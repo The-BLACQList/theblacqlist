@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Bookmark, BookmarkCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -13,22 +13,48 @@ interface SaveIconButtonProps {
 }
 
 export function SaveIconButton({
-  // listingId will be used when the save/unsave API route is ready (Ticket 045)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  listingId: _listingId,
+  listingId,
   listingName,
   initialIsSaved = false,
   className,
 }: SaveIconButtonProps) {
   const [isSaved, setIsSaved] = useState(initialIsSaved)
+  const [isPending, startTransition] = useTransition()
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation()
     e.preventDefault()
+    if (isPending) return
 
-    setIsSaved((prev) => !prev)
+    const next = !isSaved
+    setIsSaved(next)
 
-    // TODO: Replace with real API call when save/unsave routes are ready (Ticket 045)
+    startTransition(async () => {
+      try {
+        if (next) {
+          const res = await fetch("/api/saves", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ listing_id: listingId }),
+          })
+          if (!res.ok) {
+            if (res.status === 401) {
+              const currentUrl = window.location.pathname + window.location.search
+              window.location.href = `/sign-in?next=${encodeURIComponent(currentUrl)}&action=save&listing_id=${listingId}`
+              return
+            }
+            setIsSaved(!next)
+          }
+        } else {
+          const res = await fetch(`/api/saves?listing_id=${listingId}`, { method: "DELETE" })
+          if (!res.ok && res.status !== 204) {
+            setIsSaved(!next)
+          }
+        }
+      } catch {
+        setIsSaved(!next)
+      }
+    })
   }
 
   return (
@@ -36,6 +62,7 @@ export function SaveIconButton({
       <button
         type="button"
         onClick={handleClick}
+        disabled={isPending}
         aria-label={isSaved ? `Remove ${listingName} from saved` : `Save ${listingName}`}
         aria-pressed={isSaved}
         className={cn(
