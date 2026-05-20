@@ -1,18 +1,18 @@
-import type { Metadata } from "next"
-import { Suspense } from "react"
+import type { Metadata } from 'next'
+import { Suspense } from 'react'
 
-import { Container } from "@/components/layout/container"
-import { SearchBar } from "@/components/discovery/SearchBar"
-import { DiscoveryFilters } from "@/components/discovery/DiscoveryFilters"
-import { DiscoveryGrid } from "@/components/discovery/DiscoveryGrid"
-import { queryListings, LISTINGS_PAGE_SIZE } from "@/lib/listings/query"
-import { buildPageUrl } from "@/lib/listings/pagination"
-import { createClient } from "@/lib/supabase/server"
+import { Container } from '@/components/layout/container'
+import { SearchBar } from '@/components/discovery/SearchBar'
+import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters'
+import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
+import { buildPageUrl } from '@/lib/listings/pagination'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
-  title: "Discover Black-Owned Businesses | The BLACQList",
+  title: 'Discover Black-Owned Businesses | The BLACQList',
   description:
-    "Browse Black-owned businesses across every city, industry, and category. Find exactly what you need and support who matters.",
+    'Browse Black-owned businesses across every city, industry, and category. Find exactly what you need and support who matters.',
 }
 
 interface DiscoverPageProps {
@@ -28,10 +28,10 @@ interface DiscoverPageProps {
 async function DiscoverContent({
   searchParams,
 }: {
-  searchParams: DiscoverPageProps["searchParams"]
+  searchParams: DiscoverPageProps['searchParams']
 }) {
   const params = await searchParams
-  const page = parseInt(params.page ?? "1", 10)
+  const page = parseInt(params.page ?? '1', 10)
 
   const supabase = await createClient()
   const [result, { data: cities }] = await Promise.all([
@@ -42,13 +42,11 @@ async function DiscoverContent({
       city: params.city,
       page,
     }),
-    supabase.from("cities").select("name, slug").order("name"),
+    supabase.from('cities').select('name, slug').order('name'),
   ])
 
   const nextPageUrl =
-    result.total > page * LISTINGS_PAGE_SIZE
-      ? buildPageUrl(params, page + 1)
-      : undefined
+    result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
 
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
@@ -96,11 +94,7 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
 
       {/* Main content */}
       <Container className="py-8">
-        <Suspense
-          fallback={
-            <DiscoveryGrid entities={[]} total={0} isLoading />
-          }
-        >
+        <Suspense fallback={<DiscoveryGrid entities={[]} total={0} isLoading />}>
           <DiscoverContent searchParams={searchParams} />
         </Suspense>
       </Container>

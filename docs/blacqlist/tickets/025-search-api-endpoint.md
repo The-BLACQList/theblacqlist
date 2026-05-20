@@ -16,6 +16,7 @@
 Search is the highest-frequency interaction on the platform. Without a working search endpoint, the search results page, discover page, and claim entry flow are all non-functional. This Route Handler implements full-text search over published listings using PostgreSQL's `tsvector`/`tsquery` FTS mechanism with a `pg_trgm` fallback for partial matches and typo tolerance. It supports filtering by city, category, entity type, and trust tier, and is consumed by every discovery surface on the platform.
 
 Source artifacts:
+
 - `docs/blacqlist/architecture/api-contract.md` — Section 1, Endpoint 1: Search Entities
 - `docs/blacqlist/ux/mvp-screen-map.md` — Search Results page, Discover page
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 2 (search states)
@@ -33,6 +34,7 @@ This ticket depends on Ticket 009 (database schema with `search_vector` GIN inde
 ## Scope
 
 **In scope:**
+
 - `app/api/search/route.ts` — `GET` Route Handler (not a Server Action — search is triggered by URL params, not form mutations)
 - Query params: `q` (text, optional), `city` (city_slug, optional), `category` (category_slug, optional), `type` (listing_type enum, optional), `trust_tier` (optional), `location_type` (optional), `page` (integer, default 1), `limit` (integer, default 20, max 100)
 - Full-text search: when `q` is provided, use `search_vector @@ websearch_to_tsquery('english', $q)`, ranked by `ts_rank DESC, published_at DESC`
@@ -49,6 +51,7 @@ This ticket depends on Ticket 009 (database schema with `search_vector` GIN inde
 - `search_performed` analytics event logged server-side (INSERT to `analytics_events` table directly, not via the analytics API endpoint — this is the server)
 
 **Out of scope:**
+
 - Autosuggest / typeahead (V1)
 - Saved search (V1)
 - Sort options beyond Relevance (V1 — Newest, Rating)
@@ -60,14 +63,14 @@ This ticket depends on Ticket 009 (database schema with `search_vector` GIN inde
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-009: Database schema with `listings.search_vector` GIN index | Infrastructure | Not started — search_vector and GIN index must exist |
-| BLACQ-009: `pg_trgm` PostgreSQL extension enabled | Infrastructure | Not started — must be enabled via migration |
-| BLACQ-013: Seed listings data (at least 10 published listings for meaningful test results) | Data | Not started |
-| `cities` table with `slug` and `is_active` columns | Data | Must exist |
-| `categories` table with `slug` and `is_active` columns | Data | Must exist |
-| Supabase client (service_role) available in Route Handler | Infrastructure | Must be configured in `lib/supabase/server.ts` |
+| Dependency                                                                                 | Type           | Status                                               |
+| ------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------- |
+| BLACQ-009: Database schema with `listings.search_vector` GIN index                         | Infrastructure | Not started — search_vector and GIN index must exist |
+| BLACQ-009: `pg_trgm` PostgreSQL extension enabled                                          | Infrastructure | Not started — must be enabled via migration          |
+| BLACQ-013: Seed listings data (at least 10 published listings for meaningful test results) | Data           | Not started                                          |
+| `cities` table with `slug` and `is_active` columns                                         | Data           | Must exist                                           |
+| `categories` table with `slug` and `is_active` columns                                     | Data           | Must exist                                           |
+| Supabase client (service_role) available in Route Handler                                  | Infrastructure | Must be configured in `lib/supabase/server.ts`       |
 
 ---
 
@@ -127,27 +130,40 @@ Not applicable — this is a pure API ticket with no UI components.
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/search/route.ts` — Route Handler, exports `GET`
 - `lib/services/search.ts` — `searchListings(params: SearchQueryParams): Promise<{ results: SearchResult[], total: number }>` service function containing all SQL logic
 - `lib/validations/search.ts` — zod schema for `SearchQueryParams`
 - `lib/utils/rateLimit.ts` (if not already exists) — in-memory IP-based rate limiter (60/min anon, 120/min auth). Use a `Map<string, { count: number, windowStart: number }>` cleared per 60-second window per IP hash.
 
 **Files to modify:**
+
 - None — new endpoint
 
 **Key patterns:**
+
 ```typescript
 // app/api/search/route.ts
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const params = searchSchema.safeParse(Object.fromEntries(searchParams))
   if (!params.success) {
-    return Response.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', fields: params.error.flatten().fieldErrors }, { status: 400 })
+    return Response.json(
+      {
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        fields: params.error.flatten().fieldErrors,
+      },
+      { status: 400 }
+    )
   }
   // Rate limit check...
   // Delegate to service layer
   const { results, total } = await searchListings(params.data)
-  return Response.json({ data: results, meta: { total, page: params.data.page, limit: params.data.limit } })
+  return Response.json({
+    data: results,
+    meta: { total, page: params.data.page, limit: params.data.limit },
+  })
 }
 ```
 
@@ -181,6 +197,7 @@ const ftsQuery = `
 - The `search_performed` analytics event is written as a direct INSERT to the `analytics_events` table from the service layer using the service_role client. Do not call `/api/analytics/event` from within another Route Handler.
 
 **Do not:**
+
 - Use `ILIKE '%query%'` for full-text search — this is a full table scan and will be unacceptably slow even at 1,000 listings.
 - Accept raw SQL fragments via query params — all user input must be parameterized.
 - Return database column names that differ from the `SearchResult` interface — map at the service layer.
@@ -206,15 +223,15 @@ const ftsQuery = `
 
 ## Failure States
 
-| Failure | Condition | Response | Recovery |
-|---|---|---|---|
-| `pg_trgm` extension not enabled | Migration not run | 500 INTERNAL_ERROR — `operator does not exist: text % text` from Postgres | Run the extension migration; log the error server-side |
-| `search_vector` GIN index missing | Schema incomplete | FTS query runs as a sequential scan — extremely slow (not a failure per se, but a performance emergency) | Run the GIN index migration immediately |
-| Database unavailable | Supabase connection failed | 500 INTERNAL_ERROR with safe message "Search is temporarily unavailable" | Automatic retry on next request |
-| Invalid `city` slug provided | City not in `cities` table | Results filtered to 0 (city filter subquery returns null, no listings match) — 200 with empty array | User broadens their search |
-| Invalid `category` slug provided | Category not in `categories` table | Same as invalid city — 200 empty array | N/A |
-| Rate limit exceeded | IP exceeds 60/min | 429 RATE_LIMITED — `{ error: "Too many requests", code: "RATE_LIMITED" }` | Wait 60 seconds and retry |
-| `websearch_to_tsquery` rejects malformed query | User enters only stop words or query operators | FTS returns 0 results — pg_trgm fallback activates | Fallback handles gracefully |
+| Failure                                        | Condition                                      | Response                                                                                                 | Recovery                                               |
+| ---------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `pg_trgm` extension not enabled                | Migration not run                              | 500 INTERNAL_ERROR — `operator does not exist: text % text` from Postgres                                | Run the extension migration; log the error server-side |
+| `search_vector` GIN index missing              | Schema incomplete                              | FTS query runs as a sequential scan — extremely slow (not a failure per se, but a performance emergency) | Run the GIN index migration immediately                |
+| Database unavailable                           | Supabase connection failed                     | 500 INTERNAL_ERROR with safe message "Search is temporarily unavailable"                                 | Automatic retry on next request                        |
+| Invalid `city` slug provided                   | City not in `cities` table                     | Results filtered to 0 (city filter subquery returns null, no listings match) — 200 with empty array      | User broadens their search                             |
+| Invalid `category` slug provided               | Category not in `categories` table             | Same as invalid city — 200 empty array                                                                   | N/A                                                    |
+| Rate limit exceeded                            | IP exceeds 60/min                              | 429 RATE_LIMITED — `{ error: "Too many requests", code: "RATE_LIMITED" }`                                | Wait 60 seconds and retry                              |
+| `websearch_to_tsquery` rejects malformed query | User enters only stop words or query operators | FTS returns 0 results — pg_trgm fallback activates                                                       | Fallback handles gracefully                            |
 
 ---
 
@@ -239,16 +256,16 @@ Not applicable — this is a server-side API endpoint with no UI.
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-025-1 | FTS keyword search | `GET /api/search?q=barbershop` | Returns listings whose name, category, or description contains "barbershop" (via `search_vector`); response shape matches `SearchResult[]`; `meta.total > 0` |
-| QA-025-2 | City filter | `GET /api/search?city=atlanta` (no q) | Only listings with `city.slug = 'atlanta'` returned; all other cities excluded |
-| QA-025-3 | Combined q + city + category | `GET /api/search?q=hair&city=atlanta&category=hair-beauty` | Returns only Hair & Beauty listings in Atlanta matching "hair" in search_vector |
-| QA-025-4 | Typo fallback (trgm) | `GET /api/search?q=barbershoop` (intentional typo) | Returns barbershop listings via pg_trgm fallback (similarity > 0.25); results are appended after FTS results |
-| QA-025-5 | Invalid type enum | `GET /api/search?type=restaurant` | 400 VALIDATION_ERROR with error message |
-| QA-025-6 | Published-only filter | Search for a listing known to have `status = 'draft'` | Listing does NOT appear in results |
-| QA-025-7 | Pagination | `GET /api/search?limit=5&page=2` (with >5 listings) | Returns listings 6–10; `meta.page = 2, meta.limit = 5` |
-| QA-025-8 | Empty results | `GET /api/search?q=zzz_nonexistent_business_xyz` | `{ data: [], meta: { total: 0, page: 1, limit: 20 } }` — 200 status, not 404 |
+| ID       | Test                         | Steps                                                      | Expected                                                                                                                                                     |
+| -------- | ---------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-025-1 | FTS keyword search           | `GET /api/search?q=barbershop`                             | Returns listings whose name, category, or description contains "barbershop" (via `search_vector`); response shape matches `SearchResult[]`; `meta.total > 0` |
+| QA-025-2 | City filter                  | `GET /api/search?city=atlanta` (no q)                      | Only listings with `city.slug = 'atlanta'` returned; all other cities excluded                                                                               |
+| QA-025-3 | Combined q + city + category | `GET /api/search?q=hair&city=atlanta&category=hair-beauty` | Returns only Hair & Beauty listings in Atlanta matching "hair" in search_vector                                                                              |
+| QA-025-4 | Typo fallback (trgm)         | `GET /api/search?q=barbershoop` (intentional typo)         | Returns barbershop listings via pg_trgm fallback (similarity > 0.25); results are appended after FTS results                                                 |
+| QA-025-5 | Invalid type enum            | `GET /api/search?type=restaurant`                          | 400 VALIDATION_ERROR with error message                                                                                                                      |
+| QA-025-6 | Published-only filter        | Search for a listing known to have `status = 'draft'`      | Listing does NOT appear in results                                                                                                                           |
+| QA-025-7 | Pagination                   | `GET /api/search?limit=5&page=2` (with >5 listings)        | Returns listings 6–10; `meta.page = 2, meta.limit = 5`                                                                                                       |
+| QA-025-8 | Empty results                | `GET /api/search?q=zzz_nonexistent_business_xyz`           | `{ data: [], meta: { total: 0, page: 1, limit: 20 } }` — 200 status, not 404                                                                                 |
 
 ---
 

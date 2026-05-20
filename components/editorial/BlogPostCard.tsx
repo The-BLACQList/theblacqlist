@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from 'next/link'
 
 interface Props {
   title: string
@@ -10,10 +10,10 @@ interface Props {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -46,11 +46,11 @@ export function BlogPostCard({ title, slug, subtitle, authorName, publishedAt, t
         )}
       </div>
       <div className="flex items-center gap-2 mt-auto pt-1">
-        {authorName && (
-          <span className="font-subhead text-xs text-charcoal/60">{authorName}</span>
-        )}
+        {authorName && <span className="font-subhead text-xs text-charcoal/60">{authorName}</span>}
         {authorName && publishedAt && (
-          <span className="text-charcoal/30" aria-hidden="true">·</span>
+          <span className="text-charcoal/30" aria-hidden="true">
+            ·
+          </span>
         )}
         {publishedAt && (
           <time dateTime={publishedAt} className="font-subhead text-xs text-charcoal/50">

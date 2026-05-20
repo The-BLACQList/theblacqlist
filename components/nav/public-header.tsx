@@ -1,15 +1,15 @@
-import Link from "next/link"
-import { Search } from "lucide-react"
-import { Container } from "@/components/layout/container"
-import { MobileNav } from "@/components/nav/mobile-nav"
-import { createClient } from "@/lib/supabase/server"
-import { signOutAction } from "@/lib/actions/auth/signOut"
+import Link from 'next/link'
+import { Search } from 'lucide-react'
+import { Container } from '@/components/layout/container'
+import { MobileNav } from '@/components/nav/mobile-nav'
+import { createClient } from '@/lib/supabase/server'
+import { signOutAction } from '@/lib/actions/auth/signOut'
 
 const desktopNavLinks = [
-  { label: "Discover", href: "/discover" },
-  { label: "Search", href: "/search" },
-  { label: "Cities", href: "/cities" },
-  { label: "For Business", href: "/for-business" },
+  { label: 'Discover', href: '/discover' },
+  { label: 'Search', href: '/search' },
+  { label: 'Cities', href: '/cities' },
+  { label: 'For Business', href: '/for-business' },
 ] as const
 
 export async function PublicHeader() {

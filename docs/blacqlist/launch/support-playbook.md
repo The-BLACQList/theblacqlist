@@ -8,11 +8,11 @@
 
 ## How to Escalate
 
-| Severity | When to escalate | How |
-|---|---|---|
-| Needs a code fix | Resolution requires changing application code | File a GitHub issue with steps to reproduce |
-| Needs a data fix | The user's data is incorrect and needs to be corrected in the database | Contact engineering — do not edit the database yourself |
-| User is very distressed or the issue has been open > 24h | — | Flag to engineering lead directly |
+| Severity                                                 | When to escalate                                                       | How                                                     |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| Needs a code fix                                         | Resolution requires changing application code                          | File a GitHub issue with steps to reproduce             |
+| Needs a data fix                                         | The user's data is incorrect and needs to be corrected in the database | Contact engineering — do not edit the database yourself |
+| User is very distressed or the issue has been open > 24h | —                                                                      | Flag to engineering lead directly                       |
 
 ---
 
@@ -21,6 +21,7 @@
 **Symptom:** User says their claim was approved by an admin but when they log in, they don't see the Owner Dashboard or their listing.
 
 **Diagnostic steps:**
+
 1. Ask the user: are you signed in with the same email address you used to submit the claim?
 2. In Supabase Studio (prod) → Table Editor → `user_roles`: search for the user's `user_id` (found in `auth.users`)
    - Expected: a row with `role = 'owner'` for this user
@@ -37,6 +38,7 @@
 **Symptom:** A business owner says their listing doesn't appear when they search for it or browse in the city where it's listed.
 
 **Diagnostic steps:**
+
 1. In Supabase Studio → `listings`: find the listing by name or owner email
 2. Check `status` column: must be `'published'`. If `'pending'` or `'rejected'`, the listing has not been approved by admin.
 3. Check `deleted_at`: must be NULL. If set, the listing is soft-deleted.
@@ -53,6 +55,7 @@
 **Symptom:** An owner says they submitted their claim with a document, but in their account it still shows "Pending review."
 
 **Diagnostic steps:**
+
 1. In Supabase Studio → `claims`: find the claim by the user's `user_id` or the `listing_id`
 2. Check `status`: `'pending'` is correct — it means admin has not reviewed it yet. Explain this to the user (it's not a bug).
 3. Check `verification_doc_path`: if this is NULL, the document upload failed silently. Ask the user to resubmit.
@@ -68,6 +71,7 @@
 **Symptom:** When an owner tries to upload a document as part of a claim, they get an error or the upload appears to stall.
 
 **Diagnostic steps:**
+
 1. Ask the user: what file type and size? Accepted: JPEG, PNG, PDF under 10MB.
 2. Ask: what browser and device? Some mobile browsers have issues with file picker + upload combination.
 3. In Supabase Dashboard → Storage → `verification-docs` bucket: check if any recent uploads appear.
@@ -82,6 +86,7 @@
 **Symptom:** User says their email/password combination is rejected, or they get stuck in a redirect loop.
 
 **Diagnostic steps:**
+
 1. Ask: are they using "Sign in with Google" or email/password? Different flows, different failure modes.
 2. For email/password: ask them to use "Forgot password" to reset. Most sign-in failures are forgotten passwords.
 3. For Google: ask them to try a private/incognito browser window. Google OAuth sometimes has session cookie conflicts.
@@ -99,6 +104,7 @@
 **Symptom:** An owner says images they uploaded via the dashboard aren't appearing on their public listing page.
 
 **Diagnostic steps:**
+
 1. In Supabase Studio → `media_attachments`: find rows where `listing_id` matches the listing.
    - If no rows: the upload didn't create a record. Ask the owner to try reuploading.
    - If rows exist: check `file_path` is non-empty.
@@ -115,6 +121,7 @@
 **Symptom:** An owner edited their opening hours in the dashboard and saved, but the public page still shows the old information.
 
 **Diagnostic steps:**
+
 1. Verify the save actually worked: in Supabase Studio → `listing_hours`, check if the rows reflect the new hours.
 2. If the data is correct in the database, the page is showing cached content. The entity page has a 1-hour ISR revalidation interval (`revalidate = 3600`).
 3. The fix is to trigger revalidation. Engineering can call `revalidatePath('/[citySlug]/business/[listingSlug]')` or use the admin `revalidatePath` action if one exists.
@@ -128,6 +135,7 @@
 **Symptom:** An owner looks at their analytics dashboard and sees 0 page views.
 
 **Diagnostic steps:**
+
 1. Check when the owner was last on the analytics page. Analytics aggregate nightly via pg_cron at 03:00 UTC — data from today won't appear until tomorrow morning.
 2. In Supabase Studio → `analytics_events`: search for rows where `entity_id` matches the listing and `event_name = 'page_view'`. If there are rows, the events are being recorded — they just haven't been aggregated yet.
 3. If `analytics_events` has no rows for this listing at all: check if the page view tracking is working. View the listing page and then recheck `analytics_events`.
@@ -143,6 +151,7 @@
 **Symptom:** An owner edits their listing details in the dashboard and clicks Save, but either gets an error or the changes don't persist.
 
 **Diagnostic steps:**
+
 1. Ask the owner: what exactly happens when they click Save? Error message? Page refreshes with no message? Spinner that never resolves?
 2. Ask them to open the browser console (F12 → Console) and check for red errors. A TypeScript/React error often surfaces here.
 3. Check if the form has validation requirements — some fields (like description) may have minimum length requirements. An unhelpful validation error message may be the cause.
@@ -158,6 +167,7 @@
 **Symptom:** A user says they wrote a review and submitted it, but it doesn't appear on the business page.
 
 **Diagnostic steps:**
+
 1. Explain: reviews are moderated before they appear. All submitted reviews require admin approval before they're visible on the public page.
 2. In Supabase Studio → `reviews`: find the review by `reviewer_user_id` or `listing_id`. Check `status`:
    - `'intake'` = submitted, awaiting admin review (normal)

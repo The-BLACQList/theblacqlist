@@ -9,62 +9,62 @@
 
 ### Docs
 
-| File | Description |
-|---|---|
+| File                                               | Description                                                                                             |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `docs/blacqlist/monetization/monetization-spec.md` | Full spec: tier matrix, add-on products, later revenue streams, data model, Stripe integration approach |
 
 ### Database Migration
 
 **`supabase/migrations/20260511000003_monetization_foundation.sql`**
 
-| Change | Type | Notes |
-|---|---|---|
-| `plans.plan_key` column | Additive | Nullable `text`, partial unique index. Gives plans stable slugs (`free`, `starter`, `growth`, `premium`). |
-| `subscriptions` table | New placeholder | Owner-scoped subscription record. No Stripe wiring yet. RLS: owner can read own row. |
-| `sponsored_placements` table | New placeholder | Tracks spotlight and boost placements per listing. RLS: service role only for now. |
-| `sponsor_campaigns` table | New placeholder | Tracks brand sponsorship inquiries and campaigns. RLS: service role only. |
-| `set_updated_at()` function | CREATE OR REPLACE | Shared trigger function; safe if already existed. |
+| Change                       | Type              | Notes                                                                                                     |
+| ---------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `plans.plan_key` column      | Additive          | Nullable `text`, partial unique index. Gives plans stable slugs (`free`, `starter`, `growth`, `premium`). |
+| `subscriptions` table        | New placeholder   | Owner-scoped subscription record. No Stripe wiring yet. RLS: owner can read own row.                      |
+| `sponsored_placements` table | New placeholder   | Tracks spotlight and boost placements per listing. RLS: service role only for now.                        |
+| `sponsor_campaigns` table    | New placeholder   | Tracks brand sponsorship inquiries and campaigns. RLS: service role only.                                 |
+| `set_updated_at()` function  | CREATE OR REPLACE | Shared trigger function; safe if already existed.                                                         |
 
 ### Frontend Routes
 
-| Route | File | What it is |
-|---|---|---|
-| `/pricing` | `app/(public)/pricing/page.tsx` | Full rebuild: 4-tier plan comparison, add-ons, FAQ, sponsor teaser, CTA |
-| `/for-sponsors` | `app/(public)/for-sponsors/page.tsx` | Expanded: who sponsors, how it works, placement options, CTA |
-| `/dashboard/upgrade` | `app/dashboard/upgrade/page.tsx` | Authenticated placeholder: shows current plan (Free), 4-tier cards with "Coming Soon" CTAs |
+| Route                | File                                 | What it is                                                                                 |
+| -------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `/pricing`           | `app/(public)/pricing/page.tsx`      | Full rebuild: 4-tier plan comparison, add-ons, FAQ, sponsor teaser, CTA                    |
+| `/for-sponsors`      | `app/(public)/for-sponsors/page.tsx` | Expanded: who sponsors, how it works, placement options, CTA                               |
+| `/dashboard/upgrade` | `app/dashboard/upgrade/page.tsx`     | Authenticated placeholder: shows current plan (Free), 4-tier cards with "Coming Soon" CTAs |
 
 ### Components Modified
 
-| File | Change |
-|---|---|
+| File                                        | Change                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `components/dashboard/DashboardSidebar.tsx` | Added `Sparkles` icon import and `{ href: "/dashboard/upgrade", label: "Upgrade", icon: Sparkles }` nav item |
 
 ---
 
 ## Permission Model
 
-| Surface | Access | Notes |
-|---|---|---|
-| `/pricing` | Public | Static page, no auth required |
-| `/for-sponsors` | Public | Static page, no auth required |
-| `/dashboard/upgrade` | Authenticated owners | Protected by `requireOwner()` in `app/dashboard/layout.tsx` |
-| `subscriptions` reads | Owner only (RLS) | `auth.uid() = user_id` SELECT policy |
-| `sponsored_placements` | Service role only | No public/owner read policy until rendering is implemented |
-| `sponsor_campaigns` | Service role only | Admin UI required before reads are needed |
+| Surface                | Access               | Notes                                                       |
+| ---------------------- | -------------------- | ----------------------------------------------------------- |
+| `/pricing`             | Public               | Static page, no auth required                               |
+| `/for-sponsors`        | Public               | Static page, no auth required                               |
+| `/dashboard/upgrade`   | Authenticated owners | Protected by `requireOwner()` in `app/dashboard/layout.tsx` |
+| `subscriptions` reads  | Owner only (RLS)     | `auth.uid() = user_id` SELECT policy                        |
+| `sponsored_placements` | Service role only    | No public/owner read policy until rendering is implemented  |
+| `sponsor_campaigns`    | Service role only    | Admin UI required before reads are needed                   |
 
 ---
 
 ## What Is NOT Implemented
 
-| Item | Reason |
-|---|---|
-| Stripe Checkout session creation | No payment provider configured yet |
-| Subscription lifecycle webhooks | Depends on Stripe wiring |
-| Subscription enforcement (feature gating) | No active subscriptions exist; all users are Free |
-| `plan_key` seed data for `plans` table | Requires running a seed script or Supabase Studio insert |
-| Admin UI for sponsor campaigns | Deferred; admin dashboard is incomplete |
-| Marketplace transaction fees | Deferred until checkout flows exist |
-| BLACQ Boost activation flow | Deferred; only displayed on pricing/for-sponsors pages |
+| Item                                      | Reason                                                   |
+| ----------------------------------------- | -------------------------------------------------------- |
+| Stripe Checkout session creation          | No payment provider configured yet                       |
+| Subscription lifecycle webhooks           | Depends on Stripe wiring                                 |
+| Subscription enforcement (feature gating) | No active subscriptions exist; all users are Free        |
+| `plan_key` seed data for `plans` table    | Requires running a seed script or Supabase Studio insert |
+| Admin UI for sponsor campaigns            | Deferred; admin dashboard is incomplete                  |
+| Marketplace transaction fees              | Deferred until checkout flows exist                      |
+| BLACQ Boost activation flow               | Deferred; only displayed on pricing/for-sponsors pages   |
 
 ---
 

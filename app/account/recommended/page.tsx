@@ -1,12 +1,12 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { ArrowLeft, Sparkles, ExternalLink } from "lucide-react"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { ArrowLeft, Sparkles, ExternalLink } from 'lucide-react'
+import type { Metadata } from 'next'
 
-import { createClient } from "@/lib/supabase/server"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { createClient } from '@/lib/supabase/server'
+import { buildEntityUrl } from '@/lib/listings/url'
 
-export const metadata: Metadata = { title: "Recommended for You | Account" }
+export const metadata: Metadata = { title: 'Recommended for You | Account' }
 
 export default async function RecommendedPage() {
   const supabase = await createClient()
@@ -14,14 +14,14 @@ export default async function RecommendedPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/account/recommended")
+  if (!user) redirect('/sign-in?next=/account/recommended')
 
   // Get saved listing IDs and their categories
   const { data: saves } = await supabase
-    .from("saves")
-    .select("listing_id, listings!inner(category_id)")
-    .eq("user_id", user.id)
-    .is("listings.deleted_at", null)
+    .from('saves')
+    .select('listing_id, listings!inner(category_id)')
+    .eq('user_id', user.id)
+    .is('listings.deleted_at', null)
 
   const savedIds = (saves ?? []).map((s) => s.listing_id).filter(Boolean)
   const categoryIds = [
@@ -46,20 +46,22 @@ export default async function RecommendedPage() {
   let recommendations: ListingRow[] = []
   if (categoryIds.length > 0) {
     let query = supabase
-      .from("listings")
-      .select(`
+      .from('listings')
+      .select(
+        `
         id, name, slug, tagline, entity_type, trust_tier,
         cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
         listing_details_business(website_url)
-      `)
-      .in("category_id", categoryIds)
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .order("save_count", { ascending: false })
+      `
+      )
+      .in('category_id', categoryIds)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .order('save_count', { ascending: false })
       .limit(12)
 
     if (savedIds.length > 0) {
-      query = query.not("id", "in", `(${savedIds.join(",")})`)
+      query = query.not('id', 'in', `(${savedIds.join(',')})`)
     }
 
     const { data } = await query
@@ -79,15 +81,13 @@ export default async function RecommendedPage() {
           Back to account
         </Link>
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">
-          Recommended for you
-        </h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Recommended for you</h1>
         <p className="font-subhead text-sm text-charcoal/60 mb-8">
           {!hasSaves
-            ? "Based on businesses you save."
+            ? 'Based on businesses you save.'
             : recommendations.length === 0
-            ? "No new recommendations right now — check back later."
-            : `${recommendations.length} businesses you might like`}
+              ? 'No new recommendations right now — check back later.'
+              : `${recommendations.length} businesses you might like`}
         </p>
 
         {!hasSaves ? (
@@ -147,7 +147,8 @@ export default async function RecommendedPage() {
                   )}
                   {l.cities && (
                     <p className="font-subhead text-xs text-charcoal/40 mt-1">
-                      {l.cities.name}{l.cities.states?.code ? `, ${l.cities.states.code}` : ""}
+                      {l.cities.name}
+                      {l.cities.states?.code ? `, ${l.cities.states.code}` : ''}
                     </p>
                   )}
                 </div>

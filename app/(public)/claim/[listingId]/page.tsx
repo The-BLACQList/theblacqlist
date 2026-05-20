@@ -1,9 +1,9 @@
-import { notFound, redirect } from "next/navigation"
-import Link from "next/link"
-import type { Metadata } from "next"
+import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { createClient } from "@/lib/supabase/server"
-import { ClaimForm } from "@/components/claim/ClaimForm"
+import { createClient } from '@/lib/supabase/server'
+import { ClaimForm } from '@/components/claim/ClaimForm'
 
 interface PageProps {
   params: Promise<{ listingId: string }>
@@ -13,12 +13,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { listingId } = await params
   const supabase = await createClient()
   const { data: listing } = await supabase
-    .from("listings")
-    .select("name")
-    .eq("id", listingId)
+    .from('listings')
+    .select('name')
+    .eq('id', listingId)
     .maybeSingle()
 
-  if (!listing) return { title: "Claim a Listing | The BLACQList" }
+  if (!listing) return { title: 'Claim a Listing | The BLACQList' }
 
   return {
     title: `Claim ${listing.name} | The BLACQList`,
@@ -39,17 +39,17 @@ export default async function ClaimListingPage({ params }: PageProps) {
 
   // ── Fetch listing ─────────────────────────────────────────────────────────
   const { data: listing } = await supabase
-    .from("listings")
+    .from('listings')
     .select(
-      "id, name, slug, trust_tier, status, listing_details_business(city_text, state), categories(name)"
+      'id, name, slug, trust_tier, status, listing_details_business(city_text, state), categories(name)'
     )
-    .eq("id", listingId)
+    .eq('id', listingId)
     .maybeSingle()
 
   if (!listing) notFound()
 
   // ── Already claimed state ─────────────────────────────────────────────────
-  if (listing.trust_tier !== "unclaimed") {
+  if (listing.trust_tier !== 'unclaimed') {
     return (
       <main className="min-h-screen bg-pale-lavender pt-16 pb-16 px-4">
         <div className="max-w-[640px] mx-auto">
@@ -58,9 +58,8 @@ export default async function ClaimListingPage({ params }: PageProps) {
               This listing has already been claimed
             </h1>
             <p className="font-body text-sm text-charcoal leading-relaxed mb-4">
-              <span className="font-semibold">{listing.name}</span> has already
-              been claimed by its owner. If you believe this is an error or need
-              access, please{" "}
+              <span className="font-semibold">{listing.name}</span> has already been claimed by its
+              owner. If you believe this is an error or need access, please{' '}
               <Link
                 href="/contact"
                 className="text-amber-gold hover:text-light-gold underline underline-offset-2"
@@ -83,11 +82,11 @@ export default async function ClaimListingPage({ params }: PageProps) {
 
   // ── Existing open claim state ─────────────────────────────────────────────
   const { data: existingClaim } = await supabase
-    .from("claims")
-    .select("id, status, created_at")
-    .eq("listing_id", listingId)
-    .eq("claimant_user_id", user.id)
-    .in("status", ["pending", "under_review"])
+    .from('claims')
+    .select('id, status, created_at')
+    .eq('listing_id', listingId)
+    .eq('claimant_user_id', user.id)
+    .in('status', ['pending', 'under_review'])
     .maybeSingle()
 
   if (existingClaim) {
@@ -99,9 +98,8 @@ export default async function ClaimListingPage({ params }: PageProps) {
               You already have a pending claim
             </h1>
             <p className="font-body text-sm text-charcoal leading-relaxed mb-4">
-              You submitted a claim for{" "}
-              <span className="font-semibold">{listing.name}</span>. We&apos;ll
-              contact you once it&apos;s been reviewed.
+              You submitted a claim for <span className="font-semibold">{listing.name}</span>.
+              We&apos;ll contact you once it&apos;s been reviewed.
             </p>
             <Link
               href="/account/claims"
@@ -144,7 +142,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
           <p className="font-headline text-xl text-brand-black">{listing.name}</p>
           {(category || locationParts.length > 0) && (
             <p className="font-body text-xs text-charcoal/60 mt-0.5">
-              {[category, locationParts.join(", ")].filter(Boolean).join(" · ")}
+              {[category, locationParts.join(', ')].filter(Boolean).join(' · ')}
             </p>
           )}
         </div>
@@ -155,8 +153,8 @@ export default async function ClaimListingPage({ params }: PageProps) {
             Submit a claim
           </h1>
           <p className="font-body text-sm text-charcoal leading-relaxed">
-            Provide your contact details and tell us your role at this business.
-            We&apos;ll review your claim within 3–5 business days.
+            Provide your contact details and tell us your role at this business. We&apos;ll review
+            your claim within 3–5 business days.
           </p>
         </div>
 

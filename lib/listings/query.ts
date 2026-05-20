@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
-import type { DiscoveryEntity } from "@/types"
+import { createClient } from '@/lib/supabase/server'
+import type { DiscoveryEntity } from '@/types'
 
 export const LISTINGS_PAGE_SIZE = 24
 
@@ -44,12 +44,12 @@ function mapRow(raw: RawRow): DiscoveryEntity {
     id: raw.id,
     slug: raw.slug,
     name: raw.name,
-    tagline: raw.tagline ?? "",
-    description: raw.listing_details_business?.description ?? "",
-    entity_type: raw.entity_type as DiscoveryEntity["entity_type"],
-    location_type: raw.location_type as DiscoveryEntity["location_type"],
-    trust_tier: raw.trust_tier as DiscoveryEntity["trust_tier"],
-    tier: raw.tier as DiscoveryEntity["tier"],
+    tagline: raw.tagline ?? '',
+    description: raw.listing_details_business?.description ?? '',
+    entity_type: raw.entity_type as DiscoveryEntity['entity_type'],
+    location_type: raw.location_type as DiscoveryEntity['location_type'],
+    trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
+    tier: raw.tier as DiscoveryEntity['tier'],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -57,12 +57,12 @@ function mapRow(raw: RawRow): DiscoveryEntity {
     avg_rating: raw.avg_rating,
     review_count: raw.review_count,
     save_count: raw.save_count,
-    category: raw.categories ?? { name: "General", slug: "general" },
+    category: raw.categories ?? { name: 'General', slug: 'general' },
     city: raw.cities
       ? {
           name: raw.cities.name,
           slug: raw.cities.slug,
-          state_abbr: raw.cities.states?.code ?? "",
+          state_abbr: raw.cities.states?.code ?? '',
         }
       : null,
   }
@@ -76,15 +76,15 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // Resolve category slug → ID (parallel with city lookup)
   const [categoryResult, cityResult] = await Promise.all([
     params.category
-      ? supabase.from("categories").select("id").eq("slug", params.category).single()
+      ? supabase.from('categories').select('id').eq('slug', params.category).single()
       : Promise.resolve({ data: null }),
     params.city
-      ? supabase.from("cities").select("id").eq("slug", params.city).single()
+      ? supabase.from('cities').select('id').eq('slug', params.city).single()
       : Promise.resolve({ data: null }),
   ])
 
   let query = supabase
-    .from("listings")
+    .from('listings')
     .select(
       `
       id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
@@ -94,46 +94,45 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
       listing_details_business(description)
     `,
-      { count: "exact" }
+      { count: 'exact' }
     )
-    .eq("status", "published")
-    .is("deleted_at", null)
+    .eq('status', 'published')
+    .is('deleted_at', null)
 
   // Full-text search on weighted search_vector column
   if (params.q?.trim()) {
-    query = query.textSearch("search_vector", params.q.trim(), {
-      type: "websearch",
-      config: "english",
+    query = query.textSearch('search_vector', params.q.trim(), {
+      type: 'websearch',
+      config: 'english',
     })
   }
 
   if (params.type) {
-    query = query.eq("entity_type", params.type)
+    query = query.eq('entity_type', params.type)
   }
 
   if (categoryResult.data?.id) {
-    query = query.eq("category_id", categoryResult.data.id)
+    query = query.eq('category_id', categoryResult.data.id)
   }
 
   if (cityResult.data?.id) {
-    query = query.eq("city_id", cityResult.data.id)
+    query = query.eq('city_id', cityResult.data.id)
   }
 
   const { data, count } = await query
-    .order("is_featured", { ascending: false })
-    .order("save_count", { ascending: false })
+    .order('is_featured', { ascending: false })
+    .order('save_count', { ascending: false })
     .range(offset, offset + LISTINGS_PAGE_SIZE - 1)
 
-  const organicEntities: DiscoveryEntity[] = data
-    ? (data as unknown as RawRow[]).map(mapRow)
-    : []
+  const organicEntities: DiscoveryEntity[] = data ? (data as unknown as RawRow[]).map(mapRow) : []
 
   // Inject sponsored placements on page 1 only.
   if (page === 1) {
     const now = new Date().toISOString()
     let spQuery = supabase
-      .from("sponsored_placements")
-      .select(`
+      .from('sponsored_placements')
+      .select(
+        `
         position,
         listings!sponsored_placements_listing_id_fkey(
           id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
@@ -143,11 +142,12 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
           cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
           listing_details_business(description)
         )
-      `)
-      .eq("status", "active")
-      .lte("starts_at", now)
-      .gt("ends_at", now)
-      .order("position", { ascending: true })
+      `
+      )
+      .eq('status', 'active')
+      .lte('starts_at', now)
+      .gt('ends_at', now)
+      .order('position', { ascending: true })
       .limit(3)
 
     if (cityResult.data?.id) {
@@ -172,7 +172,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       }
 
       // Remove sponsored listings from organic results to avoid duplicates
-      const filtered = organicEntities.filter(e => !sponsoredIds.has(e.id))
+      const filtered = organicEntities.filter((e) => !sponsoredIds.has(e.id))
 
       // Splice sponsored entries at their configured 1-based positions
       const result = [...filtered]

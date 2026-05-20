@@ -14,13 +14,14 @@
 
 Three new tables created:
 
-| Table | Purpose |
-|---|---|
+| Table                | Purpose                                                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `editorial_articles` | BLACQLight stories and spotlight pieces. Fields: `title`, `slug`, `subtitle`, `body`, `author_name`, `tags` (text[]), `status`, `published_at`, `meta_description`, `cover_image_path`, `created_by`. |
-| `guides` | City guides. Fields: `title`, `slug`, `subtitle`, `description`, `city`, `status`, `published_at`, `meta_description`, `cover_image_path`, `created_by`. |
-| `guide_sections` | Sections within a guide. Fields: `guide_id` (FK), `heading`, `body`, `display_order`. |
+| `guides`             | City guides. Fields: `title`, `slug`, `subtitle`, `description`, `city`, `status`, `published_at`, `meta_description`, `cover_image_path`, `created_by`.                                              |
+| `guide_sections`     | Sections within a guide. Fields: `guide_id` (FK), `heading`, `body`, `display_order`.                                                                                                                 |
 
 RLS policies applied:
+
 - Anon + authenticated: read `status = 'published'` only
 - `guide_sections`: readable only when parent guide is published
 - Service role bypasses RLS for all admin writes
@@ -37,13 +38,14 @@ RLS policies applied:
 
 ### Server Actions
 
-| File | Exports |
-|---|---|
-| `lib/actions/editorial/collections.ts` | `createCollectionAction`, `updateCollectionAction`, `deleteCollectionAction`, `addCollectionItemAction`, `removeCollectionItemAction` |
-| `lib/actions/editorial/articles.ts` | `createArticleAction`, `updateArticleAction`, `deleteArticleAction` |
-| `lib/actions/editorial/guides.ts` | `createGuideAction`, `updateGuideAction`, `deleteGuideAction`, `createGuideSectionAction`, `updateGuideSectionAction`, `deleteGuideSectionAction` |
+| File                                   | Exports                                                                                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/actions/editorial/collections.ts` | `createCollectionAction`, `updateCollectionAction`, `deleteCollectionAction`, `addCollectionItemAction`, `removeCollectionItemAction`             |
+| `lib/actions/editorial/articles.ts`    | `createArticleAction`, `updateArticleAction`, `deleteArticleAction`                                                                               |
+| `lib/actions/editorial/guides.ts`      | `createGuideAction`, `updateGuideAction`, `deleteGuideAction`, `createGuideSectionAction`, `updateGuideSectionAction`, `deleteGuideSectionAction` |
 
 All actions:
+
 - `await requireAdmin()` guard
 - `createServiceClient()` (sync) for all DB writes
 - `revalidatePath()` on public and admin paths after mutations
@@ -54,28 +56,29 @@ All actions:
 
 ### Components
 
-| File | Purpose |
-|---|---|
-| `components/editorial/CollectionCard.tsx` | Card linking to `/collections/[slug]`. Shows icon, count, title, description. |
-| `components/editorial/GuideCard.tsx` | Card linking to `/guides/[slug]`. Shows BookOpen icon, section count, title, subtitle, city. |
-| `components/editorial/BlogPostCard.tsx` | Card linking to `/blacqlight/[slug]`. Shows tags, title, subtitle, author, date. |
-| `components/editorial/EditorialRichTextDisplay.tsx` | Plain-text body parser. `##` → h2, `###` → h3, `>` → blockquote, double newline → paragraph, single newline → `<br>`. |
-| `components/editorial/AdminEditorialForm.tsx` | Three form components: `CollectionAdminForm`, `ArticleAdminForm`, `GuideAdminForm`. All use `useActionState` + `useEffect` redirect on success. |
+| File                                                | Purpose                                                                                                                                         |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/editorial/CollectionCard.tsx`           | Card linking to `/collections/[slug]`. Shows icon, count, title, description.                                                                   |
+| `components/editorial/GuideCard.tsx`                | Card linking to `/guides/[slug]`. Shows BookOpen icon, section count, title, subtitle, city.                                                    |
+| `components/editorial/BlogPostCard.tsx`             | Card linking to `/blacqlight/[slug]`. Shows tags, title, subtitle, author, date.                                                                |
+| `components/editorial/EditorialRichTextDisplay.tsx` | Plain-text body parser. `##` → h2, `###` → h3, `>` → blockquote, double newline → paragraph, single newline → `<br>`.                           |
+| `components/editorial/AdminEditorialForm.tsx`       | Three form components: `CollectionAdminForm`, `ArticleAdminForm`, `GuideAdminForm`. All use `useActionState` + `useEffect` redirect on success. |
 
 ---
 
 ### Public Routes
 
-| Route | File | Notes |
-|---|---|---|
-| `/collections` | `app/(public)/collections/page.tsx` | Grid of active collections with listing counts. Empty state. |
-| `/collections/[slug]` | `app/(public)/collections/[slug]/page.tsx` | Collection detail. Listing row list with entity type, city, tagline. 404 if inactive/not found. |
-| `/guides` | `app/(public)/guides/page.tsx` | Grid of published guides with section counts. Empty state. |
-| `/guides/[slug]` | `app/(public)/guides/[slug]/page.tsx` | Guide detail. Description + sections rendered with `EditorialRichTextDisplay`. 404 if unpublished. |
-| `/blacqlight` | `app/(public)/blacqlight/page.tsx` | Grid of published articles via `BlogPostCard`. Empty state. |
-| `/blacqlight/[slug]` | `app/(public)/blacqlight/[slug]/page.tsx` | Article detail. Tags, title, subtitle, author, date, body via `EditorialRichTextDisplay`. 404 if unpublished. |
+| Route                 | File                                       | Notes                                                                                                         |
+| --------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `/collections`        | `app/(public)/collections/page.tsx`        | Grid of active collections with listing counts. Empty state.                                                  |
+| `/collections/[slug]` | `app/(public)/collections/[slug]/page.tsx` | Collection detail. Listing row list with entity type, city, tagline. 404 if inactive/not found.               |
+| `/guides`             | `app/(public)/guides/page.tsx`             | Grid of published guides with section counts. Empty state.                                                    |
+| `/guides/[slug]`      | `app/(public)/guides/[slug]/page.tsx`      | Guide detail. Description + sections rendered with `EditorialRichTextDisplay`. 404 if unpublished.            |
+| `/blacqlight`         | `app/(public)/blacqlight/page.tsx`         | Grid of published articles via `BlogPostCard`. Empty state.                                                   |
+| `/blacqlight/[slug]`  | `app/(public)/blacqlight/[slug]/page.tsx`  | Article detail. Tags, title, subtitle, author, date, body via `EditorialRichTextDisplay`. 404 if unpublished. |
 
 All detail pages:
+
 - `generateMetadata` for SSR title/description (SEO)
 - 404 via `notFound()` for missing or unpublished content
 - `createClient()` (session-aware, respects RLS) for all public queries
@@ -84,19 +87,20 @@ All detail pages:
 
 ### Admin Routes
 
-| Route | File | Notes |
-|---|---|---|
-| `/admin/collections` | `app/admin/collections/page.tsx` | Table of all collections, active status, listing count. Link to edit. |
-| `/admin/collections/new` | `app/admin/collections/new/page.tsx` | `CollectionAdminForm` with `createCollectionAction`. Redirects to list on save. |
-| `/admin/collections/[id]/edit` | `app/admin/collections/[id]/edit/page.tsx` | `CollectionAdminForm` + listing manager (add by UUID, remove by item ID). |
-| `/admin/guides` | `app/admin/guides/page.tsx` | Table of all guides, city, status, published date. |
-| `/admin/guides/new` | `app/admin/guides/new/page.tsx` | `GuideAdminForm` with `createGuideAction`. |
-| `/admin/guides/[id]/edit` | `app/admin/guides/[id]/edit/page.tsx` | `GuideAdminForm` + section manager (add, delete sections inline). |
-| `/admin/blacqlight` | `app/admin/blacqlight/page.tsx` | Table of all articles, author, status, published date. |
-| `/admin/blacqlight/new` | `app/admin/blacqlight/new/page.tsx` | `ArticleAdminForm` with `createArticleAction`. |
-| `/admin/blacqlight/[id]/edit` | `app/admin/blacqlight/[id]/edit/page.tsx` | `ArticleAdminForm` with `updateArticleAction`. Live link shown for published articles. |
+| Route                          | File                                       | Notes                                                                                  |
+| ------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `/admin/collections`           | `app/admin/collections/page.tsx`           | Table of all collections, active status, listing count. Link to edit.                  |
+| `/admin/collections/new`       | `app/admin/collections/new/page.tsx`       | `CollectionAdminForm` with `createCollectionAction`. Redirects to list on save.        |
+| `/admin/collections/[id]/edit` | `app/admin/collections/[id]/edit/page.tsx` | `CollectionAdminForm` + listing manager (add by UUID, remove by item ID).              |
+| `/admin/guides`                | `app/admin/guides/page.tsx`                | Table of all guides, city, status, published date.                                     |
+| `/admin/guides/new`            | `app/admin/guides/new/page.tsx`            | `GuideAdminForm` with `createGuideAction`.                                             |
+| `/admin/guides/[id]/edit`      | `app/admin/guides/[id]/edit/page.tsx`      | `GuideAdminForm` + section manager (add, delete sections inline).                      |
+| `/admin/blacqlight`            | `app/admin/blacqlight/page.tsx`            | Table of all articles, author, status, published date.                                 |
+| `/admin/blacqlight/new`        | `app/admin/blacqlight/new/page.tsx`        | `ArticleAdminForm` with `createArticleAction`.                                         |
+| `/admin/blacqlight/[id]/edit`  | `app/admin/blacqlight/[id]/edit/page.tsx`  | `ArticleAdminForm` with `updateArticleAction`. Live link shown for published articles. |
 
 All admin routes:
+
 - `requireAdmin()` guard (layout also guards at the segment level)
 - `createServiceClient()` (sync) for admin data reads
 
@@ -150,11 +154,11 @@ No rich text editor installed. Body is stored as plain text and rendered by `Edi
 
 ## Next Ticket Recommendations
 
-| Priority | Work |
-|---|---|
-| P1 | Wire `cover_image_path` upload to editorial admin forms (extends ticket 030 media upload) |
-| P1 | Add JSON-LD structured data to editorial detail pages (extends ticket 023 pattern) |
-| P2 | Pagination on admin editorial list pages |
-| P2 | Guide section inline edit (requires `"use client"` section editor component) |
-| P2 | Tag filter on `/blacqlight` index page |
-| P3 | Collection listing search picker in admin (replace UUID paste) |
+| Priority | Work                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------- |
+| P1       | Wire `cover_image_path` upload to editorial admin forms (extends ticket 030 media upload) |
+| P1       | Add JSON-LD structured data to editorial detail pages (extends ticket 023 pattern)        |
+| P2       | Pagination on admin editorial list pages                                                  |
+| P2       | Guide section inline edit (requires `"use client"` section editor component)              |
+| P2       | Tag filter on `/blacqlight` index page                                                    |
+| P3       | Collection listing search picker in admin (replace UUID paste)                            |

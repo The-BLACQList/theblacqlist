@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 14: Monetization and Sponsorship Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Monetization
 
 ---
@@ -40,6 +45,7 @@ As a platform engineer, I want Stripe subscription events handled reliably and i
 ## Scope
 
 **In scope:**
+
 - `app/api/webhooks/stripe/route.ts` — Route Handler; POST only; no auth (Stripe signature is the auth mechanism)
 - Webhook signature verification: `stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET)` — return 400 if verification fails
 - **Four events handled:**
@@ -54,6 +60,7 @@ As a platform engineer, I want Stripe subscription events handled reliably and i
 - Return 200 for all events, including unrecognized ones (Stripe retries on non-2xx responses)
 
 **Out of scope:**
+
 - Stripe Connect webhook events — V2
 - Refund processing — V2
 - Invoice history display — deferred
@@ -63,13 +70,13 @@ As a platform engineer, I want Stripe subscription events handled reliably and i
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 075 — `plans` and `subscriptions` tables + Stripe client | Blocking ticket | Not started |
-| Ticket 076 — `createCheckoutSession` (generates checkout sessions this webhook responds to) | Related ticket | Not started |
-| Ticket 012 — `admin_audit_log` table | Blocking ticket | Not started |
-| `STRIPE_WEBHOOK_SECRET` environment variable | Infrastructure | Must be set in production before this route is live |
-| Resend integration (`lib/email/resend.ts`) | Infrastructure | Must exist; from Ticket scope (check if established by earlier tickets) |
+| Dependency                                                                                  | Type            | Status                                                                  |
+| ------------------------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------- |
+| Ticket 075 — `plans` and `subscriptions` tables + Stripe client                             | Blocking ticket | Not started                                                             |
+| Ticket 076 — `createCheckoutSession` (generates checkout sessions this webhook responds to) | Related ticket  | Not started                                                             |
+| Ticket 012 — `admin_audit_log` table                                                        | Blocking ticket | Not started                                                             |
+| `STRIPE_WEBHOOK_SECRET` environment variable                                                | Infrastructure  | Must be set in production before this route is live                     |
+| Resend integration (`lib/email/resend.ts`)                                                  | Infrastructure  | Must exist; from Ticket scope (check if established by earlier tickets) |
 
 **Risk:** The `STRIPE_WEBHOOK_SECRET` must be configured in Vercel environment variables before this Route Handler is deployed to staging. Use Stripe CLI locally: `stripe listen --forward-to localhost:3000/api/webhooks/stripe`.
 
@@ -78,6 +85,7 @@ As a platform engineer, I want Stripe subscription events handled reliably and i
 ## UX Notes
 
 No user-facing UI in this ticket. The effects of webhook processing are visible to owners via:
+
 - Their listing tier changing on the dashboard (Ticket 050)
 - The success state on `/dashboard?upgrade=success` (Ticket 076)
 - A "Payment failed" notification email
@@ -102,6 +110,7 @@ No UI in this ticket. Email notification design: use the existing Resend transac
   - All events: INSERT `stripe_events_processed`; INSERT `admin_audit_log`
 
 **`stripe_events_processed` table:**
+
 ```sql
 CREATE TABLE stripe_events_processed (
   id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -131,23 +140,21 @@ CREATE UNIQUE INDEX stripe_events_processed_event_id_idx
 **Request:** Raw body (do not parse as JSON before signature verification); `stripe-signature` header
 
 **Stripe signature verification:**
+
 ```typescript
 const rawBody = await request.text()
 const sig = request.headers.get('stripe-signature')
 
 let event: Stripe.Event
 try {
-  event = stripe.webhooks.constructEvent(
-    rawBody,
-    sig!,
-    process.env.STRIPE_WEBHOOK_SECRET!
-  )
+  event = stripe.webhooks.constructEvent(rawBody, sig!, process.env.STRIPE_WEBHOOK_SECRET!)
 } catch (err) {
   return Response.json({ error: 'Invalid signature' }, { status: 400 })
 }
 ```
 
 **Response codes:**
+
 - 200: Event processed successfully (or already processed — idempotent)
 - 400: Invalid webhook signature
 - 500: Processing error (logged server-side; Stripe will retry)
@@ -156,28 +163,31 @@ try {
 
 **Event handlers (per event type):**
 
-| Stripe event | Handler behavior |
-|---|---|
-| `checkout.session.completed` | Extract `metadata.listing_id`, `metadata.plan_id`, `subscription` ID, `customer` ID. UPSERT `subscriptions`. UPDATE `listings.listing_tier`. INSERT `admin_audit_log`. |
+| Stripe event                    | Handler behavior                                                                                                                                                                                                                                         |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `checkout.session.completed`    | Extract `metadata.listing_id`, `metadata.plan_id`, `subscription` ID, `customer` ID. UPSERT `subscriptions`. UPDATE `listings.listing_tier`. INSERT `admin_audit_log`.                                                                                   |
 | `customer.subscription.updated` | Extract `listing_id` from `subscription.metadata`. UPDATE `subscriptions.status`, `current_period_start`, `current_period_end`. If `subscription.items.data[0].price.id` changed, look up new plan and UPDATE `listings.listing_tier`. INSERT audit log. |
-| `customer.subscription.deleted` | Extract `listing_id` from `subscription.metadata`. UPDATE `subscriptions.status = 'canceled'`, `canceled_at`. UPDATE `listings.listing_tier = 'free'`. INSERT audit log. |
-| `invoice.payment_failed` | Extract customer ID from `invoice.customer`. Look up `subscriptions` by `stripe_customer_id`. UPDATE `subscriptions.status = 'past_due'`. Send payment failure email via Resend. |
+| `customer.subscription.deleted` | Extract `listing_id` from `subscription.metadata`. UPDATE `subscriptions.status = 'canceled'`, `canceled_at`. UPDATE `listings.listing_tier = 'free'`. INSERT audit log.                                                                                 |
+| `invoice.payment_failed`        | Extract customer ID from `invoice.customer`. Look up `subscriptions` by `stripe_customer_id`. UPDATE `subscriptions.status = 'past_due'`. Send payment failure email via Resend.                                                                         |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `supabase/migrations/[timestamp]_create_stripe_events_processed_table.sql`
 - `app/api/webhooks/stripe/route.ts` — webhook Route Handler
 - `lib/services/billing/webhookHandlers.ts` — individual handler functions per event type (keeps route.ts clean)
 - `lib/email/templates/paymentFailed.tsx` — Resend email template
 
 **Files to modify:**
+
 - `lib/errors/codes.ts` — no new codes needed (webhook returns raw Response, not ActionResult)
 - `docs/blacqlist/architecture/environment-plan.md` — confirm `STRIPE_WEBHOOK_SECRET` is documented
 
 **Key patterns:**
+
 - Read the raw body with `await request.text()` BEFORE any JSON parsing — `stripe.webhooks.constructEvent()` requires the raw body string
 - The route must disable Next.js body parsing: `export const config = { api: { bodyParser: false } }` — in App Router this is not needed; `request.text()` works natively
 - Idempotency check must run BEFORE any DB writes: `SELECT COUNT(*) FROM stripe_events_processed WHERE stripe_event_id = $id` — if count > 0, return 200 immediately
@@ -186,6 +196,7 @@ try {
 - `revalidateTag` calls should happen after all DB writes succeed
 
 **Do not:**
+
 - Parse the request body as JSON before calling `constructEvent` — this breaks signature verification
 - Use Server Actions for webhook handling — external services cannot call Server Actions
 - Expose webhook processing errors in the response body — return a generic 500 with no details
@@ -211,13 +222,13 @@ try {
 
 ## Failure States
 
-| Failure | Condition | Behavior | Recovery |
-|---|---|---|---|
-| Invalid signature | Stripe sends a bad signature (or non-Stripe POST) | Return 400; no DB writes | Stripe does not retry 400 responses |
-| DB write fails | Supabase unreachable during handler | Return 500; log error server-side | Stripe retries with exponential backoff |
-| `metadata.listing_id` missing | Checkout Session was created without metadata | Log warning; return 200 (no retry) | Manual reconciliation via admin |
-| Email send fails (`invoice.payment_failed`) | Resend API error | Log error; still return 200 (DB was updated) | Email send is non-blocking; owner can check dashboard |
-| Plan not found | `metadata.plan_id` does not match any `plans` row | Log error; return 500; Stripe retries | Investigate plan seed data |
+| Failure                                     | Condition                                         | Behavior                                     | Recovery                                              |
+| ------------------------------------------- | ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| Invalid signature                           | Stripe sends a bad signature (or non-Stripe POST) | Return 400; no DB writes                     | Stripe does not retry 400 responses                   |
+| DB write fails                              | Supabase unreachable during handler               | Return 500; log error server-side            | Stripe retries with exponential backoff               |
+| `metadata.listing_id` missing               | Checkout Session was created without metadata     | Log warning; return 200 (no retry)           | Manual reconciliation via admin                       |
+| Email send fails (`invoice.payment_failed`) | Resend API error                                  | Log error; still return 200 (DB was updated) | Email send is non-blocking; owner can check dashboard |
+| Plan not found                              | `metadata.plan_id` does not match any `plans` row | Log error; return 500; Stripe retries        | Investigate plan seed data                            |
 
 ---
 
@@ -240,14 +251,14 @@ No UI in this ticket.
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Invalid signature | — | POST to `/api/webhooks/stripe` without a valid `stripe-signature` header | 400 response; no DB writes |
-| QA-2 | `checkout.session.completed` | — | Use Stripe CLI to trigger `checkout.session.completed` for a test checkout | `subscriptions` row created; `listings.listing_tier` updated to purchased plan |
-| QA-3 | Idempotency | — | Use Stripe CLI to replay the same event twice | First delivery: processed; second delivery: 200 returned immediately; DB not written twice |
-| QA-4 | `customer.subscription.deleted` | — | Trigger subscription deletion in Stripe test mode | `subscriptions.status = 'canceled'`; `listings.listing_tier = 'free'` |
-| QA-5 | `invoice.payment_failed` | — | Trigger `invoice.payment_failed` in Stripe test mode | `subscriptions.status = 'past_due'`; payment failure email sent to owner |
-| QA-6 | Unrecognized event | — | POST a valid Stripe-signed payload with an unrecognized event type | 200 response; no DB writes; warning logged |
+| #    | Scenario                        | Role | Steps                                                                      | Expected result                                                                            |
+| ---- | ------------------------------- | ---- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| QA-1 | Invalid signature               | —    | POST to `/api/webhooks/stripe` without a valid `stripe-signature` header   | 400 response; no DB writes                                                                 |
+| QA-2 | `checkout.session.completed`    | —    | Use Stripe CLI to trigger `checkout.session.completed` for a test checkout | `subscriptions` row created; `listings.listing_tier` updated to purchased plan             |
+| QA-3 | Idempotency                     | —    | Use Stripe CLI to replay the same event twice                              | First delivery: processed; second delivery: 200 returned immediately; DB not written twice |
+| QA-4 | `customer.subscription.deleted` | —    | Trigger subscription deletion in Stripe test mode                          | `subscriptions.status = 'canceled'`; `listings.listing_tier = 'free'`                      |
+| QA-5 | `invoice.payment_failed`        | —    | Trigger `invoice.payment_failed` in Stripe test mode                       | `subscriptions.status = 'past_due'`; payment failure email sent to owner                   |
+| QA-6 | Unrecognized event              | —    | POST a valid Stripe-signed payload with an unrecognized event type         | 200 response; no DB writes; warning logged                                                 |
 
 ---
 

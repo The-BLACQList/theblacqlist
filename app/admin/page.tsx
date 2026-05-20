@@ -1,12 +1,12 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatCard } from "@/components/admin/AdminStatCard"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatCard } from '@/components/admin/AdminStatCard'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
-export const metadata: Metadata = { title: "Overview" }
+export const metadata: Metadata = { title: 'Overview' }
 
 function formatRelativeDate(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -19,12 +19,12 @@ function formatRelativeDate(iso: string) {
 }
 
 const QUEUE_TYPE_LABELS: Record<string, string> = {
-  new_submission: "New entity",
-  claim_review: "Claim",
-  verification: "Verification",
-  correction: "Correction",
-  review: "Review",
-  flagged_listing: "Flagged listing",
+  new_submission: 'New entity',
+  claim_review: 'Claim',
+  verification: 'Verification',
+  correction: 'Correction',
+  review: 'Review',
+  flagged_listing: 'Flagged listing',
 }
 
 export default async function AdminOverviewPage() {
@@ -40,28 +40,28 @@ export default async function AdminOverviewPage() {
     { data: recentQueue },
   ] = await Promise.all([
     serviceClient
-      .from("listings")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
+      .from('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
     serviceClient
-      .from("claims")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["pending", "under_review"]),
+      .from('claims')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['pending', 'under_review']),
     serviceClient
-      .from("moderation_queue")
-      .select("id", { count: "exact", head: true })
-      .eq("queue_type", "verification")
-      .eq("status", "pending"),
+      .from('moderation_queue')
+      .select('id', { count: 'exact', head: true })
+      .eq('queue_type', 'verification')
+      .eq('status', 'pending'),
     serviceClient
-      .from("moderation_queue")
-      .select("id", { count: "exact", head: true })
-      .in("queue_type", ["correction", "review", "flagged_listing"])
-      .eq("status", "pending"),
+      .from('moderation_queue')
+      .select('id', { count: 'exact', head: true })
+      .in('queue_type', ['correction', 'review', 'flagged_listing'])
+      .eq('status', 'pending'),
     serviceClient
-      .from("moderation_queue")
-      .select("id, queue_type, entity_id, entity_type, created_at, status")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
+      .from('moderation_queue')
+      .select('id, queue_type, entity_id, entity_type, created_at, status')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
       .limit(8),
   ])
 
@@ -71,8 +71,10 @@ export default async function AdminOverviewPage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Overview</h1>
         <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
-          Signed in as {user.email} ·{" "}
-          <span className="text-amber-gold">{role === "super_admin" ? "Super Admin" : "Admin"}</span>
+          Signed in as {user.email} ·{' '}
+          <span className="text-amber-gold">
+            {role === 'super_admin' ? 'Super Admin' : 'Admin'}
+          </span>
         </p>
       </div>
 
@@ -95,18 +97,12 @@ export default async function AdminOverviewPage() {
           count={pendingVerifications ?? 0}
           href="/admin/verification"
         />
-        <AdminStatCard
-          label="Reports & flags"
-          count={pendingReports ?? 0}
-          href="/admin/reports"
-        />
+        <AdminStatCard label="Reports & flags" count={pendingReports ?? 0} href="/admin/reports" />
       </div>
 
       {/* Recent queue */}
       <div>
-        <h2 className="font-headline text-lg text-brand-black mb-4">
-          Recent queue activity
-        </h2>
+        <h2 className="font-headline text-lg text-brand-black mb-4">Recent queue activity</h2>
         {!recentQueue || recentQueue.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
             <p className="font-subhead text-sm text-charcoal/60">
@@ -135,11 +131,11 @@ export default async function AdminOverviewPage() {
               <tbody className="divide-y divide-charcoal/5">
                 {recentQueue.map((item) => {
                   const itemHref =
-                    item.queue_type === "new_submission"
+                    item.queue_type === 'new_submission'
                       ? `/admin/entities/${item.entity_id}`
-                      : item.queue_type === "claim_review"
+                      : item.queue_type === 'claim_review'
                         ? `/admin/claims/${item.entity_id}`
-                        : item.queue_type === "verification"
+                        : item.queue_type === 'verification'
                           ? `/admin/verification/${item.entity_id}`
                           : `/admin/reports`
 
@@ -178,12 +174,12 @@ export default async function AdminOverviewPage() {
         <h2 className="font-headline text-lg text-brand-black mb-4">Quick actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
-            { href: "/admin/entities", label: "Review pending entities" },
-            { href: "/admin/claims", label: "Review pending claims" },
-            { href: "/admin/verification", label: "Verification queue" },
-            { href: "/admin/reviews", label: "Review moderation" },
-            { href: "/admin/reports", label: "Reports & corrections" },
-            { href: "/admin/analytics", label: "Platform analytics" },
+            { href: '/admin/entities', label: 'Review pending entities' },
+            { href: '/admin/claims', label: 'Review pending claims' },
+            { href: '/admin/verification', label: 'Verification queue' },
+            { href: '/admin/reviews', label: 'Review moderation' },
+            { href: '/admin/reports', label: 'Reports & corrections' },
+            { href: '/admin/analytics', label: 'Platform analytics' },
           ].map(({ href, label }) => (
             <Link
               key={href}

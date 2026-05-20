@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { X } from "lucide-react"
+import Link from 'next/link'
+import { X } from 'lucide-react'
 
-import { cn } from "@/lib/utils"
-import { Container } from "@/components/layout/container"
+import { cn } from '@/lib/utils'
+import { Container } from '@/components/layout/container'
 
 // ─── Inline SVG icons for social platforms not in this lucide-react version ──
 
@@ -16,7 +16,7 @@ function InstagramIcon({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("h-5 w-5", className)}
+      className={cn('h-5 w-5', className)}
       aria-hidden="true"
     >
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
@@ -36,7 +36,7 @@ function LinkedInIcon({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("h-5 w-5", className)}
+      className={cn('h-5 w-5', className)}
       aria-hidden="true"
     >
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
@@ -52,7 +52,7 @@ function TikTokIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="currentColor"
-      className={cn("h-5 w-5", className)}
+      className={cn('h-5 w-5', className)}
       aria-hidden="true"
     >
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.21 8.21 0 0 0 4.79 1.53V6.77a4.85 4.85 0 0 1-1.02-.08z" />
@@ -75,43 +75,43 @@ interface FooterColumn {
 
 const columns: FooterColumn[] = [
   {
-    heading: "Platform",
+    heading: 'Platform',
     links: [
-      { label: "Discover", href: "/discover", active: true },
-      { label: "Search", href: "/search", active: true },
-      { label: "Collections", href: "/collections", active: true },
-      { label: "Events", href: "/events", active: false },
-      { label: "Jobs", href: "/jobs", active: false },
-      { label: "Marketplace", href: "/marketplace", active: false },
-      { label: "BLACQLight", href: "/blacqlight", active: true },
+      { label: 'Discover', href: '/discover', active: true },
+      { label: 'Search', href: '/search', active: true },
+      { label: 'Collections', href: '/collections', active: true },
+      { label: 'Events', href: '/events', active: false },
+      { label: 'Jobs', href: '/jobs', active: false },
+      { label: 'Marketplace', href: '/marketplace', active: false },
+      { label: 'BLACQLight', href: '/blacqlight', active: true },
     ],
   },
   {
-    heading: "For Businesses",
+    heading: 'For Businesses',
     links: [
-      { label: "For Business", href: "/for-business", active: true },
-      { label: "Claim Your Page", href: "/claim", active: true },
-      { label: "Add Your Business", href: "/add-business", active: true },
-      { label: "Pricing", href: "/pricing", active: false },
-      { label: "For Vendors", href: "/for-vendors", active: false },
-      { label: "For Sponsors", href: "/for-sponsors", active: false },
+      { label: 'For Business', href: '/for-business', active: true },
+      { label: 'Claim Your Page', href: '/claim', active: true },
+      { label: 'Add Your Business', href: '/add-business', active: true },
+      { label: 'Pricing', href: '/pricing', active: false },
+      { label: 'For Vendors', href: '/for-vendors', active: false },
+      { label: 'For Sponsors', href: '/for-sponsors', active: false },
     ],
   },
   {
-    heading: "Company",
+    heading: 'Company',
     links: [
-      { label: "About", href: "/about", active: true },
-      { label: "Contact", href: "/contact", active: true },
-      { label: "Careers", href: "/careers", active: false },
-      { label: "Press", href: "/press", active: false },
+      { label: 'About', href: '/about', active: true },
+      { label: 'Contact', href: '/contact', active: true },
+      { label: 'Careers', href: '/careers', active: false },
+      { label: 'Press', href: '/press', active: false },
     ],
   },
   {
-    heading: "Community",
+    heading: 'Community',
     links: [
-      { label: "The BLACQLight", href: "/blacqlight", active: true },
-      { label: "City Guides", href: "/guides", active: true },
-      { label: "Community Impact", href: "/impact", active: false },
+      { label: 'The BLACQLight', href: '/blacqlight', active: true },
+      { label: 'City Guides', href: '/guides', active: true },
+      { label: 'Community Impact', href: '/impact', active: false },
     ],
   },
 ]
@@ -122,12 +122,9 @@ export function PublicFooter() {
   return (
     <footer className="bg-black text-white">
       <Container className="py-12 md:py-16">
-
         {/* ── Top section: tagline + social ──────────────────────────────── */}
         <div>
-          <p className="font-headline text-3xl md:text-4xl text-cream mb-4">
-            Find &amp; Be Found.
-          </p>
+          <p className="font-headline text-3xl md:text-4xl text-cream mb-4">Find &amp; Be Found.</p>
 
           <div className="flex items-center gap-4">
             <Link
@@ -213,9 +210,7 @@ export function PublicFooter() {
 
         {/* ── Legal row ─────────────────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <p className="text-charcoal text-xs font-subhead">
-            &copy; 2026 The BLACQList
-          </p>
+          <p className="text-charcoal text-xs font-subhead">&copy; 2026 The BLACQList</p>
 
           <div className="flex flex-wrap items-center gap-4">
             <Link
@@ -238,7 +233,6 @@ export function PublicFooter() {
             </Link>
           </div>
         </div>
-
       </Container>
     </footer>
   )

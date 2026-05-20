@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from 'next/link'
 
 interface FlowNode {
   entity_id: string
@@ -16,9 +16,9 @@ interface FlowNodeTableProps {
 }
 
 function formatDollars(cents: number) {
-  return (cents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  return (cents / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
     maximumFractionDigits: 0,
   })
 }
@@ -32,7 +32,7 @@ export function FlowNodeTable({
   nodes,
   title,
   linkToEntity = false,
-  emptyText = "No data yet.",
+  emptyText = 'No data yet.',
 }: FlowNodeTableProps) {
   const maxAmount = Math.max(...nodes.map((n) => n.total_amount_cents), 1)
 
@@ -50,18 +50,19 @@ export function FlowNodeTable({
         <div className="divide-y divide-charcoal/5">
           {nodes.map((node, i) => {
             const barWidth = percentOfMax(node.total_amount_cents, maxAmount)
-            const nameEl = linkToEntity && node.slug ? (
-              <Link
-                href={`/b/${node.slug}`}
-                className="font-subhead text-sm font-semibold text-brand-black hover:text-amber-gold transition-colors truncate"
-              >
-                {node.name}
-              </Link>
-            ) : (
-              <span className="font-subhead text-sm font-semibold text-brand-black truncate">
-                {node.name}
-              </span>
-            )
+            const nameEl =
+              linkToEntity && node.slug ? (
+                <Link
+                  href={`/b/${node.slug}`}
+                  className="font-subhead text-sm font-semibold text-brand-black hover:text-amber-gold transition-colors truncate"
+                >
+                  {node.name}
+                </Link>
+              ) : (
+                <span className="font-subhead text-sm font-semibold text-brand-black truncate">
+                  {node.name}
+                </span>
+              )
 
             return (
               <div key={node.entity_id} className="px-5 py-3.5">
@@ -75,7 +76,8 @@ export function FlowNodeTable({
                       {formatDollars(node.total_amount_cents)}
                     </span>
                     <span className="font-body text-xs text-charcoal/40 ml-2">
-                      {node.transaction_count} {node.transaction_count === 1 ? "receipt" : "receipts"}
+                      {node.transaction_count}{' '}
+                      {node.transaction_count === 1 ? 'receipt' : 'receipts'}
                     </span>
                   </div>
                 </div>

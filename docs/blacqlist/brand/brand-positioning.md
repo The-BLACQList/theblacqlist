@@ -29,18 +29,23 @@ The BLACQList is the national discovery and commerce platform that makes the Bla
 ## Taglines
 
 **Primary:**
+
 > Find & Be Found.
 
 **Supporting:**
+
 > Find what you need. Support who matters. Keep the dollar moving.
 
 **Brand positioning line:**
+
 > Atlanta-born. National from day one. Community-powered everywhere.
 
 **For business owners:**
+
 > You deserve a better page.
 
 **For the community:**
+
 > One platform. Every city. All Black-owned.
 
 ---
@@ -48,18 +53,23 @@ The BLACQList is the national discovery and commerce platform that makes the Bla
 ## Brand Pillars
 
 ### 1. Discovery with Depth
+
 The BLACQList doesn't return a list of names. It returns a world of context. Every result is a polished, complete Page — not a business card.
 
 ### 2. Community Trust
+
 Listings on The BLACQList are maintained, corrected, reviewed, and verified by the community. Trust is visible and earned, not assumed.
 
 ### 3. Economic Circulation
+
 Every save, share, purchase, and receipt upload is part of a larger story — dollars moving through the community. The platform makes that movement visible over time.
 
 ### 4. Cultural Specificity
+
 The BLACQList is built for this community, by this community. The voice, the design, the discovery logic, and the editorial all reflect that. This is not a Black filter on a white platform.
 
 ### 5. Ambition
+
 Atlanta-born but not Atlanta-limited. National from day one. The platform is built for scale, for longevity, and for the breadth of the Black experience across every city.
 
 ---
@@ -70,49 +80,49 @@ The following voice attributes are defined in the official Brand Style Guide.
 
 **The BLACQList voice IS:**
 
-| Attribute | What it means in practice |
-|---|---|
-| Empowering | Copy lifts the reader — it gives them agency, capability, and pride. Never speaks down. |
-| Informed | We know this community and its economics. We don't explain the need — we meet it. |
-| Energetic | The platform is alive. Copy has momentum. Short sentences. Active verbs. |
-| Supportive | We are on the side of the business owner and the community member equally. |
-| Progressive | We are building something that didn't exist before. The tone should feel forward. |
+| Attribute   | What it means in practice                                                               |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Empowering  | Copy lifts the reader — it gives them agency, capability, and pride. Never speaks down. |
+| Informed    | We know this community and its economics. We don't explain the need — we meet it.       |
+| Energetic   | The platform is alive. Copy has momentum. Short sentences. Active verbs.                |
+| Supportive  | We are on the side of the business owner and the community member equally.              |
+| Progressive | We are building something that didn't exist before. The tone should feel forward.       |
 
 **The BLACQList voice is NOT:**
 
-| What to avoid | Why |
-|---|---|
-| Coarse | Professionalism is part of the brand promise |
-| Dry | We are a community platform — warmth is required |
-| Romantic | Not aspirational poetry — we are a commerce platform |
-| Sarcastic | This community deserves sincerity |
-| Snarky | It undercuts trust and alienates business owners |
+| What to avoid | Why                                                  |
+| ------------- | ---------------------------------------------------- |
+| Coarse        | Professionalism is part of the brand promise         |
+| Dry           | We are a community platform — warmth is required     |
+| Romantic      | Not aspirational poetry — we are a commerce platform |
+| Sarcastic     | This community deserves sincerity                    |
+| Snarky        | It undercuts trust and alienates business owners     |
 
 ---
 
 ## What We Are Not
 
-| We are not... | So we don't... |
-|---|---|
-| A social network | Build a content feed, follower counts, or status updates |
-| A charity or cause | Frame business listings as donations or acts of charity |
-| A black Yelp | Let star ratings define us — reviews exist in service of trust, not as the core product |
-| A protest platform | Frame every feature around grievance — we frame around opportunity and power |
-| A local app | Limit ourselves to one city or region |
-| An aggregator | Pull in and display third-party listings as our primary product — we build Pages, not scrapes |
+| We are not...      | So we don't...                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| A social network   | Build a content feed, follower counts, or status updates                                      |
+| A charity or cause | Frame business listings as donations or acts of charity                                       |
+| A black Yelp       | Let star ratings define us — reviews exist in service of trust, not as the core product       |
+| A protest platform | Frame every feature around grievance — we frame around opportunity and power                  |
+| A local app        | Limit ourselves to one city or region                                                         |
+| An aggregator      | Pull in and display third-party listings as our primary product — we build Pages, not scrapes |
 
 ---
 
 ## Competitive Positioning
 
-| Platform | What they do | What we do better |
-|---|---|---|
-| Google Maps / Business | Generic business discovery with no community context | BLACQList Pages are purpose-built, richer, and community-validated |
-| Yelp | Review-first directory | We lead with the Page and the story — reviews are one signal, not the whole product |
-| Official Black Wall Street | Black business directory | National scope, richer Pages, marketplace, spend tracking, and AI layer |
-| Support Black Owned | Black business search | Design quality, Page depth, community trust layer, commerce |
-| Instagram | Discovery through content | We are optimized for commercial intent, not content browsing |
-| General marketplaces (Etsy, Shopify) | Commerce-first | We are discovery-first with commerce as an extension, not the starting point |
+| Platform                             | What they do                                         | What we do better                                                                   |
+| ------------------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Google Maps / Business               | Generic business discovery with no community context | BLACQList Pages are purpose-built, richer, and community-validated                  |
+| Yelp                                 | Review-first directory                               | We lead with the Page and the story — reviews are one signal, not the whole product |
+| Official Black Wall Street           | Black business directory                             | National scope, richer Pages, marketplace, spend tracking, and AI layer             |
+| Support Black Owned                  | Black business search                                | Design quality, Page depth, community trust layer, commerce                         |
+| Instagram                            | Discovery through content                            | We are optimized for commercial intent, not content browsing                        |
+| General marketplaces (Etsy, Shopify) | Commerce-first                                       | We are discovery-first with commerce as an extension, not the starting point        |
 
 **The BLACQList's unique position:** The only platform that combines a national Black business directory with polished micro-website Pages, community trust validation, marketplace commerce, and a dollar-flow visualization of the community economy.
 
@@ -120,7 +130,7 @@ The following voice attributes are defined in the official Brand Style Guide.
 
 ## Visual Brand Direction
 
-*(Full design assets in `docs/blacqlist/brand/` — this section documents confirmed brand specs from the official Brand Style Guide)*
+_(Full design assets in `docs/blacqlist/brand/` — this section documents confirmed brand specs from the official Brand Style Guide)_
 
 **Tone:** Premium. Warm. Intentional. Not corporate, not streetwear — respected and approachable.
 
@@ -130,18 +140,19 @@ The following voice attributes are defined in the official Brand Style Guide.
 
 All colors below are extracted directly from the official brand assets.
 
-| Role | Name | HEX | Pantone | Use |
-|---|---|---|---|---|
-| Primary | Brand Black | `#000000` | Neutral Black C | Wordmark, primary text, high-contrast elements |
-| Primary | Deep Background | `#19191E` | — | Dark mode backgrounds, hero sections, card fills |
-| Secondary | Charcoal | `#595758` | 425 C | Secondary text, borders, inactive states |
-| Accent (warm) | Amber Gold | `#E2A428` | 151 C | CTAs, verification badges, featured highlights, hover states |
-| Accent (light) | Light Gold | `#FFD867` | — | Secondary accents, highlights, icon fills |
-| Neutral light | Pale Lavender | `#E9E9F7` | 7443 C | Light backgrounds, card surfaces, subtle dividers |
-| Neutral light | Cream | `#FCFAF4` | — | Off-white backgrounds, content surfaces |
-| Base | White | `#FFFFFF` | — | Pure white surfaces, text on dark backgrounds |
+| Role           | Name            | HEX       | Pantone         | Use                                                          |
+| -------------- | --------------- | --------- | --------------- | ------------------------------------------------------------ |
+| Primary        | Brand Black     | `#000000` | Neutral Black C | Wordmark, primary text, high-contrast elements               |
+| Primary        | Deep Background | `#19191E` | —               | Dark mode backgrounds, hero sections, card fills             |
+| Secondary      | Charcoal        | `#595758` | 425 C           | Secondary text, borders, inactive states                     |
+| Accent (warm)  | Amber Gold      | `#E2A428` | 151 C           | CTAs, verification badges, featured highlights, hover states |
+| Accent (light) | Light Gold      | `#FFD867` | —               | Secondary accents, highlights, icon fills                    |
+| Neutral light  | Pale Lavender   | `#E9E9F7` | 7443 C          | Light backgrounds, card surfaces, subtle dividers            |
+| Neutral light  | Cream           | `#FCFAF4` | —               | Off-white backgrounds, content surfaces                      |
+| Base           | White           | `#FFFFFF` | —               | Pure white surfaces, text on dark backgrounds                |
 
 **Color usage notes:**
+
 - Amber Gold (`#E2A428`) is the primary action color — buttons, badges, highlighted states
 - Deep Background (`#19191E`) is the brand's true "black" — richer than pure `#000000` for backgrounds
 - Pale Lavender (`#E9E9F7`) keeps neutral surfaces warm without feeling cold or clinical
@@ -151,13 +162,14 @@ All colors below are extracted directly from the official brand assets.
 
 ### Typography (confirmed from Brand Style Guide)
 
-| Role | Typeface | Weight/Style | Use |
-|---|---|---|---|
+| Role               | Typeface                 | Weight/Style           | Use                                                             |
+| ------------------ | ------------------------ | ---------------------- | --------------------------------------------------------------- |
 | Headlines + Titles | **Glacial Indifference** | Bold, Italic available | Hero headings, Page titles, section headers, wordmark companion |
-| Subheadings | **Lato** | Regular | Section subheads, card labels, secondary UI text |
-| Body + CTAs | **Quicksand** | Bold Italic | Body copy, CTA labels, form fields, descriptive text |
+| Subheadings        | **Lato**                 | Regular                | Section subheads, card labels, secondary UI text                |
+| Body + CTAs        | **Quicksand**            | Bold Italic            | Body copy, CTA labels, form fields, descriptive text            |
 
 **Typography notes:**
+
 - Glacial Indifference is the primary brand font — all major headings use it
 - Lato handles the readable mid-level text where Glacial would feel heavy
 - Quicksand Bold Italic adds personality at the body/CTA level without being decorative
@@ -170,19 +182,20 @@ All colors below are extracted directly from the official brand assets.
 
 The following are hard rules — no exceptions.
 
-| Rule | What it means |
-|---|---|
-| No warping or discoloring | The logo must appear in its exact brand colors only |
-| No color alterations | Do not recolor any logo element outside the approved palette |
-| No rotation | The logo is always horizontal and upright |
-| No transparency | Never apply opacity to the logo |
-| No additional text | No taglines, descriptors, or other copy added to the logo lockup |
-| No obstruction | Do not place other objects over or behind the logo that partially cover it |
-| No distortion | Always scale proportionally — never stretch or compress |
-| No element removal | Do not delete or modify any part of the logo graphic |
-| Maintain clear space | Keep a buffer of clear space around the logo equal to the height of the "Q" |
+| Rule                      | What it means                                                               |
+| ------------------------- | --------------------------------------------------------------------------- |
+| No warping or discoloring | The logo must appear in its exact brand colors only                         |
+| No color alterations      | Do not recolor any logo element outside the approved palette                |
+| No rotation               | The logo is always horizontal and upright                                   |
+| No transparency           | Never apply opacity to the logo                                             |
+| No additional text        | No taglines, descriptors, or other copy added to the logo lockup            |
+| No obstruction            | Do not place other objects over or behind the logo that partially cover it  |
+| No distortion             | Always scale proportionally — never stretch or compress                     |
+| No element removal        | Do not delete or modify any part of the logo graphic                        |
+| Maintain clear space      | Keep a buffer of clear space around the logo equal to the height of the "Q" |
 
 **Logo file formats available:**
+
 - Process color (full color) — for digital, print, signage, banners, stickers, web
 - Black & White — for single-color print (memos, fax, simple flyers)
 
@@ -192,13 +205,13 @@ The following are hard rules — no exceptions.
 
 The BLACQList uses a dedicated icon set for its five core discovery categories. These icons are part of the official brand asset kit and must be used consistently across the platform.
 
-| Category | Icon label |
-|---|---|
+| Category            | Icon label    |
+| ------------------- | ------------- |
 | Products & Services | Distinct icon |
-| Professionals | Distinct icon |
-| Creatives | Distinct icon |
-| Events | Distinct icon |
-| Jobs | Distinct icon |
+| Professionals       | Distinct icon |
+| Creatives           | Distinct icon |
+| Events              | Distinct icon |
+| Jobs                | Distinct icon |
 
 Source icons are in the brand asset kit (`.pptx` slide 14). Export as SVG for platform use.
 
@@ -228,10 +241,10 @@ Source icons are in the brand asset kit (`.pptx` slide 14). Export as SVG for pl
 
 ### Social Handles (confirmed from Brand Style Guide)
 
-| Platform | Handle |
-|---|---|
-| Instagram | @theblacqlist |
-| General (cross-platform) | theblacqlist |
+| Platform                 | Handle        |
+| ------------------------ | ------------- |
+| Instagram                | @theblacqlist |
+| General (cross-platform) | theblacqlist  |
 
 ### Hashtag Strategy
 

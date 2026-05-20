@@ -1,16 +1,16 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { PageHeader } from "@/components/layout/page-header"
-import { Container } from "@/components/layout/container"
-import { Button } from "@/components/ui/button"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { PageHeader } from '@/components/layout/page-header'
+import { Container } from '@/components/layout/container'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "Pricing | The BLACQList",
+  title: 'Pricing | The BLACQList',
   description:
-    "Getting listed is free forever. Paid tiers with advanced features and premium visibility are coming soon — join the waitlist.",
+    'Getting listed is free forever. Paid tiers with advanced features and premium visibility are coming soon — join the waitlist.',
 }
 
 interface Plan {
@@ -27,99 +27,99 @@ interface Plan {
 
 const PLANS: Plan[] = [
   {
-    key: "free",
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    tagline: "Everything you need to get discovered.",
+    key: 'free',
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    tagline: 'Everything you need to get discovered.',
     features: [
-      "Full BLACQList Page",
-      "Hours, contact & social links",
-      "Marketplace listings (products & services)",
-      "Community reviews",
-      "Basic analytics",
+      'Full BLACQList Page',
+      'Hours, contact & social links',
+      'Marketplace listings (products & services)',
+      'Community reviews',
+      'Basic analytics',
     ],
-    cta: "List Your Business Free",
-    href: "/for-business",
+    cta: 'List Your Business Free',
+    href: '/for-business',
     featured: false,
   },
   {
-    key: "starter",
-    name: "Starter",
-    price: "$19",
-    period: "/mo",
-    tagline: "Stand out and be verified.",
+    key: 'starter',
+    name: 'Starter',
+    price: '$19',
+    period: '/mo',
+    tagline: 'Stand out and be verified.',
     features: [
-      "Everything in Free",
-      "Verified badge on your page",
-      "Priority placement in search",
-      "Advanced analytics dashboard",
-      "Remove “Powered by BLACQList” badge",
+      'Everything in Free',
+      'Verified badge on your page',
+      'Priority placement in search',
+      'Advanced analytics dashboard',
+      'Remove “Powered by BLACQList” badge',
     ],
-    cta: "Join the Waitlist",
-    href: "/sign-up",
+    cta: 'Join the Waitlist',
+    href: '/sign-up',
     featured: false,
   },
   {
-    key: "growth",
-    name: "Growth",
-    price: "$49",
-    period: "/mo",
-    tagline: "Grow with featured placements and editorial exposure.",
+    key: 'growth',
+    name: 'Growth',
+    price: '$49',
+    period: '/mo',
+    tagline: 'Grow with featured placements and editorial exposure.',
     features: [
-      "Everything in Starter",
-      "Featured collection placement",
-      "BLACQLight editorial eligibility",
-      "Marketplace category spotlight",
-      "Priority support",
+      'Everything in Starter',
+      'Featured collection placement',
+      'BLACQLight editorial eligibility',
+      'Marketplace category spotlight',
+      'Priority support',
     ],
-    cta: "Join the Waitlist",
-    href: "/sign-up",
+    cta: 'Join the Waitlist',
+    href: '/sign-up',
     featured: true,
   },
   {
-    key: "premium",
-    name: "Premium",
-    price: "$99",
-    period: "/mo",
-    tagline: "The full platform, front and center.",
+    key: 'premium',
+    name: 'Premium',
+    price: '$99',
+    period: '/mo',
+    tagline: 'The full platform, front and center.',
     features: [
-      "Everything in Growth",
-      "Sponsored Spotlight credit ($299 value)",
-      "Homepage featured placement",
-      "Dedicated account support",
-      "Early access to new features",
+      'Everything in Growth',
+      'Sponsored Spotlight credit ($299 value)',
+      'Homepage featured placement',
+      'Dedicated account support',
+      'Early access to new features',
     ],
-    cta: "Join the Waitlist",
-    href: "/sign-up",
+    cta: 'Join the Waitlist',
+    href: '/sign-up',
     featured: false,
   },
 ]
 
 const FAQ_ITEMS = [
   {
-    q: "Is listing my business really free?",
-    a: "Yes. A full BLACQList Page — with your profile, hours, contact info, social links, and marketplace listings — is free forever. No credit card required.",
+    q: 'Is listing my business really free?',
+    a: 'Yes. A full BLACQList Page — with your profile, hours, contact info, social links, and marketplace listings — is free forever. No credit card required.',
   },
   {
-    q: "When will paid plans launch?",
+    q: 'When will paid plans launch?',
     a: "We're finalizing pricing and rolling out in phases. Sign up for a free listing now and you'll be the first to know when paid plans become available.",
   },
   {
-    q: "What is a Sponsored Spotlight?",
-    a: "A high-visibility paid placement on the BLACQList homepage, city pages, and category views. Inventory is limited — Sponsored Spotlight slots are available as an add-on separate from the monthly plans.",
+    q: 'What is a Sponsored Spotlight?',
+    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views. Inventory is limited — Sponsored Spotlight slots are available as an add-on separate from the monthly plans.',
   },
   {
-    q: "What is BLACQ Boost?",
-    a: "A short-term boost that surfaces your listing higher in search results and relevant category pages. Pay once, boost for 30 days.",
+    q: 'What is BLACQ Boost?',
+    a: 'A short-term boost that surfaces your listing higher in search results and relevant category pages. Pay once, boost for 30 days.',
   },
   {
-    q: "Can I cancel a paid plan anytime?",
-    a: "Yes. No long-term contracts. All paid plans are billed monthly and can be canceled at any time.",
+    q: 'Can I cancel a paid plan anytime?',
+    a: 'Yes. No long-term contracts. All paid plans are billed monthly and can be canceled at any time.',
   },
   {
-    q: "Do I need a credit card to get started?",
-    a: "No. The Free plan requires no payment information at all.",
+    q: 'Do I need a credit card to get started?',
+    a: 'No. The Free plan requires no payment information at all.',
   },
 ]
 
@@ -145,9 +145,7 @@ export default function PricingPage() {
             <div
               key={plan.key}
               className={`relative flex flex-col rounded-xl border p-6 ${
-                plan.featured
-                  ? "border-amber-gold ring-1 ring-amber-gold"
-                  : "border-charcoal/15"
+                plan.featured ? 'border-amber-gold ring-1 ring-amber-gold' : 'border-charcoal/15'
               }`}
             >
               {plan.featured && (
@@ -157,19 +155,11 @@ export default function PricingPage() {
               )}
 
               <div className="mb-4">
-                <h3 className="font-headline text-xl text-brand-black mb-1">
-                  {plan.name}
-                </h3>
-                <p className="font-subhead text-xs text-charcoal/60 mb-3">
-                  {plan.tagline}
-                </p>
+                <h3 className="font-headline text-xl text-brand-black mb-1">{plan.name}</h3>
+                <p className="font-subhead text-xs text-charcoal/60 mb-3">{plan.tagline}</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="font-headline text-3xl text-brand-black">
-                    {plan.price}
-                  </span>
-                  <span className="font-subhead text-sm text-charcoal/50">
-                    {plan.period}
-                  </span>
+                  <span className="font-headline text-3xl text-brand-black">{plan.price}</span>
+                  <span className="font-subhead text-sm text-charcoal/50">{plan.period}</span>
                 </div>
               </div>
 
@@ -192,10 +182,10 @@ export default function PricingPage() {
                 asChild
                 className={`w-full rounded-full font-body font-bold min-h-[44px] h-auto text-sm ${
                   plan.featured
-                    ? "bg-amber-gold text-brand-black hover:bg-light-gold"
-                    : plan.key === "free"
-                    ? "bg-brand-black text-white hover:bg-charcoal"
-                    : "border border-brand-black bg-white text-brand-black hover:bg-brand-black hover:text-white transition-colors"
+                    ? 'bg-amber-gold text-brand-black hover:bg-light-gold'
+                    : plan.key === 'free'
+                      ? 'bg-brand-black text-white hover:bg-charcoal'
+                      : 'border border-brand-black bg-white text-brand-black hover:bg-brand-black hover:text-white transition-colors'
                 }`}
               >
                 <Link href={plan.href}>{plan.cta}</Link>
@@ -217,9 +207,7 @@ export default function PricingPage() {
             <span className="inline-block rounded-full bg-amber-gold/15 text-amber-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Limited Inventory
             </span>
-            <h3 className="font-headline text-lg text-brand-black mb-1">
-              Sponsored Spotlight
-            </h3>
+            <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
             <p className="font-subhead text-sm text-charcoal mb-3">
               High-visibility placement on the BLACQList homepage, city pages, and category views.
             </p>
@@ -240,9 +228,7 @@ export default function PricingPage() {
             <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Pay Once
             </span>
-            <h3 className="font-headline text-lg text-brand-black mb-1">
-              BLACQ Boost
-            </h3>
+            <h3 className="font-headline text-lg text-brand-black mb-1">BLACQ Boost</h3>
             <p className="font-subhead text-sm text-charcoal mb-3">
               Boost your listing in search results and category pages for a focused 30-day window.
             </p>
@@ -278,9 +264,7 @@ export default function PricingPage() {
                   +
                 </span>
               </summary>
-              <p className="mt-3 font-body text-sm text-charcoal leading-relaxed">
-                {item.a}
-              </p>
+              <p className="mt-3 font-body text-sm text-charcoal leading-relaxed">{item.a}</p>
             </details>
           ))}
         </div>
@@ -296,10 +280,12 @@ export default function PricingPage() {
             id="sponsor-teaser-heading"
             className="font-headline text-3xl md:text-4xl text-white mb-4"
           >
-            Sponsor the platform powering<br className="hidden sm:block" /> Black economic discovery.
+            Sponsor the platform powering
+            <br className="hidden sm:block" /> Black economic discovery.
           </h2>
           <p className="font-subhead text-pale-lavender text-base max-w-lg mx-auto mb-8">
-            Partner with The BLACQList to reach an engaged, intentional audience that spends with purpose.
+            Partner with The BLACQList to reach an engaged, intentional audience that spends with
+            purpose.
           </p>
           <Button
             asChild

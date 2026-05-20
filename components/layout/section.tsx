@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils"
-import { Container } from "@/components/layout/container"
+import { cn } from '@/lib/utils'
+import { Container } from '@/components/layout/container'
 
-type SectionVariant = "white" | "cream" | "deep-bg" | "pale-lavender" | "brand-black"
+type SectionVariant = 'white' | 'cream' | 'deep-bg' | 'pale-lavender' | 'brand-black'
 
 interface SectionProps {
   children: React.ReactNode
@@ -12,18 +12,18 @@ interface SectionProps {
 }
 
 const variantClasses: Record<SectionVariant, string> = {
-  white: "bg-white",
-  cream: "bg-cream",
-  "deep-bg": "bg-deep-bg",
-  "pale-lavender": "bg-pale-lavender",
-  "brand-black": "bg-brand-black",
+  white: 'bg-white',
+  cream: 'bg-cream',
+  'deep-bg': 'bg-deep-bg',
+  'pale-lavender': 'bg-pale-lavender',
+  'brand-black': 'bg-brand-black',
 }
 
 export function Section({
   children,
-  variant = "white",
+  variant = 'white',
   id,
-  as: Tag = "section",
+  as: Tag = 'section',
   className,
 }: SectionProps) {
   return (

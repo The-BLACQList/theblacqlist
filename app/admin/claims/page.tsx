@@ -1,24 +1,24 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
-export const metadata: Metadata = { title: "Claims" }
+export const metadata: Metadata = { title: 'Claims' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  owner: "Owner",
-  manager: "Manager",
-  authorized_agent: "Authorized Agent",
+  owner: 'Owner',
+  manager: 'Manager',
+  authorized_agent: 'Authorized Agent',
 }
 
 interface PageProps {
@@ -27,7 +27,7 @@ interface PageProps {
 
 export default async function AdminClaimsPage({ searchParams }: PageProps) {
   await requireAdmin()
-  const { status = "pending", page = "1" } = await searchParams
+  const { status = 'pending', page = '1' } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page))
   const limit = 25
@@ -36,13 +36,13 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
   const serviceClient = createServiceClient()
 
   const { data: claims, count } = await serviceClient
-    .from("claims")
+    .from('claims')
     .select(
-      "id, status, role_at_business, submitted_at, created_at, claimant_user_id, listing_id, listings!claims_listing_id_fkey(name, entity_type)",
-      { count: "exact" }
+      'id, status, role_at_business, submitted_at, created_at, claimant_user_id, listing_id, listings!claims_listing_id_fkey(name, entity_type)',
+      { count: 'exact' }
     )
-    .eq("status", status)
-    .order("submitted_at", { ascending: true })
+    .eq('status', status)
+    .order('submitted_at', { ascending: true })
     .range(offset, offset + limit - 1)
 
   const totalPages = Math.ceil((count ?? 0) / limit)
@@ -55,19 +55,19 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
   const profileMap: Record<string, string> = {}
   if (claimantIds.length > 0) {
     const { data: profiles } = await serviceClient
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", claimantIds)
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', claimantIds)
     for (const p of profiles ?? []) {
       if (p.display_name) profileMap[p.id] = p.display_name
     }
   }
 
   const STATUS_TABS = [
-    { value: "pending", label: "Pending" },
-    { value: "under_review", label: "Under Review" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
+    { value: 'pending', label: 'Pending' },
+    { value: 'under_review', label: 'Under Review' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' },
   ]
 
   return (
@@ -87,8 +87,8 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
             href={`/admin/claims?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? "border-amber-gold text-amber-gold"
-                : "border-transparent text-charcoal/60 hover:text-brand-black"
+                ? 'border-amber-gold text-amber-gold'
+                : 'border-transparent text-charcoal/60 hover:text-brand-black'
             }`}
           >
             {label}
@@ -100,12 +100,12 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
       {!claims || claims.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal/60">
-            No {status.replace(/_/g, " ")} claims found.
+            No {status.replace(/_/g, ' ')} claims found.
           </p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
-          <table className="w-full text-sm" aria-label={`${status.replace(/_/g, " ")} claims`}>
+          <table className="w-full text-sm" aria-label={`${status.replace(/_/g, ' ')} claims`}>
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
@@ -130,8 +130,8 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
               {claims.map((claim) => {
                 const listing = claim.listings as { name: string; entity_type: string } | null
                 const claimantName = claim.claimant_user_id
-                  ? (profileMap[claim.claimant_user_id] ?? "Unknown user")
-                  : "Unknown user"
+                  ? (profileMap[claim.claimant_user_id] ?? 'Unknown user')
+                  : 'Unknown user'
                 const dateStr = claim.submitted_at ?? claim.created_at
                 return (
                   <tr key={claim.id} className="hover:bg-[#f9f9fb] transition-colors">
@@ -145,11 +145,11 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <p className="font-subhead text-sm font-semibold text-brand-black">
-                        {listing?.name ?? "—"}
+                        {listing?.name ?? '—'}
                       </p>
                       {listing?.entity_type && (
                         <p className="font-body text-xs text-charcoal/60 capitalize mt-0.5">
-                          {listing.entity_type.replace(/_/g, " ")}
+                          {listing.entity_type.replace(/_/g, ' ')}
                         </p>
                       )}
                     </td>
@@ -157,7 +157,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                       <span className="font-body text-xs text-charcoal/60">
                         {claim.role_at_business
                           ? (ROLE_LABELS[claim.role_at_business] ?? claim.role_at_business)
-                          : "—"}
+                          : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -172,7 +172,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                       <Link
                         href={`/admin/claims/${claim.id}`}
                         className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
-                        aria-label={`Review claim from ${claimantName}${listing?.name ? ` for ${listing.name}` : ""}`}
+                        aria-label={`Review claim from ${claimantName}${listing?.name ? ` for ${listing.name}` : ''}`}
                       >
                         Review →
                       </Link>

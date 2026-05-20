@@ -1,39 +1,39 @@
-import Link from "next/link"
-import Image from "next/image"
-import type { Route } from "next"
-import { BookmarkPlus } from "lucide-react"
+import Link from 'next/link'
+import Image from 'next/image'
+import type { Route } from 'next'
+import { BookmarkPlus } from 'lucide-react'
 
-import { StatusBadge } from "@/components/ui/status-badge"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import type { DiscoveryEntity } from "@/types"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { StatusBadge } from '@/components/ui/status-badge'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import type { DiscoveryEntity } from '@/types'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 interface EntityCardProps {
   entity: DiscoveryEntity
   className?: string
 }
 
-const ENTITY_TYPE_LABELS: Record<DiscoveryEntity["entity_type"], string> = {
-  business: "Business",
-  professional: "Professional",
-  creative: "Creative",
-  event: "Event",
-  job: "Job",
-  vendor: "Vendor",
+const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
+  business: 'Business',
+  professional: 'Professional',
+  creative: 'Creative',
+  event: 'Event',
+  job: 'Job',
+  vendor: 'Vendor',
 }
 
 function getLocationString(entity: DiscoveryEntity): string {
   const { location_type, city } = entity
-  if (location_type === "online") return "Online"
-  if (location_type === "virtual-services") return "Virtual Services"
-  if (location_type === "ships-nationwide") return "Ships Nationwide"
+  if (location_type === 'online') return 'Online'
+  if (location_type === 'virtual-services') return 'Virtual Services'
+  if (location_type === 'ships-nationwide') return 'Ships Nationwide'
   if (city) {
     const base = `${city.name}, ${city.state_abbr}`
-    return location_type === "hybrid" ? `${base} · Hybrid` : base
+    return location_type === 'hybrid' ? `${base} · Hybrid` : base
   }
-  return "Multiple Locations"
+  return 'Multiple Locations'
 }
 
 function getEntityHref(entity: DiscoveryEntity): string {
@@ -42,17 +42,14 @@ function getEntityHref(entity: DiscoveryEntity): string {
 
 function CoverPlaceholder({ name }: { name: string }) {
   const initials = name
-    .split(" ")
-    .filter(w => /^[A-Za-z]/.test(w))
+    .split(' ')
+    .filter((w) => /^[A-Za-z]/.test(w))
     .slice(0, 2)
-    .map(w => w[0] ?? "")
-    .join("")
+    .map((w) => w[0] ?? '')
+    .join('')
     .toUpperCase()
   return (
-    <div
-      className="w-full h-full bg-deep-bg flex items-center justify-center"
-      aria-hidden="true"
-    >
+    <div className="w-full h-full bg-deep-bg flex items-center justify-center" aria-hidden="true">
       <span className="font-headline text-4xl text-amber-gold select-none">{initials}</span>
     </div>
   )
@@ -65,7 +62,7 @@ export function EntityCard({ entity, className }: EntityCardProps) {
   return (
     <article
       className={cn(
-        "group bg-white rounded-xl border border-charcoal/10 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200",
+        'group bg-white rounded-xl border border-charcoal/10 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-200',
         className
       )}
     >

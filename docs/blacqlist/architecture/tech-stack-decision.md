@@ -17,25 +17,25 @@ Stack choices made for MVP must hold through all four phases without triggering 
 
 ## Stack Summary
 
-| Layer | Choice | Phase introduced |
-|---|---|---|
-| Framework | Next.js 14+ with App Router | Phase 0 |
-| Language | TypeScript (strict mode) | Phase 0 |
-| Styling | Tailwind CSS | Phase 0 |
-| Components | shadcn/ui | Phase 0 |
-| Database | Supabase + PostgreSQL | Phase 0 |
-| Database schema pattern | Base + extension tables | Phase 0 |
-| Auth | Supabase Auth | Phase 0 |
-| Storage | Supabase Storage | Phase 0 |
-| Search (MVP) | PostgreSQL FTS (tsvector + pg_trgm) | Phase 1 |
-| Email | Resend + React Email | Phase 1 |
-| Error tracking | Sentry | Phase 0 |
-| Analytics | Vercel Analytics + custom events table | Phase 1 |
-| Hosting | Vercel | Phase 0 |
-| Payments — subscriptions | Stripe (subscriptions) | V1 |
-| Payments — marketplace | Stripe Connect | V2 |
-| Search (upgraded) | Algolia | V2 (conditional) |
-| AI | Anthropic Claude API | V2 |
+| Layer                    | Choice                                 | Phase introduced |
+| ------------------------ | -------------------------------------- | ---------------- |
+| Framework                | Next.js 14+ with App Router            | Phase 0          |
+| Language                 | TypeScript (strict mode)               | Phase 0          |
+| Styling                  | Tailwind CSS                           | Phase 0          |
+| Components               | shadcn/ui                              | Phase 0          |
+| Database                 | Supabase + PostgreSQL                  | Phase 0          |
+| Database schema pattern  | Base + extension tables                | Phase 0          |
+| Auth                     | Supabase Auth                          | Phase 0          |
+| Storage                  | Supabase Storage                       | Phase 0          |
+| Search (MVP)             | PostgreSQL FTS (tsvector + pg_trgm)    | Phase 1          |
+| Email                    | Resend + React Email                   | Phase 1          |
+| Error tracking           | Sentry                                 | Phase 0          |
+| Analytics                | Vercel Analytics + custom events table | Phase 1          |
+| Hosting                  | Vercel                                 | Phase 0          |
+| Payments — subscriptions | Stripe (subscriptions)                 | V1               |
+| Payments — marketplace   | Stripe Connect                         | V2               |
+| Search (upgraded)        | Algolia                                | V2 (conditional) |
+| AI                       | Anthropic Claude API                   | V2               |
 
 ---
 
@@ -47,11 +47,11 @@ Next.js 14+ with the App Router. No alternatives under active consideration.
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Remix | Excellent data loading patterns (loaders/actions are well-designed), but ISR is not a first-class primitive. BLACQList Pages must be cacheable at the edge with periodic revalidation — Remix's model is closer to "SSR or nothing." Smaller ecosystem also means more unsupported third-party integrations. |
-| SvelteKit | Strong performance profile and clean DX, but smaller talent pool and fewer established patterns for the enterprise-adjacent concerns on this platform (multi-role auth with middleware, Supabase RLS integration, complex SEO metadata APIs). Not the right fit for a team that needs to move fast on a proven scaffold. |
-| Vite + React SPA | Excellent for apps where SEO is irrelevant. Rules out SSR entirely without a significant additional layer. Every BLACQList Page is a public-facing, Google-indexed entity page — SPA rendering is a non-starter. |
+| Alternative      | Why rejected                                                                                                                                                                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Remix            | Excellent data loading patterns (loaders/actions are well-designed), but ISR is not a first-class primitive. BLACQList Pages must be cacheable at the edge with periodic revalidation — Remix's model is closer to "SSR or nothing." Smaller ecosystem also means more unsupported third-party integrations.             |
+| SvelteKit        | Strong performance profile and clean DX, but smaller talent pool and fewer established patterns for the enterprise-adjacent concerns on this platform (multi-role auth with middleware, Supabase RLS integration, complex SEO metadata APIs). Not the right fit for a team that needs to move fast on a proven scaffold. |
+| Vite + React SPA | Excellent for apps where SEO is irrelevant. Rules out SSR entirely without a significant additional layer. Every BLACQList Page is a public-facing, Google-indexed entity page — SPA rendering is a non-starter.                                                                                                         |
 
 ### Why Next.js wins for this project
 
@@ -107,11 +107,11 @@ Tailwind CSS for all styling. No CSS-in-JS. No CSS Modules for component-level s
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| CSS Modules | Viable, but verbose for a component-heavy product. Switching between `.tsx` and `.module.css` for every component adds friction without meaningful benefit. Tailwind's purging gives equivalent bundle size control. |
+| Alternative                 | Why rejected                                                                                                                                                                                                                                                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CSS Modules                 | Viable, but verbose for a component-heavy product. Switching between `.tsx` and `.module.css` for every component adds friction without meaningful benefit. Tailwind's purging gives equivalent bundle size control.                                                                                             |
 | styled-components / Emotion | Runtime CSS-in-JS conflicts with Server Components — styled-components cannot be used in Server Components without client boundary wrapping every styled element. This would force most of the component tree to be Client Components, eliminating the Server Component benefits chosen for the framework layer. |
-| Vanilla Extract | Zero-runtime CSS-in-JS with excellent TypeScript integration, but niche adoption means fewer patterns, examples, and shadcn/ui integration. Not worth the learning overhead for a small team on a deadline. |
+| Vanilla Extract             | Zero-runtime CSS-in-JS with excellent TypeScript integration, but niche adoption means fewer patterns, examples, and shadcn/ui integration. Not worth the learning overhead for a small team on a deadline.                                                                                                      |
 
 ### Why Tailwind wins for this project
 
@@ -139,12 +139,12 @@ shadcn/ui as the base component library for all common UI patterns. Components a
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Radix UI directly | shadcn/ui is built on Radix primitives. Using Radix directly means building the styled layer from scratch — high build cost for buttons, dialogs, dropdowns, selects, forms. shadcn/ui gives the Radix accessibility guarantees with pre-built styling. |
-| MUI / Ant Design | Opinionated visual systems that conflict with The BLACQList brand. Customizing MUI to match a custom brand requires deeper overrides than starting from shadcn/ui. Bundle size is also significantly larger. |
-| Headless UI (Tailwind Labs) | Limited component count. No form components, no date pickers, limited table utilities. Would require supplementing with additional libraries for basic patterns. |
-| Chakra UI | Strong DX and accessibility, but uses CSS-in-JS (Emotion) internally — same Server Component incompatibility issue as styled-components. |
+| Alternative                 | Why rejected                                                                                                                                                                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Radix UI directly           | shadcn/ui is built on Radix primitives. Using Radix directly means building the styled layer from scratch — high build cost for buttons, dialogs, dropdowns, selects, forms. shadcn/ui gives the Radix accessibility guarantees with pre-built styling. |
+| MUI / Ant Design            | Opinionated visual systems that conflict with The BLACQList brand. Customizing MUI to match a custom brand requires deeper overrides than starting from shadcn/ui. Bundle size is also significantly larger.                                            |
+| Headless UI (Tailwind Labs) | Limited component count. No form components, no date pickers, limited table utilities. Would require supplementing with additional libraries for basic patterns.                                                                                        |
+| Chakra UI                   | Strong DX and accessibility, but uses CSS-in-JS (Emotion) internally — same Server Component incompatibility issue as styled-components.                                                                                                                |
 
 ### Why shadcn/ui wins for this project
 
@@ -172,12 +172,12 @@ Supabase as the managed PostgreSQL platform. All data stored in PostgreSQL. Row 
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Firebase Firestore | NoSQL document model is a poor fit for the entity content model. The platform has 8 entity types, each with a distinct extension table, plus junction tables for saves, claims, reviews, and subcategories. Relational queries (all businesses in city X with category Y sorted by trust tier) require SQL — Firestore's query model cannot express these without denormalization that creates significant consistency burdens. No SQL analytics layer. |
-| PlanetScale (MySQL) | Excellent serverless MySQL, but: (1) MySQL full-text search is weaker than PostgreSQL `tsvector` + `pg_trgm` for the MVP search tier; (2) no PostGIS support for V2 geo features; (3) no integrated Auth or Storage — adds two separate services to the stack; (4) branching model is useful for schema iteration but adds operational overhead for a small team. |
-| Neon (serverless Postgres) | Strong technical choice — branching is excellent for schema migrations. But Neon is Postgres-only: it provides no Auth, no Storage, no RLS managed UI, no Realtime. Adopting Neon means building or integrating auth (Auth.js or Clerk), storage (S3 or Cloudflare R2), and a permission layer separately. Total integration surface is significantly larger. |
-| PocketBase | Interesting self-hosted option but not managed — adds infrastructure responsibility for a small team. Not appropriate for a platform expecting 50K listings and 1M monthly requests at maturity. |
+| Alternative                | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Firebase Firestore         | NoSQL document model is a poor fit for the entity content model. The platform has 8 entity types, each with a distinct extension table, plus junction tables for saves, claims, reviews, and subcategories. Relational queries (all businesses in city X with category Y sorted by trust tier) require SQL — Firestore's query model cannot express these without denormalization that creates significant consistency burdens. No SQL analytics layer. |
+| PlanetScale (MySQL)        | Excellent serverless MySQL, but: (1) MySQL full-text search is weaker than PostgreSQL `tsvector` + `pg_trgm` for the MVP search tier; (2) no PostGIS support for V2 geo features; (3) no integrated Auth or Storage — adds two separate services to the stack; (4) branching model is useful for schema iteration but adds operational overhead for a small team.                                                                                       |
+| Neon (serverless Postgres) | Strong technical choice — branching is excellent for schema migrations. But Neon is Postgres-only: it provides no Auth, no Storage, no RLS managed UI, no Realtime. Adopting Neon means building or integrating auth (Auth.js or Clerk), storage (S3 or Cloudflare R2), and a permission layer separately. Total integration surface is significantly larger.                                                                                           |
+| PocketBase                 | Interesting self-hosted option but not managed — adds infrastructure responsibility for a small team. Not appropriate for a platform expecting 50K listings and 1M monthly requests at maturity.                                                                                                                                                                                                                                                        |
 
 ### Why Supabase wins for this project
 
@@ -209,16 +209,17 @@ All entity types share a single `listings` base table. Entity-type-specific fiel
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Single table with all columns nullable | Produces a 200+ column table at full entity-type coverage. Query performance degrades on tables with this many columns, even with selective indexing. Schema clarity is destroyed — it becomes impossible to tell which fields apply to which entity type without documentation. Any migration to add a field to one entity type requires `ALTER TABLE` on the main table, which locks the table in PostgreSQL. |
-| EAV (Entity-Attribute-Value) | Maximum flexibility for arbitrary field addition, but catastrophic query performance. A query for "all businesses in Atlanta with hours set, a CTA, and a cover image" requires joining the EAV table multiple times with string attribute names. No type safety. No foreign key enforcement on values. Not viable for a platform that indexes and searches on structured fields. |
-| JSONB supplement column | A `jsonb` column appended to a smaller base table. Better than EAV but still unindexable for filtered queries. The platform's search and filter needs (filter by `price_range`, `location_type`, `cta_type`, `trust_tier`) require indexed structured columns, not JSONB extraction. |
-| Separate table per entity type with no shared base | Eliminates the shared base concept. Discovery, search, SEO, trust, admin, and status fields would be duplicated across 8 tables. Any cross-entity-type query (search results across all types, admin listing queue) requires a UNION or a more complex query. Any change to a shared field (adding `is_sponsored`) requires 8 migrations. |
+| Alternative                                        | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single table with all columns nullable             | Produces a 200+ column table at full entity-type coverage. Query performance degrades on tables with this many columns, even with selective indexing. Schema clarity is destroyed — it becomes impossible to tell which fields apply to which entity type without documentation. Any migration to add a field to one entity type requires `ALTER TABLE` on the main table, which locks the table in PostgreSQL. |
+| EAV (Entity-Attribute-Value)                       | Maximum flexibility for arbitrary field addition, but catastrophic query performance. A query for "all businesses in Atlanta with hours set, a CTA, and a cover image" requires joining the EAV table multiple times with string attribute names. No type safety. No foreign key enforcement on values. Not viable for a platform that indexes and searches on structured fields.                               |
+| JSONB supplement column                            | A `jsonb` column appended to a smaller base table. Better than EAV but still unindexable for filtered queries. The platform's search and filter needs (filter by `price_range`, `location_type`, `cta_type`, `trust_tier`) require indexed structured columns, not JSONB extraction.                                                                                                                            |
+| Separate table per entity type with no shared base | Eliminates the shared base concept. Discovery, search, SEO, trust, admin, and status fields would be duplicated across 8 tables. Any cross-entity-type query (search results across all types, admin listing queue) requires a UNION or a more complex query. Any change to a shared field (adding `is_sponsored`) requires 8 migrations.                                                                       |
 
 ### Why base + extension wins for this project
 
 The platform's search, discovery, SEO, trust, and admin workflows operate on fields that apply identically to every entity type. A unified `listings` base table means:
+
 - A single `tsvector` column covers all entity types for full-text search.
 - The admin claims queue is a single query against `listings.status = 'pending'`.
 - RLS policies on `listings` apply to all entity types without duplication.
@@ -244,11 +245,11 @@ Supabase Auth for all authentication flows. JWT sessions in httpOnly cookies via
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Clerk | Excellent DX, pre-built UI components (sign-in/sign-up forms), strong user management dashboard. Rejected because: (1) Clerk's session tokens require a custom adapter to integrate with Supabase RLS — RLS policies use `auth.uid()` which is populated from Supabase's JWT, not Clerk's; (2) minimum cost $25/mo; (3) maintaining two auth systems (Clerk for identity, Supabase for RLS) creates a synchronization surface that breaks in subtle ways when users are deleted or roles change. |
-| Auth.js (NextAuth) | Good for OAuth-heavy products. Rejected because: Supabase RLS requires Supabase's JWT structure. Auth.js sessions require a custom adapter to emit Supabase-compatible JWTs and keep sessions synchronized with Supabase's session store. High integration risk for a small team. |
-| Custom JWT | Full control but high implementation risk. Password hashing, token refresh, session invalidation, email verification, and password reset flows are all non-trivial to implement securely. A small team building a platform on a 6–10 week MVP timeline should not be writing custom auth. |
+| Alternative        | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Clerk              | Excellent DX, pre-built UI components (sign-in/sign-up forms), strong user management dashboard. Rejected because: (1) Clerk's session tokens require a custom adapter to integrate with Supabase RLS — RLS policies use `auth.uid()` which is populated from Supabase's JWT, not Clerk's; (2) minimum cost $25/mo; (3) maintaining two auth systems (Clerk for identity, Supabase for RLS) creates a synchronization surface that breaks in subtle ways when users are deleted or roles change. |
+| Auth.js (NextAuth) | Good for OAuth-heavy products. Rejected because: Supabase RLS requires Supabase's JWT structure. Auth.js sessions require a custom adapter to emit Supabase-compatible JWTs and keep sessions synchronized with Supabase's session store. High integration risk for a small team.                                                                                                                                                                                                                |
+| Custom JWT         | Full control but high implementation risk. Password hashing, token refresh, session invalidation, email verification, and password reset flows are all non-trivial to implement securely. A small team building a platform on a 6–10 week MVP timeline should not be writing custom auth.                                                                                                                                                                                                        |
 
 ### Why Supabase Auth wins for this project
 
@@ -278,11 +279,11 @@ Supabase Storage for all user-uploaded media. Three buckets: `listing-media` (pu
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| AWS S3 | Most mature option. Rejected because: adds a separate AWS credential surface (IAM users, access keys, bucket policies); no native Supabase Auth integration for private bucket access; adds operational overhead for a small team managing an already multi-surface stack. |
-| Cloudflare R2 | Cost-effective (no egress fees), S3-compatible API. Rejected because: still adds a separate service; no auth-integrated bucket policy model; adds another vendor relationship to manage. |
-| Uploadthing | Excellent DX for Next.js file uploads. Rejected because: another vendor; less control over private bucket policy; no integration with Supabase Auth for access control. At the scale of a few thousand uploads, Uploadthing is fine — but the verification document bucket has strict access requirements that are easier to enforce natively in Supabase. |
+| Alternative   | Why rejected                                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AWS S3        | Most mature option. Rejected because: adds a separate AWS credential surface (IAM users, access keys, bucket policies); no native Supabase Auth integration for private bucket access; adds operational overhead for a small team managing an already multi-surface stack.                                                                                 |
+| Cloudflare R2 | Cost-effective (no egress fees), S3-compatible API. Rejected because: still adds a separate service; no auth-integrated bucket policy model; adds another vendor relationship to manage.                                                                                                                                                                   |
+| Uploadthing   | Excellent DX for Next.js file uploads. Rejected because: another vendor; less control over private bucket policy; no integration with Supabase Auth for access control. At the scale of a few thousand uploads, Uploadthing is fine — but the verification document bucket has strict access requirements that are easier to enforce natively in Supabase. |
 
 ### Why Supabase Storage wins for this project
 
@@ -310,14 +311,14 @@ PostgreSQL full-text search (`tsvector` + `GIN` index + `pg_trgm`) at MVP and ea
 
 A `search_vector` column of type `tsvector` on the `listings` base table, automatically maintained by a trigger that regenerates the vector on any relevant field change. The vector is a weighted combination of:
 
-| Field | Weight | Rationale |
-|---|---|---|
-| `name` | A (highest) | Business name is the most intent-aligned signal |
-| Category name (denormalized) | B | Category is the second most common search intent |
-| `tagline` | B | Punchy descriptor that often matches user vocabulary |
-| Description (business/event/job) | C | Longer-form content, lower precision |
-| City name | D | Geo context — supports "barbershop Atlanta" queries |
-| Social and contact fields | Excluded | Not search-relevant |
+| Field                            | Weight      | Rationale                                            |
+| -------------------------------- | ----------- | ---------------------------------------------------- |
+| `name`                           | A (highest) | Business name is the most intent-aligned signal      |
+| Category name (denormalized)     | B           | Category is the second most common search intent     |
+| `tagline`                        | B           | Punchy descriptor that often matches user vocabulary |
+| Description (business/event/job) | C           | Longer-form content, lower precision                 |
+| City name                        | D           | Geo context — supports "barbershop Atlanta" queries  |
+| Social and contact fields        | Excluded    | Not search-relevant                                  |
 
 A `GIN` index on `search_vector` keeps query times below 100ms at 5,000 listings. `pg_trgm` with a `GIN` index on `listings.name` handles typo-tolerant name matching ("Sweet Aubrn BBQ" → "Sweet Auburn BBQ").
 
@@ -338,13 +339,13 @@ The upgrade to Algolia is triggered by **any one** of the following:
 
 ### Why Algolia over Typesense for the upgrade
 
-| Factor | Algolia | Typesense |
-|---|---|---|
-| Managed reliability | SLA-backed, globally distributed | Self-hosted or managed cloud (higher ops burden) |
-| React integration | InstantSearch for React is mature and well-documented | Typesense InstantSearch exists but smaller community |
-| Neural / semantic search | Available (Algolia NeuralSearch) | Available but less mature |
-| Cost | $0.50/1K searches | Cheaper at scale, but infrastructure management overhead |
-| Index sync tooling | Official Supabase + Algolia integration documented | Requires custom sync pipeline |
+| Factor                   | Algolia                                               | Typesense                                                |
+| ------------------------ | ----------------------------------------------------- | -------------------------------------------------------- |
+| Managed reliability      | SLA-backed, globally distributed                      | Self-hosted or managed cloud (higher ops burden)         |
+| React integration        | InstantSearch for React is mature and well-documented | Typesense InstantSearch exists but smaller community     |
+| Neural / semantic search | Available (Algolia NeuralSearch)                      | Available but less mature                                |
+| Cost                     | $0.50/1K searches                                     | Cheaper at scale, but infrastructure management overhead |
+| Index sync tooling       | Official Supabase + Algolia integration documented    | Requires custom sync pipeline                            |
 
 For a small team on a managed hosting stack, Algolia's operational simplicity at V2 scale outweighs Typesense's cost advantage. The cost difference becomes relevant at high search volume — at that point, the team has more operational capacity to evaluate self-hosted options.
 
@@ -366,11 +367,11 @@ Resend for transactional email delivery. React Email for template authoring.
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| SendGrid | Industry standard. Rejected because: template authoring is HTML string editing or a drag-and-drop builder — not JSX. For a team working in React and TypeScript, switching to HTML-based email templates is a context switch that produces inconsistent brand output. Deliverability is strong but not decisively better than Resend for a platform at this scale. |
-| Postmark | Excellent deliverability, especially for transactional email. Rejected because: no React Email integration at a supported level; template authoring is Handlebars-based. |
-| AWS SES | Cheapest at scale (approximately $0.10 per 1,000 emails). Rejected because: SES requires manual deliverability configuration (DKIM, SPF, DMARC, feedback loop setup, sandbox removal process) that adds operational overhead before the first email is sent. Not appropriate for a small team launching on a deadline. |
+| Alternative | Why rejected                                                                                                                                                                                                                                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SendGrid    | Industry standard. Rejected because: template authoring is HTML string editing or a drag-and-drop builder — not JSX. For a team working in React and TypeScript, switching to HTML-based email templates is a context switch that produces inconsistent brand output. Deliverability is strong but not decisively better than Resend for a platform at this scale. |
+| Postmark    | Excellent deliverability, especially for transactional email. Rejected because: no React Email integration at a supported level; template authoring is Handlebars-based.                                                                                                                                                                                           |
+| AWS SES     | Cheapest at scale (approximately $0.10 per 1,000 emails). Rejected because: SES requires manual deliverability configuration (DKIM, SPF, DMARC, feedback loop setup, sandbox removal process) that adds operational overhead before the first email is sent. Not appropriate for a small team launching on a deadline.                                             |
 
 ### Why Resend wins for this project
 
@@ -396,11 +397,11 @@ Stripe for all payment flows. V1: Stripe subscriptions for listing tier upgrades
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Paddle | Handles VAT/sales tax automatically — a genuine advantage for international SaaS. Rejected because: Paddle does not have an equivalent of Stripe Connect for marketplace vendor payouts. The platform's V2 roadmap requires paying out to vendors for marketplace orders. Introducing Paddle for V1 subscriptions and then Stripe for V2 payouts means running two payment providers — which is worse than running Stripe for both phases. |
-| LemonSqueezy | Excellent DX for simple SaaS subscriptions. Rejected for the same reason as Paddle: no Connect-equivalent for marketplace payouts. |
-| Braintree (PayPal) | Technically supports marketplace payouts. Rejected because: developer experience is significantly worse than Stripe; fewer Next.js integration examples; PayPal association may create trust concerns for a community platform where cultural credibility matters. |
+| Alternative        | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Paddle             | Handles VAT/sales tax automatically — a genuine advantage for international SaaS. Rejected because: Paddle does not have an equivalent of Stripe Connect for marketplace vendor payouts. The platform's V2 roadmap requires paying out to vendors for marketplace orders. Introducing Paddle for V1 subscriptions and then Stripe for V2 payouts means running two payment providers — which is worse than running Stripe for both phases. |
+| LemonSqueezy       | Excellent DX for simple SaaS subscriptions. Rejected for the same reason as Paddle: no Connect-equivalent for marketplace payouts.                                                                                                                                                                                                                                                                                                         |
+| Braintree (PayPal) | Technically supports marketplace payouts. Rejected because: developer experience is significantly worse than Stripe; fewer Next.js integration examples; PayPal association may create trust concerns for a community platform where cultural credibility matters.                                                                                                                                                                         |
 
 ### Why Stripe wins for this project
 
@@ -430,12 +431,12 @@ Anthropic Claude API for all AI features at V2+. All AI calls are server-side on
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| OpenAI GPT-4o | Strong capability, dominant market share, excellent API. Rejected for two reasons: (1) OpenAI's model training data usage policies create a concern for a community-trust platform where user-submitted business content may be ingested into training pipelines — this is a brand alignment issue for The BLACQList; (2) Anthropic's Claude models have demonstrated stronger performance on nuanced content generation tasks (business description writing, reasoning traces) in the use cases this platform needs. |
-| Cohere | Strong for semantic embeddings and RAG. Weaker for the conversational discovery and content generation use cases that define V2 AI features. |
-| Google Gemini | Improving but less established API ecosystem, fewer Next.js integration patterns, and trust positioning is less aligned with the platform's community values. |
-| On-device / edge models | Insufficient capability for conversational discovery (requires multi-turn reasoning with ranking) and description generation (requires brand-appropriate writing quality). |
+| Alternative             | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenAI GPT-4o           | Strong capability, dominant market share, excellent API. Rejected for two reasons: (1) OpenAI's model training data usage policies create a concern for a community-trust platform where user-submitted business content may be ingested into training pipelines — this is a brand alignment issue for The BLACQList; (2) Anthropic's Claude models have demonstrated stronger performance on nuanced content generation tasks (business description writing, reasoning traces) in the use cases this platform needs. |
+| Cohere                  | Strong for semantic embeddings and RAG. Weaker for the conversational discovery and content generation use cases that define V2 AI features.                                                                                                                                                                                                                                                                                                                                                                          |
+| Google Gemini           | Improving but less established API ecosystem, fewer Next.js integration patterns, and trust positioning is less aligned with the platform's community values.                                                                                                                                                                                                                                                                                                                                                         |
+| On-device / edge models | Insufficient capability for conversational discovery (requires multi-turn reasoning with ranking) and description generation (requires brand-appropriate writing quality).                                                                                                                                                                                                                                                                                                                                            |
 
 ### Why Anthropic wins for this project
 
@@ -463,12 +464,12 @@ Vercel Analytics for Core Web Vitals and page-level traffic metrics at MVP. A cu
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected (at MVP) |
-|---|---|
+| Alternative         | Why rejected (at MVP)                                                                                                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PostHog immediately | Open source with strong product analytics, self-hostable, good Next.js integration. Deferred to V1, not rejected — PostHog is the documented V1 addition. MVP does not yet have validated metrics to analyze; adding full product analytics before there is data to act on is premature. |
-| Amplitude | Enterprise-grade funnel and cohort analysis. Rejected: pricing tier is higher than justified at MVP; product analytics maturity beyond MVP needs. |
-| Mixpanel | Strong funnel analytics, but another vendor relationship and cost. Deferred in favor of PostHog's data ownership model. |
-| Google Analytics 4 | Free. Rejected: data ownership concerns for a community platform; GA4's event model is less developer-friendly than PostHog; the platform's community-trust positioning makes data sovereignty a relevant consideration. |
+| Amplitude           | Enterprise-grade funnel and cohort analysis. Rejected: pricing tier is higher than justified at MVP; product analytics maturity beyond MVP needs.                                                                                                                                        |
+| Mixpanel            | Strong funnel analytics, but another vendor relationship and cost. Deferred in favor of PostHog's data ownership model.                                                                                                                                                                  |
+| Google Analytics 4  | Free. Rejected: data ownership concerns for a community platform; GA4's event model is less developer-friendly than PostHog; the platform's community-trust positioning makes data sovereignty a relevant consideration.                                                                 |
 
 ### Why this combination works
 
@@ -496,11 +497,11 @@ Vercel for all hosting. Edge Network for CDN. Preview deployments on every PR. S
 
 ### Alternatives evaluated
 
-| Alternative | Why rejected |
-|---|---|
-| Railway | Excellent DX for containerized backend services. Less optimized for Next.js ISR/SSR — cache management, edge middleware, and preview deploys require custom configuration that Vercel provides out of the box. |
-| Fly.io | Strong for always-on, globally distributed server processes. Better fit for long-running backend services than for a Next.js application with spiky discovery page traffic. Serverless edge model is more cost-efficient for the platform's traffic pattern. |
-| AWS Amplify | Strong CDN, but Next.js App Router support has historically lagged behind Vercel. App Router features (Server Components, Server Actions, streaming) are best supported on Vercel infrastructure. |
+| Alternative            | Why rejected                                                                                                                                                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Railway                | Excellent DX for containerized backend services. Less optimized for Next.js ISR/SSR — cache management, edge middleware, and preview deploys require custom configuration that Vercel provides out of the box.                                                                    |
+| Fly.io                 | Strong for always-on, globally distributed server processes. Better fit for long-running backend services than for a Next.js application with spiky discovery page traffic. Serverless edge model is more cost-efficient for the platform's traffic pattern.                      |
+| AWS Amplify            | Strong CDN, but Next.js App Router support has historically lagged behind Vercel. App Router features (Server Components, Server Actions, streaming) are best supported on Vercel infrastructure.                                                                                 |
 | Self-hosted on AWS/GCP | Full control and lowest cost at scale. Rejected: adds infrastructure management responsibility for a small team. CI/CD, health checks, autoscaling, TLS certificates, CDN configuration — all managed by Vercel at MVP and V1. Re-evaluate at V3+ if costs justify the migration. |
 
 ### Why Vercel wins for this project
@@ -531,10 +532,10 @@ Sentry for error tracking and performance monitoring, introduced at Phase 0.
 
 ### Alternatives evaluated
 
-| Alternative | Why not chosen |
-|---|---|
-| Datadog | More comprehensive observability platform, but higher cost and more configuration overhead than needed at MVP. Sentry's developer-centric DX is better suited to a small team. |
-| Bugsnag | Solid alternative to Sentry. Sentry has wider Next.js App Router integration documentation and a more active community around the specific patterns this platform uses. |
+| Alternative              | Why not chosen                                                                                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Datadog                  | More comprehensive observability platform, but higher cost and more configuration overhead than needed at MVP. Sentry's developer-centric DX is better suited to a small team.                 |
+| Bugsnag                  | Solid alternative to Sentry. Sentry has wider Next.js App Router integration documentation and a more active community around the specific patterns this platform uses.                        |
 | No error tracking at MVP | Not acceptable. A live, publicly accessible platform with user-created data and auth flows must have error visibility from day one. Discovering errors through user reports is not a strategy. |
 
 ### Why Sentry at Phase 0
@@ -551,13 +552,13 @@ Sentry covers all phases. No replacement planned. Datadog APM is evaluated at V3
 
 ## 16. Risk Register
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Supabase vendor lock-in makes future migration prohibitive | Medium | High | All database queries encapsulated in `lib/services/` using standard SQL. Storage paths (not URLs) stored in DB. Auth flows abstracted behind a service layer. Migration is expensive but feasible. |
-| Search quality failures at 50K+ listings drive user dissatisfaction before Algolia is deployed | High | Medium | Algolia upgrade path is documented and pre-scoped. Trigger conditions are specific and monitored. The upgrade is a planned event, not a reactive emergency. |
-| Stripe Connect application delay blocks V2 marketplace launch | Medium | High | Connect application submitted at V1 start, not V2 start. This gives 10–14 weeks of buffer. Timeline risk is flagged to the business at V1 planning. |
-| Vercel cost spikes at V1 traffic levels exceed budget | Low at MVP, Medium at V1 | Medium | ISR reduces per-request function cost for entity pages. Cost monitoring alerts configured at V1. Mitigation budget is identified before costs become a crisis. |
-| Next.js App Router instability from upstream changes breaks production builds | Low | Medium | Only stable, documented patterns are used. No bleeding-edge App Router features (parallel routes, intercepting routes) at MVP. Framework updates are tested on staging before merging to production. |
+| Risk                                                                                           | Likelihood               | Impact | Mitigation                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------- | ------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase vendor lock-in makes future migration prohibitive                                     | Medium                   | High   | All database queries encapsulated in `lib/services/` using standard SQL. Storage paths (not URLs) stored in DB. Auth flows abstracted behind a service layer. Migration is expensive but feasible.   |
+| Search quality failures at 50K+ listings drive user dissatisfaction before Algolia is deployed | High                     | Medium | Algolia upgrade path is documented and pre-scoped. Trigger conditions are specific and monitored. The upgrade is a planned event, not a reactive emergency.                                          |
+| Stripe Connect application delay blocks V2 marketplace launch                                  | Medium                   | High   | Connect application submitted at V1 start, not V2 start. This gives 10–14 weeks of buffer. Timeline risk is flagged to the business at V1 planning.                                                  |
+| Vercel cost spikes at V1 traffic levels exceed budget                                          | Low at MVP, Medium at V1 | Medium | ISR reduces per-request function cost for entity pages. Cost monitoring alerts configured at V1. Mitigation budget is identified before costs become a crisis.                                       |
+| Next.js App Router instability from upstream changes breaks production builds                  | Low                      | Medium | Only stable, documented patterns are used. No bleeding-edge App Router features (parallel routes, intercepting routes) at MVP. Framework updates are tested on staging before merging to production. |
 
 ---
 
@@ -565,15 +566,15 @@ Sentry covers all phases. No replacement planned. Datadog APM is evaluated at V3
 
 This is the explicit list of stack layers that are expected to change and when. Everything not on this list is expected to hold for the platform's lifetime.
 
-| Layer | Current choice | Replacement | Trigger |
-|---|---|---|---|
-| Search | PostgreSQL FTS | Algolia | p95 latency > 300ms sustained, OR > 50K listings, OR synonym failure rate confirmed in user research |
-| Analytics | Vercel Analytics + custom events | + PostHog added at V1 | V1 start — this is a planned addition, not a replacement |
-| AI model provider | Anthropic Claude | Potentially another provider | Annual evaluation at V2+; `lib/ai/` abstraction makes this a 1-day swap if justified |
-| Mobile | Next.js web app | React Native app | V4 scale; shares business logic in `lib/` but requires a separate app codebase |
-| Auth | Supabase Auth | No planned replacement | Supabase Auth covers all phases; Google OAuth added at V1 within the same provider |
-| Hosting | Vercel | Containerized self-hosting | V3+ cost review; only if Vercel pricing at 1M+ monthly requests exceeds migration cost |
-| Payments | Stripe | No planned replacement | Stripe handles both V1 subscriptions and V2 Connect — no reason to introduce a second provider |
+| Layer             | Current choice                   | Replacement                  | Trigger                                                                                              |
+| ----------------- | -------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Search            | PostgreSQL FTS                   | Algolia                      | p95 latency > 300ms sustained, OR > 50K listings, OR synonym failure rate confirmed in user research |
+| Analytics         | Vercel Analytics + custom events | + PostHog added at V1        | V1 start — this is a planned addition, not a replacement                                             |
+| AI model provider | Anthropic Claude                 | Potentially another provider | Annual evaluation at V2+; `lib/ai/` abstraction makes this a 1-day swap if justified                 |
+| Mobile            | Next.js web app                  | React Native app             | V4 scale; shares business logic in `lib/` but requires a separate app codebase                       |
+| Auth              | Supabase Auth                    | No planned replacement       | Supabase Auth covers all phases; Google OAuth added at V1 within the same provider                   |
+| Hosting           | Vercel                           | Containerized self-hosting   | V3+ cost review; only if Vercel pricing at 1M+ monthly requests exceeds migration cost               |
+| Payments          | Stripe                           | No planned replacement       | Stripe handles both V1 subscriptions and V2 Connect — no reason to introduce a second provider       |
 
 ---
 

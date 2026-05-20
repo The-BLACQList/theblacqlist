@@ -20,11 +20,11 @@ This document covers the first 30 days after production deployment. Read the mon
 
 ### Roles During First 72 Hours
 
-| Person | Responsibility |
-|---|---|
-| Tech Lead | Monitoring cadence, incident response, deployment decisions |
-| Product Lead | Collecting tester feedback, triaging severity, coordinating communication |
-| On-call engineer | Available and reachable; executes rollback if Tech Lead calls it |
+| Person           | Responsibility                                                            |
+| ---------------- | ------------------------------------------------------------------------- |
+| Tech Lead        | Monitoring cadence, incident response, deployment decisions               |
+| Product Lead     | Collecting tester feedback, triaging severity, coordinating communication |
+| On-call engineer | Available and reachable; executes rollback if Tech Lead calls it          |
 
 ### Monitoring Cadence
 
@@ -34,24 +34,26 @@ This document covers the first 30 days after production deployment. Read the mon
 
 ### Watchlist (each check)
 
-| Signal | Where to check | Action if bad |
-|---|---|---|
-| Sentry error count | Sentry Dashboard → Issues | >5 new errors/hr → P1 triage |
-| Auth success rate | Vercel Functions logs → `/auth/callback` | Failures → check Supabase Auth config |
-| Search response time | Vercel Analytics → Functions | P95 >3s → check DB connection and query |
-| Listing page load | Vercel Analytics → Web Vitals | LCP >4s → check image CDN |
-| Upload success | Vercel logs → `/api/upload/` | 4xx/5xx → check bucket config |
-| DB connection pool | Supabase Dashboard → Database → Metrics | >80% pool used → check PgBouncer |
+| Signal               | Where to check                           | Action if bad                           |
+| -------------------- | ---------------------------------------- | --------------------------------------- |
+| Sentry error count   | Sentry Dashboard → Issues                | >5 new errors/hr → P1 triage            |
+| Auth success rate    | Vercel Functions logs → `/auth/callback` | Failures → check Supabase Auth config   |
+| Search response time | Vercel Analytics → Functions             | P95 >3s → check DB connection and query |
+| Listing page load    | Vercel Analytics → Web Vitals            | LCP >4s → check image CDN               |
+| Upload success       | Vercel logs → `/api/upload/`             | 4xx/5xx → check bucket config           |
+| DB connection pool   | Supabase Dashboard → Database → Metrics  | >80% pool used → check PgBouncer        |
 
 ### Seed Data Gate
 
 The public announcement is **blocked** until all three of these are true:
+
 - [ ] 150+ Atlanta listings live with complete data (name, category, city, at least one image)
 - [ ] 50+ Houston listings live with complete data
 - [ ] 50+ Chicago listings live with complete data
 - [ ] ≥40% of listings across all cities have at least one image
 
 Check seed data counts:
+
 ```sql
 -- Run in Supabase SQL Editor (production)
 SELECT c.name AS city, COUNT(*) AS listing_count
@@ -64,12 +66,12 @@ ORDER BY listing_count DESC;
 
 ### Escalation Path
 
-| Severity | Trigger | Action |
-|---|---|---|
-| **P0** | Site down, auth broken, data breach, privacy violation | Roll back immediately via `rollback-plan.md` Scenario A. No investigation before rollback. |
-| **P1** | Critical flow broken (search returns 0, listing pages 500, upload fails) | 30-minute assess: can this be hotfixed in <2 hours? If yes, hotfix. If no, roll back. |
-| **P2** | Non-critical feature broken (collection page error, analytics event missing) | Log in Sentry and `#incidents`. Continue. Fix in next deploy. |
-| **P3** | Visual inconsistency, copy error, UX confusion | Log in `#user-feedback`. Add to backlog. |
+| Severity | Trigger                                                                      | Action                                                                                     |
+| -------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **P0**   | Site down, auth broken, data breach, privacy violation                       | Roll back immediately via `rollback-plan.md` Scenario A. No investigation before rollback. |
+| **P1**   | Critical flow broken (search returns 0, listing pages 500, upload fails)     | 30-minute assess: can this be hotfixed in <2 hours? If yes, hotfix. If no, roll back.      |
+| **P2**   | Non-critical feature broken (collection page error, analytics event missing) | Log in Sentry and `#incidents`. Continue. Fix in next deploy.                              |
+| **P3**   | Visual inconsistency, copy error, UX confusion                               | Log in `#user-feedback`. Add to backlog.                                                   |
 
 ---
 
@@ -78,6 +80,7 @@ ORDER BY listing_count DESC;
 ### Daily Standup (15 minutes)
 
 Every business day for the first 2 weeks:
+
 - What new issues were reported or detected since yesterday?
 - What is the severity and owner of each open issue?
 - What is being deployed today? (Run smoke tests within 5 minutes of any deployment)
@@ -92,6 +95,7 @@ Every business day for the first 2 weeks:
 ### Week 1 Goal — All P0/P1 Bugs from Testers Resolved
 
 Before the end of Week 1:
+
 - [ ] All P0 bugs reported by testers are fixed and re-tested
 - [ ] All P1 bugs reported by testers are either fixed or have a hotfix timeline
 - [ ] No new P0 bugs introduced by any hotfix deployments
@@ -100,6 +104,7 @@ Before the end of Week 1:
 ### Week 2 Goal — Public Announcement Ready
 
 Before public announcement:
+
 - [ ] Seed data gate passed (150 ATL, 50 HOU, 50 CHI with ≥40% images)
 - [ ] Full smoke test pass (all 19 ST tests in `prelaunch-smoke-test.md`)
 - [ ] No open P0 issues
@@ -114,22 +119,23 @@ Before public announcement:
 
 Pull these from Vercel Analytics + Supabase query each Monday:
 
-| Metric | Week 1 target | Week 4 target |
-|---|---|---|
-| Unique visitors | — (baseline) | 500+ |
-| Search queries/day | — | 30+ |
-| Listing page views | — | 2,000+ |
-| User registrations | — | 100+ |
-| Saves | — | 50+ |
-| Shares | — | 25+ |
-| Claims submitted | — | 50+ |
-| Claims resolved (≤48h) | — | 90%+ |
+| Metric                 | Week 1 target | Week 4 target |
+| ---------------------- | ------------- | ------------- |
+| Unique visitors        | — (baseline)  | 500+          |
+| Search queries/day     | —             | 30+           |
+| Listing page views     | —             | 2,000+        |
+| User registrations     | —             | 100+          |
+| Saves                  | —             | 50+           |
+| Shares                 | —             | 25+           |
+| Claims submitted       | —             | 50+           |
+| Claims resolved (≤48h) | —             | 90%+          |
 
 The Week 4 targets are drawn directly from the MVP done-when criteria in `ruthless-mvp-and-roadmap.md`: 500 unique searches, 50 saves, 50 owner claims within 60 days.
 
 ### Claim Queue SLA
 
 Every pending claim in `/admin/claims` must receive a decision within **48 hours** of submission:
+
 - Approved: email sent to claimant; owner dashboard access granted
 - Rejected: email sent with reason; claimant can re-submit with corrected info
 
@@ -156,12 +162,12 @@ These 8 processes run continuously after launch. Each should become a routine wi
 
 **Severity tiers:**
 
-| Level | Definition | Response | Resolution |
-|---|---|---|---|
-| P0 | Site down, auth broken, data breach, privacy violation | Immediate — roll back | Same day |
-| P1 | Critical flow broken (search, listing pages, upload, claim, sign-in) | 30-min assess | 24–48 hours |
-| P2 | Non-critical feature broken | 72-hour response | Next deploy |
-| P3 | Visual/copy issue, minor UX friction | 1-week response | Next sprint |
+| Level | Definition                                                           | Response              | Resolution  |
+| ----- | -------------------------------------------------------------------- | --------------------- | ----------- |
+| P0    | Site down, auth broken, data breach, privacy violation               | Immediate — roll back | Same day    |
+| P1    | Critical flow broken (search, listing pages, upload, claim, sign-in) | 30-min assess         | 24–48 hours |
+| P2    | Non-critical feature broken                                          | 72-hour response      | Next deploy |
+| P3    | Visual/copy issue, minor UX friction                                 | 1-week response       | Next sprint |
 
 **Bug log fields:** Date reported, reporter, symptom (what user sees), reproduction steps, severity, affected users (all / specific role / specific flow), assigned engineer, status.
 
@@ -175,6 +181,7 @@ These 8 processes run continuously after launch. Each should become a routine wi
 **Cadence:** Slack `#feature-requests` monitored daily; monthly batch review
 
 **Workflow:**
+
 1. Anyone (team or user) posts a feature request to `#feature-requests`
 2. Product Lead adds a phase tag: `beta`, `v1`, `v2`, `do-not-build`, or `needs-research`
 3. Once per month, Product Lead reviews all tagged requests and decides: add to roadmap, add to backlog, or document why not
@@ -191,12 +198,14 @@ These 8 processes run continuously after launch. Each should become a routine wi
 **Cadence:** Weekly spot-check; ad-hoc on user report
 
 **Weekly audit (30 minutes):**
+
 1. Open `/admin/listings` and filter by city; sort by `created_at` descending
 2. Spot-check 10 random listings for: correct phone number, accurate hours, real address, category match, no broken images
 3. For any inaccurate listing: flag it and contact the business (see Process 7 — Business Outreach)
 4. Duplicate detection: check for two listings with identical or near-identical names in the same city; merge or delete
 
 **Data quality query (run monthly):**
+
 ```sql
 -- Listings with no images (may need outreach)
 SELECT l.id, l.name, c.name AS city, l.created_at
@@ -215,6 +224,7 @@ ORDER BY l.created_at ASC;
 **Cadence:** Daily check; 48-hour SLA per claim
 
 **Daily routine:**
+
 1. Open `/admin/claims`
 2. Review all claims in `pending` status
 3. For each claim: review submitted verification info (email match, phone, optional document)
@@ -222,6 +232,7 @@ ORDER BY l.created_at ASC;
 5. No claim stays in `pending` for more than 48 hours
 
 **Claim fraud indicators (flag for manual review):**
+
 - Submitted email domain does not match the business website domain
 - Same user has submitted more than 3 claims in 7 days
 - Verification document appears altered (inconsistent fonts, mismatched address)
@@ -236,16 +247,19 @@ ORDER BY l.created_at ASC;
 **Cadence:** Weekly publication; monthly performance review; quarterly calendar planning
 
 **Weekly (Tuesdays):**
+
 - Publish 1 new collection via `/admin/collections`
 - Suggested format: "[City] + [Category or Occasion]" (e.g., "Black-Owned Bookstores in Chicago")
 - Minimum 5 listings per collection; curate personally — do not include listings with no images
 
 **Monthly:**
+
 - Review collection page views (Vercel Analytics → `/collection/*` routes)
 - Review which collections drove the most saves
 - Retire collections that are no longer accurate or relevant
 
 **Quarterly:**
+
 - Plan next quarter's collection calendar with seasonal hooks (e.g., holiday gift guides, Black History Month, Juneteenth)
 - Identify new cities or categories gaining listing density
 
@@ -258,13 +272,14 @@ ORDER BY l.created_at ASC;
 
 **Targets:**
 
-| City | Minimum listings | Priority categories |
-|---|---|---|
-| Atlanta | 150 | Restaurants, salons/barbers, retailers, professional services, creatives |
-| Houston | 50 | Restaurants, salons/barbers, retailers, professional services |
-| Chicago | 50 | Restaurants, salons/barbers, retailers, professional services |
+| City    | Minimum listings | Priority categories                                                      |
+| ------- | ---------------- | ------------------------------------------------------------------------ |
+| Atlanta | 150              | Restaurants, salons/barbers, retailers, professional services, creatives |
+| Houston | 50               | Restaurants, salons/barbers, retailers, professional services            |
+| Chicago | 50               | Restaurants, salons/barbers, retailers, professional services            |
 
 **Sourcing methods (manual):**
+
 1. Existing Black business directories (Google searches, community lists, Yelp)
 2. Community submission form at `/add-business` (share with Atlanta/Houston/Chicago community groups)
 3. Social media discovery (search "Black-owned [category] in [city]")
@@ -282,11 +297,13 @@ ORDER BY l.created_at ASC;
 **Cadence:** Ongoing; weekly batch
 
 **Outreach triggers:**
+
 - Business exists in the directory as an unclaimed listing
 - Business was identified from a seed data source but not yet added
 - A community member reported that a business should be on the platform
 
 **Outreach process:**
+
 1. Identify unclaimed listings via `/admin/listings?claimed=false`
 2. Find the business's public contact information (website, Instagram, Google)
 3. Send the outreach email (template below)
@@ -295,6 +312,7 @@ ORDER BY l.created_at ASC;
 6. Mark status in the tracking spreadsheet: `outreach-sent`, `outreach-followed-up`, `claimed`, `no-response`
 
 **Outreach email template:**
+
 > Subject: Your business is on The BLACQList — claim your Page
 >
 > Hi [Business Name] team,
@@ -302,6 +320,7 @@ ORDER BY l.created_at ASC;
 > We've added [Business Name] to The BLACQList — a directory dedicated to Black-owned businesses. Your page is live at [listing URL].
 >
 > Claiming your page is free and takes about 15 minutes. Once claimed, you can:
+>
 > - Update your hours, contact info, and photos
 > - Add your services and configure your call-to-action
 > - See how many people are finding your business
@@ -322,6 +341,7 @@ ORDER BY l.created_at ASC;
 **Cadence:** Month 1 research → Month 2 outreach → Month 3 close
 
 **Month 1 — Research and target list**
+
 - Identify 5–10 potential sponsors aligned with Black economic empowerment
 - Target sponsor types:
   - **Community Partners:** Local credit unions, community banks, regional nonprofits targeting Black entrepreneurs
@@ -330,11 +350,13 @@ ORDER BY l.created_at ASC;
 - Research: existing Black business publication sponsors, NMSDC partner companies, HBCU sponsor lists
 
 **Month 2 — Outreach**
+
 - Send sponsorship deck to 5 target contacts
 - Deck should include: platform mission, audience (Black community + businesses), reach metrics (page views, registered users), placement options (homepage, city pages, category pages), pricing tiers
 - Reference `docs/blacqlist/monetization/monetization-spec.md` for placement pricing
 
 **Month 3 — Close**
+
 - Target: at least 1 signed sponsor agreement
 - Minimum viable sponsorship: $500/month featured placement on homepage or city page
 - First sponsor placement is manually managed via `/admin/sponsorships` (self-serve dashboard planned for V1.5)
@@ -346,6 +368,7 @@ ORDER BY l.created_at ASC;
 At the end of Day 30, conduct a structured review with Tech Lead and Product Lead:
 
 **Operational health check:**
+
 - [ ] Zero open P0 bugs
 - [ ] Claim resolution SLA being met (≤48h)
 - [ ] Seed data targets hit
@@ -353,6 +376,7 @@ At the end of Day 30, conduct a structured review with Tech Lead and Product Lea
 - [ ] Sentry error count trending down week-over-week
 
 **Growth check (against MVP done-when criteria):**
+
 - [ ] Unique searches on trajectory toward 500 within 60 days
 - [ ] Saves on trajectory toward 50 within 60 days
 - [ ] Owner claims on trajectory toward 50 within 60 days

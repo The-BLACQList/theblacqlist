@@ -5,6 +5,7 @@
 **Audience:** Engineers writing `supabase/seeds/` files; content team preparing launch listings
 **Owner:** Engineering + Content
 **Source documents:**
+
 - `docs/blacqlist/product/ruthless-mvp-and-roadmap.md`
 - `docs/blacqlist/data/entity-content-model.md`
 
@@ -43,16 +44,16 @@ Goal: the product looks alive from day one. Anonymous visitors who land on The B
 
 These are the hard requirements from the MVP spec. The platform does not launch until all of these are met.
 
-| Requirement | Target | Measured by |
-|---|---|---|
-| Atlanta listings | 150+ | `SELECT COUNT(*) FROM listings WHERE city_id = [atlanta_id] AND status = 'published'` |
-| Houston listings | 50+ | Same filter for Houston |
-| Chicago listings | 50+ | Same filter for Chicago |
-| Image coverage | 40%+ of all listings have at least one image | `media_attachments` row where `entity_type = 'listing'` |
-| Claimed listings | 20%+ of listings are claimed or verified | `trust_tier IN ('claimed','verified')` |
-| Category coverage | Every active category has at least 3 listings in each launch city | COUNT per `category_id` + `city_id` combination |
-| Description quality | Every published listing has a description of 100+ characters | Length check on `listing_details_business.description` |
-| CTA completeness | Every published listing has a non-null `cta_type` | Null check on `listing_details_business.cta_type` |
+| Requirement         | Target                                                            | Measured by                                                                           |
+| ------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Atlanta listings    | 150+                                                              | `SELECT COUNT(*) FROM listings WHERE city_id = [atlanta_id] AND status = 'published'` |
+| Houston listings    | 50+                                                               | Same filter for Houston                                                               |
+| Chicago listings    | 50+                                                               | Same filter for Chicago                                                               |
+| Image coverage      | 40%+ of all listings have at least one image                      | `media_attachments` row where `entity_type = 'listing'`                               |
+| Claimed listings    | 20%+ of listings are claimed or verified                          | `trust_tier IN ('claimed','verified')`                                                |
+| Category coverage   | Every active category has at least 3 listings in each launch city | COUNT per `category_id` + `city_id` combination                                       |
+| Description quality | Every published listing has a description of 100+ characters      | Length check on `listing_details_business.description`                                |
+| CTA completeness    | Every published listing has a non-null `cta_type`                 | Null check on `listing_details_business.cta_type`                                     |
 
 These checks must be run against the staging seed before production seeding begins. A preflight SQL script should be provided with the seed files to validate all requirements before declaring production ready.
 
@@ -98,11 +99,11 @@ Three tier records defining the Free, Standard, and Premium listing tiers. These
 **Source:** Inline SQL in `004_plans.sql`
 **Required for:** All environments
 
-| Plan slug | Name | Stripe price ID (dev placeholder) | Notes |
-|---|---|---|---|
-| `free` | Free | `price_FREE_PLACEHOLDER` | Default for all new listings at MVP |
-| `standard` | Standard | `price_STANDARD_PLACEHOLDER` | V1 paid tier — replace placeholder with real Stripe price ID before V1 launch |
-| `premium` | Premium | `price_PREMIUM_PLACEHOLDER` | V1 paid tier — replace placeholder with real Stripe price ID before V1 launch |
+| Plan slug  | Name     | Stripe price ID (dev placeholder) | Notes                                                                         |
+| ---------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
+| `free`     | Free     | `price_FREE_PLACEHOLDER`          | Default for all new listings at MVP                                           |
+| `standard` | Standard | `price_STANDARD_PLACEHOLDER`      | V1 paid tier — replace placeholder with real Stripe price ID before V1 launch |
+| `premium`  | Premium  | `price_PREMIUM_PLACEHOLDER`       | V1 paid tier — replace placeholder with real Stripe price ID before V1 launch |
 
 Stripe price ID placeholders must be replaced with real Stripe price IDs before V1 monetization is activated. The placeholder strings must not appear in production after V1 launch.
 
@@ -116,9 +117,10 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 51
 **Source:** Inline SQL
 **Quality requirements:**
+
 - All 50 US states + DC
 - Two-letter abbreviation (`code`), full name (`name`), and slug (`slug`) — e.g., `'GA'`, `'Georgia'`, `'georgia'`
-**Notes:**
+  **Notes:**
 - Static reference data — insert once, never update
 - If a future migration adds territories (PR, GU, VI), add them in a separate migration with a comment explaining the expansion
 
@@ -130,10 +132,11 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 13 at MVP launch
 **Source:** Manually curated CSV or inline SQL
 **Quality requirements:**
+
 - Name, slug, state_id (FK), metro_area_name, latitude, longitude, listing target count
 - Slugs must be URL-safe kebab-case with state abbreviation suffix: `atlanta-ga`, `houston-tx`
 - Lat/lng must be accurate to the city center (use official city hall coordinates)
-**Notes:**
+  **Notes:**
 - `state_id` FK must be present — `001_states.sql` must run before `002_cities.sql`
 - See Section 6 for the complete city list
 
@@ -145,11 +148,12 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 25 top-level + ~100 subcategories
 **Source:** Manually curated in seed file
 **Quality requirements:**
+
 - Top-level categories: slug, name, display_order, parent_id = NULL
 - Subcategories: slug, name, display_order, parent_id = [top-level category ID]
 - Insert top-level rows first, then subcategory rows — the `parent_id` self-reference requires parents to exist before children
 - Slugs: lowercase kebab-case, unique across all categories including subcategories
-**Notes:**
+  **Notes:**
 - See Section 5 for the complete category tree
 - The total category count is a product decision — do not add categories that do not reflect real business types in the Black community
 
@@ -161,9 +165,10 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 3
 **Source:** Inline SQL
 **Quality requirements:**
+
 - Stripe price ID fields must contain placeholder values in dev/staging that are clearly not real Stripe IDs
 - `is_active` = true for all three at launch
-**Notes:**
+  **Notes:**
 - Standard and Premium plans exist at MVP as data records even though the payment flow is V1 — this prevents a migration change later
 - Replace Stripe price ID placeholders before V1 launch
 
@@ -175,13 +180,14 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 250+ at launch (150 ATL + 50 HOU + 50 CHI = 250 minimum)
 **Source:** Manual entry via admin dashboard + CSV import script for bulk seeding
 **Quality requirements:**
+
 - Every row must have: `name`, `status = 'published'`, `entity_type = 'business'`, `category_id`, `city_id`, `slug`, `source = 'import'`
 - Slug naming convention: `[business-name-kebab]-[city-abbreviation]` — e.g., `sweet-auburn-bbq-atl`, `jts-custom-tailoring-hou`
 - City abbreviations: `atl` (Atlanta), `hou` (Houston), `chi` (Chicago)
 - No two listings may have the same slug — UNIQUE constraint will reject duplicates
 - `trust_tier` distribution: 70% `unclaimed`, 20% `claimed`, 10% `verified` (see Section 7 for rationale)
 - `published_at` should be set to the import timestamp — do not leave null for published listings
-**Notes:**
+  **Notes:**
 - Admin dashboard provides the easiest path for small batches (under 20 listings)
 - CSV import script via service_role is the practical path for bulk seeding (50+ listings)
 - All listings created by the seed script should have `submitted_by = [admin_user_id]` and `source = 'import'`
@@ -194,13 +200,14 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** Matches `listings` count (one row per business listing)
 **Source:** Matches listings seed — same import script
 **Quality requirements:**
+
 - `description`: minimum 100 characters; ideally 200+ in plain language describing what the business does
 - `cta_type`: must be non-null; `'visit'` is the safe default for businesses that have a website; `'call'` for businesses with only a phone number
 - `cta_url`: non-null when `cta_type` is not `'call'`; must be a valid `https://` URL
 - `phone`, `email`, `website_url`: populate when known; acceptable to leave null for seeded listings with incomplete data — owners will fill in during claim
 - `hours`: null is acceptable for seed data unless hours are confirmed; do not fabricate hours
 - Address fields: `address_line_1`, `city_text`, `state`, `zip` — populate when the business has a physical location
-**Notes:**
+  **Notes:**
 - The description quality bar is non-negotiable for production. A listing with a 15-word description looks worse than no description.
 - For claimed seed listings: the real owner's description should be used if available; otherwise write a factual 100+ character description from publicly available information
 
@@ -212,10 +219,11 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** As many as have confirmed hours — do not fabricate
 **Source:** Publicly available hours from business websites, Google Maps, social media
 **Quality requirements:**
+
 - Only create rows where hours are confirmed
 - `day_of_week`: integer 0–6 (0 = Sunday, 6 = Saturday) per PostgreSQL `date_part('dow')` convention
 - Hours in 24-hour time: `09:00`, `17:00`, `00:00` for midnight
-**Notes:**
+  **Notes:**
 - Missing hours is acceptable for seed data; fabricated hours that are wrong create immediate bad impressions on launch day
 - If the business lists "hours vary" or "by appointment," set a note in `listing_details_business.hours_notes` instead
 
@@ -227,10 +235,11 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 0 minimum; aim for 60%+ of listings having at least one link
 **Source:** Publicly available links from business websites and social profiles
 **Quality requirements:**
+
 - `link_type`: one of the defined enum values (`website`, `instagram`, `facebook`, `tiktok`, `youtube`, `linkedin`, `twitter`, `booking`, `menu`, `order`)
 - All URLs must start with `https://` and be validated before insertion
 - No placeholder or example URLs — if a URL is not confirmed to be active, do not include it
-**Notes:**
+  **Notes:**
 - Instagram links are the highest-value social seed links — many Black-owned businesses are Instagram-primary
 - Website and Instagram are the two to prioritize in seed data; other socials as available
 
@@ -242,13 +251,14 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** Enough to cover 40%+ of listings (100+ at minimum)
 **Source:** Real business images sourced with permission; uploaded to `listing-media` bucket during seeding
 **Quality requirements:**
+
 - `file_path`: valid Supabase Storage path in the `listing-media` bucket; file must actually exist at that path
 - `file_type`: `image/jpeg` or `image/webp` — no PNGs over 2MB in seed data
 - `file_size_bytes`: accurate — populated from the actual uploaded file
 - `display_order`: 0 for the primary image
 - `alt_text`: required for all seed images — describe the actual image content ("Exterior of Sweet Auburn BBQ restaurant in Atlanta")
 - `uploaded_by`: set to the admin user's ID who ran the seed script
-**Notes:**
+  **Notes:**
 - Images must be real, high-quality photos of the actual business. Do not use stock photos of random restaurants or shops — they will look wrong when a user already knows the business.
 - For the 40% image coverage requirement: prioritize the most prominent businesses in each city and the most visually compelling categories (food, beauty, fashion)
 - All images must be uploaded to Supabase Storage before the seed SQL is run — the `file_path` values in the seed file are storage paths, not URLs
@@ -261,24 +271,25 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 3
 **Source:** Admin-created; content team curates the lists
 **Quality requirements:**
+
 - `title`: descriptive and community-forward ("Atlanta's Best Black-Owned Restaurants", "Black Wellness Businesses in Chicago", "Houston's Black Fashion Designers")
 - `slug`: unique, URL-safe (`atlantas-best-black-owned-restaurants`)
 - `description`: 2–3 sentence editorial intro explaining why this collection matters
 - `is_published`: true for launch collections
-**Notes:**
+  **Notes:**
 - Collections are the most important editorial seed data. One well-curated collection makes the platform feel editorial and intentional — not just a list.
 - The homepage featured collection slot should be one of the Atlanta collections since Atlanta is the primary launch city
 - Do not create more than 5 collections at launch — quality over quantity
 
 **Recommended launch collections:**
 
-| Title | City focus | Category focus |
-|---|---|---|
-| Atlanta's Best Black-Owned Restaurants | Atlanta | Food & Dining |
-| Black Wellness & Beauty in Atlanta | Atlanta | Beauty, Wellness |
-| Chicago's Black-Owned Businesses to Know | Chicago | Mixed |
-| Houston Black Business Spotlight | Houston | Mixed |
-| Black Creatives Building in Atlanta | Atlanta | Creative, Professional |
+| Title                                    | City focus | Category focus         |
+| ---------------------------------------- | ---------- | ---------------------- |
+| Atlanta's Best Black-Owned Restaurants   | Atlanta    | Food & Dining          |
+| Black Wellness & Beauty in Atlanta       | Atlanta    | Beauty, Wellness       |
+| Chicago's Black-Owned Businesses to Know | Chicago    | Mixed                  |
+| Houston Black Business Spotlight         | Houston    | Mixed                  |
+| Black Creatives Building in Atlanta      | Atlanta    | Creative, Professional |
 
 ---
 
@@ -288,10 +299,11 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 10–20 per collection (50–100 total for 5 collections)
 **Source:** Admin-curated from the published listings seed
 **Quality requirements:**
+
 - Every `listing_id` must reference a published listing — no draft or unpublished listings in editorial collections
 - `display_order`: set explicitly for each collection; the first item is the "hero" listing of the collection
 - A listing can appear in multiple collections — no uniqueness constraint across collections; UNIQUE only within a single collection (`collection_id`, `listing_id`)
-**Notes:**
+  **Notes:**
 - Collection items cannot be seeded until `012_collections.sql` and `007_listings.sql` have both run
 
 ---
@@ -302,9 +314,10 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 4 (one per test user)
 **Source:** Inline SQL in `006_test_user_roles.sql`
 **Quality requirements:**
+
 - One row per test account
 - `role` values: `supporter`, `owner`, `admin`, `super_admin`
-**Notes:**
+  **Notes:**
 - Test user IDs must exist in Supabase Auth before this seed runs
 - This file is conditional — the seed run command must skip this file in production environments
 - See Section 9 for the test user account definitions
@@ -317,9 +330,10 @@ Stripe price ID placeholders must be replaced with real Stripe price IDs before 
 **Minimum rows:** 4 (one per test user)
 **Source:** Inline SQL in `005_test_users.sql`
 **Quality requirements:**
+
 - `display_name`: readable test account names ("Test Supporter", "Test Owner", etc.)
 - `id` must match the Supabase Auth `auth.users.id` for each test account
-**Notes:**
+  **Notes:**
 - Profiles are normally created automatically via a trigger on auth user creation
 - For local dev seeding, the trigger may need to be bypassed — insert directly with service_role in the seed script
 
@@ -334,6 +348,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 ---
 
 ### Food & Dining
+
 - Restaurants
 - Bakeries & Pastry Shops
 - Cafes & Coffee
@@ -344,6 +359,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Juice Bars & Smoothies
 
 ### Beauty & Grooming
+
 - Hair Salons
 - Barber Shops
 - Nail Salons & Spas
@@ -354,6 +370,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Men's Grooming
 
 ### Wellness & Health
+
 - Fitness Studios
 - Personal Trainers
 - Yoga & Pilates
@@ -364,6 +381,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Chiropractic & Physical Therapy
 
 ### Fashion & Apparel
+
 - Clothing Boutiques
 - Shoe Stores
 - Accessories & Jewelry
@@ -374,6 +392,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Secondhand & Vintage
 
 ### Professional Services
+
 - Law & Legal Services
 - Accounting & Tax Preparation
 - Financial Planning & Wealth
@@ -384,6 +403,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Real Estate
 
 ### Creative & Media
+
 - Photography
 - Videography & Film
 - Graphic Design
@@ -394,6 +414,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Web & App Design
 
 ### Home & Living
+
 - Interior Design
 - Furniture & Decor
 - Cleaning Services
@@ -404,6 +425,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Smart Home Installation
 
 ### Events & Entertainment
+
 - Event Planning
 - DJs & Live Music
 - Photo & Video Booths
@@ -414,6 +436,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Entertainment Booking
 
 ### Education & Tutoring
+
 - Academic Tutoring
 - Test Preparation
 - Early Childhood Education
@@ -424,6 +447,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - STEM & Technology Education
 
 ### Automotive
+
 - Auto Repair & Mechanics
 - Car Detailing
 - Towing & Roadside
@@ -433,6 +457,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Mobile Mechanic
 
 ### Childcare & Family
+
 - Childcare Centers
 - Nannies & Au Pairs
 - Family Counseling
@@ -442,6 +467,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Family Photography
 
 ### Spiritual & Community
+
 - Churches & Places of Worship
 - Non-Profits & Community Organizations
 - Youth Programs
@@ -450,6 +476,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Support Groups & Recovery
 
 ### Technology
+
 - IT Support & Managed Services
 - Software Development
 - Cybersecurity
@@ -459,6 +486,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - App & Mobile Development
 
 ### Healthcare
+
 - Primary Care Physicians
 - Dentists
 - Vision & Optometry
@@ -468,6 +496,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Telehealth Services
 
 ### Travel & Transportation
+
 - Travel Agencies
 - Car Services & Black Cars
 - Shuttle & Airport Transport
@@ -475,6 +504,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Freight & Logistics
 
 ### Legal & Financial
+
 - Estate Planning
 - Business Formation & Incorporation
 - Tax Services
@@ -482,6 +512,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Mortgage & Lending
 
 ### Pet Services
+
 - Dog Walking & Pet Sitting
 - Pet Grooming
 - Veterinary Care
@@ -489,6 +520,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Pet Supplies & Accessories
 
 ### Agriculture & Sustainability
+
 - Urban Farming & Community Gardens
 - Organic & Natural Products
 - Eco-Friendly Services
@@ -496,6 +528,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Plant Shops & Nurseries
 
 ### Arts & Culture
+
 - Museums & Galleries
 - Theater & Performing Arts
 - Poetry & Spoken Word
@@ -503,6 +536,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Art Instruction & Workshops
 
 ### Books & Publishing
+
 - Bookstores
 - Independent Publishers
 - Authors & Writers
@@ -510,6 +544,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Self-Publishing Services
 
 ### Construction & Trades
+
 - General Contractors
 - Electricians
 - Plumbing
@@ -519,6 +554,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Painting & Finishing
 
 ### Retail & Gifts
+
 - Gift Shops
 - Candles & Home Fragrance
 - Handmade & Artisan Goods
@@ -527,6 +563,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Health & Wellness Products
 
 ### Photography & Videography
+
 - Portrait Photography
 - Wedding Photography
 - Event Photography
@@ -535,6 +572,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Content Creation & Reels
 
 ### Social Media & Marketing
+
 - Social Media Management
 - Influencer Marketing
 - Email Marketing
@@ -543,6 +581,7 @@ Insert order: all top-level categories first, then subcategories. The `parent_id
 - Brand Strategy
 
 ### Staffing & Workforce
+
 - Temp & Contract Staffing
 - Executive Search
 - Career Coaching
@@ -560,6 +599,7 @@ These three cities must be seeded to the minimum listing targets before producti
 ---
 
 #### Atlanta, GA
+
 - **Slug:** `atlanta-ga`
 - **Metro area:** Atlanta–Sandy Springs–Roswell, GA
 - **State:** Georgia (GA)
@@ -568,6 +608,7 @@ These three cities must be seeded to the minimum listing targets before producti
 - **Why Atlanta:** The founding city. Largest Black business district in the US (Sweet Auburn Corridor). Highest concentration of HBCUs in one metro. The BLACQList brand is rooted here — this is the proof of concept city.
 
 #### Houston, TX
+
 - **Slug:** `houston-tx`
 - **Metro area:** Houston–The Woodlands–Sugar Land, TX
 - **State:** Texas (TX)
@@ -576,6 +617,7 @@ These three cities must be seeded to the minimum listing targets before producti
 - **Why Houston:** Fourth-largest city in the US; one of the largest Black populations in the South. Strong Black entrepreneurship culture. Major cultural anchor for Texas and the Gulf Coast region.
 
 #### Chicago, IL
+
 - **Slug:** `chicago-il`
 - **Metro area:** Chicago–Naperville–Elgin, IL-IN-WI
 - **State:** Illinois (IL)
@@ -590,6 +632,7 @@ These three cities must be seeded to the minimum listing targets before producti
 These ten cities do not have listing targets at MVP launch but must have valid records in the `cities` table with complete data to support future content and search functionality.
 
 #### Washington, D.C.
+
 - **Slug:** `washington-dc`
 - **Metro area:** Washington–Arlington–Alexandria, DC-VA-MD
 - **State:** District of Columbia (DC)
@@ -598,6 +641,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why DC:** Highest percentage of Black residents among major US cities (~46%). Strong federal contractor, legal, and non-profit sector with significant Black professional community. Shaw, U Street, and Anacostia business corridors.
 
 #### Detroit, MI
+
 - **Slug:** `detroit-mi`
 - **Metro area:** Detroit–Warren–Dearborn, MI
 - **State:** Michigan (MI)
@@ -606,6 +650,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Detroit:** 78% Black population — highest of any major US city. Historically significant Black business community; birthplace of Motown. Resurgent entrepreneurship in Midtown and New Center corridors.
 
 #### Baltimore, MD
+
 - **Slug:** `baltimore-md`
 - **Metro area:** Baltimore–Columbia–Towson, MD
 - **State:** Maryland (MD)
@@ -614,6 +659,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Baltimore:** ~64% Black population; significant Black business presence in Cherry Hill, Park Heights, and Upton neighborhoods. Proximity to DC creates a natural two-city cluster.
 
 #### New Orleans, LA
+
 - **Slug:** `new-orleans-la`
 - **Metro area:** New Orleans–Metairie, LA
 - **State:** Louisiana (LA)
@@ -622,6 +668,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why New Orleans:** Treme is the oldest Black neighborhood in the US; iconic Black-owned food, music, and cultural businesses. Strong community identity and strong buy-Black culture. Unique Creole and Louisiana culture creates distinctive listing content.
 
 #### Memphis, TN
+
 - **Slug:** `memphis-tn`
 - **Metro area:** Memphis, TN-MS-AR
 - **State:** Tennessee (TN)
@@ -630,6 +677,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Memphis:** ~64% Black population; historically significant for civil rights and Black culture (Beale Street, Soulsville). Growing entrepreneurship on South Main and in Midtown.
 
 #### Philadelphia, PA
+
 - **Slug:** `philadelphia-pa`
 - **Metro area:** Philadelphia–Camden–Wilmington, PA-NJ-DE-MD
 - **State:** Pennsylvania (PA)
@@ -638,6 +686,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Philadelphia:** Large Black population (~44%); North Philly and West Philly Black business corridors. Strong arts, music, and food entrepreneurship community.
 
 #### Charlotte, NC
+
 - **Slug:** `charlotte-nc`
 - **Metro area:** Charlotte–Concord–Gastonia, NC-SC
 - **State:** North Carolina (NC)
@@ -646,6 +695,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Charlotte:** Rapidly growing; ~36% Black population and one of the fastest-growing Black professional communities in the Southeast. Strong banking, finance, and healthcare sectors with significant Black ownership. Proximity to the broader Carolinas market.
 
 #### Dallas, TX
+
 - **Slug:** `dallas-tx`
 - **Metro area:** Dallas–Fort Worth–Arlington, TX
 - **State:** Texas (TX)
@@ -654,6 +704,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Dallas:** Second-largest Texas city; strong Black business community in South Dallas, Oak Cliff, and Desoto. With Houston already in the primary set, Dallas anchors North Texas and creates statewide Texas coverage.
 
 #### Miami, FL
+
 - **Slug:** `miami-fl`
 - **Metro area:** Miami–Fort Lauderdale–Pompano Beach, FL
 - **State:** Florida (FL)
@@ -662,6 +713,7 @@ These ten cities do not have listing targets at MVP launch but must have valid r
 - **Why Miami:** Diverse Black community including Caribbean-American, Haitian-American, and African-American communities. Opa-locka, Liberty City, Overtown neighborhoods. Strong tourism and entertainment Black business presence.
 
 #### Los Angeles, CA
+
 - **Slug:** `los-angeles-ca`
 - **Metro area:** Los Angeles–Long Beach–Anaheim, CA
 - **State:** California (CA)
@@ -699,17 +751,18 @@ A seed listing is "complete enough to be searchable and useful" when it meets al
 
 The 70/20/10 split models the realistic real-world state of a business directory at launch:
 
-| Trust tier | Target percentage | Reasoning |
-|---|---|---|
-| `unclaimed` | 70% | Most businesses discovered during research have not yet interacted with the platform — this is normal and honest |
-| `claimed` | 20% | Businesses the team has contacted and onboarded before launch; these have real owner accounts |
-| `verified` | 10% | Businesses that went through document review during the seeding process; demonstrates the verification system works |
+| Trust tier  | Target percentage | Reasoning                                                                                                           |
+| ----------- | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `unclaimed` | 70%               | Most businesses discovered during research have not yet interacted with the platform — this is normal and honest    |
+| `claimed`   | 20%               | Businesses the team has contacted and onboarded before launch; these have real owner accounts                       |
+| `verified`  | 10%               | Businesses that went through document review during the seeding process; demonstrates the verification system works |
 
 `certified` is not achievable at launch — it requires 6+ published reviews and 90+ days active. No seed listings will be `certified` at launch.
 
 ### Description quality standard
 
 At minimum:
+
 - 100 characters
 - Plain language — written for a community member, not a search engine
 - Describes what the business does: cuisine type, specialties, who it serves, what makes it distinctive
@@ -717,37 +770,41 @@ At minimum:
 - Does not contain "lorem ipsum" or template placeholder text
 
 Preferred (200+ characters):
+
 - Includes the neighborhood or area of the city
 - Mentions 2–3 specific things the business is known for
 - Has a voice that matches the business's community standing
 
 Example of an acceptable seed description (107 characters):
+
 > "Family-owned soul food restaurant on Atlanta's Westside. Known for smothered chicken, mac & cheese, and homemade cornbread."
 
 Example of an unacceptable seed description:
+
 > "Black-owned restaurant in Atlanta serving great food."
 
 ### Slug naming convention
 
 `[business-name-kebab]-[city-abbreviation]`
 
-| City | Abbreviation |
-|---|---|
-| Atlanta | `atl` |
-| Houston | `hou` |
-| Chicago | `chi` |
-| Washington DC | `dc` |
-| Detroit | `det` |
-| Baltimore | `balt` |
-| New Orleans | `nola` |
-| Memphis | `mem` |
-| Philadelphia | `phi` |
-| Charlotte | `clt` |
-| Dallas | `dal` |
-| Miami | `mia` |
-| Los Angeles | `la` |
+| City          | Abbreviation |
+| ------------- | ------------ |
+| Atlanta       | `atl`        |
+| Houston       | `hou`        |
+| Chicago       | `chi`        |
+| Washington DC | `dc`         |
+| Detroit       | `det`        |
+| Baltimore     | `balt`       |
+| New Orleans   | `nola`       |
+| Memphis       | `mem`        |
+| Philadelphia  | `phi`        |
+| Charlotte     | `clt`        |
+| Dallas        | `dal`        |
+| Miami         | `mia`        |
+| Los Angeles   | `la`         |
 
 Examples:
+
 - `sweet-auburn-bbq-atl`
 - `jade-nails-spa-hou`
 - `bronzeville-coffee-chi`
@@ -812,21 +869,21 @@ A production seed runbook should document this exact command sequence.
 
 FK constraints will fail if seed files run out of order.
 
-| Order | File | Dependencies |
-|---|---|---|
-| 1 | `001_states.sql` | None |
-| 2 | `002_cities.sql` | `states` table must exist and have rows |
-| 3 | `003_categories.sql` | None for top-level; parent rows must be inserted before subcategory rows within the file |
-| 4 | `004_plans.sql` | None |
-| 5 | `005_test_users.sql` | Supabase Auth `auth.users` must be set up; test accounts must be created in Supabase Auth first |
-| 6 | `006_test_user_roles.sql` | `user_roles` table must exist; test user UUIDs from `005` must be known |
-| 7 | `007_listings.sql` | `cities`, `categories` tables must have rows |
-| 8 | `008_listing_details_business.sql` | `listings` table must have rows |
-| 9 | `009_listing_hours.sql` | `listings` table must have rows |
-| 10 | `010_listing_links.sql` | `listings` table must have rows |
-| 11 | `011_media_attachments.sql` | `listings` table must have rows; Storage files must be uploaded before this seed runs |
-| 12 | `012_collections.sql` | None (no FK dependencies except `created_by` FK to `users` — use admin user ID) |
-| 13 | `013_collection_items.sql` | `collections` and `listings` tables must have rows |
+| Order | File                               | Dependencies                                                                                    |
+| ----- | ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1     | `001_states.sql`                   | None                                                                                            |
+| 2     | `002_cities.sql`                   | `states` table must exist and have rows                                                         |
+| 3     | `003_categories.sql`               | None for top-level; parent rows must be inserted before subcategory rows within the file        |
+| 4     | `004_plans.sql`                    | None                                                                                            |
+| 5     | `005_test_users.sql`               | Supabase Auth `auth.users` must be set up; test accounts must be created in Supabase Auth first |
+| 6     | `006_test_user_roles.sql`          | `user_roles` table must exist; test user UUIDs from `005` must be known                         |
+| 7     | `007_listings.sql`                 | `cities`, `categories` tables must have rows                                                    |
+| 8     | `008_listing_details_business.sql` | `listings` table must have rows                                                                 |
+| 9     | `009_listing_hours.sql`            | `listings` table must have rows                                                                 |
+| 10    | `010_listing_links.sql`            | `listings` table must have rows                                                                 |
+| 11    | `011_media_attachments.sql`        | `listings` table must have rows; Storage files must be uploaded before this seed runs           |
+| 12    | `012_collections.sql`              | None (no FK dependencies except `created_by` FK to `users` — use admin user ID)                 |
+| 13    | `013_collection_items.sql`         | `collections` and `listings` tables must have rows                                              |
 
 ### Idempotency
 
@@ -901,12 +958,12 @@ WHERE l.status = 'published' AND l.deleted_at IS NULL
 
 These accounts support development and QA workflows. They must never be seeded in production.
 
-| User | Email | Role | Purpose |
-|---|---|---|---|
-| Test Supporter | `supporter@test.blacqlist.dev` | `supporter` | Test browsing, saving listings, submitting receipts |
-| Test Owner | `owner@test.blacqlist.dev` | `owner` | Test listing management, analytics dashboard, CTA configuration |
-| Test Admin | `admin@test.blacqlist.dev` | `admin` | Test moderation queue, claim approvals, listing management |
-| Test Super Admin | `superadmin@test.blacqlist.dev` | `super_admin` | Test full platform access, audit log, role assignment |
+| User             | Email                           | Role          | Purpose                                                         |
+| ---------------- | ------------------------------- | ------------- | --------------------------------------------------------------- |
+| Test Supporter   | `supporter@test.blacqlist.dev`  | `supporter`   | Test browsing, saving listings, submitting receipts             |
+| Test Owner       | `owner@test.blacqlist.dev`      | `owner`       | Test listing management, analytics dashboard, CTA configuration |
+| Test Admin       | `admin@test.blacqlist.dev`      | `admin`       | Test moderation queue, claim approvals, listing management      |
+| Test Super Admin | `superadmin@test.blacqlist.dev` | `super_admin` | Test full platform access, audit log, role assignment           |
 
 ### Passwords
 
@@ -951,4 +1008,4 @@ This list is explicit and non-negotiable. A production seed review must check ev
 
 ---
 
-*Document complete. Next: implement seed files in `supabase/seeds/` following the dependency order in Section 8, then validate with the preflight script in Section 8 before production deployment.*
+_Document complete. Next: implement seed files in `supabase/seeds/` following the dependency order in Section 8, then validate with the preflight script in Section 8 before production deployment._

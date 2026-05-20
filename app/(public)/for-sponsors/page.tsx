@@ -1,53 +1,53 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { Button } from "@/components/ui/button"
-import { Container } from "@/components/layout/container"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
 
 export const metadata: Metadata = {
-  title: "For Sponsors | The BLACQList",
+  title: 'For Sponsors | The BLACQList',
   description:
-    "Partner with The BLACQList. Reach an engaged, intentional audience that spends with purpose.",
+    'Partner with The BLACQList. Reach an engaged, intentional audience that spends with purpose.',
 }
 
 const SPONSOR_TYPES = [
   {
-    title: "Community Partner",
+    title: 'Community Partner',
     description:
-      "Local businesses and organizations that want to reach Black community members who are actively seeking businesses and services like yours.",
-    badge: "Local",
+      'Local businesses and organizations that want to reach Black community members who are actively seeking businesses and services like yours.',
+    badge: 'Local',
   },
   {
-    title: "City Spotlight",
+    title: 'City Spotlight',
     description:
-      "Brands and organizations targeting a specific metropolitan area — get featured placement on BLACQList city pages where your audience already looks.",
-    badge: "Regional",
+      'Brands and organizations targeting a specific metropolitan area — get featured placement on BLACQList city pages where your audience already looks.',
+    badge: 'Regional',
   },
   {
-    title: "Platform Partner",
+    title: 'Platform Partner',
     description:
-      "National brands aligning with Black economic empowerment. Appear across the full BLACQList network with homepage presence and co-branded editorial.",
-    badge: "National",
+      'National brands aligning with Black economic empowerment. Appear across the full BLACQList network with homepage presence and co-branded editorial.',
+    badge: 'National',
   },
 ]
 
 const HOW_IT_WORKS = [
   {
-    step: "01",
-    title: "Submit an inquiry",
+    step: '01',
+    title: 'Submit an inquiry',
     body: "Tell us about your organization, target audience, and campaign goals. We'll follow up within 2 business days.",
   },
   {
-    step: "02",
-    title: "Receive a tailored proposal",
+    step: '02',
+    title: 'Receive a tailored proposal',
     body: "We'll send a sponsorship proposal with placement options, audience data, and pricing within 5 business days of your inquiry.",
   },
   {
-    step: "03",
-    title: "Launch your campaign",
-    body: "Go live with homepage, city-level, or category placements — your brand alongside the businesses your audience already trusts.",
+    step: '03',
+    title: 'Launch your campaign',
+    body: 'Go live with homepage, city-level, or category placements — your brand alongside the businesses your audience already trusts.',
   },
 ]
 
@@ -64,13 +64,13 @@ export default function ForSponsorsPage() {
             id="for-sponsors-heading"
             className="font-headline text-4xl md:text-5xl text-white leading-tight mb-4"
           >
-            Partner with the platform<br className="hidden sm:block" />
+            Partner with the platform
+            <br className="hidden sm:block" />
             powering Black economic discovery.
           </h1>
           <p className="font-subhead text-pale-lavender text-lg leading-relaxed max-w-xl mb-8">
-            The BLACQList connects brands and organizations with an engaged,
-            intentional audience that actively seeks to support Black-owned
-            businesses and community initiatives.
+            The BLACQList connects brands and organizations with an engaged, intentional audience
+            that actively seeks to support Black-owned businesses and community initiatives.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -97,19 +97,12 @@ export default function ForSponsorsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           {SPONSOR_TYPES.map((type) => (
-            <div
-              key={type.title}
-              className="rounded-xl border border-charcoal/15 p-6"
-            >
+            <div key={type.title} className="rounded-xl border border-charcoal/15 p-6">
               <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-4">
                 {type.badge}
               </span>
-              <h3 className="font-headline text-lg text-brand-black mb-2">
-                {type.title}
-              </h3>
-              <p className="font-body text-sm text-charcoal leading-relaxed">
-                {type.description}
-              </p>
+              <h3 className="font-headline text-lg text-brand-black mb-2">{type.title}</h3>
+              <p className="font-body text-sm text-charcoal leading-relaxed">{type.description}</p>
             </div>
           ))}
         </div>
@@ -130,9 +123,7 @@ export default function ForSponsorsPage() {
               <h3 className="font-subhead text-base font-semibold text-brand-black">
                 {step.title}
               </h3>
-              <p className="font-body text-sm text-charcoal leading-relaxed">
-                {step.body}
-              </p>
+              <p className="font-body text-sm text-charcoal leading-relaxed">{step.body}</p>
             </div>
           ))}
         </div>
@@ -150,11 +141,10 @@ export default function ForSponsorsPage() {
             <span className="inline-block rounded-full bg-amber-gold/15 text-amber-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Limited Inventory
             </span>
-            <h3 className="font-headline text-lg text-brand-black mb-1">
-              Sponsored Spotlight
-            </h3>
+            <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
             <p className="font-subhead text-sm text-charcoal mb-3">
-              High-visibility placement on the BLACQList homepage, city pages, and category views. Limited slots available per placement zone.
+              High-visibility placement on the BLACQList homepage, city pages, and category views.
+              Limited slots available per placement zone.
             </p>
             <p className="font-headline text-2xl text-brand-black mb-1">
               $299–$999
@@ -176,11 +166,10 @@ export default function ForSponsorsPage() {
             <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Pay Once
             </span>
-            <h3 className="font-headline text-lg text-brand-black mb-1">
-              BLACQ Boost
-            </h3>
+            <h3 className="font-headline text-lg text-brand-black mb-1">BLACQ Boost</h3>
             <p className="font-subhead text-sm text-charcoal mb-3">
-              Boost an individual listing in search results and relevant category pages for a focused 30-day window.
+              Boost an individual listing in search results and relevant category pages for a
+              focused 30-day window.
             </p>
             <p className="font-headline text-2xl text-brand-black mb-1">
               $49–$99

@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { Share2, Phone, MapPin } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { getCtaLabel } from "@/types"
-import { SaveButton } from "@/components/entity-page/SaveButton"
-import type { EntityPageData } from "@/types"
+import { useEffect, useState } from 'react'
+import { Share2, Phone, MapPin } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { getCtaLabel } from '@/types'
+import { SaveButton } from '@/components/entity-page/SaveButton'
+import type { EntityPageData } from '@/types'
 
 interface Props {
   entity: EntityPageData
@@ -17,15 +17,14 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
 
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
   const ctaHref =
-    entity.details.cta_type === "call" && entity.details.phone
-      ? `tel:${entity.details.phone.replace(/\D/g, "")}`
-      : (entity.details.cta_url ?? "#")
+    entity.details.cta_type === 'call' && entity.details.phone
+      ? `tel:${entity.details.phone.replace(/\D/g, '')}`
+      : (entity.details.cta_url ?? '#')
 
-  const shortName =
-    entity.name.length > 18 ? entity.name.slice(0, 17) + "…" : entity.name
+  const shortName = entity.name.length > 18 ? entity.name.slice(0, 17) + '…' : entity.name
 
   useEffect(() => {
-    const heroCta = document.getElementById("hero-cta")
+    const heroCta = document.getElementById('hero-cta')
     if (!heroCta) return
 
     const observer = new IntersectionObserver(
@@ -47,7 +46,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
           entity.details.zip,
         ]
           .filter(Boolean)
-          .join(", ")
+          .join(', ')
       )}`
     : null
 
@@ -57,9 +56,9 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
       <div
         aria-hidden={!visible}
         className={cn(
-          "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-white/10",
-          "transition-transform duration-300 ease-out",
-          visible ? "translate-y-0" : "translate-y-full"
+          'md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-white/10',
+          'transition-transform duration-300 ease-out',
+          visible ? 'translate-y-0' : 'translate-y-full'
         )}
       >
         <div className="flex items-center gap-3 px-4 py-3 safe-area-inset-bottom">
@@ -94,9 +93,9 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
       <div
         aria-hidden={!visible}
         className={cn(
-          "hidden md:flex fixed top-16 left-0 right-0 z-40 bg-brand-black border-b border-white/10",
-          "transition-opacity duration-300 ease-out h-[52px]",
-          visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          'hidden md:flex fixed top-16 left-0 right-0 z-40 bg-brand-black border-b border-white/10',
+          'transition-opacity duration-300 ease-out h-[52px]',
+          visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
       >
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 flex items-center gap-4">
@@ -106,7 +105,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
 
           {entity.details.phone && (
             <a
-              href={`tel:${entity.details.phone.replace(/\D/g, "")}`}
+              href={`tel:${entity.details.phone.replace(/\D/g, '')}`}
               tabIndex={visible ? 0 : -1}
               className="inline-flex items-center gap-1.5 font-subhead text-sm text-white/70 hover:text-white transition-colors"
               aria-label={`Call ${entity.name}: ${entity.details.phone}`}

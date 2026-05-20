@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 // ─── ListingCardSkeleton ───────────────────────────────────────────────────────
 // Mirrors the EntityCard layout: cover image + content area
@@ -7,7 +7,7 @@ export function ListingCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn("rounded-lg border border-pale-lavender overflow-hidden bg-white", className)}
+      className={cn('rounded-lg border border-pale-lavender overflow-hidden bg-white', className)}
     >
       {/* Cover image area */}
       <Skeleton className="aspect-video w-full rounded-none rounded-t-lg" />
@@ -36,17 +36,14 @@ export function SectionSkeleton({ lines = 3, className }: SectionSkeletonProps) 
   const lineCount = Math.max(1, lines)
 
   return (
-    <div aria-hidden="true" className={cn("w-full", className)}>
+    <div aria-hidden="true" className={cn('w-full', className)}>
       {/* Section title */}
       <Skeleton className="h-6 w-1/3 mb-4" />
 
       {/* Body lines */}
       <div className="flex flex-col gap-y-3">
         {Array.from({ length: lineCount }).map((_, i) => (
-          <Skeleton
-            key={i}
-            className={cn("h-4", i === lineCount - 1 ? "w-2/3" : "w-full")}
-          />
+          <Skeleton key={i} className={cn('h-4', i === lineCount - 1 ? 'w-2/3' : 'w-full')} />
         ))}
       </div>
     </div>
@@ -57,7 +54,7 @@ export function SectionSkeleton({ lines = 3, className }: SectionSkeletonProps) 
 // Mirrors the BLACQList Page hero: image area + entity name + tagline
 export function HeroSkeleton({ className }: { className?: string }) {
   return (
-    <div aria-hidden="true" className={cn("w-full", className)}>
+    <div aria-hidden="true" className={cn('w-full', className)}>
       {/* Hero image */}
       <Skeleton className="w-full h-[240px] md:h-[360px] rounded-lg" />
 
@@ -74,7 +71,10 @@ export function HeroSkeleton({ className }: { className?: string }) {
 // Dashboard stat card: label + number + sub-label
 export function StatCardSkeleton({ className }: { className?: string }) {
   return (
-    <div aria-hidden="true" className={cn("rounded-lg border border-pale-lavender bg-white p-4", className)}>
+    <div
+      aria-hidden="true"
+      className={cn('rounded-lg border border-pale-lavender bg-white p-4', className)}
+    >
       {/* Label */}
       <Skeleton className="h-3 w-24 mb-2" />
       {/* Number */}

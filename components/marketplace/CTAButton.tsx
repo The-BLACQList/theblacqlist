@@ -1,26 +1,26 @@
-"use client"
+'use client'
 
-import { ExternalLink } from "lucide-react"
+import { ExternalLink } from 'lucide-react'
 
 interface CTAButtonProps {
   href: string
   label: string
   ctaType: string
-  entityType: "listing" | "product" | "service"
+  entityType: 'listing' | 'product' | 'service'
   entityId: string
   listingId: string
-  variant?: "primary" | "outline"
+  variant?: 'primary' | 'outline'
 }
 
 const CTA_LABELS: Record<string, string> = {
-  "visit-website": "Visit Website",
-  "shop-now":      "Shop Now",
-  "book-now":      "Book Now",
-  "request-quote": "Request Quote",
-  "order":         "Order Now",
-  "buy-now":       "Buy Now",
-  "shop":          "Shop",
-  "book":          "Book",
+  'visit-website': 'Visit Website',
+  'shop-now': 'Shop Now',
+  'book-now': 'Book Now',
+  'request-quote': 'Request Quote',
+  order: 'Order Now',
+  'buy-now': 'Buy Now',
+  shop: 'Shop',
+  book: 'Book',
 }
 
 export function CTAButton({
@@ -30,32 +30,32 @@ export function CTAButton({
   entityType,
   entityId,
   listingId,
-  variant = "primary",
+  variant = 'primary',
 }: CTAButtonProps) {
-  const displayLabel = label || CTA_LABELS[ctaType] || "Visit Website"
+  const displayLabel = label || CTA_LABELS[ctaType] || 'Visit Website'
 
   function handleClick() {
     // Fire-and-forget analytics — do not block navigation
-    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
       navigator.sendBeacon(
-        "/api/marketplace/cta-click",
+        '/api/marketplace/cta-click',
         JSON.stringify({
-          entity_type:     entityType,
-          entity_id:       entityId,
-          cta_type:        ctaType,
-          listing_id:      listingId,
+          entity_type: entityType,
+          entity_id: entityId,
+          cta_type: ctaType,
+          listing_id: listingId,
           destination_url: href,
         })
       )
     } else {
-      fetch("/api/marketplace/cta-click", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
+      fetch('/api/marketplace/cta-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          entity_type:     entityType,
-          entity_id:       entityId,
-          cta_type:        ctaType,
-          listing_id:      listingId,
+          entity_type: entityType,
+          entity_id: entityId,
+          cta_type: ctaType,
+          listing_id: listingId,
           destination_url: href,
         }),
         keepalive: true,
@@ -63,7 +63,7 @@ export function CTAButton({
     }
   }
 
-  if (variant === "outline") {
+  if (variant === 'outline') {
     return (
       <a
         href={href}

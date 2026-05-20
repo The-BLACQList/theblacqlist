@@ -20,12 +20,12 @@ This document defines what to monitor, where to look, alert thresholds, and the 
 
 ### Alert Configuration (configure in Sentry → Alerts → Create Alert Rule)
 
-| Rule name | Condition | Action |
-|---|---|---|
-| P1 error spike | >5 unique issues in 1 hour | Post to Slack `#incidents` |
-| P0 error storm | >20 unique issues in 1 hour | Post to Slack `#incidents` + email on-call engineer |
-| New high-volume error | Any single issue exceeds 10 occurrences | Post to Slack `#incidents` for P1 triage |
-| Auth callback failure | Error matching `auth.callback` exceeds 3 occurrences | Post to Slack `#incidents` — check auth config |
+| Rule name             | Condition                                            | Action                                              |
+| --------------------- | ---------------------------------------------------- | --------------------------------------------------- |
+| P1 error spike        | >5 unique issues in 1 hour                           | Post to Slack `#incidents`                          |
+| P0 error storm        | >20 unique issues in 1 hour                          | Post to Slack `#incidents` + email on-call engineer |
+| New high-volume error | Any single issue exceeds 10 occurrences              | Post to Slack `#incidents` for P1 triage            |
+| Auth callback failure | Error matching `auth.callback` exceeds 3 occurrences | Post to Slack `#incidents` — check auth config      |
 
 ### Weekly Sentry Review (every Monday)
 
@@ -40,6 +40,7 @@ This document defines what to monitor, where to look, alert thresholds, and the 
 ### Privacy Note
 
 Before enabling Session Replay in Sentry:
+
 - Confirm PII scrubbing is configured: mask all form inputs, redact email/phone fields
 - Do not enable Session Replay without reviewing Sentry's data processing settings
 - Default: Session Replay is disabled until explicitly reviewed
@@ -52,22 +53,22 @@ Before enabling Session Replay in Sentry:
 
 Access: Supabase Dashboard → The BLACQList production project → Reports/Metrics
 
-| Metric | Where | Alert threshold |
-|---|---|---|
-| Database connection count | Settings → Database → Connection Pooling | >80% of pool limit |
-| Query P95 response time | Reports → Database | >500ms P95 |
-| Storage usage | Storage → each bucket | >80% of plan storage limit |
-| Auth active users | Authentication → Users | Sudden drop vs. prior day |
+| Metric                    | Where                                    | Alert threshold            |
+| ------------------------- | ---------------------------------------- | -------------------------- |
+| Database connection count | Settings → Database → Connection Pooling | >80% of pool limit         |
+| Query P95 response time   | Reports → Database                       | >500ms P95                 |
+| Storage usage             | Storage → each bucket                    | >80% of plan storage limit |
+| Auth active users         | Authentication → Users                   | Sudden drop vs. prior day  |
 
 **Connection pool note:** With PgBouncer in transaction mode, the default pool size is typically 15–25 connections. At >80% utilization, investigate slow queries and long-running transactions before connections are exhausted.
 
 ### Weekly Checks
 
-| Check | How | Alert |
-|---|---|---|
-| PITR backup status | Settings → Backups → Point-in-Time Recovery | Must show last backup timestamp < 24 hours ago |
-| Migration log | Dashboard → Database → Migrations | No unexpected migrations should appear |
-| Storage bucket visibility | Storage → bucket settings | `listing-media` = public; `verification-docs` = private; `receipts` = private |
+| Check                     | How                                         | Alert                                                                         |
+| ------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------- |
+| PITR backup status        | Settings → Backups → Point-in-Time Recovery | Must show last backup timestamp < 24 hours ago                                |
+| Migration log             | Dashboard → Database → Migrations           | No unexpected migrations should appear                                        |
+| Storage bucket visibility | Storage → bucket settings                   | `listing-media` = public; `verification-docs` = private; `receipts` = private |
 
 ### Auth Failure Monitoring
 
@@ -119,23 +120,23 @@ AND state != 'idle';
 
 Check Vercel Dashboard → Functions → Logs daily for the first 2 weeks, then weekly:
 
-| Route | What to watch for |
-|---|---|
-| `/api/upload/[bucket]` | 400/413/415 errors (file type/size rejections) vs. unexpected 500s |
+| Route                  | What to watch for                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| `/api/upload/[bucket]` | 400/413/415 errors (file type/size rejections) vs. unexpected 500s                           |
 | `/api/analytics/event` | 429 errors (rate limiter; confirm it's operating correctly, not blocking legitimate traffic) |
-| `/auth/callback` | Any 500 errors — auth flow is broken |
-| `/api/search` | 500 errors — search index or DB query issue |
-| `/api/listings/[id]` | 404 patterns — check if slugs are resolving correctly |
+| `/auth/callback`       | Any 500 errors — auth flow is broken                                                         |
+| `/api/search`          | 500 errors — search index or DB query issue                                                  |
+| `/api/listings/[id]`   | 404 patterns — check if slugs are resolving correctly                                        |
 
 ### Core Web Vitals
 
 Check Vercel Analytics → Web Analytics → Core Web Vitals weekly:
 
-| Metric | Target | Alert threshold |
-|---|---|---|
-| LCP (Largest Contentful Paint) | <2.5s | >4s |
-| CLS (Cumulative Layout Shift) | <0.1 | >0.25 |
-| INP (Interaction to Next Paint) | <200ms | >500ms |
+| Metric                          | Target | Alert threshold |
+| ------------------------------- | ------ | --------------- |
+| LCP (Largest Contentful Paint)  | <2.5s  | >4s             |
+| CLS (Cumulative Layout Shift)   | <0.1   | >0.25           |
+| INP (Interaction to Next Paint) | <200ms | >500ms          |
 
 Primary targets set from ticket 088 (performance optimization). If any metric exceeds the alert threshold on listing pages or the search results page, file a P1 performance ticket.
 
@@ -163,16 +164,16 @@ Every production deployment triggers this check:
 
 This table represents the "all clear" state. Check weekly; alert if any metric enters the alert zone.
 
-| Metric | Source | Healthy | Warning | Alert |
-|---|---|---|---|---|
-| Homepage LCP | Vercel Analytics | <2.5s | 2.5–4s | >4s |
-| Search P95 response time | Sentry Performance | <1.5s | 1.5–3s | >3s |
-| Entity page LCP | Vercel Analytics | <2.5s | 2.5–4s | >4s |
-| Auth success rate | Supabase Auth Logs | >98% | 95–98% | <95% |
-| Upload success rate | Vercel Function Logs | >95% | 90–95% | <90% |
-| Sentry error count (weekly) | Sentry | <50 | 50–200 | >200 |
-| Claim resolution time (avg) | Manual SQL query | ≤24h | 24–48h | >48h |
-| DB connection pool usage | Supabase Metrics | <60% | 60–80% | >80% |
+| Metric                      | Source               | Healthy | Warning | Alert |
+| --------------------------- | -------------------- | ------- | ------- | ----- |
+| Homepage LCP                | Vercel Analytics     | <2.5s   | 2.5–4s  | >4s   |
+| Search P95 response time    | Sentry Performance   | <1.5s   | 1.5–3s  | >3s   |
+| Entity page LCP             | Vercel Analytics     | <2.5s   | 2.5–4s  | >4s   |
+| Auth success rate           | Supabase Auth Logs   | >98%    | 95–98%  | <95%  |
+| Upload success rate         | Vercel Function Logs | >95%    | 90–95%  | <90%  |
+| Sentry error count (weekly) | Sentry               | <50     | 50–200  | >200  |
+| Claim resolution time (avg) | Manual SQL query     | ≤24h    | 24–48h  | >48h  |
+| DB connection pool usage    | Supabase Metrics     | <60%    | 60–80%  | >80%  |
 
 ### Claim Resolution Query
 
@@ -201,6 +202,7 @@ WHERE status IN ('approved', 'rejected')
 See `post-launch-plan.md` for the hour-by-hour cadence.
 
 Summary:
+
 - Hours 0–4: every 30 minutes
 - Hours 5–72: every 2 hours
 - Dedicated on-call person designated for each 8-hour block
@@ -236,13 +238,13 @@ Summary:
 
 ## Section 6 — Incident Response Quick Reference
 
-| Symptom | Likely cause | First action |
-|---|---|---|
-| Homepage blank or 500 | Next.js build failure or DB connection | Check Vercel deployment status; `rollback-plan.md` Scenario A |
-| Listing pages show mock data | `NEXT_PUBLIC_SUPABASE_URL` env var wrong | Check Vercel env vars; confirm production Supabase URL |
-| Sign-in redirects to error page | `AUTH_SECRET` missing or Supabase redirect URL misconfigured | Check Vercel env vars; check Supabase Auth → URL Configuration |
-| Admin page accessible to non-admin | Auth middleware regression | Rollback immediately — security breach; `rollback-plan.md` Scenario D |
-| Upload endpoint 500 | Supabase Storage bucket config | Check bucket exists, check RLS policies on storage |
-| Auth callback failures spiking | Supabase service_role key rotated or expired | Check key in Vercel env vars; rotate if necessary; `rollback-plan.md` Scenario D |
-| DB connection pool at 100% | Long-running queries or connection leak | Kill long-running queries; check for infinite loops in server actions |
-| Email not delivered | Resend API key wrong or domain DNS issue | `rollback-plan.md` Scenario F |
+| Symptom                            | Likely cause                                                 | First action                                                                     |
+| ---------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Homepage blank or 500              | Next.js build failure or DB connection                       | Check Vercel deployment status; `rollback-plan.md` Scenario A                    |
+| Listing pages show mock data       | `NEXT_PUBLIC_SUPABASE_URL` env var wrong                     | Check Vercel env vars; confirm production Supabase URL                           |
+| Sign-in redirects to error page    | `AUTH_SECRET` missing or Supabase redirect URL misconfigured | Check Vercel env vars; check Supabase Auth → URL Configuration                   |
+| Admin page accessible to non-admin | Auth middleware regression                                   | Rollback immediately — security breach; `rollback-plan.md` Scenario D            |
+| Upload endpoint 500                | Supabase Storage bucket config                               | Check bucket exists, check RLS policies on storage                               |
+| Auth callback failures spiking     | Supabase service_role key rotated or expired                 | Check key in Vercel env vars; rotate if necessary; `rollback-plan.md` Scenario D |
+| DB connection pool at 100%         | Long-running queries or connection leak                      | Kill long-running queries; check for infinite loops in server actions            |
+| Email not delivered                | Resend API key wrong or domain DNS issue                     | `rollback-plan.md` Scenario F                                                    |

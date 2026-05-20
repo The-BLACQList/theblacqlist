@@ -1,27 +1,27 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { ArrowLeft, Trash2 } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
 import {
   updateGuideAction,
   createGuideSectionAction,
   deleteGuideSectionAction,
-} from "@/lib/actions/editorial/guides"
-import { GuideAdminForm } from "@/components/editorial/AdminEditorialForm"
+} from '@/lib/actions/editorial/guides'
+import { GuideAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "Edit Guide" }
+export const metadata: Metadata = { title: 'Edit Guide' }
 
 interface Props {
   params: Promise<{ id: string }>
 }
 
 const inputCls =
-  "w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
+  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
 const textareaCls =
-  "w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y"
+  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
 
 export default async function EditGuidePage({ params }: Props) {
   await requireAdmin()
@@ -29,23 +29,22 @@ export default async function EditGuidePage({ params }: Props) {
   const serviceClient = createServiceClient()
 
   const { data: guide } = await serviceClient
-    .from("guides")
-    .select("id, title, slug, subtitle, description, city, meta_description, status")
-    .eq("id", id)
+    .from('guides')
+    .select('id, title, slug, subtitle, description, city, meta_description, status')
+    .eq('id', id)
     .single()
 
   if (!guide) notFound()
 
   const { data: sections } = await serviceClient
-    .from("guide_sections")
-    .select("id, heading, body, display_order")
-    .eq("guide_id", id)
-    .order("display_order", { ascending: true })
+    .from('guide_sections')
+    .select('id, heading, body, display_order')
+    .eq('guide_id', id)
+    .order('display_order', { ascending: true })
 
   const sectionList = sections ?? []
-  const nextOrder = sectionList.length > 0
-    ? Math.max(...sectionList.map((s) => s.display_order)) + 1
-    : 0
+  const nextOrder =
+    sectionList.length > 0 ? Math.max(...sectionList.map((s) => s.display_order)) + 1 : 0
 
   return (
     <div className="max-w-[800px] space-y-8">
@@ -76,7 +75,7 @@ export default async function EditGuidePage({ params }: Props) {
         <div>
           <h2 className="font-headline text-base text-brand-black">Sections</h2>
           <p className="font-subhead text-xs text-charcoal/50 mt-0.5">
-            {sectionList.length} {sectionList.length === 1 ? "section" : "sections"}
+            {sectionList.length} {sectionList.length === 1 ? 'section' : 'sections'}
           </p>
         </div>
 
@@ -91,7 +90,13 @@ export default async function EditGuidePage({ params }: Props) {
                   <span className="font-subhead text-xs text-charcoal/40 font-semibold">
                     Section {i + 1}
                   </span>
-                  <form action={deleteGuideSectionAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>}>
+                  <form
+                    action={
+                      deleteGuideSectionAction.bind(null, null) as unknown as (
+                        formData: FormData
+                      ) => Promise<void>
+                    }
+                  >
                     <input type="hidden" name="id" value={section.id} />
                     <button
                       type="submit"
@@ -116,12 +121,22 @@ export default async function EditGuidePage({ params }: Props) {
         )}
 
         {/* Add section */}
-        <form action={createGuideSectionAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>} className="space-y-3 pt-2 border-t border-charcoal/10">
+        <form
+          action={
+            createGuideSectionAction.bind(null, null) as unknown as (
+              formData: FormData
+            ) => Promise<void>
+          }
+          className="space-y-3 pt-2 border-t border-charcoal/10"
+        >
           <p className="font-subhead text-xs font-semibold text-brand-black pt-1">Add section</p>
           <input type="hidden" name="guide_id" value={id} />
           <input type="hidden" name="display_order" value={nextOrder} />
           <div className="space-y-1">
-            <label htmlFor="heading" className="block font-subhead text-sm font-semibold text-brand-black">
+            <label
+              htmlFor="heading"
+              className="block font-subhead text-sm font-semibold text-brand-black"
+            >
               Heading *
             </label>
             <input
@@ -135,7 +150,10 @@ export default async function EditGuidePage({ params }: Props) {
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="body" className="block font-subhead text-sm font-semibold text-brand-black">
+            <label
+              htmlFor="body"
+              className="block font-subhead text-sm font-semibold text-brand-black"
+            >
               Body
             </label>
             <textarea

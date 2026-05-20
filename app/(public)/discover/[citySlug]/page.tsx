@@ -1,16 +1,16 @@
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ChevronRight } from "lucide-react"
+import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ChevronRight } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { queryListings, LISTINGS_PAGE_SIZE } from "@/lib/listings/query"
-import { buildPageUrl } from "@/lib/listings/pagination"
-import { Container } from "@/components/layout/container"
-import { SearchBar } from "@/components/discovery/SearchBar"
-import { DiscoveryFilters } from "@/components/discovery/DiscoveryFilters"
-import { DiscoveryGrid } from "@/components/discovery/DiscoveryGrid"
+import { createClient } from '@/lib/supabase/server'
+import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
+import { buildPageUrl } from '@/lib/listings/pagination'
+import { Container } from '@/components/layout/container'
+import { SearchBar } from '@/components/discovery/SearchBar'
+import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters'
+import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,10 +37,10 @@ type CityRow = {
 async function getCity(slug: string): Promise<CityRow | null> {
   const supabase = await createClient()
   const { data } = await supabase
-    .from("cities")
-    .select("id, name, slug, metro_area, states!cities_state_id_fkey(name, code)")
-    .eq("slug", slug)
-    .eq("is_active", true)
+    .from('cities')
+    .select('id, name, slug, metro_area, states!cities_state_id_fkey(name, code)')
+    .eq('slug', slug)
+    .eq('is_active', true)
     .maybeSingle()
   return data as CityRow | null
 }
@@ -50,14 +50,12 @@ async function getCity(slug: string): Promise<CityRow | null> {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { citySlug } = await params
   const city = await getCity(citySlug)
-  if (!city) return { title: "Not Found | The BLACQList" }
+  if (!city) return { title: 'Not Found | The BLACQList' }
 
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://theblacqlist.com"
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
   const canonicalUrl = `${BASE_URL}/discover/${citySlug}`
 
-  const locationLabel = city.states
-    ? `${city.name}, ${city.states.code}`
-    : city.name
+  const locationLabel = city.states ? `${city.name}, ${city.states.code}` : city.name
 
   const title = `Black-Owned Businesses in ${locationLabel} | The BLACQList`
   const description = `Discover and support Black-owned businesses in ${locationLabel}. Browse restaurants, salons, professional services, and more on The BLACQList.`
@@ -72,7 +70,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: canonicalUrl,
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title,
       description,
     },
@@ -86,10 +84,10 @@ async function CityContent({
   searchParams,
 }: {
   city: CityRow
-  searchParams: PageProps["searchParams"]
+  searchParams: PageProps['searchParams']
 }) {
   const params = await searchParams
-  const page = Math.max(1, parseInt(params.page ?? "1", 10))
+  const page = Math.max(1, parseInt(params.page ?? '1', 10))
 
   const result = await queryListings({
     city: city.slug,
@@ -132,9 +130,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   const city = await getCity(citySlug)
   if (!city) notFound()
 
-  const locationLabel = city.states
-    ? `${city.name}, ${city.states.code}`
-    : city.name
+  const locationLabel = city.states ? `${city.name}, ${city.states.code}` : city.name
 
   return (
     <>
@@ -157,24 +153,17 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             aria-label="Breadcrumb"
             className="flex items-center gap-1.5 font-subhead text-xs text-charcoal/50 mb-2"
           >
-            <Link
-              href="/cities"
-              className="hover:text-charcoal transition-colors"
-            >
+            <Link href="/cities" className="hover:text-charcoal transition-colors">
               Cities
             </Link>
             <ChevronRight className="size-3" aria-hidden="true" />
-            <span className="text-brand-black font-semibold">
-              {locationLabel}
-            </span>
+            <span className="text-brand-black font-semibold">{locationLabel}</span>
           </nav>
           <h1 className="font-headline text-2xl md:text-3xl text-brand-black">
             Black-Owned Businesses in {city.name}
           </h1>
           {city.metro_area && (
-            <p className="font-body text-sm text-charcoal/50 mt-1">
-              {city.metro_area}
-            </p>
+            <p className="font-body text-sm text-charcoal/50 mt-1">{city.metro_area}</p>
           )}
         </Container>
       </div>
@@ -190,9 +179,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
 
       {/* Listings */}
       <Container className="py-8">
-        <Suspense
-          fallback={<DiscoveryGrid entities={[]} total={0} isLoading />}
-        >
+        <Suspense fallback={<DiscoveryGrid entities={[]} total={0} isLoading />}>
           <CityContent city={city} searchParams={searchParams} />
         </Suspense>
       </Container>

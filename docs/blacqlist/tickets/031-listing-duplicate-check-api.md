@@ -1,26 +1,33 @@
 # Ticket 031: Listing Duplicate-Check API
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 API / Entity Submission
 
 ## Context
+
 Before a user submits a new business listing, the platform must warn them if a similar listing already exists in the same city. Without this check, The BLACQList will accumulate duplicate entries for the same business — undermining data quality and trust. This Route Handler powers the `DuplicateWarningDialog` on the Add Business form Step 7 and must be implemented before Ticket 033 (steps 5–7 of the Add Business form). Source: `docs/blacqlist/architecture/api-contract.md` Section 4 endpoint 18; `docs/blacqlist/ux/mvp-screen-map.md` Add Business screen; `docs/blacqlist/data/database-schema-plan.md` listings table.
 
 ## User Story
+
 As a business owner completing the Add Business form, I want to be warned if a similar listing already exists in my city before I publish, so that I can claim an existing page instead of creating a duplicate.
 
 ## Scope
 
 **In scope:**
+
 - Create `app/api/listings/duplicate-check/route.ts` as a POST Route Handler
 - Accept JSON body `{ name: string, city_id: string }`
 - Execute `pg_trgm` similarity query against published listings in the given city with `similarity > 0.3`, ordered by match score descending, limited to 5 results
@@ -32,6 +39,7 @@ As a business owner completing the Add Business form, I want to be warned if a s
 - Structured error responses matching `{ error: string, code: string }` envelope
 
 **Out of scope:**
+
 - Fuzzy search across cities (query is always scoped to the provided `city_id`)
 - Draft or pending listings in results (only `status = 'published' AND deleted_at IS NULL` listings returned)
 - Saving duplicate warnings to the database
@@ -39,11 +47,11 @@ As a business owner completing the Add Business form, I want to be warned if a s
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 025 (listings table migration) | Blocking ticket | Must be complete — `listings` table must exist with `pg_trgm` extension and `name` column |
-| `pg_trgm` extension enabled in Supabase | Infrastructure | Must be enabled before similarity queries work — confirm in Supabase Studio |
-| `cities` table seeded with launch cities | Data | Required to validate `city_id` |
+| Dependency                               | Type            | Status                                                                                    |
+| ---------------------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| Ticket 025 (listings table migration)    | Blocking ticket | Must be complete — `listings` table must exist with `pg_trgm` extension and `name` column |
+| `pg_trgm` extension enabled in Supabase  | Infrastructure  | Must be enabled before similarity queries work — confirm in Supabase Studio               |
+| `cities` table seeded with launch cities | Data            | Required to validate `city_id`                                                            |
 
 ## UX Notes
 
@@ -69,6 +77,7 @@ As a business owner completing the Add Business form, I want to be warned if a s
 - **Migration required:** No — requires `pg_trgm` extension only; confirm enabled
 
 **Query pattern:**
+
 ```sql
 SELECT
   id, name, slug, entity_type, trust_tier,
@@ -82,6 +91,7 @@ WHERE city_id = $2
 ORDER BY match_score DESC
 LIMIT 5
 ```
+
 Join to `cities` table to return `city.name` in the response.
 
 ## API Notes
@@ -105,7 +115,7 @@ Join to `cities` table to return `city.name` in the response.
         city: { name: string }
         entity_type: string
         trust_tier: string
-        match_score: number   // 0–1
+        match_score: number // 0–1
         cover_image_url: string | null
       }>
     }
@@ -118,12 +128,15 @@ Join to `cities` table to return `city.name` in the response.
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/listings/duplicate-check/route.ts` — POST Route Handler
 
 **Files to modify:**
+
 - None
 
 **Key patterns:**
+
 - Use `createServerClient` from `@supabase/ssr` with `cookies()` — never the browser client
 - Call `supabase.auth.getUser()` — not `getSession()` — to validate the session on every request
 - Use zod `safeParse` to validate the request body before any DB operation
@@ -133,6 +146,7 @@ Join to `cities` table to return `city.name` in the response.
 - Follow the response envelope pattern from `docs/blacqlist/architecture/api-contract.md` overview
 
 **Do not:**
+
 - Return storage paths to the client — always generate the CDN URL server-side
 - Include `draft`, `pending`, `flagged`, or `archived` listings in results
 - Skip the `city_id` existence check — an invalid city UUID must return `400`, not a DB error
@@ -153,13 +167,13 @@ Join to `cities` table to return `city.name` in the response.
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| No session | Unauthenticated caller | `401 AUTH_REQUIRED` JSON response | Caller redirects user to sign-in; `next=/add-business` param preserves flow |
-| Invalid city_id | Non-UUID or non-existent city | `400 VALIDATION_ERROR` JSON response | Caller shows inline error — city selection must be reselected |
-| `pg_trgm` extension missing | Extension not enabled in Supabase | `500 SERVER_ERROR` — DB query fails with pg error | Admin enables extension in Supabase Studio; no user-visible recovery |
-| DB timeout | Supabase query exceeds threshold | `500 SERVER_ERROR` returned | Caller shows generic error; user can retry or proceed without duplicate check |
-| Empty `name` | Name field is empty string | `400 VALIDATION_ERROR` | Caller enforces minimum length before calling endpoint |
+| Failure                     | Condition                         | User sees                                         | Recovery                                                                      |
+| --------------------------- | --------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| No session                  | Unauthenticated caller            | `401 AUTH_REQUIRED` JSON response                 | Caller redirects user to sign-in; `next=/add-business` param preserves flow   |
+| Invalid city_id             | Non-UUID or non-existent city     | `400 VALIDATION_ERROR` JSON response              | Caller shows inline error — city selection must be reselected                 |
+| `pg_trgm` extension missing | Extension not enabled in Supabase | `500 SERVER_ERROR` — DB query fails with pg error | Admin enables extension in Supabase Studio; no user-visible recovery          |
+| DB timeout                  | Supabase query exceeds threshold  | `500 SERVER_ERROR` returned                       | Caller shows generic error; user can retry or proceed without duplicate check |
+| Empty `name`                | Name field is empty string        | `400 VALIDATION_ERROR`                            | Caller enforces minimum length before calling endpoint                        |
 
 ## Edge Cases
 
@@ -175,13 +189,13 @@ Join to `cities` table to return `city.name` in the response.
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
+| ID   | Test                         | Steps                                                                                                                    | Expected                                                                                                                    |
+| ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | QA-1 | Happy path — duplicate found | POST with `{ name: "The Hair Studio", city_id: "[atlanta-uuid]" }` where "Hair Studio ATL" exists as a published listing | Response 200; `duplicates` array contains at least one item; each item has `id`, `name`, `slug`, `match_score`, `city.name` |
-| QA-2 | No duplicate | POST with `{ name: "Completely Unique Xylophone Repair", city_id: "[atlanta-uuid]" }` | Response 200; `duplicates` is empty array |
-| QA-3 | Unauthenticated | POST without session cookie | Response 401; `code: "AUTH_REQUIRED"` |
-| QA-4 | Invalid city_id | POST with `{ name: "Test Business", city_id: "not-a-uuid" }` | Response 400; `code: "VALIDATION_ERROR"` |
-| QA-5 | Draft listing not returned | POST with name matching a `status: 'draft'` listing | Response 200; `duplicates` does not contain the draft listing |
+| QA-2 | No duplicate                 | POST with `{ name: "Completely Unique Xylophone Repair", city_id: "[atlanta-uuid]" }`                                    | Response 200; `duplicates` is empty array                                                                                   |
+| QA-3 | Unauthenticated              | POST without session cookie                                                                                              | Response 401; `code: "AUTH_REQUIRED"`                                                                                       |
+| QA-4 | Invalid city_id              | POST with `{ name: "Test Business", city_id: "not-a-uuid" }`                                                             | Response 400; `code: "VALIDATION_ERROR"`                                                                                    |
+| QA-5 | Draft listing not returned   | POST with name matching a `status: 'draft'` listing                                                                      | Response 200; `duplicates` does not contain the draft listing                                                               |
 
 ## Security Notes
 

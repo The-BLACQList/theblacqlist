@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 7: Saves, Reviews, Corrections, Sharing
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Saves / Engagement
 
 ---
@@ -42,6 +47,7 @@ As a logged-in supporter or owner, I want to save a listing with a single tap an
 ## Scope
 
 **In scope:**
+
 - `app/api/saves/route.ts` — Route Handler for `POST /api/saves` and `DELETE /api/saves`
 - `app/api/saves/check/route.ts` — Route Handler for `GET /api/saves/check?listing_id=`
 - `components/listing/SaveButton.tsx` — "use client"; reusable save/unsave toggle button
@@ -56,6 +62,7 @@ As a logged-in supporter or owner, I want to save a listing with a single tap an
 - `DELETE /api/saves` fires a `listing_unsaved` analytics event (fire-and-forget)
 
 **Out of scope:**
+
 - Saved Listings page `/account/saved` (Ticket 046)
 - Save count badge on listing cards (aggregated by DB trigger; surfaced in Ticket 021 BLACQList Page)
 - Save from the admin interface
@@ -64,11 +71,11 @@ As a logged-in supporter or owner, I want to save a listing with a single tap an
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 011 — `saves` table migration | Blocking ticket | Not started |
-| Ticket 013 — Supabase Auth session middleware | Blocking ticket | Not started |
-| `SignInModal` component | Component | Must exist or be created in this ticket |
+| Dependency                                             | Type                | Status                                                  |
+| ------------------------------------------------------ | ------------------- | ------------------------------------------------------- |
+| Ticket 011 — `saves` table migration                   | Blocking ticket     | Not started                                             |
+| Ticket 013 — Supabase Auth session middleware          | Blocking ticket     | Not started                                             |
+| `SignInModal` component                                | Component           | Must exist or be created in this ticket                 |
 | `POST /api/analytics/event` Route Handler (Ticket 049) | Fire-and-forget API | Should exist; if not, stub with a no-op until 049 ships |
 
 ---
@@ -82,16 +89,17 @@ As a logged-in supporter or owner, I want to save a listing with a single tap an
 
 **Save button state transitions (from `empty-loading-error-success-states.md` § 8):**
 
-| State | Icon | Label | Button state |
-|---|---|---|---|
-| Unsaved | Heart outline (Cream on dark bg, Charcoal on light bg) | "Save" (if space) | Enabled |
-| Saving | Spinner | — | Disabled |
-| Saved | Heart filled (Amber Gold) | "Saved" (if space) | Enabled |
-| Unsaving | Spinner | — | Disabled |
-| Error (save failed) | Heart outline returns | — | Enabled; toast: "Couldn't save. Try again." |
-| Auth required | Heart outline unchanged | — | Enabled; sign-in modal opens |
+| State               | Icon                                                   | Label              | Button state                                |
+| ------------------- | ------------------------------------------------------ | ------------------ | ------------------------------------------- |
+| Unsaved             | Heart outline (Cream on dark bg, Charcoal on light bg) | "Save" (if space)  | Enabled                                     |
+| Saving              | Spinner                                                | —                  | Disabled                                    |
+| Saved               | Heart filled (Amber Gold)                              | "Saved" (if space) | Enabled                                     |
+| Unsaving            | Spinner                                                | —                  | Disabled                                    |
+| Error (save failed) | Heart outline returns                                  | —                  | Enabled; toast: "Couldn't save. Try again." |
+| Auth required       | Heart outline unchanged                                | —                  | Enabled; sign-in modal opens                |
 
 **Sign-in modal (from screen map § BLACQList Page and § 8):**
+
 - Heading: "Sign in to save listings."
 - Body: "Keep track of the Black-owned businesses you love."
 - Primary CTA: "Sign in" → `/sign-in?next=[current-page-url]`
@@ -135,36 +143,39 @@ As a logged-in supporter or owner, I want to save a listing with a single tap an
 
 **Route Handlers:**
 
-| Method | Route | Auth | What it does |
-|---|---|---|---|
-| `POST` | `/api/saves` | Supporter | Insert save; idempotent via ON CONFLICT DO NOTHING; returns 201 `{ data: { saved: true, listing_id } }` |
-| `DELETE` | `/api/saves` | Supporter | Delete save row; idempotent; returns 204 No Content |
-| `GET` | `/api/saves/check` | Supporter | Check save status for a single listing; returns `{ data: { saved: boolean } }` |
+| Method   | Route              | Auth      | What it does                                                                                            |
+| -------- | ------------------ | --------- | ------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/api/saves`       | Supporter | Insert save; idempotent via ON CONFLICT DO NOTHING; returns 201 `{ data: { saved: true, listing_id } }` |
+| `DELETE` | `/api/saves`       | Supporter | Delete save row; idempotent; returns 204 No Content                                                     |
+| `GET`    | `/api/saves/check` | Supporter | Check save status for a single listing; returns `{ data: { saved: boolean } }`                          |
 
 **Request shapes:**
+
 - POST body: `{ listing_id: string }`
 - DELETE query param: `?listing_id=[uuid]` (per api-contract.md § 15 spec)
 - GET query param: `?listing_id=[uuid]`
 
 **Error codes to handle in the component:**
 
-| Code | HTTP | UI behavior |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | Anonymous: open sign-in modal. Session-expired authenticated: redirect to sign-in. |
-| `NOT_FOUND` | 404 | POST only — listing was deleted; revert optimistic state; toast "This listing is no longer available." |
-| `VALIDATION_ERROR` | 400 | Revert optimistic state; toast "Couldn't save. Try again." |
-| Network / 500 | — | Revert optimistic state; toast "Couldn't save. Try again." with Retry |
+| Code               | HTTP | UI behavior                                                                                            |
+| ------------------ | ---- | ------------------------------------------------------------------------------------------------------ |
+| `AUTH_REQUIRED`    | 401  | Anonymous: open sign-in modal. Session-expired authenticated: redirect to sign-in.                     |
+| `NOT_FOUND`        | 404  | POST only — listing was deleted; revert optimistic state; toast "This listing is no longer available." |
+| `VALIDATION_ERROR` | 400  | Revert optimistic state; toast "Couldn't save. Try again."                                             |
+| Network / 500      | —    | Revert optimistic state; toast "Couldn't save. Try again." with Retry                                  |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/saves/route.ts` — Route Handler; exports `POST` and `DELETE` handlers
 - `app/api/saves/check/route.ts` — Route Handler; exports `GET` handler
 - `components/listing/SaveButton.tsx` — "use client"; self-contained save toggle
 
 **Files to modify:**
+
 - `components/listing/ListingCard.tsx` — import and render `<SaveButton listingId={listing.id} initialSaved={listing.is_saved} />`
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — render `<SaveButton>` in the hero and quick-actions bar
 - `components/ui/SignInModal.tsx` — create if it doesn't exist; used here and by other anonymous-gated actions
@@ -186,17 +197,23 @@ async function handleToggle() {
   setLoading(true)
   try {
     if (nextState) {
-      const res = await fetch('/api/saves', { method: 'POST', body: JSON.stringify({ listing_id: listingId }) })
+      const res = await fetch('/api/saves', {
+        method: 'POST',
+        body: JSON.stringify({ listing_id: listingId }),
+      })
       if (!res.ok) throw new Error()
       // fire-and-forget analytics
-      fetch('/api/analytics/event', { method: 'POST', body: JSON.stringify({ event_name: 'listing_saved', entity_id: listingId }) })
+      fetch('/api/analytics/event', {
+        method: 'POST',
+        body: JSON.stringify({ event_name: 'listing_saved', entity_id: listingId }),
+      })
     } else {
       const res = await fetch(`/api/saves?listing_id=${listingId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
     }
   } catch {
     setSaved(!nextState) // rollback
-    toast.error("Couldn't save. Try again.", { action: { label: "Retry", onClick: handleToggle } })
+    toast.error("Couldn't save. Try again.", { action: { label: 'Retry', onClick: handleToggle } })
   } finally {
     setLoading(false)
   }
@@ -210,6 +227,7 @@ async function handleToggle() {
 - Analytics events are fire-and-forget: `fetch('/api/analytics/event', ...)` — never `await`, wrapped in try/catch that swallows errors
 
 **Do not:**
+
 - Accept `user_id` from the client — always set from `auth.uid()` on the server
 - Navigate the user away when they click save while anonymous — open the modal in-place
 - Block the UI while the analytics event fires
@@ -234,13 +252,13 @@ async function handleToggle() {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Network timeout | Request times out | Heart reverts; toast: "Couldn't save. Try again." with Retry | Retry button fires the same request |
-| 404 from POST | Listing deleted or unpublished | Heart reverts; toast: "This listing is no longer available." | No recovery; page should be refreshed |
-| 401 (no session) | Session expired for authenticated user | Toast: "Your session expired. Sign in again." + "Sign in" link | Re-authenticate; returns to page |
-| 500 from server | Unexpected DB error | Heart reverts; toast: "Couldn't save. Try again." | Retry |
-| Double-click before first request completes | User taps twice quickly | Button is disabled after first click; second click ignored | N/A — prevented by disabled state |
+| Failure                                     | Condition                              | User sees                                                      | Recovery                              |
+| ------------------------------------------- | -------------------------------------- | -------------------------------------------------------------- | ------------------------------------- |
+| Network timeout                             | Request times out                      | Heart reverts; toast: "Couldn't save. Try again." with Retry   | Retry button fires the same request   |
+| 404 from POST                               | Listing deleted or unpublished         | Heart reverts; toast: "This listing is no longer available."   | No recovery; page should be refreshed |
+| 401 (no session)                            | Session expired for authenticated user | Toast: "Your session expired. Sign in again." + "Sign in" link | Re-authenticate; returns to page      |
+| 500 from server                             | Unexpected DB error                    | Heart reverts; toast: "Couldn't save. Try again."              | Retry                                 |
+| Double-click before first request completes | User taps twice quickly                | Button is disabled after first click; second click ignored     | N/A — prevented by disabled state     |
 
 ---
 
@@ -266,14 +284,14 @@ async function handleToggle() {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: save listing | 1. Log in. 2. Navigate to a listing card. 3. Click the save button. | Heart fills with Amber Gold immediately. POST request returns 201. DB save row created. Analytics event fired. |
-| QA-2 | Happy path: unsave listing | 1. Log in with a saved listing. 2. Click the filled heart. | Heart reverts to outline immediately. DELETE returns 204. DB save row deleted. |
-| QA-3 | Anonymous save | 1. Log out. 2. Click the save button on any listing card. | Sign-in modal opens with correct heading and `?next=` links. Heart state unchanged. No API call made. |
-| QA-4 | Optimistic rollback | 1. Log in. 2. Block the `/api/saves` endpoint (e.g., via DevTools). 3. Click save. | Heart fills (optimistic). Request fails. Heart reverts. Toast: "Couldn't save. Try again." with Retry. |
-| QA-5 | Idempotent unsave | 1. Delete save row directly in DB. 2. Click the filled-heart save button (which still shows saved from local state). | DELETE request fires; returns 204 even though no row exists. No error shown. |
-| QA-6 | Mobile at 375px | 1. Open a listing card on a 375px device. 2. Tap the save button. | Tap target is at least 44×44px. Button responds. No label overflow. |
+| ID   | Test                       | Steps                                                                                                                | Expected                                                                                                       |
+| ---- | -------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: save listing   | 1. Log in. 2. Navigate to a listing card. 3. Click the save button.                                                  | Heart fills with Amber Gold immediately. POST request returns 201. DB save row created. Analytics event fired. |
+| QA-2 | Happy path: unsave listing | 1. Log in with a saved listing. 2. Click the filled heart.                                                           | Heart reverts to outline immediately. DELETE returns 204. DB save row deleted.                                 |
+| QA-3 | Anonymous save             | 1. Log out. 2. Click the save button on any listing card.                                                            | Sign-in modal opens with correct heading and `?next=` links. Heart state unchanged. No API call made.          |
+| QA-4 | Optimistic rollback        | 1. Log in. 2. Block the `/api/saves` endpoint (e.g., via DevTools). 3. Click save.                                   | Heart fills (optimistic). Request fails. Heart reverts. Toast: "Couldn't save. Try again." with Retry.         |
+| QA-5 | Idempotent unsave          | 1. Delete save row directly in DB. 2. Click the filled-heart save button (which still shows saved from local state). | DELETE request fires; returns 204 even though no row exists. No error shown.                                   |
+| QA-6 | Mobile at 375px            | 1. Open a listing card on a 375px device. 2. Tap the save button.                                                    | Tap target is at least 44×44px. Button responds. No label overflow.                                            |
 
 ---
 

@@ -1,14 +1,14 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─── Brand Color Tokens ─────────────────────────────────────────────────── */
 @theme {
   --color-brand-black: #000000;
-  --color-deep-bg: #19191E;
+  --color-deep-bg: #19191e;
   --color-charcoal: #595758;
-  --color-amber-gold: #E2A428;
-  --color-light-gold: #FFD867;
-  --color-pale-lavender: #E9E9F7;
-  --color-cream: #FCFAF4;
+  --color-amber-gold: #e2a428;
+  --color-light-gold: #ffd867;
+  --color-pale-lavender: #e9e9f7;
+  --color-cream: #fcfaf4;
 
   /* Font families — CSS vars injected by next/font */
   --font-headline: var(--font-glacial), sans-serif;
@@ -19,12 +19,12 @@
 /* ─── CSS Custom Properties (raw brand values for non-Tailwind use) ────────── */
 :root {
   --brand-black: #000000;
-  --deep-bg: #19191E;
+  --deep-bg: #19191e;
   --charcoal: #595758;
-  --amber-gold: #E2A428;
-  --light-gold: #FFD867;
-  --pale-lavender: #E9E9F7;
-  --cream: #FCFAF4;
+  --amber-gold: #e2a428;
+  --light-gold: #ffd867;
+  --pale-lavender: #e9e9f7;
+  --cream: #fcfaf4;
 
   /* ─── shadcn/ui semantic variables ───────────────────────────────────────── */
   --background: #ffffff;
@@ -35,17 +35,17 @@
   --popover-foreground: #000000;
   --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #E9E9F7;
+  --secondary: #e9e9f7;
   --secondary-foreground: #000000;
-  --muted: #E9E9F7;
+  --muted: #e9e9f7;
   --muted-foreground: #595758;
-  --accent: #E9E9F7;
+  --accent: #e9e9f7;
   --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #E2A428;
+  --ring: #e2a428;
   --radius: 0.5rem;
 
   /* Glacial Indifference placeholder until font file is loaded */
@@ -67,7 +67,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-headline), sans-serif;
     line-height: 1.15;
   }

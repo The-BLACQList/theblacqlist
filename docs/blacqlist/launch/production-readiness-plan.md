@@ -26,6 +26,7 @@ For The BLACQList, production ready means:
 Before any user-facing work begins.
 
 ### Infrastructure
+
 - [ ] Next.js project scaffolded with TypeScript, Tailwind, shadcn/ui
 - [ ] Supabase project created (production instance, not just local)
 - [ ] Vercel project connected to GitHub repository
@@ -35,6 +36,7 @@ Before any user-facing work begins.
 - [ ] RLS enabled on all Supabase tables from day one
 
 ### Database
+
 - [ ] Initial migration files committed and tested
 - [ ] Base tables created: `users`, `listings`, `categories`, `cities`
 - [ ] Seed script imports 10 test listings cleanly
@@ -42,11 +44,13 @@ Before any user-facing work begins.
 - [ ] `updated_at` trigger installed on mutable tables
 
 ### Monitoring
+
 - [ ] Sentry (or equivalent) installed and sending errors to the team
 - [ ] Vercel Analytics enabled
 - [ ] Supabase database usage alerts configured
 
 ### Repository
+
 - [ ] `.gitignore` blocks `.env` files
 - [ ] No secrets committed to version control (confirmed via `git log`)
 - [ ] `README.md` explains how to run the project locally
@@ -61,6 +65,7 @@ Before any user-facing work begins.
 This is the gate for public launch.
 
 ### Code Quality
+
 - [ ] `tsc --noEmit` passes with zero errors
 - [ ] ESLint passes with zero errors
 - [ ] No `console.log` statements in production code
@@ -68,6 +73,7 @@ This is the gate for public launch.
 - [ ] All `TODO:` comments reviewed and either resolved or converted to tickets
 
 ### Functional Verification
+
 - [ ] Anonymous user can search by keyword and return results
 - [ ] Anonymous user can filter by category and city
 - [ ] Anonymous user can view a complete BLACQList Page
@@ -84,6 +90,7 @@ This is the gate for public launch.
 - [ ] Admin can view pending claims queue
 
 ### BLACQList Pages
+
 - [ ] Every Page is server-rendered (check page source — content is in HTML, not JS)
 - [ ] `<title>` and `<meta description>` are unique per Page
 - [ ] OG tags (`og:title`, `og:description`, `og:image`) are set on every Page
@@ -91,6 +98,7 @@ This is the gate for public launch.
 - [ ] Pages load in under 2 seconds on a simulated 4G mobile connection
 
 ### Authentication + Security
+
 - [ ] Signup, signin, and password reset flows work end-to-end
 - [ ] Protected routes redirect to signin when not authenticated
 - [ ] Admin routes are blocked for non-admin users (tested directly, not just through UI)
@@ -100,6 +108,7 @@ This is the gate for public launch.
 - [ ] HTTPS is enforced (HTTP redirects to HTTPS)
 
 ### Media
+
 - [ ] Logo upload works and image appears on the Page
 - [ ] Cover image upload works and image appears on the Page
 - [ ] Gallery images upload and display correctly
@@ -108,6 +117,7 @@ This is the gate for public launch.
 - [ ] File size limit enforced server-side (max 10MB per image)
 
 ### Mobile
+
 - [ ] Homepage renders correctly at 375px
 - [ ] Search results page renders correctly at 375px
 - [ ] BLACQList Page renders correctly at 375px
@@ -115,6 +125,7 @@ This is the gate for public launch.
 - [ ] Business owner dashboard works on mobile
 
 ### Accessibility
+
 - [ ] All form inputs have visible labels
 - [ ] Tab order is logical on all pages
 - [ ] Error messages are descriptive and shown inline
@@ -122,12 +133,14 @@ This is the gate for public launch.
 - [ ] CTA buttons are keyboard-activatable
 
 ### Performance
+
 - [ ] Lighthouse score ≥ 80 on BLACQList Page (mobile)
 - [ ] Time to First Contentful Paint < 2s (mobile, simulated 4G)
 - [ ] Search returns results in < 1.5s for standard queries
 - [ ] Image gallery uses lazy loading
 
 ### Data + Seed
+
 - [ ] Atlanta: ≥ 150 listings with complete data (name, category, city, description, contact)
 - [ ] Houston: ≥ 50 listings
 - [ ] Chicago: ≥ 50 listings
@@ -136,6 +149,7 @@ This is the gate for public launch.
 - [ ] No duplicate listings in seed data (verified via admin)
 
 ### Legal + Compliance (MVP minimum)
+
 - [ ] Privacy Policy page published and linked in footer
 - [ ] Terms of Service page published and linked in footer
 - [ ] Cookie policy / banner if applicable (check jurisdiction requirements)
@@ -144,12 +158,14 @@ This is the gate for public launch.
 - [ ] Receipt upload legal language reviewed (data retention, anonymization)
 
 ### Email
+
 - [ ] All transactional emails send correctly in production environment
 - [ ] Emails render correctly in Gmail, Apple Mail, and Outlook
 - [ ] Unsubscribe mechanism works for any marketing-adjacent emails
 - [ ] From address is a branded domain (not `no-reply@supabase.io`)
 
 ### Operations
+
 - [ ] On-call person identified for launch week
 - [ ] Incident response process documented (who to contact, how to roll back)
 - [ ] Vercel deployment confirmed in production environment
@@ -158,6 +174,7 @@ This is the gate for public launch.
 - [ ] SSL certificate is valid and auto-renewing
 
 ### Known Issues
+
 - [ ] All open bugs reviewed and triaged
 - [ ] No Critical (P0) bugs open
 - [ ] No High (P1) bugs that affect the primary MVP flow
@@ -172,6 +189,7 @@ This is the gate for public launch.
 Additional checks required before V1 ships on top of Phase 1.
 
 ### Reviews
+
 - [ ] Review submission works for logged-in users on verified listings
 - [ ] Review appears on BLACQList Page after submission
 - [ ] Admin moderation queue shows new reviews
@@ -179,12 +197,14 @@ Additional checks required before V1 ships on top of Phase 1.
 - [ ] Flag review flow works
 
 ### Trust + Verification
+
 - [ ] Verification document upload works
 - [ ] Admin can review uploaded documents
 - [ ] Verified badge appears on approved listings
 - [ ] Rejected verification sends email to owner with reason
 
 ### Monetization
+
 - [ ] Stripe integration tested in Stripe test mode before production
 - [ ] Listing tier upgrade flow works end-to-end
 - [ ] Stripe webhook handler processes events correctly
@@ -192,6 +212,7 @@ Additional checks required before V1 ships on top of Phase 1.
 - [ ] No production Stripe keys in code; only environment variables
 
 ### Analytics
+
 - [ ] Business owner can view their Page analytics (views, CTA clicks, saves)
 - [ ] Admin can view platform-level stats
 - [ ] Analytics data is accurate (spot-checked against raw database counts)
@@ -205,6 +226,7 @@ Additional checks required before V1 ships on top of Phase 1.
 Additional checks required before marketplace goes live.
 
 ### Marketplace
+
 - [ ] Vendor Stripe Connect onboarding tested end-to-end (vendor receives payout after test purchase)
 - [ ] Checkout flow tested in Stripe test mode
 - [ ] Order confirmation email sends correctly
@@ -213,12 +235,14 @@ Additional checks required before marketplace goes live.
 - [ ] Refund flow works (buyer requests → vendor approves → Stripe processes)
 
 ### Legal (Marketplace-specific)
+
 - [ ] Vendor agreement / Terms of Service for sellers reviewed by legal counsel
 - [ ] Marketplace return/refund policy published and linked
 - [ ] Sales tax handling documented (is the platform responsible, or the vendor?)
 - [ ] Payout schedule and fee structure disclosed to vendors before onboarding
 
 ### Receipt Upload
+
 - [ ] Receipt photo capture works on iOS and Android mobile browsers
 - [ ] OCR parsing returns reasonable category suggestions
 - [ ] Spend data is stored correctly and linked to user account
@@ -233,37 +257,37 @@ Additional checks required before marketplace goes live.
 
 For each phase, document the rollback procedure before deployment:
 
-| Scenario | Rollback method | Time estimate |
-|---|---|---|
-| Bad deploy breaks the site | Vercel: redeploy previous deployment (1 click) | < 5 minutes |
-| Bad database migration | Supabase point-in-time recovery to pre-migration snapshot | 15–30 minutes |
-| Stripe webhook handler broken | Disable webhook in Stripe dashboard; deploy fix; re-enable | 30–60 minutes |
-| Seed data causes performance issues | Admin tool to bulk-flag or remove listings | < 15 minutes |
-| Security incident (compromised key) | Rotate key in Supabase/Stripe/Vercel dashboards immediately | < 30 minutes |
+| Scenario                            | Rollback method                                             | Time estimate |
+| ----------------------------------- | ----------------------------------------------------------- | ------------- |
+| Bad deploy breaks the site          | Vercel: redeploy previous deployment (1 click)              | < 5 minutes   |
+| Bad database migration              | Supabase point-in-time recovery to pre-migration snapshot   | 15–30 minutes |
+| Stripe webhook handler broken       | Disable webhook in Stripe dashboard; deploy fix; re-enable  | 30–60 minutes |
+| Seed data causes performance issues | Admin tool to bulk-flag or remove listings                  | < 15 minutes  |
+| Security incident (compromised key) | Rotate key in Supabase/Stripe/Vercel dashboards immediately | < 30 minutes  |
 
 ---
 
 ## Incident Severity Levels
 
-| Level | Definition | Response |
-|---|---|---|
-| P0 (Critical) | Site is down or completely unusable | Immediate — fix before anything else |
-| P1 (High) | Core flow is broken (search, claim, Page display, auth) | Fix within 24 hours |
-| P2 (Medium) | Secondary feature broken (gallery, share, analytics) | Fix within 72 hours |
-| P3 (Low) | Minor UX issue, cosmetic bug | Fix in next sprint |
+| Level         | Definition                                              | Response                             |
+| ------------- | ------------------------------------------------------- | ------------------------------------ |
+| P0 (Critical) | Site is down or completely unusable                     | Immediate — fix before anything else |
+| P1 (High)     | Core flow is broken (search, claim, Page display, auth) | Fix within 24 hours                  |
+| P2 (Medium)   | Secondary feature broken (gallery, share, analytics)    | Fix within 72 hours                  |
+| P3 (Low)      | Minor UX issue, cosmetic bug                            | Fix in next sprint                   |
 
 ---
 
 ## Monitoring Stack
 
-| Layer | Tool | What it monitors |
-|---|---|---|
-| Error tracking | Sentry | Frontend and API exceptions, error rate |
-| Performance | Vercel Analytics | Core Web Vitals, request latency |
-| Database | Supabase Dashboard | Query performance, connection count, disk usage |
-| Uptime | Vercel built-in | Deployment health |
-| Payments | Stripe Dashboard | Webhook failures, failed charges |
-| Email | Resend Dashboard | Delivery rate, bounces |
+| Layer          | Tool               | What it monitors                                |
+| -------------- | ------------------ | ----------------------------------------------- |
+| Error tracking | Sentry             | Frontend and API exceptions, error rate         |
+| Performance    | Vercel Analytics   | Core Web Vitals, request latency                |
+| Database       | Supabase Dashboard | Query performance, connection count, disk usage |
+| Uptime         | Vercel built-in    | Deployment health                               |
+| Payments       | Stripe Dashboard   | Webhook failures, failed charges                |
+| Email          | Resend Dashboard   | Delivery rate, bounces                          |
 
 ---
 

@@ -10,6 +10,7 @@ This document inventories every screen in The BLACQList MVP. For each screen it 
 **Phase key:** MVP = required for public launch. MVP (Beta) = feature-flagged on production at launch, not publicly promoted. V1 = 8–12 weeks post-MVP.
 
 **Layout types used throughout:**
+
 - **Full-bleed hero** — full-viewport-width hero image or background behind content
 - **Constrained content** — centered, max-width container (`max-w-5xl` or `max-w-3xl`)
 - **Discovery grid** — nav + filter bar + results grid, full page
@@ -26,18 +27,18 @@ This document inventories every screen in The BLACQList MVP. For each screen it 
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Homepage | `/` | Full-bleed hero | Search by keyword + city | Browse categories, browse city spotlight, claim page | `HeroSearchBar`, `CategoryGrid`, `CitySpotlight`, `FeaturedListingsGrid`, `FeaturedCollectionSlot`, `DollarFlowTeaser`, `ForBusinessBand`, `Footer` | Admin-curated featured listings, category list, one featured collection | No | MVP | Nav transparent → solid on scroll; featured listings via Suspense |
-| Discover | `/discover` | Discovery grid | Filter + browse all listings | View listing Page, save listing | `DiscoverFilterBar`, `ListingCardGrid`, `EntityTypeFilter`, `CategoryFilter`, `CityFilter`, `EmptyState`, `Pagination` | Paginated listings, category list, city list, entity type list | No | MVP | URL search params drive all filter state |
-| Search Results | `/search` | Discovery grid | View listing Page from result card | Save listing, clear filters, adjust query | `SearchBar` (pre-filled), `ActiveFilterChips`, `ResultCountBar`, `ListingCardGrid`, `SearchEmptyState`, `Pagination`, `SortControl` | Search API results, category list, city list | No (save gated) | MVP | `searchParams` from page props; full-text via Supabase PG FTS |
-| City Landing | `/city/[city-slug]` | Full-bleed hero | Browse featured listings in city | Browse category shortcuts, view city collections | `CityHero`, `TopListingsGrid`, `CityCategoryShortcuts`, `CityStatLine`, `Footer` | City record, top-ranked listings for city, category list, collection featuring city | No | MVP | `generateStaticParams` for all cities; ISR 24h |
-| City + Category | `/city/[city-slug]/[category-slug]` | Discovery grid | View listing Page from card | Save listing, filter subcategory, sort | `PageSEOHeader`, `ListingCardGrid`, `FilterBar`, `ResultCount`, `EmptyState`, `Pagination` | City record, category record, listings filtered by city + category | No (save gated) | MVP | `generateStaticParams` for all active city+category combos; ISR 24h |
-| Collections Index | `/collections` | Constrained content | View a collection | — | `CollectionCardGrid` (cover, title, count, excerpt) | All published collections | No | MVP | Admin creates collections; this page is publicly discoverable |
-| Collection Page | `/collection/[slug]` | Constrained content | View a listing Page from collection | Back to collections | `CollectionHeader` (title, editorial intro, cover), `ListingCardGrid`, `BackToCollectionsLink` | Collection record, linked listing records | No | MVP | ISR 1h; OG meta from collection title + description |
-| Business BLACQList Page | `/[city-slug]/business/[listing-slug]` | BLACQList Page | Owner-configured primary CTA (Book/Order/Call/Visit/Message) | Save, Share, view gallery image, view similar listing | `ListingHero`, `TrustBadge`, `SaveButton`, `ShareButton`, `AboutSection`, `CategoryTags`, `HoursBlock`, `ContactBlock`, `SocialLinksRow`, `ServicesSection`, `ImageGallery`, `ReviewsPlaceholder`, `SimilarListingsRow`, `MobileStickyCtaBar` | Full listing record, business page details, media attachments, services, city, saves count, claim status | No (save/share gated for save) | MVP | SSR + `generateStaticParams`; ISR 1h; LocalBusiness JSON-LD; OG image per listing |
-| For Business | `/for-business` | Full-bleed hero | Claim your page | Add a new business | `MarketingHero`, `HowItWorksSteps`, `ValuePropGrid`, `SocialProofBar`, `CtaBand`, `Footer` | Static content | No | MVP | SEO-targeted at Black business owners; repeated CTA at each section break |
-| About | `/about` | Constrained content | — | — | `AboutHero`, `MissionBlock`, `OriginStoryBlock`, `TeamSection`, `Footer` | Static content | No | MVP | Standard marketing page; no dynamic data |
+| Screen                  | Route                                  | Layout              | Primary Action                                               | Secondary Actions                                     | Key Components                                                                                                                                                                                                                                | Data Required                                                                                            | Auth                           | Phase | Notes                                                                             |
+| ----------------------- | -------------------------------------- | ------------------- | ------------------------------------------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------ | ----- | --------------------------------------------------------------------------------- |
+| Homepage                | `/`                                    | Full-bleed hero     | Search by keyword + city                                     | Browse categories, browse city spotlight, claim page  | `HeroSearchBar`, `CategoryGrid`, `CitySpotlight`, `FeaturedListingsGrid`, `FeaturedCollectionSlot`, `DollarFlowTeaser`, `ForBusinessBand`, `Footer`                                                                                           | Admin-curated featured listings, category list, one featured collection                                  | No                             | MVP   | Nav transparent → solid on scroll; featured listings via Suspense                 |
+| Discover                | `/discover`                            | Discovery grid      | Filter + browse all listings                                 | View listing Page, save listing                       | `DiscoverFilterBar`, `ListingCardGrid`, `EntityTypeFilter`, `CategoryFilter`, `CityFilter`, `EmptyState`, `Pagination`                                                                                                                        | Paginated listings, category list, city list, entity type list                                           | No                             | MVP   | URL search params drive all filter state                                          |
+| Search Results          | `/search`                              | Discovery grid      | View listing Page from result card                           | Save listing, clear filters, adjust query             | `SearchBar` (pre-filled), `ActiveFilterChips`, `ResultCountBar`, `ListingCardGrid`, `SearchEmptyState`, `Pagination`, `SortControl`                                                                                                           | Search API results, category list, city list                                                             | No (save gated)                | MVP   | `searchParams` from page props; full-text via Supabase PG FTS                     |
+| City Landing            | `/city/[city-slug]`                    | Full-bleed hero     | Browse featured listings in city                             | Browse category shortcuts, view city collections      | `CityHero`, `TopListingsGrid`, `CityCategoryShortcuts`, `CityStatLine`, `Footer`                                                                                                                                                              | City record, top-ranked listings for city, category list, collection featuring city                      | No                             | MVP   | `generateStaticParams` for all cities; ISR 24h                                    |
+| City + Category         | `/city/[city-slug]/[category-slug]`    | Discovery grid      | View listing Page from card                                  | Save listing, filter subcategory, sort                | `PageSEOHeader`, `ListingCardGrid`, `FilterBar`, `ResultCount`, `EmptyState`, `Pagination`                                                                                                                                                    | City record, category record, listings filtered by city + category                                       | No (save gated)                | MVP   | `generateStaticParams` for all active city+category combos; ISR 24h               |
+| Collections Index       | `/collections`                         | Constrained content | View a collection                                            | —                                                     | `CollectionCardGrid` (cover, title, count, excerpt)                                                                                                                                                                                           | All published collections                                                                                | No                             | MVP   | Admin creates collections; this page is publicly discoverable                     |
+| Collection Page         | `/collection/[slug]`                   | Constrained content | View a listing Page from collection                          | Back to collections                                   | `CollectionHeader` (title, editorial intro, cover), `ListingCardGrid`, `BackToCollectionsLink`                                                                                                                                                | Collection record, linked listing records                                                                | No                             | MVP   | ISR 1h; OG meta from collection title + description                               |
+| Business BLACQList Page | `/[city-slug]/business/[listing-slug]` | BLACQList Page      | Owner-configured primary CTA (Book/Order/Call/Visit/Message) | Save, Share, view gallery image, view similar listing | `ListingHero`, `TrustBadge`, `SaveButton`, `ShareButton`, `AboutSection`, `CategoryTags`, `HoursBlock`, `ContactBlock`, `SocialLinksRow`, `ServicesSection`, `ImageGallery`, `ReviewsPlaceholder`, `SimilarListingsRow`, `MobileStickyCtaBar` | Full listing record, business page details, media attachments, services, city, saves count, claim status | No (save/share gated for save) | MVP   | SSR + `generateStaticParams`; ISR 1h; LocalBusiness JSON-LD; OG image per listing |
+| For Business            | `/for-business`                        | Full-bleed hero     | Claim your page                                              | Add a new business                                    | `MarketingHero`, `HowItWorksSteps`, `ValuePropGrid`, `SocialProofBar`, `CtaBand`, `Footer`                                                                                                                                                    | Static content                                                                                           | No                             | MVP   | SEO-targeted at Black business owners; repeated CTA at each section break         |
+| About                   | `/about`                               | Constrained content | —                                                            | —                                                     | `AboutHero`, `MissionBlock`, `OriginStoryBlock`, `TeamSection`, `Footer`                                                                                                                                                                      | Static content                                                                                           | No                             | MVP   | Standard marketing page; no dynamic data                                          |
 
 ---
 
@@ -175,14 +176,14 @@ Static marketing page. Mission statement, origin story, team section (names, tit
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Sign In | `/sign-in` | Auth centered | Sign in with email + password | Forgot password, go to sign-up | `SignInForm`, `ForgotPasswordLink`, `SignUpLink`, `AuthErrorAlert` | — | No (redirect if authed) | MVP | Supabase Auth; redirect to `?next=` or `/dashboard` on success |
-| Sign Up | `/sign-up` | Auth centered | Create account | Go to sign in, terms link | `SignUpForm` (email, password, display name, role selector, ToS checkbox), `SignInLink` | — | No (redirect if authed) | MVP | Triggers email verification; role default: Supporter |
-| Onboarding | `/onboarding` | Multi-step form | Complete onboarding step | Skip, go back | `OnboardingStepIndicator`, `RoleConfirmStep`, `BusinessSearchStep`, `ExplorePromptStep`, `SkipButton` | User record, role | Yes | MVP | 2–3 steps max; Client Component for step state; skippable |
-| Forgot Password | `/forgot-password` | Auth centered | Send reset link | Back to sign in | `ForgotPasswordForm`, `BackToSignInLink`, `SuccessMessage` | — | No | MVP | Always shows success regardless of whether email exists |
-| Reset Password | `/reset-password` | Auth centered | Set new password | Back to sign in | `ResetPasswordForm` (new password, confirm), `ExpiredTokenError`, `BackToSignInLink` | Token from URL | No (token-gated) | MVP | Supabase handles token validation |
-| Verify Email | `/verify-email` | Auth centered | — (landing page) | Resend verification email | `VerifySuccessMessage`, `VerifyErrorState`, `ResendEmailButton`, `RedirectCountdown` | Token from URL | No (token-gated) | MVP | Success → redirect to `/onboarding`; failure → resend option |
+| Screen          | Route              | Layout          | Primary Action                | Secondary Actions              | Key Components                                                                                        | Data Required     | Auth                    | Phase | Notes                                                          |
+| --------------- | ------------------ | --------------- | ----------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------- | ----------------- | ----------------------- | ----- | -------------------------------------------------------------- |
+| Sign In         | `/sign-in`         | Auth centered   | Sign in with email + password | Forgot password, go to sign-up | `SignInForm`, `ForgotPasswordLink`, `SignUpLink`, `AuthErrorAlert`                                    | —                 | No (redirect if authed) | MVP   | Supabase Auth; redirect to `?next=` or `/dashboard` on success |
+| Sign Up         | `/sign-up`         | Auth centered   | Create account                | Go to sign in, terms link      | `SignUpForm` (email, password, display name, role selector, ToS checkbox), `SignInLink`               | —                 | No (redirect if authed) | MVP   | Triggers email verification; role default: Supporter           |
+| Onboarding      | `/onboarding`      | Multi-step form | Complete onboarding step      | Skip, go back                  | `OnboardingStepIndicator`, `RoleConfirmStep`, `BusinessSearchStep`, `ExplorePromptStep`, `SkipButton` | User record, role | Yes                     | MVP   | 2–3 steps max; Client Component for step state; skippable      |
+| Forgot Password | `/forgot-password` | Auth centered   | Send reset link               | Back to sign in                | `ForgotPasswordForm`, `BackToSignInLink`, `SuccessMessage`                                            | —                 | No                      | MVP   | Always shows success regardless of whether email exists        |
+| Reset Password  | `/reset-password`  | Auth centered   | Set new password              | Back to sign in                | `ResetPasswordForm` (new password, confirm), `ExpiredTokenError`, `BackToSignInLink`                  | Token from URL    | No (token-gated)        | MVP   | Supabase handles token validation                              |
+| Verify Email    | `/verify-email`    | Auth centered   | — (landing page)              | Resend verification email      | `VerifySuccessMessage`, `VerifyErrorState`, `ResendEmailButton`, `RedirectCountdown`                  | Token from URL    | No (token-gated)        | MVP   | Success → redirect to `/onboarding`; failure → resend option   |
 
 ---
 
@@ -224,11 +225,11 @@ Static marketing page. Mission statement, origin story, team section (names, tit
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Saved Listings | `/account/saved` | Dashboard sidebar | Navigate to a saved listing Page | Unsave a listing, browse discover | `SavedListingsGrid`, `SaveToggleButton`, `EmptyState`, `LoadMoreButton` | `saves` for `auth.uid()`, listing records (name, image, category, city, status) | Yes | MVP | Save/unsave toggle from this page; optimistic UI |
-| Receipt Upload Beta | `/account/receipts` | Dashboard sidebar | Upload a receipt | View submitted receipts, correct OCR fields | `ReceiptUploadButton`, `ReceiptList`, `ReceiptOCRForm`, `ReceiptStatusBadge`, `EmptyState` | `spend_events` for `auth.uid()` | Yes | MVP (Beta) | OCR is a manual-entry stub at MVP; beta flag in UI copy |
-| Account Settings | `/account/settings` | Dashboard sidebar | Save profile changes | Change password, delete account | `ProfileForm`, `SecuritySection`, `DeleteAccountSection`, `ConfirmationDialog` | User record for `auth.uid()` | Yes | MVP | Separate form sections; destructive actions require dialog confirmation |
+| Screen              | Route               | Layout            | Primary Action                   | Secondary Actions                           | Key Components                                                                             | Data Required                                                                   | Auth | Phase      | Notes                                                                   |
+| ------------------- | ------------------- | ----------------- | -------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ---- | ---------- | ----------------------------------------------------------------------- |
+| Saved Listings      | `/account/saved`    | Dashboard sidebar | Navigate to a saved listing Page | Unsave a listing, browse discover           | `SavedListingsGrid`, `SaveToggleButton`, `EmptyState`, `LoadMoreButton`                    | `saves` for `auth.uid()`, listing records (name, image, category, city, status) | Yes  | MVP        | Save/unsave toggle from this page; optimistic UI                        |
+| Receipt Upload Beta | `/account/receipts` | Dashboard sidebar | Upload a receipt                 | View submitted receipts, correct OCR fields | `ReceiptUploadButton`, `ReceiptList`, `ReceiptOCRForm`, `ReceiptStatusBadge`, `EmptyState` | `spend_events` for `auth.uid()`                                                 | Yes  | MVP (Beta) | OCR is a manual-entry stub at MVP; beta flag in UI copy                 |
+| Account Settings    | `/account/settings` | Dashboard sidebar | Save profile changes             | Change password, delete account             | `ProfileForm`, `SecuritySection`, `DeleteAccountSection`, `ConfirmationDialog`             | User record for `auth.uid()`                                                    | Yes  | MVP        | Separate form sections; destructive actions require dialog confirmation |
 
 ---
 
@@ -268,11 +269,11 @@ Static marketing page. Mission statement, origin story, team section (names, tit
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Claim Entry | `/claim` | Constrained content | Search for your listing | Add a new business, sign in | `ClaimSearchBar`, `ClaimResultsList`, `AddBusinessLink`, `SignInPrompt` | Search results from listing API | Yes | MVP | Auth gate: unauthenticated users see a sign-in prompt before searching |
-| Claim Form | `/claim/[listing-id]` | Constrained content | Submit claim request | Back to claim search, not this listing | `ListingClaimPreviewCard`, `ClaimVerificationForm`, `DocumentUploadField`, `SubmitClaimButton`, `NotMyListingLink` | Listing record by ID | Yes | MVP | Creates a claim record with `status: pending`; triggers claim submitted email |
-| Add Business | `/add-business` | Multi-step form | Continue to next step | Back, save draft (local) | `StepProgressBar`, `EntityTypeStep`, `BasicInfoStep`, `ContactStep`, `CategoryCityStep`, `MediaStep`, `CtaStep`, `PreviewStep`, `PublishButton`, `DuplicateWarningDialog` | Category list, city list | Yes | MVP | 7 steps; URL param or localStorage draft persistence; duplicate check before publish |
+| Screen       | Route                 | Layout              | Primary Action          | Secondary Actions                      | Key Components                                                                                                                                                            | Data Required                   | Auth | Phase | Notes                                                                                |
+| ------------ | --------------------- | ------------------- | ----------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---- | ----- | ------------------------------------------------------------------------------------ |
+| Claim Entry  | `/claim`              | Constrained content | Search for your listing | Add a new business, sign in            | `ClaimSearchBar`, `ClaimResultsList`, `AddBusinessLink`, `SignInPrompt`                                                                                                   | Search results from listing API | Yes  | MVP   | Auth gate: unauthenticated users see a sign-in prompt before searching               |
+| Claim Form   | `/claim/[listing-id]` | Constrained content | Submit claim request    | Back to claim search, not this listing | `ListingClaimPreviewCard`, `ClaimVerificationForm`, `DocumentUploadField`, `SubmitClaimButton`, `NotMyListingLink`                                                        | Listing record by ID            | Yes  | MVP   | Creates a claim record with `status: pending`; triggers claim submitted email        |
+| Add Business | `/add-business`       | Multi-step form     | Continue to next step   | Back, save draft (local)               | `StepProgressBar`, `EntityTypeStep`, `BasicInfoStep`, `ContactStep`, `CategoryCityStep`, `MediaStep`, `CtaStep`, `PreviewStep`, `PublishButton`, `DuplicateWarningDialog` | Category list, city list        | Yes  | MVP   | 7 steps; URL param or localStorage draft persistence; duplicate check before publish |
 
 ---
 
@@ -322,11 +323,11 @@ Static marketing page. Mission statement, origin story, team section (names, tit
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Dashboard Home | `/dashboard` | Dashboard sidebar | Edit Page | Preview Page, Share Page | `ClaimStatusBanner`, `PagePreviewCard`, `StatsRow`, `QuickActionsBar`, `CompletionChecklist`, `HelpPanel` | Listing record, analytics event aggregates (7d: views, CTA clicks, saves, shares), claim status | Yes (Owner) | MVP | Non-owners redirected to `/account`; empty state for new owners without a page |
-| Page Editor | `/dashboard/page` | Dashboard sidebar | Save changes to Page | Preview Page, Publish/Unpublish toggle | `PageEditorForm` (sectioned), `HeroSection`, `AboutSection`, `ContactSection`, `HoursSection`, `SocialSection`, `CTASection`, `PublishToggle`, `AutosaveIndicator`, `PreviewLink` | Full listing record, business page details, media attachments | Yes (Owner) | MVP | `react-hook-form` + `zod`; autosave on section blur; large multi-section form |
-| Services Manager | `/dashboard/services` | Dashboard sidebar | Add a new service | Edit service, delete service, reorder services | `ServicesList`, `AddServiceForm`, `ServiceEditRow`, `DeleteServiceConfirmDialog`, `DragToReorderHandle` | Services for listing_id | Yes (Owner) | MVP | Inline or modal form for add/edit; drag-to-reorder updates `sort_order` field |
+| Screen           | Route                 | Layout            | Primary Action       | Secondary Actions                              | Key Components                                                                                                                                                                    | Data Required                                                                                   | Auth        | Phase | Notes                                                                          |
+| ---------------- | --------------------- | ----------------- | -------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- | ----- | ------------------------------------------------------------------------------ |
+| Dashboard Home   | `/dashboard`          | Dashboard sidebar | Edit Page            | Preview Page, Share Page                       | `ClaimStatusBanner`, `PagePreviewCard`, `StatsRow`, `QuickActionsBar`, `CompletionChecklist`, `HelpPanel`                                                                         | Listing record, analytics event aggregates (7d: views, CTA clicks, saves, shares), claim status | Yes (Owner) | MVP   | Non-owners redirected to `/account`; empty state for new owners without a page |
+| Page Editor      | `/dashboard/page`     | Dashboard sidebar | Save changes to Page | Preview Page, Publish/Unpublish toggle         | `PageEditorForm` (sectioned), `HeroSection`, `AboutSection`, `ContactSection`, `HoursSection`, `SocialSection`, `CTASection`, `PublishToggle`, `AutosaveIndicator`, `PreviewLink` | Full listing record, business page details, media attachments                                   | Yes (Owner) | MVP   | `react-hook-form` + `zod`; autosave on section blur; large multi-section form  |
+| Services Manager | `/dashboard/services` | Dashboard sidebar | Add a new service    | Edit service, delete service, reorder services | `ServicesList`, `AddServiceForm`, `ServiceEditRow`, `DeleteServiceConfirmDialog`, `DragToReorderHandle`                                                                           | Services for listing_id                                                                         | Yes (Owner) | MVP   | Inline or modal form for add/edit; drag-to-reorder updates `sort_order` field  |
 
 ---
 
@@ -343,6 +344,7 @@ Static marketing page. Mission statement, origin story, team section (names, tit
 **Quick actions bar.** Three ghost or secondary buttons in a row: "Edit My Page" → `/dashboard/page`, "Preview Page" → opens the public BLACQList Page URL in a new tab, "Share Page" → opens a share sheet or copy-link modal.
 
 **Completion checklist.** A section below the stats row titled "Complete your page" showing a progress bar ("3 of 5 steps complete") and a checklist:
+
 1. Add your description — checkmark if `description` is non-empty
 2. Upload a cover image — checkmark if cover image exists
 3. Set your primary CTA — checkmark if `cta_type` is set
@@ -397,17 +399,17 @@ Each unchecked item is a link to the relevant section of the page editor. The ch
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Admin Overview | `/admin` | Admin panel | Navigate to claim queue | Navigate to listings, users | `PlatformStatsRow`, `ActionQueueLinks`, `RecentActivityFeed` | Platform aggregates: listing count, pending claims, new users (7d), total saves | Yes (Admin) | MVP | Redirects to `/admin/overview`; no content at root |
-| Admin Listings | `/admin/listings` | Admin panel | Edit a listing | Filter, search, bulk flag, delete | `ListingsTable`, `StatusFilterChips`, `SearchInput`, `BulkActionBar`, `TableActionMenu` | Paginated listings with claim status join, all filter dimensions | Yes (Admin) | MVP | Full CRUD; bulk flag action |
-| Admin Listing Detail | `/admin/listings/[id]` | Admin panel | Save listing changes | Change status, flag listing, delete listing | `AdminListingForm`, `StatusOverrideSelect`, `FlagReasonInput`, `ClaimHistoryPanel`, `DeleteConfirmDialog` | Full listing record, business details, media, claim history | Yes (Admin) | MVP | Same fields as owner editor; admin adds status override, flag, hard delete |
-| Admin Claims Queue | `/admin/claims` | Admin panel | Approve a claim | Reject a claim, filter by status | `ClaimsTable`, `StatusFilter`, `ClaimRowActions` (approve/reject), `RejectReasonModal` | All claims with listing + user join | Yes (Admin) | MVP | Claim cards with inline approve/reject; reject requires reason |
-| Admin Claim Review | `/admin/claims/[id]` | Admin panel | Approve claim | Reject with reason | `ClaimDetailPanel` (claimant info, verification data, document preview), `LinkedListingPreview`, `ClaimantProfileLink`, `ApproveButton`, `RejectPanel` | Claim record, linked listing, user record, uploaded verification docs | Yes (Admin) | MVP | Approve triggers owner role + email; reject triggers email with reason |
-| Admin Receipts Queue | `/admin/receipts` | Admin panel | Mark receipt reviewed | Flag for correction | `ReceiptsTable`, `ReceiptDetailPanel`, `OCRCorrectionForm`, `StatusFilter` | `spend_events` with `status = pending_review`; receipt image from Storage | Yes (Admin) | MVP (Beta) | Beta intake only; admin corrects OCR values and approves |
-| Admin Collections | `/admin/collections` | Admin panel | Create new collection | Edit, archive, publish/unpublish | `CollectionsTable`, `CollectionRow` (edit/archive/publish toggle), `CreateCollectionButton` | All collections with listing count | Yes (Admin) | MVP | Collections drive homepage featured slot and `/collections` page |
-| Admin Collection Edit | `/admin/collections/[id]` | Admin panel | Save collection changes | Add listing, remove listing, reorder, publish | `CollectionMetadataForm` (title, slug, description, cover image), `ListingSearchAndAdd`, `SelectedListingsTable`, `DragToReorderHandle`, `PublishToggle` | Collection record, linked listing records | Yes (Admin) | MVP | Search to add listings; drag to reorder; publish/unpublish |
-| Admin Users | `/admin/users` | Admin panel | Change user role | Suspend/unsuspend user, filter by role | `UsersTable`, `RoleFilter`, `UserRowActions` (change role, suspend), `RoleChangeConfirmDialog`, `SuspendConfirmDialog` | Users table, user_roles table | Yes (Admin) | MVP | Role change and suspend require confirmation dialogs; Super Admin only for Admin role assignment |
+| Screen                | Route                     | Layout      | Primary Action          | Secondary Actions                             | Key Components                                                                                                                                           | Data Required                                                                   | Auth        | Phase      | Notes                                                                                            |
+| --------------------- | ------------------------- | ----------- | ----------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| Admin Overview        | `/admin`                  | Admin panel | Navigate to claim queue | Navigate to listings, users                   | `PlatformStatsRow`, `ActionQueueLinks`, `RecentActivityFeed`                                                                                             | Platform aggregates: listing count, pending claims, new users (7d), total saves | Yes (Admin) | MVP        | Redirects to `/admin/overview`; no content at root                                               |
+| Admin Listings        | `/admin/listings`         | Admin panel | Edit a listing          | Filter, search, bulk flag, delete             | `ListingsTable`, `StatusFilterChips`, `SearchInput`, `BulkActionBar`, `TableActionMenu`                                                                  | Paginated listings with claim status join, all filter dimensions                | Yes (Admin) | MVP        | Full CRUD; bulk flag action                                                                      |
+| Admin Listing Detail  | `/admin/listings/[id]`    | Admin panel | Save listing changes    | Change status, flag listing, delete listing   | `AdminListingForm`, `StatusOverrideSelect`, `FlagReasonInput`, `ClaimHistoryPanel`, `DeleteConfirmDialog`                                                | Full listing record, business details, media, claim history                     | Yes (Admin) | MVP        | Same fields as owner editor; admin adds status override, flag, hard delete                       |
+| Admin Claims Queue    | `/admin/claims`           | Admin panel | Approve a claim         | Reject a claim, filter by status              | `ClaimsTable`, `StatusFilter`, `ClaimRowActions` (approve/reject), `RejectReasonModal`                                                                   | All claims with listing + user join                                             | Yes (Admin) | MVP        | Claim cards with inline approve/reject; reject requires reason                                   |
+| Admin Claim Review    | `/admin/claims/[id]`      | Admin panel | Approve claim           | Reject with reason                            | `ClaimDetailPanel` (claimant info, verification data, document preview), `LinkedListingPreview`, `ClaimantProfileLink`, `ApproveButton`, `RejectPanel`   | Claim record, linked listing, user record, uploaded verification docs           | Yes (Admin) | MVP        | Approve triggers owner role + email; reject triggers email with reason                           |
+| Admin Receipts Queue  | `/admin/receipts`         | Admin panel | Mark receipt reviewed   | Flag for correction                           | `ReceiptsTable`, `ReceiptDetailPanel`, `OCRCorrectionForm`, `StatusFilter`                                                                               | `spend_events` with `status = pending_review`; receipt image from Storage       | Yes (Admin) | MVP (Beta) | Beta intake only; admin corrects OCR values and approves                                         |
+| Admin Collections     | `/admin/collections`      | Admin panel | Create new collection   | Edit, archive, publish/unpublish              | `CollectionsTable`, `CollectionRow` (edit/archive/publish toggle), `CreateCollectionButton`                                                              | All collections with listing count                                              | Yes (Admin) | MVP        | Collections drive homepage featured slot and `/collections` page                                 |
+| Admin Collection Edit | `/admin/collections/[id]` | Admin panel | Save collection changes | Add listing, remove listing, reorder, publish | `CollectionMetadataForm` (title, slug, description, cover image), `ListingSearchAndAdd`, `SelectedListingsTable`, `DragToReorderHandle`, `PublishToggle` | Collection record, linked listing records                                       | Yes (Admin) | MVP        | Search to add listings; drag to reorder; publish/unpublish                                       |
+| Admin Users           | `/admin/users`            | Admin panel | Change user role        | Suspend/unsuspend user, filter by role        | `UsersTable`, `RoleFilter`, `UserRowActions` (change role, suspend), `RoleChangeConfirmDialog`, `SuspendConfirmDialog`                                   | Users table, user_roles table                                                   | Yes (Admin) | MVP        | Role change and suspend require confirmation dialogs; Super Admin only for Admin role assignment |
 
 ---
 
@@ -487,12 +489,12 @@ Each unchecked item is a link to the relevant section of the page editor. The ch
 
 ### Table
 
-| Screen | Route | Layout | Primary Action | Secondary Actions | Key Components | Data Required | Auth | Phase | Notes |
-|---|---|---|---|---|---|---|---|---|---|
-| Privacy Policy | `/privacy` | Static | — | Footer nav | `StaticContentPage` | Static legal text | No | MVP | Must be live before public launch; linked in footer and at sign-up |
-| Terms of Service | `/terms` | Static | — | Footer nav | `StaticContentPage` | Static legal text | No | MVP | Must be live before public launch |
-| 404 Not Found | `not-found.tsx` | Constrained content | Search for something | Browse discover, go home | `NotFoundHeading`, `SearchBar`, `HomepageLink`, `DiscoverLink` | — | No | MVP | Friendly, branded; includes search bar so user can immediately search |
-| Error | `error.tsx` | Constrained content | Try again | Go to homepage | `ErrorHeading`, `RetryButton`, `HomepageLink` | — | No | MVP | Generic error boundary for runtime failures in data-fetching routes |
+| Screen           | Route           | Layout              | Primary Action       | Secondary Actions        | Key Components                                                 | Data Required     | Auth | Phase | Notes                                                                 |
+| ---------------- | --------------- | ------------------- | -------------------- | ------------------------ | -------------------------------------------------------------- | ----------------- | ---- | ----- | --------------------------------------------------------------------- |
+| Privacy Policy   | `/privacy`      | Static              | —                    | Footer nav               | `StaticContentPage`                                            | Static legal text | No   | MVP   | Must be live before public launch; linked in footer and at sign-up    |
+| Terms of Service | `/terms`        | Static              | —                    | Footer nav               | `StaticContentPage`                                            | Static legal text | No   | MVP   | Must be live before public launch                                     |
+| 404 Not Found    | `not-found.tsx` | Constrained content | Search for something | Browse discover, go home | `NotFoundHeading`, `SearchBar`, `HomepageLink`, `DiscoverLink` | —                 | No   | MVP   | Friendly, branded; includes search bar so user can immediately search |
+| Error            | `error.tsx`     | Constrained content | Try again            | Go to homepage           | `ErrorHeading`, `RetryButton`, `HomepageLink`                  | —                 | No   | MVP   | Generic error boundary for runtime failures in data-fetching routes   |
 
 ---
 
@@ -510,43 +512,43 @@ Each unchecked item is a link to the relevant section of the page editor. The ch
 
 ## 8. Screen Inventory Summary
 
-| Screen Name | Route | Auth | Phase | Layout Type |
-|---|---|---|---|---|
-| Homepage | `/` | No | MVP | Full-bleed hero |
-| Discover | `/discover` | No | MVP | Discovery grid |
-| Search Results | `/search` | No | MVP | Discovery grid |
-| City Landing | `/city/[city-slug]` | No | MVP | Full-bleed hero |
-| City + Category | `/city/[city-slug]/[category-slug]` | No | MVP | Discovery grid |
-| Collections Index | `/collections` | No | MVP | Constrained content |
-| Collection Page | `/collection/[slug]` | No | MVP | Constrained content |
-| Business BLACQList Page | `/[city-slug]/business/[listing-slug]` | No (save gated) | MVP | BLACQList Page |
-| For Business | `/for-business` | No | MVP | Full-bleed hero |
-| About | `/about` | No | MVP | Constrained content |
-| Sign In | `/sign-in` | No (redirect if authed) | MVP | Auth centered |
-| Sign Up | `/sign-up` | No (redirect if authed) | MVP | Auth centered |
-| Onboarding | `/onboarding` | Yes | MVP | Multi-step form |
-| Forgot Password | `/forgot-password` | No | MVP | Auth centered |
-| Reset Password | `/reset-password` | No (token-gated) | MVP | Auth centered |
-| Verify Email | `/verify-email` | No (token-gated) | MVP | Auth centered |
-| Saved Listings | `/account/saved` | Yes | MVP | Dashboard sidebar |
-| Receipt Upload Beta | `/account/receipts` | Yes | MVP (Beta) | Dashboard sidebar |
-| Account Settings | `/account/settings` | Yes | MVP | Dashboard sidebar |
-| Claim Entry | `/claim` | Yes | MVP | Constrained content |
-| Claim Form | `/claim/[listing-id]` | Yes | MVP | Constrained content |
-| Add Business | `/add-business` | Yes | MVP | Multi-step form |
-| Dashboard Home | `/dashboard` | Yes (Owner) | MVP | Dashboard sidebar |
-| Page Editor | `/dashboard/page` | Yes (Owner) | MVP | Dashboard sidebar |
-| Services Manager | `/dashboard/services` | Yes (Owner) | MVP | Dashboard sidebar |
-| Admin Overview | `/admin` | Yes (Admin) | MVP | Admin panel |
-| Admin Listings | `/admin/listings` | Yes (Admin) | MVP | Admin panel |
-| Admin Listing Detail | `/admin/listings/[id]` | Yes (Admin) | MVP | Admin panel |
-| Admin Claims Queue | `/admin/claims` | Yes (Admin) | MVP | Admin panel |
-| Admin Claim Review | `/admin/claims/[id]` | Yes (Admin) | MVP | Admin panel |
-| Admin Receipts Queue | `/admin/receipts` | Yes (Admin) | MVP (Beta) | Admin panel |
-| Admin Collections | `/admin/collections` | Yes (Admin) | MVP | Admin panel |
-| Admin Collection Edit | `/admin/collections/[id]` | Yes (Admin) | MVP | Admin panel |
-| Admin Users | `/admin/users` | Yes (Admin) | MVP | Admin panel |
-| Privacy Policy | `/privacy` | No | MVP | Static |
-| Terms of Service | `/terms` | No | MVP | Static |
-| 404 Not Found | `not-found.tsx` | No | MVP | Constrained content |
-| Error | `error.tsx` | No | MVP | Constrained content |
+| Screen Name             | Route                                  | Auth                    | Phase      | Layout Type         |
+| ----------------------- | -------------------------------------- | ----------------------- | ---------- | ------------------- |
+| Homepage                | `/`                                    | No                      | MVP        | Full-bleed hero     |
+| Discover                | `/discover`                            | No                      | MVP        | Discovery grid      |
+| Search Results          | `/search`                              | No                      | MVP        | Discovery grid      |
+| City Landing            | `/city/[city-slug]`                    | No                      | MVP        | Full-bleed hero     |
+| City + Category         | `/city/[city-slug]/[category-slug]`    | No                      | MVP        | Discovery grid      |
+| Collections Index       | `/collections`                         | No                      | MVP        | Constrained content |
+| Collection Page         | `/collection/[slug]`                   | No                      | MVP        | Constrained content |
+| Business BLACQList Page | `/[city-slug]/business/[listing-slug]` | No (save gated)         | MVP        | BLACQList Page      |
+| For Business            | `/for-business`                        | No                      | MVP        | Full-bleed hero     |
+| About                   | `/about`                               | No                      | MVP        | Constrained content |
+| Sign In                 | `/sign-in`                             | No (redirect if authed) | MVP        | Auth centered       |
+| Sign Up                 | `/sign-up`                             | No (redirect if authed) | MVP        | Auth centered       |
+| Onboarding              | `/onboarding`                          | Yes                     | MVP        | Multi-step form     |
+| Forgot Password         | `/forgot-password`                     | No                      | MVP        | Auth centered       |
+| Reset Password          | `/reset-password`                      | No (token-gated)        | MVP        | Auth centered       |
+| Verify Email            | `/verify-email`                        | No (token-gated)        | MVP        | Auth centered       |
+| Saved Listings          | `/account/saved`                       | Yes                     | MVP        | Dashboard sidebar   |
+| Receipt Upload Beta     | `/account/receipts`                    | Yes                     | MVP (Beta) | Dashboard sidebar   |
+| Account Settings        | `/account/settings`                    | Yes                     | MVP        | Dashboard sidebar   |
+| Claim Entry             | `/claim`                               | Yes                     | MVP        | Constrained content |
+| Claim Form              | `/claim/[listing-id]`                  | Yes                     | MVP        | Constrained content |
+| Add Business            | `/add-business`                        | Yes                     | MVP        | Multi-step form     |
+| Dashboard Home          | `/dashboard`                           | Yes (Owner)             | MVP        | Dashboard sidebar   |
+| Page Editor             | `/dashboard/page`                      | Yes (Owner)             | MVP        | Dashboard sidebar   |
+| Services Manager        | `/dashboard/services`                  | Yes (Owner)             | MVP        | Dashboard sidebar   |
+| Admin Overview          | `/admin`                               | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Listings          | `/admin/listings`                      | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Listing Detail    | `/admin/listings/[id]`                 | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Claims Queue      | `/admin/claims`                        | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Claim Review      | `/admin/claims/[id]`                   | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Receipts Queue    | `/admin/receipts`                      | Yes (Admin)             | MVP (Beta) | Admin panel         |
+| Admin Collections       | `/admin/collections`                   | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Collection Edit   | `/admin/collections/[id]`              | Yes (Admin)             | MVP        | Admin panel         |
+| Admin Users             | `/admin/users`                         | Yes (Admin)             | MVP        | Admin panel         |
+| Privacy Policy          | `/privacy`                             | No                      | MVP        | Static              |
+| Terms of Service        | `/terms`                               | No                      | MVP        | Static              |
+| 404 Not Found           | `not-found.tsx`                        | No                      | MVP        | Constrained content |
+| Error                   | `error.tsx`                            | No                      | MVP        | Constrained content |

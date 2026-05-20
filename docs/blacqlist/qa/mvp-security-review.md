@@ -18,11 +18,13 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 **Status: PASS with caveats**
 
 ### What was reviewed
+
 `supabase/migrations/20260510000001_mvp_rls_policies.sql` — 803 lines
 
 ### Findings
 
 **Pass:**
+
 - RLS is enabled on all MVP tables via `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
 - Helper functions (`is_admin()`, `is_super_admin()`, `has_role()`, `owns_listing()`, `owns_entity()`) are defined as `SECURITY DEFINER STABLE` — correct; prevents privilege escalation, allows caching
 - `admin_audit_log` and `moderation_queue`: no public policies defined — correct default deny
@@ -33,12 +35,12 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 
 **Risks identified:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| `listings` public SELECT policy — scope review needed | Medium | Verify public policy does not expose draft/deleted listings; `deleted_at IS NULL` must be in policy WHERE clause |
-| `reviews` cross-user read | Low | Reviews are public by design; confirm reviewer `user_id` is NOT in the SELECT projection for anonymous reads |
-| `receipts` — buyer anonymity | Medium | Receipts must be readable only by submitter (user_id match) or admin/service role. Verify the policy does not allow any authenticated user to read all receipts. |
-| `community_spend` aggregation | Low | Verify aggregate API (`/api/community-spend`) never returns individual transaction amounts |
+| Risk                                                  | Severity | Detail                                                                                                                                                           |
+| ----------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listings` public SELECT policy — scope review needed | Medium   | Verify public policy does not expose draft/deleted listings; `deleted_at IS NULL` must be in policy WHERE clause                                                 |
+| `reviews` cross-user read                             | Low      | Reviews are public by design; confirm reviewer `user_id` is NOT in the SELECT projection for anonymous reads                                                     |
+| `receipts` — buyer anonymity                          | Medium   | Receipts must be readable only by submitter (user_id match) or admin/service role. Verify the policy does not allow any authenticated user to read all receipts. |
+| `community_spend` aggregation                         | Low      | Verify aggregate API (`/api/community-spend`) never returns individual transaction amounts                                                                       |
 
 ---
 
@@ -49,6 +51,7 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 ### Findings
 
 **Pass:**
+
 - `requireAdmin()` in `lib/admin/guard.ts` checks `user_roles` table server-side — not middleware-only
 - `requireOwner()` in `lib/dashboard/guard.ts` checks `listings.owner_user_id = auth.uid()` server-side
 - Middleware (`middleware.ts`) provides first-line protection for `/admin`, `/dashboard`, `/account`, `/claim`, `/add-business`, `/onboarding`
@@ -57,10 +60,10 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| Admin middleware only checks session, not role | Low | Expected design — role check is in `requireAdmin()`. Middleware gap would only affect direct URL access without a session; role is always checked server-side. |
-| `createServiceClient()` used in admin pages | Low | Correct for admin use cases; bypasses RLS intentionally. Ensure no `createServiceClient()` is used in owner-facing pages. Audit: `grep -r "createServiceClient" app/dashboard/` should return zero results. |
+| Risk                                           | Severity | Detail                                                                                                                                                                                                      |
+| ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin middleware only checks session, not role | Low      | Expected design — role check is in `requireAdmin()`. Middleware gap would only affect direct URL access without a session; role is always checked server-side.                                              |
+| `createServiceClient()` used in admin pages    | Low      | Correct for admin use cases; bypasses RLS intentionally. Ensure no `createServiceClient()` is used in owner-facing pages. Audit: `grep -r "createServiceClient" app/dashboard/` should return zero results. |
 
 ---
 
@@ -71,15 +74,16 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 ### Findings
 
 **Pass:**
+
 - Admin server actions in `lib/actions/admin/` include `requireAdmin()` at the top of each function
 - Audit log insertion (`admin_audit_log`) present in admin claim approval, rejection, and moderation actions
 - No admin action calls `createClient()` (which would be session-scoped) — all use `createServiceClient()` with prior auth gate
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| Admin audit log completeness | Medium | Verify ALL admin mutations (approve claim, reject claim, verify listing, moderate review) write to `admin_audit_log`. Missing audit entries make incident response harder. |
+| Risk                         | Severity | Detail                                                                                                                                                                     |
+| ---------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin audit log completeness | Medium   | Verify ALL admin mutations (approve claim, reject claim, verify listing, moderate review) write to `admin_audit_log`. Missing audit entries make incident response harder. |
 
 ---
 
@@ -90,14 +94,15 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 ### Findings
 
 **Pass:**
+
 - All owner dashboard Server Actions call `requireOwner()` before any mutation
 - `requireOwner()` cross-checks `listings.owner_user_id = auth.uid()`
 - Supabase RLS enforces the same rule at the DB layer independently
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
+| Risk                                       | Severity      | Detail                                                                                                                               |
+| ------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `ai_suggestions` apply action (when built) | High (future) | The approval workflow spec notes: apply action must verify ownership independent of RLS. Not yet built — flag for V2 implementation. |
 
 ---
@@ -111,13 +116,13 @@ The BLACQList has a strong RLS foundation with 803 lines of policies, SECURITY D
 **Concern:**
 The receipt lifecycle involves: supporter submits receipt → admin reviews → aggregate spend updated. Individual receipt amounts must never be visible to other supporters or to public anonymous users.
 
-| Check | Expected | Status |
-|---|---|---|
-| RLS: supporter reads own receipts only | `WHERE user_id = auth.uid()` | Must verify in migration |
-| RLS: admin reads all receipts | service role or `is_admin()` policy | Must verify |
-| Public `community_spend` API | Returns aggregate total only | Must verify no per-user data |
-| Receipt detail page (`/account/receipts`) | Shows only current user's history | Must verify with signed-out and cross-user test |
-| Signed receipt URL API | Generates signed URL with TTL | Must verify URL expires |
+| Check                                     | Expected                            | Status                                          |
+| ----------------------------------------- | ----------------------------------- | ----------------------------------------------- |
+| RLS: supporter reads own receipts only    | `WHERE user_id = auth.uid()`        | Must verify in migration                        |
+| RLS: admin reads all receipts             | service role or `is_admin()` policy | Must verify                                     |
+| Public `community_spend` API              | Returns aggregate total only        | Must verify no per-user data                    |
+| Receipt detail page (`/account/receipts`) | Shows only current user's history   | Must verify with signed-out and cross-user test |
+| Signed receipt URL API                    | Generates signed URL with TTL       | Must verify URL expires                         |
 
 **Action required:** Run TA-20 (Receipts lifecycle test) with cross-user access test.
 
@@ -143,6 +148,7 @@ The receipt lifecycle involves: supporter submits receipt → admin reviews → 
    - Storage path structure: `/{entity_type}/{entity_id}/{filename}` — never user-supplied paths
 
 ### Required implementation (before launch):
+
 ```
 POST /api/upload/[bucket]
 - requireAuth()
@@ -164,6 +170,7 @@ POST /api/upload/[bucket]
 ### Findings
 
 **Pass:**
+
 - `NEXT_PUBLIC_*` variables in `.env.example` are limited to Supabase URL and anon key (safe to expose)
 - Service role key, Resend API key, Stripe keys, Anthropic key — all non-public in `.env.example`
 - No hardcoded API keys found in codebase
@@ -171,10 +178,10 @@ POST /api/upload/[bucket]
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| Supabase anon key in client bundle | Low | Intentional by design — anon key is meant for client use; RLS enforces access. RLS must be comprehensive (it is). |
-| Service role key exposure | High (hypothetical) | Never seen in any client component; confirm with `grep -r "service_role" app/` returning only server-side files |
+| Risk                               | Severity            | Detail                                                                                                            |
+| ---------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Supabase anon key in client bundle | Low                 | Intentional by design — anon key is meant for client use; RLS enforces access. RLS must be comprehensive (it is). |
+| Service role key exposure          | High (hypothetical) | Never seen in any client component; confirm with `grep -r "service_role" app/` returning only server-side files   |
 
 ---
 
@@ -185,6 +192,7 @@ POST /api/upload/[bucket]
 ### Findings
 
 **Pass:**
+
 - `analytics_events` table: no public SELECT policy — default deny
 - `entity_analytics_daily`: owner reads own listing's data only (via `owns_listing()` helper)
 - Admin analytics reads all data via service role
@@ -192,9 +200,9 @@ POST /api/upload/[bucket]
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| Rate limiting on analytics API | Medium | No rate limiting on `POST /api/analytics/event`. A malicious actor could flood the table with valid events. Recommend: rate limit per IP (10 req/sec) before launch. |
+| Risk                           | Severity | Detail                                                                                                                                                               |
+| ------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rate limiting on analytics API | Medium   | No rate limiting on `POST /api/analytics/event`. A malicious actor could flood the table with valid events. Recommend: rate limit per IP (10 req/sec) before launch. |
 
 ---
 
@@ -205,6 +213,7 @@ POST /api/upload/[bucket]
 ### Findings
 
 **Pass:**
+
 - `admin_audit_log`: no public RLS policy — default deny. Only accessible via service role.
 - `moderation_queue`: no public RLS policy — default deny.
 - Admin notes on claims/listings/reviews: stored in admin-only tables; no owner-facing SELECT policy returns note fields.
@@ -219,6 +228,7 @@ POST /api/upload/[bucket]
 ### Findings
 
 **Pass:**
+
 - Claim approval requires admin action — not a user self-service flow
 - `requireAdmin()` check in all claim approval/rejection server actions
 - An owner cannot approve their own claim via the owner dashboard (no approve action exists there)
@@ -226,20 +236,20 @@ POST /api/upload/[bucket]
 
 **Risks:**
 
-| Risk | Severity | Detail |
-|---|---|---|
-| Claim workflow: same user owns listing and submits claim | Low | Should not be possible if listing already has `owner_user_id`. Verify claim form blocks claim on already-owned listings. |
+| Risk                                                     | Severity | Detail                                                                                                                   |
+| -------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Claim workflow: same user owns listing and submits claim | Low      | Should not be possible if listing already has `owner_user_id`. Verify claim form blocks claim on already-owned listings. |
 
 ---
 
 ## Security Fix Priority
 
-| Priority | Issue | Required Before |
-|---|---|---|
-| P0 — Critical | Upload route handler missing | Any media upload feature goes live |
-| P1 — High | Receipt RLS cross-user access: verify | Launch |
-| P1 — High | Rate limiting on analytics event API | Launch (DDoS/spam vector) |
-| P1 — High | Admin audit log completeness audit | Launch |
-| P2 — Medium | `createServiceClient()` usage audit in non-admin pages | Launch |
-| P2 — Medium | Verify `listings` public RLS includes `deleted_at IS NULL` | Launch |
-| P3 — Low | Self-verification guard on already-owned listings | Pre-launch validation |
+| Priority      | Issue                                                      | Required Before                    |
+| ------------- | ---------------------------------------------------------- | ---------------------------------- |
+| P0 — Critical | Upload route handler missing                               | Any media upload feature goes live |
+| P1 — High     | Receipt RLS cross-user access: verify                      | Launch                             |
+| P1 — High     | Rate limiting on analytics event API                       | Launch (DDoS/spam vector)          |
+| P1 — High     | Admin audit log completeness audit                         | Launch                             |
+| P2 — Medium   | `createServiceClient()` usage audit in non-admin pages     | Launch                             |
+| P2 — Medium   | Verify `listings` public RLS includes `deleted_at IS NULL` | Launch                             |
+| P3 — Low      | Self-verification guard on already-owned listings          | Pre-launch validation              |

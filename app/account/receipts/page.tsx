@@ -1,12 +1,12 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { redirect } from "next/navigation"
-import { ArrowLeft, Plus } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { ArrowLeft, Plus } from 'lucide-react'
 
-import { createClient, createServiceClient } from "@/lib/supabase/server"
-import { ReceiptListRow } from "@/components/spend/ReceiptSubmissionForm"
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { ReceiptListRow } from '@/components/spend/ReceiptSubmissionForm'
 
-export const metadata: Metadata = { title: "My Receipts" }
+export const metadata: Metadata = { title: 'My Receipts' }
 
 export default async function MyReceiptsPage({
   searchParams,
@@ -14,16 +14,19 @@ export default async function MyReceiptsPage({
   searchParams: Promise<{ submitted?: string }>
 }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/sign-in?next=/account/receipts")
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in?next=/account/receipts')
 
   const { submitted } = await searchParams
 
   const serviceClient = createServiceClient()
 
   const { data: receipts } = await serviceClient
-    .from("receipt_uploads")
-    .select(`
+    .from('receipt_uploads')
+    .select(
+      `
       id,
       raw_business_name,
       amount_cents,
@@ -32,18 +35,19 @@ export default async function MyReceiptsPage({
       file_path,
       listing_id,
       listings(name)
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+    `
+    )
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
 
   const receiptList = receipts ?? []
 
   const totalApproved = receiptList
-    .filter((r) => r.status === "approved")
+    .filter((r) => r.status === 'approved')
     .reduce((sum, r) => sum + r.amount_cents, 0)
 
   function formatDollars(cents: number) {
-    return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+    return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
   }
 
   return (
@@ -75,7 +79,7 @@ export default async function MyReceiptsPage({
         </div>
 
         {/* Success banner */}
-        {submitted === "true" && (
+        {submitted === 'true' && (
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">
               Receipt submitted — thank you!
@@ -96,7 +100,10 @@ export default async function MyReceiptsPage({
               {formatDollars(totalApproved)}
             </p>
             <p className="font-body text-xs text-charcoal/50 mt-0.5">
-              Across {receiptList.filter((r) => r.status === "approved").length} approved {receiptList.filter((r) => r.status === "approved").length === 1 ? "receipt" : "receipts"}
+              Across {receiptList.filter((r) => r.status === 'approved').length} approved{' '}
+              {receiptList.filter((r) => r.status === 'approved').length === 1
+                ? 'receipt'
+                : 'receipts'}
             </p>
           </div>
         )}

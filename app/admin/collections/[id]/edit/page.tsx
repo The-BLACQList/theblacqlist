@@ -1,14 +1,18 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { ArrowLeft, X } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, X } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { updateCollectionAction, removeCollectionItemAction, addCollectionItemAction } from "@/lib/actions/editorial/collections"
-import { CollectionAdminForm } from "@/components/editorial/AdminEditorialForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import {
+  updateCollectionAction,
+  removeCollectionItemAction,
+  addCollectionItemAction,
+} from '@/lib/actions/editorial/collections'
+import { CollectionAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "Edit Collection" }
+export const metadata: Metadata = { title: 'Edit Collection' }
 
 interface Props {
   params: Promise<{ id: string }>
@@ -20,23 +24,30 @@ export default async function EditCollectionPage({ params }: Props) {
   const serviceClient = createServiceClient()
 
   const { data: collection } = await serviceClient
-    .from("collections")
-    .select("id, title, slug, description, is_active")
-    .eq("id", id)
+    .from('collections')
+    .select('id, title, slug, description, is_active')
+    .eq('id', id)
     .single()
 
   if (!collection) notFound()
 
   const { data: items } = await serviceClient
-    .from("collection_items")
-    .select("id, display_order, listings(id, name, slug, tagline)")
-    .eq("collection_id", id)
-    .order("display_order", { ascending: true })
+    .from('collection_items')
+    .select('id, display_order, listings(id, name, slug, tagline)')
+    .eq('collection_id', id)
+    .order('display_order', { ascending: true })
 
-  const listings = (items ?? []).map((item) => ({
-    itemId: item.id,
-    ...((item.listings as { id: string; name: string; slug: string; tagline: string | null } | null) ?? { id: "", name: "", slug: "", tagline: null }),
-  })).filter((l) => l.id)
+  const listings = (items ?? [])
+    .map((item) => ({
+      itemId: item.id,
+      ...((item.listings as {
+        id: string
+        name: string
+        slug: string
+        tagline: string | null
+      } | null) ?? { id: '', name: '', slug: '', tagline: null }),
+    }))
+    .filter((l) => l.id)
 
   return (
     <div className="max-w-[800px] space-y-8">
@@ -67,7 +78,7 @@ export default async function EditCollectionPage({ params }: Props) {
         <div>
           <h2 className="font-headline text-base text-brand-black">Listings</h2>
           <p className="font-subhead text-xs text-charcoal/50 mt-0.5">
-            {listings.length} {listings.length === 1 ? "listing" : "listings"} in this collection
+            {listings.length} {listings.length === 1 ? 'listing' : 'listings'} in this collection
           </p>
         </div>
 
@@ -85,7 +96,13 @@ export default async function EditCollectionPage({ params }: Props) {
                     </p>
                   )}
                 </div>
-                <form action={removeCollectionItemAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>}>
+                <form
+                  action={
+                    removeCollectionItemAction.bind(null, null) as unknown as (
+                      formData: FormData
+                    ) => Promise<void>
+                  }
+                >
                   <input type="hidden" name="item_id" value={listing.itemId} />
                   <button
                     type="submit"
@@ -101,7 +118,14 @@ export default async function EditCollectionPage({ params }: Props) {
         )}
 
         {/* Add listing by ID */}
-        <form action={addCollectionItemAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>} className="flex gap-2 pt-2">
+        <form
+          action={
+            addCollectionItemAction.bind(null, null) as unknown as (
+              formData: FormData
+            ) => Promise<void>
+          }
+          className="flex gap-2 pt-2"
+        >
           <input type="hidden" name="collection_id" value={id} />
           <input
             name="listing_id"

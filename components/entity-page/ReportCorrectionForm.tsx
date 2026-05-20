@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useActionState, useState } from "react"
-import { Loader2, Flag, X, CheckCircle } from "lucide-react"
-import { submitCorrectionAction } from "@/lib/actions/corrections/submitCorrection"
-import { CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from "@/lib/constants/corrections"
-import { cn } from "@/lib/utils"
+import { useActionState, useState } from 'react'
+import { Loader2, Flag, X, CheckCircle } from 'lucide-react'
+import { submitCorrectionAction } from '@/lib/actions/corrections/submitCorrection'
+import { CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from '@/lib/constants/corrections'
+import { cn } from '@/lib/utils'
 
 interface Props {
   listingId: string
@@ -19,10 +19,14 @@ export function ReportCorrectionForm({ listingId }: Props) {
   function toggleIssue(issue: string) {
     setSelected((prev) => {
       const next = new Set(prev)
-      if (next.has(issue)) { next.delete(issue) } else { next.add(issue) }
+      if (next.has(issue)) {
+        next.delete(issue)
+      } else {
+        next.add(issue)
+      }
       return next
     })
-    if (issue === "other") setShowOther(!selected.has("other"))
+    if (issue === 'other') setShowOther(!selected.has('other'))
   }
 
   if (!open) {
@@ -44,7 +48,9 @@ export function ReportCorrectionForm({ listingId }: Props) {
       aria-modal="true"
       aria-labelledby="correction-heading"
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-brand-black/50"
-      onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false)
+      }}
     >
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-charcoal/10">
@@ -61,12 +67,15 @@ export function ReportCorrectionForm({ listingId }: Props) {
           </button>
         </div>
 
-        {state && "success" in state ? (
+        {state && 'success' in state ? (
           <div className="px-5 py-8 text-center" role="status" aria-live="polite">
             <CheckCircle className="size-10 text-green-500 mx-auto mb-3" aria-hidden="true" />
-            <p className="font-subhead text-base font-semibold text-brand-black mb-1">Thanks — we&apos;re on it.</p>
+            <p className="font-subhead text-base font-semibold text-brand-black mb-1">
+              Thanks — we&apos;re on it.
+            </p>
             <p className="font-body text-sm text-charcoal/60 mb-4">
-              Our team reviews all reports. We&apos;ll update the listing if the information is incorrect.
+              Our team reviews all reports. We&apos;ll update the listing if the information is
+              incorrect.
             </p>
             <button
               type="button"
@@ -88,12 +97,14 @@ export function ReportCorrectionForm({ listingId }: Props) {
               <ul className="space-y-2">
                 {CORRECTION_ISSUE_TYPES.map((issue) => (
                   <li key={issue}>
-                    <label className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors",
-                      selected.has(issue)
-                        ? "border-amber-gold/40 bg-amber-50/40"
-                        : "border-charcoal/12 hover:border-charcoal/20"
-                    )}>
+                    <label
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors',
+                        selected.has(issue)
+                          ? 'border-amber-gold/40 bg-amber-50/40'
+                          : 'border-charcoal/12 hover:border-charcoal/20'
+                      )}
+                    >
                       <input
                         type="checkbox"
                         name="issue_type"
@@ -102,7 +113,9 @@ export function ReportCorrectionForm({ listingId }: Props) {
                         onChange={() => toggleIssue(issue)}
                         className="rounded border-charcoal/30 text-amber-gold focus:ring-amber-gold/40"
                       />
-                      <span className="font-body text-sm text-brand-black">{ISSUE_LABELS[issue]}</span>
+                      <span className="font-body text-sm text-brand-black">
+                        {ISSUE_LABELS[issue]}
+                      </span>
                     </label>
                   </li>
                 ))}
@@ -111,8 +124,12 @@ export function ReportCorrectionForm({ listingId }: Props) {
 
             {showOther && (
               <div>
-                <label htmlFor="correction-notes" className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1">
-                  Describe the issue <span className="font-normal text-charcoal/40">(optional, max 500 chars)</span>
+                <label
+                  htmlFor="correction-notes"
+                  className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+                >
+                  Describe the issue{' '}
+                  <span className="font-normal text-charcoal/40">(optional, max 500 chars)</span>
                 </label>
                 <textarea
                   id="correction-notes"
@@ -125,8 +142,11 @@ export function ReportCorrectionForm({ listingId }: Props) {
               </div>
             )}
 
-            {state && "error" in state && (
-              <p role="alert" className="font-body text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {state && 'error' in state && (
+              <p
+                role="alert"
+                className="font-body text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+              >
                 {state.error}
               </p>
             )}
@@ -145,7 +165,7 @@ export function ReportCorrectionForm({ listingId }: Props) {
                 className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                {isPending ? "Submitting…" : "Submit report"}
+                {isPending ? 'Submitting…' : 'Submit report'}
               </button>
             </div>
           </form>

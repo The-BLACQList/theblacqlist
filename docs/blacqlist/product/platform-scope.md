@@ -16,61 +16,63 @@ The BLACQList is a national Black discovery, marketplace, and community commerce
 
 ## Module Inventory
 
-| # | Module | Phase | Priority |
-|---|---|---|---|
-| 1 | National discovery + search | MVP | Must-have |
-| 2 | City-aware discovery + city landing pages | MVP | Must-have |
-| 3 | Category-aware discovery + category landing pages | MVP | Must-have |
-| 4 | BLACQList Pages — business template | MVP | Must-have |
-| 5 | BLACQList Pages — professional template | V1 | Should-have |
-| 6 | BLACQList Pages — creative template | V1 | Should-have |
-| 7 | BLACQList Pages — event template | V1 | Should-have |
-| 8 | BLACQList Pages — job/opportunity listing | V1 | Should-have |
-| 9 | BLACQList Pages — marketplace vendor template | V2 | Later |
-| 10 | Claim workflow (business owner claims listing) | MVP | Must-have |
-| 11 | Create workflow (business owner creates new listing) | MVP | Must-have |
-| 12 | Manage workflow (dashboard for owners to edit their Page) | MVP | Must-have |
-| 13 | Trust + verification (claimed → verified → certified) | V1 | Should-have |
-| 14 | Community corrections (flag incorrect info) | V1 | Should-have |
-| 15 | Reviews (star rating + text) | V1 | Should-have |
-| 16 | Saves + save lists | MVP | Must-have |
-| 17 | Shares (social share, copy link) | MVP | Must-have |
-| 18 | Marketplace — vendor storefronts | V2 | Later |
-| 19 | Marketplace — product listings | V2 | Later |
-| 20 | Marketplace — cart + checkout | V2 | Later |
-| 21 | Marketplace — fulfillment tracking | V2 | Later |
-| 22 | Receipt upload | V2 | Later |
-| 23 | Community spend tracking | V2 | Later |
-| 24 | Dollar-flow map (visualization) | V3 | Future |
-| 25 | Supporter dashboard | V1 | Should-have |
-| 26 | Business owner dashboard | MVP | Must-have |
-| 27 | Vendor dashboard | V2 | Later |
-| 28 | Sponsor dashboard | V3 | Future |
-| 29 | Admin dashboard | MVP | Must-have |
-| 30 | Editorial — BLACQLight articles | V1 | Should-have |
-| 31 | Editorial — curated collections | V1 | Should-have |
-| 32 | Editorial — city guides | V2 | Later |
-| 33 | AI — shopper-side discovery agent | V2 | Later |
-| 34 | AI — business page optimization agent | V2 | Later |
-| 35 | AI — admin + curator agent | V3 | Future |
-| 36 | Monetization — listing tiers (free/basic/premium) | V1 | Should-have |
-| 37 | Monetization — sponsored pages | V1 | Should-have |
-| 38 | Monetization — marketplace transaction fees | V2 | Later |
-| 39 | Monetization — job posting fees | V2 | Later |
-| 40 | Monetization — event promotion fees | V2 | Later |
-| 41 | Monetization — sponsor campaign packages | V3 | Future |
-| 42 | Platform analytics (admin) | V1 | Should-have |
-| 43 | Business analytics (owner dashboard) | V1 | Should-have |
-| 44 | Community impact analytics | V3 | Future |
+| #   | Module                                                    | Phase | Priority    |
+| --- | --------------------------------------------------------- | ----- | ----------- |
+| 1   | National discovery + search                               | MVP   | Must-have   |
+| 2   | City-aware discovery + city landing pages                 | MVP   | Must-have   |
+| 3   | Category-aware discovery + category landing pages         | MVP   | Must-have   |
+| 4   | BLACQList Pages — business template                       | MVP   | Must-have   |
+| 5   | BLACQList Pages — professional template                   | V1    | Should-have |
+| 6   | BLACQList Pages — creative template                       | V1    | Should-have |
+| 7   | BLACQList Pages — event template                          | V1    | Should-have |
+| 8   | BLACQList Pages — job/opportunity listing                 | V1    | Should-have |
+| 9   | BLACQList Pages — marketplace vendor template             | V2    | Later       |
+| 10  | Claim workflow (business owner claims listing)            | MVP   | Must-have   |
+| 11  | Create workflow (business owner creates new listing)      | MVP   | Must-have   |
+| 12  | Manage workflow (dashboard for owners to edit their Page) | MVP   | Must-have   |
+| 13  | Trust + verification (claimed → verified → certified)     | V1    | Should-have |
+| 14  | Community corrections (flag incorrect info)               | V1    | Should-have |
+| 15  | Reviews (star rating + text)                              | V1    | Should-have |
+| 16  | Saves + save lists                                        | MVP   | Must-have   |
+| 17  | Shares (social share, copy link)                          | MVP   | Must-have   |
+| 18  | Marketplace — vendor storefronts                          | V2    | Later       |
+| 19  | Marketplace — product listings                            | V2    | Later       |
+| 20  | Marketplace — cart + checkout                             | V2    | Later       |
+| 21  | Marketplace — fulfillment tracking                        | V2    | Later       |
+| 22  | Receipt upload                                            | V2    | Later       |
+| 23  | Community spend tracking                                  | V2    | Later       |
+| 24  | Dollar-flow map (visualization)                           | V3    | Future      |
+| 25  | Supporter dashboard                                       | V1    | Should-have |
+| 26  | Business owner dashboard                                  | MVP   | Must-have   |
+| 27  | Vendor dashboard                                          | V2    | Later       |
+| 28  | Sponsor dashboard                                         | V3    | Future      |
+| 29  | Admin dashboard                                           | MVP   | Must-have   |
+| 30  | Editorial — BLACQLight articles                           | V1    | Should-have |
+| 31  | Editorial — curated collections                           | V1    | Should-have |
+| 32  | Editorial — city guides                                   | V2    | Later       |
+| 33  | AI — shopper-side discovery agent                         | V2    | Later       |
+| 34  | AI — business page optimization agent                     | V2    | Later       |
+| 35  | AI — admin + curator agent                                | V3    | Future      |
+| 36  | Monetization — listing tiers (free/basic/premium)         | V1    | Should-have |
+| 37  | Monetization — sponsored pages                            | V1    | Should-have |
+| 38  | Monetization — marketplace transaction fees               | V2    | Later       |
+| 39  | Monetization — job posting fees                           | V2    | Later       |
+| 40  | Monetization — event promotion fees                       | V2    | Later       |
+| 41  | Monetization — sponsor campaign packages                  | V3    | Future      |
+| 42  | Platform analytics (admin)                                | V1    | Should-have |
+| 43  | Business analytics (owner dashboard)                      | V1    | Should-have |
+| 44  | Community impact analytics                                | V3    | Future      |
 
 ---
 
 ## Phase Definitions
 
 ### MVP
+
 The smallest version of The BLACQList that delivers real value to real users on launch day.
 
 A real user — someone who is not the founder and has no obligation to use the platform — can:
+
 - Search for a Black-owned business, professional, or creative by keyword, category, or city
 - View a polished BLACQList Page for that entity
 - Save, share, or click to contact/visit
@@ -81,12 +83,15 @@ A real user — someone who is not the founder and has no obligation to use the 
 The MVP is not feature-complete. It is value-complete for the core discovery and listing use case.
 
 ### V1 (Post-MVP Hardening)
+
 Adds trust signals, reviews, community health, and early monetization. The platform moves from "discoverable" to "trusted and growing."
 
 ### V2 (Commerce Layer)
+
 Adds marketplace, receipt upload, spend tracking, and job + event monetization. The platform becomes a commerce platform, not just a discovery platform.
 
 ### V3 (Intelligence + Impact Layer)
+
 Adds AI concierge, dollar-flow map, sponsor campaigns, and community impact analytics. The platform becomes a data layer for the Black economy.
 
 ---
@@ -110,16 +115,16 @@ These will not be built at any phase without a new product decision:
 
 The BLACQList supports the following entity types. Each type has its own BLACQList Page template.
 
-| Entity Type | Template | Phase |
-|---|---|---|
-| Business | Full business Page (hero, about, offerings, hours, gallery, reviews, contact) | MVP |
-| Professional | Professional profile Page (bio, services, credentials, portfolio, reviews, contact) | V1 |
-| Creative | Creative Page (bio, medium/genre, portfolio/gallery, booking, reviews, contact) | V1 |
-| Event | Event Page (date/time, location, description, tickets/RSVP, organizer, related businesses) | V1 |
-| Job/Opportunity | Job listing Page (role, description, employer, apply link, deadline) | V1 |
-| Marketplace Vendor | Vendor storefront Page (products, categories, shipping info, reviews) | V2 |
-| Product | Product listing card (linked from vendor Page or searchable standalone) | V2 |
-| Service | Service listing card (linked from business or professional Page) | MVP (embedded) |
+| Entity Type        | Template                                                                                   | Phase          |
+| ------------------ | ------------------------------------------------------------------------------------------ | -------------- |
+| Business           | Full business Page (hero, about, offerings, hours, gallery, reviews, contact)              | MVP            |
+| Professional       | Professional profile Page (bio, services, credentials, portfolio, reviews, contact)        | V1             |
+| Creative           | Creative Page (bio, medium/genre, portfolio/gallery, booking, reviews, contact)            | V1             |
+| Event              | Event Page (date/time, location, description, tickets/RSVP, organizer, related businesses) | V1             |
+| Job/Opportunity    | Job listing Page (role, description, employer, apply link, deadline)                       | V1             |
+| Marketplace Vendor | Vendor storefront Page (products, categories, shipping info, reviews)                      | V2             |
+| Product            | Product listing card (linked from vendor Page or searchable standalone)                    | V2             |
+| Service            | Service listing card (linked from business or professional Page)                           | MVP (embedded) |
 
 ---
 

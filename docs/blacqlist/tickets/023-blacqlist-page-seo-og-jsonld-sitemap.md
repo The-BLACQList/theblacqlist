@@ -16,6 +16,7 @@
 Search discoverability is a core distribution channel for The BLACQList. Every business page must be a first-class SEO asset — with a unique title, description, canonical URL, Open Graph metadata for social sharing, and JSON-LD structured data for Google rich results. Without this, pages cannot be found by the users the platform is built to serve. This ticket also implements the platform sitemap and robots.txt, which are required before any SEO-targeted page goes live.
 
 Source artifacts:
+
 - `docs/blacqlist/ux/mvp-screen-map.md` — Business BLACQList Page SEO spec: title format, JSON-LD type, OG image note
 - `docs/blacqlist/architecture/api-contract.md` — Endpoint 5: `listing.meta_title`, `listing.meta_description`, `listing.canonical_url`, `listing.og_image_path`, `listing.noindex`, `details.phone`, `details.address_*`, `details.hours`, `listing_links` (sameAs)
 - `docs/blacqlist/design/blacqlist-page-design-system.md` — Brand colors and typography for OG image design
@@ -33,6 +34,7 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 ## Scope
 
 **In scope:**
+
 - `generateMetadata()` export on `app/[city-slug]/business/[listing-slug]/page.tsx`: `title`, `description`, `openGraph` (title, description, image URL, type, url), `twitter` (card type), canonical URL (`alternates.canonical`), `robots` (index/noindex based on `listing.noindex`)
 - Title format: `"[Business Name] — [Category Name] in [City Name] | The BLACQList"`
 - Description: first 155 characters of `listing.meta_description` if set; otherwise first 155 characters of `details.description` if set; otherwise fallback template: `"Discover [Business Name], a [Category Name] business in [City Name]. Find contact info, hours, services, and more on The BLACQList."`
@@ -43,6 +45,7 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 - Canonical URL is always the definitive slug path — if `listing.canonical_url` is set, use it; otherwise construct from `listing.city.slug`, `listing.entity_type`, `listing.slug`
 
 **Out of scope:**
+
 - OG images for city landing pages, collections, or user profiles (separate tickets)
 - Schema.org for event, job, or professional entity types (Beta/V1)
 - Google Search Console verification (deployment/ops concern)
@@ -53,13 +56,13 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-020: Listing page route and `EntityPageData` data fetch | Blocking ticket | Not started |
-| `@vercel/og` or `next/og` installed in the project | Infrastructure | Must be installed |
-| Listing `updated_at`, `city.slug`, `slug`, `entity_type`, `category.name`, `trust_tier` fields available from Endpoint 5 | Data contract | Defined in api-contract.md |
-| All published listings accessible from Supabase for sitemap generation | Database | Must be queryable via service_role in `app/sitemap.ts` |
-| Brand fonts available as static assets for OG image rendering | Design | Glacial Indifference Bold .woff2 or .ttf must be in `public/fonts/` |
+| Dependency                                                                                                               | Type            | Status                                                              |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------- |
+| BLACQ-020: Listing page route and `EntityPageData` data fetch                                                            | Blocking ticket | Not started                                                         |
+| `@vercel/og` or `next/og` installed in the project                                                                       | Infrastructure  | Must be installed                                                   |
+| Listing `updated_at`, `city.slug`, `slug`, `entity_type`, `category.name`, `trust_tier` fields available from Endpoint 5 | Data contract   | Defined in api-contract.md                                          |
+| All published listings accessible from Supabase for sitemap generation                                                   | Database        | Must be queryable via service_role in `app/sitemap.ts`              |
+| Brand fonts available as static assets for OG image rendering                                                            | Design          | Glacial Indifference Bold .woff2 or .ttf must be in `public/fonts/` |
 
 ---
 
@@ -114,6 +117,7 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/og/listing/[id]/route.ts` — Route Handler that returns `ImageResponse` (PNG) for the listing OG image. Query: fetch listing by `id`, generate branded 1200×630 image with `ImageResponse` from `next/og`. Fallback: if listing not found or no cover image, render text-only branded image.
 - `app/sitemap.ts` — Next.js sitemap convention. Exports default async function returning `MetadataRoute.Sitemap`. Queries all published business listings. Implements `generateSitemaps()` for pagination.
 - `app/robots.ts` — Next.js robots convention. Returns `MetadataRoute.Robots` with `rules`, `sitemap` URL.
@@ -121,9 +125,11 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 - `lib/seo/generateListingJsonLd.ts` — Pure function: `(data: EntityPageData, baseUrl: string) => WithContext<LocalBusiness>` (using `schema-dts` types or plain object). Constructs `LocalBusiness` schema.
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — Add `export async function generateMetadata(...)` that calls `generateListingMetadata()`. Add `<script type="application/ld+json">` in the page's `<head>` via Next.js `<Script>` strategy `beforeInteractive` or direct `<script>` tag in the `<head>` section (use `dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}`).
 
 **Key patterns:**
+
 - `generateMetadata()` in Next.js App Router receives `{ params }` — the same params used to fetch `EntityPageData`. To avoid a second database query, call the same `fetchListingPageData()` function used by the page. Next.js deduplicates `fetch()` calls with the same URL within a single render cycle via request memoization — ensure the data fetch is a `fetch()` call (not a direct Supabase client call) so memoization applies.
 - OG image font loading: use `new URL('../../../../public/fonts/GlacialIndifference-Bold.woff2', import.meta.url)` in the route handler to load fonts as buffers for `ImageResponse`.
 - JSON-LD injection: `<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />` inside the page component's return. This is the Next.js App Router pattern for JSON-LD — no separate library required.
@@ -131,6 +137,7 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 - OG image caching: Set `Cache-Control: public, max-age=3600, s-maxage=3600` response header in the OG route handler. OG images do not need to be real-time.
 
 **Do not:**
+
 - Add the `schema-dts` npm package unless it is already a project dependency — use typed plain objects if not.
 - Use `dangerouslySetInnerHTML` for anything other than the JSON-LD `<script>` tag.
 - Hardcode the base URL — read it from `process.env.NEXT_PUBLIC_SITE_URL` or Next.js `headers()`.
@@ -155,14 +162,14 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| `generateMetadata` receives null city | Listing has no city (online-only entity) | Title uses `"[Business Name] — [Category Name] | The BLACQList"` (city segment omitted) | Fallback title template handles null city |
-| OG image route receives unknown listing ID | Listing not found or unpublished | Branded fallback OG image returned (200 OK with generic BLACQList branding) — no 404 | Fallback rendering path in OG route handler |
-| Sitemap query times out | Database slow or unavailable | Next.js returns empty sitemap (not an error page) — crawlers get no URLs but do not error | Revalidation on next cycle |
-| JSON-LD `openingHoursSpecification` has no open days | All days `is_closed = true` | JSON-LD omits `openingHoursSpecification` field entirely — still valid schema | Valid JSON-LD with reduced fields |
-| Font file not found for OG image | Font path incorrect | OG image renders with system fallback font — not ideal but not a crash | Correct font path in environment setup |
-| Description is null and fallback template references null city | Online-only listing | Fallback template uses "[City Name]" only when city is non-null; otherwise omits the city phrase | Null-safe template construction |
+| Failure                                                        | Condition                                | User sees                                                                                        | Recovery                                    |
+| -------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------- | ----------------------------------------- |
+| `generateMetadata` receives null city                          | Listing has no city (online-only entity) | Title uses `"[Business Name] — [Category Name]                                                   | The BLACQList"` (city segment omitted)      | Fallback title template handles null city |
+| OG image route receives unknown listing ID                     | Listing not found or unpublished         | Branded fallback OG image returned (200 OK with generic BLACQList branding) — no 404             | Fallback rendering path in OG route handler |
+| Sitemap query times out                                        | Database slow or unavailable             | Next.js returns empty sitemap (not an error page) — crawlers get no URLs but do not error        | Revalidation on next cycle                  |
+| JSON-LD `openingHoursSpecification` has no open days           | All days `is_closed = true`              | JSON-LD omits `openingHoursSpecification` field entirely — still valid schema                    | Valid JSON-LD with reduced fields           |
+| Font file not found for OG image                               | Font path incorrect                      | OG image renders with system fallback font — not ideal but not a crash                           | Correct font path in environment setup      |
+| Description is null and fallback template references null city | Online-only listing                      | Fallback template uses "[City Name]" only when city is non-null; otherwise omits the city phrase | Null-safe template construction             |
 
 ---
 
@@ -187,16 +194,16 @@ This ticket depends on Ticket 020 (listing page route and data fetching). It doe
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-023-1 | Page title format | Navigate to any published Business page, inspect `<title>` | Title matches `"[Business Name] — [Category Name] in [City Name] | The BLACQList"` |
-| QA-023-2 | OG image renders | Navigate to `/og/listing/[id]` in the browser for a listing with a cover image | Returns 200 PNG, 1200×630, with business name, category, city visible, cover image on right half |
-| QA-023-3 | OG image fallback | Navigate to `/og/listing/[non-existent-uuid]` | Returns 200 PNG with generic BLACQList branding — no 404, no crash |
-| QA-023-4 | JSON-LD structure | Open a Business page, inspect the page source for `<script type="application/ld+json">`, paste into Google's Rich Results Test | Valid LocalBusiness schema with name, address, telephone, openingHours, image, url. No validation errors. |
-| QA-023-5 | Robots.txt | Navigate to `/robots.txt` | File present, disallows `/admin/`, `/dashboard/`, `/api/`. Sitemap URL listed. |
-| QA-023-6 | Sitemap | Navigate to `/sitemap.xml` | Valid XML with `<url>` entries for all published Business listings. Each entry has `<loc>`, `<lastmod>`, `<changefreq>`, `<priority>`. |
-| QA-023-7 | noindex listing | Set `listing.noindex = true` for a test listing, load the page | `<meta name="robots" content="noindex, nofollow">` present in `<head>` |
-| QA-023-8 | Meta description fallback | Load a listing page where `meta_description` is null but `description` is set | Meta description equals first 155 chars of `description` |
+| ID       | Test                      | Steps                                                                                                                          | Expected                                                                                                                               |
+| -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| QA-023-1 | Page title format         | Navigate to any published Business page, inspect `<title>`                                                                     | Title matches `"[Business Name] — [Category Name] in [City Name]                                                                       | The BLACQList"` |
+| QA-023-2 | OG image renders          | Navigate to `/og/listing/[id]` in the browser for a listing with a cover image                                                 | Returns 200 PNG, 1200×630, with business name, category, city visible, cover image on right half                                       |
+| QA-023-3 | OG image fallback         | Navigate to `/og/listing/[non-existent-uuid]`                                                                                  | Returns 200 PNG with generic BLACQList branding — no 404, no crash                                                                     |
+| QA-023-4 | JSON-LD structure         | Open a Business page, inspect the page source for `<script type="application/ld+json">`, paste into Google's Rich Results Test | Valid LocalBusiness schema with name, address, telephone, openingHours, image, url. No validation errors.                              |
+| QA-023-5 | Robots.txt                | Navigate to `/robots.txt`                                                                                                      | File present, disallows `/admin/`, `/dashboard/`, `/api/`. Sitemap URL listed.                                                         |
+| QA-023-6 | Sitemap                   | Navigate to `/sitemap.xml`                                                                                                     | Valid XML with `<url>` entries for all published Business listings. Each entry has `<loc>`, `<lastmod>`, `<changefreq>`, `<priority>`. |
+| QA-023-7 | noindex listing           | Set `listing.noindex = true` for a test listing, load the page                                                                 | `<meta name="robots" content="noindex, nofollow">` present in `<head>`                                                                 |
+| QA-023-8 | Meta description fallback | Load a listing page where `meta_description` is null but `description` is set                                                  | Meta description equals first 155 chars of `description`                                                                               |
 
 ---
 

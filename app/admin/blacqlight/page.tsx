@@ -1,17 +1,17 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { Plus } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Plus } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: "BLACQLight Articles" }
+export const metadata: Metadata = { title: 'BLACQLight Articles' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -20,9 +20,9 @@ export default async function AdminBlacqlightPage() {
   const serviceClient = createServiceClient()
 
   const { data: articles } = await serviceClient
-    .from("editorial_articles")
-    .select("id, title, slug, author_name, status, published_at, created_at, tags")
-    .order("created_at", { ascending: false })
+    .from('editorial_articles')
+    .select('id, title, slug, author_name, status, published_at, created_at, tags')
+    .order('created_at', { ascending: false })
 
   const items = articles ?? []
 
@@ -84,30 +84,28 @@ export default async function AdminBlacqlightPage() {
               {items.map((a) => (
                 <tr key={a.id} className="hover:bg-[#f9f9fb] transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-subhead text-sm font-semibold text-brand-black">
-                      {a.title}
-                    </p>
+                    <p className="font-subhead text-sm font-semibold text-brand-black">{a.title}</p>
                     <p className="font-body text-xs text-charcoal/40 mt-0.5">{a.slug}</p>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <span className="font-body text-xs text-charcoal/60">
-                      {a.author_name ?? "—"}
+                      {a.author_name ?? '—'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-subhead font-semibold ${
-                        a.status === "published"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-charcoal/5 text-charcoal/60"
+                        a.status === 'published'
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-charcoal/5 text-charcoal/60'
                       }`}
                     >
-                      {a.status === "published" ? "Published" : "Draft"}
+                      {a.status === 'published' ? 'Published' : 'Draft'}
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className="font-body text-xs text-charcoal/60">
-                      {a.published_at ? formatDate(a.published_at) : "—"}
+                      {a.published_at ? formatDate(a.published_at) : '—'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">

@@ -16,6 +16,7 @@ This document is the authoritative specification for every BLACQList Page templa
 A BLACQList Page is the atomic public unit of The BLACQList platform. Every listed entity — whether a restaurant in Atlanta, a graphic designer in Chicago, an event in Houston, or a job opening in Los Angeles — receives a BLACQList Page. It is not a profile, a form submission, or a directory listing. It is a conversion-focused, shareable, SEO-indexed micro-website that represents the entity with the depth and visual quality it deserves.
 
 A BLACQList Page serves three audiences simultaneously:
+
 - **The visitor** who needs to find, trust, and act on what they discover.
 - **The entity owner** who needs a professional digital presence that represents them at full value.
 - **The platform** which needs every Page to reinforce the brand promise, accumulate SEO equity, and drive community engagement.
@@ -40,18 +41,19 @@ A BLACQList Page is not a user profile. It is not an editable wiki. It is not a 
 
 ## 2. Entity Type Overview
 
-| Entity Type | Route Pattern | Introduced | Top-level vs Sub-page | Primary CTA Type(s) | Who Manages the Page |
-|---|---|---|---|---|---|
-| Business | `/[city-slug]/business/[listing-slug]` | MVP | Top-level | Book, Order, Call, Visit, Message | Business owner (Claimed) or Admin (Unclaimed) |
-| Professional | `/[city-slug]/professional/[listing-slug]` | Beta (feature-flagged) | Top-level | Book Consultation, Contact, Visit Profile | Professional (Claimed) or Admin |
-| Creative | `/[city-slug]/creative/[listing-slug]` | Beta (feature-flagged) | Top-level | Commission, Book, Contact | Creative (Claimed) or Admin |
-| Event | `/events/[event-slug]` | Beta (feature-flagged) | Top-level | Get Tickets, RSVP, Learn More | Event organizer (Claimed) or Admin |
-| Job | `/jobs/[job-slug]` | Beta (feature-flagged) | Top-level | Apply Now | Employer or Admin |
-| Marketplace Vendor | `/marketplace/vendor/[vendor-slug]` | V2 | Top-level | Shop Now, View Products | Vendor (Claimed) or Admin |
-| Product | `/marketplace/product/[product-slug]` | V2 | Sub-page (under Vendor) | Add to Cart, Buy Now | Vendor (inherits from parent) |
-| Service | Nested under parent Page | V1 | Sub-page (under Business or Professional) | Book, Request Quote | Parent Page owner |
+| Entity Type        | Route Pattern                              | Introduced             | Top-level vs Sub-page                     | Primary CTA Type(s)                       | Who Manages the Page                          |
+| ------------------ | ------------------------------------------ | ---------------------- | ----------------------------------------- | ----------------------------------------- | --------------------------------------------- |
+| Business           | `/[city-slug]/business/[listing-slug]`     | MVP                    | Top-level                                 | Book, Order, Call, Visit, Message         | Business owner (Claimed) or Admin (Unclaimed) |
+| Professional       | `/[city-slug]/professional/[listing-slug]` | Beta (feature-flagged) | Top-level                                 | Book Consultation, Contact, Visit Profile | Professional (Claimed) or Admin               |
+| Creative           | `/[city-slug]/creative/[listing-slug]`     | Beta (feature-flagged) | Top-level                                 | Commission, Book, Contact                 | Creative (Claimed) or Admin                   |
+| Event              | `/events/[event-slug]`                     | Beta (feature-flagged) | Top-level                                 | Get Tickets, RSVP, Learn More             | Event organizer (Claimed) or Admin            |
+| Job                | `/jobs/[job-slug]`                         | Beta (feature-flagged) | Top-level                                 | Apply Now                                 | Employer or Admin                             |
+| Marketplace Vendor | `/marketplace/vendor/[vendor-slug]`        | V2                     | Top-level                                 | Shop Now, View Products                   | Vendor (Claimed) or Admin                     |
+| Product            | `/marketplace/product/[product-slug]`      | V2                     | Sub-page (under Vendor)                   | Add to Cart, Buy Now                      | Vendor (inherits from parent)                 |
+| Service            | Nested under parent Page                   | V1                     | Sub-page (under Business or Professional) | Book, Request Quote                       | Parent Page owner                             |
 
 **Notes on sub-pages:**
+
 - Product Pages are not independent entities. They are owned by their parent Vendor Page and inherit the vendor's trust tier, claim status, and brand assets.
 - Service sub-pages are lightweight — they present a single service in detail. They do not have their own hero or trust section; they inherit from the parent Business or Professional Page.
 - Product and Service sub-pages do not appear in section 9 (Platform Activity) counts — saves and views roll up to the parent top-level Page.
@@ -71,24 +73,25 @@ The Hero is the first thing a visitor sees and the last thing they should need t
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Cover image | Image (object-fit cover) | All | No (has default fallback) | Max 10MB upload; 16:9 recommended; 1920×1080px ideal; served via CDN; OG image source |
-| Entity name | Text | All | Yes | Glacial Indifference Bold; white on overlay; max 60 chars displayed before truncation |
-| Tagline | Text | Business, Professional, Creative, Vendor | No | Lato Regular; white on overlay; max 80 chars; shown below name |
-| Trust badge | Badge component | Business, Professional, Creative, Vendor | Yes (system-assigned) | Position: lower-right of hero on desktop; below name on mobile |
-| Primary CTA button | Button (Amber Gold) | All | Yes (owner-configured or system default) | Label is owner-configured for Business, Professional, Creative, Vendor; fixed label for Event ("Get Tickets"), Job ("Apply Now"), Product ("Add to Cart") |
-| Save button | Icon button | All top-level Pages | Yes (always visible) | Bookmark icon; Cream fill when unsaved; Amber Gold fill when saved; visible to all; auth-gated on tap for anonymous users |
-| Share button | Icon button | All top-level Pages | Yes (always visible) | Share icon; Cream; triggers share sheet or copy-link modal |
-| Event date/time badge | Badge | Event | Yes for Event | Shown in hero overlay; format: "Sat, Jun 14 · 7:00 PM" |
-| Job company + location badge | Badge | Job | Yes for Job | Shown in hero overlay; format: "[Company] · [City or Remote]" |
-| Product price | Text | Product | Yes for Product | Shown in hero; Amber Gold text; format: "$XX.XX" or "From $XX.XX" |
-| Overlay gradient | Design element | All | System-applied | Bottom-to-top linear gradient over cover image to ensure text legibility; Brand Black at 60% opacity at the bottom, transparent at top |
+| Field                        | Type                     | Entity Types                             | Required                                 | Notes                                                                                                                                                     |
+| ---------------------------- | ------------------------ | ---------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cover image                  | Image (object-fit cover) | All                                      | No (has default fallback)                | Max 10MB upload; 16:9 recommended; 1920×1080px ideal; served via CDN; OG image source                                                                     |
+| Entity name                  | Text                     | All                                      | Yes                                      | Glacial Indifference Bold; white on overlay; max 60 chars displayed before truncation                                                                     |
+| Tagline                      | Text                     | Business, Professional, Creative, Vendor | No                                       | Lato Regular; white on overlay; max 80 chars; shown below name                                                                                            |
+| Trust badge                  | Badge component          | Business, Professional, Creative, Vendor | Yes (system-assigned)                    | Position: lower-right of hero on desktop; below name on mobile                                                                                            |
+| Primary CTA button           | Button (Amber Gold)      | All                                      | Yes (owner-configured or system default) | Label is owner-configured for Business, Professional, Creative, Vendor; fixed label for Event ("Get Tickets"), Job ("Apply Now"), Product ("Add to Cart") |
+| Save button                  | Icon button              | All top-level Pages                      | Yes (always visible)                     | Bookmark icon; Cream fill when unsaved; Amber Gold fill when saved; visible to all; auth-gated on tap for anonymous users                                 |
+| Share button                 | Icon button              | All top-level Pages                      | Yes (always visible)                     | Share icon; Cream; triggers share sheet or copy-link modal                                                                                                |
+| Event date/time badge        | Badge                    | Event                                    | Yes for Event                            | Shown in hero overlay; format: "Sat, Jun 14 · 7:00 PM"                                                                                                    |
+| Job company + location badge | Badge                    | Job                                      | Yes for Job                              | Shown in hero overlay; format: "[Company] · [City or Remote]"                                                                                             |
+| Product price                | Text                     | Product                                  | Yes for Product                          | Shown in hero; Amber Gold text; format: "$XX.XX" or "From $XX.XX"                                                                                         |
+| Overlay gradient             | Design element           | All                                      | System-applied                           | Bottom-to-top linear gradient over cover image to ensure text legibility; Brand Black at 60% opacity at the bottom, transparent at top                    |
 
 **MVP behavior:**
 Available for Business entity type only. Hero renders with: cover image (or Deep Background `#19191E` fallback with the BLACQList wordmark centered if no image is uploaded), business name in Glacial Indifference Bold at 40px (desktop) / 28px (mobile), tagline in Lato Regular at 18px, trust badge in lower-right, Amber Gold primary CTA button with owner-configured label, and Save + Share icon buttons. Cover image is uploaded via the owner dashboard. The gradient overlay is always applied when a cover image exists.
 
 **Later behavior:**
+
 - Beta: Hero available for Professional, Creative, Event, Job entity types with type-specific badge content (event date, job company/location).
 - V1: Video background support as an alternative to a static cover image (owner-configurable; desktop only; falls back to still frame thumbnail on mobile). Hero layout option for Premium tier owners: expanded hero with logo positioned in lower-left alongside name instead of above.
 - V2: Product hero with product image carousel (up to 5 images) replacing the single cover image. Vendor hero with storefront cover image + logo lockup.
@@ -97,6 +100,7 @@ Available for Business entity type only. Hero renders with: cover image (or Deep
 If no cover image has been uploaded: the hero renders with a full-bleed Deep Background (`#19191E`) fill. The entity name and other overlay elements render normally. No "Add a cover image" prompt is visible on the public-facing Page — that prompt lives exclusively in the owner dashboard completion checklist. The absence of a cover image is not surfaced as incompleteness to visitors.
 
 **Editability by owner:**
+
 - Cover image: upload via dashboard Page Editor > Hero section. Max 10MB. JPEG, PNG, WebP accepted. Square crop tool provided; 16:9 aspect ratio enforced as the output. Old image replaced on new upload; old image deleted from storage after 24h (deferred cleanup job).
 - Entity name: editable in dashboard > Hero section. Business name has a 100-character hard limit stored in the database; display truncates at 60 characters with an ellipsis in the hero.
 - Tagline: editable in dashboard > Hero section. 80-character limit enforced in the form.
@@ -104,11 +108,13 @@ If no cover image has been uploaded: the hero renders with a full-bleed Deep Bac
 - Trust badge: not owner-editable; system-assigned based on claim/verification status.
 
 **Admin moderation needs:**
+
 - Replace cover image on any listing (override owner image with admin-uploaded image if the image is inappropriate or low quality).
 - Override trust badge tier independently of the claim flow (e.g., manually setting Verified without going through the full verification queue).
 - Force-republish hero when changes are made directly in the admin listing editor.
 
 **SEO needs:**
+
 - Entity name is used verbatim in the `<title>` tag and `og:title`. It must not be truncated in the `<title>` value even if the visual hero truncates.
 - Cover image is the source for `og:image` via the `/og/[...params]` dynamic image generation route. The OG image renders the cover image with the entity name and BLACQList wordmark overlaid using Satori or equivalent server-side image generation. Dimensions: 1200×630.
 - The hero section's entity name heading uses `<h1>` — there is exactly one `<h1>` per Page.
@@ -116,12 +122,12 @@ If no cover image has been uploaded: the hero renders with a full-bleed Deep Bac
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `page_view` | Page is loaded | `entity_type`, `entity_id`, `listing_slug`, `city_slug`, `trust_tier`, `is_claimed`, `referrer_source` |
-| `hero_cta_click` | Primary CTA button in hero is clicked | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `trust_tier` |
-| `save_toggled` | Save button in hero is clicked | `entity_type`, `entity_id`, `action` (`saved` or `unsaved`), `auth_state` (`authenticated` or `auth_gated`) |
-| `share_initiated` | Share button in hero is clicked | `entity_type`, `entity_id`, `share_method` (`copy_link`, `native_share`, `social`) |
+| Event name        | Trigger                               | Properties                                                                                                  |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `page_view`       | Page is loaded                        | `entity_type`, `entity_id`, `listing_slug`, `city_slug`, `trust_tier`, `is_claimed`, `referrer_source`      |
+| `hero_cta_click`  | Primary CTA button in hero is clicked | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `trust_tier`                                           |
+| `save_toggled`    | Save button in hero is clicked        | `entity_type`, `entity_id`, `action` (`saved` or `unsaved`), `auth_state` (`authenticated` or `auth_gated`) |
+| `share_initiated` | Share button in hero is clicked       | `entity_type`, `entity_id`, `share_method` (`copy_link`, `native_share`, `social`)                          |
 
 **Design notes:**
 The hero occupies 60% of the viewport height on desktop (max 600px), 50% on mobile (max 400px). The entity name renders left-aligned in the lower quarter of the hero area, above the tagline, above the CTA row. The CTA row contains: primary CTA button (Amber Gold, `px-8 py-3`, Quicksand Bold Italic), Save button (icon, 44×44px tap target), Share button (icon, 44×44px tap target). On mobile, the CTA row stacks: primary CTA button full-width, Save and Share buttons as a pair below it at 50% width each.
@@ -142,19 +148,20 @@ The Quick Action Bar is the Page's persistent conversion rail. Once the visitor 
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Primary CTA button | Button (Amber Gold, compact) | All | Yes | Same label and action as hero CTA; compact variant: `px-4 py-2` |
-| Phone quick-tap | Icon + text link | Business, Professional, Creative, Vendor | Conditional | Shows only if phone number exists; `tel:` link; phone handset icon |
-| Map/directions quick-tap | Icon + text link | Business, Professional, Creative, Event | Conditional | Shows only if address exists; map pin icon; opens Google Maps or Apple Maps via OS detection |
-| Save button | Icon button | All top-level Pages | Yes | Bookmark icon; matches save state from hero; 44×44px |
-| Share button | Icon button | All top-level Pages | Yes | Share icon; 44×44px |
-| Entity name (condensed) | Text | All | Yes (for context) | Short entity name in Lato Medium, 14px, truncated at 24 characters; confirms to the visitor which Page they are on |
+| Field                    | Type                         | Entity Types                             | Required          | Notes                                                                                                              |
+| ------------------------ | ---------------------------- | ---------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Primary CTA button       | Button (Amber Gold, compact) | All                                      | Yes               | Same label and action as hero CTA; compact variant: `px-4 py-2`                                                    |
+| Phone quick-tap          | Icon + text link             | Business, Professional, Creative, Vendor | Conditional       | Shows only if phone number exists; `tel:` link; phone handset icon                                                 |
+| Map/directions quick-tap | Icon + text link             | Business, Professional, Creative, Event  | Conditional       | Shows only if address exists; map pin icon; opens Google Maps or Apple Maps via OS detection                       |
+| Save button              | Icon button                  | All top-level Pages                      | Yes               | Bookmark icon; matches save state from hero; 44×44px                                                               |
+| Share button             | Icon button                  | All top-level Pages                      | Yes               | Share icon; 44×44px                                                                                                |
+| Entity name (condensed)  | Text                         | All                                      | Yes (for context) | Short entity name in Lato Medium, 14px, truncated at 24 characters; confirms to the visitor which Page they are on |
 
 **MVP behavior:**
 Available for Business only. Bar contains: condensed entity name (left), primary CTA button (center-right, Amber Gold), phone icon link if phone exists (right of CTA), map icon link if address exists (right of phone), Save and Share icons (far right). Bar is a Client Component using `IntersectionObserver` to detect when the hero CTA button leaves the viewport — it becomes `position: fixed; top: [nav-height]px` at that moment. The bar is hidden when the user scrolls back up and the hero CTA re-enters the viewport.
 
 **Later behavior:**
+
 - Beta: Available for Professional, Creative, Event, Job entity types. Event bar shows a "Get Tickets" button and a location map link. Job bar shows an "Apply Now" button and the application deadline if present.
 - V1: Quick Action Bar appears in a slightly elevated state for Verified and BLACQList Certified entities — a subtle certification indicator (small gold star, no text) appears to the left of the entity name within the bar.
 
@@ -172,12 +179,12 @@ The Quick Action Bar is a Client Component rendered after initial HTML output. I
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `action_bar_cta_click` | Primary CTA in Quick Action Bar is clicked | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `scroll_depth_pct` at time of click |
-| `action_bar_phone_click` | Phone icon in Quick Action Bar is tapped | `entity_type`, `entity_id` |
-| `action_bar_map_click` | Map icon in Quick Action Bar is tapped | `entity_type`, `entity_id` |
-| `action_bar_save_toggled` | Save button in Quick Action Bar is clicked | `entity_type`, `entity_id`, `action` (`saved` or `unsaved`) |
+| Event name                | Trigger                                    | Properties                                                                               |
+| ------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `action_bar_cta_click`    | Primary CTA in Quick Action Bar is clicked | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `scroll_depth_pct` at time of click |
+| `action_bar_phone_click`  | Phone icon in Quick Action Bar is tapped   | `entity_type`, `entity_id`                                                               |
+| `action_bar_map_click`    | Map icon in Quick Action Bar is tapped     | `entity_type`, `entity_id`                                                               |
+| `action_bar_save_toggled` | Save button in Quick Action Bar is clicked | `entity_type`, `entity_id`, `action` (`saved` or `unsaved`)                              |
 
 **Design notes:**
 Bar height: 56px (desktop), 52px (mobile). Background: Deep Background (`#19191E`) with a 1px bottom border in Charcoal at 30% opacity — this separates the bar from the page content below it. The bar appears with a subtle fade-in (150ms ease-out opacity transition) when it first enters sticky state. It does not "slide down" — it fades in. The entity name and quick-tap icons use Pale Lavender or Cream on the Dark Background. The Amber Gold CTA button is the single chromatic accent in the bar.
@@ -196,33 +203,34 @@ The At-a-Glance section answers "the fast five" questions a visitor has before t
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Category (primary) | Badge | All | Yes | Amber Gold badge; links to category discovery page |
-| Subcategories | Badges | Business, Professional, Creative, Vendor | No | Pale Lavender badges; up to 3 subcategory tags |
-| City | Text + location icon | Business, Professional, Creative, Event, Vendor | Yes for local entities | Lato Regular; links to city landing page |
-| Hours of operation | Hours block | Business, Professional, Creative, Vendor | No | Shows current open/closed status + full weekly schedule |
-| Open/Closed indicator | Status badge | Business, Professional, Creative, Vendor | Conditional on hours field | Green "Open now" / Red "Closed · Opens [day] at [time]"; calculated client-side |
-| Phone | `tel:` link | Business, Professional, Creative, Vendor | No | Phone handset icon + formatted number |
-| Email | `mailto:` link | Business, Professional, Creative, Vendor | No | Email icon + address |
-| Website | External link | Business, Professional, Creative, Vendor | No | Globe icon + domain (not full URL displayed); opens new tab |
-| Address | Text + map link | Business, Professional, Creative, Event | No | Map pin icon; tapping opens maps app; service-area businesses show "Service area: [City]" |
-| Event date + time | Date/time display | Event | Yes for Event | Format: "Saturday, June 14, 2025 · 7:00 PM – 10:00 PM EDT" |
-| Event location | Text + optional map link | Event | Yes for Event | Physical address or "Virtual" with platform link |
-| Job location | Text | Job | Yes for Job | City name + state, or "Remote", or "Hybrid – [City]" |
-| Application deadline | Date display | Job | No | Format: "Apply by June 30, 2025"; red text if within 7 days |
-| Job type | Badge | Job | No | Full-time / Part-time / Contract / Internship / Volunteer |
-| Salary range | Text | Job | No | Format: "$60K – $80K / year" or "Competitive" |
-| Product price | Text | Product | Yes for Product | Amber Gold text; format: "$XX.XX" or "From $XX.XX" |
-| Product variants | Select or badge row | Product | Conditional | Size, color, or type selector if variants exist |
-| Service price | Text | Service | No | Format: "From $XX" or "$XX / hour" or "Contact for pricing" |
-| Service duration | Text | Service | No | Format: "60 min" or "Half-day" |
-| Social links | Icon row | Business, Professional, Creative, Vendor | No | Instagram, Facebook, LinkedIn, TikTok, YouTube icons; only icons with non-empty URLs rendered |
+| Field                 | Type                     | Entity Types                                    | Required                   | Notes                                                                                         |
+| --------------------- | ------------------------ | ----------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| Category (primary)    | Badge                    | All                                             | Yes                        | Amber Gold badge; links to category discovery page                                            |
+| Subcategories         | Badges                   | Business, Professional, Creative, Vendor        | No                         | Pale Lavender badges; up to 3 subcategory tags                                                |
+| City                  | Text + location icon     | Business, Professional, Creative, Event, Vendor | Yes for local entities     | Lato Regular; links to city landing page                                                      |
+| Hours of operation    | Hours block              | Business, Professional, Creative, Vendor        | No                         | Shows current open/closed status + full weekly schedule                                       |
+| Open/Closed indicator | Status badge             | Business, Professional, Creative, Vendor        | Conditional on hours field | Green "Open now" / Red "Closed · Opens [day] at [time]"; calculated client-side               |
+| Phone                 | `tel:` link              | Business, Professional, Creative, Vendor        | No                         | Phone handset icon + formatted number                                                         |
+| Email                 | `mailto:` link           | Business, Professional, Creative, Vendor        | No                         | Email icon + address                                                                          |
+| Website               | External link            | Business, Professional, Creative, Vendor        | No                         | Globe icon + domain (not full URL displayed); opens new tab                                   |
+| Address               | Text + map link          | Business, Professional, Creative, Event         | No                         | Map pin icon; tapping opens maps app; service-area businesses show "Service area: [City]"     |
+| Event date + time     | Date/time display        | Event                                           | Yes for Event              | Format: "Saturday, June 14, 2025 · 7:00 PM – 10:00 PM EDT"                                    |
+| Event location        | Text + optional map link | Event                                           | Yes for Event              | Physical address or "Virtual" with platform link                                              |
+| Job location          | Text                     | Job                                             | Yes for Job                | City name + state, or "Remote", or "Hybrid – [City]"                                          |
+| Application deadline  | Date display             | Job                                             | No                         | Format: "Apply by June 30, 2025"; red text if within 7 days                                   |
+| Job type              | Badge                    | Job                                             | No                         | Full-time / Part-time / Contract / Internship / Volunteer                                     |
+| Salary range          | Text                     | Job                                             | No                         | Format: "$60K – $80K / year" or "Competitive"                                                 |
+| Product price         | Text                     | Product                                         | Yes for Product            | Amber Gold text; format: "$XX.XX" or "From $XX.XX"                                            |
+| Product variants      | Select or badge row      | Product                                         | Conditional                | Size, color, or type selector if variants exist                                               |
+| Service price         | Text                     | Service                                         | No                         | Format: "From $XX" or "$XX / hour" or "Contact for pricing"                                   |
+| Service duration      | Text                     | Service                                         | No                         | Format: "60 min" or "Half-day"                                                                |
+| Social links          | Icon row                 | Business, Professional, Creative, Vendor        | No                         | Instagram, Facebook, LinkedIn, TikTok, YouTube icons; only icons with non-empty URLs rendered |
 
 **MVP behavior:**
 Available for Business only. The section renders as a two-column card on desktop (contact info left, hours right) and a stacked single-column list on mobile. Fields rendered at MVP: category badge, city text, open/closed indicator + full hours, phone `tel:` link, email `mailto:` link, website external link, address + map link, social links icon row.
 
 **Later behavior:**
+
 - Beta: At-a-Glance available for Professional, Creative, Event, Job. Event variant shows date/time and event location. Job variant shows location, deadline, job type, and salary range.
 - V1: Subcategory badges added for all applicable entity types. Verification date shown in a tooltip on the Verified trust badge.
 - V2: Product variant selector embedded within At-a-Glance for Product sub-pages.
@@ -234,6 +242,7 @@ Fields that have no data are hidden individually — there is no row showing "Ph
 All fields in this section are editable in the dashboard Page Editor under the "Location + Hours" and "Contact" sub-sections. Hours are set per day with individual open/closed toggles and time pickers. Address has a "service area" toggle that replaces the address fields with a service area description text input.
 
 **Admin moderation needs:**
+
 - Override any contact field directly from the admin listing editor.
 - Flag a listing as having incorrect address or hours (from a community correction report).
 - View a timestamp of when each contact field was last edited, and by whom (owner vs admin).
@@ -245,14 +254,14 @@ The hours block is rendered as visible HTML text — not hidden behind a JavaScr
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `phone_click` | Phone `tel:` link tapped | `entity_type`, `entity_id`, `source` (`at_a_glance`) |
-| `website_click` | Website link clicked | `entity_type`, `entity_id` |
-| `map_click` | Address map link tapped | `entity_type`, `entity_id` |
-| `email_click` | Email `mailto:` link tapped | `entity_type`, `entity_id` |
-| `social_link_click` | Social icon link clicked | `entity_type`, `entity_id`, `platform` (e.g., `instagram`) |
-| `job_deadline_view` | Job page with deadline within 7 days is loaded | `entity_id`, `days_remaining` |
+| Event name          | Trigger                                        | Properties                                                 |
+| ------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `phone_click`       | Phone `tel:` link tapped                       | `entity_type`, `entity_id`, `source` (`at_a_glance`)       |
+| `website_click`     | Website link clicked                           | `entity_type`, `entity_id`                                 |
+| `map_click`         | Address map link tapped                        | `entity_type`, `entity_id`                                 |
+| `email_click`       | Email `mailto:` link tapped                    | `entity_type`, `entity_id`                                 |
+| `social_link_click` | Social icon link clicked                       | `entity_type`, `entity_id`, `platform` (e.g., `instagram`) |
+| `job_deadline_view` | Job page with deadline within 7 days is loaded | `entity_id`, `days_remaining`                              |
 
 **Design notes:**
 At-a-Glance renders in a card with a Cream background and a 1px Charcoal/15% border. Category badge is Amber Gold with Brand Black text. Subcategory badges are Pale Lavender with Charcoal text. The open/closed indicator is a small dot (8px) + text: green (`#22C55E`) for open, red (`#EF4444`) for closed — with the next open time in Charcoal below the status for closed entities. Font for all data rows: Lato Regular 14px. Labels are Lato Regular 12px Charcoal. The two-column layout on desktop splits: left column = category, hours, open/closed; right column = phone, email, website, address, social links. On mobile, all rows stack in a single column in that same order.
@@ -271,20 +280,21 @@ The Story section is the human layer of the Page. It moves a visitor from "what 
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| About / description | Long-form text | Business, Professional, Creative, Vendor, Service | Required for Business (min 50 chars for publish) | Plain text at MVP; rich text (bold, italics, links) at V1; max 1000 chars at MVP |
-| Origin story | Text | Business | No | "How we started" — free text, up to 500 chars; separate from description |
-| Values statement | Text | Business, Professional | No | Short list or paragraph; up to 300 chars |
-| Bio | Text | Professional, Creative | Required for Professional/Creative Page types | Up to 500 chars; separate field from business description |
-| Product description | Text | Product | Yes for Product | Up to 600 chars; plain text at MVP |
-| Service description | Text | Service | Yes for Service | Up to 400 chars |
-| "Read more" truncation | UI behavior | All | System-applied | Truncate at 4 visible lines; "Read more" expands; "Show less" collapses |
+| Field                  | Type           | Entity Types                                      | Required                                         | Notes                                                                            |
+| ---------------------- | -------------- | ------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| About / description    | Long-form text | Business, Professional, Creative, Vendor, Service | Required for Business (min 50 chars for publish) | Plain text at MVP; rich text (bold, italics, links) at V1; max 1000 chars at MVP |
+| Origin story           | Text           | Business                                          | No                                               | "How we started" — free text, up to 500 chars; separate from description         |
+| Values statement       | Text           | Business, Professional                            | No                                               | Short list or paragraph; up to 300 chars                                         |
+| Bio                    | Text           | Professional, Creative                            | Required for Professional/Creative Page types    | Up to 500 chars; separate field from business description                        |
+| Product description    | Text           | Product                                           | Yes for Product                                  | Up to 600 chars; plain text at MVP                                               |
+| Service description    | Text           | Service                                           | Yes for Service                                  | Up to 400 chars                                                                  |
+| "Read more" truncation | UI behavior    | All                                               | System-applied                                   | Truncate at 4 visible lines; "Read more" expands; "Show less" collapses          |
 
 **MVP behavior:**
 Available for Business only. The section renders the business description as the primary body text. If an origin story is provided, it renders in a visually distinct block below the description (slightly smaller font, with a subtle left border in Amber Gold). Values statement, if provided, renders below the origin story as a short italicized paragraph or bullet list. The section heading "About" renders as an `<h2>`. All text is server-rendered. The "Read more" toggle is a Client Component.
 
 **Later behavior:**
+
 - Beta: Story available for Professional (bio field) and Creative (bio field + "about my practice" field). Rich text formatting (bold, italic, external links) added for V1 for all entity types.
 - V1: Structured values statement for Business: an owner can add up to 3 short "values" as labeled chips (e.g., "Minority-owned", "Women-led", "Veteran-owned") that render as Pale Lavender badges below the description.
 - V2: Vendor's Story section includes a "brand origin" narrative with an optional founder photo (portrait format, circular crop) displayed alongside the text.
@@ -295,12 +305,14 @@ If description is empty (possible for Unclaimed listings): the Story section is 
 For an Unclaimed listing where no description exists, admins may add a brief placeholder description during seeding ("Black-owned [category] in [city]. Claim this listing to update your story."). This placeholder is hidden once an owner claims and edits the page.
 
 **Editability by owner:**
+
 - Description: editable in dashboard Page Editor > About section. Required field for publishing. Character counter shown. Plain text only at MVP.
 - Origin story: optional field, same section.
 - Values statement: optional field, same section. V1 adds the structured values chips.
 - Bio (Professional/Creative, Beta): editable in the equivalent "About" section of the professional/creative editor.
 
 **Admin moderation needs:**
+
 - Review and edit any text field for content policy compliance (hate speech, false claims, spam).
 - Replace placeholder description with a higher-quality admin-authored description for high-priority seed listings.
 - Flag a description as needing owner review (triggers a notification to the owner if claimed).
@@ -310,9 +322,9 @@ The description is the primary body text for the Page and is the source for the 
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `story_expanded` | "Read more" toggle clicked to expand | `entity_type`, `entity_id` |
+| Event name        | Trigger                                | Properties                 |
+| ----------------- | -------------------------------------- | -------------------------- |
+| `story_expanded`  | "Read more" toggle clicked to expand   | `entity_type`, `entity_id` |
 | `story_collapsed` | "Show less" toggle clicked to collapse | `entity_type`, `entity_id` |
 
 **Design notes:**
@@ -332,61 +344,62 @@ What They Offer is the operational depth of the Page — it answers "what can I 
 
 **Fields — Business / Professional:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Service name | Text | Business, Professional | Yes per service | Lato Medium; max 60 chars |
-| Service description | Text | Business, Professional | No | Lato Regular; max 200 chars; optional |
-| Service price | Text | Business, Professional | No | Free-form text: "$50/hr", "From $200", "Contact for pricing" |
-| Services list | List | Business, Professional | No (section optional) | Up to 20 services; drag-to-reorder in dashboard |
-| "View all services" expansion | UI control | Business, Professional | System-applied if >6 services | Shows first 6; remainder hidden behind expansion |
+| Field                         | Type       | Entity Types           | Required                      | Notes                                                        |
+| ----------------------------- | ---------- | ---------------------- | ----------------------------- | ------------------------------------------------------------ |
+| Service name                  | Text       | Business, Professional | Yes per service               | Lato Medium; max 60 chars                                    |
+| Service description           | Text       | Business, Professional | No                            | Lato Regular; max 200 chars; optional                        |
+| Service price                 | Text       | Business, Professional | No                            | Free-form text: "$50/hr", "From $200", "Contact for pricing" |
+| Services list                 | List       | Business, Professional | No (section optional)         | Up to 20 services; drag-to-reorder in dashboard              |
+| "View all services" expansion | UI control | Business, Professional | System-applied if >6 services | Shows first 6; remainder hidden behind expansion             |
 
 **Fields — Creative:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Portfolio items (images) | Image gallery | Creative | No (section optional) | Up to 24 portfolio images; primary display format for creative work |
-| Portfolio item caption | Text | Creative | No | Per-image; max 140 chars |
-| Commission / booking types | Text list | Creative | No | List of what the creative accepts: "Brand identity", "Editorial portraits", etc. |
-| Commission status | Badge | Creative | No | "Open for commissions" (Amber Gold) / "Not currently available" (Charcoal) |
+| Field                      | Type          | Entity Types | Required              | Notes                                                                            |
+| -------------------------- | ------------- | ------------ | --------------------- | -------------------------------------------------------------------------------- |
+| Portfolio items (images)   | Image gallery | Creative     | No (section optional) | Up to 24 portfolio images; primary display format for creative work              |
+| Portfolio item caption     | Text          | Creative     | No                    | Per-image; max 140 chars                                                         |
+| Commission / booking types | Text list     | Creative     | No                    | List of what the creative accepts: "Brand identity", "Editorial portraits", etc. |
+| Commission status          | Badge         | Creative     | No                    | "Open for commissions" (Amber Gold) / "Not currently available" (Charcoal)       |
 
 **Fields — Event:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Event description | Long-form text | Event | Yes for Event | Up to 1000 chars; this is the primary body text for Event Pages (no Story section) |
-| Event schedule | Text list | Event | No | Individual schedule items with times; e.g., "6:00 PM – Doors open" |
-| Featured guests / speakers | Text list | Event | No | Names and titles; links to their BLACQList Pages if they have one |
-| Ticket tiers | Text list | Event | No | Tier name + price; links to external ticketing |
-| Ticket link | URL | Event | Yes if tickets are required | "Get Tickets" CTA destination |
-| RSVP link | URL | Event | Yes if RSVP only | "RSVP" CTA destination |
-| Organizer | Linked entity | Event | No | Link to organizer's Business or Professional Page |
-| Accessibility info | Text | Event | No | "Wheelchair accessible", "ASL interpretation available", etc. |
+| Field                      | Type           | Entity Types | Required                    | Notes                                                                              |
+| -------------------------- | -------------- | ------------ | --------------------------- | ---------------------------------------------------------------------------------- |
+| Event description          | Long-form text | Event        | Yes for Event               | Up to 1000 chars; this is the primary body text for Event Pages (no Story section) |
+| Event schedule             | Text list      | Event        | No                          | Individual schedule items with times; e.g., "6:00 PM – Doors open"                 |
+| Featured guests / speakers | Text list      | Event        | No                          | Names and titles; links to their BLACQList Pages if they have one                  |
+| Ticket tiers               | Text list      | Event        | No                          | Tier name + price; links to external ticketing                                     |
+| Ticket link                | URL            | Event        | Yes if tickets are required | "Get Tickets" CTA destination                                                      |
+| RSVP link                  | URL            | Event        | Yes if RSVP only            | "RSVP" CTA destination                                                             |
+| Organizer                  | Linked entity  | Event        | No                          | Link to organizer's Business or Professional Page                                  |
+| Accessibility info         | Text           | Event        | No                          | "Wheelchair accessible", "ASL interpretation available", etc.                      |
 
 **Fields — Job:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Job description | Long-form text | Job | Yes | Up to 2000 chars; this is the primary body text for Job Pages (no Story section) |
-| Responsibilities | Bulleted list | Job | No | Rendered as `<ul>` |
-| Requirements | Bulleted list | Job | No | Rendered as `<ul>` |
-| Nice-to-have qualifications | Bulleted list | Job | No | Rendered as `<ul>` |
-| How to apply | Text | Job | No | Instructions beyond the CTA link |
-| Employer link | Linked entity | Job | No | Link to employer's Business or Professional Page |
+| Field                       | Type           | Entity Types | Required | Notes                                                                            |
+| --------------------------- | -------------- | ------------ | -------- | -------------------------------------------------------------------------------- |
+| Job description             | Long-form text | Job          | Yes      | Up to 2000 chars; this is the primary body text for Job Pages (no Story section) |
+| Responsibilities            | Bulleted list  | Job          | No       | Rendered as `<ul>`                                                               |
+| Requirements                | Bulleted list  | Job          | No       | Rendered as `<ul>`                                                               |
+| Nice-to-have qualifications | Bulleted list  | Job          | No       | Rendered as `<ul>`                                                               |
+| How to apply                | Text           | Job          | No       | Instructions beyond the CTA link                                                 |
+| Employer link               | Linked entity  | Job          | No       | Link to employer's Business or Professional Page                                 |
 
 **Fields — Vendor (product grid teaser):**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Featured product cards | Grid (2–4 cards) | Vendor | Conditional | Shows 2–4 featured products; each links to a Product sub-page |
-| Product card: name | Text | Vendor | Yes per card | |
-| Product card: price | Text | Vendor | Yes per card | Amber Gold text |
-| Product card: image | Image | Vendor | No | Falls back to vendor cover image or placeholder |
-| "View all products" link | Link | Vendor | Yes if products exist | Routes to vendor product catalog sub-route |
+| Field                    | Type             | Entity Types | Required              | Notes                                                         |
+| ------------------------ | ---------------- | ------------ | --------------------- | ------------------------------------------------------------- |
+| Featured product cards   | Grid (2–4 cards) | Vendor       | Conditional           | Shows 2–4 featured products; each links to a Product sub-page |
+| Product card: name       | Text             | Vendor       | Yes per card          |                                                               |
+| Product card: price      | Text             | Vendor       | Yes per card          | Amber Gold text                                               |
+| Product card: image      | Image            | Vendor       | No                    | Falls back to vendor cover image or placeholder               |
+| "View all products" link | Link             | Vendor       | Yes if products exist | Routes to vendor product catalog sub-route                    |
 
 **MVP behavior:**
 Available for Business only. The section renders the services list — up to 20 items. Each item shows: service name (Lato Medium), optional description in smaller text, optional price in Amber Gold text. If more than 6 services exist, the first 6 are shown and a "Show all [N] services" button expands the rest. If no services have been added, the section is hidden on the public Page.
 
 **Later behavior:**
+
 - Beta: What They Offer available for Professional (services + pricing), Creative (portfolio gallery + commission types), Event (full event description + schedule), Job (full job description + requirements lists).
 - V1: Services for Business and Professional gain named pricing tiers ("Starting at", "Hourly rate", "Project rate") with structured pricing fields rather than free-form text. Vendor product grid teaser added in V1 for early vendor participants.
 - V2: Full Vendor product grid with pagination, filtering by product category, and cart integration.
@@ -395,12 +408,14 @@ Available for Business only. The section renders the services list — up to 20 
 If no services or offerings have been added: the section is hidden on the public Page. No "Add your services" prompt is shown publicly. The prompt lives in the owner dashboard completion checklist.
 
 **Editability by owner:**
+
 - Services (Business/Professional): editable via dashboard > Services Manager. Add, edit, delete, reorder.
 - Creative portfolio: image upload via dashboard > Portfolio section (Beta).
 - Event details: editable in the event listing editor (Beta).
 - Job description: editable in the job listing editor (Beta).
 
 **Admin moderation needs:**
+
 - Remove a service listing that violates content policy.
 - Edit job description for formatting quality on high-priority seed job postings.
 - Flag a service with an inappropriate or misleading price claim.
@@ -410,13 +425,13 @@ Service names and descriptions are server-rendered as visible text and contribut
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `services_expanded` | "Show all services" button clicked | `entity_type`, `entity_id`, `total_service_count` |
-| `commission_status_view` | Creative page with commission status badge loaded | `entity_id`, `commission_status` |
-| `ticket_link_click` | Ticket or RSVP link clicked on Event page | `entity_id`, `ticket_tier` |
-| `apply_link_click` | Apply link clicked on Job page | `entity_id` |
-| `vendor_product_card_click` | Product card in vendor teaser grid clicked | `entity_id` (vendor), `product_id` |
+| Event name                  | Trigger                                           | Properties                                        |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| `services_expanded`         | "Show all services" button clicked                | `entity_type`, `entity_id`, `total_service_count` |
+| `commission_status_view`    | Creative page with commission status badge loaded | `entity_id`, `commission_status`                  |
+| `ticket_link_click`         | Ticket or RSVP link clicked on Event page         | `entity_id`, `ticket_tier`                        |
+| `apply_link_click`          | Apply link clicked on Job page                    | `entity_id`                                       |
+| `vendor_product_card_click` | Product card in vendor teaser grid clicked        | `entity_id` (vendor), `product_id`                |
 
 **Design notes:**
 Service list items: each row has a 1px Pale Lavender bottom border. Service name: Lato Medium 15px Brand Black. Description: Lato Regular 13px Charcoal. Price: Lato Medium 14px Amber Gold, right-aligned. The expand control ("Show all N services →") uses a text link in Amber Gold with a downward chevron. Creative portfolio grid: 3 columns desktop, 2 columns mobile, with each image in a 1:1 square crop. Commission status badge: "Open for commissions" in a rounded badge with Amber Gold background and Brand Black text; "Not currently available" in Pale Lavender and Charcoal.
@@ -435,20 +450,21 @@ The Media section is the visual proof layer. It answers "what does this entity a
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Gallery images | Image array | Business, Vendor | No | Up to 12 images; JPEG, PNG, WebP; max 2MB each; served via CDN |
-| Portfolio images | Image array | Professional, Creative | No | Up to 24 images for Creative; up to 12 for Professional |
-| Image caption | Text | All | No | Per-image; max 140 chars; rendered in lightbox only |
-| Event photos | Image array | Event | No | Up to 12 images from past events or promotional images |
-| Product images | Image array | Product | No | Up to 8 images; first image is the primary product thumbnail |
-| Lightbox navigation | UI behavior | All | System-applied | Left/right navigation; swipe on mobile; Escape closes |
-| Gallery sort order | Integer per image | All | System-applied | Owner-draggable in dashboard; persists `sort_order` field |
+| Field               | Type              | Entity Types           | Required       | Notes                                                          |
+| ------------------- | ----------------- | ---------------------- | -------------- | -------------------------------------------------------------- |
+| Gallery images      | Image array       | Business, Vendor       | No             | Up to 12 images; JPEG, PNG, WebP; max 2MB each; served via CDN |
+| Portfolio images    | Image array       | Professional, Creative | No             | Up to 24 images for Creative; up to 12 for Professional        |
+| Image caption       | Text              | All                    | No             | Per-image; max 140 chars; rendered in lightbox only            |
+| Event photos        | Image array       | Event                  | No             | Up to 12 images from past events or promotional images         |
+| Product images      | Image array       | Product                | No             | Up to 8 images; first image is the primary product thumbnail   |
+| Lightbox navigation | UI behavior       | All                    | System-applied | Left/right navigation; swipe on mobile; Escape closes          |
+| Gallery sort order  | Integer per image | All                    | System-applied | Owner-draggable in dashboard; persists `sort_order` field      |
 
 **MVP behavior:**
 Available for Business only. Gallery renders as a responsive uniform grid: 3 columns desktop, 2 columns tablet, 2 columns mobile. Each cell is a square-cropped image thumbnail. Clicking a thumbnail opens a lightbox with the full-size image, caption (if provided), and left/right navigation. Lightbox on desktop: centered modal with dark overlay. Lightbox on mobile: full-screen with swipe navigation. If fewer than 3 images exist, the gallery renders as a narrower single-row of image thumbnails (no grid). If zero images exist, the section is hidden entirely. No "Add photos" prompt is shown on the public Page.
 
 **Later behavior:**
+
 - Beta: Media available for Professional (portfolio grid), Creative (portfolio as the primary feature, occupying the largest visual space on the page), Event (event photo gallery).
 - V1: Video embeds added — owner can provide YouTube or Vimeo URLs; these render as embedded players within the gallery in a mixed grid of images and video thumbnails. Maximum 3 video embeds per Page at V1.
 - V2: Product images for Product sub-pages support a dedicated carousel at the top of the product Page (separate from the hero treatment).
@@ -460,6 +476,7 @@ If no images have been uploaded: the section is hidden. Not hidden behind a cond
 Images are uploaded in dashboard > Page Editor > Gallery section. Owner can: upload (multi-select file or camera capture on mobile), reorder (drag-to-reorder grid), delete (with undo toast — image is marked deleted but not permanently removed for 24h), and add or edit captions per image. Gallery images are stored in Supabase Storage. Paths stored in the `media_attachments` table; signed CDN URLs generated at read time.
 
 **Admin moderation needs:**
+
 - Remove any image from a gallery (for content policy violations: nudity, violence, unrelated content, competitor branding).
 - View the full image for moderation purposes directly in the admin listing detail view.
 - Bulk-remove all images from a listing if it is flagged for fraudulent content.
@@ -469,12 +486,12 @@ Gallery images are rendered as `<img>` elements with `alt="[Entity Name] — [ca
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `gallery_opened` | Any gallery image thumbnail clicked | `entity_type`, `entity_id`, `image_index` |
-| `gallery_navigated` | Left/right navigation in lightbox used | `entity_type`, `entity_id`, `direction`, `image_index` |
-| `gallery_closed` | Lightbox closed via Escape or overlay click | `entity_type`, `entity_id`, `last_image_index` |
-| `video_embed_played` | Video embed play button pressed | `entity_type`, `entity_id`, `video_url` |
+| Event name           | Trigger                                     | Properties                                             |
+| -------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| `gallery_opened`     | Any gallery image thumbnail clicked         | `entity_type`, `entity_id`, `image_index`              |
+| `gallery_navigated`  | Left/right navigation in lightbox used      | `entity_type`, `entity_id`, `direction`, `image_index` |
+| `gallery_closed`     | Lightbox closed via Escape or overlay click | `entity_type`, `entity_id`, `last_image_index`         |
+| `video_embed_played` | Video embed play button pressed             | `entity_type`, `entity_id`, `video_url`                |
 
 **Design notes:**
 Gallery grid: `gap-2` between images. Each thumbnail is square-cropped (`aspect-square`, `object-cover`). On hover (desktop), a subtle overlay with a zoom/expand icon (white, centered) appears over the image thumbnail. The lightbox overlay is Brand Black at 85% opacity. The lightbox image is centered with max 90% viewport width/height. Caption text in lightbox: Lato Regular 14px white, centered below the image. The image count indicator in the lightbox: "3 / 8" in Lato Regular 12px Charcoal, top-right corner.
@@ -495,19 +512,20 @@ The Trust section is the credibility layer. It makes the entity's trust status e
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Trust badge (detailed) | Badge + label | Business, Professional, Creative, Vendor | Yes (system-assigned) | Full display of trust tier: icon + tier name + short description of what it means |
-| Trust tier description | Text | All trust tiers | System-generated | Short copy: "Unclaimed: this listing was created from public data" / "Claimed: this business has verified ownership" / "Verified: identity and business status confirmed" / "Certified: meets BLACQList excellence criteria" |
-| Claim prompt | CTA block | Unclaimed only | Conditional (Unclaimed only) | "Is this your business? Claim your free BLACQList Page →" — visible to all visitors on Unclaimed pages; routes to `/claim/[listing-id]` |
-| Verification date | Text | Verified, Certified (V1) | System-generated | "Verified [Month Year]" |
-| Reviews summary | Star rating + count | Business, Professional, Creative, Vendor | V1 | Average star rating (1–5) with count; links down to Section 8; displayed only after moderation opens |
-| Certification criteria summary | Text | BLACQList Certified (V1) | System-generated | 2–3 sentence explanation of what BLACQList Certified means |
+| Field                          | Type                | Entity Types                             | Required                     | Notes                                                                                                                                                                                                                        |
+| ------------------------------ | ------------------- | ---------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trust badge (detailed)         | Badge + label       | Business, Professional, Creative, Vendor | Yes (system-assigned)        | Full display of trust tier: icon + tier name + short description of what it means                                                                                                                                            |
+| Trust tier description         | Text                | All trust tiers                          | System-generated             | Short copy: "Unclaimed: this listing was created from public data" / "Claimed: this business has verified ownership" / "Verified: identity and business status confirmed" / "Certified: meets BLACQList excellence criteria" |
+| Claim prompt                   | CTA block           | Unclaimed only                           | Conditional (Unclaimed only) | "Is this your business? Claim your free BLACQList Page →" — visible to all visitors on Unclaimed pages; routes to `/claim/[listing-id]`                                                                                      |
+| Verification date              | Text                | Verified, Certified (V1)                 | System-generated             | "Verified [Month Year]"                                                                                                                                                                                                      |
+| Reviews summary                | Star rating + count | Business, Professional, Creative, Vendor | V1                           | Average star rating (1–5) with count; links down to Section 8; displayed only after moderation opens                                                                                                                         |
+| Certification criteria summary | Text                | BLACQList Certified (V1)                 | System-generated             | 2–3 sentence explanation of what BLACQList Certified means                                                                                                                                                                   |
 
 **MVP behavior:**
 The section renders the current trust badge at its full, expanded size (not the compact hero badge) with the trust tier name and its descriptive copy. For Unclaimed listings, the claim prompt is displayed — a Amber Gold-outlined block with the entity name, the "Is this your business?" copy, and the "Claim Your Free BLACQList Page" Amber Gold button. For Claimed listings, the claim prompt is hidden and replaced with a brief "This page is owner-managed." text. Reviews summary and Certification are not shown at MVP — their placeholder is not rendered (no "coming soon" copy in this section at MVP).
 
 **Later behavior:**
+
 - Beta: No changes to Trust section structure.
 - V1: Reviews summary added (average star + count + link to review list in Section 8). Verified and BLACQList Certified tiers activated. Certified Pages show a short criteria summary and the certification date.
 
@@ -518,6 +536,7 @@ The Trust section never has an empty state — it always shows the current trust
 The trust badge and tier are not owner-editable — they are system-assigned. Owners interact with trust through the claim flow (claim → Claimed tier), the verification flow (V1 — upload documentation → admin review → Verified tier), and the certification application flow (V1 — admin-reviewed application). The claim prompt content ("Is this your business?") is system copy — not owner-editable.
 
 **Admin moderation needs:**
+
 - Override trust tier for any listing (e.g., manually upgrading to Verified after reviewing documentation, or downgrading Verified to Claimed if verification expires or is revoked).
 - Approve or deny verification applications (V1 queue).
 - Remove or suspend a trust badge if fraud is detected.
@@ -527,10 +546,10 @@ The trust badge tier name is included as a visible `<span>` with semantic text �
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `claim_prompt_click` | "Claim Your Page" button in Trust section clicked | `entity_id`, `trust_tier` (`unclaimed`) |
-| `trust_section_view` | Trust section scrolled into viewport | `entity_type`, `entity_id`, `trust_tier` |
+| Event name           | Trigger                                           | Properties                               |
+| -------------------- | ------------------------------------------------- | ---------------------------------------- |
+| `claim_prompt_click` | "Claim Your Page" button in Trust section clicked | `entity_id`, `trust_tier` (`unclaimed`)  |
+| `trust_section_view` | Trust section scrolled into viewport              | `entity_type`, `entity_id`, `trust_tier` |
 
 **Design notes:**
 The expanded trust badge in this section is 80px height (vs. 24px in the hero). It renders as a horizontal lockup: large icon left (badge, checkmark, star depending on tier), tier name in Glacial Indifference 20px right of the icon, tier description in Lato Regular 14px Charcoal below the name. Color treatment: Unclaimed = Pale Lavender icon, Charcoal text. Claimed = Amber Gold icon, Brand Black text. Verified = Gold gradient icon, Brand Black text. Certified = Amber Gold star icon + gradient fill, Brand Black text.
@@ -551,26 +570,27 @@ The Community Connection section is where the platform's communal character beco
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| "Support this business" nudge | CTA block | Business, Professional, Creative, Vendor | Yes | Save prompt for anonymous visitors; "Saved [N] times" social proof count; visible to all |
-| Save count | Number | All applicable | Yes | Public social proof; "This listing has been saved [N] times by our community" |
-| Community corrections prompt | Link | Beta+ | Beta and later | "Know something that's not right about this page? Help us keep it accurate." links to correction form |
-| Reviews: star average | Number display | V1 | V1 for Business, Professional, Creative, Vendor | Average rating from 1–5; displayed only when at least 3 approved reviews exist |
-| Reviews: count | Number | V1 | V1 | "N reviews" |
-| Reviews: individual review list | Review card list | V1 | V1 | Up to 10 shown; "View all" link to full paginated review page |
-| Review card: reviewer name | Text | V1 | Yes per review | Display name from user account |
-| Review card: star rating | 1–5 star display | V1 | Yes per review | |
-| Review card: body text | Text | V1 | No per review | Up to 500 chars |
-| Review card: date | Date | V1 | Yes per review | "March 2025" format |
-| Owner response to review | Text | V1 | No | Indented below the review; "Response from [Business Name]:" label |
-| Review submission CTA | Button | V1 | V1 | "Write a review" — authenticated users only; routes to review form |
-| "Helpful" vote on review | Button | V2 | V2 | Up/down vote count on individual review cards |
+| Field                           | Type             | Entity Types                             | Required                                        | Notes                                                                                                 |
+| ------------------------------- | ---------------- | ---------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| "Support this business" nudge   | CTA block        | Business, Professional, Creative, Vendor | Yes                                             | Save prompt for anonymous visitors; "Saved [N] times" social proof count; visible to all              |
+| Save count                      | Number           | All applicable                           | Yes                                             | Public social proof; "This listing has been saved [N] times by our community"                         |
+| Community corrections prompt    | Link             | Beta+                                    | Beta and later                                  | "Know something that's not right about this page? Help us keep it accurate." links to correction form |
+| Reviews: star average           | Number display   | V1                                       | V1 for Business, Professional, Creative, Vendor | Average rating from 1–5; displayed only when at least 3 approved reviews exist                        |
+| Reviews: count                  | Number           | V1                                       | V1                                              | "N reviews"                                                                                           |
+| Reviews: individual review list | Review card list | V1                                       | V1                                              | Up to 10 shown; "View all" link to full paginated review page                                         |
+| Review card: reviewer name      | Text             | V1                                       | Yes per review                                  | Display name from user account                                                                        |
+| Review card: star rating        | 1–5 star display | V1                                       | Yes per review                                  |                                                                                                       |
+| Review card: body text          | Text             | V1                                       | No per review                                   | Up to 500 chars                                                                                       |
+| Review card: date               | Date             | V1                                       | Yes per review                                  | "March 2025" format                                                                                   |
+| Owner response to review        | Text             | V1                                       | No                                              | Indented below the review; "Response from [Business Name]:" label                                     |
+| Review submission CTA           | Button           | V1                                       | V1                                              | "Write a review" — authenticated users only; routes to review form                                    |
+| "Helpful" vote on review        | Button           | V2                                       | V2                                              | Up/down vote count on individual review cards                                                         |
 
 **MVP behavior:**
 The section contains only the "Support this business" block: "This listing has been saved [N] times by our community. Add it to yours →" with a Save button (same behavior as hero and quick action bar: auth-gated for anonymous users). The [N] count is a live count from the `saves` table. No community corrections prompt. No reviews section. No placeholder for reviews. The section heading at MVP is simply "Support" or the content is rendered without a prominent `<h2>` heading — it is a subtle nudge, not a featured section at MVP.
 
 **Later behavior:**
+
 - Beta: Community corrections prompt added: "Know something that's not right about this page?" with a "Suggest a correction" link. Clicking opens a form (modal or page) where the visitor can submit a field name + suggested value. Admin reviews corrections in the admin corrections queue.
 - V1: Full reviews section replaces the placeholder entirely. Reviews display is gated on: (a) at least 3 approved reviews and (b) the listing being in Claimed status or higher. If the listing has fewer than 3 approved reviews, no reviews are shown — no "0 reviews" state is exposed publicly. When reviews display: star average at the top, individual review cards below (most recent first), "Write a review" button for authenticated users, owner response capability for page owners.
 
@@ -578,12 +598,14 @@ The section contains only the "Support this business" block: "This listing has b
 Save count of 0: the nudge text changes to "Be the first to save this listing." with the Save button. Save count > 0: shows the count. Reviews (V1): the reviews section only renders when at least 3 approved reviews exist — no "no reviews yet" state is shown publicly. The absence of the reviews section is the silent empty state.
 
 **Editability by owner:**
+
 - Owner cannot edit save counts (system data).
 - Owner can respond to individual reviews (V1) via the dashboard > Reviews section.
 - Owner can flag a review for admin review (V1) but cannot delete reviews.
 - Community corrections prompt is system copy — not owner-editable.
 
 **Admin moderation needs:**
+
 - Review and approve or reject submitted corrections (Beta correction queue).
 - Review, approve, or reject submitted reviews before they are displayed (V1 review moderation queue).
 - Remove an approved review if it violates content policy post-approval.
@@ -594,13 +616,13 @@ When reviews are displayed (V1), individual review text is server-rendered and c
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
+| Event name                   | Trigger                                             | Properties                                                     |
+| ---------------------------- | --------------------------------------------------- | -------------------------------------------------------------- |
 | `community_save_nudge_click` | Save button in Community Connection section clicked | `entity_type`, `entity_id`, `action` (`saved` or `auth_gated`) |
-| `correction_prompt_click` | "Suggest a correction" link clicked | `entity_type`, `entity_id` |
-| `review_form_opened` | "Write a review" button clicked | `entity_type`, `entity_id` |
-| `review_helpful_voted` | Helpful vote button on a review clicked (V2) | `entity_id`, `review_id`, `vote_direction` |
-| `owner_response_viewed` | Owner response expanded/visible | `entity_id`, `review_id` |
+| `correction_prompt_click`    | "Suggest a correction" link clicked                 | `entity_type`, `entity_id`                                     |
+| `review_form_opened`         | "Write a review" button clicked                     | `entity_type`, `entity_id`                                     |
+| `review_helpful_voted`       | Helpful vote button on a review clicked (V2)        | `entity_id`, `review_id`, `vote_direction`                     |
+| `owner_response_viewed`      | Owner response expanded/visible                     | `entity_id`, `review_id`                                       |
 
 **Design notes:**
 At MVP, the "Support this business" block is a small, contained card at the bottom of the Page's main content column — not a featured section. Cream background, Charcoal border, `rounded-md`, `p-4`. The save count text is Lato Regular 14px Charcoal. The Save button is compact (secondary/outline variant). This section should feel like a gentle community nudge, not a conversion push — that role belongs to the hero and quick action bar.
@@ -621,16 +643,17 @@ Platform Activity makes community engagement visible on the Page — it is publi
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Save count | Number (public) | All top-level Pages | Yes (always visible) | "Saved [N] times" — public; updates in near-real-time |
-| View count | Number (owner-only) | All top-level Pages | Owner dashboard only | Displayed in owner dashboard stats row; NOT visible on the public Page |
-| Editorial collection appearances | Linked list | V1 | V1 | "Featured in: [Collection Name]" with collection cover and link; only shown if the entity appears in at least one published collection |
+| Field                            | Type                | Entity Types        | Required             | Notes                                                                                                                                  |
+| -------------------------------- | ------------------- | ------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Save count                       | Number (public)     | All top-level Pages | Yes (always visible) | "Saved [N] times" — public; updates in near-real-time                                                                                  |
+| View count                       | Number (owner-only) | All top-level Pages | Owner dashboard only | Displayed in owner dashboard stats row; NOT visible on the public Page                                                                 |
+| Editorial collection appearances | Linked list         | V1                  | V1                   | "Featured in: [Collection Name]" with collection cover and link; only shown if the entity appears in at least one published collection |
 
 **MVP behavior:**
 The save count is the only public element. It renders as a simple text line: "Saved [N] times by the community." The section is subtle — a single line below the Community Connection section or embedded within it. There is no dedicated section header for Platform Activity at MVP; the save count lives in the Community Connection section at MVP and is split into its own dedicated section at V1 when collection appearances are added.
 
 **Later behavior:**
+
 - V1: Editorial collection appearances added. When a Page has been included in at least one published collection, a "Featured in" row renders with up to 3 collection cards (cover image, collection title, listing count) linking to the collection pages. If the entity appears in more than 3 collections, a "View all collections featuring this listing →" text link appears.
 
 **Empty state:**
@@ -640,6 +663,7 @@ Save count 0: "Be the first to save this listing." No collection appearances (V1
 Not editable by the owner — all fields are system-generated. Owners can view their full save count, view count, share count, and CTA click count in their owner dashboard.
 
 **Admin moderation needs:**
+
 - Add or remove a listing from a collection (via admin > Collections editor).
 - Reset save count (edge case: fraudulent saves from bulk accounts — save count reset requires super admin action and is logged).
 
@@ -648,8 +672,8 @@ The save count is visible HTML text and can be indexed. No special structured da
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
+| Event name              | Trigger                                                                | Properties                                                     |
+| ----------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `collection_link_click` | Editorial collection card or link clicked in Platform Activity section | `entity_type`, `entity_id`, `collection_id`, `collection_slug` |
 
 **Design notes:**
@@ -669,25 +693,26 @@ Related Discovery is the retention mechanism — it catches visitors who are sti
 
 **Fields:**
 
-| Field | Type | Entity Types | Required | Notes |
-|---|---|---|---|---|
-| Related listings cards | Card row | Business, Professional, Creative, Vendor | Yes if 3+ similar entities exist | 3–4 listing cards; same city + category; excludes current entity |
-| Related events from organizer | Card row | Event | Yes if organizer has 2+ events | "More from [Organizer Name]" — links to other event Pages by the same organizer |
-| More jobs from employer | Card row | Job | Yes if employer has 2+ active jobs | "More from [Employer Name]" — links to other job Pages from the same employer |
-| Related products from vendor | Card row | Product | Yes if vendor has 3+ products | "More from [Vendor Name]" — links to sibling Product sub-pages |
-| Service-level cross-links | List | Service | Conditional | "Other services from [Business Name]" — links to sibling service sub-pages |
-| Section heading | Text | All | System-generated | "More [Category] in [City]", "More from [Organizer]", "More from [Employer]", "More from [Vendor]" |
-| Listing card: cover image | Image | All | No (placeholder if absent) | |
-| Listing card: entity name | Text | All | Yes | |
-| Listing card: category badge | Badge | Business, Professional, Creative | Yes | |
-| Listing card: city | Text | Business, Professional, Creative | Yes | |
-| Listing card: trust badge (small) | Badge | Business, Professional, Creative, Vendor | Yes | Compact trust badge |
-| Listing card: save button | Icon | Business, Professional, Creative, Vendor | Yes | Same auth-gate behavior as hero save button |
+| Field                             | Type     | Entity Types                             | Required                           | Notes                                                                                              |
+| --------------------------------- | -------- | ---------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Related listings cards            | Card row | Business, Professional, Creative, Vendor | Yes if 3+ similar entities exist   | 3–4 listing cards; same city + category; excludes current entity                                   |
+| Related events from organizer     | Card row | Event                                    | Yes if organizer has 2+ events     | "More from [Organizer Name]" — links to other event Pages by the same organizer                    |
+| More jobs from employer           | Card row | Job                                      | Yes if employer has 2+ active jobs | "More from [Employer Name]" — links to other job Pages from the same employer                      |
+| Related products from vendor      | Card row | Product                                  | Yes if vendor has 3+ products      | "More from [Vendor Name]" — links to sibling Product sub-pages                                     |
+| Service-level cross-links         | List     | Service                                  | Conditional                        | "Other services from [Business Name]" — links to sibling service sub-pages                         |
+| Section heading                   | Text     | All                                      | System-generated                   | "More [Category] in [City]", "More from [Organizer]", "More from [Employer]", "More from [Vendor]" |
+| Listing card: cover image         | Image    | All                                      | No (placeholder if absent)         |                                                                                                    |
+| Listing card: entity name         | Text     | All                                      | Yes                                |                                                                                                    |
+| Listing card: category badge      | Badge    | Business, Professional, Creative         | Yes                                |                                                                                                    |
+| Listing card: city                | Text     | Business, Professional, Creative         | Yes                                |                                                                                                    |
+| Listing card: trust badge (small) | Badge    | Business, Professional, Creative, Vendor | Yes                                | Compact trust badge                                                                                |
+| Listing card: save button         | Icon     | Business, Professional, Creative, Vendor | Yes                                | Same auth-gate behavior as hero save button                                                        |
 
 **MVP behavior:**
 Available for Business only. Renders 3–4 listing cards in a horizontal row on desktop. Each card is the same `ListingCard` component used in search results and discovery pages. Cards are fetched by querying for published listings matching the current listing's city + primary category, excluding the current listing, ranked by save count descending. If fewer than 3 similar listings exist in the same city + category, the section is hidden.
 
 **Later behavior:**
+
 - Beta: Related Discovery available for Professional, Creative, Event (organizer's other events), Job (employer's other jobs).
 - V1: The ranking algorithm for related listings incorporates: editorial curation weight, trust tier (Verified listings appear before Unclaimed), and save count. The section heading may be dynamically replaced with an editorial collection name if the current entity belongs to a collection that includes related entities.
 - V2: Related products from vendor for Product sub-pages.
@@ -699,6 +724,7 @@ If fewer than 3 matching related entities exist: section is hidden entirely. It 
 Not directly editable by the owner. The related listings are algorithmically selected. There is no "exclude this competitor" option for owners.
 
 **Admin moderation needs:**
+
 - Exclude a specific listing from appearing in any related discovery sections (e.g., if a listing has been flagged but not yet taken down, preventing it from surfacing in related rows).
 - Override related discovery to pin a specific collection or set of listings for a high-priority Page.
 
@@ -707,10 +733,10 @@ Related listing cards are rendered as `<a>` elements with descriptive `aria-labe
 
 **Analytics events:**
 
-| Event name | Trigger | Properties |
-|---|---|---|
-| `related_card_click` | Any card in Related Discovery section clicked | `source_entity_type`, `source_entity_id`, `destination_entity_id`, `destination_entity_type`, `card_position` (1–4) |
-| `related_save_toggled` | Save button on a related discovery card clicked | `source_entity_id`, `destination_entity_id`, `action` |
+| Event name             | Trigger                                         | Properties                                                                                                          |
+| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `related_card_click`   | Any card in Related Discovery section clicked   | `source_entity_type`, `source_entity_id`, `destination_entity_id`, `destination_entity_type`, `card_position` (1–4) |
+| `related_save_toggled` | Save button on a related discovery card clicked | `source_entity_id`, `destination_entity_id`, `action`                                                               |
 
 **Design notes:**
 On desktop: 3–4 cards in a horizontal grid row. Each card: 240px min-width, aspect ratio image 16:9 or 1:1 consistent with search results card format. On mobile: horizontal scroll container with `scroll-snap-type: x mandatory` and each card snapping to position. Card width on mobile: 75vw (≈280px at 375px viewport), so the next card is partially visible indicating scrollability. Section heading: Lato Medium 14px uppercase letter-spaced Charcoal, above the cards. The section renders below the Community Connection or Platform Activity section — it is always the last section before the footer.
@@ -722,20 +748,21 @@ At 375px: horizontal scroll row, cards at 280px width, 4px gap. The first card i
 
 ## 4. Section Order by Entity Type
 
-| Order | Business | Professional | Creative | Event | Job | Vendor | Product | Service |
-|---|---|---|---|---|---|---|---|---|
-| 1 | Hero | Hero | Hero | Hero | Hero | Hero | Hero | Hero |
-| 2 | Quick Action Bar | Quick Action Bar | Quick Action Bar | Quick Action Bar | Quick Action Bar | Quick Action Bar | Quick Action Bar | Quick Action Bar |
-| 3 | At-a-Glance | At-a-Glance | At-a-Glance | At-a-Glance (date/time/location) | At-a-Glance (location/deadline) | At-a-Glance | At-a-Glance (price/variants) | At-a-Glance (price/duration) |
-| 4 | Story | Story | Story | — | — | Story | Story (product desc) | Story |
-| 5 | What They Offer (services) | What They Offer (services) | What They Offer (portfolio/commissions) | What They Offer (event details) | What They Offer (job desc) | What They Offer (product grid teaser) | — | — |
-| 6 | Media (gallery) | Media (portfolio) | Media (portfolio — primary) | Media (event photos) | — | Media (product images) | Media (product images) | — |
-| 7 | Trust | Trust | Trust | — | — | Trust | — | — |
-| 8 | Community Connection | Community Connection | Community Connection | — | — | Community Connection | — | — |
-| 9 | Platform Activity | Platform Activity | Platform Activity | Platform Activity | Platform Activity | Platform Activity | — | — |
-| 10 | Related Discovery | Related Discovery | Related Discovery | Related Discovery | Related Discovery | Related Discovery | Related Discovery | Related Discovery |
+| Order | Business                   | Professional               | Creative                                | Event                            | Job                             | Vendor                                | Product                      | Service                      |
+| ----- | -------------------------- | -------------------------- | --------------------------------------- | -------------------------------- | ------------------------------- | ------------------------------------- | ---------------------------- | ---------------------------- |
+| 1     | Hero                       | Hero                       | Hero                                    | Hero                             | Hero                            | Hero                                  | Hero                         | Hero                         |
+| 2     | Quick Action Bar           | Quick Action Bar           | Quick Action Bar                        | Quick Action Bar                 | Quick Action Bar                | Quick Action Bar                      | Quick Action Bar             | Quick Action Bar             |
+| 3     | At-a-Glance                | At-a-Glance                | At-a-Glance                             | At-a-Glance (date/time/location) | At-a-Glance (location/deadline) | At-a-Glance                           | At-a-Glance (price/variants) | At-a-Glance (price/duration) |
+| 4     | Story                      | Story                      | Story                                   | —                                | —                               | Story                                 | Story (product desc)         | Story                        |
+| 5     | What They Offer (services) | What They Offer (services) | What They Offer (portfolio/commissions) | What They Offer (event details)  | What They Offer (job desc)      | What They Offer (product grid teaser) | —                            | —                            |
+| 6     | Media (gallery)            | Media (portfolio)          | Media (portfolio — primary)             | Media (event photos)             | —                               | Media (product images)                | Media (product images)       | —                            |
+| 7     | Trust                      | Trust                      | Trust                                   | —                                | —                               | Trust                                 | —                            | —                            |
+| 8     | Community Connection       | Community Connection       | Community Connection                    | —                                | —                               | Community Connection                  | —                            | —                            |
+| 9     | Platform Activity          | Platform Activity          | Platform Activity                       | Platform Activity                | Platform Activity               | Platform Activity                     | —                            | —                            |
+| 10    | Related Discovery          | Related Discovery          | Related Discovery                       | Related Discovery                | Related Discovery               | Related Discovery                     | Related Discovery            | Related Discovery            |
 
 **Notes on order:**
+
 - For Event Pages, section 4 (Story) is skipped — the event description is placed in section 5 (What They Offer / event details), which functions as the primary body text. The ordering becomes: Hero → Quick Action Bar → At-a-Glance → What They Offer → Media → Platform Activity → Related Discovery.
 - For Job Pages, sections 4 (Story) and 6 (Media) are skipped — the job description is placed in section 5. Trust and Community Connection are also skipped. The ordering becomes: Hero → Quick Action Bar → At-a-Glance → What They Offer → Platform Activity → Related Discovery.
 - For Product sub-pages, sections 5 (What They Offer), 7 (Trust), 8 (Community Connection), and 9 (Platform Activity) are skipped. The ordering becomes: Hero → Quick Action Bar → At-a-Glance → Story (product description) → Media (product images) → Related Discovery.
@@ -848,23 +875,24 @@ Monetization tiers are introduced at V1. At MVP, all listings are effectively Fr
 
 The primary CTA is owner-configured for Business, Professional, Creative, and Vendor Pages. For Event, Job, and Product Pages, the CTA label and action are determined by the entity type. The CTA renders in the hero (Section 1) and the Quick Action Bar (Section 2).
 
-| CTA label | Entity types | Action | URL / destination pattern | Notes |
-|---|---|---|---|---|
-| Book Appointment | Business, Professional | Opens external URL in new tab | Owner-configured URL (e.g., Calendly, Booksy, custom booking page) | Default for Business Pages with a service focus |
-| Order Online | Business, Vendor | Opens external URL in new tab | Owner-configured order URL (e.g., Toast, DoorDash, own e-commerce) | Default for food and product businesses |
-| Call Us | Business, Professional, Creative | `tel:` link | Phone number from contact fields (auto-populated if phone exists, or owner re-enters) | Only available if phone exists on the Page |
-| Visit Us | Business, Vendor | Opens maps link in new tab | Address from contact fields (auto-generated Google Maps URL from stored address) | Only available if address exists |
-| Message Us | Business, Professional, Creative | Opens mailto or external messaging URL in new tab | Owner-configured: email address or link to contact form / social DM |  |
-| Visit Portfolio | Professional, Creative | Opens external URL in new tab | Owner-configured portfolio or personal site URL | Specific to Professional/Creative entity types |
-| Get Tickets | Event | Opens external URL in new tab | Event ticketing URL (Eventbrite, direct, etc.) | System-fixed label for Event entity type; URL configured in event record |
-| RSVP | Event | Opens external URL in new tab | RSVP link (Google Form, Eventbrite free, etc.) | Used when event is free but wants RSVP; mutually exclusive with Get Tickets |
-| Apply Now | Job | Opens external URL in new tab | External application URL | System-fixed label for Job entity type |
-| Add to Cart | Product | In-platform action | Adds product to cart (V2) | Only available at V2 when marketplace cart is live |
-| Buy Now | Product | In-platform action or external URL | At V1: external checkout link. At V2: in-platform checkout | Immediate purchase flow |
-| Request Quote | Business, Professional, Service | Opens external URL or in-platform form | Owner-configured quote request form URL | V1; for entities where pricing is bespoke |
-| Shop Now | Vendor | Scrolls to / links to product grid section | In-page anchor to What They Offer section or vendor catalog sub-route | Vendor entity type, V2 |
+| CTA label        | Entity types                     | Action                                            | URL / destination pattern                                                             | Notes                                                                       |
+| ---------------- | -------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Book Appointment | Business, Professional           | Opens external URL in new tab                     | Owner-configured URL (e.g., Calendly, Booksy, custom booking page)                    | Default for Business Pages with a service focus                             |
+| Order Online     | Business, Vendor                 | Opens external URL in new tab                     | Owner-configured order URL (e.g., Toast, DoorDash, own e-commerce)                    | Default for food and product businesses                                     |
+| Call Us          | Business, Professional, Creative | `tel:` link                                       | Phone number from contact fields (auto-populated if phone exists, or owner re-enters) | Only available if phone exists on the Page                                  |
+| Visit Us         | Business, Vendor                 | Opens maps link in new tab                        | Address from contact fields (auto-generated Google Maps URL from stored address)      | Only available if address exists                                            |
+| Message Us       | Business, Professional, Creative | Opens mailto or external messaging URL in new tab | Owner-configured: email address or link to contact form / social DM                   |                                                                             |
+| Visit Portfolio  | Professional, Creative           | Opens external URL in new tab                     | Owner-configured portfolio or personal site URL                                       | Specific to Professional/Creative entity types                              |
+| Get Tickets      | Event                            | Opens external URL in new tab                     | Event ticketing URL (Eventbrite, direct, etc.)                                        | System-fixed label for Event entity type; URL configured in event record    |
+| RSVP             | Event                            | Opens external URL in new tab                     | RSVP link (Google Form, Eventbrite free, etc.)                                        | Used when event is free but wants RSVP; mutually exclusive with Get Tickets |
+| Apply Now        | Job                              | Opens external URL in new tab                     | External application URL                                                              | System-fixed label for Job entity type                                      |
+| Add to Cart      | Product                          | In-platform action                                | Adds product to cart (V2)                                                             | Only available at V2 when marketplace cart is live                          |
+| Buy Now          | Product                          | In-platform action or external URL                | At V1: external checkout link. At V2: in-platform checkout                            | Immediate purchase flow                                                     |
+| Request Quote    | Business, Professional, Service  | Opens external URL or in-platform form            | Owner-configured quote request form URL                                               | V1; for entities where pricing is bespoke                                   |
+| Shop Now         | Vendor                           | Scrolls to / links to product grid section        | In-page anchor to What They Offer section or vendor catalog sub-route                 | Vendor entity type, V2                                                      |
 
 **CTA configuration rules:**
+
 - Exactly one primary CTA is active per Page at any time. Owners configure CTA type and CTA value (URL or auto-populated contact field) in the dashboard.
 - The CTA label is the button's visible text. It is the selected option from the list above — owners do not write custom CTA labels (to maintain visual and copy consistency across all Pages).
 - The CTA URL is validated server-side: must be a valid URL (for link-based CTAs) or a valid phone number (for Call Us). An invalid CTA URL is flagged in the owner dashboard completion checklist.
@@ -944,80 +972,80 @@ All BLACQList Pages must meet WCAG 2.1 AA. The following requirements are specif
 
 ### Business
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/LocalBusiness` (or appropriate sub-type: `Restaurant`, `HealthAndBeautyBusiness`, etc. based on category) |
-| `<title>` template | `[Business Name] — [Primary Category] in [City] \| The BLACQList` |
+| SEO element               | Value / Template                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/LocalBusiness` (or appropriate sub-type: `Restaurant`, `HealthAndBeautyBusiness`, etc. based on category)                             |
+| `<title>` template        | `[Business Name] — [Primary Category] in [City] \| The BLACQList`                                                                                 |
 | Meta description template | `[Business Name] is a Black-owned [category] in [city]. [First 120 chars of description]. Find contact info, hours, and photos on The BLACQList.` |
-| OG image strategy | Dynamically generated via `/og/[params]` API route: cover image as background + entity name + BLACQList wordmark overlay. 1200×630px. |
-| Canonical URL | `/[city-slug]/business/[listing-slug]` |
-| JSON-LD fields | `name`, `description`, `address`, `telephone`, `email`, `url`, `openingHours`, `image`, `geo`, `priceRange`, `hasMap`, `sameAs` (social links) |
+| OG image strategy         | Dynamically generated via `/og/[params]` API route: cover image as background + entity name + BLACQList wordmark overlay. 1200×630px.             |
+| Canonical URL             | `/[city-slug]/business/[listing-slug]`                                                                                                            |
+| JSON-LD fields            | `name`, `description`, `address`, `telephone`, `email`, `url`, `openingHours`, `image`, `geo`, `priceRange`, `hasMap`, `sameAs` (social links)    |
 
 ### Professional (Beta)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/Person` with `jobTitle` and `worksFor` where available |
-| `<title>` template | `[Full Name] — [Profession/Specialty] in [City] \| The BLACQList` |
+| SEO element               | Value / Template                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/Person` with `jobTitle` and `worksFor` where available                                                                |
+| `<title>` template        | `[Full Name] — [Profession/Specialty] in [City] \| The BLACQList`                                                                 |
 | Meta description template | `[Full Name] is a Black [profession] in [city]. [First 120 chars of bio]. Explore their services and portfolio on The BLACQList.` |
-| OG image strategy | Cover image (if provided) or auto-generated gradient background with name overlay. 1200×630px. |
-| Canonical URL | `/[city-slug]/professional/[listing-slug]` |
-| JSON-LD fields | `name`, `description`, `address`, `telephone`, `email`, `url`, `image`, `sameAs` |
+| OG image strategy         | Cover image (if provided) or auto-generated gradient background with name overlay. 1200×630px.                                    |
+| Canonical URL             | `/[city-slug]/professional/[listing-slug]`                                                                                        |
+| JSON-LD fields            | `name`, `description`, `address`, `telephone`, `email`, `url`, `image`, `sameAs`                                                  |
 
 ### Creative (Beta)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/Person` or `schema.org/Organization` (depends on whether it is an individual or a creative studio) |
-| `<title>` template | `[Name] — [Medium/Discipline] in [City] \| The BLACQList` |
-| Meta description template | `[Name] is a Black [medium/discipline] in [city]. [First 120 chars of bio]. See their portfolio on The BLACQList.` |
-| OG image strategy | First portfolio image (highest SEO value for creatives) as OG background + name overlay. Falls back to cover image. 1200×630px. |
-| Canonical URL | `/[city-slug]/creative/[listing-slug]` |
-| JSON-LD fields | `name`, `description`, `image` (portfolio images as `ImageObject` array), `url`, `sameAs` |
+| SEO element               | Value / Template                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/Person` or `schema.org/Organization` (depends on whether it is an individual or a creative studio)                  |
+| `<title>` template        | `[Name] — [Medium/Discipline] in [City] \| The BLACQList`                                                                       |
+| Meta description template | `[Name] is a Black [medium/discipline] in [city]. [First 120 chars of bio]. See their portfolio on The BLACQList.`              |
+| OG image strategy         | First portfolio image (highest SEO value for creatives) as OG background + name overlay. Falls back to cover image. 1200×630px. |
+| Canonical URL             | `/[city-slug]/creative/[listing-slug]`                                                                                          |
+| JSON-LD fields            | `name`, `description`, `image` (portfolio images as `ImageObject` array), `url`, `sameAs`                                       |
 
 ### Event (Beta)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/Event` |
-| `<title>` template | `[Event Name] — [City], [Month Day, Year] \| The BLACQList` |
+| SEO element               | Value / Template                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/Event`                                                                                                                    |
+| `<title>` template        | `[Event Name] — [City], [Month Day, Year] \| The BLACQList`                                                                           |
 | Meta description template | `[Event Name] takes place on [Date] at [Location] in [City]. [First 120 chars of description]. Get tickets or RSVP on The BLACQList.` |
-| OG image strategy | Event cover image + event name + date overlay. 1200×630px. |
-| Canonical URL | `/events/[event-slug]` |
-| JSON-LD fields | `name`, `description`, `startDate`, `endDate`, `location`, `image`, `url`, `organizer`, `offers` (ticket tiers + links) |
+| OG image strategy         | Event cover image + event name + date overlay. 1200×630px.                                                                            |
+| Canonical URL             | `/events/[event-slug]`                                                                                                                |
+| JSON-LD fields            | `name`, `description`, `startDate`, `endDate`, `location`, `image`, `url`, `organizer`, `offers` (ticket tiers + links)               |
 
 ### Job (Beta)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/JobPosting` |
-| `<title>` template | `[Job Title] at [Company] — [City or Remote] \| The BLACQList` |
-| Meta description template | `[Company] is hiring a [Job Title] in [city]. [First 120 chars of job description]. Apply on The BLACQList.` |
-| OG image strategy | Auto-generated with company name and role title on Cream or Deep Background. Falls back to company cover image. 1200×630px. |
-| Canonical URL | `/jobs/[job-slug]` |
-| JSON-LD fields | `title`, `description`, `datePosted`, `validThrough` (deadline), `hiringOrganization`, `jobLocation`, `baseSalary` (if provided), `employmentType`, `directApply` |
+| SEO element               | Value / Template                                                                                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/JobPosting`                                                                                                                                           |
+| `<title>` template        | `[Job Title] at [Company] — [City or Remote] \| The BLACQList`                                                                                                    |
+| Meta description template | `[Company] is hiring a [Job Title] in [city]. [First 120 chars of job description]. Apply on The BLACQList.`                                                      |
+| OG image strategy         | Auto-generated with company name and role title on Cream or Deep Background. Falls back to company cover image. 1200×630px.                                       |
+| Canonical URL             | `/jobs/[job-slug]`                                                                                                                                                |
+| JSON-LD fields            | `title`, `description`, `datePosted`, `validThrough` (deadline), `hiringOrganization`, `jobLocation`, `baseSalary` (if provided), `employmentType`, `directApply` |
 
 ### Vendor (V2)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/OnlineStore` or `schema.org/Store` |
-| `<title>` template | `[Vendor Name] — Black-owned [Category] Shop \| The BLACQList Marketplace` |
+| SEO element               | Value / Template                                                                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/OnlineStore` or `schema.org/Store`                                                                                          |
+| `<title>` template        | `[Vendor Name] — Black-owned [Category] Shop \| The BLACQList Marketplace`                                                              |
 | Meta description template | `Shop [Vendor Name] — a Black-owned [category] vendor. [First 120 chars of description]. Browse products on The BLACQList Marketplace.` |
-| OG image strategy | Vendor cover image + wordmark. 1200×630px. |
-| Canonical URL | `/marketplace/vendor/[vendor-slug]` |
-| JSON-LD fields | `name`, `description`, `url`, `image`, `address`, `openingHours` (if applicable) |
+| OG image strategy         | Vendor cover image + wordmark. 1200×630px.                                                                                              |
+| Canonical URL             | `/marketplace/vendor/[vendor-slug]`                                                                                                     |
+| JSON-LD fields            | `name`, `description`, `url`, `image`, `address`, `openingHours` (if applicable)                                                        |
 
 ### Product (V2)
 
-| SEO element | Value / Template |
-|---|---|
-| Structured data type | `schema.org/Product` |
-| `<title>` template | `[Product Name] by [Vendor Name] \| The BLACQList Marketplace` |
+| SEO element               | Value / Template                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Structured data type      | `schema.org/Product`                                                                                 |
+| `<title>` template        | `[Product Name] by [Vendor Name] \| The BLACQList Marketplace`                                       |
 | Meta description template | `[Product Name] by [Vendor Name] — [First 120 chars of product description]. Shop on The BLACQList.` |
-| OG image strategy | First product image as OG image. 1200×630px. |
-| Canonical URL | `/marketplace/product/[product-slug]` |
-| JSON-LD fields | `name`, `description`, `image`, `offers` (price, availability, currency), `brand` (vendor name) |
+| OG image strategy         | First product image as OG image. 1200×630px.                                                         |
+| Canonical URL             | `/marketplace/product/[product-slug]`                                                                |
+| JSON-LD fields            | `name`, `description`, `image`, `offers` (price, availability, currency), `brand` (vendor name)      |
 
 ### Shared SEO rules across all Page types
 
@@ -1032,51 +1060,52 @@ All BLACQList Pages must meet WCAG 2.1 AA. The following requirements are specif
 
 ## 10. Analytics Events Master List
 
-| Event | Trigger | Entity types | Properties | Phase |
-|---|---|---|---|---|
-| `page_view` | Page is loaded | All | `entity_type`, `entity_id`, `listing_slug`, `trust_tier`, `is_claimed`, `listing_tier`, `referrer_source`, `referrer_path`, `city_slug`, `category_slug` | MVP |
-| `hero_cta_click` | Primary CTA button in hero clicked | All | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `trust_tier` | MVP |
-| `save_toggled` | Save button in hero clicked | All top-level | `entity_type`, `entity_id`, `action` (`saved`/`unsaved`), `auth_state` (`authenticated`/`auth_gated`), `source` (`hero`) | MVP |
-| `save_toggled` | Save button in Quick Action Bar clicked | All top-level | same as above + `source: 'action_bar'` | MVP |
-| `save_toggled` | Save button on related discovery card clicked | All top-level | same + `source: 'related_discovery'` | MVP |
-| `share_initiated` | Share button clicked (hero or action bar) | All top-level | `entity_type`, `entity_id`, `share_method` (`copy_link`/`native_share`/`social`), `source` | MVP |
-| `action_bar_cta_click` | CTA in Quick Action Bar clicked | All | `entity_type`, `entity_id`, `cta_type`, `scroll_depth_pct` | MVP |
-| `action_bar_phone_click` | Phone icon in Quick Action Bar tapped | Business, Professional, Creative, Vendor | `entity_type`, `entity_id` | MVP |
-| `action_bar_map_click` | Map icon in Quick Action Bar tapped | Business, Professional, Creative, Event | `entity_type`, `entity_id` | MVP |
-| `phone_click` | Phone `tel:` link in At-a-Glance tapped | Business, Professional, Creative, Vendor | `entity_type`, `entity_id`, `source: 'at_a_glance'` | MVP |
-| `website_click` | Website link in At-a-Glance clicked | All applicable | `entity_type`, `entity_id` | MVP |
-| `map_click` | Address map link in At-a-Glance tapped | Business, Professional, Event, Vendor | `entity_type`, `entity_id` | MVP |
-| `email_click` | Email `mailto:` link in At-a-Glance tapped | All applicable | `entity_type`, `entity_id` | MVP |
-| `social_link_click` | Social icon link in At-a-Glance clicked | All applicable | `entity_type`, `entity_id`, `platform` | MVP |
-| `story_expanded` | "Read more" toggle in Story section clicked | Business, Professional, Creative, Vendor | `entity_type`, `entity_id` | MVP |
-| `story_collapsed` | "Show less" toggle in Story section clicked | All applicable | `entity_type`, `entity_id` | MVP |
-| `services_expanded` | "Show all services" button clicked | Business, Professional | `entity_type`, `entity_id`, `total_service_count` | MVP |
-| `gallery_opened` | Gallery thumbnail clicked to open lightbox | Business, Professional, Creative, Event, Vendor | `entity_type`, `entity_id`, `image_index` | MVP |
-| `gallery_navigated` | Left/right navigation used in lightbox | All applicable | `entity_type`, `entity_id`, `direction`, `image_index` | MVP |
-| `gallery_closed` | Lightbox closed | All applicable | `entity_type`, `entity_id`, `last_image_index`, `total_images_viewed` | MVP |
-| `trust_section_view` | Trust section scrolled into viewport | Business, Professional, Creative, Vendor | `entity_type`, `entity_id`, `trust_tier` | MVP |
-| `claim_prompt_click` | "Claim Your Page" button in Trust section clicked | All unclaimed | `entity_type`, `entity_id` | MVP |
-| `community_save_nudge_click` | Save button in Community Connection section clicked | Business, Professional, Creative, Vendor | `entity_type`, `entity_id`, `action`, `source: 'community_connection'` | MVP |
-| `related_card_click` | Card in Related Discovery section clicked | All | `source_entity_type`, `source_entity_id`, `destination_entity_id`, `destination_entity_type`, `card_position` | MVP |
-| `related_save_toggled` | Save button on related discovery card clicked | All applicable | `source_entity_id`, `destination_entity_id`, `action` | MVP |
-| `video_embed_played` | Video embed play button pressed | All applicable | `entity_type`, `entity_id`, `video_url` | V1 |
-| `correction_prompt_click` | "Suggest a correction" link clicked | All applicable | `entity_type`, `entity_id` | Beta |
-| `review_form_opened` | "Write a review" button clicked | Business, Professional, Creative, Vendor | `entity_type`, `entity_id` | V1 |
-| `review_helpful_voted` | Helpful vote button on a review clicked | Business, Professional, Creative, Vendor | `entity_id`, `review_id`, `vote_direction` | V2 |
-| `owner_response_viewed` | Owner response visible on loaded page | Business, Professional, Creative, Vendor | `entity_id`, `review_id` | V1 |
-| `collection_link_click` | Collection link in Platform Activity section clicked | All top-level | `entity_type`, `entity_id`, `collection_id`, `collection_slug` | V1 |
-| `job_deadline_view` | Job page with deadline within 7 days loaded | Job | `entity_id`, `days_remaining` | Beta |
-| `ticket_link_click` | Ticket or RSVP link clicked on Event page | Event | `entity_id`, `ticket_tier` | Beta |
-| `apply_link_click` | Apply Now link clicked on Job page | Job | `entity_id` | Beta |
-| `vendor_product_card_click` | Product card in vendor teaser grid clicked | Vendor | `entity_id` (vendor), `product_id` | V2 |
-| `commission_status_view` | Creative page with commission status loaded | Creative | `entity_id`, `commission_status` | Beta |
-| `product_add_to_cart` | Add to Cart button clicked on Product page | Product | `entity_id`, `product_id`, `variant_id` | V2 |
-| `scroll_depth_25` | User scrolls to 25% of page | All | `entity_type`, `entity_id` | MVP |
-| `scroll_depth_50` | User scrolls to 50% of page | All | `entity_type`, `entity_id` | MVP |
-| `scroll_depth_75` | User scrolls to 75% of page | All | `entity_type`, `entity_id` | MVP |
-| `scroll_depth_100` | User scrolls to 100% of page | All | `entity_type`, `entity_id` | MVP |
+| Event                        | Trigger                                              | Entity types                                    | Properties                                                                                                                                               | Phase |
+| ---------------------------- | ---------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `page_view`                  | Page is loaded                                       | All                                             | `entity_type`, `entity_id`, `listing_slug`, `trust_tier`, `is_claimed`, `listing_tier`, `referrer_source`, `referrer_path`, `city_slug`, `category_slug` | MVP   |
+| `hero_cta_click`             | Primary CTA button in hero clicked                   | All                                             | `entity_type`, `entity_id`, `cta_type`, `cta_label`, `trust_tier`                                                                                        | MVP   |
+| `save_toggled`               | Save button in hero clicked                          | All top-level                                   | `entity_type`, `entity_id`, `action` (`saved`/`unsaved`), `auth_state` (`authenticated`/`auth_gated`), `source` (`hero`)                                 | MVP   |
+| `save_toggled`               | Save button in Quick Action Bar clicked              | All top-level                                   | same as above + `source: 'action_bar'`                                                                                                                   | MVP   |
+| `save_toggled`               | Save button on related discovery card clicked        | All top-level                                   | same + `source: 'related_discovery'`                                                                                                                     | MVP   |
+| `share_initiated`            | Share button clicked (hero or action bar)            | All top-level                                   | `entity_type`, `entity_id`, `share_method` (`copy_link`/`native_share`/`social`), `source`                                                               | MVP   |
+| `action_bar_cta_click`       | CTA in Quick Action Bar clicked                      | All                                             | `entity_type`, `entity_id`, `cta_type`, `scroll_depth_pct`                                                                                               | MVP   |
+| `action_bar_phone_click`     | Phone icon in Quick Action Bar tapped                | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `action_bar_map_click`       | Map icon in Quick Action Bar tapped                  | Business, Professional, Creative, Event         | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `phone_click`                | Phone `tel:` link in At-a-Glance tapped              | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`, `source: 'at_a_glance'`                                                                                                      | MVP   |
+| `website_click`              | Website link in At-a-Glance clicked                  | All applicable                                  | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `map_click`                  | Address map link in At-a-Glance tapped               | Business, Professional, Event, Vendor           | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `email_click`                | Email `mailto:` link in At-a-Glance tapped           | All applicable                                  | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `social_link_click`          | Social icon link in At-a-Glance clicked              | All applicable                                  | `entity_type`, `entity_id`, `platform`                                                                                                                   | MVP   |
+| `story_expanded`             | "Read more" toggle in Story section clicked          | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `story_collapsed`            | "Show less" toggle in Story section clicked          | All applicable                                  | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `services_expanded`          | "Show all services" button clicked                   | Business, Professional                          | `entity_type`, `entity_id`, `total_service_count`                                                                                                        | MVP   |
+| `gallery_opened`             | Gallery thumbnail clicked to open lightbox           | Business, Professional, Creative, Event, Vendor | `entity_type`, `entity_id`, `image_index`                                                                                                                | MVP   |
+| `gallery_navigated`          | Left/right navigation used in lightbox               | All applicable                                  | `entity_type`, `entity_id`, `direction`, `image_index`                                                                                                   | MVP   |
+| `gallery_closed`             | Lightbox closed                                      | All applicable                                  | `entity_type`, `entity_id`, `last_image_index`, `total_images_viewed`                                                                                    | MVP   |
+| `trust_section_view`         | Trust section scrolled into viewport                 | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`, `trust_tier`                                                                                                                 | MVP   |
+| `claim_prompt_click`         | "Claim Your Page" button in Trust section clicked    | All unclaimed                                   | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `community_save_nudge_click` | Save button in Community Connection section clicked  | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`, `action`, `source: 'community_connection'`                                                                                   | MVP   |
+| `related_card_click`         | Card in Related Discovery section clicked            | All                                             | `source_entity_type`, `source_entity_id`, `destination_entity_id`, `destination_entity_type`, `card_position`                                            | MVP   |
+| `related_save_toggled`       | Save button on related discovery card clicked        | All applicable                                  | `source_entity_id`, `destination_entity_id`, `action`                                                                                                    | MVP   |
+| `video_embed_played`         | Video embed play button pressed                      | All applicable                                  | `entity_type`, `entity_id`, `video_url`                                                                                                                  | V1    |
+| `correction_prompt_click`    | "Suggest a correction" link clicked                  | All applicable                                  | `entity_type`, `entity_id`                                                                                                                               | Beta  |
+| `review_form_opened`         | "Write a review" button clicked                      | Business, Professional, Creative, Vendor        | `entity_type`, `entity_id`                                                                                                                               | V1    |
+| `review_helpful_voted`       | Helpful vote button on a review clicked              | Business, Professional, Creative, Vendor        | `entity_id`, `review_id`, `vote_direction`                                                                                                               | V2    |
+| `owner_response_viewed`      | Owner response visible on loaded page                | Business, Professional, Creative, Vendor        | `entity_id`, `review_id`                                                                                                                                 | V1    |
+| `collection_link_click`      | Collection link in Platform Activity section clicked | All top-level                                   | `entity_type`, `entity_id`, `collection_id`, `collection_slug`                                                                                           | V1    |
+| `job_deadline_view`          | Job page with deadline within 7 days loaded          | Job                                             | `entity_id`, `days_remaining`                                                                                                                            | Beta  |
+| `ticket_link_click`          | Ticket or RSVP link clicked on Event page            | Event                                           | `entity_id`, `ticket_tier`                                                                                                                               | Beta  |
+| `apply_link_click`           | Apply Now link clicked on Job page                   | Job                                             | `entity_id`                                                                                                                                              | Beta  |
+| `vendor_product_card_click`  | Product card in vendor teaser grid clicked           | Vendor                                          | `entity_id` (vendor), `product_id`                                                                                                                       | V2    |
+| `commission_status_view`     | Creative page with commission status loaded          | Creative                                        | `entity_id`, `commission_status`                                                                                                                         | Beta  |
+| `product_add_to_cart`        | Add to Cart button clicked on Product page           | Product                                         | `entity_id`, `product_id`, `variant_id`                                                                                                                  | V2    |
+| `scroll_depth_25`            | User scrolls to 25% of page                          | All                                             | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `scroll_depth_50`            | User scrolls to 50% of page                          | All                                             | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `scroll_depth_75`            | User scrolls to 75% of page                          | All                                             | `entity_type`, `entity_id`                                                                                                                               | MVP   |
+| `scroll_depth_100`           | User scrolls to 100% of page                         | All                                             | `entity_type`, `entity_id`                                                                                                                               | MVP   |
 
 **Analytics implementation notes:**
+
 - All events are fired via a thin client-side analytics wrapper that queues events and batches them to avoid impacting page performance. The wrapper calls the platform's analytics endpoint or a third-party analytics service (Posthog, Mixpanel, or equivalent — to be confirmed in architecture decisions).
 - Scroll depth events use `IntersectionObserver` on sentinel divs placed at 25%, 50%, 75%, and 100% of page height — not a `scroll` event listener (avoids scroll jitter).
 - `page_view` fires on the server side (via server action or middleware logging) to capture views from users with JavaScript disabled or blocked. Client-side `page_view` is a duplicate-safe enrichment event if the server-side event is the authoritative count.
@@ -1085,4 +1114,4 @@ All BLACQList Pages must meet WCAG 2.1 AA. The following requirements are specif
 
 ---
 
-*Recommended next artifact:* Data model — `docs/blacqlist/architecture/data-model.md`. The BLACQList Pages spec defines the complete field inventory for all entity types. The next step is formalizing the database schema: table structure for `listings`, `business_pages`, `professional_pages`, `creative_pages`, `event_pages`, `job_pages`, `vendor_pages`, `product_pages`, `services`, `media_attachments`, `saves`, `reviews`, `collections`, and the analytics events table. The schema should derive directly from the fields defined in this document.
+_Recommended next artifact:_ Data model — `docs/blacqlist/architecture/data-model.md`. The BLACQList Pages spec defines the complete field inventory for all entity types. The next step is formalizing the database schema: table structure for `listings`, `business_pages`, `professional_pages`, `creative_pages`, `event_pages`, `job_pages`, `vendor_pages`, `product_pages`, `services`, `media_attachments`, `saves`, `reviews`, `collections`, and the analytics events table. The schema should derive directly from the fields defined in this document.

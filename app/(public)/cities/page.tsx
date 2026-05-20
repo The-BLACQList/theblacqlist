@@ -1,24 +1,24 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ChevronRight, MapPin } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ChevronRight, MapPin } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { Container } from "@/components/layout/container"
+import { createClient } from '@/lib/supabase/server'
+import { Container } from '@/components/layout/container'
 
 export const metadata: Metadata = {
-  title: "Cities | The BLACQList",
+  title: 'Cities | The BLACQList',
   description:
-    "Explore Black-owned businesses across Atlanta, Houston, Chicago, and more. Find and support your local community.",
+    'Explore Black-owned businesses across Atlanta, Houston, Chicago, and more. Find and support your local community.',
 }
 
 export default async function CitiesPage() {
   const supabase = await createClient()
 
   const { data: cities } = await supabase
-    .from("cities")
-    .select("id, name, slug, metro_area, states!cities_state_id_fkey(name, code)")
-    .eq("is_active", true)
-    .order("name")
+    .from('cities')
+    .select('id, name, slug, metro_area, states!cities_state_id_fkey(name, code)')
+    .eq('is_active', true)
+    .order('name')
 
   const cityList = (cities ?? []) as Array<{
     id: string
@@ -32,11 +32,11 @@ export default async function CitiesPage() {
   const counts = await Promise.all(
     cityList.map((city) =>
       supabase
-        .from("listings")
-        .select("id", { count: "exact", head: true })
-        .eq("city_id", city.id)
-        .eq("status", "published")
-        .is("deleted_at", null)
+        .from('listings')
+        .select('id', { count: 'exact', head: true })
+        .eq('city_id', city.id)
+        .eq('status', 'published')
+        .is('deleted_at', null)
     )
   )
 
@@ -50,9 +50,7 @@ export default async function CitiesPage() {
       {/* Header */}
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-8 md:py-12">
-          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-2">
-            Cities
-          </h1>
+          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-2">Cities</h1>
           <p className="font-subhead text-sm text-charcoal/60">
             Black-owned businesses, city by city.
           </p>
@@ -62,15 +60,11 @@ export default async function CitiesPage() {
       {/* City grid */}
       <Container className="py-8">
         {citiesWithCounts.length === 0 ? (
-          <p className="font-body text-sm text-charcoal/60">
-            No cities available yet.
-          </p>
+          <p className="font-body text-sm text-charcoal/60">No cities available yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {citiesWithCounts.map((city) => {
-              const locationLabel = city.states
-                ? `${city.name}, ${city.states.code}`
-                : city.name
+              const locationLabel = city.states ? `${city.name}, ${city.states.code}` : city.name
 
               return (
                 <Link
@@ -101,8 +95,7 @@ export default async function CitiesPage() {
                   )}
 
                   <p className="font-subhead text-sm font-semibold text-brand-black">
-                    {city.listingCount}{" "}
-                    {city.listingCount === 1 ? "business" : "businesses"} listed
+                    {city.listingCount} {city.listingCount === 1 ? 'business' : 'businesses'} listed
                   </p>
                 </Link>
               )

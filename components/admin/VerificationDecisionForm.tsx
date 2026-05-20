@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useActionState } from "react"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { updateVerificationStatusAction } from "@/lib/actions/admin/updateVerificationStatus"
+import { useActionState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { updateVerificationStatusAction } from '@/lib/actions/admin/updateVerificationStatus'
 
 interface Props {
   listingId: string
@@ -14,12 +14,12 @@ export function VerificationDecisionForm({ listingId }: Props) {
   const router = useRouter()
 
   useEffect(() => {
-    if (state && "success" in state && state.success) {
-      router.push("/admin/verification")
+    if (state && 'success' in state && state.success) {
+      router.push('/admin/verification')
     }
   }, [state, router])
 
-  const error = state && "error" in state ? state.error : null
+  const error = state && 'error' in state ? state.error : null
 
   return (
     <form action={dispatch} className="space-y-4">
@@ -55,7 +55,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
           disabled={isPending}
           className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 font-subhead text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
         >
-          {isPending ? "Saving…" : "Approve verification"}
+          {isPending ? 'Saving…' : 'Approve verification'}
         </button>
         <button
           type="submit"
@@ -64,7 +64,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
           disabled={isPending}
           className="flex-1 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 font-subhead text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 transition-colors"
         >
-          {isPending ? "Saving…" : "Reject"}
+          {isPending ? 'Saving…' : 'Reject'}
         </button>
       </div>
     </form>

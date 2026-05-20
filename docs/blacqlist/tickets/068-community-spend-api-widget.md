@@ -1,18 +1,23 @@
 # Ticket 068: Community spend aggregate API and public display widget
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 12: Flow Map Data and MVP Visualization
 
 ## Priority
+
 P3
 
 ## Estimate
+
 S (1–2h)
 
 ## Feature Area
+
 Flow Map
 
 ---
@@ -38,6 +43,7 @@ As a homepage visitor, I want to see how much money the community has collective
 ## Scope
 
 **In scope:**
+
 - `app/api/community-spend/route.ts` — GET Route Handler; no auth required; queries `spend_events` and `flow_nodes`; uses `unstable_cache` with `revalidate: 3600` (1 hour); returns aggregate stats
 - `components/homepage/CommunitySpendWidget.tsx` — Server Component (or Client Component if it needs to animate the count-up); renders a compact band or stats row
 - Adding `CommunitySpendWidget` to the homepage (`app/page.tsx`) in the dollar-flow teaser section (position: the "Your receipts are already counting." band area from the screen map)
@@ -45,6 +51,7 @@ As a homepage visitor, I want to see how much money the community has collective
 - API response caching: `unstable_cache` or Route Handler-level `revalidate` — no on-demand revalidation (stale by up to 1 hour is acceptable)
 
 **Out of scope:**
+
 - Interactive Dollar Flow Map visualization (V3)
 - Individual listing spend attribution badge (V2 event: `spend_attributed_badge_click`)
 - Real-time spend updates via Supabase Realtime (V3)
@@ -55,11 +62,11 @@ As a homepage visitor, I want to see how much money the community has collective
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
+| Dependency                                                             | Type            | Status      |
+| ---------------------------------------------------------------------- | --------------- | ----------- |
 | Ticket 067 — Flow map data model (`spend_events`, `flow_nodes` tables) | Blocking ticket | Not started |
-| Ticket 016 — Homepage (to add the widget) | Blocking ticket | Not started |
-| Ticket 027 — City landing pages (to add the city-scoped widget) | Soft dependency | Not started |
+| Ticket 016 — Homepage (to add the widget)                              | Blocking ticket | Not started |
+| Ticket 027 — City landing pages (to add the city-scoped widget)        | Soft dependency | Not started |
 
 ---
 
@@ -87,6 +94,7 @@ As a homepage visitor, I want to see how much money the community has collective
 
 - **Tables:** `spend_events`, `flow_nodes` (Ticket 067)
 - **`GET /api/community-spend` query:**
+
   ```sql
   -- All-time total
   SELECT
@@ -109,6 +117,7 @@ As a homepage visitor, I want to see how much money the community has collective
   ORDER BY fn.total_amount_cents DESC
   LIMIT 5;
   ```
+
 - **City-scoped query (for city landing page variant):**
   ```sql
   SELECT COALESCE(SUM(se.amount_cents), 0) AS total_amount_cents
@@ -130,54 +139,60 @@ As a homepage visitor, I want to see how much money the community has collective
 **Caching:** `unstable_cache` with `revalidate: 3600` (1 hour)
 
 **Request:**
+
 ```typescript
 interface CommunitySpendQueryParams {
-  city_slug?: string  // Optional — if provided, returns city-scoped stats
+  city_slug?: string // Optional — if provided, returns city-scoped stats
 }
 ```
 
 **Response:**
+
 ```typescript
 interface CommunitySpendStats {
-  total_amount_cents: number         // All-time (or city-scoped if city_slug provided)
-  total_amount_cents_30d: number     // Last 30 days
-  transaction_count: number          // All-time transaction count
+  total_amount_cents: number // All-time (or city-scoped if city_slug provided)
+  total_amount_cents_30d: number // Last 30 days
+  transaction_count: number // All-time transaction count
   top_cities: Array<{
     city_id: string
     city_name: string
     city_slug: string
     total_amount_cents: number
     transaction_count: number
-  }>                                 // Empty array if city_slug provided (city-scoped response has no sub-breakdown)
+  }> // Empty array if city_slug provided (city-scoped response has no sub-breakdown)
 }
 // Envelope: { data: CommunitySpendStats }
 ```
 
 **Errors:**
 
-| Code | HTTP | When |
-|---|---|---|
-| `OPERATION_FAILED` | 500 | DB query fails |
+| Code               | HTTP | When           |
+| ------------------ | ---- | -------------- |
+| `OPERATION_FAILED` | 500  | DB query fails |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/community-spend/route.ts` — GET Route Handler with caching
 - `components/homepage/CommunitySpendWidget.tsx` — the stats display component
 
 **Files to modify:**
+
 - `app/page.tsx` — wrap `CommunitySpendWidget` in `<Suspense>` in the dollar-flow teaser band area
 - `app/city/[city-slug]/page.tsx` (Ticket 027 scope — if merged first) — add city-scoped `CommunitySpendWidget` below the hero
 
 **Key patterns:**
+
 - Use `unstable_cache` (Next.js 14 API) for Route Handler caching — alternative: use `fetch` with `next: { revalidate: 3600 }` inside `CommunitySpendWidget` if it is a Server Component
 - `CommunitySpendWidget` should be a Server Component where possible — call the API via `fetch` with `revalidate` in the component itself rather than making a client-side fetch
 - Amount formatting: `new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(total_amount_cents / 100)` — omit cents for display (e.g., "$12,450")
 - "See the full flow map →" link: use `href="/account/receipts"` as the MVP interim destination; add a `// TODO: Update to /flow-map when V3 is live` comment
 
 **Do not:**
+
 - Add a chart library for this ticket — the widget is text-only at MVP
 - Make `CommunitySpendWidget` depend on real-time data — 1-hour cache is acceptable
 - Show individual transaction details or user attribution in the public widget
@@ -198,10 +213,10 @@ interface CommunitySpendStats {
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| DB query fails | API returns 500 `OPERATION_FAILED`; `CommunitySpendWidget` Suspense error boundary renders null (widget hidden) — homepage is not broken |
-| `top_cities` query returns zero rows | `top_cities: []` in response; widget does not show city breakdown |
+| Failure                              | User-visible behavior                                                                                                                    |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| DB query fails                       | API returns 500 `OPERATION_FAILED`; `CommunitySpendWidget` Suspense error boundary renders null (widget hidden) — homepage is not broken |
+| `top_cities` query returns zero rows | `top_cities: []` in response; widget does not show city breakdown                                                                        |
 
 ---
 
@@ -223,13 +238,13 @@ interface CommunitySpendStats {
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | API with data | anonymous | Approve 3 receipts; GET /api/community-spend | Response includes non-zero `total_amount_cents` and `transaction_count: 3` |
-| QA-2 | API — zero data | anonymous | GET /api/community-spend on a fresh DB | `total_amount_cents: 0`, `transaction_count: 0`, `top_cities: []` |
-| QA-3 | Widget on homepage | anonymous | Visit homepage | CommunitySpendWidget renders in dollar-flow section with correct total |
-| QA-4 | City-scoped API | anonymous | GET /api/community-spend?city_slug=atlanta | Returns Atlanta-only total; `top_cities` is empty array |
-| QA-5 | Caching | anonymous | GET /api/community-spend twice in quick succession; approve a receipt between calls | Second call returns the cached (pre-approval) response — cache not yet expired |
+| #    | Scenario           | Role      | Steps                                                                               | Expected result                                                                |
+| ---- | ------------------ | --------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| QA-1 | API with data      | anonymous | Approve 3 receipts; GET /api/community-spend                                        | Response includes non-zero `total_amount_cents` and `transaction_count: 3`     |
+| QA-2 | API — zero data    | anonymous | GET /api/community-spend on a fresh DB                                              | `total_amount_cents: 0`, `transaction_count: 0`, `top_cities: []`              |
+| QA-3 | Widget on homepage | anonymous | Visit homepage                                                                      | CommunitySpendWidget renders in dollar-flow section with correct total         |
+| QA-4 | City-scoped API    | anonymous | GET /api/community-spend?city_slug=atlanta                                          | Returns Atlanta-only total; `top_cities` is empty array                        |
+| QA-5 | Caching            | anonymous | GET /api/community-spend twice in quick succession; approve a receipt between calls | Second call returns the cached (pre-approval) response — cache not yet expired |
 
 ---
 

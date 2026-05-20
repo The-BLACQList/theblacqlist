@@ -1,26 +1,33 @@
 # Ticket 040: Admin Claims Queue (/admin/claims)
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Admin / Claims
 
 ## Context
+
 The admin claims queue is where the platform's ownership verification happens. Every claim submitted by a business owner (Ticket 035) lands here for admin review. Approving a claim triggers the ownership transfer — it sets `listings.trust_tier = 'claimed'`, assigns the `owner` role to the claimant, and sends the approval email. This is a P0 ticket because without the ability to approve claims, no business owner can take ownership of their listing and the platform's primary business owner workflow is blocked end-to-end. Source: `docs/blacqlist/ux/mvp-screen-map.md` Admin Claims Queue and Admin Claim Review screens; `docs/blacqlist/architecture/api-contract.md` Section 9 endpoints 45–48; `docs/blacqlist/data/database-schema-plan.md` claims table; `docs/blacqlist/architecture/server-actions-plan.md` `approveClaim` and `rejectClaim` actions.
 
 ## User Story
+
 As a platform admin, I want to view and process ownership claims in priority order, mark claims under review, and approve or reject them, so that legitimate business owners can take control of their listings and fraudulent claims are prevented.
 
 ## Scope
 
 **In scope:**
+
 - `app/admin/claims/page.tsx` — Server Component; reads `searchParams` for status filter; fetches claims via service_role; passes data to Client Component
 - `app/admin/claims/_components/AdminClaimsTable.tsx` — Client Component; table + filter + row actions
 - **Table columns:** Claimant display name, Claimant email, Listing name + city, Claim status badge, Submitted date, Verification doc count badge (e.g., "2 docs"), Actions
@@ -46,6 +53,7 @@ As a platform admin, I want to view and process ownership claims in priority ord
 - Loading: table skeleton (5 row placeholders)
 
 **Out of scope:**
+
 - Bulk claim approval (post-MVP — individual review is required for trust reasons)
 - Automated claim approval (no AI/automated decision at MVP)
 - Claim appeal workflow (post-MVP)
@@ -53,15 +61,15 @@ As a platform admin, I want to view and process ownership claims in priority ord
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 (admin layout + auth guard) | Blocking ticket | Admin shell required |
-| Ticket 035 (claim form) | Blocking ticket | Claims must exist in DB from user submissions |
-| Ticket 011 (engagement tables migration — `claims` table) | Blocking ticket | `claims` table must exist |
-| `approveClaim` SA (`lib/actions/admin/approveClaim.ts`) | Code dependency | Must exist; 5-step atomic transaction |
-| `rejectClaim` SA (`lib/actions/admin/rejectClaim.ts`) | Code dependency | Must exist; writes rejection reason + sends email |
+| Dependency                                                                | Type            | Status                                                  |
+| ------------------------------------------------------------------------- | --------------- | ------------------------------------------------------- |
+| Ticket 037 (admin layout + auth guard)                                    | Blocking ticket | Admin shell required                                    |
+| Ticket 035 (claim form)                                                   | Blocking ticket | Claims must exist in DB from user submissions           |
+| Ticket 011 (engagement tables migration — `claims` table)                 | Blocking ticket | `claims` table must exist                               |
+| `approveClaim` SA (`lib/actions/admin/approveClaim.ts`)                   | Code dependency | Must exist; 5-step atomic transaction                   |
+| `rejectClaim` SA (`lib/actions/admin/rejectClaim.ts`)                     | Code dependency | Must exist; writes rejection reason + sends email       |
 | `getVerificationDocUrl` SA (`lib/actions/admin/getVerificationDocUrl.ts`) | Code dependency | Required for "View document" links on claim detail page |
-| Resend email integration + `claimApproved` / `claimRejected` templates | Infrastructure | Required for post-decision email notifications |
+| Resend email integration + `claimApproved` / `claimRejected` templates    | Infrastructure  | Required for post-decision email notifications          |
 
 ## UX Notes
 
@@ -125,17 +133,19 @@ As a platform admin, I want to view and process ownership claims in priority ord
   - `SERVER_ERROR` — toast: "Action failed. Please try again."
 
 **`approveClaim` atomic transaction steps (from API contract):**
+
 1. `UPDATE claims SET status='approved', reviewed_by=auth.uid(), reviewed_at=now()`
 2. `UPDATE listings SET trust_tier='claimed', owner_user_id=$claimant_user_id, claim_id=$claim_id`
 3. `INSERT INTO user_roles (user_id=$claimant_user_id, role='owner', listing_id=$listing_id, granted_by=auth.uid())` ON CONFLICT DO NOTHING
 4. `UPDATE moderation_queue SET status='resolved', resolved_at=now()` for this claim
 5. `INSERT INTO admin_audit_log (...)`
 6. Non-blocking: `sendNotificationEmail('claimApproved', { claimant_email, listing_name })`
-Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
+   Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/claims/page.tsx` — Server Component; fetches claims with joins
 - `app/admin/claims/_components/AdminClaimsTable.tsx` — Client Component; table + filter tabs + row actions
 - `app/admin/claims/_components/ApproveClaimPopover.tsx` — inline approve confirmation
@@ -148,9 +158,11 @@ Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
 - `lib/actions/admin/markClaimUnderReview.ts` — Server Action (simple status update)
 
 **Files to modify:**
+
 - `app/admin/overview/page.tsx` — confirm the "Claims pending review: [N]" count query uses the correct filter (`status IN ('pending', 'under_review')`)
 
 **Key patterns for `getVerificationDocUrl` SA:**
+
 ```typescript
 // lib/actions/admin/getVerificationDocUrl.ts
 // STEP 1: getUser + admin role check
@@ -168,6 +180,7 @@ Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
 ```
 
 **Do not:**
+
 - Return `verification_doc_paths` array in any list or detail API response — return only `verification_doc_count` in the table view and generate signed URLs on demand in the detail view
 - Cache signed URLs — they expire in 15 minutes and must be regenerated on every "View document" click
 - Allow bulk approval from the table — each claim requires individual admin review to prevent fraudulent approval
@@ -188,14 +201,14 @@ Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| INVALID_STATUS_TRANSITION on approve | Claim already approved or withdrawn | Toast: "This claim cannot be approved in its current state." | Admin reviews current status |
-| LISTING_ALREADY_OWNED on approve | Listing already has a different owner | Toast: "This listing already has an owner." | Admin reviews listing + existing claim on detail page |
-| Signed URL generation fails | Storage error in `getVerificationDocUrl` | Toast: "Couldn't load document. Try again." | Admin retries; button re-enabled |
-| Rejection without reason | Admin submits rejection with empty textarea | Inline error: "Rejection reason is required" | Admin enters reason and resubmits |
-| Network error during approve | `approveClaim` SA times out | Toast: "Approval failed. Please try again." | Admin retries; optimistic update reverted |
-| Claims fetch failure | Service_role query fails | Next.js `error.tsx` with retry | Admin refreshes page |
+| Failure                              | Condition                                   | User sees                                                    | Recovery                                              |
+| ------------------------------------ | ------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| INVALID_STATUS_TRANSITION on approve | Claim already approved or withdrawn         | Toast: "This claim cannot be approved in its current state." | Admin reviews current status                          |
+| LISTING_ALREADY_OWNED on approve     | Listing already has a different owner       | Toast: "This listing already has an owner."                  | Admin reviews listing + existing claim on detail page |
+| Signed URL generation fails          | Storage error in `getVerificationDocUrl`    | Toast: "Couldn't load document. Try again."                  | Admin retries; button re-enabled                      |
+| Rejection without reason             | Admin submits rejection with empty textarea | Inline error: "Rejection reason is required"                 | Admin enters reason and resubmits                     |
+| Network error during approve         | `approveClaim` SA times out                 | Toast: "Approval failed. Please try again."                  | Admin retries; optimistic update reverted             |
+| Claims fetch failure                 | Service_role query fails                    | Next.js `error.tsx` with retry                               | Admin refreshes page                                  |
 
 ## Edge Cases
 
@@ -216,14 +229,14 @@ Then: `revalidatePath('/[city-slug]/business/[listing-slug]')`
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Queue default view | Admin navigates to `/admin/claims` | Table shows pending claims sorted oldest-first; "Under Review" and other statuses are filtered out |
-| QA-2 | Inline approve | Click "Approve" on a pending claim row → confirm | `approveClaim` fires; row badge → Approved; DB: `claims.status = 'approved'`, `listings.trust_tier = 'claimed'`, `user_roles` row inserted for claimant; approval email sent |
-| QA-3 | Mark under review | Click "Mark Under Review" on a pending claim | Row badge → Under Review; `claims.status = 'under_review'` in DB |
-| QA-4 | Claim detail — reject | Navigate to `/admin/claims/[id]` → expand reject → enter reason → Confirm | `rejectClaim` fires; claim `status = 'rejected'`; `rejection_reason` stored; rejection email sent to claimant |
-| QA-5 | Verification document view | Navigate to claim detail with uploaded doc → click "View document 1" | `getVerificationDocUrl` SA called; signed URL opens in new tab; URL expires after 15 minutes |
-| QA-6 | Empty state | Filter to Pending with no pending claims | "You're all caught up." empty state renders with no CTA button |
+| ID   | Test                       | Steps                                                                     | Expected                                                                                                                                                                     |
+| ---- | -------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Queue default view         | Admin navigates to `/admin/claims`                                        | Table shows pending claims sorted oldest-first; "Under Review" and other statuses are filtered out                                                                           |
+| QA-2 | Inline approve             | Click "Approve" on a pending claim row → confirm                          | `approveClaim` fires; row badge → Approved; DB: `claims.status = 'approved'`, `listings.trust_tier = 'claimed'`, `user_roles` row inserted for claimant; approval email sent |
+| QA-3 | Mark under review          | Click "Mark Under Review" on a pending claim                              | Row badge → Under Review; `claims.status = 'under_review'` in DB                                                                                                             |
+| QA-4 | Claim detail — reject      | Navigate to `/admin/claims/[id]` → expand reject → enter reason → Confirm | `rejectClaim` fires; claim `status = 'rejected'`; `rejection_reason` stored; rejection email sent to claimant                                                                |
+| QA-5 | Verification document view | Navigate to claim detail with uploaded doc → click "View document 1"      | `getVerificationDocUrl` SA called; signed URL opens in new tab; URL expires after 15 minutes                                                                                 |
+| QA-6 | Empty state                | Filter to Pending with no pending claims                                  | "You're all caught up." empty state renders with no CTA button                                                                                                               |
 
 ## Security Notes
 

@@ -1,10 +1,10 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ArrowLeft, MapPin } from "lucide-react"
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, MapPin } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { EditorialRichTextDisplay } from "@/components/editorial/EditorialRichTextDisplay"
+import { createClient } from '@/lib/supabase/server'
+import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -14,13 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const supabase = await createClient()
   const { data } = await supabase
-    .from("guides")
-    .select("title, meta_description, description")
-    .eq("slug", slug)
-    .eq("status", "published")
+    .from('guides')
+    .select('title, meta_description, description')
+    .eq('slug', slug)
+    .eq('status', 'published')
     .single()
 
-  if (!data) return { title: "Guide | The BLACQList" }
+  if (!data) return { title: 'Guide | The BLACQList' }
 
   return {
     title: `${data.title} | The BLACQList`,
@@ -36,27 +36,27 @@ export default async function GuideDetailPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: guide } = await supabase
-    .from("guides")
-    .select("id, title, slug, subtitle, description, city, published_at")
-    .eq("slug", slug)
-    .eq("status", "published")
+    .from('guides')
+    .select('id, title, slug, subtitle, description, city, published_at')
+    .eq('slug', slug)
+    .eq('status', 'published')
     .single()
 
   if (!guide) notFound()
 
   const { data: rawSections } = await supabase
-    .from("guide_sections")
-    .select("id, heading, body, display_order")
-    .eq("guide_id", guide.id)
-    .order("display_order", { ascending: true })
+    .from('guide_sections')
+    .select('id, heading, body, display_order')
+    .eq('guide_id', guide.id)
+    .order('display_order', { ascending: true })
 
   const sections = rawSections ?? []
 
   function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
+    return new Date(iso).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
     })
   }
 
@@ -93,10 +93,7 @@ export default async function GuideDetailPage({ params }: Props) {
           </p>
         )}
         {guide.published_at && (
-          <time
-            dateTime={guide.published_at}
-            className="font-subhead text-xs text-charcoal/40"
-          >
+          <time dateTime={guide.published_at} className="font-subhead text-xs text-charcoal/40">
             {formatDate(guide.published_at)}
           </time>
         )}
@@ -119,12 +116,8 @@ export default async function GuideDetailPage({ params }: Props) {
             <div className="space-y-10">
               {sections.map((section) => (
                 <div key={section.id}>
-                  <h2 className="font-headline text-xl text-brand-black mb-4">
-                    {section.heading}
-                  </h2>
-                  {section.body && (
-                    <EditorialRichTextDisplay body={section.body} />
-                  )}
+                  <h2 className="font-headline text-xl text-brand-black mb-4">{section.heading}</h2>
+                  {section.body && <EditorialRichTextDisplay body={section.body} />}
                 </div>
               ))}
             </div>

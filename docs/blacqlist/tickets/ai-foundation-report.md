@@ -9,14 +9,15 @@
 
 ### Data Model
 
-| Table | Description |
-|---|---|
-| `ai_suggestions` | AI-generated content rows awaiting human approval. Includes `suggestion_type`, `agent_type`, `suggestion_text`, `status` lifecycle (pending → approved → applied / rejected / expired), `reviewed_by`, `applied_at`. |
-| `ai_generation_requests` | Audit log for every AI generation call (mock or real). Logs `provider`, `model`, token counts, `status`, `error_message`. Full prompt text is **never** stored. |
+| Table                    | Description                                                                                                                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ai_suggestions`         | AI-generated content rows awaiting human approval. Includes `suggestion_type`, `agent_type`, `suggestion_text`, `status` lifecycle (pending → approved → applied / rejected / expired), `reviewed_by`, `applied_at`. |
+| `ai_generation_requests` | Audit log for every AI generation call (mock or real). Logs `provider`, `model`, token counts, `status`, `error_message`. Full prompt text is **never** stored.                                                      |
 
 **Migration:** `supabase/migrations/20260511000004_ai_foundation.sql`
 
 RLS:
+
 - `ai_suggestions`: owners can SELECT their own listing's pending, approved, and applied suggestions
 - `ai_generation_requests`: no public policy — admin access via service role only
 
@@ -34,23 +35,23 @@ All 17 agents defined and specified in `docs/blacqlist/ai/ai-feature-spec.md`.
 
 ### Files Created
 
-| File | Description |
-|---|---|
-| `docs/blacqlist/ai/ai-feature-spec.md` | Full spec for all 17 agents: purpose, inputs, outputs, privacy constraints, phase |
-| `docs/blacqlist/ai/ai-agent-roadmap.md` | Phase map: Foundation → V2 Mock → V2 Provider → V3 Autonomous; 6 phase gates before real API |
-| `docs/blacqlist/ai/ai-safety-and-approval-plan.md` | Approval workflow, privacy guardrails, output validation, GDPR notes, open risks |
-| `supabase/migrations/20260511000004_ai_foundation.sql` | Creates `ai_suggestions` and `ai_generation_requests` tables with RLS |
-| `lib/ai/prompts.ts` | 11 prompt template constants (string only — no API calls); `AGENT_PROMPT_MAP` lookup |
-| `lib/ai/checklist.ts` | Rule-based 12-check page optimization function; zero external dependencies; returns score + grade |
-| `app/dashboard/pages/[entityId]/ai-suggestions/page.tsx` | Owner-facing AI suggestions page: checklist score + item list + AI placeholder |
-| `app/admin/ai-tools/page.tsx` | Admin AI tools page: system status + 4 stat cards + suggestions table + prompt library |
+| File                                                     | Description                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `docs/blacqlist/ai/ai-feature-spec.md`                   | Full spec for all 17 agents: purpose, inputs, outputs, privacy constraints, phase                 |
+| `docs/blacqlist/ai/ai-agent-roadmap.md`                  | Phase map: Foundation → V2 Mock → V2 Provider → V3 Autonomous; 6 phase gates before real API      |
+| `docs/blacqlist/ai/ai-safety-and-approval-plan.md`       | Approval workflow, privacy guardrails, output validation, GDPR notes, open risks                  |
+| `supabase/migrations/20260511000004_ai_foundation.sql`   | Creates `ai_suggestions` and `ai_generation_requests` tables with RLS                             |
+| `lib/ai/prompts.ts`                                      | 11 prompt template constants (string only — no API calls); `AGENT_PROMPT_MAP` lookup              |
+| `lib/ai/checklist.ts`                                    | Rule-based 12-check page optimization function; zero external dependencies; returns score + grade |
+| `app/dashboard/pages/[entityId]/ai-suggestions/page.tsx` | Owner-facing AI suggestions page: checklist score + item list + AI placeholder                    |
+| `app/admin/ai-tools/page.tsx`                            | Admin AI tools page: system status + 4 stat cards + suggestions table + prompt library            |
 
 ### Files Modified
 
-| File | Change |
-|---|---|
+| File                                        | Change                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
 | `components/dashboard/DashboardSidebar.tsx` | Added "AI Suggestions" nav item to page-specific nav (after Analytics) |
-| `components/admin/AdminSidebar.tsx` | Added "AI Tools" nav item (uses `Sparkles` icon from lucide-react) |
+| `components/admin/AdminSidebar.tsx`         | Added "AI Tools" nav item (uses `Sparkles` icon from lucide-react)     |
 
 ---
 
@@ -58,20 +59,20 @@ All 17 agents defined and specified in `docs/blacqlist/ai/ai-feature-spec.md`.
 
 The checklist in `lib/ai/checklist.ts` scores 12 attributes of a listing against its current data. Zero external calls. Computed entirely from data already fetched for the owner dashboard.
 
-| Check | Category | Weight |
-|---|---|---|
-| Tagline present | Required | 8 |
-| Description ≥ 100 chars | Required | 12 |
-| Logo/profile image uploaded | Required | 10 |
-| Cover image uploaded | Recommended | 8 |
-| Gallery image present | Recommended | 6 |
-| CTA configured | Recommended | 10 |
-| Phone or website present | Recommended | 8 |
-| Business hours set | Recommended | 8 |
-| Social link present | Engagement | 6 |
-| Service listed | Engagement | 8 |
-| Meta title set | SEO | 8 |
-| Meta description set | SEO | 8 |
+| Check                       | Category    | Weight |
+| --------------------------- | ----------- | ------ |
+| Tagline present             | Required    | 8      |
+| Description ≥ 100 chars     | Required    | 12     |
+| Logo/profile image uploaded | Required    | 10     |
+| Cover image uploaded        | Recommended | 8      |
+| Gallery image present       | Recommended | 6      |
+| CTA configured              | Recommended | 10     |
+| Phone or website present    | Recommended | 8      |
+| Business hours set          | Recommended | 8      |
+| Social link present         | Engagement  | 6      |
+| Service listed              | Engagement  | 8      |
+| Meta title set              | SEO         | 8      |
+| Meta description set        | SEO         | 8      |
 
 Score ≥ 80 → "Strong" (green). Score ≥ 50 → "Good" (amber). Score < 50 → "Needs work" (red).
 
@@ -82,6 +83,7 @@ Score ≥ 80 → "Strong" (green). Score ≥ 50 → "Good" (amber). Score < 50 �
 11 templates stored in `lib/ai/prompts.ts`. All are string constants with `{{variable}}` placeholders. No API calls, no model invocations.
 
 Templates defined:
+
 1. `LISTING_DESCRIPTION` — business description (150–250 words)
 2. `SEO_TITLE` — meta title (≤60 chars)
 3. `SEO_DESCRIPTION` — meta description (140–160 chars)
@@ -98,32 +100,32 @@ Templates defined:
 
 ## What Remains Manual / Not Yet Built
 
-| Item | Status | Phase |
-|---|---|---|
-| Real AI API calls | Not built — no provider connected | V2 Provider |
-| Mock suggestion generation UI | Not built | V2 Mock |
-| Approve / Reject action buttons | Not built | V2 Mock |
-| "Apply to listing" button | Not built | V2 Mock |
-| `lib/ai/provider.ts` wrapper | Not built | V2 Mock |
-| `lib/ai/mock-responses.ts` | Not built | V2 Mock |
-| `lib/actions/ai/generateSuggestion.ts` | Not built | V2 Mock |
-| Suggestion expiry job (7 days) | Not built | V2 |
-| Rate limiting (10/listing/24h) | Not built (required before V2 Provider) | V2 |
-| `ai_agent_runs` table | Not built | V3 |
-| Autonomous background agent jobs | Not built | V3 |
-| Admin suggestion approve/reject UI | Not built | V2 Mock |
+| Item                                   | Status                                  | Phase       |
+| -------------------------------------- | --------------------------------------- | ----------- |
+| Real AI API calls                      | Not built — no provider connected       | V2 Provider |
+| Mock suggestion generation UI          | Not built                               | V2 Mock     |
+| Approve / Reject action buttons        | Not built                               | V2 Mock     |
+| "Apply to listing" button              | Not built                               | V2 Mock     |
+| `lib/ai/provider.ts` wrapper           | Not built                               | V2 Mock     |
+| `lib/ai/mock-responses.ts`             | Not built                               | V2 Mock     |
+| `lib/actions/ai/generateSuggestion.ts` | Not built                               | V2 Mock     |
+| Suggestion expiry job (7 days)         | Not built                               | V2          |
+| Rate limiting (10/listing/24h)         | Not built (required before V2 Provider) | V2          |
+| `ai_agent_runs` table                  | Not built                               | V3          |
+| Autonomous background agent jobs       | Not built                               | V3          |
+| Admin suggestion approve/reject UI     | Not built                               | V2 Mock     |
 
 ---
 
 ## Privacy Risks
 
-| Risk | Severity | Current mitigation |
-|---|---|---|
-| PII in prompts via listing description field (phone/email typed into description) | High | Prompt assembly must strip email/phone patterns — function not yet written; gate 2 of V2 phase requires privacy code audit |
-| Review text passed to provider — reviewer identity leaked | Medium | Review Response Agent spec explicitly excludes reviewer display_name and user_id; not enforced in code until prompt assembly is written |
-| User_id included in AI audit log | Low | `ai_generation_requests.created_by` stores operator user_id (admin or owner who clicked generate), not the end-user being analyzed |
-| Verification documents passed to AI | Low | Verification Support Agent spec explicitly excludes documents — metadata only; enforced at spec level |
-| Spend data at individual level | Medium | Community Spend Agent spec requires aggregates only — not enforced in code until agent is built |
+| Risk                                                                              | Severity | Current mitigation                                                                                                                      |
+| --------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| PII in prompts via listing description field (phone/email typed into description) | High     | Prompt assembly must strip email/phone patterns — function not yet written; gate 2 of V2 phase requires privacy code audit              |
+| Review text passed to provider — reviewer identity leaked                         | Medium   | Review Response Agent spec explicitly excludes reviewer display_name and user_id; not enforced in code until prompt assembly is written |
+| User_id included in AI audit log                                                  | Low      | `ai_generation_requests.created_by` stores operator user_id (admin or owner who clicked generate), not the end-user being analyzed      |
+| Verification documents passed to AI                                               | Low      | Verification Support Agent spec explicitly excludes documents — metadata only; enforced at spec level                                   |
+| Spend data at individual level                                                    | Medium   | Community Spend Agent spec requires aggregates only — not enforced in code until agent is built                                         |
 
 **Action required before V2 Provider:** Full privacy code audit of all prompt assembly functions (phase gate 2).
 

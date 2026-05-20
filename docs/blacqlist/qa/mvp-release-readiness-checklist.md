@@ -19,62 +19,70 @@ Remaining open items are medium/low severity (accessibility, type generation, co
 
 ## Previously Blocking Issues — Now Resolved
 
-| Issue | Reference | Status |
-|---|---|---|
-| Upload route handler missing | BRK-01 | **Fixed** — `app/api/upload/[bucket]/route.ts` |
-| Business detail page: mock data in production code | BRK-02 | **Fixed** — real DB query via `getEntityPageFromDB()` |
-| Search/discover: mock data in production code | BRK-03 | **Fixed** — real DB queries in discover + search pages |
-| No rate limiting on analytics API | BRH-01 | **Fixed** — 30 req/IP/min in-memory limiter |
-| Admin audit log completeness | BRH-02 | **Resolved** — confirmed complete via code audit |
-| Receipt RLS cross-user access | BRH-03 | **Resolved** — confirmed correct via migration audit |
-| Missing `pnpm test` script | BRL-01 | **Fixed** — placeholder added to package.json |
+| Issue                                              | Reference | Status                                                 |
+| -------------------------------------------------- | --------- | ------------------------------------------------------ |
+| Upload route handler missing                       | BRK-01    | **Fixed** — `app/api/upload/[bucket]/route.ts`         |
+| Business detail page: mock data in production code | BRK-02    | **Fixed** — real DB query via `getEntityPageFromDB()`  |
+| Search/discover: mock data in production code      | BRK-03    | **Fixed** — real DB queries in discover + search pages |
+| No rate limiting on analytics API                  | BRH-01    | **Fixed** — 30 req/IP/min in-memory limiter            |
+| Admin audit log completeness                       | BRH-02    | **Resolved** — confirmed complete via code audit       |
+| Receipt RLS cross-user access                      | BRH-03    | **Resolved** — confirmed correct via migration audit   |
+| Missing `pnpm test` script                         | BRL-01    | **Fixed** — placeholder added to package.json          |
 
 ---
 
 ## Safe Checks — Results
 
 ### TypeScript
+
 ```
 Command: pnpm tsc --noEmit
 Exit code: 0
 Status: PASS — zero errors
 ```
+
 All types resolve correctly including manually-added `ai_suggestions` and `ai_generation_requests` type definitions.
 
 ### Lint
+
 ```
 Command: pnpm exec eslint . --ext .ts,.tsx
 Exit code: 0
 Status: PASS — zero errors
 ```
+
 Note: `pnpm lint` script is defined as bare `eslint` (no path argument) which silently exits 0 without scanning files. The explicit `eslint . --ext .ts,.tsx` form confirms zero errors. Recommend updating the `lint` script in `package.json` to `eslint . --ext .ts,.tsx` or `next lint`.
 
 ### Tests
+
 ```
 Command: pnpm test
 Exit code: 0
 Status: PASS — placeholder script added (no real tests configured)
 ```
+
 `"test": "echo 'No tests configured' && exit 0"` added to `package.json`. Real test framework (Playwright) recommended before first major release after launch.
 
 ### Build
+
 ```
 Command: pnpm build
 Status: NOT YET RUN — run on staging before production deployment
 ```
+
 Should be run to catch any build-time errors not caught by `tsc --noEmit`.
 
 ---
 
 ## Code Quality
 
-| Check | Status | Notes |
-|---|---|---|
-| `pnpm tsc --noEmit` — zero TypeScript errors | Not run | Run before staging deploy |
-| `pnpm lint` — zero lint errors | Not run | Run before staging deploy |
-| No `@ts-ignore` without documented reason | Unverified | Audit needed |
-| No `any` types without justification | Unverified | Audit needed |
-| No mock data in production code paths | **Pass** | BRK-02, BRK-03 fixed |
+| Check                                        | Status     | Notes                     |
+| -------------------------------------------- | ---------- | ------------------------- |
+| `pnpm tsc --noEmit` — zero TypeScript errors | Not run    | Run before staging deploy |
+| `pnpm lint` — zero lint errors               | Not run    | Run before staging deploy |
+| No `@ts-ignore` without documented reason    | Unverified | Audit needed              |
+| No `any` types without justification         | Unverified | Audit needed              |
+| No mock data in production code paths        | **Pass**   | BRK-02, BRK-03 fixed      |
 
 ---
 
@@ -82,20 +90,21 @@ Should be run to catch any build-time errors not caught by `tsc --noEmit`.
 
 All variables must be set in Vercel staging and production environments before deployment.
 
-| Variable | Group | Required | Staging | Production | Notes |
-|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase | Yes | ? | ? | Public — safe to expose |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase | Yes | ? | ? | Public — safe to expose |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase | Yes | ? | ? | Server-only — never in client bundle |
-| `NEXTAUTH_SECRET` or `SUPABASE_JWT_SECRET` | Next.js | Yes | ? | ? | Verify correct key name |
-| `NEXT_PUBLIC_SITE_URL` | Next.js | Yes | ? | ? | Must match actual deployment URL |
-| `RESEND_API_KEY` | Resend (email) | Yes | ? | ? | Required for email verification |
-| `SENTRY_DSN` | Sentry | No (optional) | ? | ? | Error monitoring |
-| `STRIPE_SECRET_KEY` | Stripe V1 | No (not wired) | — | — | Not needed until payment launch |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe V1 | No | — | — | Not needed until payment launch |
-| `ANTHROPIC_API_KEY` | Anthropic V2 | No (not wired) | — | — | Not needed until AI provider phase |
+| Variable                                   | Group          | Required       | Staging | Production | Notes                                |
+| ------------------------------------------ | -------------- | -------------- | ------- | ---------- | ------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`                 | Supabase       | Yes            | ?       | ?          | Public — safe to expose              |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | Supabase       | Yes            | ?       | ?          | Public — safe to expose              |
+| `SUPABASE_SERVICE_ROLE_KEY`                | Supabase       | Yes            | ?       | ?          | Server-only — never in client bundle |
+| `NEXTAUTH_SECRET` or `SUPABASE_JWT_SECRET` | Next.js        | Yes            | ?       | ?          | Verify correct key name              |
+| `NEXT_PUBLIC_SITE_URL`                     | Next.js        | Yes            | ?       | ?          | Must match actual deployment URL     |
+| `RESEND_API_KEY`                           | Resend (email) | Yes            | ?       | ?          | Required for email verification      |
+| `SENTRY_DSN`                               | Sentry         | No (optional)  | ?       | ?          | Error monitoring                     |
+| `STRIPE_SECRET_KEY`                        | Stripe V1      | No (not wired) | —       | —          | Not needed until payment launch      |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`       | Stripe V1      | No             | —       | —          | Not needed until payment launch      |
+| `ANTHROPIC_API_KEY`                        | Anthropic V2   | No (not wired) | —       | —          | Not needed until AI provider phase   |
 
 **Action required:**
+
 - [ ] Confirm all "Required" variables are set in Vercel staging environment
 - [ ] Confirm `SUPABASE_SERVICE_ROLE_KEY` is NOT in any `NEXT_PUBLIC_*` variable
 - [ ] Verify `NEXT_PUBLIC_SITE_URL` matches the actual staging/production domain
@@ -105,15 +114,16 @@ All variables must be set in Vercel staging and production environments before d
 
 ## Database and Migrations
 
-| Check | Status |
-|---|---|
-| All 7 migrations applied to staging | Not verified |
-| Migrations tested on staging before production | Not yet |
-| No destructive migration without explicit approval | N/A (all migrations are additive) |
-| Backup confirmed before production migration | Required before production run |
+| Check                                                               | Status                               |
+| ------------------------------------------------------------------- | ------------------------------------ |
+| All 7 migrations applied to staging                                 | Not verified                         |
+| Migrations tested on staging before production                      | Not yet                              |
+| No destructive migration without explicit approval                  | N/A (all migrations are additive)    |
+| Backup confirmed before production migration                        | Required before production run       |
 | `set_updated_at()` trigger function exists before AI migration runs | Migration 000003 must precede 000004 |
 
 ### Migration order (must run in this sequence):
+
 1. `20260510000000_...` (initial schema)
 2. `20260510000001_mvp_rls_policies.sql`
 3. `20260511000001_...` (analytics)
@@ -125,63 +135,63 @@ All variables must be set in Vercel staging and production environments before d
 
 ## Security
 
-| Check | Status | Reference |
-|---|---|---|
-| Upload route handler implemented with auth + validation | **Done** | SR-06, BRK-01 |
-| Rate limiting on analytics event API | **Done** — 30 req/IP/min | BRH-01 |
-| Receipt RLS cross-user access verified | **Verified** — `user_id = auth.uid()` confirmed | SR-05, BRH-03 |
-| Admin audit log completeness verified | **Verified** — all 8 admin/receipt actions confirmed | BRH-02 |
-| No secrets in codebase | Not audited | SR-07 |
-| `createServiceClient()` not used in owner-facing pages | Not audited | SR-02 |
-| `listings` public RLS includes `deleted_at IS NULL` | Not verified | SR-01 |
+| Check                                                   | Status                                               | Reference     |
+| ------------------------------------------------------- | ---------------------------------------------------- | ------------- |
+| Upload route handler implemented with auth + validation | **Done**                                             | SR-06, BRK-01 |
+| Rate limiting on analytics event API                    | **Done** — 30 req/IP/min                             | BRH-01        |
+| Receipt RLS cross-user access verified                  | **Verified** — `user_id = auth.uid()` confirmed      | SR-05, BRH-03 |
+| Admin audit log completeness verified                   | **Verified** — all 8 admin/receipt actions confirmed | BRH-02        |
+| No secrets in codebase                                  | Not audited                                          | SR-07         |
+| `createServiceClient()` not used in owner-facing pages  | Not audited                                          | SR-02         |
+| `listings` public RLS includes `deleted_at IS NULL`     | Not verified                                         | SR-01         |
 
 ---
 
 ## Functionality
 
-| Area | Status | Reference |
-|---|---|---|
-| Sign-up / sign-in / sign-out | Not tested | TA-02, TA-03 |
-| User onboarding flow | Not tested | TA-04 |
-| Add Business form (all 7 steps) | Not tested — media step will fail | TA-05, BRK-01 |
-| Business detail page (real data) | **Unblocked** — needs manual QA | BRK-02 |
-| Search and discover (real data) | **Unblocked** — needs manual QA | BRK-03 |
-| Claim workflow (full lifecycle) | Not tested | TA-09 |
-| Owner dashboard (all sections) | Not tested | TA-10 through TA-16 |
-| Media upload (gallery, receipt docs) | **Unblocked** — needs manual QA | BRK-01 |
-| Analytics event ingestion API | Not tested | TA-17 |
-| Admin panel (all sections) | Not tested | TA-18, TA-19 |
-| Receipts lifecycle | Not tested | TA-20 |
-| Collections (index + detail) | Not tested | TA-23 |
-| Saves and share | Not tested | TA-24 |
+| Area                                 | Status                            | Reference           |
+| ------------------------------------ | --------------------------------- | ------------------- |
+| Sign-up / sign-in / sign-out         | Not tested                        | TA-02, TA-03        |
+| User onboarding flow                 | Not tested                        | TA-04               |
+| Add Business form (all 7 steps)      | Not tested — media step will fail | TA-05, BRK-01       |
+| Business detail page (real data)     | **Unblocked** — needs manual QA   | BRK-02              |
+| Search and discover (real data)      | **Unblocked** — needs manual QA   | BRK-03              |
+| Claim workflow (full lifecycle)      | Not tested                        | TA-09               |
+| Owner dashboard (all sections)       | Not tested                        | TA-10 through TA-16 |
+| Media upload (gallery, receipt docs) | **Unblocked** — needs manual QA   | BRK-01              |
+| Analytics event ingestion API        | Not tested                        | TA-17               |
+| Admin panel (all sections)           | Not tested                        | TA-18, TA-19        |
+| Receipts lifecycle                   | Not tested                        | TA-20               |
+| Collections (index + detail)         | Not tested                        | TA-23               |
+| Saves and share                      | Not tested                        | TA-24               |
 
 ---
 
 ## Accessibility
 
-| Check | Status | Reference |
-|---|---|---|
-| `text-charcoal/40` contrast failure fixed | Not fixed | AR-05, BRM-01 |
-| Icon-only buttons have `aria-label` | Not verified | AR-03, BRM-02 |
-| Search input has label or `aria-label` | Not verified | AR-03 |
-| Keyboard navigation test on P1 flows | Not run | AR-01 |
-| Mobile tap target audit at 375px | Not run | AR-06 |
-| Heading structure review per page | Not run | AR-02 |
+| Check                                     | Status       | Reference     |
+| ----------------------------------------- | ------------ | ------------- |
+| `text-charcoal/40` contrast failure fixed | Not fixed    | AR-05, BRM-01 |
+| Icon-only buttons have `aria-label`       | Not verified | AR-03, BRM-02 |
+| Search input has label or `aria-label`    | Not verified | AR-03         |
+| Keyboard navigation test on P1 flows      | Not run      | AR-01         |
+| Mobile tap target audit at 375px          | Not run      | AR-06         |
+| Heading structure review per page         | Not run      | AR-02         |
 
 ---
 
 ## Documentation
 
-| Check | Status |
-|---|---|
+| Check                                             | Status                                                   |
+| ------------------------------------------------- | -------------------------------------------------------- |
 | Build reports exist for all completed foundations | Pass (all 14 reports exist in `docs/blacqlist/tickets/`) |
-| MVP test plan written | Pass (this session) |
-| Bug risk log written | Pass (this session) |
-| Accessibility review written | Pass (this session) |
-| Security review written | Pass (this session) |
-| User-facing help docs / FAQ | Not yet created |
-| Admin onboarding guide | Not yet created |
-| API reference (for future integrations) | Not yet created |
+| MVP test plan written                             | Pass (this session)                                      |
+| Bug risk log written                              | Pass (this session)                                      |
+| Accessibility review written                      | Pass (this session)                                      |
+| Security review written                           | Pass (this session)                                      |
+| User-facing help docs / FAQ                       | Not yet created                                          |
+| Admin onboarding guide                            | Not yet created                                          |
+| API reference (for future integrations)           | Not yet created                                          |
 
 ---
 
@@ -215,24 +225,24 @@ All pre-staging items above, plus:
 
 ## Rollback Plan
 
-| Scenario | Rollback method |
-|---|---|
-| Vercel deployment failure | Vercel dashboard → Deployments → Promote previous deployment |
+| Scenario                   | Rollback method                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vercel deployment failure  | Vercel dashboard → Deployments → Promote previous deployment                                                                                |
 | Database migration failure | Supabase dashboard → Point-in-time recovery; or manual SQL reversal (all migrations are additive — `DROP TABLE` required for full reversal) |
-| Critical bug post-deploy | Vercel instant rollback to previous deployment; DB change may require data migration if AI foundation tables have data |
-| Estimated rollback time | < 5 minutes for Vercel rollback; 30 min for DB recovery |
+| Critical bug post-deploy   | Vercel instant rollback to previous deployment; DB change may require data migration if AI foundation tables have data                      |
+| Estimated rollback time    | < 5 minutes for Vercel rollback; 30 min for DB recovery                                                                                     |
 
 ---
 
 ## Final Status
 
-| Area | Status |
-|---|---|
-| Code quality | Pending (not run) |
-| Critical functionality | **P0 issues resolved** — manual QA pass required |
-| Security | **P1 issues resolved** — rate limiting + RLS confirmed |
-| Accessibility | Gaps identified |
-| Database migrations | Pending staging test |
-| Documentation | Complete for development phase |
+| Area                   | Status                                                 |
+| ---------------------- | ------------------------------------------------------ |
+| Code quality           | Pending (not run)                                      |
+| Critical functionality | **P0 issues resolved** — manual QA pass required       |
+| Security               | **P1 issues resolved** — rate limiting + RLS confirmed |
+| Accessibility          | Gaps identified                                        |
+| Database migrations    | Pending staging test                                   |
+| Documentation          | Complete for development phase                         |
 
 **Recommendation: CONDITIONAL GO — All P0 blockers resolved. Proceed to staging deploy. Complete manual QA pass (TA-01 through TA-25) and address accessibility medium items before public launch.**

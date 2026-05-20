@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 7: Saves, Reviews, Corrections, Sharing
 
 ## Priority
+
 P2 — Medium
 
 ## Estimate
+
 S (1–2h)
 
 ## Feature Area
+
 Saves / Engagement / Sharing
 
 ---
@@ -40,6 +45,7 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 ## Scope
 
 **In scope:**
+
 - `components/listing/ShareButton.tsx` — "use client"; self-contained share button
 - Props: `{ listingName: string, listingUrl: string, className?: string }`
 - Behavior decision tree:
@@ -52,6 +58,7 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 - On listing cards: share button is not required at MVP on cards — only required on the BLACQList Page; include an `iconOnly` boolean prop so it can be added to cards later without a new component
 
 **Out of scope:**
+
 - Custom OG image generation (Ticket 023)
 - Twitter/X card metadata (part of Ticket 023's `generateMetadata`)
 - Social media deep-linking (direct share to Instagram, etc.) — post-MVP
@@ -61,11 +68,11 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
+| Dependency                                         | Type                | Status                                                         |
+| -------------------------------------------------- | ------------------- | -------------------------------------------------------------- |
 | Ticket 023 — BLACQList Page OG metadata generation | Blocking dependency | Not started (OG metadata must exist for rich previews to work) |
-| Ticket 049 — Analytics event ingestion API | Soft dependency | Not started; stub with no-op if not yet shipped |
-| `POST /api/analytics/event` Route Handler | API | Fire-and-forget |
+| Ticket 049 — Analytics event ingestion API         | Soft dependency     | Not started; stub with no-op if not yet shipped                |
+| `POST /api/analytics/event` Route Handler          | API                 | Fire-and-forget                                                |
 
 ---
 
@@ -79,6 +86,7 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 - **Clipboard fallback on HTTPS only:** `navigator.clipboard.writeText` only works over HTTPS. In local development (`localhost`), it works. On any HTTP deployment, fall back to a `document.execCommand('copy')` polyfill or show a "Copy this link:" text with the URL pre-selected.
 
 **Toast (from `empty-loading-error-success-states.md` § Global States):**
+
 - "Link copied!" — 2 seconds, no dismiss button
 
 **AbortError handling:** When the user opens the native share sheet and then taps "Cancel" or "Dismiss", `navigator.share()` rejects with an `AbortError`. This is expected behavior — not a failure. Do not show an error toast. Do not fire the analytics event.
@@ -101,6 +109,7 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 - Analytics event `listing_shared` is fire-and-forget only
 
 **Analytics event payload:**
+
 ```typescript
 {
   event_name: 'listing_shared',
@@ -123,9 +132,11 @@ As a visitor or supporter on a BLACQList Page, I want to share the listing with 
 ## Implementation Notes
 
 **Files to create:**
+
 - `components/listing/ShareButton.tsx` — "use client"; self-contained
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` or the quick-actions bar component — import and render `<ShareButton listingName={listing.name} listingUrl={canonicalUrl} />`
 
 **Key implementation:**
@@ -148,7 +159,7 @@ interface ShareButtonProps {
 export function ShareButton({ listingName, listingUrl, listingId, iconOnly, className }: ShareButtonProps) {
   async function handleShare() {
     const shareText = `${listingName} — Found on The BLACQList`
-    
+
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({ title: listingName, text: shareText, url: listingUrl })
@@ -207,6 +218,7 @@ export function ShareButton({ listingName, listingUrl, listingId, iconOnly, clas
 - The `listingUrl` prop should be the full canonical URL: `https://theblacqlist.com/[city-slug]/business/[listing-slug]`; the listing page passes this via `process.env.NEXT_PUBLIC_SITE_URL + pathname`
 
 **Do not:**
+
 - Show an error toast on `AbortError` — the user deliberately cancelled
 - Await the analytics fetch — it must be fire-and-forget
 - Add any new npm packages for this feature — `navigator.share` and `navigator.clipboard` are native browser APIs
@@ -228,11 +240,11 @@ export function ShareButton({ listingName, listingUrl, listingId, iconOnly, clas
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Web Share API rejects (non-AbortError) | Unexpected browser error | Falls back to clipboard; "Link copied!" if successful | Clipboard fallback is transparent |
-| Clipboard write fails | HTTP page, browser permissions denied | Toast: "Couldn't copy link. Try selecting the URL manually." | User manually copies |
-| Analytics event fails | Network error on analytics POST | Nothing — swallowed silently; user unaffected | N/A |
+| Failure                                | Condition                             | User sees                                                    | Recovery                          |
+| -------------------------------------- | ------------------------------------- | ------------------------------------------------------------ | --------------------------------- |
+| Web Share API rejects (non-AbortError) | Unexpected browser error              | Falls back to clipboard; "Link copied!" if successful        | Clipboard fallback is transparent |
+| Clipboard write fails                  | HTTP page, browser permissions denied | Toast: "Couldn't copy link. Try selecting the URL manually." | User manually copies              |
+| Analytics event fails                  | Network error on analytics POST       | Nothing — swallowed silently; user unaffected                | N/A                               |
 
 ---
 
@@ -256,13 +268,13 @@ export function ShareButton({ listingName, listingUrl, listingId, iconOnly, clas
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Web Share API (mobile) | 1. Open a BLACQList Page on a mobile device. 2. Tap "Share". | Native OS share sheet opens with correct title, text, and URL. |
-| QA-2 | Web Share API cancel | 1. Open share sheet on mobile. 2. Dismiss without sharing. | No toast. No analytics event. |
-| QA-3 | Clipboard fallback (desktop) | 1. Open a BLACQList Page in Chrome desktop. 2. Click "Share". | URL copied to clipboard. "Link copied!" toast appears for 2 seconds. |
-| QA-4 | Analytics event | 1. Open network DevTools. 2. Click Share (clipboard path). | `POST /api/analytics/event` fires with `event_name: 'listing_shared'` and `share_method: 'clipboard'`. No UI blocking. |
-| QA-5 | Accessibility | 1. Tab to the Share button on a BLACQList Page. 2. Press Enter. | Share action triggers. `aria-label` describes the listing name. |
+| ID   | Test                         | Steps                                                           | Expected                                                                                                               |
+| ---- | ---------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Web Share API (mobile)       | 1. Open a BLACQList Page on a mobile device. 2. Tap "Share".    | Native OS share sheet opens with correct title, text, and URL.                                                         |
+| QA-2 | Web Share API cancel         | 1. Open share sheet on mobile. 2. Dismiss without sharing.      | No toast. No analytics event.                                                                                          |
+| QA-3 | Clipboard fallback (desktop) | 1. Open a BLACQList Page in Chrome desktop. 2. Click "Share".   | URL copied to clipboard. "Link copied!" toast appears for 2 seconds.                                                   |
+| QA-4 | Analytics event              | 1. Open network DevTools. 2. Click Share (clipboard path).      | `POST /api/analytics/event` fires with `event_name: 'listing_shared'` and `share_method: 'clipboard'`. No UI blocking. |
+| QA-5 | Accessibility                | 1. Tab to the Share button on a BLACQList Page. 2. Press Enter. | Share action triggers. `aria-label` describes the listing name.                                                        |
 
 ---
 

@@ -1,10 +1,10 @@
-import Image from "next/image"
-import { Share2, Star } from "lucide-react"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { SaveButton } from "@/components/entity-page/SaveButton"
-import { cn } from "@/lib/utils"
-import { getCtaLabel } from "@/types"
-import type { EntityPageData } from "@/types"
+import Image from 'next/image'
+import { Share2, Star } from 'lucide-react'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { SaveButton } from '@/components/entity-page/SaveButton'
+import { cn } from '@/lib/utils'
+import { getCtaLabel } from '@/types'
+import type { EntityPageData } from '@/types'
 
 interface Props {
   entity: EntityPageData
@@ -13,39 +13,37 @@ interface Props {
 
 function CoverPlaceholder({ name }: { name: string }) {
   const initials = name
-    .split(" ")
+    .split(' ')
     .filter((w) => /^[A-Za-z]/.test(w))
     .slice(0, 2)
-    .map((w) => w[0] ?? "")
-    .join("")
+    .map((w) => w[0] ?? '')
+    .join('')
     .toUpperCase()
   return (
     <div className="absolute inset-0 bg-gradient-to-br from-charcoal/60 to-brand-black flex items-center justify-center">
-      <span className="font-headline text-6xl text-white/20 select-none">
-        {initials}
-      </span>
+      <span className="font-headline text-6xl text-white/20 select-none">{initials}</span>
     </div>
   )
 }
 
 export function EntityPageHero({ entity, initialSaved = false }: Props) {
-  const isPremium = entity.tier === "premium"
+  const isPremium = entity.tier === 'premium'
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
 
   // CTA href: "call" type uses tel: link, otherwise use cta_url or fallback "#"
   const ctaHref =
-    entity.details.cta_type === "call" && entity.details.phone
-      ? `tel:${entity.details.phone.replace(/\D/g, "")}`
-      : (entity.details.cta_url ?? "#")
+    entity.details.cta_type === 'call' && entity.details.phone
+      ? `tel:${entity.details.phone.replace(/\D/g, '')}`
+      : (entity.details.cta_url ?? '#')
 
   return (
     <div
       className={cn(
-        "relative overflow-hidden w-full",
+        'relative overflow-hidden w-full',
         // Heights: mobile 240px; desktop varies by tier
-        "h-[240px] md:h-[360px]",
-        entity.tier === "standard" && "md:h-[400px]",
-        isPremium && "md:h-[560px]"
+        'h-[240px] md:h-[360px]',
+        entity.tier === 'standard' && 'md:h-[400px]',
+        isPremium && 'md:h-[560px]'
       )}
     >
       {/* Cover image or placeholder */}
@@ -67,7 +65,7 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(0,0,0,0.72) 100%)",
+            'linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(0,0,0,0.72) 100%)',
         }}
         aria-hidden="true"
       />
@@ -91,10 +89,12 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
         <h1 className="font-headline text-[28px] md:text-[40px] text-white leading-tight mb-1">
           {entity.name}
         </h1>
-        <p className={cn(
-          "font-body text-sm md:text-base text-white/80 line-clamp-2 max-w-xl",
-          entity.avg_rating !== null && entity.review_count > 0 ? "mb-2" : "mb-4"
-        )}>
+        <p
+          className={cn(
+            'font-body text-sm md:text-base text-white/80 line-clamp-2 max-w-xl',
+            entity.avg_rating !== null && entity.review_count > 0 ? 'mb-2' : 'mb-4'
+          )}
+        >
           {entity.tagline}
         </p>
 
@@ -107,10 +107,10 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
               <Star
                 key={i}
                 className={cn(
-                  "size-4",
+                  'size-4',
                   i < Math.round(entity.avg_rating!)
-                    ? "fill-amber-gold text-amber-gold"
-                    : "fill-transparent text-white/30"
+                    ? 'fill-amber-gold text-amber-gold'
+                    : 'fill-transparent text-white/30'
                 )}
                 aria-hidden="true"
               />
@@ -118,9 +118,7 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
             <span className="font-subhead text-sm font-semibold text-white/90 ml-0.5">
               {entity.avg_rating.toFixed(1)}
             </span>
-            <span className="font-body text-xs text-white/60">
-              ({entity.review_count})
-            </span>
+            <span className="font-body text-xs text-white/60">({entity.review_count})</span>
           </div>
         )}
 

@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useActionState, useRef, useState } from "react"
-import { FileText, ImageIcon, Loader2, X } from "lucide-react"
-import { submitVerificationRequest } from "@/lib/actions/owner/submitVerificationRequest"
-import type { SubmitVerificationState } from "@/lib/actions/owner/submitVerificationRequest"
+import { useActionState, useRef, useState } from 'react'
+import { FileText, ImageIcon, Loader2, X } from 'lucide-react'
+import { submitVerificationRequest } from '@/lib/actions/owner/submitVerificationRequest'
+import type { SubmitVerificationState } from '@/lib/actions/owner/submitVerificationRequest'
 
 interface UploadedFile {
   name: string
@@ -23,7 +23,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const ACCEPTED = "image/jpeg,image/png,image/webp,application/pdf"
+const ACCEPTED = 'image/jpeg,image/png,image/webp,application/pdf'
 const MAX_FILES = 5
 const MAX_BYTES = 10 * 1024 * 1024
 
@@ -56,40 +56,37 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
       }
 
       const body = new FormData()
-      body.append("file", file)
+      body.append('file', file)
 
-      const res = await fetch("/api/upload/receipt-uploads", { method: "POST", body })
+      const res = await fetch('/api/upload/receipt-uploads', { method: 'POST', body })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        setUploadError((json as { error?: string }).error ?? "Upload failed. Please try again.")
+        setUploadError((json as { error?: string }).error ?? 'Upload failed. Please try again.')
         setUploading(false)
         return
       }
 
       const { path } = (await res.json()) as { path: string }
-      setFiles((prev) => [
-        ...prev,
-        { name: file.name, size: file.size, path, type: file.type },
-      ])
+      setFiles((prev) => [...prev, { name: file.name, size: file.size, path, type: file.type }])
     }
 
     setUploading(false)
-    if (inputRef.current) inputRef.current.value = ""
+    if (inputRef.current) inputRef.current.value = ''
   }
 
   function removeFile(path: string) {
     setFiles((prev) => prev.filter((f) => f.path !== path))
   }
 
-  if (state && "success" in state && state.success) {
+  if (state && 'success' in state && state.success) {
     return (
       <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4">
         <p className="font-subhead text-sm font-semibold text-green-800">
           Verification request submitted
         </p>
         <p className="font-body text-sm text-green-700 mt-1">
-          Our team will review your documents within 2–3 business days. You&apos;ll receive
-          an update in your dashboard.
+          Our team will review your documents within 2–3 business days. You&apos;ll receive an
+          update in your dashboard.
         </p>
       </div>
     )
@@ -121,9 +118,10 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
         <label
           htmlFor="verification-file-input"
           className={`flex items-center justify-center gap-2 w-full h-14 rounded-xl border-2 border-dashed cursor-pointer transition-colors font-subhead text-sm font-semibold
-            ${uploading || files.length >= MAX_FILES
-              ? "border-charcoal/15 text-charcoal/30 cursor-not-allowed"
-              : "border-charcoal/25 text-charcoal/60 hover:border-amber-gold hover:text-amber-gold"
+            ${
+              uploading || files.length >= MAX_FILES
+                ? 'border-charcoal/15 text-charcoal/30 cursor-not-allowed'
+                : 'border-charcoal/25 text-charcoal/60 hover:border-amber-gold hover:text-amber-gold'
             }`}
         >
           {uploading ? (
@@ -134,7 +132,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
           ) : files.length >= MAX_FILES ? (
             `Maximum ${MAX_FILES} files reached`
           ) : (
-            "Choose file(s) to upload"
+            'Choose file(s) to upload'
           )}
         </label>
         <input
@@ -163,7 +161,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
               key={f.path}
               className="flex items-center gap-3 rounded-lg border border-charcoal/10 bg-white px-4 py-2.5"
             >
-              {f.type === "application/pdf" ? (
+              {f.type === 'application/pdf' ? (
                 <FileText className="size-4 shrink-0 text-charcoal/50" aria-hidden="true" />
               ) : (
                 <ImageIcon className="size-4 shrink-0 text-charcoal/50" aria-hidden="true" />
@@ -194,7 +192,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
           <input key={f.path} type="hidden" name="doc_paths[]" value={f.path} />
         ))}
 
-        {state && "error" in state && (
+        {state && 'error' in state && (
           <p className="font-body text-sm text-red-600 mb-3" role="alert">
             {state.error}
           </p>

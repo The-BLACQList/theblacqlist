@@ -1,30 +1,28 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
-import { createClient } from "@/lib/supabase/server"
-import { CollectionCard } from "@/components/editorial/CollectionCard"
+import { createClient } from '@/lib/supabase/server'
+import { CollectionCard } from '@/components/editorial/CollectionCard'
 
 export const metadata: Metadata = {
-  title: "Collections | The BLACQList",
+  title: 'Collections | The BLACQList',
   description:
-    "Curated lists of Black-owned businesses by category, occasion, city, and theme. Find the perfect spot for any need.",
+    'Curated lists of Black-owned businesses by category, occasion, city, and theme. Find the perfect spot for any need.',
 }
 
 export default async function CollectionsPage() {
   const supabase = await createClient()
 
   const { data: collections } = await supabase
-    .from("collections")
-    .select("id, title, slug, description")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true })
+    .from('collections')
+    .select('id, title, slug, description')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true })
 
   const items = collections ?? []
 
   // Get listing counts per collection
-  const { data: counts } = await supabase
-    .from("collection_items")
-    .select("collection_id")
+  const { data: counts } = await supabase.from('collection_items').select('collection_id')
 
   const countMap: Record<string, number> = {}
   for (const row of counts ?? []) {

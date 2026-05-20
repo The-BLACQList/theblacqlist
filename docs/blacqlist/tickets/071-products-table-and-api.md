@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 13: Marketplace Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Marketplace
 
 ---
@@ -40,6 +45,7 @@ As a visitor browsing a vendor's storefront, I want to see the vendor's product 
 ## Scope
 
 **In scope:**
+
 - Migration: `products` table creation with all fields defined below
 - Index: `products_listing_id_idx` on `(listing_id)` for catalog list queries
 - Index: `products_listing_slug_idx` on `(listing_id, slug)` — unique, vendor-scoped
@@ -52,6 +58,7 @@ As a visitor browsing a vendor's storefront, I want to see the vendor's product 
 - Standard response envelope: `{ data: Product[] | Product, meta?: {...} }`
 
 **Out of scope:**
+
 - Product creation, update, delete (Ticket 073)
 - Vendor storefront page UI (Ticket 072)
 - Admin product moderation (Ticket 074)
@@ -62,12 +69,12 @@ As a visitor browsing a vendor's storefront, I want to see the vendor's product 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
+| Dependency                                  | Type            | Status      |
+| ------------------------------------------- | --------------- | ----------- |
 | Ticket 070 — Vendor listing extension table | Blocking ticket | Not started |
-| Ticket 009 — `listings` base table | Blocking ticket | Not started |
-| Ticket 013 — RLS policies | Blocking ticket | Not started |
-| Ticket 002 — Supabase setup | Infrastructure | Not started |
+| Ticket 009 — `listings` base table          | Blocking ticket | Not started |
+| Ticket 013 — RLS policies                   | Blocking ticket | Not started |
+| Ticket 002 — Supabase setup                 | Infrastructure  | Not started |
 
 ---
 
@@ -131,11 +138,13 @@ CREATE TRIGGER set_products_updated_at
 **Images:** Product images are stored as rows in the existing `media_attachments` table using `entity_type = 'product'` and `entity_id = products.id`. The Route Handler joins `media_attachments` to assemble the `images` array.
 
 **RLS policies:**
+
 - `anon` and `authenticated` can SELECT products where `status = 'active' AND deleted_at IS NULL`
 - Owners and admins can SELECT all products for their listing regardless of status (enforced in the dashboard, not in these public endpoints)
 - Enforce in public endpoints via explicit `WHERE` clause, not relying on RLS alone
 
 **Validation rules:**
+
 - `price_cents >= 0` — enforced at DB level; `0` is a valid price (free items)
 - `slug` must be non-empty, lowercase, hyphenated; validated at the service layer in Ticket 073
 - Max 100 products per vendor — enforced in Ticket 073 create action, not here
@@ -149,28 +158,30 @@ CREATE TRIGGER set_products_updated_at
 ### GET /api/listings/[id]/products
 
 **Request:**
+
 - Path param: `id` — UUID of the listing (vendor listing)
 - Query params: `page` (default 1), `limit` (default 20, max 100)
 - No auth required
 
 **Response (200):**
+
 ```typescript
 {
   data: Array<{
-    id: string               // UUID
+    id: string // UUID
     name: string
     description: string | null
     price_cents: number
     category: string | null
-    is_active: boolean       // computed: status === 'active'
+    is_active: boolean // computed: status === 'active'
     stock_count: number | null
     display_order: number
     slug: string
     images: Array<{
-      path: string           // Supabase Storage path — NOT the CDN URL
+      path: string // Supabase Storage path — NOT the CDN URL
       file_type: string
     }>
-    created_at: string       // ISO 8601
+    created_at: string // ISO 8601
   }>
   meta: {
     total: number
@@ -182,17 +193,18 @@ CREATE TRIGGER set_products_updated_at
 
 **Error codes:**
 
-| Code | HTTP | Condition |
-|---|---|---|
-| `LISTING_NOT_FOUND` | 404 | No listing with this ID exists or `listing_type != 'vendor'` |
-| `VALIDATION_ERROR` | 400 | `page` or `limit` is not a positive integer |
-| `INTERNAL_ERROR` | 500 | Unexpected DB error |
+| Code                | HTTP | Condition                                                    |
+| ------------------- | ---- | ------------------------------------------------------------ |
+| `LISTING_NOT_FOUND` | 404  | No listing with this ID exists or `listing_type != 'vendor'` |
+| `VALIDATION_ERROR`  | 400  | `page` or `limit` is not a positive integer                  |
+| `INTERNAL_ERROR`    | 500  | Unexpected DB error                                          |
 
 **Caching:** `Cache-Control: s-maxage=3600, stale-while-revalidate=86400` — ISR 1h
 
 ### GET /api/products/[id]
 
 **Request:**
+
 - Path param: `id` — UUID of the product
 - No auth required
 
@@ -200,10 +212,10 @@ CREATE TRIGGER set_products_updated_at
 
 **Error codes:**
 
-| Code | HTTP | Condition |
-|---|---|---|
-| `PRODUCT_NOT_FOUND` | 404 | Product does not exist, is inactive, or is soft-deleted |
-| `INTERNAL_ERROR` | 500 | Unexpected DB error |
+| Code                | HTTP | Condition                                               |
+| ------------------- | ---- | ------------------------------------------------------- |
+| `PRODUCT_NOT_FOUND` | 404  | Product does not exist, is inactive, or is soft-deleted |
+| `INTERNAL_ERROR`    | 500  | Unexpected DB error                                     |
 
 **Caching:** Same ISR headers as list endpoint.
 
@@ -212,6 +224,7 @@ CREATE TRIGGER set_products_updated_at
 ## Implementation Notes
 
 **Files to create:**
+
 - `supabase/migrations/[timestamp]_create_products_table.sql` — migration for the `products` table
 - `app/api/listings/[id]/products/route.ts` — Route Handler for listing product catalog
 - `app/api/products/[id]/route.ts` — Route Handler for single product detail
@@ -219,9 +232,11 @@ CREATE TRIGGER set_products_updated_at
 - `types/marketplace.ts` — `Product`, `ProductListResponse`, `ProductDetailResponse` TypeScript interfaces
 
 **Files to modify:**
+
 - `types/index.ts` — re-export marketplace types if a barrel file exists
 
 **Key patterns:**
+
 - Use the anon Supabase client (not service role) in both Route Handlers — these are public reads
 - Join `media_attachments` in a single query using `LEFT JOIN media_attachments ma ON ma.entity_type = 'product' AND ma.entity_id = p.id`; aggregate paths into an array using `json_agg` or a Supabase `.select()` with embedded relations
 - **Never return the raw `status` field** — compute `is_active` in the service layer: `is_active: product.status === 'active'`
@@ -231,6 +246,7 @@ CREATE TRIGGER set_products_updated_at
 - Set ISR cache headers using `Response` constructor with `Cache-Control` header — do not use `next: { revalidate }` in Route Handlers (that option is for `fetch()` calls in Server Components)
 
 **Do not:**
+
 - Expose the `status` enum in any API response — always translate to `is_active: boolean`
 - Return soft-deleted products (`deleted_at IS NOT NULL`) in public endpoints
 - Store CDN URLs in the `images` array — store only `path` values; the frontend generates URLs via `supabase.storage.from('listing-media').getPublicUrl(path)`
@@ -256,12 +272,12 @@ CREATE TRIGGER set_products_updated_at
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Listing not found | Invalid listing ID or wrong entity type | 404 `{ error: "Listing not found.", code: "LISTING_NOT_FOUND" }` | Client shows "Page not found" |
-| Product not found | Product inactive, deleted, or non-existent | 404 `{ error: "Product not found.", code: "PRODUCT_NOT_FOUND" }` | Client shows "Product not available" |
-| DB query error | Supabase returns an error | 500 `{ error: "Something went wrong.", code: "INTERNAL_ERROR" }` | Client shows error state with retry |
-| Invalid pagination params | `page=0` or `limit=abc` | 400 `{ error: "Validation failed.", code: "VALIDATION_ERROR" }` | Client falls back to defaults |
+| Failure                   | Condition                                  | User sees                                                        | Recovery                             |
+| ------------------------- | ------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------ |
+| Listing not found         | Invalid listing ID or wrong entity type    | 404 `{ error: "Listing not found.", code: "LISTING_NOT_FOUND" }` | Client shows "Page not found"        |
+| Product not found         | Product inactive, deleted, or non-existent | 404 `{ error: "Product not found.", code: "PRODUCT_NOT_FOUND" }` | Client shows "Product not available" |
+| DB query error            | Supabase returns an error                  | 500 `{ error: "Something went wrong.", code: "INTERNAL_ERROR" }` | Client shows error state with retry  |
+| Invalid pagination params | `page=0` or `limit=abc`                    | 400 `{ error: "Validation failed.", code: "VALIDATION_ERROR" }`  | Client falls back to defaults        |
 
 ---
 
@@ -284,14 +300,14 @@ No UI in this ticket. Accessibility requirements are scoped to Ticket 072 (store
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path: list products | Anonymous | `GET /api/listings/[valid-vendor-id]/products` | 200 with product array; all items have `is_active: true`; no `status` field in response |
-| QA-2 | Empty catalog | Anonymous | `GET /api/listings/[vendor-id-with-no-active-products]/products` | 200 with `{ data: [], meta: { total: 0 } }` |
-| QA-3 | Non-vendor listing | Anonymous | `GET /api/listings/[business-listing-id]/products` | 404 `LISTING_NOT_FOUND` |
-| QA-4 | Single product detail | Anonymous | `GET /api/products/[valid-product-id]` | 200 with product; `listing_id`, `listing_slug`, `images` array present; no `status` field |
-| QA-5 | Inactive product excluded | Anonymous | `GET /api/products/[inactive-product-id]` | 404 `PRODUCT_NOT_FOUND` |
-| QA-6 | Pagination | Anonymous | `GET /api/listings/[id]/products?page=2&limit=5` | Returns second page of 5; `meta.page=2`, `meta.limit=5`, `meta.total` reflects full count |
+| #    | Scenario                  | Role      | Steps                                                            | Expected result                                                                           |
+| ---- | ------------------------- | --------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: list products | Anonymous | `GET /api/listings/[valid-vendor-id]/products`                   | 200 with product array; all items have `is_active: true`; no `status` field in response   |
+| QA-2 | Empty catalog             | Anonymous | `GET /api/listings/[vendor-id-with-no-active-products]/products` | 200 with `{ data: [], meta: { total: 0 } }`                                               |
+| QA-3 | Non-vendor listing        | Anonymous | `GET /api/listings/[business-listing-id]/products`               | 404 `LISTING_NOT_FOUND`                                                                   |
+| QA-4 | Single product detail     | Anonymous | `GET /api/products/[valid-product-id]`                           | 200 with product; `listing_id`, `listing_slug`, `images` array present; no `status` field |
+| QA-5 | Inactive product excluded | Anonymous | `GET /api/products/[inactive-product-id]`                        | 404 `PRODUCT_NOT_FOUND`                                                                   |
+| QA-6 | Pagination                | Anonymous | `GET /api/listings/[id]/products?page=2&limit=5`                 | Returns second page of 5; `meta.page=2`, `meta.limit=5`, `meta.total` reflects full count |
 
 ---
 

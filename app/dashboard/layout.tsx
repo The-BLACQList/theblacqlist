@@ -1,5 +1,5 @@
-import { requireOwner } from "@/lib/dashboard/guard"
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { requireOwner } from '@/lib/dashboard/guard'
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const owner = await requireOwner()

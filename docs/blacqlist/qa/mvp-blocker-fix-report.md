@@ -17,15 +17,15 @@ All 3 P0 blockers and all 3 P1 security issues identified in `mvp-bug-risk-log.m
 
 ## Blockers Found
 
-| ID | Description | Severity |
-|---|---|---|
-| BRK-01 | Upload route handler `app/api/upload/[bucket]/route.ts` did not exist | Critical P0 |
+| ID     | Description                                                                            | Severity    |
+| ------ | -------------------------------------------------------------------------------------- | ----------- |
+| BRK-01 | Upload route handler `app/api/upload/[bucket]/route.ts` did not exist                  | Critical P0 |
 | BRK-02 | Business detail page called `getEntityPageBySlug()` (mock data) instead of querying DB | Critical P0 |
-| BRK-03 | Discover and search pages imported `MOCK_ENTITIES` instead of querying DB | Critical P0 |
-| BRH-01 | Analytics event API had no rate limiting | High P1 |
-| BRH-02 | Admin audit log completeness was unverified | High P1 |
-| BRH-03 | Receipt RLS cross-user access was unverified | High P1 |
-| BRL-01 | `package.json` had no `test` script — CI would fail | Low P3 |
+| BRK-03 | Discover and search pages imported `MOCK_ENTITIES` instead of querying DB              | Critical P0 |
+| BRH-01 | Analytics event API had no rate limiting                                               | High P1     |
+| BRH-02 | Admin audit log completeness was unverified                                            | High P1     |
+| BRH-03 | Receipt RLS cross-user access was unverified                                           | High P1     |
+| BRL-01 | `package.json` had no `test` script — CI would fail                                    | Low P3      |
 
 ---
 
@@ -51,6 +51,7 @@ The upload route handler was missing entirely. Implemented with:
 ### BRK-02 — Business Detail Page Wired to DB
 
 **Files created/modified:**
+
 - `lib/listings/entityPage.ts` — **created**
 - `app/[citySlug]/business/[listingSlug]/page.tsx` — **modified**
 
@@ -67,12 +68,14 @@ The upload route handler was missing entirely. Implemented with:
 ### BRK-03 — Discover and Search Pages Wired to DB
 
 **Files modified:**
+
 - `app/(public)/discover/page.tsx` — **rewritten**
 - `app/(public)/search/page.tsx` — **rewritten**
 
 Both pages previously imported `MOCK_ENTITIES` and used it as the data source.
 
 Both now:
+
 - Remove the `MOCK_ENTITIES` runtime import (type-only `DiscoveryEntity`/`EntityType` imports remain — zero runtime impact)
 - Add a real Supabase query: all `published`, non-deleted listings, ordered by `is_featured` then `save_count`, limited to 100
 - Use the same `RawRow` → `DiscoveryEntity` mapping pattern as `entityPage.ts`
@@ -84,6 +87,7 @@ Both now:
 **File modified:** `app/api/analytics/event/route.ts`
 
 Added a module-level in-memory rate limiter:
+
 - 30 requests per IP per 60-second sliding window
 - IP extracted from `x-forwarded-for` (first hop) with `x-real-ip` fallback
 - Returns `429 Too Many Requests` with `{ error: "Too many requests.", code: "RATE_LIMITED" }` when exceeded
@@ -113,15 +117,15 @@ Added `"test": "echo 'No tests configured' && exit 0"` to `scripts`. CI pipeline
 
 ## Files Changed
 
-| File | Action | Blocker |
-|---|---|---|
-| `app/api/upload/[bucket]/route.ts` | Created | BRK-01 |
-| `lib/listings/entityPage.ts` | Created | BRK-02 |
-| `app/[citySlug]/business/[listingSlug]/page.tsx` | Modified (2 call sites) | BRK-02 |
-| `app/(public)/discover/page.tsx` | Rewritten | BRK-03 |
-| `app/(public)/search/page.tsx` | Rewritten | BRK-03 |
-| `app/api/analytics/event/route.ts` | Modified (rate limiter added) | BRH-01 |
-| `package.json` | Modified (test script added) | BRL-01 |
+| File                                             | Action                        | Blocker |
+| ------------------------------------------------ | ----------------------------- | ------- |
+| `app/api/upload/[bucket]/route.ts`               | Created                       | BRK-01  |
+| `lib/listings/entityPage.ts`                     | Created                       | BRK-02  |
+| `app/[citySlug]/business/[listingSlug]/page.tsx` | Modified (2 call sites)       | BRK-02  |
+| `app/(public)/discover/page.tsx`                 | Rewritten                     | BRK-03  |
+| `app/(public)/search/page.tsx`                   | Rewritten                     | BRK-03  |
+| `app/api/analytics/event/route.ts`               | Modified (rate limiter added) | BRH-01  |
+| `package.json`                                   | Modified (test script added)  | BRL-01  |
 
 **Files audited but not changed:** `lib/actions/admin/*.ts` (×6), `lib/actions/spend/approveReceipt.ts`, `lib/actions/spend/rejectReceipt.ts`, `supabase/migrations/20260511000001_receipt_community_spend.sql`
 
@@ -142,6 +146,7 @@ Exit code: 0 — PASS — zero lint errors
 ```
 
 Two TypeScript errors were introduced during implementation and fixed immediately:
+
 1. `app/api/analytics/event/route.ts` — `.split(",")[0]` typed as `string | undefined` in strict mode → fixed with `?? ""` nullish coalescing
 2. `app/api/upload/[bucket]/route.ts` — `BUCKET_LIMITS[bucket]` typed as `T | undefined` despite prior allowlist check → fixed with `!` non-null assertion after explicit guard
 
@@ -151,15 +156,15 @@ Two TypeScript errors were introduced during implementation and fixed immediatel
 
 These were explicitly out of scope for this blocker-only session:
 
-| ID | Description | Severity | Recommended timing |
-|---|---|---|---|
-| BRM-01 | `text-charcoal/40` contrast failure on hint text | Medium P1 | Before public launch |
-| BRM-02 | Icon-only buttons without `aria-label` | Medium P1 | Before public launch |
-| BRM-03 | Gallery image alt text (no `alt_text` column in schema) | Medium P2 | V1 post-launch |
-| BRM-04 | Supabase types hand-maintained (sync risk) | Medium P2 | Before first schema change post-launch |
-| BRM-05 | Type-only mock imports still present | Medium P2 | Can be removed after launch — no runtime impact |
-| BRL-02 | AI types manually added — need regeneration after migration | Low | After staging migration apply |
-| BRL-03 | Collections empty state not verified | Low | Manual QA pass |
+| ID     | Description                                                 | Severity  | Recommended timing                              |
+| ------ | ----------------------------------------------------------- | --------- | ----------------------------------------------- |
+| BRM-01 | `text-charcoal/40` contrast failure on hint text            | Medium P1 | Before public launch                            |
+| BRM-02 | Icon-only buttons without `aria-label`                      | Medium P1 | Before public launch                            |
+| BRM-03 | Gallery image alt text (no `alt_text` column in schema)     | Medium P2 | V1 post-launch                                  |
+| BRM-04 | Supabase types hand-maintained (sync risk)                  | Medium P2 | Before first schema change post-launch          |
+| BRM-05 | Type-only mock imports still present                        | Medium P2 | Can be removed after launch — no runtime impact |
+| BRL-02 | AI types manually added — need regeneration after migration | Low       | After staging migration apply                   |
+| BRL-03 | Collections empty state not verified                        | Low       | Manual QA pass                                  |
 
 ---
 
@@ -178,6 +183,7 @@ These were explicitly out of scope for this blocker-only session:
 **CONDITIONAL GO** — The three P0 blockers and three P1 security issues are resolved. The codebase is in a state where staging deployment and a full manual QA pass can proceed.
 
 The product is not ready for public launch until:
+
 - [ ] `pnpm build` passes on staging
 - [ ] Manual QA pass completed against all 25 test areas
 - [ ] BRM-01 (contrast) and BRM-02 (aria-labels) addressed

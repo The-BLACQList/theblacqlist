@@ -1,18 +1,23 @@
 # Ticket 069: Personal impact API (GET /api/flow/personal-impact, authenticated)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 12: Flow Map Data and MVP Visualization
 
 ## Priority
+
 P3
 
 ## Estimate
+
 S (1–2h)
 
 ## Feature Area
+
 Flow Map
 
 ---
@@ -38,6 +43,7 @@ As an authenticated supporter, I want to see my personal spend impact — total 
 ## Scope
 
 **In scope:**
+
 - `app/api/flow/personal-impact/route.ts` — GET Route Handler; `authenticated` role required; queries `receipt_uploads` and `spend_events` for the current user; cached per-user with `unstable_cache`
 - A `PersonalImpactCard` component — used on the supporter account dashboard (`/account` or added to `/account/receipts` page header); shows the personal stats returned by the API
 - Adding `PersonalImpactCard` to `/account/receipts` page header (Ticket 066's page — as a summary above the receipt list)
@@ -45,6 +51,7 @@ As an authenticated supporter, I want to see my personal spend impact — total 
 - The `approveReceipt` SA (Ticket 065) should call `revalidateTag(`personal-impact-${receipt.user_id}`)` after a successful approval — this is a modification to Ticket 065's SA, which can be done as part of this ticket or a PR comment in Ticket 065
 
 **Out of scope:**
+
 - A dedicated personal impact page or visualization (V3 — `/account/impact` or `/flow-map`)
 - Top categories breakdown beyond the top 3 (keep response lean at MVP)
 - Comparison to other users' spend (V3 — social/community features)
@@ -55,13 +62,13 @@ As an authenticated supporter, I want to see my personal spend impact — total 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 014 — Auth flows | Blocking ticket | Not started |
-| Ticket 067 — `spend_events` table | Blocking ticket | Not started |
-| Ticket 063 — Receipt upload API (produces `receipt_uploads` rows) | Blocking ticket | Not started |
-| Ticket 065 — Admin receipts queue (sets `status = 'approved'` on receipts; should add `revalidateTag` for this endpoint) | Soft dependency | Not started |
-| Ticket 066 — Supporter receipts history page (location where `PersonalImpactCard` is rendered) | Soft dependency (card can be built independently) | Not started |
+| Dependency                                                                                                               | Type                                              | Status      |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ----------- |
+| Ticket 014 — Auth flows                                                                                                  | Blocking ticket                                   | Not started |
+| Ticket 067 — `spend_events` table                                                                                        | Blocking ticket                                   | Not started |
+| Ticket 063 — Receipt upload API (produces `receipt_uploads` rows)                                                        | Blocking ticket                                   | Not started |
+| Ticket 065 — Admin receipts queue (sets `status = 'approved'` on receipts; should add `revalidateTag` for this endpoint) | Soft dependency                                   | Not started |
+| Ticket 066 — Supporter receipts history page (location where `PersonalImpactCard` is rendered)                           | Soft dependency (card can be built independently) | Not started |
 
 ---
 
@@ -93,6 +100,7 @@ As an authenticated supporter, I want to see my personal spend impact — total 
 
 - **Tables:** `receipt_uploads`, `spend_events`, `listings`, `cities`
 - **Query:**
+
   ```sql
   -- Personal impact for auth.uid()
   SELECT
@@ -119,9 +127,10 @@ As an authenticated supporter, I want to see my personal spend impact — total 
   ORDER BY category_total_cents DESC
   LIMIT 3;
   ```
+
 - **Caching strategy:**
   - `unstable_cache(() => queryPersonalImpact(userId), ['personal-impact', userId], { revalidate: 3600, tags: [\`personal-impact-${userId}\`] })`
-  - Tag-based invalidation: `revalidateTag(\`personal-impact-${userId}\`)` in `approveReceipt` SA when a receipt belonging to `userId` is approved
+  - Tag-based invalidation: `revalidateTag(\`personal-impact-${userId}\`)`in`approveReceipt`SA when a receipt belonging to`userId` is approved
 - **RLS:** `receipt_uploads` SELECT — `authenticated` users can only SELECT rows where `user_id = auth.uid()`. The Route Handler must get the authenticated user's ID via `supabase.auth.getUser()` and pass it to the cached query function.
 - **Migration required:** No — uses existing tables
 
@@ -141,45 +150,48 @@ As an authenticated supporter, I want to see my personal spend impact — total 
 
 ```typescript
 interface PersonalImpactData {
-  total_amount_cents: number          // All-time approved spend
-  transaction_count: number           // Count of approved receipt_uploads
-  unique_businesses_count: number     // Distinct listings supported
-  unique_cities_count: number         // Distinct cities reached
+  total_amount_cents: number // All-time approved spend
+  transaction_count: number // Count of approved receipt_uploads
+  unique_businesses_count: number // Distinct listings supported
+  unique_cities_count: number // Distinct cities reached
   top_categories: Array<{
     category_name: string
     category_slug: string
     total_amount_cents: number
-  }>                                  // Top 3 categories by spend; empty array if no data
+  }> // Top 3 categories by spend; empty array if no data
 }
 // Envelope: { data: PersonalImpactData }
 ```
 
 **Errors:**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `OPERATION_FAILED` | 500 | DB query fails |
+| Code               | HTTP | When             |
+| ------------------ | ---- | ---------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session |
+| `OPERATION_FAILED` | 500  | DB query fails   |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/flow/personal-impact/route.ts` — GET Route Handler
 - `components/spend/PersonalImpactCard.tsx` — stats display component (Server Component, or Client Component that fetches from the Route Handler)
 
 **Files to modify:**
+
 - `app/account/receipts/page.tsx` (Ticket 066) — add `<PersonalImpactCard>` above the receipt list
 - `lib/actions/admin/approveReceipt.ts` (Ticket 065) — add `revalidateTag(\`personal-impact-${receipt.user_id}\`)` in Step 6 of the SA after successful approval
 
 **Key patterns:**
+
 - `unstable_cache` requires the cached function to be defined outside the Route Handler component, with the user ID passed as a parameter (not captured from closure) — this is essential for per-user cache isolation:
   ```typescript
   const getCachedPersonalImpact = unstable_cache(
     async (userId: string) => queryPersonalImpact(userId),
     ['personal-impact'],
-    { revalidate: 3600, tags: [`personal-impact-${userId}`] }  // NOTE: tags can reference the param
+    { revalidate: 3600, tags: [`personal-impact-${userId}`] } // NOTE: tags can reference the param
   )
   ```
   Note: `unstable_cache` with dynamic tags requires Next.js 14.1+. Verify the project's Next.js version; if < 14.1, use static tag `'personal-impact'` and accept that invalidation is global (less precise but correct).
@@ -188,6 +200,7 @@ interface PersonalImpactData {
 - If the supporter has no approved receipts, all fields return `0` / `[]` — this is correct, not an error
 
 **Do not:**
+
 - Query `spend_events` for `user_id` — `spend_events` does not have a `user_id` column (Ticket 067 anonymization rule); join through `receipt_uploads` instead
 - Use `getSession()` — use `getUser()`
 - Return a 404 when the user has no impact data — return zeroed stats with 200
@@ -200,7 +213,7 @@ interface PersonalImpactData {
 - [ ] Given a supporter with no approved receipts calls the endpoint, then the response is 200 with all numeric fields = 0 and `top_categories = []`
 - [ ] Given a supporter has 3 approved receipts totaling $150 at 2 businesses in 1 city, then the response returns `total_amount_cents: 15000`, `transaction_count: 3`, `unique_businesses_count: 2`, `unique_cities_count: 1`
 - [ ] Given `top_categories` query has data, then up to 3 categories are returned ordered by spend descending
-- [ ] Given the cache is live and a receipt is approved, then calling `revalidateTag(\`personal-impact-${userId}\`)` in the `approveReceipt` SA causes the next request to return fresh data
+- [ ] Given the cache is live and a receipt is approved, then calling `revalidateTag(\`personal-impact-${userId}\`)`in the`approveReceipt` SA causes the next request to return fresh data
 - [ ] `PersonalImpactCard` renders on `/account/receipts` above the receipt list with correct stats
 - [ ] Empty state: given no approved receipts, `PersonalImpactCard` shows zeroed values and a "Upload a receipt to start tracking →" link
 - [ ] Mobile at 375px: stats display wraps to 2×2 grid or single-column; no horizontal overflow
@@ -209,10 +222,10 @@ interface PersonalImpactData {
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Route Handler DB query fails | 500 `OPERATION_FAILED`; `PersonalImpactCard` error boundary renders null — page renders without the card |
-| `revalidateTag` fails in `approveReceipt` SA | The approval still succeeds; the card shows stale data until the 1-hour TTL expires — acceptable |
+| Failure                                      | User-visible behavior                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Route Handler DB query fails                 | 500 `OPERATION_FAILED`; `PersonalImpactCard` error boundary renders null — page renders without the card |
+| `revalidateTag` fails in `approveReceipt` SA | The approval still succeeds; the card shows stale data until the 1-hour TTL expires — acceptable         |
 
 ---
 
@@ -235,13 +248,13 @@ interface PersonalImpactData {
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Unauthenticated request | anonymous | GET /api/flow/personal-impact without session | 401 response with `code: 'AUTH_REQUIRED'` |
-| QA-2 | No approved receipts | supporter (new) | GET /api/flow/personal-impact | All fields = 0; `top_categories = []` |
-| QA-3 | With approved receipts | supporter | Approve 3 receipts for the user; GET /api/flow/personal-impact | Correct totals: `transaction_count: 3`, `total_amount_cents` = sum |
-| QA-4 | Cache invalidation on approval | supporter | Call endpoint (cache warms); approve a new receipt; call endpoint again | Second call returns updated data (cache was invalidated by `approveReceipt` SA) |
-| QA-5 | PersonalImpactCard on receipts page | supporter | Navigate to `/account/receipts` with approved receipts | Card renders above the list with correct amounts; "Beta" badge visible |
+| #    | Scenario                            | Role            | Steps                                                                   | Expected result                                                                 |
+| ---- | ----------------------------------- | --------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| QA-1 | Unauthenticated request             | anonymous       | GET /api/flow/personal-impact without session                           | 401 response with `code: 'AUTH_REQUIRED'`                                       |
+| QA-2 | No approved receipts                | supporter (new) | GET /api/flow/personal-impact                                           | All fields = 0; `top_categories = []`                                           |
+| QA-3 | With approved receipts              | supporter       | Approve 3 receipts for the user; GET /api/flow/personal-impact          | Correct totals: `transaction_count: 3`, `total_amount_cents` = sum              |
+| QA-4 | Cache invalidation on approval      | supporter       | Call endpoint (cache warms); approve a new receipt; call endpoint again | Second call returns updated data (cache was invalidated by `approveReceipt` SA) |
+| QA-5 | PersonalImpactCard on receipts page | supporter       | Navigate to `/account/receipts` with approved receipts                  | Card renders above the list with correct amounts; "Beta" badge visible          |
 
 ---
 

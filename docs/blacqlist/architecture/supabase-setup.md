@@ -9,32 +9,33 @@
 
 ### What is configured
 
-| Item | Status |
-|---|---|
-| `@supabase/supabase-js@2.105.4` installed | ✅ |
-| `@supabase/ssr@0.10.3` installed | ✅ |
-| `lib/supabase/client.ts` — browser client | ✅ |
-| `lib/supabase/server.ts` — server client + service client | ✅ |
-| `lib/supabase/types.ts` — placeholder Database type | ✅ (placeholder only) |
-| `.env.example` updated to match `environment-plan.md` | ✅ |
-| `.env.local` — `NEXT_PUBLIC_SUPABASE_URL` | ✅ present |
-| `.env.local` — `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ present |
-| `.env.local` — `SUPABASE_SERVICE_ROLE_KEY` | ✅ present |
-| `.env.local` — `AUTH_SECRET` | ✅ present |
-| `middleware.ts` — session refresh + route protection | ✅ |
-| `next.config.ts` — Supabase Storage `remotePatterns` | ✅ |
-| Health check route `app/api/health/supabase` | ✅ |
-| TypeScript — zero errors | ✅ |
-| Lint — zero errors | ✅ |
-| Supabase project reachable (cloud) | Not yet verified — run `pnpm dev` and GET `/api/health/supabase` |
-| `supabase/` directory (CLI init) | ❌ not yet — needed before migrations |
-| Database schema migrations | ❌ not yet |
-| Storage buckets created | ❌ not yet |
-| Auth redirect URLs configured | ❌ not yet |
+| Item                                                      | Status                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| `@supabase/supabase-js@2.105.4` installed                 | ✅                                                               |
+| `@supabase/ssr@0.10.3` installed                          | ✅                                                               |
+| `lib/supabase/client.ts` — browser client                 | ✅                                                               |
+| `lib/supabase/server.ts` — server client + service client | ✅                                                               |
+| `lib/supabase/types.ts` — placeholder Database type       | ✅ (placeholder only)                                            |
+| `.env.example` updated to match `environment-plan.md`     | ✅                                                               |
+| `.env.local` — `NEXT_PUBLIC_SUPABASE_URL`                 | ✅ present                                                       |
+| `.env.local` — `NEXT_PUBLIC_SUPABASE_ANON_KEY`            | ✅ present                                                       |
+| `.env.local` — `SUPABASE_SERVICE_ROLE_KEY`                | ✅ present                                                       |
+| `.env.local` — `AUTH_SECRET`                              | ✅ present                                                       |
+| `middleware.ts` — session refresh + route protection      | ✅                                                               |
+| `next.config.ts` — Supabase Storage `remotePatterns`      | ✅                                                               |
+| Health check route `app/api/health/supabase`              | ✅                                                               |
+| TypeScript — zero errors                                  | ✅                                                               |
+| Lint — zero errors                                        | ✅                                                               |
+| Supabase project reachable (cloud)                        | Not yet verified — run `pnpm dev` and GET `/api/health/supabase` |
+| `supabase/` directory (CLI init)                          | ❌ not yet — needed before migrations                            |
+| Database schema migrations                                | ❌ not yet                                                       |
+| Storage buckets created                                   | ❌ not yet                                                       |
+| Auth redirect URLs configured                             | ❌ not yet                                                       |
 
 ### Middleware and image config
 
 **`middleware.ts`** (project root) runs on the Vercel Edge before every non-asset request. It:
+
 - Calls `supabase.auth.getUser()` on every request to refresh the session token in the cookie — this is required by `@supabase/ssr` and must not be skipped
 - Redirects unauthenticated users to `/sign-in?next=[path]` for all protected route prefixes: `/dashboard`, `/account`, `/claim`, `/add-business`, `/onboarding`, `/admin`
 - Redirects authenticated users away from `/sign-in` and `/sign-up` to `/dashboard`
@@ -148,6 +149,7 @@ See `data-model.md` for entity definitions, field types, relationships, and RLS 
 ## 1. Overview
 
 The BLACQList uses Supabase for:
+
 - **PostgreSQL** — primary application database
 - **Auth** — email/password authentication with httpOnly cookie sessions
 - **Storage** — three buckets for listing media, verification documents, and receipts
@@ -172,37 +174,42 @@ Three environments exist, each backed by a separate Supabase project. See `envir
 
 Three Supabase client utilities live in `lib/supabase/`:
 
-| File | Context | What it does |
-|---|---|---|
-| `lib/supabase/client.ts` | Client Components (`"use client"`) | Browser client using `createBrowserClient`. Reads/writes cookies via the browser. |
+| File                     | Context                                           | What it does                                                                                                          |
+| ------------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `lib/supabase/client.ts` | Client Components (`"use client"`)                | Browser client using `createBrowserClient`. Reads/writes cookies via the browser.                                     |
 | `lib/supabase/server.ts` | Server Components, Route Handlers, Server Actions | `createClient()` — server client with cookie access. `createServiceClient()` — bypasses RLS entirely, admin use only. |
-| `lib/supabase/types.ts` | Shared — imported by both client files | Placeholder Database type. Regenerate from schema after running migrations. |
+| `lib/supabase/types.ts`  | Shared — imported by both client files            | Placeholder Database type. Regenerate from schema after running migrations.                                           |
 
 ### Usage patterns
 
 **In a Server Component or Server Action:**
+
 ```typescript
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server'
 
 export default async function Page() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   // ...
 }
 ```
 
 **In a Client Component:**
+
 ```typescript
-"use client"
-import { createClient } from "@/lib/supabase/client"
+'use client'
+import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
 // Use for real-time subscriptions, client-side auth state, etc.
 ```
 
 **Service role (admin only):**
+
 ```typescript
-import { createServiceClient } from "@/lib/supabase/server"
+import { createServiceClient } from '@/lib/supabase/server'
 
 // In a Route Handler or Server Action only — never in a Client Component
 const supabase = createServiceClient()
@@ -359,11 +366,11 @@ Or via CI/CD pipeline using `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`.
 
 Three buckets are required. Create each in **Supabase Dashboard → Storage** for both staging and production projects.
 
-| Bucket | Visibility | File size limit | Purpose |
-|---|---|---|---|
-| `listing-media` | **Public** | 10MB | Business listing photos — logos, cover photos, gallery images |
-| `verification-docs` | **Private** | 10MB | Ownership verification documents uploaded during the claim flow |
-| `receipts` | **Private** | 10MB | Receipt photos uploaded by business owners |
+| Bucket              | Visibility  | File size limit | Purpose                                                         |
+| ------------------- | ----------- | --------------- | --------------------------------------------------------------- |
+| `listing-media`     | **Public**  | 10MB            | Business listing photos — logos, cover photos, gallery images   |
+| `verification-docs` | **Private** | 10MB            | Ownership verification documents uploaded during the claim flow |
+| `receipts`          | **Private** | 10MB            | Receipt photos uploaded by business owners                      |
 
 **Important:** Store the Supabase Storage **path** in the database, not the full URL. Generate signed URLs at read time for private buckets (expire in 15 minutes). The public URL for `listing-media` follows this pattern:
 
@@ -397,11 +404,11 @@ RLS is enabled by default on all tables. The default policy is **deny all** — 
 
 Three roles:
 
-| Role | Context | Notes |
-|---|---|---|
-| `anon` | Unauthenticated requests | Can read public listing data only |
-| `authenticated` | Logged-in users | Can read/write their own data per RLS policies |
-| `service_role` | `createServiceClient()` | Bypasses all RLS — admin use only |
+| Role            | Context                  | Notes                                          |
+| --------------- | ------------------------ | ---------------------------------------------- |
+| `anon`          | Unauthenticated requests | Can read public listing data only              |
+| `authenticated` | Logged-in users          | Can read/write their own data per RLS policies |
+| `service_role`  | `createServiceClient()`  | Bypasses all RLS — admin use only              |
 
 RLS policies are defined per migration file alongside the table they protect. Do not add policies manually in the Dashboard for production — policies must be version-controlled in migration files.
 

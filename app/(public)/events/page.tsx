@@ -1,15 +1,15 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { PageHeader } from "@/components/layout/page-header"
-import { Button } from "@/components/ui/button"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "Events | The BLACQList",
+  title: 'Events | The BLACQList',
   description:
-    "Discover pop-ups, networking events, markets, and cultural experiences hosted by and for the Black community.",
+    'Discover pop-ups, networking events, markets, and cultural experiences hosted by and for the Black community.',
 }
 
 export default function EventsPage() {
@@ -30,10 +30,9 @@ export default function EventsPage() {
           Events Launching in Beta
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
-          From vendor markets to networking dinners, The BLACQList events
-          calendar will become the go-to source for Black community events
-          across the country. Business owners will be able to list events
-          directly from their BLACQList Page.
+          From vendor markets to networking dinners, The BLACQList events calendar will become the
+          go-to source for Black community events across the country. Business owners will be able
+          to list events directly from their BLACQList Page.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Button

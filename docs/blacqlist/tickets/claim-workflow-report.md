@@ -13,59 +13,59 @@ The full claim workflow for BLACQList Pages, allowing a business owner or author
 
 ## Routes Created
 
-| Route | Type | Description |
-|---|---|---|
-| `/claim` | Server Component (public) | Search for a business to claim; shows results linked to the form page |
+| Route                | Type                          | Description                                                                        |
+| -------------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
+| `/claim`             | Server Component (public)     | Search for a business to claim; shows results linked to the form page              |
 | `/claim/[listingId]` | Server Component (auth-gated) | Claim form for a specific listing by UUID; redirects to sign-in if unauthenticated |
-| `/account/claims` | Server Component (auth-gated) | List of all claims submitted by the signed-in user with status and withdraw action |
+| `/account/claims`    | Server Component (auth-gated) | List of all claims submitted by the signed-in user with status and withdraw action |
 
 ---
 
 ## Files Created
 
-| File | Description |
-|---|---|
-| `lib/actions/claims/createClaim.ts` | Server action — validates input, checks DB guards, inserts claim, writes to moderation_queue and analytics_events |
-| `lib/actions/claims/withdrawClaim.ts` | Server action — verifies ownership and status, updates claim to withdrawn |
-| `components/claim/ClaimSearchForm.tsx` | Client component — search input, pushes to `/claim?q=...` |
-| `components/claim/ClaimForm.tsx` | Client component — `useActionState`-based form with success and error states |
-| `components/claim/ClaimWithdrawButton.tsx` | Client component — confirm dialog + `useActionState`-based withdraw form |
-| `app/(public)/claim/page.tsx` | Public claim search/landing page |
-| `app/(public)/claim/[listingId]/page.tsx` | Claim form page with auth guard, already-claimed, and existing-claim states |
-| `app/account/claims/page.tsx` | Account claims list with status badges and withdraw action |
+| File                                       | Description                                                                                                       |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `lib/actions/claims/createClaim.ts`        | Server action — validates input, checks DB guards, inserts claim, writes to moderation_queue and analytics_events |
+| `lib/actions/claims/withdrawClaim.ts`      | Server action — verifies ownership and status, updates claim to withdrawn                                         |
+| `components/claim/ClaimSearchForm.tsx`     | Client component — search input, pushes to `/claim?q=...`                                                         |
+| `components/claim/ClaimForm.tsx`           | Client component — `useActionState`-based form with success and error states                                      |
+| `components/claim/ClaimWithdrawButton.tsx` | Client component — confirm dialog + `useActionState`-based withdraw form                                          |
+| `app/(public)/claim/page.tsx`              | Public claim search/landing page                                                                                  |
+| `app/(public)/claim/[listingId]/page.tsx`  | Claim form page with auth guard, already-claimed, and existing-claim states                                       |
+| `app/account/claims/page.tsx`              | Account claims list with status badges and withdraw action                                                        |
 
 ---
 
 ## Files Modified
 
-| File | Change |
-|---|---|
-| `components/entity-page/EntityTrustSection.tsx` | Claim link now points to `/claim/${entity.id}` (was `/claim`) |
-| `app/account/page.tsx` | Added "My claims" navigation link between Saved and Settings |
-| `lib/supabase/types.ts` | Added `verification_email`, `verification_phone`, `role_at_business` to `claims` Row / Insert / Update types |
+| File                                            | Change                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `components/entity-page/EntityTrustSection.tsx` | Claim link now points to `/claim/${entity.id}` (was `/claim`)                                                |
+| `app/account/page.tsx`                          | Added "My claims" navigation link between Saved and Settings                                                 |
+| `lib/supabase/types.ts`                         | Added `verification_email`, `verification_phone`, `role_at_business` to `claims` Row / Insert / Update types |
 
 ---
 
 ## Database Tables Written
 
-| Table | Operation | Notes |
-|---|---|---|
-| `claims` | INSERT | `listing_id`, `claimant_user_id`, `status = 'pending'`, `verification_email`, `verification_phone`, `role_at_business`, `notes` |
-| `claims` | UPDATE | `status = 'withdrawn'` only by `claimant_user_id` |
-| `moderation_queue` | INSERT (service role) | `entity_type = 'claim'`, `queue_type = 'claim_review'` — triggers admin review |
-| `analytics_events` | INSERT (service role, fire-and-forget) | `event_name = 'claim_submitted'` with `listing_id` and `has_verification_email` |
+| Table              | Operation                              | Notes                                                                                                                           |
+| ------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `claims`           | INSERT                                 | `listing_id`, `claimant_user_id`, `status = 'pending'`, `verification_email`, `verification_phone`, `role_at_business`, `notes` |
+| `claims`           | UPDATE                                 | `status = 'withdrawn'` only by `claimant_user_id`                                                                               |
+| `moderation_queue` | INSERT (service role)                  | `entity_type = 'claim'`, `queue_type = 'claim_review'` — triggers admin review                                                  |
+| `analytics_events` | INSERT (service role, fire-and-forget) | `event_name = 'claim_submitted'` with `listing_id` and `has_verification_email`                                                 |
 
 ---
 
 ## Permission Model
 
-| Action | Who | Guard |
-|---|---|---|
-| Submit a claim | Any authenticated user | `supabase.auth.getUser()` |
-| View own claims | Claimant only | `WHERE claimant_user_id = user.id` (RLS + service-layer) |
-| Withdraw a claim | Claimant only, pending/under_review only | `WHERE id = claim_id AND claimant_user_id = user.id` + status check |
-| Approve/reject a claim | Admin only | Not built — admin queue dependency (see below) |
-| See proof fields (`verification_email`, `verification_phone`, `verification_doc_paths`) | Never exposed publicly | Not returned in any public-facing query; only in claimant's own account view (not yet shown) |
+| Action                                                                                  | Who                                      | Guard                                                                                        |
+| --------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Submit a claim                                                                          | Any authenticated user                   | `supabase.auth.getUser()`                                                                    |
+| View own claims                                                                         | Claimant only                            | `WHERE claimant_user_id = user.id` (RLS + service-layer)                                     |
+| Withdraw a claim                                                                        | Claimant only, pending/under_review only | `WHERE id = claim_id AND claimant_user_id = user.id` + status check                          |
+| Approve/reject a claim                                                                  | Admin only                               | Not built — admin queue dependency (see below)                                               |
+| See proof fields (`verification_email`, `verification_phone`, `verification_doc_paths`) | Never exposed publicly                   | Not returned in any public-facing query; only in claimant's own account view (not yet shown) |
 
 ---
 
@@ -121,6 +121,7 @@ pnpm lint           # 0 errors
 ```
 
 Manual test flow:
+
 1. Visit an entity page with `trust_tier = 'unclaimed'` → "Claim this listing" link leads to `/claim/[listing.id]`
 2. Sign out → clicking claim link redirects to `/sign-in?next=/claim/[id]` → after sign-in, lands on claim form
 3. Sign in → fill form (email, role, optional phone and notes) → submit → success state shown → claim row in DB with `status = pending`, moderation_queue row created

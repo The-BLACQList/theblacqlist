@@ -1,27 +1,27 @@
-import Link from "next/link"
-import { ExternalLink, ChevronRight, Clock } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
-import { requireOwner } from "@/lib/dashboard/guard"
-import { buildEntityUrl } from "@/lib/listings/url"
+import Link from 'next/link'
+import { ExternalLink, ChevronRight, Clock } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { requireOwner } from '@/lib/dashboard/guard'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 export default async function DashboardPagesPage() {
   const owner = await requireOwner()
   const supabase = await createClient()
 
   const { data: listings } = await supabase
-    .from("listings")
-    .select("id, name, slug, status, entity_type, trust_tier, last_edited_by_owner_at, cities(slug, name)")
-    .eq("owner_user_id", owner.user.id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: true })
+    .from('listings')
+    .select(
+      'id, name, slug, status, entity_type, trust_tier, last_edited_by_owner_at, cities(slug, name)'
+    )
+    .eq('owner_user_id', owner.user.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">My Pages</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">
-          Your BLACQList business pages.
-        </p>
+        <p className="font-body text-sm text-charcoal/60 mt-0.5">Your BLACQList business pages.</p>
       </div>
 
       {!listings || listings.length === 0 ? (
@@ -40,13 +40,15 @@ export default async function DashboardPagesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-headline text-base text-brand-black">{listing.name}</p>
-                      <span className={`px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
-                        listing.status === "published"
-                          ? "bg-green-100 text-green-700"
-                          : listing.status === "pending"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-charcoal/10 text-charcoal/60"
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
+                          listing.status === 'published'
+                            ? 'bg-green-100 text-green-700'
+                            : listing.status === 'pending'
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-charcoal/10 text-charcoal/60'
+                        }`}
+                      >
                         {listing.status}
                       </span>
                     </div>

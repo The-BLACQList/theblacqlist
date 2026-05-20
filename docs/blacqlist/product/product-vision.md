@@ -71,13 +71,13 @@ The Black dollar recirculates within the Black community at a fraction of the ra
 
 ## Strategic Bets
 
-| Bet | Rationale |
-|---|---|
-| BLACQList Pages > basic profiles | Higher quality presence = higher business adoption and retention |
-| Dollar-flow map as long-term moat | No other platform visualizes community commerce circulation |
-| National from day one | A city-only strategy creates a ceiling; go national, focus depth in anchor cities |
-| AI as concierge, not just search | Recommendation quality determines whether discovery leads to action |
-| Receipts + spend tracking | Behavioral data from real transactions makes the platform self-improving |
+| Bet                               | Rationale                                                                         |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| BLACQList Pages > basic profiles  | Higher quality presence = higher business adoption and retention                  |
+| Dollar-flow map as long-term moat | No other platform visualizes community commerce circulation                       |
+| National from day one             | A city-only strategy creates a ceiling; go national, focus depth in anchor cities |
+| AI as concierge, not just search  | Recommendation quality determines whether discovery leads to action               |
+| Receipts + spend tracking         | Behavioral data from real transactions makes the platform self-improving          |
 
 ---
 

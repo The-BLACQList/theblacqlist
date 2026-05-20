@@ -24,15 +24,15 @@ pnpm create next-app@latest . --typescript --tailwind --app --no-src-dir --eslin
 
 ## 2. Installed Versions
 
-| Package | Version |
-|---|---|
-| Next.js | 16.2.5 |
-| React | 19.2.4 |
-| TypeScript | 5.9.3 |
-| Tailwind CSS | 4.2.4 |
-| ESLint | 9.39.4 |
-| clsx | 2.1.1 |
-| tailwind-merge | 3.5.0 |
+| Package        | Version |
+| -------------- | ------- |
+| Next.js        | 16.2.5  |
+| React          | 19.2.4  |
+| TypeScript     | 5.9.3   |
+| Tailwind CSS   | 4.2.4   |
+| ESLint         | 9.39.4  |
+| clsx           | 2.1.1   |
+| tailwind-merge | 3.5.0   |
 
 **Note:** Tailwind v4 was installed. There is no `tailwind.config.ts` — brand tokens are configured via `@theme` in `globals.css` (the v4 approach).
 
@@ -40,23 +40,24 @@ pnpm create next-app@latest . --typescript --tailwind --app --no-src-dir --eslin
 
 ## 3. Files Created or Modified
 
-| File | Action | Notes |
-|---|---|---|
-| `app/globals.css` | Modified | Tailwind v4 `@theme` block with brand tokens; replaced default Geist/dark-mode styles |
-| `app/layout.tsx` | Modified | Lato + Quicksand Google Fonts; BLACQList metadata; removed Geist fonts |
-| `app/page.tsx` | Modified | Placeholder homepage with three-line content |
-| `tsconfig.json` | Modified | Added `noUncheckedIndexedAccess: true` (strict was already enabled) |
-| `next.config.ts` | Modified | Added `experimental.typedRoutes: true` |
-| `.gitignore` | Modified | Replaced `.env*` glob with explicit exclusions; `.env.example` is now committed |
-| `package.json` | Modified | Added `clsx`, `tailwind-merge`; added `pnpm.trustedDependencies` |
-| `lib/utils.ts` | Created | `cn()` helper using clsx + tailwind-merge (required by shadcn/ui) |
-| `types/index.ts` | Created | Barrel export file (empty placeholder) |
-| `.env.example` | Created | All env var groups A–G; safe to commit |
-| `.env.local` | Created | Local placeholder values; gitignored |
-| `components/ui/.gitkeep` | Created | Reserves shadcn/ui component directory |
-| `public/fonts/glacial-indifference/.gitkeep` | Created | Reserves Glacial Indifference font directory |
+| File                                         | Action   | Notes                                                                                 |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| `app/globals.css`                            | Modified | Tailwind v4 `@theme` block with brand tokens; replaced default Geist/dark-mode styles |
+| `app/layout.tsx`                             | Modified | Lato + Quicksand Google Fonts; BLACQList metadata; removed Geist fonts                |
+| `app/page.tsx`                               | Modified | Placeholder homepage with three-line content                                          |
+| `tsconfig.json`                              | Modified | Added `noUncheckedIndexedAccess: true` (strict was already enabled)                   |
+| `next.config.ts`                             | Modified | Added `experimental.typedRoutes: true`                                                |
+| `.gitignore`                                 | Modified | Replaced `.env*` glob with explicit exclusions; `.env.example` is now committed       |
+| `package.json`                               | Modified | Added `clsx`, `tailwind-merge`; added `pnpm.trustedDependencies`                      |
+| `lib/utils.ts`                               | Created  | `cn()` helper using clsx + tailwind-merge (required by shadcn/ui)                     |
+| `types/index.ts`                             | Created  | Barrel export file (empty placeholder)                                                |
+| `.env.example`                               | Created  | All env var groups A–G; safe to commit                                                |
+| `.env.local`                                 | Created  | Local placeholder values; gitignored                                                  |
+| `components/ui/.gitkeep`                     | Created  | Reserves shadcn/ui component directory                                                |
+| `public/fonts/glacial-indifference/.gitkeep` | Created  | Reserves Glacial Indifference font directory                                          |
 
 **Deleted (default Next.js placeholders):**
+
 - `public/vercel.svg`
 - `public/next.svg`
 - `public/file.svg`
@@ -112,27 +113,28 @@ theblacqlist/
 
 Tailwind v4 brand tokens defined in `@theme`:
 
-| Token | Class | Value |
-|---|---|---|
-| `--color-brand-black` | `bg-brand-black`, `text-brand-black` | `#000000` |
-| `--color-deep-bg` | `bg-deep-bg`, `text-deep-bg` | `#19191E` |
-| `--color-charcoal` | `bg-charcoal`, `text-charcoal` | `#595758` |
-| `--color-amber-gold` | `bg-amber-gold`, `text-amber-gold` | `#E2A428` |
-| `--color-light-gold` | `bg-light-gold`, `text-light-gold` | `#FFD867` |
+| Token                   | Class                                    | Value     |
+| ----------------------- | ---------------------------------------- | --------- |
+| `--color-brand-black`   | `bg-brand-black`, `text-brand-black`     | `#000000` |
+| `--color-deep-bg`       | `bg-deep-bg`, `text-deep-bg`             | `#19191E` |
+| `--color-charcoal`      | `bg-charcoal`, `text-charcoal`           | `#595758` |
+| `--color-amber-gold`    | `bg-amber-gold`, `text-amber-gold`       | `#E2A428` |
+| `--color-light-gold`    | `bg-light-gold`, `text-light-gold`       | `#FFD867` |
 | `--color-pale-lavender` | `bg-pale-lavender`, `text-pale-lavender` | `#E9E9F7` |
-| `--color-cream` | `bg-cream`, `text-cream` | `#FCFAF4` |
+| `--color-cream`         | `bg-cream`, `text-cream`                 | `#FCFAF4` |
 
 Font family tokens:
 
-| Token | Class | Loaded via |
-|---|---|---|
+| Token             | Class           | Loaded via                                          |
+| ----------------- | --------------- | --------------------------------------------------- |
 | `--font-headline` | `font-headline` | `var(--font-glacial)` → self-hosted (see Section 6) |
-| `--font-subhead` | `font-subhead` | `var(--font-lato)` → `next/font/google` |
-| `--font-body` | `font-body` | `var(--font-quicksand)` → `next/font/google` |
+| `--font-subhead`  | `font-subhead`  | `var(--font-lato)` → `next/font/google`             |
+| `--font-body`     | `font-body`     | `var(--font-quicksand)` → `next/font/google`        |
 
 ### Google Fonts
 
 Loaded in `app/layout.tsx` via `next/font/google`:
+
 - **Lato** — weights 400, 700 — `variable: "--font-lato"`
 - **Quicksand** — weights 400, 700 — `variable: "--font-quicksand"`
 
@@ -143,18 +145,19 @@ Loaded in `app/layout.tsx` via `next/font/google`:
 Glacial Indifference Bold is not available on Google Fonts. It must be self-hosted.
 
 **Action required:**
+
 1. Download `GlacialIndifference-Bold.otf` from [fonts.cdnfonts.com/s/13814/GlacialIndifference-Bold.woff](https://www.cdnfonts.com/glacial-indifference.font) or another trusted source.
 2. Place the file at: `public/fonts/glacial-indifference/GlacialIndifference-Bold.otf`
 3. Update `app/layout.tsx` to load the font via `next/font/local`:
 
 ```typescript
-import localFont from "next/font/local"
+import localFont from 'next/font/local'
 
 const glacialIndifference = localFont({
-  src: "../public/fonts/glacial-indifference/GlacialIndifference-Bold.otf",
-  variable: "--font-glacial",
-  weight: "700",
-  display: "swap",
+  src: '../public/fonts/glacial-indifference/GlacialIndifference-Bold.otf',
+  variable: '--font-glacial',
+  weight: '700',
+  display: 'swap',
 })
 ```
 
@@ -181,11 +184,11 @@ No real features are implemented. This file is replaced in Ticket 015 (app shell
 
 ## 8. Verification Results
 
-| Check | Result |
-|---|---|
-| `pnpm tsc --noEmit` | ✓ Zero errors |
-| `pnpm lint` | ✓ Zero errors |
-| `pnpm dev` | Not run (dev server test — run manually to verify) |
+| Check               | Result                                             |
+| ------------------- | -------------------------------------------------- |
+| `pnpm tsc --noEmit` | ✓ Zero errors                                      |
+| `pnpm lint`         | ✓ Zero errors                                      |
+| `pnpm dev`          | Not run (dev server test — run manually to verify) |
 
 ---
 
@@ -194,6 +197,7 @@ No real features are implemented. This file is replaced in Ticket 015 (app shell
 All vars documented in `.env.example`. Full details in `architecture/environment-plan.md`.
 
 Groups:
+
 - **A** — Supabase public (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 - **B** — Supabase server-only (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`)
 - **C** — App config (`NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_ENV`)
@@ -207,6 +211,7 @@ Groups:
 ## 10. Next Step
 
 **Ticket 002:** Supabase project setup and environment configuration
+
 - Install Supabase CLI
 - Run `supabase init` to create `supabase/` directory
 - Define local vs staging vs production Supabase project setup

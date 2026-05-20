@@ -1,24 +1,31 @@
 # Ticket 016: Homepage Page Component
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 2: Public Marketing and Discovery Shell
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Discovery
 
 ## Context
+
 The homepage is the national front door of the BLACQList platform. It is the first impression for every new visitor from organic search, social media, and word of mouth. It must render fast, communicate purpose immediately, and drive users toward discovery within two seconds of arrival. Source: `docs/blacqlist/ux/mvp-screen-map.md` section 1 (Homepage detailed spec), `docs/blacqlist/ux/empty-loading-error-success-states.md` section 1.
 
 ## User Story
+
 As a visitor, I want to see a clear, inviting homepage that immediately communicates what The BLACQList is and lets me search for or browse Black-owned businesses, so that I can start discovering within seconds of arriving.
 
 ## Scope
+
 - `app/page.tsx` — Server Component with ISR (`export const revalidate = 21600` = 6 hours)
 - Hero section: headline in Glacial Indifference ("Find & Be Found."), subheadline in Lato, full-width `HeroSearchBar` Client Component with city selector + keyword input → navigate to `/search`
 - Category grid: five category tiles (Products & Services, Professionals, Creatives, Events, Jobs) with icons — each links to `/discover?type=[slug]`
@@ -31,6 +38,7 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - `<main id="main-content">` wrapper for skip-to-content accessibility
 
 ## Out of Scope
+
 - Search functionality itself (covered by Ticket 018)
 - City landing page (separate ticket)
 - Collections index page (separate ticket)
@@ -38,10 +46,12 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - Dollar-flow live data visualization (V3)
 
 ## Dependencies
+
 - Depends on: Ticket 015 — App shell layout (root layout with nav and footer must exist)
 - Depends on: Ticket 009 — Core entity tables (listings, categories, cities data must be seeded)
 
 ## UX Notes
+
 - **Screen:** Homepage (`/`) — Full-bleed hero layout
 - **Route:** `/`
 - **Entry points:** Direct URL, search engines, social media links
@@ -59,6 +69,7 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - **Error state:** Featured listings error → section collapses (no error banner for supplementary element). City spotlight error → section collapses silently.
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/design-brief.md`
 - **Hero section:**
   - Background: full-bleed dark hero image or `bg-[#19191E]` if no image configured
@@ -77,6 +88,7 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - **Listing card component:** `ListingCard` — reusable across search results, city pages, collections; renders cover image, name, category badge, city, trust badge, save button
 
 ## Data Notes
+
 - **Data model:** `docs/blacqlist/data/database-schema-plan.md` — `listings`, `categories`, `cities`, `collections`, `collection_items`
 - **Tables read:** `listings` (featured), `categories` (category grid), `cities` (city spotlight), `collections` (featured collection), `collection_items`
 - **Operations:** SELECT only; all server-side in the page component
@@ -89,6 +101,7 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - **Migration required:** No — requires seed data for listings and collections (separate seed data ticket)
 
 ## API Notes
+
 - **API contract:** `docs/blacqlist/architecture/api-contract.md` — endpoints 2 (Get Featured Entities), 3 (Get City Page Data), 7 (List Collections)
 - **Endpoints involved:**
   - `GET /api/listings/featured?limit=6` — featured listings grid
@@ -101,6 +114,7 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/page.tsx` — Server Component with `export const revalidate = 21600`
 - `components/home/HeroSearchBar.tsx` — `"use client"` — city selector + keyword input; on submit, calls `router.push('/search?q=[query]&city=[city]')`
 - `components/home/CategoryGrid.tsx` — Server Component (static 5 categories)
@@ -113,9 +127,11 @@ As a visitor, I want to see a clear, inviting homepage that immediately communic
 - `components/listings/ListingCardSkeleton.tsx` — Skeleton matching `ListingCard` layout
 
 **Files to modify:**
+
 - `app/layout.tsx` — Ensure `<main id="main-content">` is placed correctly (may already be done in Ticket 015; confirm)
 
 **Page structure in `app/page.tsx`:**
+
 ```tsx
 export const revalidate = 21600
 
@@ -154,6 +170,7 @@ export default async function HomePage() {
 ```
 
 **`HeroSearchBar` submit behavior:**
+
 ```tsx
 function onSubmit(e: React.FormEvent) {
   e.preventDefault()
@@ -165,15 +182,18 @@ function onSubmit(e: React.FormEvent) {
 ```
 
 **Key patterns:**
+
 - Use `Promise.all()` for parallel server-side data fetches — do not waterfall
 - Each Suspense boundary covers one data-dependent section; the hero, category grid, and static bands render immediately on first paint
 - `ListingCard` must accept a `listing: SearchResult` prop matching the API contract response shape
 
 **Do not:**
+
 - Fetch data inside Client Components — all data fetching happens in Server Components
 - Show an empty state or error message for supplementary sections (featured listings, city spotlight, collection slot) — collapse silently on error or empty
 
 ## Acceptance Criteria
+
 - [ ] Homepage renders at `/` with hero, category grid, featured listings (or skeleton while loading), city spotlight, and for-business band
 - [ ] Featured listings section shows up to 6 listing cards fetched from `/api/listings/featured?limit=6`; shows 6 skeleton cards while fetching via Suspense
 - [ ] If no featured listings exist, the featured listings section is hidden entirely — no empty-state banner shown to public users
@@ -187,19 +207,21 @@ function onSubmit(e: React.FormEvent) {
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Featured listings API returns error or timeout | Featured listings section collapses silently — skeleton is replaced by nothing. Rest of the page renders normally. |
-| City spotlight API returns error | City spotlight section collapses silently. No error banner. |
-| Featured collection slot — no active collection | Section is hidden entirely. No "empty" message shown to users. |
+| Failure                                             | User-visible behavior                                                                                                   |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Featured listings API returns error or timeout      | Featured listings section collapses silently — skeleton is replaced by nothing. Rest of the page renders normally.      |
+| City spotlight API returns error                    | City spotlight section collapses silently. No error banner.                                                             |
+| Featured collection slot — no active collection     | Section is hidden entirely. No "empty" message shown to users.                                                          |
 | ISR stale cache serves old data after admin changes | Admin triggers `revalidatePath('/')` after any featured listing or collection change — stale window is under 30 seconds |
 
 ## Edge Cases
+
 - Homepage with no seeded listings at all (development environment): featured listings section collapses, city spotlight shows listing count of 0, category grid still renders (it is static)
 - User arrives via `/` with an active session that has expired (stale cookie): `supabase.auth.getUser()` in the root layout returns null; nav renders unauthenticated state; no error shown
 - `HeroSearchBar` city selector with only 1 city available (early launch): single option pre-selected, city selector may render as a static chip rather than a dropdown
 
 ## Accessibility Notes
+
 - [ ] Hero section headline is `<h1>` — only one `<h1>` per page
 - [ ] Category grid tiles are `<a>` elements with descriptive text (icon + label) — not `<div>` click handlers
 - [ ] `HeroSearchBar` city selector has a visible `<label>` ("City") and keyword input has a visible `<label>` ("Search")
@@ -209,20 +231,22 @@ function onSubmit(e: React.FormEvent) {
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Homepage renders all sections | Anonymous | Load `/`; scroll through full page | Hero, category grid, featured listings (or skeleton), city spotlight, dollar-flow teaser, for-business band, footer all visible |
-| QA-2 | HeroSearchBar navigates correctly | Anonymous | Enter "hair salon" in keyword field, select "Atlanta" in city selector, submit | Navigates to `/search?q=hair+salon&city=atlanta` |
-| QA-3 | Featured listings skeleton shows while loading | Anonymous | Throttle network to Slow 3G; load `/` | 6 skeleton cards appear in featured listings area; real cards replace them after load |
-| QA-4 | Homepage at 375px | Anonymous | Set browser viewport to 375px; load `/` | No horizontal overflow; category grid visible (2-col or horizontal scroll); search bar single column; for-business buttons stacked |
-| QA-5 | generateMetadata | Anonymous | View page source or inspect `<head>` | `<title>` and `<meta name="description">` present and non-empty |
+| #    | Scenario                                       | Role      | Steps                                                                          | Expected result                                                                                                                    |
+| ---- | ---------------------------------------------- | --------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Homepage renders all sections                  | Anonymous | Load `/`; scroll through full page                                             | Hero, category grid, featured listings (or skeleton), city spotlight, dollar-flow teaser, for-business band, footer all visible    |
+| QA-2 | HeroSearchBar navigates correctly              | Anonymous | Enter "hair salon" in keyword field, select "Atlanta" in city selector, submit | Navigates to `/search?q=hair+salon&city=atlanta`                                                                                   |
+| QA-3 | Featured listings skeleton shows while loading | Anonymous | Throttle network to Slow 3G; load `/`                                          | 6 skeleton cards appear in featured listings area; real cards replace them after load                                              |
+| QA-4 | Homepage at 375px                              | Anonymous | Set browser viewport to 375px; load `/`                                        | No horizontal overflow; category grid visible (2-col or horizontal scroll); search bar single column; for-business buttons stacked |
+| QA-5 | generateMetadata                               | Anonymous | View page source or inspect `<head>`                                           | `<title>` and `<meta name="description">` present and non-empty                                                                    |
 
 ## Security Notes
+
 - No user data is read on the homepage — all fetches are public, anonymous-accessible endpoints
 - The `HeroSearchBar` query input must be sanitized before including in the URL — use `encodeURIComponent` or `URLSearchParams` which handles encoding automatically
 - No auth tokens or session data are passed to any component on the homepage (session is read only in the root layout for nav state)
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

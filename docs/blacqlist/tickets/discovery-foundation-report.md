@@ -22,20 +22,20 @@ The first working public discovery experience for The BLACQList. Users can brows
 
 ## Files Created
 
-| File | What it is |
-|---|---|
-| `data/mock-entities.ts` | `DiscoveryEntity` type + 12 mock records (6 cities, 4 entity types, 10 categories, all location types) |
-| `components/entities/EntityCard.tsx` | Discovery-optimized entity card |
-| `components/discovery/SearchBar.tsx` | Client Component — search form; updates `?q=` param on submit |
-| `components/discovery/DiscoveryFilters.tsx` | Client Component — sidebar filters (type + category functional; city, availability, trust tier stubs) |
-| `components/discovery/DiscoveryGrid.tsx` | Server Component — result grid with loading/empty/error states |
+| File                                        | What it is                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `data/mock-entities.ts`                     | `DiscoveryEntity` type + 12 mock records (6 cities, 4 entity types, 10 categories, all location types) |
+| `components/entities/EntityCard.tsx`        | Discovery-optimized entity card                                                                        |
+| `components/discovery/SearchBar.tsx`        | Client Component — search form; updates `?q=` param on submit                                          |
+| `components/discovery/DiscoveryFilters.tsx` | Client Component — sidebar filters (type + category functional; city, availability, trust tier stubs)  |
+| `components/discovery/DiscoveryGrid.tsx`    | Server Component — result grid with loading/empty/error states                                         |
 
 ## Files Modified
 
-| File | Change |
-|---|---|
+| File                             | Change                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `app/(public)/discover/page.tsx` | Replaced placeholder with full discover page: SearchBar + DiscoveryFilters sidebar + DiscoveryGrid |
-| `app/(public)/search/page.tsx` | Replaced placeholder with full search page: SearchBar + no-query state + DiscoveryGrid results |
+| `app/(public)/search/page.tsx`   | Replaced placeholder with full search page: SearchBar + no-query state + DiscoveryGrid results     |
 
 ---
 
@@ -59,13 +59,13 @@ Each card renders:
 
 All filters update URL search params immediately (no submit button). State is URL-driven so results are shareable and survive refresh.
 
-| Filter | State | Params key | Notes |
-|---|---|---|---|
-| Entity type | Functional | `type` | Button group — press to toggle |
-| Category | Functional | `category` | Select dropdown — 25 categories from seed |
-| City | Stub | `city` | Select disabled with "coming soon" |
-| Availability | Stub | — | Checkboxes disabled with "Soon" label |
-| Trust tier | Stub | — | Checkbox disabled with "Soon" label |
+| Filter       | State      | Params key | Notes                                     |
+| ------------ | ---------- | ---------- | ----------------------------------------- |
+| Entity type  | Functional | `type`     | Button group — press to toggle            |
+| Category     | Functional | `category` | Select dropdown — 25 categories from seed |
+| City         | Stub       | `city`     | Select disabled with "coming soon"        |
+| Availability | Stub       | —          | Checkboxes disabled with "Soon" label     |
+| Trust tier   | Stub       | —          | Checkbox disabled with "Soon" label       |
 
 Sidebar filters are hidden on mobile (< 768px). A note reads "Filters available on desktop · Full mobile filters coming in V1."
 
@@ -98,14 +98,14 @@ interface DiscoveryEntity {
   id: string
   name: string
   slug: string
-  entity_type: "business" | "professional" | "creative" | "event" | "job" | "vendor"
+  entity_type: 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
   tagline: string
-  description: string   // from listing_details_business — flattened for display
+  description: string // from listing_details_business — flattened for display
   category: { name: string; slug: string }
   city: { name: string; slug: string; state_abbr: string } | null
-  location_type: "physical" | "online" | "hybrid" | "virtual-services" | "ships-nationwide"
-  trust_tier: "unclaimed" | "claimed" | "verified" | "certified"
-  tier: "free" | "standard" | "premium"
+  location_type: 'physical' | 'online' | 'hybrid' | 'virtual-services' | 'ships-nationwide'
+  trust_tier: 'unclaimed' | 'claimed' | 'verified' | 'certified'
+  tier: 'free' | 'standard' | 'premium'
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -120,14 +120,14 @@ interface DiscoveryEntity {
 
 ## Components Used (all pre-existing)
 
-| Component | File |
-|---|---|
-| `StatusBadge` | `components/ui/status-badge.tsx` |
-| `CardGrid` | `components/ui/card-grid.tsx` |
-| `Container` | `components/layout/container.tsx` |
-| `Skeleton` | `components/ui/skeleton.tsx` |
-| `Button` | `components/ui/button.tsx` |
-| `Badge` | `components/ui/badge.tsx` |
+| Component     | File                              |
+| ------------- | --------------------------------- |
+| `StatusBadge` | `components/ui/status-badge.tsx`  |
+| `CardGrid`    | `components/ui/card-grid.tsx`     |
+| `Container`   | `components/layout/container.tsx` |
+| `Skeleton`    | `components/ui/skeleton.tsx`      |
+| `Button`      | `components/ui/button.tsx`        |
+| `Badge`       | `components/ui/badge.tsx`         |
 
 No new packages installed.
 
@@ -135,29 +135,29 @@ No new packages installed.
 
 ## States Implemented
 
-| State | Where | How |
-|---|---|---|
-| Loading | DiscoveryGrid | 6-card skeleton grid matching card structure |
-| Empty (no results) | DiscoveryGrid | Message tailored to whether a query was active |
-| Empty (no query) | SearchPage | Prompt to enter a query with link to /discover |
-| Error | DiscoveryGrid | Alert with message (wired; currently not triggered by mock data) |
-| Success | DiscoveryGrid | Result count + card grid |
+| State              | Where         | How                                                              |
+| ------------------ | ------------- | ---------------------------------------------------------------- |
+| Loading            | DiscoveryGrid | 6-card skeleton grid matching card structure                     |
+| Empty (no results) | DiscoveryGrid | Message tailored to whether a query was active                   |
+| Empty (no query)   | SearchPage    | Prompt to enter a query with link to /discover                   |
+| Error              | DiscoveryGrid | Alert with message (wired; currently not triggered by mock data) |
+| Success            | DiscoveryGrid | Result count + card grid                                         |
 
 ---
 
 ## What Was NOT Built
 
-| Item | Reason |
-|---|---|
-| Real Supabase reads | No listing records in seed.sql; mock data used |
-| `lib/entities/queries.ts` | Not needed — filtering happens inline against mock array |
-| Mobile filter drawer | V1 ticket — filter sidebar hidden on mobile with a note |
-| Pagination | Load more button is a visual stub; full pagination requires API (ticket 025) |
-| Sort controls | Requires API (ticket 025) |
-| Save button functionality | Requires auth (ticket 014) |
-| Entity detail pages | BLACQList Pages build (tickets 020–024); links currently go to 404 |
-| Real cover images / logos | Requires Supabase Storage setup and real listing data |
-| City, availability, trust tier filters | Requires API filtering support (ticket 025) |
+| Item                                   | Reason                                                                       |
+| -------------------------------------- | ---------------------------------------------------------------------------- |
+| Real Supabase reads                    | No listing records in seed.sql; mock data used                               |
+| `lib/entities/queries.ts`              | Not needed — filtering happens inline against mock array                     |
+| Mobile filter drawer                   | V1 ticket — filter sidebar hidden on mobile with a note                      |
+| Pagination                             | Load more button is a visual stub; full pagination requires API (ticket 025) |
+| Sort controls                          | Requires API (ticket 025)                                                    |
+| Save button functionality              | Requires auth (ticket 014)                                                   |
+| Entity detail pages                    | BLACQList Pages build (tickets 020–024); links currently go to 404           |
+| Real cover images / logos              | Requires Supabase Storage setup and real listing data                        |
+| City, availability, trust tier filters | Requires API filtering support (ticket 025)                                  |
 
 ---
 
@@ -204,11 +204,11 @@ pnpm lint          # ✅ zero errors
 
 ## Next Tickets to Build
 
-| Priority | Ticket | Description |
-|---|---|---|
-| P1 | 014 | Auth flows — unlocks save button and owner dashboard |
-| P1 | 020–024 | BLACQList Page — entity detail page; makes card CTAs work |
-| P1 | 025–026 | Search API + real DB reads — replaces mock data |
-| P1 | 032–033 | Add Business form — lets owners create listings |
-| P2 | 027–028 | City landing pages — city-level discovery |
-| P2 | 029 | Full Discover page — pagination, sort, mobile filters |
+| Priority | Ticket  | Description                                               |
+| -------- | ------- | --------------------------------------------------------- |
+| P1       | 014     | Auth flows — unlocks save button and owner dashboard      |
+| P1       | 020–024 | BLACQList Page — entity detail page; makes card CTAs work |
+| P1       | 025–026 | Search API + real DB reads — replaces mock data           |
+| P1       | 032–033 | Add Business form — lets owners create listings           |
+| P2       | 027–028 | City landing pages — city-level discovery                 |
+| P2       | 029     | Full Discover page — pagination, sort, mobile filters     |

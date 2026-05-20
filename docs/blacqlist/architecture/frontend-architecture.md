@@ -9,14 +9,14 @@
 
 ## Stack Confirmation
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Framework | Next.js 16 App Router | `app/` directory; Server Components by default |
-| Language | TypeScript strict + `noUncheckedIndexedAccess` | All files `.ts` / `.tsx` |
-| Styling | Tailwind CSS v4 | `@theme` block in CSS; no `tailwind.config.ts` |
-| Components | shadcn/ui | NOT yet installed — see init plan below |
-| Utilities | `clsx` + `tailwind-merge` | `cn()` exists at `lib/utils.ts` |
-| Package manager | pnpm | All install commands use `pnpm` |
+| Layer           | Choice                                         | Notes                                          |
+| --------------- | ---------------------------------------------- | ---------------------------------------------- |
+| Framework       | Next.js 16 App Router                          | `app/` directory; Server Components by default |
+| Language        | TypeScript strict + `noUncheckedIndexedAccess` | All files `.ts` / `.tsx`                       |
+| Styling         | Tailwind CSS v4                                | `@theme` block in CSS; no `tailwind.config.ts` |
+| Components      | shadcn/ui                                      | NOT yet installed — see init plan below        |
+| Utilities       | `clsx` + `tailwind-merge`                      | `cn()` exists at `lib/utils.ts`                |
+| Package manager | pnpm                                           | All install commands use `pnpm`                |
 
 ---
 
@@ -51,6 +51,7 @@ The shadcn CLI will add CSS variables to `globals.css` in the form:
 These use HSL channels (no `hsl()` wrapper) — shadcn's convention.
 
 **Required globals.css changes after init:**
+
 1. shadcn adds `--background`, `--foreground`, `--card`, `--primary`, `--secondary`, etc. as HSL channel variables inside `@layer base { :root { } }`.
 2. The existing BLACQList `@theme` block uses hex values for brand tokens (`--color-amber-gold: #E2A428;`, etc.).
 3. These two systems do NOT conflict — they occupy different namespaces (`--color-*` vs shadcn's bare names).
@@ -58,11 +59,13 @@ These use HSL channels (no `hsl()` wrapper) — shadcn's convention.
 5. The `--radius` variable from shadcn: set to `0.5rem` (8px) to match the brand's 8px corner radius.
 
 **Components to install immediately (required for UI foundation):**
+
 ```
 pnpm dlx shadcn@canary add button input label form select textarea badge skeleton card dialog sheet dropdown-menu separator toast sonner
 ```
 
 **Components to install when screens require them:**
+
 ```
 pnpm dlx shadcn@canary add table checkbox radio-group switch progress alert-dialog command popover scroll-area tabs avatar
 ```
@@ -75,17 +78,17 @@ After shadcn init, `globals.css` must contain — in this order:
 
 ```css
 /* 1. Tailwind v4 directives */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* 2. BLACQList brand tokens — in @theme block */
 @theme {
   --color-brand-black: #000000;
-  --color-deep-bg: #19191E;
+  --color-deep-bg: #19191e;
   --color-charcoal: #595758;
-  --color-amber-gold: #E2A428;
-  --color-light-gold: #FFD867;
-  --color-pale-lavender: #E9E9F7;
-  --color-cream: #FCFAF4;
+  --color-amber-gold: #e2a428;
+  --color-light-gold: #ffd867;
+  --color-pale-lavender: #e9e9f7;
+  --color-cream: #fcfaf4;
 
   --font-headline: var(--font-glacial), sans-serif;
   --font-subhead: var(--font-lato), sans-serif;
@@ -102,7 +105,9 @@ After shadcn init, `globals.css` must contain — in this order:
     --radius: 0.5rem;
     /* ... rest of shadcn vars ... */
   }
-  .dark { /* ... */ }
+  .dark {
+    /* ... */
+  }
 }
 
 /* 4. Font-face declarations for Glacial Indifference */
@@ -147,6 +152,7 @@ app/layout.tsx (Server Component)
 ```
 
 **Font loading pattern:**
+
 ```typescript
 // app/layout.tsx
 import localFont from 'next/font/local'
@@ -164,6 +170,7 @@ const quicksand = Quicksand({ subsets: ['latin'], weight: ['700'], variable: '--
 Apply all three variables to `<html className={cn(glacial.variable, lato.variable, quicksand.variable)}>`.
 
 **Auth pattern in layout:**
+
 ```typescript
 // app/layout.tsx
 const supabase = createServerClient(...)
@@ -209,26 +216,26 @@ PublicMobileNav ("use client")
 
 ## Client vs. Server Component Boundary Summary
 
-| Component | Type | Reason |
-|---|---|---|
-| `app/layout.tsx` | Server | Fetches session; no browser APIs |
-| `components/layout/container.tsx` | Server | Pure layout wrapper |
-| `components/layout/section.tsx` | Server | Pure layout + variant prop |
-| `components/layout/page-header.tsx` | Server | Static render; receives props |
-| `components/nav/public-header.tsx` | Server | Composes nav; passes props down |
+| Component                                 | Type   | Reason                                            |
+| ----------------------------------------- | ------ | ------------------------------------------------- |
+| `app/layout.tsx`                          | Server | Fetches session; no browser APIs                  |
+| `components/layout/container.tsx`         | Server | Pure layout wrapper                               |
+| `components/layout/section.tsx`           | Server | Pure layout + variant prop                        |
+| `components/layout/page-header.tsx`       | Server | Static render; receives props                     |
+| `components/nav/public-header.tsx`        | Server | Composes nav; passes props down                   |
 | `components/nav/public-header-client.tsx` | Client | Scroll detection for transparent→solid transition |
-| `components/nav/nav-links.tsx` | Client | `usePathname()` for active state |
-| `components/nav/auth-nav.tsx` | Client | DropdownMenu requires event handlers |
-| `components/nav/public-mobile-nav.tsx` | Client | Sheet open/close state |
-| `components/nav/public-footer.tsx` | Server | Static content |
-| `components/ui/section-heading.tsx` | Server | Pure display |
-| `components/ui/status-badge.tsx` | Server | Pure display; receives tier prop |
-| `components/ui/cta-button-group.tsx` | Server | Renders shadcn Buttons; no state |
-| `components/ui/empty-state.tsx` | Server | Pure display |
-| `components/ui/loading-state.tsx` | Server | Skeleton shimmer is CSS-only |
-| `components/ui/error-state.tsx` | Client | `reset()` retry requires event handler |
-| `components/ui/card-grid.tsx` | Server | CSS Grid wrapper; no state |
-| `components/ui/entity-card.tsx` | Server | Display only; save button extracted separately |
+| `components/nav/nav-links.tsx`            | Client | `usePathname()` for active state                  |
+| `components/nav/auth-nav.tsx`             | Client | DropdownMenu requires event handlers              |
+| `components/nav/public-mobile-nav.tsx`    | Client | Sheet open/close state                            |
+| `components/nav/public-footer.tsx`        | Server | Static content                                    |
+| `components/ui/section-heading.tsx`       | Server | Pure display                                      |
+| `components/ui/status-badge.tsx`          | Server | Pure display; receives tier prop                  |
+| `components/ui/cta-button-group.tsx`      | Server | Renders shadcn Buttons; no state                  |
+| `components/ui/empty-state.tsx`           | Server | Pure display                                      |
+| `components/ui/loading-state.tsx`         | Server | Skeleton shimmer is CSS-only                      |
+| `components/ui/error-state.tsx`           | Client | `reset()` retry requires event handler            |
+| `components/ui/card-grid.tsx`             | Server | CSS Grid wrapper; no state                        |
+| `components/ui/entity-card.tsx`           | Server | Display only; save button extracted separately    |
 
 ---
 
@@ -241,11 +248,12 @@ PublicMobileNav ("use client")
 **Purpose:** Enforces the 960px max-width editorial constraint across all pages.
 
 **Props:**
+
 ```typescript
 interface ContainerProps {
   children: React.ReactNode
   className?: string
-  as?: React.ElementType  // defaults to 'div'; allows 'section', 'article', 'main'
+  as?: React.ElementType // defaults to 'div'; allows 'section', 'article', 'main'
 }
 ```
 
@@ -266,19 +274,21 @@ interface ContainerProps {
 **Purpose:** Consistent vertical padding + background color per design system section rhythm. Every page section wraps its content in this component.
 
 **Props:**
+
 ```typescript
 type SectionVariant = 'white' | 'cream' | 'deep-bg' | 'pale-lavender' | 'brand-black'
 
 interface SectionProps {
   children: React.ReactNode
-  variant?: SectionVariant       // defaults to 'white'
+  variant?: SectionVariant // defaults to 'white'
   className?: string
-  id?: string                    // for anchor links (page editor sections)
-  as?: 'section' | 'div' | 'article'  // defaults to 'section'
+  id?: string // for anchor links (page editor sections)
+  as?: 'section' | 'div' | 'article' // defaults to 'section'
 }
 ```
 
 **Key Tailwind:**
+
 - Outer: full-width div with background color class
 - Inner: `py-12 md:py-16` vertical padding
 - Background map:
@@ -303,16 +313,18 @@ interface SectionProps {
 **Purpose:** Page-level h1 + optional subtitle for constrained content pages (About, Collections, Account pages, static pages). Not used on BLACQList Pages (which have their own hero h1) or full-bleed hero pages.
 
 **Props:**
+
 ```typescript
 interface PageHeaderProps {
   title: string
   subtitle?: string
   className?: string
-  align?: 'left' | 'center'   // defaults to 'left'
+  align?: 'left' | 'center' // defaults to 'left'
 }
 ```
 
 **Key Tailwind:**
+
 - Title: `font-headline text-3xl md:text-4xl font-bold text-brand-black`
 - Subtitle: `font-subhead text-base md:text-lg text-charcoal mt-2`
 - Wrapper: `mb-8`
@@ -332,6 +344,7 @@ interface PageHeaderProps {
 **Purpose:** Desktop nav bar. Fetches nothing itself — receives `user` and `roles` from `app/layout.tsx` as props. Composes `NavLinks`, `AuthNav`, and `PublicMobileNav`.
 
 **Props:**
+
 ```typescript
 interface PublicHeaderProps {
   user: User | null
@@ -340,6 +353,7 @@ interface PublicHeaderProps {
 ```
 
 **Structure:**
+
 ```
 PublicHeader (Server)
   └── PublicHeaderClient ("use client")
@@ -356,6 +370,7 @@ PublicHeader (Server)
 **shadcn deps:** `DropdownMenu` (for avatar), `Sheet` (for mobile drawer, via `PublicMobileNav`)
 
 **States:**
+
 - Default (anonymous): Sign In text link + Sign Up Amber Gold button
 - Authenticated supporter: Avatar circular button + dropdown (Saved, Settings, Sign Out)
 - Authenticated owner: Avatar circular button + dropdown (My Dashboard, My Page, divider, Saved, Settings, Sign Out)
@@ -363,6 +378,7 @@ PublicHeader (Server)
 - Solid (all other): `bg-[#19191E]`
 
 **A11y:**
+
 - `<nav aria-label="Main navigation">` wrapper
 - Skip-to-content link is the first focusable element in `<body>` (see `SkipToContent` component — separate from PublicHeader)
 - Active nav link: `aria-current="page"` on the matching link
@@ -377,6 +393,7 @@ PublicHeader (Server)
 **Purpose:** Hamburger trigger + full-screen drawer for mobile nav.
 
 **Props:**
+
 ```typescript
 interface PublicMobileNavProps {
   user: User | null
@@ -391,12 +408,14 @@ interface PublicMobileNavProps {
 **shadcn deps:** `Sheet`, `SheetContent`, `SheetHeader` — Radix Dialog underneath handles focus trap and Escape key.
 
 **Close triggers:**
+
 - `SheetContent` close button (×)
 - Tap outside (Radix default)
 - Route change: `useEffect(() => setOpen(false), [pathname])`
 - Viewport resize to desktop: `useEffect` on `matchMedia` change
 
 **Drawer content order:**
+
 1. Logo (links to `/`)
 2. Nav links: Discover, Search, Cities (→ `/city/atlanta`), For Business — each 48px tap target
 3. Divider (`<Separator />` from shadcn)
@@ -404,6 +423,7 @@ interface PublicMobileNavProps {
 5. Sign Up — full-width Amber Gold button (anonymous only)
 
 **A11y:**
+
 - Hamburger button: `aria-label="Open navigation"` + `aria-expanded={isOpen}`
 - Focus trap: Radix Dialog handles this automatically
 - Focus return: Radix returns focus to trigger on close automatically
@@ -418,6 +438,7 @@ interface PublicMobileNavProps {
 **Purpose:** Full platform footer — four-column grid + tagline + social icons + legal row.
 
 **Props:**
+
 ```typescript
 interface PublicFooterProps {
   className?: string
@@ -426,6 +447,7 @@ interface PublicFooterProps {
 ```
 
 **Key Tailwind:**
+
 - Outer: `bg-black text-white`
 - Column grid: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8`
 - Column headings: `font-subhead font-bold text-[#E2A428] text-sm uppercase tracking-wide mb-3`
@@ -439,6 +461,7 @@ interface PublicFooterProps {
 **Phase handling:** V1+ footer links render with `text-charcoal` and no hover effect. They link to a `/coming-soon` holding page or a `#` placeholder. They are not hidden — they communicate roadmap intent.
 
 **A11y:**
+
 - `<footer aria-label="Site footer">`
 - All links are `<a>` elements with descriptive text
 - Column headings use `<h3>` (within footer context, below page `<h1>` and `<h2>`)
@@ -453,18 +476,20 @@ interface PublicFooterProps {
 **Purpose:** Standardizes h2/h3 section headings across all page sections. Handles color for dark vs. light backgrounds.
 
 **Props:**
+
 ```typescript
 interface SectionHeadingProps {
   children: React.ReactNode
-  level?: 2 | 3               // defaults to 2; renders h2 or h3
-  onDark?: boolean            // true = white text; false = brand-black text (default)
-  subtitle?: string           // optional Lato Regular subtitle below
+  level?: 2 | 3 // defaults to 2; renders h2 or h3
+  onDark?: boolean // true = white text; false = brand-black text (default)
+  subtitle?: string // optional Lato Regular subtitle below
   className?: string
-  align?: 'left' | 'center'  // defaults to 'left'
+  align?: 'left' | 'center' // defaults to 'left'
 }
 ```
 
 **Key Tailwind:**
+
 - h2: `font-headline text-2xl md:text-[28px] font-bold leading-tight`
 - h3: `font-headline text-lg md:text-xl font-bold leading-tight`
 - Light bg: `text-brand-black`
@@ -486,33 +511,36 @@ interface SectionHeadingProps {
 **Purpose:** Trust tier pill badge. Used on listing cards, BLACQList Page heroes, and Trust sections.
 
 **Props:**
+
 ```typescript
 type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 type BadgeSize = 'small' | 'standard'
 
 interface StatusBadgeProps {
   tier: TrustTier
-  size?: BadgeSize            // defaults to 'small'
+  size?: BadgeSize // defaults to 'small'
   className?: string
 }
 ```
 
 **Visual specs (from design system):**
 
-| Tier | Background | Text color | Icon | Text |
-|---|---|---|---|---|
-| `unclaimed` | `#595758` | white | none | "Unclaimed" |
-| `claimed` | `#3B82F6` | white | checkmark | "Claimed" |
-| `verified` | `#D4A017` | `#000000` | checkmark | "Verified" |
-| `certified` | `#E2A428` | `#000000` | star | "BLACQList Certified" |
+| Tier        | Background | Text color | Icon      | Text                  |
+| ----------- | ---------- | ---------- | --------- | --------------------- |
+| `unclaimed` | `#595758`  | white      | none      | "Unclaimed"           |
+| `claimed`   | `#3B82F6`  | white      | checkmark | "Claimed"             |
+| `verified`  | `#D4A017`  | `#000000`  | checkmark | "Verified"            |
+| `certified` | `#E2A428`  | `#000000`  | star      | "BLACQList Certified" |
 
 **Size specs:**
+
 - `small`: `h-[26px] px-2 text-xs` — hero overlay + listing cards
 - `standard`: `h-[32px] px-3 text-sm` — Trust section
 
 **shadcn deps:** `Badge` (use as base; override colors via `className`)
 
 **A11y:**
+
 - `role="status"` on the badge container
 - Icon within badge: `aria-hidden="true"` (icon is decorative; text is the accessible label)
 - Color contrast: all tier combinations pass WCAG AA (see design-brief.md Section 16.5)
@@ -526,25 +554,27 @@ interface StatusBadgeProps {
 **Purpose:** Standardizes the primary + optional secondary CTA button pair pattern used across marketing and BLACQList pages.
 
 **Props:**
+
 ```typescript
 interface CtaButtonGroupProps {
   primary: {
     label: string
     href: string
-    onClick?: never          // href-based only in this component
+    onClick?: never // href-based only in this component
   }
   secondary?: {
     label: string
     href: string
-    variant?: 'ghost' | 'outline'  // defaults to 'outline'
+    variant?: 'ghost' | 'outline' // defaults to 'outline'
   }
-  align?: 'left' | 'center' | 'right'  // defaults to 'left'
+  align?: 'left' | 'center' | 'right' // defaults to 'left'
   className?: string
-  stackOnMobile?: boolean   // defaults to true — stacks vertically below md
+  stackOnMobile?: boolean // defaults to true — stacks vertically below md
 }
 ```
 
 **Key Tailwind:**
+
 - Wrapper: `flex gap-3` + conditional `flex-col md:flex-row` if `stackOnMobile`
 - Primary button: `bg-[#E2A428] text-black font-body font-bold hover:bg-[#FFD867] rounded-full px-6 py-2`
 - Secondary (outline): `border border-white text-white hover:bg-white/10 rounded-full px-6 py-2`
@@ -552,6 +582,7 @@ interface CtaButtonGroupProps {
 **shadcn deps:** `Button` (both buttons use shadcn Button with className overrides)
 
 **States:**
+
 - Default: renders both or primary-only
 - Loading: not applicable — navigation buttons, not form submit buttons
 - This component does NOT handle form submit loading states. Use `FormSubmitButton` (separate) for that.
@@ -567,6 +598,7 @@ interface CtaButtonGroupProps {
 **Purpose:** Consistent empty state display across all data-dependent views (search, saved, tables, admin queues).
 
 **Props:**
+
 ```typescript
 interface EmptyStateProps {
   heading: string
@@ -579,12 +611,13 @@ interface EmptyStateProps {
     label: string
     href: string
   }
-  icon?: React.ReactNode     // optional illustrative icon
+  icon?: React.ReactNode // optional illustrative icon
   className?: string
 }
 ```
 
 **Key Tailwind:**
+
 - Container: `flex flex-col items-center text-center py-16 px-4 gap-4`
 - Heading: `font-headline text-xl font-bold text-brand-black`
 - Body: `font-subhead text-charcoal text-sm max-w-[360px]`
@@ -606,13 +639,14 @@ interface EmptyStateProps {
 **Purpose:** Skeleton shimmer for known-shape content regions. Exported as a set of named skeleton variants, not one generic component.
 
 **Exports:**
+
 ```typescript
 // Named skeleton variants — not a single generic component
-export function ListingCardSkeleton(): JSX.Element   // matches EntityCard shape
-export function StatCardSkeleton(): JSX.Element      // matches dashboard stat card
+export function ListingCardSkeleton(): JSX.Element // matches EntityCard shape
+export function StatCardSkeleton(): JSX.Element // matches dashboard stat card
 export function TableRowSkeleton({ cols }: { cols: number }): JSX.Element
-export function SectionSkeleton(): JSX.Element       // full-section shimmer block
-export function HeroSkeleton(): JSX.Element          // full-bleed hero placeholder
+export function SectionSkeleton(): JSX.Element // full-section shimmer block
+export function HeroSkeleton(): JSX.Element // full-bleed hero placeholder
 ```
 
 **Key Tailwind:** All skeletons use shadcn `Skeleton` component. Each matches the spatial dimensions of the loaded content — height, width, border-radius, and spacing must mirror the actual component.
@@ -632,12 +666,13 @@ export function HeroSkeleton(): JSX.Element          // full-bleed hero placehol
 **Purpose:** Error display with retry action. Used in `error.tsx` boundaries and inline within data-fetching components that fail.
 
 **Props:**
+
 ```typescript
 interface ErrorStateProps {
-  heading?: string            // defaults to "Something went wrong."
-  body?: string               // defaults to generic message
-  reset?: () => void          // from Next.js error.tsx boundary
-  homeHref?: string           // defaults to '/'
+  heading?: string // defaults to "Something went wrong."
+  body?: string // defaults to generic message
+  reset?: () => void // from Next.js error.tsx boundary
+  homeHref?: string // defaults to '/'
   className?: string
 }
 ```
@@ -645,6 +680,7 @@ interface ErrorStateProps {
 **Must be Client Component** because the `reset()` function from Next.js error boundaries requires a click handler.
 
 **Key Tailwind:**
+
 - Container: `flex flex-col items-center text-center py-16 px-4 gap-4`
 - Heading: `font-headline text-xl text-brand-black`
 - Body: `font-subhead text-charcoal text-sm`
@@ -666,17 +702,18 @@ interface ErrorStateProps {
 **Purpose:** Responsive CSS grid wrapper used for listing cards, product cards, category tiles, and any uniformly-sized card collection.
 
 **Props:**
+
 ```typescript
 type GridColumns = 1 | 2 | 3 | 4
 
 interface CardGridProps {
   children: React.ReactNode
   cols?: {
-    base?: GridColumns     // default 1
-    sm?: GridColumns       // default 2
-    lg?: GridColumns       // default 3
+    base?: GridColumns // default 1
+    sm?: GridColumns // default 2
+    lg?: GridColumns // default 3
   }
-  gap?: 'sm' | 'md' | 'lg'  // sm=gap-3, md=gap-4, lg=gap-6 — default 'md'
+  gap?: 'sm' | 'md' | 'lg' // sm=gap-3, md=gap-4, lg=gap-6 — default 'md'
   className?: string
 }
 ```
@@ -684,6 +721,7 @@ interface CardGridProps {
 **Key Tailwind:** `grid` + dynamic col classes. The component maps the `cols` prop to Tailwind grid-cols classes. Uses `cn()` for conditional class application.
 
 **Common presets:**
+
 - Listing cards: `{ base: 1, sm: 2, lg: 3 }` — the standard card grid
 - Dashboard stats: `{ base: 1, sm: 2, lg: 4 }`
 - Category tiles: `{ base: 2, sm: 3, lg: 5 }`
@@ -703,6 +741,7 @@ interface CardGridProps {
 **Purpose:** The primary listing card used across search results, discovery, city pages, collection pages, and related discovery rows. This is the most-rendered component in the product.
 
 **Props:**
+
 ```typescript
 interface EntityCardProps {
   id: string
@@ -714,14 +753,15 @@ interface EntityCardProps {
   category: string
   city: string
   trustTier: TrustTier
-  isSaved?: boolean           // undefined = unauthenticated (show save icon, auth-gate on click)
-  isFeatured?: boolean        // shows Featured badge (outline Amber Gold pill)
-  isSponsored?: boolean       // shows Sponsored badge
+  isSaved?: boolean // undefined = unauthenticated (show save icon, auth-gate on click)
+  isFeatured?: boolean // shows Featured badge (outline Amber Gold pill)
+  isSponsored?: boolean // shows Sponsored badge
   className?: string
 }
 ```
 
 **Structure:**
+
 ```
 EntityCard (Server)
   ├── Card image area (relative)
@@ -740,6 +780,7 @@ EntityCard (Server)
 **Route:** The full card is wrapped in `<Link href={`/${citySlug}/business/${slug}`}>` (or the appropriate route by entity type). The save button uses `event.stopPropagation()` to prevent card navigation on save tap.
 
 **Key Tailwind:**
+
 - Card: `rounded-lg border border-[#E9E9F7] overflow-hidden hover:shadow-md transition-shadow cursor-pointer`
 - Image wrapper: `relative aspect-video w-full bg-charcoal`
 - Content: `p-3`
@@ -750,16 +791,17 @@ EntityCard (Server)
 
 **States:**
 
-| State | Implementation |
-|---|---|
-| Loading | `ListingCardSkeleton` — use instead of this component |
-| No cover image | Placeholder div with charcoal background + centered text initials of business name |
-| Error | Does not apply — card receives pre-fetched data; if data fetch fails, parent handles it |
-| Saved | `SaveIconButton` shows filled icon; fires optimistic update |
-| Unsaved | `SaveIconButton` shows outline icon |
-| Unauthenticated save attempt | `SaveIconButton` opens sign-in modal via `useSignInModal()` hook |
+| State                        | Implementation                                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------- |
+| Loading                      | `ListingCardSkeleton` — use instead of this component                                   |
+| No cover image               | Placeholder div with charcoal background + centered text initials of business name      |
+| Error                        | Does not apply — card receives pre-fetched data; if data fetch fails, parent handles it |
+| Saved                        | `SaveIconButton` shows filled icon; fires optimistic update                             |
+| Unsaved                      | `SaveIconButton` shows outline icon                                                     |
+| Unauthenticated save attempt | `SaveIconButton` opens sign-in modal via `useSignInModal()` hook                        |
 
 **A11y:**
+
 - Card link: `aria-label={`View ${name} listing`}` on the wrapper `<Link>`
 - Cover image: `alt={`${name} — cover photo`}`
 - Save button (in `SaveIconButton`): dynamic `aria-label` — "Save [Name]" when unsaved, "Remove [Name] from saved" when saved
@@ -770,64 +812,64 @@ EntityCard (Server)
 
 ## State Management Summary
 
-| State type | Location | Tool |
-|---|---|---|
-| Server data (listings, collections, session) | Server Components | Supabase + `async/await` in page Server Components |
+| State type                                          | Location          | Tool                                                 |
+| --------------------------------------------------- | ----------------- | ---------------------------------------------------- |
+| Server data (listings, collections, session)        | Server Components | Supabase + `async/await` in page Server Components   |
 | URL-driven filters (search, discover, admin tables) | URL search params | `useSearchParams` + `useRouter` in Client Components |
-| Form state | Client Components | `react-hook-form` + `zod` |
-| Optimistic UI (save toggle, service reorder) | Client Components | `useOptimistic` (React 19) |
-| Local UI state (modals, drawers, open/close) | Client Components | `useState` |
-| Draft persistence (add-business form) | localStorage | `useEffect` + `localStorage` |
-| Auth state | Server → props | Fetched in `app/layout.tsx`, passed as props |
-| Toast notifications | Global | Sonner via `<Toaster />` in root layout |
+| Form state                                          | Client Components | `react-hook-form` + `zod`                            |
+| Optimistic UI (save toggle, service reorder)        | Client Components | `useOptimistic` (React 19)                           |
+| Local UI state (modals, drawers, open/close)        | Client Components | `useState`                                           |
+| Draft persistence (add-business form)               | localStorage      | `useEffect` + `localStorage`                         |
+| Auth state                                          | Server → props    | Fetched in `app/layout.tsx`, passed as props         |
+| Toast notifications                                 | Global            | Sonner via `<Toaster />` in root layout              |
 
 ---
 
 ## Loading, Empty, Error, Success — by Component
 
-| Component | Loading | Empty | Error | Success |
-|---|---|---|---|---|
-| `EntityCard` | `ListingCardSkeleton` | N/A (parent handles) | N/A (parent handles) | Card renders |
-| `CardGrid` of listings | N/A — wrap in `<Suspense fallback={<CardGridSkeleton />}>` | `<EmptyState>` from parent | `error.tsx` boundary | Grid renders |
-| `PublicHeader` | No loading state — session fetch is fast; SSR | N/A | Falls back to anonymous state | Renders with correct auth state |
-| `PublicFooter` | N/A | N/A | N/A | Static |
-| `StatusBadge` | N/A | N/A | N/A | Badge renders |
-| `EmptyState` | N/A | This IS the empty state | N/A | N/A |
-| `LoadingState` (skeletons) | This IS the loading state | N/A | N/A | N/A |
-| `ErrorState` | N/A | N/A | This IS the error state | N/A |
+| Component                  | Loading                                                    | Empty                      | Error                         | Success                         |
+| -------------------------- | ---------------------------------------------------------- | -------------------------- | ----------------------------- | ------------------------------- |
+| `EntityCard`               | `ListingCardSkeleton`                                      | N/A (parent handles)       | N/A (parent handles)          | Card renders                    |
+| `CardGrid` of listings     | N/A — wrap in `<Suspense fallback={<CardGridSkeleton />}>` | `<EmptyState>` from parent | `error.tsx` boundary          | Grid renders                    |
+| `PublicHeader`             | No loading state — session fetch is fast; SSR              | N/A                        | Falls back to anonymous state | Renders with correct auth state |
+| `PublicFooter`             | N/A                                                        | N/A                        | N/A                           | Static                          |
+| `StatusBadge`              | N/A                                                        | N/A                        | N/A                           | Badge renders                   |
+| `EmptyState`               | N/A                                                        | This IS the empty state    | N/A                           | N/A                             |
+| `LoadingState` (skeletons) | This IS the loading state                                  | N/A                        | N/A                           | N/A                             |
+| `ErrorState`               | N/A                                                        | N/A                        | This IS the error state       | N/A                             |
 
 ---
 
 ## Accessibility Summary
 
-| Component | Key requirement |
-|---|---|
-| All forms (future) | Every input has `<FormLabel>`; errors use `aria-describedby`; required fields marked |
-| `PublicHeader` | `<nav aria-label="Main navigation">`; active link `aria-current="page"` |
-| `PublicMobileNav` | Hamburger: `aria-label` + `aria-expanded`; focus trap via Radix; focus returns to trigger |
-| `PublicFooter` | `<footer aria-label="Site footer">`; social links have `aria-label` |
-| `EntityCard` | Card link `aria-label`; image `alt`; save button dynamic `aria-label`; badge `role="status"` |
-| `StatusBadge` | `role="status"`; icon `aria-hidden`; text always present |
-| `ErrorState` | `role="alert"` |
-| `EmptyState` | `role="status"` if dynamically appearing post-fetch |
-| `SectionHeading` | Correct `<h2>` or `<h3>` — never skip levels |
-| Icon-only buttons | `aria-label` required on every instance |
-| Color as status | Never color-only — text label always accompanies color signal |
+| Component          | Key requirement                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| All forms (future) | Every input has `<FormLabel>`; errors use `aria-describedby`; required fields marked         |
+| `PublicHeader`     | `<nav aria-label="Main navigation">`; active link `aria-current="page"`                      |
+| `PublicMobileNav`  | Hamburger: `aria-label` + `aria-expanded`; focus trap via Radix; focus returns to trigger    |
+| `PublicFooter`     | `<footer aria-label="Site footer">`; social links have `aria-label`                          |
+| `EntityCard`       | Card link `aria-label`; image `alt`; save button dynamic `aria-label`; badge `role="status"` |
+| `StatusBadge`      | `role="status"`; icon `aria-hidden`; text always present                                     |
+| `ErrorState`       | `role="alert"`                                                                               |
+| `EmptyState`       | `role="status"` if dynamically appearing post-fetch                                          |
+| `SectionHeading`   | Correct `<h2>` or `<h3>` — never skip levels                                                 |
+| Icon-only buttons  | `aria-label` required on every instance                                                      |
+| Color as status    | Never color-only — text label always accompanies color signal                                |
 
 ---
 
 ## Responsive Behavior
 
-| Component | Mobile (base) | Tablet (`md:`) | Desktop (`lg:`) |
-|---|---|---|---|
-| `Container` | Full width, 16px padding | Full width, 24px padding | 960px max-w, 32px padding |
-| `Section` | `py-12` | `py-14` | `py-16` |
-| `PublicHeader` | 56px, hamburger + logo | 56px, hamburger | 64px, full nav links |
-| `PublicMobileNav` | Full-screen drawer | Drawer (320px wide) | Hidden |
-| `PublicFooter` | Single column | 2-column grid | 4-column grid |
-| `CardGrid` (listings) | 1 col | 2 col | 3 col |
-| `EntityCard` | Full width | Card in 2-col | Card in 3-col |
-| `PageHeader` | `text-2xl` | `text-3xl` | `text-4xl` |
+| Component             | Mobile (base)            | Tablet (`md:`)           | Desktop (`lg:`)           |
+| --------------------- | ------------------------ | ------------------------ | ------------------------- |
+| `Container`           | Full width, 16px padding | Full width, 24px padding | 960px max-w, 32px padding |
+| `Section`             | `py-12`                  | `py-14`                  | `py-16`                   |
+| `PublicHeader`        | 56px, hamburger + logo   | 56px, hamburger          | 64px, full nav links      |
+| `PublicMobileNav`     | Full-screen drawer       | Drawer (320px wide)      | Hidden                    |
+| `PublicFooter`        | Single column            | 2-column grid            | 4-column grid             |
+| `CardGrid` (listings) | 1 col                    | 2 col                    | 3 col                     |
+| `EntityCard`          | Full width               | Card in 2-col            | Card in 3-col             |
+| `PageHeader`          | `text-2xl`               | `text-3xl`               | `text-4xl`                |
 
 ---
 

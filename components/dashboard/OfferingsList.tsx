@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useActionState, useState } from "react"
-import { Loader2, Trash2, Pencil, Star, CheckCircle, AlertCircle, X } from "lucide-react"
-import { updateServiceAction } from "@/lib/actions/dashboard/updateService"
-import { deleteServiceAction } from "@/lib/actions/dashboard/deleteService"
+import { useActionState, useState } from 'react'
+import { Loader2, Trash2, Pencil, Star, CheckCircle, AlertCircle, X } from 'lucide-react'
+import { updateServiceAction } from '@/lib/actions/dashboard/updateService'
+import { deleteServiceAction } from '@/lib/actions/dashboard/deleteService'
 
 interface Service {
   id: string
@@ -24,7 +24,7 @@ function DeleteServiceButton({ serviceId }: { serviceId: string }) {
   return (
     <form action={formAction}>
       <input type="hidden" name="service_id" value={serviceId} />
-      {state && "error" in state && (
+      {state && 'error' in state && (
         <p className="font-body text-xs text-red-600 mt-1">{state.error}</p>
       )}
       <button
@@ -32,15 +32,17 @@ function DeleteServiceButton({ serviceId }: { serviceId: string }) {
         disabled={isPending}
         aria-label="Delete service"
         onClick={(e) => {
-          if (!window.confirm("Delete this service? This cannot be undone.")) {
+          if (!window.confirm('Delete this service? This cannot be undone.')) {
             e.preventDefault()
           }
         }}
         className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors"
       >
-        {isPending
-          ? <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          : <Trash2 className="size-4" aria-hidden="true" />}
+        {isPending ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Trash2 className="size-4" aria-hidden="true" />
+        )}
       </button>
     </form>
   )
@@ -77,7 +79,7 @@ function ServiceRow({ service }: { service: Service }) {
           <input
             name="description"
             type="text"
-            defaultValue={service.description ?? ""}
+            defaultValue={service.description ?? ''}
             placeholder="Description (optional)"
             aria-label="Service description"
             className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
@@ -85,7 +87,7 @@ function ServiceRow({ service }: { service: Service }) {
           <input
             name="price_display"
             type="text"
-            defaultValue={service.price_display ?? ""}
+            defaultValue={service.price_display ?? ''}
             placeholder="Price (optional)"
             aria-label="Service price"
             className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
@@ -101,13 +103,13 @@ function ServiceRow({ service }: { service: Service }) {
             <span className="font-body text-xs text-charcoal/70">Mark as featured</span>
           </label>
 
-          {state && "error" in state && (
+          {state && 'error' in state && (
             <div role="alert" className="flex items-center gap-1.5 text-red-600">
               <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
               <p className="font-body text-xs">{state.error}</p>
             </div>
           )}
-          {state && "success" in state && (
+          {state && 'success' in state && (
             <div className="flex items-center gap-1.5 text-green-600">
               <CheckCircle className="size-3.5 shrink-0" aria-hidden="true" />
               <p className="font-body text-xs">Saved.</p>
@@ -115,10 +117,13 @@ function ServiceRow({ service }: { service: Service }) {
           )}
 
           <div className="flex justify-end">
-            <button type="submit" disabled={isPending}
-              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-xs hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-xs hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
               {isPending && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
-              {isPending ? "Saving…" : "Save"}
+              {isPending ? 'Saving…' : 'Save'}
             </button>
           </div>
         </form>
@@ -130,13 +135,17 @@ function ServiceRow({ service }: { service: Service }) {
     <li className="flex items-start gap-3 rounded-lg border border-charcoal/8 bg-white px-4 py-3 hover:border-charcoal/15 transition-colors">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-subhead font-semibold text-sm text-brand-black truncate">{service.name}</p>
+          <p className="font-subhead font-semibold text-sm text-brand-black truncate">
+            {service.name}
+          </p>
           {service.is_featured && (
             <Star className="size-3.5 text-amber-gold shrink-0" aria-label="Featured" />
           )}
         </div>
         {service.description && (
-          <p className="font-body text-xs text-charcoal/60 mt-0.5 line-clamp-2">{service.description}</p>
+          <p className="font-body text-xs text-charcoal/60 mt-0.5 line-clamp-2">
+            {service.description}
+          </p>
         )}
         {service.price_display && (
           <p className="font-body text-xs text-charcoal/50 mt-1">{service.price_display}</p>

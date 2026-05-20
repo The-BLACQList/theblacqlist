@@ -1,44 +1,44 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { ChevronLeft, FileCheck } from "lucide-react"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { ChevronLeft, FileCheck } from 'lucide-react'
+import type { Metadata } from 'next'
 
-import { createClient } from "@/lib/supabase/server"
-import { ClaimWithdrawButton } from "@/components/claim/ClaimWithdrawButton"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { createClient } from '@/lib/supabase/server'
+import { ClaimWithdrawButton } from '@/components/claim/ClaimWithdrawButton'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 export const metadata: Metadata = {
-  title: "My Claims | The BLACQList",
+  title: 'My Claims | The BLACQList',
 }
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   pending: {
-    label: "Pending review",
-    className: "bg-amber-50 text-amber-700 border-amber-200",
+    label: 'Pending review',
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   under_review: {
-    label: "Under review",
-    className: "bg-blue-50 text-blue-700 border-blue-200",
+    label: 'Under review',
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   approved: {
-    label: "Approved",
-    className: "bg-green-50 text-green-700 border-green-200",
+    label: 'Approved',
+    className: 'bg-green-50 text-green-700 border-green-200',
   },
   rejected: {
-    label: "Rejected",
-    className: "bg-red-50 text-red-700 border-red-200",
+    label: 'Rejected',
+    className: 'bg-red-50 text-red-700 border-red-200',
   },
   withdrawn: {
-    label: "Withdrawn",
-    className: "bg-charcoal/5 text-charcoal/60 border-charcoal/15",
+    label: 'Withdrawn',
+    className: 'bg-charcoal/5 text-charcoal/60 border-charcoal/15',
   },
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -48,15 +48,15 @@ export default async function AccountClaimsPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/account/claims")
+  if (!user) redirect('/sign-in?next=/account/claims')
 
   const { data: claims } = await supabase
-    .from("claims")
+    .from('claims')
     .select(
-      "id, status, created_at, listings!claims_listing_id_fkey(id, name, slug, entity_type, cities!listings_city_id_fkey(slug), listing_details_business(city_text))"
+      'id, status, created_at, listings!claims_listing_id_fkey(id, name, slug, entity_type, cities!listings_city_id_fkey(slug), listing_details_business(city_text))'
     )
-    .eq("claimant_user_id", user.id)
-    .order("created_at", { ascending: false })
+    .eq('claimant_user_id', user.id)
+    .order('created_at', { ascending: false })
 
   const claimList = (claims ?? []) as Array<{
     id: string
@@ -86,9 +86,7 @@ export default async function AccountClaimsPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-headline text-3xl text-brand-black mb-1">
-            My claims
-          </h1>
+          <h1 className="font-headline text-3xl text-brand-black mb-1">My claims</h1>
           <p className="font-subhead text-sm text-charcoal/60">
             Listing ownership claims you&apos;ve submitted
           </p>
@@ -97,10 +95,7 @@ export default async function AccountClaimsPage() {
         {/* Empty state */}
         {claimList.length === 0 && (
           <div className="bg-white rounded-xl border border-charcoal/10 p-8 text-center">
-            <FileCheck
-              className="size-10 text-charcoal/20 mx-auto mb-3"
-              aria-hidden="true"
-            />
+            <FileCheck className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
             <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
               No claims yet
             </p>
@@ -121,24 +116,21 @@ export default async function AccountClaimsPage() {
           <div className="space-y-3">
             {claimList.map((claim) => {
               const listing = claim.listings
-              const city =
-                listing?.listing_details_business?.city_text
-              const statusInfo =
-                STATUS_LABELS[claim.status] ?? STATUS_LABELS["pending"]!
-              const canWithdraw = ["pending", "under_review"].includes(
-                claim.status
-              )
+              const city = listing?.listing_details_business?.city_text
+              const statusInfo = STATUS_LABELS[claim.status] ?? STATUS_LABELS['pending']!
+              const canWithdraw = ['pending', 'under_review'].includes(claim.status)
 
               return (
-                <div
-                  key={claim.id}
-                  className="bg-white rounded-xl border border-charcoal/10 p-4"
-                >
+                <div key={claim.id} className="bg-white rounded-xl border border-charcoal/10 p-4">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
                       {listing ? (
                         <Link
-                          href={buildEntityUrl(listing.entity_type, listing.cities?.slug, listing.slug)}
+                          href={buildEntityUrl(
+                            listing.entity_type,
+                            listing.cities?.slug,
+                            listing.slug
+                          )}
                           className="font-subhead text-sm font-semibold text-brand-black hover:text-amber-gold transition-colors"
                         >
                           {listing.name}
@@ -148,11 +140,7 @@ export default async function AccountClaimsPage() {
                           Listing unavailable
                         </p>
                       )}
-                      {city && (
-                        <p className="font-body text-xs text-charcoal/60 mt-0.5">
-                          {city}
-                        </p>
-                      )}
+                      {city && <p className="font-body text-xs text-charcoal/60 mt-0.5">{city}</p>}
                     </div>
                     <span
                       className={`flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-full border font-subhead text-xs font-semibold ${statusInfo.className}`}

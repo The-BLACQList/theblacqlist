@@ -1,15 +1,19 @@
 # Ticket 084: Admin platform analytics dashboard — totals, growth, search analytics (`/admin/analytics`)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 16: Analytics and Reporting
 
 ## Priority
+
 P2
 
 ## Feature Area
+
 Admin / Analytics
 
 ---
@@ -31,6 +35,7 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 ## Scope
 
 **In scope:**
+
 - `app/(admin)/admin/analytics/page.tsx` — Server Component; all data fetched server-side via service role client; passes props to Client Component chart
 - Summary stat cards (4 cards in a grid):
   - Total published listings
@@ -44,6 +49,7 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 - `error.tsx` with "Couldn't load platform analytics. Try refreshing."
 
 **Out of scope:**
+
 - User growth metrics (deferred)
 - Revenue / subscription metrics (V1)
 - Custom date range picker (deferred)
@@ -54,11 +60,11 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037: Admin layout, navigation, and auth guard | Blocking ticket | In Progress |
-| Ticket 082: Daily analytics aggregation | Soft dependency — growth chart data is richer with it | In Progress |
-| `recharts` npm package | Dependency | Must be installed (see Ticket 083) |
+| Dependency                                           | Type                                                  | Status                             |
+| ---------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| Ticket 037: Admin layout, navigation, and auth guard | Blocking ticket                                       | In Progress                        |
+| Ticket 082: Daily analytics aggregation              | Soft dependency — growth chart data is richer with it | In Progress                        |
+| `recharts` npm package                               | Dependency                                            | Must be installed (see Ticket 083) |
 
 ---
 
@@ -108,6 +114,7 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/(admin)/admin/analytics/page.tsx`
 - `app/(admin)/admin/analytics/loading.tsx`
 - `app/(admin)/admin/analytics/error.tsx`
@@ -116,15 +123,18 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 - `app/(admin)/admin/analytics/components/PlatformStatCards.tsx`
 
 **Files to modify:**
+
 - `app/(admin)/admin/layout.tsx` — add "Analytics" to admin sidebar nav (link to `/admin/analytics`)
 
 **Key patterns:**
+
 - All SQL queries run in parallel using `Promise.all()` in the Server Component — do not await them sequentially
 - Growth chart receives pre-processed `{week: string, count: number}[]` data as a prop from the Server Component
 - Use `Intl.NumberFormat` for displaying counts (e.g., `1,234` not `1234`)
 - Claim approval rate: handle division by zero (display `"N/A"` when total claims = 0)
 
 **Do not:**
+
 - Expose raw SQL query errors in the UI — catch at the service level and return typed error objects
 - Use a Line chart for the growth chart — use a Bar chart (new listings per week is better visualized as discrete bars)
 
@@ -145,12 +155,12 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| One of the aggregate queries fails | Error boundary catches; "Couldn't load platform analytics. Try refreshing." — entire page shows error state |
-| City leaderboard query returns no rows (empty platform) | Table shows "No cities with published listings yet." |
-| Growth chart has fewer than 2 data points | Chart renders with available data; if zero points, chart area shows "No listing data for this period." |
-| Recharts bundle fails to load | Error boundary replaces chart with "Chart unavailable. Refresh to try again." |
+| Failure                                                 | User-visible behavior                                                                                       |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| One of the aggregate queries fails                      | Error boundary catches; "Couldn't load platform analytics. Try refreshing." — entire page shows error state |
+| City leaderboard query returns no rows (empty platform) | Table shows "No cities with published listings yet."                                                        |
+| Growth chart has fewer than 2 data points               | Chart renders with available data; if zero points, chart area shows "No listing data for this period."      |
+| Recharts bundle fails to load                           | Error boundary replaces chart with "Chart unavailable. Refresh to try again."                               |
 
 ---
 
@@ -173,13 +183,13 @@ As a platform admin, I want to see key platform metrics — listing counts, grow
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path | Admin | 1. Log in as admin. 2. Navigate to `/admin/analytics`. | All four stat cards populated; growth chart visible; city leaderboard shows top cities |
-| QA-2 | Stat card accuracy | Admin | 1. Note total published count on `/admin/analytics`. 2. Check `SELECT COUNT(*) FROM listings WHERE status = 'published'` in Supabase Studio. | Counts match |
-| QA-3 | Growth chart correctness | Admin | 1. View the growth chart. 2. Compare the most recent week's bar against a direct SQL query for listings published that week. | Bar height matches query count |
-| QA-4 | Non-admin access blocked | Supporter | 1. Log in as a supporter. 2. Navigate directly to `/admin/analytics`. | Redirected to homepage; no analytics data visible |
-| QA-5 | Mobile at 375px | Admin | 1. Open `/admin/analytics` at 375px. | Stat cards stack 1-per-row; chart visible without overflow; all content accessible |
+| #    | Scenario                 | Role      | Steps                                                                                                                                        | Expected result                                                                        |
+| ---- | ------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| QA-1 | Happy path               | Admin     | 1. Log in as admin. 2. Navigate to `/admin/analytics`.                                                                                       | All four stat cards populated; growth chart visible; city leaderboard shows top cities |
+| QA-2 | Stat card accuracy       | Admin     | 1. Note total published count on `/admin/analytics`. 2. Check `SELECT COUNT(*) FROM listings WHERE status = 'published'` in Supabase Studio. | Counts match                                                                           |
+| QA-3 | Growth chart correctness | Admin     | 1. View the growth chart. 2. Compare the most recent week's bar against a direct SQL query for listings published that week.                 | Bar height matches query count                                                         |
+| QA-4 | Non-admin access blocked | Supporter | 1. Log in as a supporter. 2. Navigate directly to `/admin/analytics`.                                                                        | Redirected to homepage; no analytics data visible                                      |
+| QA-5 | Mobile at 375px          | Admin     | 1. Open `/admin/analytics` at 375px.                                                                                                         | Stat cards stack 1-per-row; chart visible without overflow; all content accessible     |
 
 ---
 

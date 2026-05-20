@@ -7,13 +7,13 @@
 
 ## Overview
 
-| # | Source | Files Importing It | Blocks Beta | Needs DB Seed First |
-|---|---|---|---|---|
-| 1 | `data/mock-entities.ts` — `MOCK_ENTITIES` array | `app/(public)/discover/page.tsx`, `app/(public)/search/page.tsx`, `lib/listings/query.ts` | Yes | Yes |
-| 2 | `data/mock-entity-page.ts` — `EntityPageData` types | `lib/listings/entityPage.ts` | No (types only) | No |
-| 3 | `STUB_CITIES` in onboarding | `app/onboarding/page.tsx` | Yes | Yes |
-| 4 | SaveButton placeholder | `components/entity-page/SaveButton.tsx` | Yes | No |
-| 5 | ShareButton placeholder | `components/entity-page/ShareButton.tsx` | No (UX gap) | No |
+| #   | Source                                              | Files Importing It                                                                        | Blocks Beta     | Needs DB Seed First |
+| --- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------- | ------------------- |
+| 1   | `data/mock-entities.ts` — `MOCK_ENTITIES` array     | `app/(public)/discover/page.tsx`, `app/(public)/search/page.tsx`, `lib/listings/query.ts` | Yes             | Yes                 |
+| 2   | `data/mock-entity-page.ts` — `EntityPageData` types | `lib/listings/entityPage.ts`                                                              | No (types only) | No                  |
+| 3   | `STUB_CITIES` in onboarding                         | `app/onboarding/page.tsx`                                                                 | Yes             | Yes                 |
+| 4   | SaveButton placeholder                              | `components/entity-page/SaveButton.tsx`                                                   | Yes             | No                  |
+| 5   | ShareButton placeholder                             | `components/entity-page/ShareButton.tsx`                                                  | No (UX gap)     | No                  |
 
 ---
 
@@ -24,11 +24,11 @@
 
 **Where it's imported:**
 
-| Importing file | Usage | Line |
-|---|---|---|
-| `app/(public)/discover/page.tsx` | Renders as fallback when `result.fromMock === true` | 8, 44–49 |
-| `app/(public)/search/page.tsx` | Filters mock array by query params when DB empty | 8, 93–95 |
-| `lib/listings/query.ts` | Sets `fromMock: true` flag when Supabase returns 0 results | 2, 134 |
+| Importing file                   | Usage                                                      | Line     |
+| -------------------------------- | ---------------------------------------------------------- | -------- |
+| `app/(public)/discover/page.tsx` | Renders as fallback when `result.fromMock === true`        | 8, 44–49 |
+| `app/(public)/search/page.tsx`   | Filters mock array by query params when DB empty           | 8, 93–95 |
+| `lib/listings/query.ts`          | Sets `fromMock: true` flag when Supabase returns 0 results | 2, 134   |
 
 **Why it exists:** Dev/demo fallback to show a non-empty UI before listings were seeded in the database.
 
@@ -59,9 +59,9 @@ Real `listings` records from Supabase with `status = 'published'` and `deleted_a
 
 **Where it's imported:**
 
-| Importing file | Usage | Line |
-|---|---|---|
-| `lib/listings/entityPage.ts` | Imports `EntityPageData` and related types; fixture not used in production path | 10 |
+| Importing file               | Usage                                                                           | Line |
+| ---------------------------- | ------------------------------------------------------------------------------- | ---- |
+| `lib/listings/entityPage.ts` | Imports `EntityPageData` and related types; fixture not used in production path | 10   |
 
 **Why it exists:** Type definitions and a demo fixture from before real DB types were generated.
 
@@ -90,14 +90,14 @@ The types should be replaced by (or aliased to) the auto-generated Supabase type
 ```typescript
 // line 12 — with TODO comment: "replace with DB query once schema migration runs"
 const STUB_CITIES = [
-  "Atlanta",
-  "Chicago",
-  "Houston",
-  "Los Angeles",
-  "New York",
-  "Philadelphia",
-  "Washington D.C.",
-  "Miami",
+  'Atlanta',
+  'Chicago',
+  'Houston',
+  'Los Angeles',
+  'New York',
+  'Philadelphia',
+  'Washington D.C.',
+  'Miami',
 ]
 ```
 
@@ -111,10 +111,10 @@ const STUB_CITIES = [
 // Replace with:
 const supabase = await createClient()
 const { data: cities } = await supabase
-  .from("cities")
-  .select("id, name, state_abbr, slug")
-  .eq("is_active", true)
-  .order("name")
+  .from('cities')
+  .select('id, name, state_abbr, slug')
+  .eq('is_active', true)
+  .order('name')
 ```
 
 **What needs to happen before removal:**
@@ -140,6 +140,7 @@ const { data: cities } = await supabase
 **What it replaces:**
 
 `/api/saves` — already implemented and production-ready:
+
 - `POST /api/saves` — saves listing (`{ listing_id: uuid }`)
 - `DELETE /api/saves` — unsaves listing (`?listing_id=uuid`)
 - `GET /api/saves` — returns user's saved listings
@@ -175,7 +176,7 @@ async function handleShare() {
     await navigator.share({ title, url })
   } else {
     await navigator.clipboard.writeText(url)
-    toast.success("Link copied to clipboard")
+    toast.success('Link copied to clipboard')
   }
 }
 ```
@@ -223,20 +224,20 @@ ORDER BY saves.created_at DESC
 
 Remove in this sequence to avoid import errors and broken pages:
 
-| Step | Action | Blocker |
-|---|---|---|
-| 1 | Seed `cities` table with launch cities | Required for Step 2 |
-| 2 | Seed `categories` table with taxonomy | Required for Step 3 |
-| 3 | Seed at least 5 real `listings` records | Required for Steps 4–5 |
-| 4 | Replace `STUB_CITIES` in onboarding with cities DB query | Cities seed done |
-| 5 | Wire `SaveButton` to `/api/saves` | No dependencies |
-| 6 | Wire `ShareButton` to Web Share API | No dependencies |
-| 7 | Wire `/account/saved` to saves query | No dependencies |
-| 8 | Remove `fromMock` fallback from `/discover` and `/search` | Listings seeded |
-| 9 | Migrate types from `data/mock-entities.ts` to `types/index.ts` | Step 8 complete |
-| 10 | Delete `data/mock-entities.ts` | Step 9 complete |
-| 11 | Migrate types from `data/mock-entity-page.ts` to `types/index.ts` | Step 10 complete |
-| 12 | Delete `data/mock-entity-page.ts` | Step 11 complete |
+| Step | Action                                                            | Blocker                |
+| ---- | ----------------------------------------------------------------- | ---------------------- |
+| 1    | Seed `cities` table with launch cities                            | Required for Step 2    |
+| 2    | Seed `categories` table with taxonomy                             | Required for Step 3    |
+| 3    | Seed at least 5 real `listings` records                           | Required for Steps 4–5 |
+| 4    | Replace `STUB_CITIES` in onboarding with cities DB query          | Cities seed done       |
+| 5    | Wire `SaveButton` to `/api/saves`                                 | No dependencies        |
+| 6    | Wire `ShareButton` to Web Share API                               | No dependencies        |
+| 7    | Wire `/account/saved` to saves query                              | No dependencies        |
+| 8    | Remove `fromMock` fallback from `/discover` and `/search`         | Listings seeded        |
+| 9    | Migrate types from `data/mock-entities.ts` to `types/index.ts`    | Step 8 complete        |
+| 10   | Delete `data/mock-entities.ts`                                    | Step 9 complete        |
+| 11   | Migrate types from `data/mock-entity-page.ts` to `types/index.ts` | Step 10 complete       |
+| 12   | Delete `data/mock-entity-page.ts`                                 | Step 11 complete       |
 
 ---
 
@@ -244,11 +245,11 @@ Remove in this sequence to avoid import errors and broken pages:
 
 The following hardcoded data is intentional and is NOT a conversion target:
 
-| Location | Data | Why it stays |
-|---|---|---|
-| `app/page.tsx` lines 16–68 | `CATEGORIES`, `CITIES`, `FEATURES` arrays | Marketing content; curated copy; not a DB query |
-| `app/(auth)/sign-up/page.tsx` | `ROLE_OPTIONS` array | UI config (enum of valid roles); not DB data |
-| `app/admin/entities/page.tsx` | `STATUS_TABS` | UI config |
-| `app/admin/claims/page.tsx` | `ROLE_LABELS`, `STATUS_TABS` | UI config |
-| `app/api/upload/[bucket]/route.ts` | `ALLOWED_BUCKETS`, `BUCKET_LIMITS` | Security config — should NOT come from DB |
-| `app/api/analytics/event/route.ts` | `MAX_PROPERTIES_BYTES`, `RATE_LIMIT` | Rate-limiting config — correct as constants |
+| Location                           | Data                                      | Why it stays                                    |
+| ---------------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| `app/page.tsx` lines 16–68         | `CATEGORIES`, `CITIES`, `FEATURES` arrays | Marketing content; curated copy; not a DB query |
+| `app/(auth)/sign-up/page.tsx`      | `ROLE_OPTIONS` array                      | UI config (enum of valid roles); not DB data    |
+| `app/admin/entities/page.tsx`      | `STATUS_TABS`                             | UI config                                       |
+| `app/admin/claims/page.tsx`        | `ROLE_LABELS`, `STATUS_TABS`              | UI config                                       |
+| `app/api/upload/[bucket]/route.ts` | `ALLOWED_BUCKETS`, `BUCKET_LIMITS`        | Security config — should NOT come from DB       |
+| `app/api/analytics/event/route.ts` | `MAX_PROPERTIES_BYTES`, `RATE_LIMIT`      | Rate-limiting config — correct as constants     |

@@ -1,13 +1,10 @@
-"use server"
+'use server'
 
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type WithdrawClaimState =
-  | { error: string }
-  | { success: true }
-  | null
+export type WithdrawClaimState = { error: string } | { success: true } | null
 
 // ─── Server Action ────────────────────────────────────────────────────────────
 
@@ -21,44 +18,44 @@ export async function withdrawClaimAction(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { error: "You must be signed in to withdraw a claim." }
+    return { error: 'You must be signed in to withdraw a claim.' }
   }
 
-  const claimId = formData.get("claim_id")?.toString().trim() ?? ""
+  const claimId = formData.get('claim_id')?.toString().trim() ?? ''
 
   if (!claimId) {
-    return { error: "Invalid claim." }
+    return { error: 'Invalid claim.' }
   }
 
   // ── Fetch claim — confirm ownership and status ──────────────────────────────
   const { data: claim } = await supabase
-    .from("claims")
-    .select("id, claimant_user_id, status")
-    .eq("id", claimId)
+    .from('claims')
+    .select('id, claimant_user_id, status')
+    .eq('id', claimId)
     .maybeSingle()
 
   if (!claim || claim.claimant_user_id !== user.id) {
-    return { error: "Claim not found." }
+    return { error: 'Claim not found.' }
   }
 
-  if (!["pending", "under_review"].includes(claim.status)) {
+  if (!['pending', 'under_review'].includes(claim.status)) {
     return {
       error:
-        "This claim cannot be withdrawn. Only pending or under-review claims can be withdrawn.",
+        'This claim cannot be withdrawn. Only pending or under-review claims can be withdrawn.',
     }
   }
 
   // ── Update status ───────────────────────────────────────────────────────────
   const serviceClient = createServiceClient()
   const { error: updateError } = await serviceClient
-    .from("claims")
-    .update({ status: "withdrawn" })
-    .eq("id", claimId)
-    .eq("claimant_user_id", user.id)
+    .from('claims')
+    .update({ status: 'withdrawn' })
+    .eq('id', claimId)
+    .eq('claimant_user_id', user.id)
 
   if (updateError) {
     return {
-      error: "Something went wrong withdrawing your claim. Please try again.",
+      error: 'Something went wrong withdrawing your claim. Please try again.',
     }
   }
 

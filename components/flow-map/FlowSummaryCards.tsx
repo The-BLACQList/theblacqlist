@@ -11,9 +11,7 @@ function SummaryCard({ label, value, subtext }: SummaryCardProps) {
         {label}
       </p>
       <p className="font-headline text-3xl text-brand-black mt-1">{value}</p>
-      {subtext && (
-        <p className="font-body text-xs text-charcoal/40 mt-0.5">{subtext}</p>
-      )}
+      {subtext && <p className="font-body text-xs text-charcoal/40 mt-0.5">{subtext}</p>}
     </div>
   )
 }
@@ -29,19 +27,15 @@ export function FlowSummaryCards({
   totalTransactions,
   uniqueBusinesses,
 }: FlowSummaryCardsProps) {
-  const dollars = (totalAmountCents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
+  const dollars = (totalAmountCents / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
     maximumFractionDigits: 0,
   })
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <SummaryCard
-        label="Total circulated"
-        value={dollars}
-        subtext="Verified community spend"
-      />
+      <SummaryCard label="Total circulated" value={dollars} subtext="Verified community spend" />
       <SummaryCard
         label="Businesses supported"
         value={uniqueBusinesses.toLocaleString()}

@@ -29,7 +29,7 @@ function getNodeRadius(count: number, maxCount: number): number {
 }
 
 function truncateLabel(label: string, maxLen = 14): string {
-  return label.length > maxLen ? label.slice(0, maxLen - 1) + "…" : label
+  return label.length > maxLen ? label.slice(0, maxLen - 1) + '…' : label
 }
 
 export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
@@ -58,9 +58,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
 
       {!hasNodes ? (
         <div className="px-5 py-16 text-center">
-          <p className="font-subhead text-sm font-semibold text-brand-black">
-            No flow data yet
-          </p>
+          <p className="font-subhead text-sm font-semibold text-brand-black">No flow data yet</p>
           <p className="font-body text-xs text-charcoal/50 mt-1">
             As community members submit receipts, businesses will appear here as nodes.
           </p>
@@ -90,13 +88,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
           {/* Business nodes */}
           {positioned.map((node) => (
             <g key={`node-${node.id}`}>
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={node.radius}
-                fill="#1A1A2E"
-                fillOpacity={0.9}
-              />
+              <circle cx={node.x} cy={node.y} r={node.radius} fill="#1A1A2E" fillOpacity={0.9} />
               <text
                 x={node.x}
                 y={node.y + node.radius + 12}
@@ -112,12 +104,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
           ))}
 
           {/* Center "Community" node */}
-          <circle
-            cx={CENTER_X}
-            cy={CENTER_Y}
-            r={CENTER_RADIUS}
-            fill="#D4A017"
-          />
+          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#D4A017" />
           <text
             x={CENTER_X}
             y={CENTER_Y + 4}

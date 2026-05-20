@@ -1,7 +1,7 @@
-import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { requireOwner } from "@/lib/dashboard/guard"
-import { MediaGrid } from "@/components/dashboard/MediaGrid"
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { requireOwner } from '@/lib/dashboard/guard'
+import { MediaGrid } from '@/components/dashboard/MediaGrid'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -13,23 +13,23 @@ export default async function MediaPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: listing } = await supabase
-    .from("listings")
-    .select("id, name")
-    .eq("id", entityId)
-    .eq("owner_user_id", owner.user.id)
-    .is("deleted_at", null)
+    .from('listings')
+    .select('id, name')
+    .eq('id', entityId)
+    .eq('owner_user_id', owner.user.id)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) notFound()
 
   const { data: media } = await supabase
-    .from("media_attachments")
-    .select("id, file_path, file_type, alt_text, display_order")
-    .eq("entity_id", entityId)
-    .eq("entity_type", "listing")
-    .order("display_order", { ascending: true })
+    .from('media_attachments')
+    .select('id, file_path, file_type, alt_text, display_order')
+    .eq('entity_id', entityId)
+    .eq('entity_type', 'listing')
+    .order('display_order', { ascending: true })
 
-  const supabaseStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL + "/storage/v1/object/public"
+  const supabaseStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public'
 
   return (
     <div className="max-w-3xl space-y-6">

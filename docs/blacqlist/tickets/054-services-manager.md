@@ -1,26 +1,33 @@
 # Ticket 054: Services manager — CRUD + drag-to-reorder (`/dashboard/services`)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 8: Owner Dashboard
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Owner Dashboard
 
 ## Context
+
 The `/dashboard/services` screen lets business owners manage the list of services they offer. Services are displayed on the public BLACQList Page in a structured list. This ticket implements Create, Read, Update, and Delete operations for `services` table rows, plus drag-to-reorder via `@dnd-kit`. Each service has: `name` (required), `description` (optional), `price_note` (free-text price display, optional — e.g., "Starting at $50"), `display_order`, and `is_visible`. Add/edit is done inline (no separate edit page — an expandable row form). Delete has an undo toast (optimistic delete with a 5-second undo window before the SA fires). Maximum 20 services per listing (enforced client-side before `createService` SA is called). All mutations trigger `revalidatePath` for the public listing page.
 
 Source documents: `docs/blacqlist/ux/mvp-screen-map.md` (Services Manager), `docs/blacqlist/architecture/server-actions-plan.md` (`addService`, `updateService`, `deleteService`, `reorderServices`), `docs/blacqlist/data/database-schema-plan.md` (`services`).
 
 ## User Story
+
 As a business owner, I want to add, edit, reorder, and delete the services my business offers, so that customers can see exactly what I provide and at what price.
 
 ## Scope
+
 - `app/dashboard/services/page.tsx` — Server Component that fetches all services for the owner's listing and renders the manager
 - `app/dashboard/services/components/ServicesList.tsx` — Client Component: dnd-kit sortable list of service rows
 - `app/dashboard/services/components/ServiceRow.tsx` — Client Component: read mode (drag handle, name, optional price, edit icon, delete icon) + edit mode (inline expanded form)
@@ -30,18 +37,21 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - Undo-delete: optimistic delete removes the row from state immediately; a persistent toast shows "Service deleted. Undo?" for 5 seconds; clicking Undo calls a restore path; if undo window expires, the SA fires the actual soft-delete
 
 ## Out of Scope
+
 - Per-service CTA type and URL (V1 feature per `services.cta_type`, `services.cta_url`)
 - Per-service price with numeric value, price_type, duration_minutes (V1 features per schema)
 - `is_visible` toggle per service (deferred — all services visible at MVP)
 - Bulk delete
 
 ## Dependencies
+
 - Depends on: Ticket 050 (owner dashboard layout, sidebar nav, owner auth guard)
 - Depends on: Ticket 010 (`services` table — `id`, `listing_id`, `name`, `description`, `price_note`, `display_order`, `is_visible`)
 - Depends on: Ticket 013 (RLS — `services` INSERT/UPDATE/DELETE for authenticated owner), Ticket 014 (auth)
 - Note: Ticket 051 page editor has a "Services" section that links to `/dashboard/services` — this ticket implements the target of that link
 
 ## UX Notes
+
 - **Screen:** Services Manager — `docs/blacqlist/ux/mvp-screen-map.md` → "Services Manager (`/dashboard/services`)"
 - **Route:** `/dashboard/services`
 - **Layout:** Dashboard sidebar layout; same sidebar as Dashboard Home and Page Editor
@@ -59,6 +69,7 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - **Success state:** "Service saved." toast after add/edit; "Service deleted. Undo?" persistent toast after delete
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/blacqlist-page-design-system.md`
 - **Colors:** Amber Gold `#E2A428` for price_note text and "Add a Service" button; Pale Lavender `#E9E9F7` for expanded edit row background; red destructive for delete confirm button
 - **Fonts:** Glacial Indifference Bold for "Services" page heading; Lato Medium for service names; Lato Regular for descriptions; Quicksand Bold Italic for "Add a Service" CTA
@@ -66,6 +77,7 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - **States to implement:** Empty, Loading skeleton, Populated list, Edit-mode (row expanded), Dragging (elevation shadow), Deleting (fade out with undo toast), Error, Success (toast)
 
 ## Data Notes
+
 - **Data model:** `docs/blacqlist/data/database-schema-plan.md` → `services`
 - **Fields involved:** `id`, `listing_id`, `name`, `description`, `price_note`, `display_order`, `is_visible` (default true), `created_at`, `updated_at`
 - **Operations:**
@@ -80,6 +92,7 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - **Migration required:** No — `services` table exists from Ticket 010
 
 ## API Notes
+
 - **Server Actions plan:** `docs/blacqlist/architecture/server-actions-plan.md` → `addService`, `updateService`, `deleteService`, `reorderServices` (all in `lib/actions/dashboard/`)
 - **`addService(input)`:** `{ listingId, name, description?, price_note? }` → `ActionResult<{ serviceId: string }>` + `revalidatePath` for listing page
 - **`updateService(input)`:** `{ serviceId, listingId, name, description?, price_note? }` → `ActionResult<{ serviceId: string }>` + `revalidatePath`
@@ -90,7 +103,9 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - **Error codes:** `AUTH_REQUIRED`, `NOT_FOUND` (service or listing not owned), `VALIDATION_ERROR`, `CONFLICT` (max services reached), `OPERATION_FAILED`
 
 ## Implementation Notes
+
 **Files to create:**
+
 - `app/dashboard/services/page.tsx`
 - `app/dashboard/services/components/ServicesList.tsx`
 - `app/dashboard/services/components/ServiceRow.tsx`
@@ -102,9 +117,11 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - `lib/validations/listing.ts` — add `serviceSectionSchema` (name, description, price_note)
 
 **Files to modify:**
+
 - `app/dashboard/layout.tsx` — confirm "Services" nav item routes to `/dashboard/services`
 
 **Key patterns:**
+
 - `@dnd-kit/core` + `@dnd-kit/sortable` — install if not already present (may be added in Ticket 053). Use `SortableContext` + `useSortable` per service row. Use `DndContext` with `PointerSensor` (desktop) and `TouchSensor` (mobile).
 - Undo-delete pattern: set a `deletingId` state; use `setTimeout(5000)` to delay the SA call; "Undo" clears `deletingId` before the timeout fires; the row is hidden (opacity 0) during the undo window, then removed on SA success
 - `reorderServices` SA updates all `display_order` values by index position; pass `orderedIds` array; SA runs UPDATE in a loop or uses a CASE WHEN expression for batch update
@@ -112,11 +129,13 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - `addService` assigns `display_order = services.length` (append to end) or `0` (prepend); use append to end to avoid reordering all existing rows on every add
 
 **Do not:**
+
 - Use a separate edit page — edit is always inline within the services list
 - Hard-delete without a defined business reason — use `is_visible = false` unless the schema plan explicitly allows hard-delete for services
 - Show V1 fields (price numeric, price_type, duration_minutes, cta_type) in the MVP form — use only `price_note` (free text)
 
 ## Acceptance Criteria
+
 - [ ] `/dashboard/services` renders for an owner with their existing services sorted by `display_order`
 - [ ] Empty state shows when no services exist
 - [ ] Count badge in the page header shows the current count ("4 services")
@@ -133,16 +152,18 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - [ ] `tsc --noEmit` and `npm run lint` pass with zero errors
 
 ## Failure States
-| Failure | User-visible behavior |
-|---|---|
-| `addService` returns `CONFLICT` (max services reached) | Toast: "You've reached the maximum of 20 services." |
-| `addService` / `updateService` returns `VALIDATION_ERROR` | Inline field error below the affected field |
-| `deleteService` SA fails | Undo toast replaces with "Couldn't delete service. Try again." Row is restored. |
-| `reorderServices` SA fails | Order reverts to previous state; toast: "Couldn't save the new order. Try again." |
-| `addService` / `updateService` returns `OPERATION_FAILED` | Toast: "Couldn't save service. Please try again." |
-| Session expired | SA returns `AUTH_REQUIRED`; toast with sign-in link |
+
+| Failure                                                   | User-visible behavior                                                             |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `addService` returns `CONFLICT` (max services reached)    | Toast: "You've reached the maximum of 20 services."                               |
+| `addService` / `updateService` returns `VALIDATION_ERROR` | Inline field error below the affected field                                       |
+| `deleteService` SA fails                                  | Undo toast replaces with "Couldn't delete service. Try again." Row is restored.   |
+| `reorderServices` SA fails                                | Order reverts to previous state; toast: "Couldn't save the new order. Try again." |
+| `addService` / `updateService` returns `OPERATION_FAILED` | Toast: "Couldn't save service. Please try again."                                 |
+| Session expired                                           | SA returns `AUTH_REQUIRED`; toast with sign-in link                               |
 
 ## Edge Cases
+
 - Owner submits the add form with only whitespace in the name field — trim before validation; zod `.trim().min(1)` catches this
 - Owner reorders while another save is in flight — disable the drag handles during an in-progress SA call to avoid race conditions
 - Owner has exactly 19 services and adds one more — button state updates to disabled at exactly 20; the new service's row appears
@@ -151,6 +172,7 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - Owner edits a service while drag-to-reorder is in progress — prevent by disabling edit actions during an active drag
 
 ## Accessibility Notes
+
 - [ ] Each service row's edit button has `aria-label="Edit [service name]"`
 - [ ] Each service row's delete button has `aria-label="Delete [service name]"`
 - [ ] Drag handle has `aria-label="Drag to reorder [service name]"`; dnd-kit keyboard sensor allows reordering with arrow keys
@@ -160,20 +182,23 @@ As a business owner, I want to add, edit, reorder, and delete the services my bu
 - [ ] Page heading "Services" is `<h1>`; "Add a Service" is a `<button>` not a link
 
 ## QA Test Cases
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| 1 | Add service | Owner | 1. Click "Add a Service". 2. Enter name "Haircuts" and price "From $45". 3. Submit. | New row appears at bottom; count badge increments; SA fires; `revalidatePath` fires if published |
-| 2 | Edit service | Owner | 1. Click pencil on first service. 2. Change name. 3. Save. | Row updates inline; toast "Service saved."; SA fires |
-| 3 | Delete with undo | Owner | 1. Click delete on a service. 2. Immediately click "Undo". | Row is restored; `deleteService` SA is NOT called |
-| 4 | Delete without undo | Owner | 1. Click delete. 2. Wait 5 seconds. | SA fires; row is removed from DB; public page revalidated |
-| 5 | Max limit | Owner (20 services) | 1. Try to click "Add a Service". | Button disabled; tooltip visible |
+
+| #   | Scenario            | Role                | Steps                                                                               | Expected result                                                                                  |
+| --- | ------------------- | ------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 1   | Add service         | Owner               | 1. Click "Add a Service". 2. Enter name "Haircuts" and price "From $45". 3. Submit. | New row appears at bottom; count badge increments; SA fires; `revalidatePath` fires if published |
+| 2   | Edit service        | Owner               | 1. Click pencil on first service. 2. Change name. 3. Save.                          | Row updates inline; toast "Service saved."; SA fires                                             |
+| 3   | Delete with undo    | Owner               | 1. Click delete on a service. 2. Immediately click "Undo".                          | Row is restored; `deleteService` SA is NOT called                                                |
+| 4   | Delete without undo | Owner               | 1. Click delete. 2. Wait 5 seconds.                                                 | SA fires; row is removed from DB; public page revalidated                                        |
+| 5   | Max limit           | Owner (20 services) | 1. Try to click "Add a Service".                                                    | Button disabled; tooltip visible                                                                 |
 
 ## Security Notes
+
 - All SAs verify ownership server-side; the `listingId` from the client is cross-checked against `listings.owner_user_id = auth.uid()`
 - `serviceId` from the client is cross-checked to ensure it belongs to the owner's listing before UPDATE or DELETE
 - `display_order` values are set server-side based on the provided ordered array; client-supplied values are not trusted directly
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

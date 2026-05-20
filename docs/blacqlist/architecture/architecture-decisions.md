@@ -14,6 +14,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Use Next.js 14+ with the App Router for all frontend and API route work.
 
 **Reasoning:**
+
 - Server Components enable SEO-critical BLACQList Pages to be fully server-rendered and indexable without hydration overhead
 - Streaming and Suspense support means discovery pages can load incrementally without blocking on slow queries
 - The App Router's file-based routing maps cleanly to the BLACQList URL structure (`/[city]/[category]/[slug]`)
@@ -21,10 +22,12 @@ This document records the major architecture decisions made for The BLACQList, t
 - Vercel deployment pipeline is native and zero-config for Next.js
 
 **Trade-offs accepted:**
+
 - App Router is more complex to learn than Pages Router — requires discipline around Server vs. Client component boundaries
 - Some third-party libraries are not yet App Router-compatible — must evaluate before adding
 
 **Rejected alternatives:**
+
 - Remix: Excellent DX but smaller ecosystem; Next.js better for the SEO-first use case
 - SvelteKit: Smaller team familiarity; excellent but not the default for this team
 - Vite + React SPA: Rules out SSR/SEO without additional configuration — not viable for a discovery platform
@@ -37,11 +40,13 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** All files use TypeScript. Strict mode enabled. No `any` without documented justification.
 
 **Reasoning:**
+
 - A platform with 8+ entity types, multiple user roles, and complex permission logic requires type safety to catch errors at compile time, not runtime
 - Shared schemas between client (zod) and server (TypeScript types) are only viable with TypeScript
 - AI-assisted development (GitHub Copilot, Claude Code) is significantly more accurate with TypeScript
 
 **Trade-offs accepted:**
+
 - Slightly slower initial development for developers moving from JavaScript
 - Some third-party libraries require `@types/` packages
 
@@ -53,6 +58,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Supabase as the database platform, using PostgreSQL with Row Level Security.
 
 **Reasoning:**
+
 - PostgreSQL `tsvector` full-text search is sufficient for MVP search without an additional search service
 - `pg_trgm` enables fuzzy matching and typo-tolerant search at low cost
 - Supabase Auth eliminates the need to build authentication from scratch
@@ -62,10 +68,12 @@ This document records the major architecture decisions made for The BLACQList, t
 - Supabase's dashboard is a sufficient admin data interface in early phases
 
 **Trade-offs accepted:**
+
 - PostgreSQL full-text search has limitations at scale (no ML-based ranking, no synonym expansion) — plan for Algolia or Typesense migration in V2 when listing count exceeds ~50,000
 - Supabase is not self-hosted at launch — data residency decisions deferred to V2
 
 **Rejected alternatives:**
+
 - PlanetScale/MySQL: No full-text search native support; PostGIS/geo support weaker
 - MongoDB: Less appropriate for relational data (listings → categories → cities → users)
 - Firebase: No SQL, weak relational support, harder to migrate away from
@@ -78,6 +86,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Use PostgreSQL full-text search with `tsvector` and `pg_trgm` at MVP. Plan for Algolia or Typesense migration when search quality or performance degrades.
 
 **MVP search strategy:**
+
 - `tsvector` columns on `listings` table combining: name, description, category, city, subcategory, tags
 - `GIN` index on the `tsvector` column for query performance
 - `pg_trgm` for fuzzy matching (handles typos and partial matches)
@@ -85,12 +94,14 @@ This document records the major architecture decisions made for The BLACQList, t
 - Sorting: relevance (ts_rank) first, then recency tiebreaker
 
 **V2 migration trigger:** When any of the following occur:
+
 - Search latency exceeds 300ms at p95
 - Total listings exceed 50,000
 - Users request synonym search ("barber" ≠ "barbershop" in basic FTS) or semantic search
 - AI-assisted discovery is being built (requires vector search — `pgvector` or external)
 
 **Rejected alternatives for MVP:**
+
 - Algolia at MVP: Cost and complexity overhead before the platform has validated search usage patterns
 - Elasticsearch: Infrastructure overhead not justified at MVP scale
 
@@ -102,18 +113,21 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Supabase Auth for all authentication flows.
 
 **Flows supported:**
+
 - Email + password (MVP)
 - Magic link / passwordless email (V1 — simpler onboarding)
 - Google OAuth (V1)
 - Apple OAuth (V2 — required for iOS app)
 
 **Session management:**
+
 - JWT sessions stored in httpOnly cookies (server-side)
 - Session refresh handled by Supabase client SDK
 - Middleware (`middleware.ts`) checks session on protected routes
 - RLS policies use `auth.uid()` for ownership enforcement at the database level
 
 **Role management:**
+
 - Roles stored in a `user_roles` table, not in the JWT (to allow role changes without token re-issue)
 - Admin role is checked server-side on every admin route access
 - Supabase `service_role` key used only in server-side code; never exposed to the client
@@ -133,6 +147,7 @@ This document records the major architecture decisions made for The BLACQList, t
 | `receipts` | Private (owner only) | Receipt photo uploads |
 
 **Rules:**
+
 - Never store the Supabase CDN URL — store the storage path and generate URLs at read time
 - File type and size validation server-side before upload
 - Image optimization (WebP conversion, resize) via Next.js Image or Supabase image transforms
@@ -148,16 +163,19 @@ This document records the major architecture decisions made for The BLACQList, t
 **MVP scope:** None (no payments at MVP)
 
 **V1 scope:**
+
 - Stripe subscriptions for listing tier upgrades (Standard, Premium)
 - Stripe Customer Portal for self-service subscription management
 
 **V2 scope (Marketplace):**
+
 - Stripe Connect (Standard or Express) for vendor payouts
 - Platform application fee on marketplace transactions
 - Webhook handlers for: payment succeeded, payment failed, subscription updated, refund processed
 - Stripe Radar for fraud detection on marketplace transactions
 
 **Trade-offs accepted:**
+
 - Stripe fees reduce platform margin on marketplace
 - Stripe Connect onboarding requires vendors to complete KYC — some friction at vendor signup
 
@@ -169,6 +187,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Resend for transactional email.
 
 **MVP transactional emails:**
+
 - Claim request submitted (owner receives confirmation)
 - Claim approved (owner notified)
 - Claim rejected (owner notified with reason)
@@ -176,6 +195,7 @@ This document records the major architecture decisions made for The BLACQList, t
 - Email verification
 
 **V1 additions:**
+
 - Review notification (business owner)
 - Community correction resolved
 - Listing approaching expiry (events, jobs)
@@ -190,19 +210,23 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Anthropic Claude API for all AI features. No other AI provider.
 
 **V2 AI features:**
+
 - Business Page optimization suggestions (description quality, category accuracy, CTA completeness)
 - Shopper-side conversational discovery (natural language search with ranked results + reasoning)
 
 **V3 AI features:**
+
 - Admin curation agent (surfaces trending listings, flags stale content, recommends editorial)
 
 **Prompt strategy:**
+
 - All AI prompts are server-side only — no client-side API calls with exposed keys
 - AI responses include a confidence signal and a reasoning trace visible to the user
 - Prompts are versioned and testable
 - AI features are behind feature flags — disabled if response quality is below threshold
 
 **Rejected alternatives:**
+
 - OpenAI: Valid alternative; Anthropic preferred for safety characteristics and reasoning quality
 - On-device / edge models: Insufficient capability for the conversational discovery use case
 
@@ -214,6 +238,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** The BLACQList URL structure for all routes.
 
 **Public routes:**
+
 ```
 /                                                    Homepage
 /search                                              Search results
@@ -238,6 +263,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Note:** Entity type is determined by the `listing_type` field on the `listings` table, not by URL prefix. All entity pages share the same dynamic route segment pattern `/[city-slug]/[entity-type]/[listing-slug]`. The original `/listing/[slug]` pattern in this ADR was superseded by the route map established in `ux/route-map.md`.
 
 **Authenticated routes:**
+
 ```
 /dashboard                     Business owner or supporter dashboard (role-based redirect)
 /dashboard/page                Business owner — edit BLACQList Page
@@ -249,6 +275,7 @@ This document records the major architecture decisions made for The BLACQList, t
 ```
 
 **Admin routes:**
+
 ```
 /admin                         Admin dashboard
 /admin/listings                Listing management
@@ -260,6 +287,7 @@ This document records the major architecture decisions made for The BLACQList, t
 ```
 
 **Slug format for listings:** `[business-name]-[city]` — e.g., `sweet-auburn-bbq-atlanta`
+
 - Generated on create, unique, URL-safe
 - Does not change when business data changes (stability over accuracy)
 
@@ -271,12 +299,14 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** Vercel for hosting. Edge Network for CDN. Preview deployments on every PR.
 
 **Reasoning:**
+
 - Zero-config Next.js deployment
 - Preview URLs enable non-technical stakeholders to review UX before merging
 - Vercel Edge Functions can handle geolocation-based city detection
 - Serverless functions scale to zero — cost-efficient at MVP traffic levels
 
 **Trade-offs accepted:**
+
 - Vendor lock-in to Vercel — acceptable until V3/V4 scale requires cost optimization
 - Cold start latency on serverless functions — mitigated by keeping route handlers lean
 
@@ -288,6 +318,7 @@ This document records the major architecture decisions made for The BLACQList, t
 **Decision:** PostgreSQL relational model with typed entities, not a schema-less document store.
 
 **Core principles:**
+
 - Every entity type is a separate table (not a polymorphic mega-table)
 - Listings have a shared base table (`listings`) with entity-type-specific extension tables
 - Many-to-many relationships use explicit junction tables
@@ -297,6 +328,7 @@ This document records the major architecture decisions made for The BLACQList, t
 - Soft deletes (`deleted_at`) on all entities where history matters
 
 **Entity relationship summary (see full data model in `docs/blacqlist/data/`):**
+
 - `users` — auth and profile
 - `listings` — base entity record shared across all types
 - `listing_details_business` — business-specific fields
@@ -316,15 +348,15 @@ This document records the major architecture decisions made for The BLACQList, t
 
 ## Decisions Still Open
 
-| Decision | Options | Target Phase |
-|---|---|---|
-| Map / geo provider (city detection, "near me") | Mapbox, Google Maps, Radar | V2 |
-| Analytics platform | PostHog, Mixpanel, Amplitude | V1 |
-| Error tracking | Sentry (likely) | Phase 0 |
-| Search upgrade path | Algolia vs. Typesense | V2 |
-| Mobile app approach | React Native vs. Expo vs. native Swift/Kotlin | V4 |
-| Marketplace fulfillment tracking | Custom vs. EasyPost | V2 |
-| Dollar-flow graph technology | D3.js vs. React Flow vs. Nivo | V3 |
+| Decision                                       | Options                                       | Target Phase |
+| ---------------------------------------------- | --------------------------------------------- | ------------ |
+| Map / geo provider (city detection, "near me") | Mapbox, Google Maps, Radar                    | V2           |
+| Analytics platform                             | PostHog, Mixpanel, Amplitude                  | V1           |
+| Error tracking                                 | Sentry (likely)                               | Phase 0      |
+| Search upgrade path                            | Algolia vs. Typesense                         | V2           |
+| Mobile app approach                            | React Native vs. Expo vs. native Swift/Kotlin | V4           |
+| Marketplace fulfillment tracking               | Custom vs. EasyPost                           | V2           |
+| Dollar-flow graph technology                   | D3.js vs. React Flow vs. Nivo                 | V3           |
 
 ---
 

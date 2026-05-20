@@ -38,6 +38,7 @@ npx supabase start
 This starts the full local Supabase stack (Postgres, Auth, Storage, Studio) and prints local API keys. Copy the `API URL` and `anon key` into `.env.local`.
 
 Local services:
+
 - API: `http://127.0.0.1:54321`
 - Studio: `http://127.0.0.1:54323`
 - Email (inbucket): `http://127.0.0.1:54324`
@@ -51,6 +52,7 @@ npx supabase db reset
 ```
 
 This re-runs all 16 migrations and seeds:
+
 - Reference data (cities, categories, plans)
 - 80 real Black-owned businesses across Atlanta, Houston, and Chicago
 
@@ -89,17 +91,17 @@ Then visit `http://localhost:3000/admin`.
 
 ## Key Commands
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Start Next.js dev server at port 3000 |
-| `pnpm build` | Production build |
-| `pnpm lint` | Run ESLint |
-| `npx tsc --noEmit` | TypeScript type check |
-| `npx supabase start` | Start local Supabase stack |
-| `npx supabase stop` | Stop local Supabase stack |
-| `npx supabase db reset` | Reset DB and re-run all migrations + seeds |
-| `npx supabase db diff` | Diff local schema vs migrations |
-| `npx supabase migration new <name>` | Create a new migration file |
+| Command                             | What it does                               |
+| ----------------------------------- | ------------------------------------------ |
+| `pnpm dev`                          | Start Next.js dev server at port 3000      |
+| `pnpm build`                        | Production build                           |
+| `pnpm lint`                         | Run ESLint                                 |
+| `npx tsc --noEmit`                  | TypeScript type check                      |
+| `npx supabase start`                | Start local Supabase stack                 |
+| `npx supabase stop`                 | Stop local Supabase stack                  |
+| `npx supabase db reset`             | Reset DB and re-run all migrations + seeds |
+| `npx supabase db diff`              | Diff local schema vs migrations            |
+| `npx supabase migration new <name>` | Create a new migration file                |
 
 ---
 
@@ -127,16 +129,16 @@ docs/blacqlist/       Product docs, architecture, tickets, QA
 
 ## Tech Stack
 
-| Layer | Tool |
-|---|---|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Components | shadcn/ui |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth |
-| Storage | Supabase Storage |
-| Email | Resend |
-| Payments | Stripe |
-| Error tracking | Sentry |
-| Deployment | Vercel |
+| Layer          | Tool                    |
+| -------------- | ----------------------- |
+| Framework      | Next.js 15 (App Router) |
+| Language       | TypeScript              |
+| Styling        | Tailwind CSS            |
+| Components     | shadcn/ui               |
+| Database       | Supabase (PostgreSQL)   |
+| Auth           | Supabase Auth           |
+| Storage        | Supabase Storage        |
+| Email          | Resend                  |
+| Payments       | Stripe                  |
+| Error tracking | Sentry                  |
+| Deployment     | Vercel                  |

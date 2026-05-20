@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { MapPin, BookOpen } from "lucide-react"
+import Link from 'next/link'
+import { MapPin, BookOpen } from 'lucide-react'
 
 interface Props {
   title: string
@@ -21,7 +21,7 @@ export function GuideCard({ title, slug, subtitle, city, sectionCount }: Props) 
         </div>
         {sectionCount !== undefined && (
           <span className="font-subhead text-xs text-charcoal/50 shrink-0">
-            {sectionCount} {sectionCount === 1 ? "section" : "sections"}
+            {sectionCount} {sectionCount === 1 ? 'section' : 'sections'}
           </span>
         )}
       </div>

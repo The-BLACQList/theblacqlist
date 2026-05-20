@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Layers } from "lucide-react"
+import Link from 'next/link'
+import { Layers } from 'lucide-react'
 
 interface Props {
   title: string
@@ -20,7 +20,7 @@ export function CollectionCard({ title, slug, description, listingCount }: Props
         </div>
         {listingCount !== undefined && (
           <span className="font-subhead text-xs text-charcoal/50 shrink-0">
-            {listingCount} {listingCount === 1 ? "business" : "businesses"}
+            {listingCount} {listingCount === 1 ? 'business' : 'businesses'}
           </span>
         )}
       </div>

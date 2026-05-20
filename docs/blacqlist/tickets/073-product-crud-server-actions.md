@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 13: Marketplace Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Marketplace
 
 ---
@@ -42,6 +47,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 ## Scope
 
 **In scope:**
+
 - `lib/actions/marketplace/createProduct.ts` — Server Action; validates owner, validates input, INSERTs into `products`, handles image upload (calls `POST /api/upload`), enforces 100-product limit, revalidates tag
 - `lib/actions/marketplace/updateProduct.ts` — Server Action; owner-only check; UPDATEs `products`; replaces images if changed; revalidates tag
 - `lib/actions/marketplace/deleteProduct.ts` — Server Action; owner-only check; soft delete: sets `deleted_at = now()` (effectively removes from public catalog); revalidates tag
@@ -58,6 +64,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 - `ActionResult<T>` return type on all Server Actions (standard pattern from `lib/errors/types.ts`)
 
 **Out of scope:**
+
 - Admin product moderation (Ticket 074)
 - Vendor storefront page rendering (Ticket 072)
 - Products table migration (Ticket 071)
@@ -68,13 +75,13 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 071 — `products` table migration and API | Blocking ticket | Not started |
-| Ticket 030 — Media upload Route Handler | Blocking ticket | Not started |
-| Ticket 014 — Auth flows | Blocking ticket | Not started |
-| Ticket 050 — Owner dashboard home (dashboard layout) | Blocking ticket | Not started |
-| `lib/errors/types.ts` — `ActionResult<T>` type | Infrastructure | Not started (from Ticket 050 scope or earlier) |
+| Dependency                                           | Type            | Status                                         |
+| ---------------------------------------------------- | --------------- | ---------------------------------------------- |
+| Ticket 071 — `products` table migration and API      | Blocking ticket | Not started                                    |
+| Ticket 030 — Media upload Route Handler              | Blocking ticket | Not started                                    |
+| Ticket 014 — Auth flows                              | Blocking ticket | Not started                                    |
+| Ticket 050 — Owner dashboard home (dashboard layout) | Blocking ticket | Not started                                    |
+| `lib/errors/types.ts` — `ActionResult<T>` type       | Infrastructure  | Not started (from Ticket 050 scope or earlier) |
 
 ---
 
@@ -86,6 +93,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 - **Exit points:** Save → back to `/dashboard/products`; Cancel → back to `/dashboard/products`; Delete → confirmed and removed from table inline
 
 **Product management table layout:**
+
 ```
 [Add product] button (top right)
 ┌──────────┬────────┬──────────┬─────────────┬───────────┐
@@ -97,6 +105,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 ```
 
 **Create/Edit form fields:**
+
 - Name (required)
 - Price (required; number input `inputMode="decimal"`)
 - Category (text; optional)
@@ -110,6 +119,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
 **Drag-to-reorder:** Use `@dnd-kit/core` and `@dnd-kit/sortable` for drag-and-drop. Fire `reorderProducts` on drag end. Optimistic update: move the item in local state immediately; roll back if the action returns an error.
 
 **Mobile behavior:**
+
 - Product table: truncate name and price columns; hide display_order drag handle column; retain Edit and Delete actions
 - Create/edit form: single column, full-width; submit button fixed at bottom of viewport
 
@@ -140,6 +150,7 @@ As a vendor owner, I want to add, edit, and remove products from my catalog in m
   - `reorderProducts`: UPDATE `products SET display_order = $n WHERE id = $id AND listing_id = $listing_id`
 
 **Ownership check pattern (every action must implement this):**
+
 ```typescript
 // Verify caller owns the listing
 const { data: listing } = await supabase
@@ -154,6 +165,7 @@ if (!listing || listing.owner_user_id !== user.id) {
 ```
 
 **100-product limit check in `createProduct`:**
+
 ```typescript
 const { count } = await supabase
   .from('products')
@@ -181,6 +193,7 @@ if ((count ?? 0) >= 100) {
 **All four mutations are Server Actions (not Route Handlers)** because they mutate data and must call `revalidateTag` for ISR invalidation.
 
 **`createProduct` input:**
+
 ```typescript
 {
   listingId: string         // UUID
@@ -204,19 +217,20 @@ if ((count ?? 0) >= 100) {
 
 **Error codes to handle in the UI:**
 
-| Code | User message |
-|---|---|
-| `PRODUCT_LIMIT_EXCEEDED` | "You've reached the 100-product limit." |
-| `FORBIDDEN` | "You don't have permission to manage this listing." |
-| `NOT_FOUND` | "This product no longer exists." |
-| `VALIDATION_ERROR` | Inline field errors per field |
-| `INTERNAL_ERROR` | "Something went wrong. Please try again." |
+| Code                     | User message                                        |
+| ------------------------ | --------------------------------------------------- |
+| `PRODUCT_LIMIT_EXCEEDED` | "You've reached the 100-product limit."             |
+| `FORBIDDEN`              | "You don't have permission to manage this listing." |
+| `NOT_FOUND`              | "This product no longer exists."                    |
+| `VALIDATION_ERROR`       | Inline field errors per field                       |
+| `INTERNAL_ERROR`         | "Something went wrong. Please try again."           |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `lib/actions/marketplace/createProduct.ts`
 - `lib/actions/marketplace/updateProduct.ts`
 - `lib/actions/marketplace/deleteProduct.ts`
@@ -230,16 +244,19 @@ if ((count ?? 0) >= 100) {
 - `lib/utils/slug.ts` — `slugify()` and `uniqueSlug()` helpers (or add to existing utils file)
 
 **Files to modify:**
+
 - `lib/errors/codes.ts` — add `PRODUCT_LIMIT_EXCEEDED`
 - Dashboard sidebar nav — add "Products" link pointing to `/dashboard/products`
 
 **Key patterns:**
+
 - Follow the standard 7-step Server Action pattern from `docs/blacqlist/architecture/server-actions-plan.md`
 - Image upload: do NOT upload files directly in the Server Action — Server Actions cannot stream multipart/form-data. The client component calls `POST /api/upload` first (Ticket 030), receives the storage path, then passes the path to the Server Action.
 - `reorderProducts` must validate that all `id`s in the input array belong to the caller's `listingId` before updating — prevent cross-listing manipulation
 - Use `@dnd-kit/core` and `@dnd-kit/sortable` for drag-to-reorder if not already installed; confirm not available in shadcn/ui before installing
 
 **Do not:**
+
 - Skip the ownership check for any of the four Server Actions — this is the primary security constraint
 - Hard-delete products (use soft delete — set `deleted_at`)
 - Expose `status` enum in UI; translate to Active / Inactive labels in the component layer
@@ -267,15 +284,15 @@ if ((count ?? 0) >= 100) {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Product limit reached | COUNT >= 100 before create | Toast error: "You've reached the 100-product limit." | Owner must delete an existing product first |
-| Ownership check fails | `listingId` not owned by caller | Toast error: "You don't have permission to manage this listing." | No action (should not be reachable via normal UI) |
-| Validation error | Required field missing or out of range | Inline field errors below each invalid field | Correct and resubmit |
-| Product not found (edit) | Product was deleted between loading the form and submitting | Toast error: "This product no longer exists." | Redirect to `/dashboard/products` |
-| Image upload fails | `POST /api/upload` returns error | Inline error below the image input: "Image upload failed. Try again." | Retry upload; form submission blocked until resolved |
-| Reorder fails | `reorderProducts` returns error | Toast error: "Couldn't save new order. Please try again." | Local state rolled back to previous order |
-| Server error | Unexpected DB error in any SA | Toast error: "Something went wrong. Please try again." | Retry |
+| Failure                  | Condition                                                   | User sees                                                             | Recovery                                             |
+| ------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------- |
+| Product limit reached    | COUNT >= 100 before create                                  | Toast error: "You've reached the 100-product limit."                  | Owner must delete an existing product first          |
+| Ownership check fails    | `listingId` not owned by caller                             | Toast error: "You don't have permission to manage this listing."      | No action (should not be reachable via normal UI)    |
+| Validation error         | Required field missing or out of range                      | Inline field errors below each invalid field                          | Correct and resubmit                                 |
+| Product not found (edit) | Product was deleted between loading the form and submitting | Toast error: "This product no longer exists."                         | Redirect to `/dashboard/products`                    |
+| Image upload fails       | `POST /api/upload` returns error                            | Inline error below the image input: "Image upload failed. Try again." | Retry upload; form submission blocked until resolved |
+| Reorder fails            | `reorderProducts` returns error                             | Toast error: "Couldn't save new order. Please try again."             | Local state rolled back to previous order            |
+| Server error             | Unexpected DB error in any SA                               | Toast error: "Something went wrong. Please try again."                | Retry                                                |
 
 ---
 
@@ -303,15 +320,15 @@ if ((count ?? 0) >= 100) {
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Create product happy path | Vendor owner | Navigate to `/dashboard/products/new`; fill all required fields; click Save | Product appears in the table; public storefront revalidated |
-| QA-2 | 100-product limit | Vendor owner | Create 100 products then attempt to create a 101st | Error toast: "You've reached the 100-product limit." |
-| QA-3 | Ownership enforcement | Vendor owner | Call `createProduct` with a `listingId` owned by another user | Returns `FORBIDDEN` error; no product created |
-| QA-4 | Delete product | Vendor owner | Click ✕ on a product; confirm in AlertDialog | Product removed from table; `deleted_at` set; product not visible on public storefront after ISR |
-| QA-5 | Drag to reorder | Vendor owner | Drag product B above product A; release | Product order updates optimistically; `reorderProducts` SA called; order persists on page reload |
-| QA-6 | Validation errors | Vendor owner | Submit create form with name and price empty | Inline errors shown under both fields; no product created |
-| QA-7 | Mobile form | Vendor owner | Open `/dashboard/products/new` at 375px | Single-column form; submit button visible without scrolling |
+| #    | Scenario                  | Role         | Steps                                                                       | Expected result                                                                                  |
+| ---- | ------------------------- | ------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| QA-1 | Create product happy path | Vendor owner | Navigate to `/dashboard/products/new`; fill all required fields; click Save | Product appears in the table; public storefront revalidated                                      |
+| QA-2 | 100-product limit         | Vendor owner | Create 100 products then attempt to create a 101st                          | Error toast: "You've reached the 100-product limit."                                             |
+| QA-3 | Ownership enforcement     | Vendor owner | Call `createProduct` with a `listingId` owned by another user               | Returns `FORBIDDEN` error; no product created                                                    |
+| QA-4 | Delete product            | Vendor owner | Click ✕ on a product; confirm in AlertDialog                                | Product removed from table; `deleted_at` set; product not visible on public storefront after ISR |
+| QA-5 | Drag to reorder           | Vendor owner | Drag product B above product A; release                                     | Product order updates optimistically; `reorderProducts` SA called; order persists on page reload |
+| QA-6 | Validation errors         | Vendor owner | Submit create form with name and price empty                                | Inline errors shown under both fields; no product created                                        |
+| QA-7 | Mobile form               | Vendor owner | Open `/dashboard/products/new` at 375px                                     | Single-column form; submit button visible without scrolling                                      |
 
 ---
 

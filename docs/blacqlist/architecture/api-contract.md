@@ -7,6 +7,7 @@
 This document defines every API endpoint and Server Action for The BLACQList across all feature areas and phases. Engineers read this before writing any route handler, server action, or client-side fetch call.
 
 **Document structure:**
+
 - Part A (this file): Overview + Sections 1–4 — Public Discovery, Auth/Account, Saves/Shares, Entity Submission
 - Part B (api-contract-b.md): Sections 5–9 — Claims, Owner Dashboard, Reviews, Corrections, Admin
 - Part C (api-contract-c.md): Sections 10–12 — Receipt/Spend, Flow Map, Marketplace
@@ -17,11 +18,11 @@ This document defines every API endpoint and Server Action for The BLACQList acr
 
 ### Base URL
 
-| Environment | URL |
-|---|---|
-| Development | `http://localhost:3000` |
-| Staging | `https://staging.theblacqlist.com` |
-| Production | `https://theblacqlist.com` |
+| Environment | URL                                |
+| ----------- | ---------------------------------- |
+| Development | `http://localhost:3000`            |
+| Staging     | `https://staging.theblacqlist.com` |
+| Production  | `https://theblacqlist.com`         |
 
 ### Authentication
 
@@ -29,13 +30,13 @@ All authenticated endpoints use the Supabase session managed in httpOnly cookies
 
 **Role hierarchy:**
 
-| Role | Description |
-|---|---|
-| Anonymous | Unauthenticated — read-only access to published content |
-| Supporter | Any authenticated user — can save, review, share |
-| Owner | Authenticated user with `user_roles.role = 'owner'` for a specific `listing_id` |
-| Admin | Platform staff — elevated moderation and management access |
-| Super Admin | Full platform access including role grants and destructive operations |
+| Role        | Description                                                                     |
+| ----------- | ------------------------------------------------------------------------------- |
+| Anonymous   | Unauthenticated — read-only access to published content                         |
+| Supporter   | Any authenticated user — can save, review, share                                |
+| Owner       | Authenticated user with `user_roles.role = 'owner'` for a specific `listing_id` |
+| Admin       | Platform staff — elevated moderation and management access                      |
+| Super Admin | Full platform access including role grants and destructive operations           |
 
 ### Request Format
 
@@ -84,12 +85,12 @@ Supabase Storage paths (not CDN URLs) are stored in the database and returned in
 
 ### ISR Cache Strategy
 
-| Change type | Invalidation call |
-|---|---|
-| Published listing content updated | `revalidatePath('/[city-slug]/business/[listing-slug]')` |
+| Change type                          | Invalidation call                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| Published listing content updated    | `revalidatePath('/[city-slug]/business/[listing-slug]')`                      |
 | City or category listing set changes | `revalidateTag('city-[slug]')` or `revalidatePath('/[city-slug]/[cat-slug]')` |
-| Collection items change | `revalidatePath('/collection/[slug]')` |
-| Admin changes featured status | Revalidate homepage + city page |
+| Collection items change              | `revalidatePath('/collection/[slug]')`                                        |
+| Admin changes featured status        | Revalidate homepage + city page                                               |
 
 ---
 
@@ -148,14 +149,14 @@ All endpoints in this section are public (Anonymous access). They enforce `statu
 
 ```typescript
 interface SearchQueryParams {
-  q?: string                 // Full-text search query, max 200 chars
-  city?: string              // City slug (e.g., "atlanta")
-  category?: string          // Category slug (e.g., "food-beverage")
+  q?: string // Full-text search query, max 200 chars
+  city?: string // City slug (e.g., "atlanta")
+  category?: string // Category slug (e.g., "food-beverage")
   type?: 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
   trust_tier?: 'claimed' | 'verified' | 'certified'
   location_type?: 'physical' | 'online' | 'hybrid'
-  page?: number              // Default: 1, min: 1
-  limit?: number             // Default: 20, max: 100
+  page?: number // Default: 1, min: 1
+  limit?: number // Default: 20, max: 100
 }
 ```
 
@@ -178,13 +179,13 @@ interface SearchResult {
   }
   trust_tier: 'unclaimed' | 'claimed' | 'verified' | 'certified'
   listing_tier: 'free' | 'standard' | 'premium'
-  logo_path: string | null          // Supabase Storage path; caller generates URL
-  cover_image_path: string | null   // Supabase Storage path; caller generates URL
+  logo_path: string | null // Supabase Storage path; caller generates URL
+  cover_image_path: string | null // Supabase Storage path; caller generates URL
   avg_rating: number | null
   review_count: number
   save_count: number
   status: 'published'
-  published_at: string              // ISO 8601
+  published_at: string // ISO 8601
 }
 
 // Response envelope: { data: SearchResult[], meta: { total, page, limit } }
@@ -213,10 +214,10 @@ When `q` is provided: `search_vector @@ websearch_to_tsquery('english', q)`, ran
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid parameter values (non-numeric page/limit, invalid enum value) |
-| `RATE_LIMITED` | 429 | 60 requests/min for Anonymous; 120 requests/min for authenticated |
+| Code               | HTTP | When                                                                  |
+| ------------------ | ---- | --------------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid parameter values (non-numeric page/limit, invalid enum value) |
+| `RATE_LIMITED`     | 429  | 60 requests/min for Anonymous; 120 requests/min for authenticated     |
 
 **Frontend Usage**
 
@@ -244,8 +245,8 @@ None — fully dynamic; no ISR cache.
 
 ```typescript
 interface FeaturedQueryParams {
-  city_slug?: string   // Filter featured listings to a specific city
-  limit?: number       // Default: 6, max: 20
+  city_slug?: string // Filter featured listings to a specific city
+  limit?: number // Default: 6, max: 20
 }
 ```
 
@@ -270,9 +271,9 @@ interface FeaturedQueryParams {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `limit` exceeds 20 or is non-numeric |
+| Code               | HTTP | When                                 |
+| ------------------ | ---- | ------------------------------------ |
+| `VALIDATION_ERROR` | 400  | `limit` exceeds 20 or is non-numeric |
 
 **Frontend Usage**
 
@@ -312,7 +313,7 @@ interface CityPageData {
     slug: string
     state: {
       name: string
-      code: string              // Two-letter state code
+      code: string // Two-letter state code
     }
     metro_area: string | null
     latitude: number
@@ -323,10 +324,10 @@ interface CityPageData {
     name: string
     slug: string
     icon: string | null
-    listing_count: number       // Count of published listings in this city + category
+    listing_count: number // Count of published listings in this city + category
   }>
-  featured_listings: SearchResult[]   // Same shape as endpoint 1; limited to 6
-  total_listings: number              // Total published listings in this city
+  featured_listings: SearchResult[] // Same shape as endpoint 1; limited to 6
+  total_listings: number // Total published listings in this city
 }
 ```
 
@@ -342,9 +343,9 @@ interface CityPageData {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | City slug not found in `cities` table, or `is_active = false` |
+| Code        | HTTP | When                                                          |
+| ----------- | ---- | ------------------------------------------------------------- |
+| `NOT_FOUND` | 404  | City slug not found in `cities` table, or `is_active = false` |
 
 **Frontend Usage**
 
@@ -371,8 +372,8 @@ ISR 24 hours. `revalidateTag('city-[slug]')` called whenever any listing in the 
 
 ```typescript
 interface CityCategoryQueryParams {
-  page?: number    // Default: 1
-  limit?: number   // Default: 20, max: 100
+  page?: number // Default: 1
+  limit?: number // Default: 20, max: 100
   type?: 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
   trust_tier?: 'claimed' | 'verified' | 'certified'
 }
@@ -393,7 +394,7 @@ interface CityCategoryPageData {
     slug: string
     description: string | null
   }
-  listings: SearchResult[]   // Same shape as endpoint 1
+  listings: SearchResult[] // Same shape as endpoint 1
   meta: {
     total: number
     page: number
@@ -418,10 +419,10 @@ interface CityCategoryPageData {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | City or category slug not found, or either is inactive |
-| `VALIDATION_ERROR` | 400 | Invalid parameter values |
+| Code               | HTTP | When                                                   |
+| ------------------ | ---- | ------------------------------------------------------ |
+| `NOT_FOUND`        | 404  | City or category slug not found, or either is inactive |
+| `VALIDATION_ERROR` | 400  | Invalid parameter values                               |
 
 **Frontend Usage**
 
@@ -485,7 +486,7 @@ interface EntityPageData {
       name: string
       slug: string
     }
-    owner_user_id: string | null   // Only included if requester is the listing owner
+    owner_user_id: string | null // Only included if requester is the listing owner
   }
   details: {
     // listing_details_business fields (for business and vendor entity types)
@@ -514,7 +515,7 @@ interface EntityPageData {
   }
   media: Array<{
     id: string
-    file_path: string        // Storage path — caller generates URL
+    file_path: string // Storage path — caller generates URL
     alt_text: string | null
     display_order: number
     width: number | null
@@ -534,8 +535,8 @@ interface EntityPageData {
     is_visible: boolean
   }>
   listing_hours: Array<{
-    day_of_week: number        // 0 = Sunday, 6 = Saturday
-    open_time: string | null   // "HH:MM" format
+    day_of_week: number // 0 = Sunday, 6 = Saturday
+    open_time: string | null // "HH:MM" format
     close_time: string | null
     is_closed: boolean
     notes: string | null
@@ -545,7 +546,7 @@ interface EntityPageData {
     url: string
     display_order: number
   }>
-  is_saved: boolean   // Always false for Anonymous; true if authenticated user has saved this listing
+  is_saved: boolean // Always false for Anonymous; true if authenticated user has saved this listing
 }
 ```
 
@@ -566,10 +567,10 @@ interface EntityPageData {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Listing slug not found, or listing is not published for Anonymous |
-| `WRONG_ENTITY_TYPE` | 301 | Entity type in URL path does not match `listings.entity_type` — redirect to correct URL |
+| Code                | HTTP | When                                                                                    |
+| ------------------- | ---- | --------------------------------------------------------------------------------------- |
+| `NOT_FOUND`         | 404  | Listing slug not found, or listing is not published for Anonymous                       |
+| `WRONG_ENTITY_TYPE` | 301  | Entity type in URL path does not match `listings.entity_type` — redirect to correct URL |
 
 **Frontend Usage**
 
@@ -597,7 +598,7 @@ ISR 1 hour. `revalidatePath('/[city-slug]/[entity-type]/[listing-slug]')` called
 
 ```typescript
 interface RelatedQueryParams {
-  limit?: number   // Default: 4, max: 12
+  limit?: number // Default: 4, max: 12
 }
 ```
 
@@ -624,10 +625,10 @@ interface RelatedQueryParams {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Source listing ID not found or soft-deleted |
-| `VALIDATION_ERROR` | 400 | `id` is not a valid UUID |
+| Code               | HTTP | When                                        |
+| ------------------ | ---- | ------------------------------------------- |
+| `NOT_FOUND`        | 404  | Source listing ID not found or soft-deleted |
+| `VALIDATION_ERROR` | 400  | `id` is not a valid UUID                    |
 
 **Frontend Usage**
 
@@ -664,7 +665,7 @@ interface CollectionCard {
   title: string
   slug: string
   description: string | null
-  cover_image_path: string | null   // Storage path; caller generates URL
+  cover_image_path: string | null // Storage path; caller generates URL
   listing_count: number
   display_order: number
 }
@@ -684,9 +685,9 @@ interface CollectionCard {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| — | — | Returns empty array if no active collections exist |
+| Code | HTTP | When                                               |
+| ---- | ---- | -------------------------------------------------- |
+| —    | —    | Returns empty array if no active collections exist |
 
 **Frontend Usage**
 
@@ -725,9 +726,9 @@ interface CollectionDetailData {
     title: string
     slug: string
     description: string | null
-    cover_image_path: string | null   // Storage path; caller generates URL
+    cover_image_path: string | null // Storage path; caller generates URL
   }
-  listings: SearchResult[]   // Same shape as endpoint 1; ordered by collection display_order ASC
+  listings: SearchResult[] // Same shape as endpoint 1; ordered by collection display_order ASC
 }
 
 // Response envelope: { data: CollectionDetailData }
@@ -744,9 +745,9 @@ interface CollectionDetailData {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Collection slug not found, or `is_active = false` |
+| Code        | HTTP | When                                              |
+| ----------- | ---- | ------------------------------------------------- |
+| `NOT_FOUND` | 404  | Collection slug not found, or `is_active = false` |
 
 **Frontend Usage**
 
@@ -773,10 +774,10 @@ ISR 1 hour. `revalidatePath('/collection/[slug]')` called when admin adds, remov
 
 ```typescript
 interface EventBrowseQueryParams {
-  type: 'event'        // Required — this endpoint is the handler when type=event is passed
-  city?: string        // City slug
-  page?: number        // Default: 1
-  limit?: number       // Default: 20, max: 100
+  type: 'event' // Required — this endpoint is the handler when type=event is passed
+  city?: string // City slug
+  page?: number // Default: 1
+  limit?: number // Default: 20, max: 100
 }
 ```
 
@@ -803,9 +804,9 @@ interface EventBrowseQueryParams {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid parameter values |
+| Code               | HTTP | When                     |
+| ------------------ | ---- | ------------------------ |
+| `VALIDATION_ERROR` | 400  | Invalid parameter values |
 
 **Frontend Usage**
 
@@ -832,10 +833,10 @@ ISR 30 minutes. `revalidatePath('/events')` called when an event listing is publ
 
 ```typescript
 interface JobBrowseQueryParams {
-  type: 'job'          // Required — this endpoint is the handler when type=job is passed
-  city?: string        // City slug
-  page?: number        // Default: 1
-  limit?: number       // Default: 20, max: 100
+  type: 'job' // Required — this endpoint is the handler when type=job is passed
+  city?: string // City slug
+  page?: number // Default: 1
+  limit?: number // Default: 20, max: 100
 }
 ```
 
@@ -862,9 +863,9 @@ interface JobBrowseQueryParams {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid parameter values |
+| Code               | HTTP | When                     |
+| ------------------ | ---- | ------------------------ |
+| `VALIDATION_ERROR` | 400  | Invalid parameter values |
 
 **Frontend Usage**
 
@@ -905,14 +906,14 @@ These endpoints manage the authenticated user's own identity and onboarding stat
 interface CurrentUser {
   id: string
   display_name: string | null
-  avatar_url: string | null        // Storage path; caller generates URL
+  avatar_url: string | null // Storage path; caller generates URL
   bio: string | null
   city_id: string | null
   website_url: string | null
-  created_at: string               // ISO 8601
+  created_at: string // ISO 8601
   roles: Array<{
     role: 'supporter' | 'owner' | 'editor' | 'admin' | 'super_admin'
-    listing_id: string | null      // Non-null only for 'owner' role
+    listing_id: string | null // Non-null only for 'owner' role
   }>
 }
 
@@ -931,9 +932,9 @@ interface CurrentUser {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session cookie present |
+| Code            | HTTP | When                            |
+| --------------- | ---- | ------------------------------- |
+| `AUTH_REQUIRED` | 401  | No valid session cookie present |
 
 **Frontend Usage**
 
@@ -962,11 +963,11 @@ None — fully dynamic.
 
 ```typescript
 interface UpdateProfileInput {
-  display_name?: string   // Max 100 chars
-  avatar_url?: string     // Supabase Storage path (not a URL); must match avatars bucket path format
-  bio?: string            // Max 500 chars
-  city_id?: string        // Valid UUID; must exist in cities table
-  website_url?: string    // Must start with https://
+  display_name?: string // Max 100 chars
+  avatar_url?: string // Supabase Storage path (not a URL); must match avatars bucket path format
+  bio?: string // Max 500 chars
+  city_id?: string // Valid UUID; must exist in cities table
+  website_url?: string // Must start with https://
 }
 ```
 
@@ -1002,11 +1003,11 @@ interface UpdatedProfile {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Field-level validation failure (see fields object in response) |
-| `SERVER_ERROR` | 500 | Unexpected database error (safe message returned; full error logged server-side) |
+| Code               | HTTP | When                                                                             |
+| ------------------ | ---- | -------------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                                                 |
+| `VALIDATION_ERROR` | 400  | Field-level validation failure (see fields object in response)                   |
+| `SERVER_ERROR`     | 500  | Unexpected database error (safe message returned; full error logged server-side) |
 
 **Frontend Usage**
 
@@ -1060,11 +1061,11 @@ interface OnboardingRoleResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | `role` is not `'supporter'` or `'owner'`, or field is missing |
-| `ROLE_ALREADY_SET` | 409 | User already has a `supporter` or `owner` role in `user_roles` |
+| Code               | HTTP | When                                                           |
+| ------------------ | ---- | -------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                               |
+| `VALIDATION_ERROR` | 400  | `role` is not `'supporter'` or `'owner'`, or field is missing  |
+| `ROLE_ALREADY_SET` | 409  | User already has a `supporter` or `owner` role in `user_roles` |
 
 **Frontend Usage**
 
@@ -1097,7 +1098,7 @@ Saves are lightweight toggles that authenticated users apply to listings. The ro
 
 ```typescript
 interface SaveEntityBody {
-  listing_id: string   // UUID
+  listing_id: string // UUID
 }
 ```
 
@@ -1126,11 +1127,11 @@ interface SaveResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | `listing_id` is missing or not a valid UUID |
-| `NOT_FOUND` | 404 | Listing does not exist, is not published, or is soft-deleted |
+| Code               | HTTP | When                                                         |
+| ------------------ | ---- | ------------------------------------------------------------ |
+| `AUTH_REQUIRED`    | 401  | No valid session                                             |
+| `VALIDATION_ERROR` | 400  | `listing_id` is missing or not a valid UUID                  |
+| `NOT_FOUND`        | 404  | Listing does not exist, is not published, or is soft-deleted |
 
 **Frontend Usage**
 
@@ -1157,7 +1158,7 @@ None. The `save_count` on `listings` is updated by a DB trigger on `saves` INSER
 
 ```typescript
 interface UnsaveEntityParams {
-  listing_id: string   // UUID — passed as query parameter: DELETE /api/saves?listing_id=...
+  listing_id: string // UUID — passed as query parameter: DELETE /api/saves?listing_id=...
 }
 ```
 
@@ -1181,10 +1182,10 @@ interface UnsaveEntityParams {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | `listing_id` is missing or not a valid UUID |
+| Code               | HTTP | When                                        |
+| ------------------ | ---- | ------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                            |
+| `VALIDATION_ERROR` | 400  | `listing_id` is missing or not a valid UUID |
 
 **Frontend Usage**
 
@@ -1212,8 +1213,8 @@ None. DB trigger on `saves` DELETE updates `listings.save_count`.
 
 ```typescript
 interface SavesListQueryParams {
-  page?: number    // Default: 1
-  limit?: number   // Default: 20, max: 100
+  page?: number // Default: 1
+  limit?: number // Default: 20, max: 100
 }
 ```
 
@@ -1221,7 +1222,7 @@ interface SavesListQueryParams {
 
 ```typescript
 interface SavedListingCard extends SearchResult {
-  saved_at: string   // ISO 8601 timestamp of when the listing was saved
+  saved_at: string // ISO 8601 timestamp of when the listing was saved
 }
 
 // Response envelope: { data: SavedListingCard[], meta: { total, page, limit } }
@@ -1242,10 +1243,10 @@ interface SavedListingCard extends SearchResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Invalid page or limit value |
+| Code               | HTTP | When                        |
+| ------------------ | ---- | --------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session            |
+| `VALIDATION_ERROR` | 400  | Invalid page or limit value |
 
 **Frontend Usage**
 
@@ -1272,11 +1273,11 @@ None — fully dynamic.
 
 ```typescript
 interface AnalyticsEventBody {
-  event_name: string         // Must be one of the 45 defined event names (see analytics enum)
-  entity_type?: string       // E.g., 'listing', 'collection', 'search'
-  entity_id?: string         // UUID of the entity being interacted with
-  properties?: Record<string, unknown>   // Max 5KB serialized
-  session_id?: string        // Client-generated session identifier for anonymous attribution
+  event_name: string // Must be one of the 45 defined event names (see analytics enum)
+  entity_type?: string // E.g., 'listing', 'collection', 'search'
+  entity_id?: string // UUID of the entity being interacted with
+  properties?: Record<string, unknown> // Max 5KB serialized
+  session_id?: string // Client-generated session identifier for anonymous attribution
 }
 ```
 
@@ -1307,10 +1308,10 @@ interface AnalyticsEventResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `event_name` not in the defined enum, or `properties` exceeds 5KB |
-| `RATE_LIMITED` | 429 | Exceeds 300 events/min per `session_id` (silently swallowed by client) |
+| Code               | HTTP | When                                                                   |
+| ------------------ | ---- | ---------------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | `event_name` not in the defined enum, or `properties` exceeds 5KB      |
+| `RATE_LIMITED`     | 429  | Exceeds 300 events/min per `session_id` (silently swallowed by client) |
 
 **Frontend Usage**
 
@@ -1343,8 +1344,8 @@ These endpoints and actions cover the full lifecycle of submitting a new listing
 
 ```typescript
 interface DuplicateCheckBody {
-  name: string      // Max 200 chars
-  city_id: string   // UUID
+  name: string // Max 200 chars
+  city_id: string // UUID
 }
 ```
 
@@ -1361,7 +1362,7 @@ interface DuplicateCheckResult {
     }
     entity_type: string
     trust_tier: string
-    match_score: number   // pg_trgm similarity score between 0 and 1
+    match_score: number // pg_trgm similarity score between 0 and 1
   }>
 }
 
@@ -1382,10 +1383,10 @@ interface DuplicateCheckResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | `name` or `city_id` missing, `city_id` is not a valid UUID, or `city_id` does not exist |
+| Code               | HTTP | When                                                                                    |
+| ------------------ | ---- | --------------------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                                                        |
+| `VALIDATION_ERROR` | 400  | `name` or `city_id` missing, `city_id` is not a valid UUID, or `city_id` does not exist |
 
 **Frontend Usage**
 
@@ -1414,24 +1415,24 @@ None.
 interface CreateListingInput {
   // Core listing fields
   entity_type: 'business' | 'professional' | 'creative' | 'event' | 'job'
-  name: string                  // Required; max 200 chars
-  tagline?: string              // Max 140 chars
-  category_id: string           // Required; UUID; must exist in categories table
-  city_id?: string              // UUID; null for online-only entities
+  name: string // Required; max 200 chars
+  tagline?: string // Max 140 chars
+  category_id: string // Required; UUID; must exist in categories table
+  city_id?: string // UUID; null for online-only entities
   location_type: 'physical' | 'online' | 'hybrid' | 'virtual-services' | 'ships-nationwide'
 
   // Business detail fields (for entity_type = 'business')
   description?: string
-  phone?: string                // Valid US phone format if provided
-  email?: string                // Valid email format if provided
-  website_url?: string          // Must start with https:// if provided
+  phone?: string // Valid US phone format if provided
+  email?: string // Valid email format if provided
+  website_url?: string // Must start with https:// if provided
   address_line_1?: string
   address_line_2?: string
-  state?: string                // Two-letter US state code
+  state?: string // Two-letter US state code
   zip?: string
-  cta_type: string              // Required; must be a valid cta_type value for entity_type
-  cta_url?: string              // Required unless cta_type = 'call'
-  cta_label_override?: string   // Max 50 chars
+  cta_type: string // Required; must be a valid cta_type value for entity_type
+  cta_url?: string // Required unless cta_type = 'call'
+  cta_label_override?: string // Max 50 chars
 
   // Hours — optional at creation; structured as object
   hours?: Record<
@@ -1440,8 +1441,8 @@ interface CreateListingInput {
   >
 
   // Media — optional at creation; paths from prior /api/upload calls
-  logo_path?: string            // Storage path
-  cover_image_path?: string     // Storage path
+  logo_path?: string // Storage path
+  cover_image_path?: string // Storage path
 }
 ```
 
@@ -1483,11 +1484,11 @@ interface CreateListingResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Any field-level validation failure (fields object included in response) |
-| `SERVER_ERROR` | 500 | Unexpected database error (safe message returned; full error logged) |
+| Code               | HTTP | When                                                                    |
+| ------------------ | ---- | ----------------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                                        |
+| `VALIDATION_ERROR` | 400  | Any field-level validation failure (fields object included in response) |
+| `SERVER_ERROR`     | 500  | Unexpected database error (safe message returned; full error logged)    |
 
 **Frontend Usage**
 
@@ -1514,9 +1515,9 @@ None at creation (listing is `draft` and not publicly visible). ISR cache path i
 
 ```typescript
 interface UpdateListingDraftInput {
-  listing_id: string    // UUID
+  listing_id: string // UUID
   section: 'hero' | 'contact' | 'hours' | 'social' | 'cta' | 'about' | 'seo'
-  fields: Record<string, unknown>   // Section-specific fields; validated per section
+  fields: Record<string, unknown> // Section-specific fields; validated per section
 }
 ```
 
@@ -1525,9 +1526,9 @@ interface UpdateListingDraftInput {
 ```typescript
 // section = 'hero'
 interface HeroFields {
-  name?: string          // Max 200 chars
-  tagline?: string       // Max 140 chars
-  logo_path?: string     // Storage path
+  name?: string // Max 200 chars
+  tagline?: string // Max 140 chars
+  logo_path?: string // Storage path
   cover_image_path?: string
 }
 
@@ -1535,7 +1536,7 @@ interface HeroFields {
 interface ContactFields {
   phone?: string
   email?: string
-  website_url?: string   // Must start with https://
+  website_url?: string // Must start with https://
   address_line_1?: string
   address_line_2?: string
   state?: string
@@ -1562,21 +1563,21 @@ interface SocialFields {
 interface CTAFields {
   cta_type?: string
   cta_url?: string
-  cta_label_override?: string   // Max 50 chars
+  cta_label_override?: string // Max 50 chars
 }
 
 // section = 'about'
 interface AboutFields {
   description?: string
   price_range?: '$' | '$$' | '$$$' | '$$$$' | null
-  founded_year?: number   // Between 1800 and current year
+  founded_year?: number // Between 1800 and current year
 }
 
 // section = 'seo'
 interface SEOFields {
-  meta_title?: string         // Max 60 chars
-  meta_description?: string   // Max 160 chars
-  og_image_path?: string      // Storage path
+  meta_title?: string // Max 60 chars
+  meta_description?: string // Max 160 chars
+  og_image_path?: string // Storage path
 }
 ```
 
@@ -1584,7 +1585,7 @@ interface SEOFields {
 
 ```typescript
 interface AutosaveResult {
-  saved_at: string   // ISO 8601 timestamp
+  saved_at: string // ISO 8601 timestamp
 }
 
 // Response envelope: { data: AutosaveResult }
@@ -1608,13 +1609,13 @@ interface AutosaveResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `owner_user_id != auth.uid()` or listing is soft-deleted |
-| `NOT_FOUND` | 404 | `listing_id` does not exist |
-| `VALIDATION_ERROR` | 400 | Field-level validation failure |
-| `SERVER_ERROR` | 500 | Unexpected database error |
+| Code               | HTTP | When                                                     |
+| ------------------ | ---- | -------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                         |
+| `FORBIDDEN`        | 403  | `owner_user_id != auth.uid()` or listing is soft-deleted |
+| `NOT_FOUND`        | 404  | `listing_id` does not exist                              |
+| `VALIDATION_ERROR` | 400  | Field-level validation failure                           |
+| `SERVER_ERROR`     | 500  | Unexpected database error                                |
 
 **Frontend Usage**
 
@@ -1644,9 +1645,9 @@ If `listings.status = 'published'`: call `revalidatePath('/[city-slug]/[entity-t
 interface UploadFormData {
   file: File
   bucket: 'listing-media' | 'verification-docs' | 'receipts'
-  entity_type: string   // E.g., 'listing', 'user'
-  entity_id: string     // UUID of the parent entity
-  media_role?: 'logo' | 'cover' | 'gallery'   // For listing-media bucket only
+  entity_type: string // E.g., 'listing', 'user'
+  entity_id: string // UUID of the parent entity
+  media_role?: 'logo' | 'cover' | 'gallery' // For listing-media bucket only
 }
 ```
 
@@ -1654,7 +1655,7 @@ interface UploadFormData {
 
 ```typescript
 interface UploadResult {
-  path: string   // Supabase Storage path — NEVER a URL
+  path: string // Supabase Storage path — NEVER a URL
 }
 
 // Response envelope: { data: UploadResult }
@@ -1686,12 +1687,12 @@ interface UploadResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `owner_user_id != auth.uid()` for listing-media, or non-service access to private buckets |
-| `VALIDATION_ERROR` | 400 | Invalid MIME type, file exceeds size limit, missing required fields |
-| `UPLOAD_FAILED` | 500 | Supabase Storage upload failed (logged server-side; safe message returned) |
+| Code               | HTTP | When                                                                                      |
+| ------------------ | ---- | ----------------------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                                                          |
+| `FORBIDDEN`        | 403  | `owner_user_id != auth.uid()` for listing-media, or non-service access to private buckets |
+| `VALIDATION_ERROR` | 400  | Invalid MIME type, file exceeds size limit, missing required fields                       |
+| `UPLOAD_FAILED`    | 500  | Supabase Storage upload failed (logged server-side; safe message returned)                |
 
 **Frontend Usage**
 
@@ -1719,7 +1720,7 @@ None at upload. Cache is invalidated when the listing is updated via `updateList
 
 ```typescript
 interface SubmitListingForReviewInput {
-  listing_id: string   // UUID
+  listing_id: string // UUID
 }
 ```
 
@@ -1729,7 +1730,7 @@ interface SubmitListingForReviewInput {
 interface SubmitForReviewResult {
   listing_id: string
   status: 'pending'
-  message: string   // E.g., "Your listing has been submitted for review. We'll notify you within 2 business days."
+  message: string // E.g., "Your listing has been submitted for review. We'll notify you within 2 business days."
 }
 
 // Response envelope: { data: SubmitForReviewResult }
@@ -1754,13 +1755,13 @@ interface SubmitForReviewResult {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `owner_user_id != auth.uid()` or listing is soft-deleted |
-| `NOT_FOUND` | 404 | `listing_id` does not exist |
-| `VALIDATION_ERROR` | 400 | Required fields are missing (response includes which fields are incomplete) |
-| `INVALID_STATUS_TRANSITION` | 422 | Listing is not in `'draft'` status — cannot be submitted |
+| Code                        | HTTP | When                                                                        |
+| --------------------------- | ---- | --------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`             | 401  | No valid session                                                            |
+| `FORBIDDEN`                 | 403  | `owner_user_id != auth.uid()` or listing is soft-deleted                    |
+| `NOT_FOUND`                 | 404  | `listing_id` does not exist                                                 |
+| `VALIDATION_ERROR`          | 400  | Required fields are missing (response includes which fields are incomplete) |
+| `INVALID_STATUS_TRANSITION` | 422  | Listing is not in `'draft'` status — cannot be submitted                    |
 
 **Frontend Usage**
 
@@ -1772,8 +1773,7 @@ interface SubmitForReviewResult {
 
 **Cache Invalidation**
 
-None — listing transitions from `'draft'` to `'pending'`; neither status is publicly cached.
----
+## None — listing transitions from `'draft'` to `'pending'`; neither status is publicly cached.
 
 ## Section 5: Claim Workflow
 
@@ -1790,10 +1790,10 @@ None — listing transitions from `'draft'` to `'pending'`; neither status is pu
 
 ```typescript
 interface CreateClaimInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   verification_email: string
   verification_phone?: string
-  role_at_business: string      // "owner" | "manager" | "authorized_agent"
+  role_at_business: string // "owner" | "manager" | "authorized_agent"
   notes?: string
 }
 ```
@@ -1802,13 +1802,14 @@ interface CreateClaimInput {
 
 ```typescript
 interface CreateClaimResponse {
-  claim_id: string              // uuid
+  claim_id: string // uuid
   status: 'pending'
   message: string
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required; must be a valid UUID
 - `verification_email` required; must be a valid email format
 - `verification_phone` optional; if provided, must be a non-empty string (formatting validated at UI layer)
@@ -1818,6 +1819,7 @@ interface CreateClaimResponse {
 - Referenced listing must not already have `owner_user_id` set to a different authenticated user (checked pre-insert)
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null (authenticated)
 - Block if an open claim already exists: `EXISTS (SELECT 1 FROM claims WHERE claimant_user_id = auth.uid() AND listing_id = $listing_id AND status IN ('pending', 'under_review'))` → return `409 CLAIM_ALREADY_OPEN`
 - Rate limit: max 3 open claims per user within a rolling 24-hour window → return `429 RATE_LIMITED`
@@ -1825,15 +1827,16 @@ interface CreateClaimResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing or invalid fields |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `CLAIM_ALREADY_OPEN` | 409 | A pending or under_review claim already exists for this user + listing |
-| `LISTING_ALREADY_CLAIMED` | 422 | Listing already has an owner (different user) or caller already owns it |
-| `RATE_LIMITED` | 429 | More than 3 open claims in 24 hours |
+| Code                      | HTTP | When                                                                    |
+| ------------------------- | ---- | ----------------------------------------------------------------------- |
+| `VALIDATION_ERROR`        | 400  | Missing or invalid fields                                               |
+| `AUTH_REQUIRED`           | 401  | No authenticated session                                                |
+| `CLAIM_ALREADY_OPEN`      | 409  | A pending or under_review claim already exists for this user + listing  |
+| `LISTING_ALREADY_CLAIMED` | 422  | Listing already has an owner (different user) or caller already owns it |
+| `RATE_LIMITED`            | 429  | More than 3 open claims in 24 hours                                     |
 
 **Frontend Usage**
+
 - Claim Form screen at `/claim/[listing-id]`
 - On success: show confirmation message with `claim_id` and status; navigate to claim status page
 
@@ -1859,7 +1862,7 @@ None
 interface UploadClaimProofInput {
   file: File
   bucket: 'verification-docs'
-  entity_id: string             // claim_id (uuid)
+  entity_id: string // claim_id (uuid)
 }
 ```
 
@@ -1867,17 +1870,19 @@ interface UploadClaimProofInput {
 
 ```typescript
 interface UploadClaimProofResponse {
-  path: string                  // Supabase Storage path — never a URL
+  path: string // Supabase Storage path — never a URL
 }
 ```
 
 **Validation Rules**
+
 - `file` required; must not be empty
 - MIME type must be one of: `image/jpeg`, `image/png`, `application/pdf`
 - File size must not exceed 10MB (10 × 1024 × 1024 bytes)
 - `entity_id` must be a valid UUID and map to an existing `claims` row
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `claims.claimant_user_id = auth.uid()` — caller must own the referenced claim
 - `claims.status IN ('pending', 'under_review')` — cannot upload to resolved or withdrawn claims
@@ -1885,15 +1890,16 @@ interface UploadClaimProofResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid MIME type, size exceeded, or missing file |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the claim |
-| `NOT_FOUND` | 404 | `entity_id` does not match an existing claim |
-| `SERVER_ERROR` | 500 | Supabase Storage upload failure |
+| Code               | HTTP | When                                              |
+| ------------------ | ---- | ------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid MIME type, size exceeded, or missing file |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                          |
+| `FORBIDDEN`        | 403  | Caller does not own the claim                     |
+| `NOT_FOUND`        | 404  | `entity_id` does not match an existing claim      |
+| `SERVER_ERROR`     | 500  | Supabase Storage upload failure                   |
 
 **Frontend Usage**
+
 - Claim Form document upload step
 - On success: append returned `path` to the pending upload list; display file name confirmation to user
 - After upload, the service layer calls `UPDATE claims SET verification_doc_paths = array_append(verification_doc_paths, $path)` using the service_role client
@@ -1917,7 +1923,7 @@ None
 
 ```typescript
 interface ClaimStatusQueryParams {
-  listing_id: string            // uuid — required query parameter
+  listing_id: string // uuid — required query parameter
 }
 ```
 
@@ -1927,27 +1933,30 @@ interface ClaimStatusQueryParams {
 interface ClaimStatusResponse {
   claim_id: string | null
   status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'withdrawn' | null
-  submitted_at: string | null   // ISO 8601
-  reviewed_at: string | null    // ISO 8601; null until admin decision
+  submitted_at: string | null // ISO 8601
+  reviewed_at: string | null // ISO 8601; null until admin decision
   rejection_reason: string | null
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required; must be a valid UUID format
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - Query is scoped to `claimant_user_id = auth.uid()` — users can only read their own claims
 - If no claim exists for the caller + listing combination, return `200` with all fields null (not a 404)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
+| Code            | HTTP | When                     |
+| --------------- | ---- | ------------------------ |
+| `AUTH_REQUIRED` | 401  | No authenticated session |
 
 **Frontend Usage**
+
 - Claim Form screen: pre-populates status banner if an existing claim is found
 - Dashboard claim status card: shows current state and rejection reason if applicable
 
@@ -1970,7 +1979,7 @@ None
 
 ```typescript
 interface WithdrawClaimInput {
-  claim_id: string              // uuid
+  claim_id: string // uuid
 }
 ```
 
@@ -1984,23 +1993,26 @@ interface WithdrawClaimResponse {
 ```
 
 **Validation Rules**
+
 - `claim_id` required; must be a valid UUID
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `claims.claimant_user_id = auth.uid()` — caller must own the claim
 - `claims.status IN ('pending', 'under_review')` — cannot withdraw a claim that has already been approved or rejected; return `422 INVALID_STATUS_TRANSITION` if status is `approved` or `rejected`
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing or invalid `claim_id` |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the claim |
-| `INVALID_STATUS_TRANSITION` | 422 | Claim status is `approved` or `rejected` — cannot be withdrawn |
+| Code                        | HTTP | When                                                           |
+| --------------------------- | ---- | -------------------------------------------------------------- |
+| `VALIDATION_ERROR`          | 400  | Missing or invalid `claim_id`                                  |
+| `AUTH_REQUIRED`             | 401  | No authenticated session                                       |
+| `FORBIDDEN`                 | 403  | Caller does not own the claim                                  |
+| `INVALID_STATUS_TRANSITION` | 422  | Claim status is `approved` or `rejected` — cannot be withdrawn |
 
 **Frontend Usage**
+
 - Claim status page: "Withdraw claim" button visible only when `status IN ('pending', 'under_review')`
 - On success: update status display to `withdrawn`; hide withdraw button
 
@@ -2033,19 +2045,19 @@ No query parameters. Returns all listings owned by the authenticated user.
 interface DashboardOverviewResponse {
   data: {
     listings: Array<{
-      id: string                          // uuid
+      id: string // uuid
       name: string
       slug: string
       entity_type: 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
       status: 'draft' | 'pending' | 'published' | 'unpublished' | 'flagged' | 'archived'
       trust_tier: 'unclaimed' | 'claimed' | 'verified' | 'certified'
       listing_tier: 'free' | 'standard' | 'premium'
-      logo_path: string | null            // Storage path — generate public URL at read time
-      cover_image_path: string | null     // Storage path — generate public URL at read time
-      published_at: string | null         // ISO 8601
+      logo_path: string | null // Storage path — generate public URL at read time
+      cover_image_path: string | null // Storage path — generate public URL at read time
+      published_at: string | null // ISO 8601
       claim: {
         status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'withdrawn'
-        submitted_at: string              // ISO 8601
+        submitted_at: string // ISO 8601
       } | null
       analytics_7d: {
         page_views: number
@@ -2059,9 +2071,11 @@ interface DashboardOverviewResponse {
 ```
 
 **Validation Rules**
+
 - No request parameters to validate
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - Query filters: `listings.owner_user_id = auth.uid() AND deleted_at IS NULL`
 - Uses authenticated Supabase client (not service_role); RLS enforces ownership
@@ -2069,12 +2083,13 @@ interface DashboardOverviewResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Authenticated user does not have the `owner` role for any listing |
+| Code            | HTTP | When                                                              |
+| --------------- | ---- | ----------------------------------------------------------------- |
+| `AUTH_REQUIRED` | 401  | No authenticated session                                          |
+| `FORBIDDEN`     | 403  | Authenticated user does not have the `owner` role for any listing |
 
 **Frontend Usage**
+
 - Dashboard Home screen: renders listing card grid
 - Each card shows logo, name, status badge, trust tier badge, 7-day analytics summary, and claim status if pending
 
@@ -2097,13 +2112,13 @@ None — real-time data; not cached
 
 ```typescript
 interface UpdateListingContentInput {
-  listing_id: string            // uuid — required
+  listing_id: string // uuid — required
 
   // Hero fields (updates listings table)
   name?: string
   tagline?: string
-  logo_path?: string            // Storage path
-  cover_image_path?: string     // Storage path
+  logo_path?: string // Storage path
+  cover_image_path?: string // Storage path
 
   // About + Contact fields (updates listing_details_business)
   description?: string
@@ -2145,11 +2160,12 @@ interface UpdateListingContentInput {
 
 ```typescript
 interface UpdateListingContentResponse {
-  saved_at: string              // ISO 8601 timestamp
+  saved_at: string // ISO 8601 timestamp
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `name` max 200 chars if provided
 - `tagline` max 140 chars if provided
@@ -2161,20 +2177,22 @@ interface UpdateListingContentResponse {
 - At least one field beyond `listing_id` must be present
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `listings.owner_user_id = auth.uid() AND deleted_at IS NULL` — service layer verifies before any UPDATE
 - Service sets `last_edited_by_owner_at = now()` and `updated_by = auth.uid()` on every call
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Field length, format, or URL validation failure |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Authenticated user does not own this listing |
-| `NOT_FOUND` | 404 | `listing_id` does not exist or is soft-deleted |
+| Code               | HTTP | When                                            |
+| ------------------ | ---- | ----------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Field length, format, or URL validation failure |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                        |
+| `FORBIDDEN`        | 403  | Authenticated user does not own this listing    |
+| `NOT_FOUND`        | 404  | `listing_id` does not exist or is soft-deleted  |
 
 **Frontend Usage**
+
 - Page Editor: autosaves on field blur per section (Hero, About, Contact, Hours, Social, SEO)
 - On success: show inline "Saved" confirmation; no page navigation
 
@@ -2197,8 +2215,8 @@ interface UpdateListingContentResponse {
 
 ```typescript
 interface ManageCtasInput {
-  listing_id: string            // uuid
-  cta_type: string              // see valid values below
+  listing_id: string // uuid
+  cta_type: string // see valid values below
   cta_url?: string
   cta_label_override?: string
 }
@@ -2208,11 +2226,12 @@ interface ManageCtasInput {
 
 ```typescript
 interface ManageCtasResponse {
-  saved_at: string              // ISO 8601
+  saved_at: string // ISO 8601
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `cta_type` required; must be one of: `'book'`, `'order'`, `'call'`, `'message'`, `'visit'`, `'get-quote'`, `'shop'`, `'subscribe'`, `'contact'`, `'schedule'`, `'inquire'`, `'commission'`, `'reserve'`, `'download'`, `'apply'`, `'donate'`, `'join'`, `'learn-more'` (18 valid values)
 - `cta_url` required when `cta_type !== 'call'`; must start with `https://`
@@ -2220,18 +2239,20 @@ interface ManageCtasResponse {
 - `cta_label_override` optional; max 50 chars
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `listings.owner_user_id = auth.uid()` verified before UPDATE
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid `cta_type`, missing required `cta_url`, or URL format error |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own this listing |
+| Code               | HTTP | When                                                                |
+| ------------------ | ---- | ------------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid `cta_type`, missing required `cta_url`, or URL format error |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                                            |
+| `FORBIDDEN`        | 403  | Caller does not own this listing                                    |
 
 **Frontend Usage**
+
 - Page Editor CTA section
 - On success: show inline "Saved" confirmation; refresh CTA preview component
 
@@ -2255,21 +2276,21 @@ interface ManageCtasResponse {
 ```typescript
 // addService
 interface AddServiceInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   name: string
   description?: string
-  price?: number                // V1; numeric, ≥ 0
-  price_type?: 'fixed' | 'starting-at' | 'hourly' | 'custom' | 'free'  // V1
-  price_note?: string           // V1
-  duration_minutes?: number     // V1; positive integer
-  cta_type?: 'book' | 'inquire' | 'call' | 'contact'  // V1
-  cta_url?: string              // V1
+  price?: number // V1; numeric, ≥ 0
+  price_type?: 'fixed' | 'starting-at' | 'hourly' | 'custom' | 'free' // V1
+  price_note?: string // V1
+  duration_minutes?: number // V1; positive integer
+  cta_type?: 'book' | 'inquire' | 'call' | 'contact' // V1
+  cta_url?: string // V1
   display_order?: number
 }
 
 // updateService
 interface UpdateServiceInput {
-  service_id: string            // uuid
+  service_id: string // uuid
   name?: string
   description?: string
   price?: number
@@ -2283,7 +2304,7 @@ interface UpdateServiceInput {
 
 // deleteService
 interface DeleteServiceInput {
-  service_id: string            // uuid
+  service_id: string // uuid
 }
 ```
 
@@ -2292,7 +2313,7 @@ interface DeleteServiceInput {
 ```typescript
 // addService / updateService
 interface ServiceMutationResponse {
-  service_id: string            // uuid
+  service_id: string // uuid
 }
 
 // deleteService
@@ -2302,32 +2323,36 @@ interface DeleteServiceResponse {
 ```
 
 **Validation Rules**
+
 - `name` required for `addService`; max 200 chars
 - `price` must be ≥ 0 if provided
 - `price_type` must be a valid enum value if provided
 - `cta_url` must start with `https://` if provided and `cta_type !== 'call'`
 
 **Permission Checks**
+
 - For `addService`: `listings.owner_user_id = auth.uid()` where `listing_id` matches
 - For `updateService` and `deleteService`: service's parent `listing_id` must satisfy `listings.owner_user_id = auth.uid()`
 - Soft-deleted listings cannot have services added (`deleted_at IS NULL` required)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid field values |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the parent listing |
-| `NOT_FOUND` | 404 | `service_id` or `listing_id` does not exist |
+| Code               | HTTP | When                                        |
+| ------------------ | ---- | ------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid field values                        |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                    |
+| `FORBIDDEN`        | 403  | Caller does not own the parent listing      |
+| `NOT_FOUND`        | 404  | `service_id` or `listing_id` does not exist |
 
 **Frontend Usage**
+
 - Services Manager screen at `/dashboard/services`
 - Add: appends new service card to list
 - Update: inline field edits with autosave on blur
 - Delete: removes card from list with confirmation dialog
 
 **Analytics Event Emitted**
+
 - `service_added` — properties: `{ listing_id, service_id }`
 - `service_updated` — properties: `{ service_id, changed_fields: string[] }`
 - `service_deleted` — properties: `{ service_id }`
@@ -2348,8 +2373,8 @@ interface DeleteServiceResponse {
 
 ```typescript
 interface ReorderServicesInput {
-  listing_id: string            // uuid
-  ordered_ids: string[]         // uuid[] — complete ordered list of service IDs for this listing
+  listing_id: string // uuid
+  ordered_ids: string[] // uuid[] — complete ordered list of service IDs for this listing
 }
 ```
 
@@ -2357,29 +2382,32 @@ interface ReorderServicesInput {
 
 ```typescript
 interface ReorderServicesResponse {
-  updated: number               // count of rows updated
+  updated: number // count of rows updated
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `ordered_ids` required; must be a non-empty array
 - All IDs in `ordered_ids` must belong to the given `listing_id` — any foreign ID returns `403`
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `listings.owner_user_id = auth.uid()` — verified before bulk UPDATE
 - Service IDs validated against `SELECT id FROM services WHERE listing_id = $listing_id` before executing any update
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Empty `ordered_ids` or malformed UUIDs |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the listing or `ordered_ids` contains IDs from another listing |
+| Code               | HTTP | When                                                                               |
+| ------------------ | ---- | ---------------------------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Empty `ordered_ids` or malformed UUIDs                                             |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                                                           |
+| `FORBIDDEN`        | 403  | Caller does not own the listing or `ordered_ids` contains IDs from another listing |
 
 **Frontend Usage**
+
 - Services Manager drag-to-reorder UI
 - Called on drop event after drag completes; `ordered_ids` reflects final visual order
 - On success: no visual change needed (order already updated optimistically in UI)
@@ -2404,19 +2432,19 @@ None
 ```typescript
 // deleteMedia
 interface DeleteMediaInput {
-  media_id: string              // uuid
+  media_id: string // uuid
 }
 
 // updateMediaAltText
 interface UpdateMediaAltTextInput {
-  media_id: string              // uuid
+  media_id: string // uuid
   alt_text: string
 }
 
 // reorderMedia
 interface ReorderMediaInput {
-  listing_id: string            // uuid
-  ordered_ids: string[]         // uuid[] — complete ordered list of media IDs for this listing
+  listing_id: string // uuid
+  ordered_ids: string[] // uuid[] — complete ordered list of media IDs for this listing
 }
 ```
 
@@ -2435,16 +2463,18 @@ interface UpdateMediaAltTextResponse {
 
 // reorderMedia
 interface ReorderMediaResponse {
-  updated: number               // count of rows updated
+  updated: number // count of rows updated
 }
 ```
 
 **Validation Rules**
+
 - `media_id` required and valid UUID for delete and alt text update
 - `alt_text` max 200 chars
 - `listing_id` and `ordered_ids` required for reorder; all IDs must belong to the given listing
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - For delete and alt text: `media_attachments.uploaded_by = auth.uid()` OR parent `listings.owner_user_id = auth.uid()`
 - For reorder: `listings.owner_user_id = auth.uid()`
@@ -2452,20 +2482,22 @@ interface ReorderMediaResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid input or alt text exceeds max |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the media or listing |
-| `NOT_FOUND` | 404 | `media_id` or `listing_id` does not exist |
+| Code               | HTTP | When                                      |
+| ------------------ | ---- | ----------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid input or alt text exceeds max     |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                  |
+| `FORBIDDEN`        | 403  | Caller does not own the media or listing  |
+| `NOT_FOUND`        | 404  | `media_id` or `listing_id` does not exist |
 
 **Frontend Usage**
+
 - Page Editor gallery section
 - Delete: removes image from gallery; triggers storage cleanup
 - Alt text: inline edit with autosave on blur
 - Reorder: drag-to-reorder grid; called on drop event
 
 **Analytics Event Emitted**
+
 - `media_deleted` — properties: `{ media_id, listing_id }`
 - `media_reordered` — properties: `{ listing_id, item_count: number }`
 
@@ -2485,8 +2517,8 @@ interface ReorderMediaResponse {
 
 ```typescript
 interface GetListingAnalyticsInput {
-  listing_id: string            // uuid
-  days?: 7 | 30 | 90           // default: 30; free tier capped at 7
+  listing_id: string // uuid
+  days?: 7 | 30 | 90 // default: 30; free tier capped at 7
 }
 ```
 
@@ -2503,7 +2535,7 @@ interface GetListingAnalyticsResponse {
     shares: number
   }
   daily: Array<{
-    date: string                // ISO 8601 date string (YYYY-MM-DD)
+    date: string // ISO 8601 date string (YYYY-MM-DD)
     page_views: number
     cta_clicks: number
     saves: number
@@ -2513,23 +2545,26 @@ interface GetListingAnalyticsResponse {
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `days` must be one of `7`, `30`, or `90` if provided; defaults to `30`
 - Free tier cap: if `listings.tier = 'free'`, `days` is clamped to `7` regardless of request value — no error returned, the cap is applied silently with `period_days` in the response reflecting the actual range used
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `listings.owner_user_id = auth.uid()` — verified before data is returned
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `days` is not 7, 30, or 90 |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own this listing |
+| Code               | HTTP | When                             |
+| ------------------ | ---- | -------------------------------- |
+| `VALIDATION_ERROR` | 400  | `days` is not 7, 30, or 90       |
+| `AUTH_REQUIRED`    | 401  | No authenticated session         |
+| `FORBIDDEN`        | 403  | Caller does not own this listing |
 
 **Frontend Usage**
+
 - Dashboard analytics section: renders totals summary cards and a daily line chart
 - Free tier: shows 7-day data with an upsell prompt to unlock 30- and 90-day views (V1)
 
@@ -2556,11 +2591,11 @@ None
 
 ```typescript
 interface CreateReviewInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   rating: 1 | 2 | 3 | 4 | 5
   title?: string
   body?: string
-  visit_date?: string           // ISO 8601 date string (YYYY-MM-DD)
+  visit_date?: string // ISO 8601 date string (YYYY-MM-DD)
 }
 ```
 
@@ -2568,13 +2603,14 @@ interface CreateReviewInput {
 
 ```typescript
 interface CreateReviewResponse {
-  review_id: string             // uuid
+  review_id: string // uuid
   status: 'intake'
   message: string
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `rating` required; must be an integer between 1 and 5 inclusive
 - `title` optional; max 150 chars
@@ -2582,6 +2618,7 @@ interface CreateReviewResponse {
 - `visit_date` optional; must be a valid ISO date string; must not be a future date
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - Referenced listing must exist with `status = 'published' AND deleted_at IS NULL`
 - Uniqueness: `UNIQUE (reviewer_user_id, listing_id)` — one review per user per listing; duplicate returns `409 REVIEW_ALREADY_EXISTS`
@@ -2589,14 +2626,15 @@ interface CreateReviewResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing required fields, rating out of range, future visit date, or body exceeds max |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `NOT_FOUND` | 404 | `listing_id` does not exist or is not published |
-| `REVIEW_ALREADY_EXISTS` | 409 | Caller has already submitted a review for this listing |
+| Code                    | HTTP | When                                                                                 |
+| ----------------------- | ---- | ------------------------------------------------------------------------------------ |
+| `VALIDATION_ERROR`      | 400  | Missing required fields, rating out of range, future visit date, or body exceeds max |
+| `AUTH_REQUIRED`         | 401  | No authenticated session                                                             |
+| `NOT_FOUND`             | 404  | `listing_id` does not exist or is not published                                      |
+| `REVIEW_ALREADY_EXISTS` | 409  | Caller has already submitted a review for this listing                               |
 
 **Frontend Usage**
+
 - Review form modal on BLACQList Page
 - On success: show confirmation message ("Your review has been submitted and will appear after approval"); close modal
 
@@ -2619,11 +2657,11 @@ None — review not publicly displayed until V1 when `status = 'published'`
 
 ```typescript
 interface UpdateReviewInput {
-  review_id: string             // uuid
+  review_id: string // uuid
   rating?: 1 | 2 | 3 | 4 | 5
   title?: string
   body?: string
-  visit_date?: string           // ISO 8601 date string (YYYY-MM-DD)
+  visit_date?: string // ISO 8601 date string (YYYY-MM-DD)
 }
 ```
 
@@ -2632,11 +2670,12 @@ interface UpdateReviewInput {
 ```typescript
 interface UpdateReviewResponse {
   review_id: string
-  updated_at: string            // ISO 8601
+  updated_at: string // ISO 8601
 }
 ```
 
 **Validation Rules**
+
 - `review_id` required
 - `rating` must be 1–5 if provided
 - `title` max 150 chars if provided
@@ -2645,20 +2684,22 @@ interface UpdateReviewResponse {
 - At least one field beyond `review_id` must be present
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `reviews.reviewer_user_id = auth.uid()` — caller must own the review
 - `reviews.status = 'intake'` — reviews can only be edited while in intake; if status has advanced (e.g., `pending_approval` or `published`), return `422 INVALID_STATUS_TRANSITION`
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Field value or format violation |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own this review |
-| `INVALID_STATUS_TRANSITION` | 422 | Review is no longer in `intake` status |
+| Code                        | HTTP | When                                   |
+| --------------------------- | ---- | -------------------------------------- |
+| `VALIDATION_ERROR`          | 400  | Field value or format violation        |
+| `AUTH_REQUIRED`             | 401  | No authenticated session               |
+| `FORBIDDEN`                 | 403  | Caller does not own this review        |
+| `INVALID_STATUS_TRANSITION` | 422  | Review is no longer in `intake` status |
 
 **Frontend Usage**
+
 - Review edit flow: pre-populated form in account settings or on listing page if review is in intake
 - On success: show inline "Review updated" confirmation
 
@@ -2681,7 +2722,7 @@ None — review not publicly displayed while in intake
 
 ```typescript
 interface DeleteOwnReviewInput {
-  review_id: string             // uuid
+  review_id: string // uuid
 }
 ```
 
@@ -2694,22 +2735,25 @@ interface DeleteOwnReviewResponse {
 ```
 
 **Validation Rules**
+
 - `review_id` required; must be a valid UUID
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - `reviews.reviewer_user_id = auth.uid()` — caller must own the review
 - `reviews.status = 'intake'` — published reviews cannot be self-deleted; return `422 INVALID_STATUS_TRANSITION` for any other status
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own this review |
-| `INVALID_STATUS_TRANSITION` | 422 | Review is not in `intake` status (published reviews require admin removal) |
+| Code                        | HTTP | When                                                                       |
+| --------------------------- | ---- | -------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`             | 401  | No authenticated session                                                   |
+| `FORBIDDEN`                 | 403  | Caller does not own this review                                            |
+| `INVALID_STATUS_TRANSITION` | 422  | Review is not in `intake` status (published reviews require admin removal) |
 
 **Frontend Usage**
+
 - Review management in account settings
 - On success: remove review entry from list; show "Review deleted" toast
 
@@ -2732,7 +2776,7 @@ None
 
 ```typescript
 interface RespondToReviewInput {
-  review_id: string             // uuid
+  review_id: string // uuid
   response_text: string
 }
 ```
@@ -2741,31 +2785,34 @@ interface RespondToReviewInput {
 
 ```typescript
 interface RespondToReviewResponse {
-  response_id: string           // uuid
+  response_id: string // uuid
 }
 ```
 
 **Validation Rules**
+
 - `review_id` required
 - `response_text` required; max 1000 chars
 - Referenced review must have `status = 'published'`
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - Lookup `reviews.listing_id` for the referenced review; verify `listings.owner_user_id = auth.uid()`
 - One response per review: `UNIQUE (review_id)` on `review_responses` — return `409 RESPONSE_ALREADY_EXISTS` if a response already exists
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing or too-long `response_text`, or review is not published |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller does not own the listing associated with this review |
-| `NOT_FOUND` | 404 | `review_id` does not exist |
-| `RESPONSE_ALREADY_EXISTS` | 409 | A response has already been posted for this review |
+| Code                      | HTTP | When                                                            |
+| ------------------------- | ---- | --------------------------------------------------------------- |
+| `VALIDATION_ERROR`        | 400  | Missing or too-long `response_text`, or review is not published |
+| `AUTH_REQUIRED`           | 401  | No authenticated session                                        |
+| `FORBIDDEN`               | 403  | Caller does not own the listing associated with this review     |
+| `NOT_FOUND`               | 404  | `review_id` does not exist                                      |
+| `RESPONSE_ALREADY_EXISTS` | 409  | A response has already been posted for this review              |
 
 **Frontend Usage**
+
 - Owner review management screen (Beta): "Reply to review" form rendered beneath each published review
 
 **Analytics Event Emitted**
@@ -2787,7 +2834,7 @@ interface RespondToReviewResponse {
 
 ```typescript
 interface ReportReviewInput {
-  review_id: string             // uuid
+  review_id: string // uuid
   reason: 'spam' | 'inappropriate' | 'fake' | 'off_topic' | 'other'
   notes?: string
 }
@@ -2802,11 +2849,13 @@ interface ReportReviewResponse {
 ```
 
 **Validation Rules**
+
 - `review_id` required
 - `reason` required; must be one of the five valid enum values
 - `notes` optional; max 500 chars
 
 **Permission Checks**
+
 - `auth.uid()` must be non-null
 - Caller cannot report their own review: `reviews.reviewer_user_id != auth.uid()`
 - One report per caller per review — check `EXISTS (SELECT 1 FROM review_reports WHERE review_id = $review_id AND reporter_user_id = auth.uid())` → `409 ALREADY_REPORTED`
@@ -2814,13 +2863,14 @@ interface ReportReviewResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing `reason`, invalid `reason` value, or notes exceeds max |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `ALREADY_REPORTED` | 409 | Caller has already reported this review |
+| Code               | HTTP | When                                                           |
+| ------------------ | ---- | -------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Missing `reason`, invalid `reason` value, or notes exceeds max |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                                       |
+| `ALREADY_REPORTED` | 409  | Caller has already reported this review                        |
 
 **Frontend Usage**
+
 - "Report this review" link on each published review card
 - On success: replace link with "Reported" disabled text; show "Thank you for your report" toast
 
@@ -2853,9 +2903,9 @@ Specification documented in full under Section 9, endpoint 51. This entry is a p
 
 ```typescript
 interface SubmitCorrectionInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   field_name: string
-  current_value?: string        // what the submitter currently sees
+  current_value?: string // what the submitter currently sees
   suggested_value: string
   reason?: string
 }
@@ -2865,12 +2915,13 @@ interface SubmitCorrectionInput {
 
 ```typescript
 interface SubmitCorrectionResponse {
-  correction_id: string         // uuid
+  correction_id: string // uuid
   message: string
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required; must be a valid UUID
 - `field_name` required; max 100 chars (e.g., `"phone"`, `"address_line_1"`, `"website_url"`)
 - `suggested_value` required; max 500 chars
@@ -2879,17 +2930,19 @@ interface SubmitCorrectionResponse {
 - Referenced listing must exist with `status = 'published' AND deleted_at IS NULL`
 
 **Permission Checks**
+
 - No authentication required — `submitter_user_id` is set to `auth.uid()` when a session exists, or `NULL` for anonymous submissions
 - No rate limiting at MVP; consider IP-based rate limiting at Beta if spam occurs
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing required fields or field length violations |
-| `NOT_FOUND` | 404 | `listing_id` does not exist or is not published |
+| Code               | HTTP | When                                               |
+| ------------------ | ---- | -------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Missing required fields or field length violations |
+| `NOT_FOUND`        | 404  | `listing_id` does not exist or is not published    |
 
 **Frontend Usage**
+
 - "Report incorrect info" modal accessible from the BLACQList Page (Beta)
 - On success: show "Thank you — we'll review this soon" confirmation; close modal
 
@@ -2925,12 +2978,12 @@ All endpoints in this section require the `admin` or `super_admin` role. All mut
 ```typescript
 interface AdminListingsQueryParams {
   status?: 'draft' | 'pending' | 'published' | 'unpublished' | 'flagged' | 'archived'
-  city?: string                 // city slug
-  category?: string             // category slug
+  city?: string // city slug
+  category?: string // category slug
   type?: 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
-  include_deleted?: 'true' | 'false'  // default: 'false'
-  page?: number                 // default: 1
-  limit?: number                // default: 50; max: 100
+  include_deleted?: 'true' | 'false' // default: 'false'
+  page?: number // default: 1
+  limit?: number // default: 50; max: 100
 }
 ```
 
@@ -2950,8 +3003,8 @@ interface AdminListingsResponse {
     category_id: string
     owner_user_id: string | null
     submitted_by: string | null
-    created_at: string          // ISO 8601
-    updated_at: string          // ISO 8601
+    created_at: string // ISO 8601
+    updated_at: string // ISO 8601
     published_at: string | null // ISO 8601
     moderation_notes: string | null
     admin_notes: string | null
@@ -2967,23 +3020,26 @@ interface AdminListingsResponse {
 ```
 
 **Validation Rules**
+
 - `status` must be a valid status enum value if provided
 - `type` must be a valid `entity_type` value if provided
 - `limit` capped at 100
 - `include_deleted = 'true'` removes the `deleted_at IS NULL` filter
 
 **Permission Checks**
+
 - Server-side role check: `EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role IN ('admin', 'super_admin'))`
 - Uses service_role client — bypasses RLS to return all statuses and soft-deleted records when `include_deleted = true`
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Authenticated user is not admin or super_admin |
+| Code            | HTTP | When                                           |
+| --------------- | ---- | ---------------------------------------------- |
+| `AUTH_REQUIRED` | 401  | No authenticated session                       |
+| `FORBIDDEN`     | 403  | Authenticated user is not admin or super_admin |
 
 **Frontend Usage**
+
 - Admin Listings screen: filterable, paginated table of all listings
 - Columns show status, flag_status, trust_tier, owner presence, and timestamps
 
@@ -3006,7 +3062,7 @@ None
 
 ```typescript
 interface ApproveEntityInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   notes?: string
 }
 ```
@@ -3017,27 +3073,30 @@ interface ApproveEntityInput {
 interface ApproveEntityResponse {
   listing_id: string
   status: 'published'
-  published_at: string          // ISO 8601
+  published_at: string // ISO 8601
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - Listing must currently have `status = 'pending'`; any other status returns `422 INVALID_STATUS_TRANSITION`
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 - All writes use service_role — RLS bypassed; service layer enforces admin authorization
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `INVALID_STATUS_TRANSITION` | 422 | Listing is not in `pending` status |
+| Code                        | HTTP | When                               |
+| --------------------------- | ---- | ---------------------------------- |
+| `AUTH_REQUIRED`             | 401  | No authenticated session           |
+| `FORBIDDEN`                 | 403  | Caller is not admin or super_admin |
+| `INVALID_STATUS_TRANSITION` | 422  | Listing is not in `pending` status |
 
 **Frontend Usage**
+
 - Admin Listings detail page: "Approve" button
 - On success: update status badge in UI; show success toast
 
@@ -3063,9 +3122,9 @@ interface ApproveEntityResponse {
 
 ```typescript
 interface RejectEntityInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   reason: string
-  notes?: string                // internal admin notes
+  notes?: string // internal admin notes
 }
 ```
 
@@ -3079,21 +3138,24 @@ interface RejectEntityResponse {
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `reason` required; max 500 chars — shown to the listing submitter via email
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing or too-long `reason` |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code               | HTTP | When                               |
+| ------------------ | ---- | ---------------------------------- |
+| `VALIDATION_ERROR` | 400  | Missing or too-long `reason`       |
+| `AUTH_REQUIRED`    | 401  | No authenticated session           |
+| `FORBIDDEN`        | 403  | Caller is not admin or super_admin |
 
 **Frontend Usage**
+
 - Admin Listings detail page: "Reject" button triggers a reason input dialog before confirming
 - On success: update status badge to `rejected`; rejection reason saved as `moderation_notes`
 
@@ -3120,8 +3182,8 @@ None — rejected listings are not publicly indexed
 ```typescript
 interface AdminClaimsQueryParams {
   status?: 'pending' | 'under_review' | 'approved' | 'rejected'
-  page?: number                 // default: 1
-  limit?: number                // default: 20; max: 100
+  page?: number // default: 1
+  limit?: number // default: 20; max: 100
 }
 ```
 
@@ -3132,19 +3194,19 @@ interface AdminClaimsResponse {
   data: Array<{
     claim_id: string
     status: string
-    submitted_at: string        // ISO 8601
-    reviewed_at: string | null  // ISO 8601
+    submitted_at: string // ISO 8601
+    reviewed_at: string | null // ISO 8601
     listing: {
       id: string
       name: string
-      city: string | null       // city_text from listing_details_business
+      city: string | null // city_text from listing_details_business
     }
     claimant: {
       id: string
       display_name: string | null
-      email: string             // from auth.users — admin-only
+      email: string // from auth.users — admin-only
     }
-    verification_doc_count: number  // count of paths in verification_doc_paths — NOT the paths themselves
+    verification_doc_count: number // count of paths in verification_doc_paths — NOT the paths themselves
   }>
   meta: {
     total: number
@@ -3156,21 +3218,24 @@ interface AdminClaimsResponse {
 ```
 
 **Validation Rules**
+
 - `status` must be a valid claim status if provided
 - `limit` capped at 100
 - `verification_doc_paths` array is never returned in list view — use `getVerificationDocUrl` (endpoint 46) to access individual documents
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code            | HTTP | When                               |
+| --------------- | ---- | ---------------------------------- |
+| `AUTH_REQUIRED` | 401  | No authenticated session           |
+| `FORBIDDEN`     | 403  | Caller is not admin or super_admin |
 
 **Frontend Usage**
+
 - Admin Claims Queue screen: sortable, filterable table of claims awaiting review
 - `verification_doc_count` shown as badge (e.g., "2 docs") with a link to view each via signed URL
 
@@ -3193,8 +3258,8 @@ None
 
 ```typescript
 interface GetVerificationDocUrlInput {
-  claim_id: string              // uuid
-  doc_path: string              // Supabase Storage path in verification-docs bucket
+  claim_id: string // uuid
+  doc_path: string // Supabase Storage path in verification-docs bucket
 }
 ```
 
@@ -3202,30 +3267,33 @@ interface GetVerificationDocUrlInput {
 
 ```typescript
 interface GetVerificationDocUrlResponse {
-  signed_url: string            // 15-minute expiry signed URL — never log, store, or cache
-  expires_at: string            // ISO 8601 timestamp (now + 15 minutes)
+  signed_url: string // 15-minute expiry signed URL — never log, store, or cache
+  expires_at: string // ISO 8601 timestamp (now + 15 minutes)
 }
 ```
 
 **Validation Rules**
+
 - `claim_id` required
 - `doc_path` required; must begin with a valid `verification-docs/` path prefix
 - Referenced `claim_id` must have `status IN ('pending', 'under_review')` — no access to docs for resolved claims
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 - Uses service_role storage client: `supabase.storage.from('verification-docs').createSignedUrl(doc_path, 900)`
 - The signed URL is returned in the Server Action response only — it is never logged, cached, stored in the DB, or included in any audit log snapshot
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `NOT_FOUND` | 404 | `claim_id` not found or `doc_path` not in the claim's `verification_doc_paths` |
+| Code            | HTTP | When                                                                           |
+| --------------- | ---- | ------------------------------------------------------------------------------ |
+| `AUTH_REQUIRED` | 401  | No authenticated session                                                       |
+| `FORBIDDEN`     | 403  | Caller is not admin or super_admin                                             |
+| `NOT_FOUND`     | 404  | `claim_id` not found or `doc_path` not in the claim's `verification_doc_paths` |
 
 **Frontend Usage**
+
 - Admin Claim Review screen: "View document" button generates a signed URL on demand
 - URL opened in a new browser tab; displayed for 15 minutes before expiry
 - No URL caching on the client — each click generates a fresh signed URL
@@ -3249,8 +3317,8 @@ None
 
 ```typescript
 interface ApproveClaimInput {
-  claim_id: string              // uuid
-  notes?: string                // internal notes
+  claim_id: string // uuid
+  notes?: string // internal notes
 }
 ```
 
@@ -3265,24 +3333,27 @@ interface ApproveClaimResponse {
 ```
 
 **Validation Rules**
+
 - `claim_id` required
 - Claim must have `status IN ('pending', 'under_review')`
 - Listing must not already have `owner_user_id` set to a different user than the claimant — return `409 LISTING_ALREADY_OWNED`
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 - All five DB operations execute as a single transaction; partial success is not permitted
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `INVALID_STATUS_TRANSITION` | 422 | Claim is not in `pending` or `under_review` status |
-| `LISTING_ALREADY_OWNED` | 409 | Listing `owner_user_id` is already set to a different user |
+| Code                        | HTTP | When                                                       |
+| --------------------------- | ---- | ---------------------------------------------------------- |
+| `AUTH_REQUIRED`             | 401  | No authenticated session                                   |
+| `FORBIDDEN`                 | 403  | Caller is not admin or super_admin                         |
+| `INVALID_STATUS_TRANSITION` | 422  | Claim is not in `pending` or `under_review` status         |
+| `LISTING_ALREADY_OWNED`     | 409  | Listing `owner_user_id` is already set to a different user |
 
 **Frontend Usage**
+
 - Admin Claim Review screen: "Approve claim" button
 - On success: update claim status badge; show "Claim approved — ownership transferred" toast
 
@@ -3296,6 +3367,7 @@ interface ApproveClaimResponse {
 `INSERT INTO admin_audit_log (admin_user_id, action='claim_approved', target_table='claims', target_id=$claim_id, before_state={status:'pending',...}, after_state={status:'approved',...}, ip_address)`
 
 **Transaction Steps (executed atomically)**
+
 1. `UPDATE claims SET status='approved', reviewed_by=auth.uid(), reviewed_at=now()`
 2. `UPDATE listings SET trust_tier='claimed', owner_user_id=$claimant_user_id, claim_id=$claim_id, is_claimed=true, claimed_at=now()`
 3. `INSERT INTO user_roles (user_id=$claimant_user_id, role='owner', listing_id=$listing_id, granted_by=auth.uid())` on conflict do nothing
@@ -3316,9 +3388,9 @@ interface ApproveClaimResponse {
 
 ```typescript
 interface RejectClaimInput {
-  claim_id: string              // uuid
+  claim_id: string // uuid
   reason: string
-  notes?: string                // internal admin notes; not shown to claimant
+  notes?: string // internal admin notes; not shown to claimant
 }
 ```
 
@@ -3332,21 +3404,24 @@ interface RejectClaimResponse {
 ```
 
 **Validation Rules**
+
 - `claim_id` required
 - `reason` required; max 500 chars — shown to the claimant in the rejection email
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing or too-long `reason` |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code               | HTTP | When                               |
+| ------------------ | ---- | ---------------------------------- |
+| `VALIDATION_ERROR` | 400  | Missing or too-long `reason`       |
+| `AUTH_REQUIRED`    | 401  | No authenticated session           |
+| `FORBIDDEN`        | 403  | Caller is not admin or super_admin |
 
 **Frontend Usage**
+
 - Admin Claim Review screen: "Reject" button triggers a reason input dialog before confirming
 - On success: update claim status badge to `rejected`
 
@@ -3372,9 +3447,9 @@ None — listing trust tier does not change on rejection
 
 ```typescript
 interface UpdateVerificationStatusInput {
-  listing_id: string            // uuid
+  listing_id: string // uuid
   decision: 'verified' | 'rejected'
-  notes?: string                // shown to owner on rejection
+  notes?: string // shown to owner on rejection
 }
 ```
 
@@ -3384,31 +3459,35 @@ interface UpdateVerificationStatusInput {
 interface UpdateVerificationStatusResponse {
   listing_id: string
   verification_status: 'verified' | 'rejected'
-  trust_tier?: 'verified'       // set only when decision = 'verified'
+  trust_tier?: 'verified' // set only when decision = 'verified'
 }
 ```
 
 **Validation Rules**
+
 - `listing_id` required
 - `decision` required; must be `'verified'` or `'rejected'`
 - Listing must have `verification_status = 'pending'`; other states return `422 INVALID_STATUS_TRANSITION`
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `INVALID_STATUS_TRANSITION` | 422 | `verification_status` is not `'pending'` |
+| Code                        | HTTP | When                                     |
+| --------------------------- | ---- | ---------------------------------------- |
+| `AUTH_REQUIRED`             | 401  | No authenticated session                 |
+| `FORBIDDEN`                 | 403  | Caller is not admin or super_admin       |
+| `INVALID_STATUS_TRANSITION` | 422  | `verification_status` is not `'pending'` |
 
 **Frontend Usage**
+
 - Admin Verification Queue (V1): approve or reject with optional notes
 - On approval: trust tier badge updates to `verified` on the listing page
 
 **Analytics Event Emitted**
+
 - `admin_verification_granted` — on `decision = 'verified'`; properties: `{ listing_id, admin_id }`
 - `admin_verification_rejected` — on `decision = 'rejected'`; properties: `{ listing_id, admin_id }`
 
@@ -3431,7 +3510,7 @@ interface UpdateVerificationStatusResponse {
 
 ```typescript
 interface ModerateMediaInput {
-  media_id: string              // uuid
+  media_id: string // uuid
   approved: boolean
   notes?: string
 }
@@ -3447,24 +3526,28 @@ interface ModerateMediaResponse {
 ```
 
 **Validation Rules**
+
 - `media_id` required; must be a valid UUID
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `NOT_FOUND` | 404 | `media_id` does not exist |
+| Code            | HTTP | When                               |
+| --------------- | ---- | ---------------------------------- |
+| `AUTH_REQUIRED` | 401  | No authenticated session           |
+| `FORBIDDEN`     | 403  | Caller is not admin or super_admin |
+| `NOT_FOUND`     | 404  | `media_id` does not exist          |
 
 **Frontend Usage**
+
 - Admin Listing Detail media section: approve or reject individual gallery images
 - On rejection (`approved = false`): image hidden from public listing page without deletion
 
 **Analytics Event Emitted**
+
 - `admin_media_approved` — when `approved = true`; properties: `{ media_id }`
 - `admin_media_rejected` — when `approved = false`; properties: `{ media_id }`
 
@@ -3487,9 +3570,9 @@ interface ModerateMediaResponse {
 
 ```typescript
 interface ModerateReviewInput {
-  review_id: string             // uuid
+  review_id: string // uuid
   decision: 'published' | 'rejected' | 'removed'
-  reason?: string               // required when decision is 'rejected' or 'removed'
+  reason?: string // required when decision is 'rejected' or 'removed'
 }
 ```
 
@@ -3503,22 +3586,25 @@ interface ModerateReviewResponse {
 ```
 
 **Validation Rules**
+
 - `review_id` required
 - `decision` required; must be one of `'published'`, `'rejected'`, `'removed'`
 - `reason` required when `decision IN ('rejected', 'removed')`; max 500 chars
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing `reason` when decision requires it |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code               | HTTP | When                                       |
+| ------------------ | ---- | ------------------------------------------ |
+| `VALIDATION_ERROR` | 400  | Missing `reason` when decision requires it |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                   |
+| `FORBIDDEN`        | 403  | Caller is not admin or super_admin         |
 
 **Frontend Usage**
+
 - Admin Review Queue: approve or reject each queued review
 - On `published`: review becomes publicly visible on the listing page (V1 display activation)
 
@@ -3547,9 +3633,9 @@ When `decision = 'published'`: set `reviews.published_at = now()`; trigger recal
 
 ```typescript
 interface ResolveCorrectionInput {
-  correction_id: string         // uuid
+  correction_id: string // uuid
   decision: 'approved' | 'dismissed'
-  notes?: string                // internal notes; visible to admin only
+  notes?: string // internal notes; visible to admin only
 }
 ```
 
@@ -3563,26 +3649,30 @@ interface ResolveCorrectionResponse {
 ```
 
 **Validation Rules**
+
 - `correction_id` required
 - `decision` required; must be `'approved'` or `'dismissed'`
 - Correction must have `status = 'pending'`; return `422` otherwise
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
-| `NOT_FOUND` | 404 | `correction_id` does not exist |
+| Code            | HTTP | When                               |
+| --------------- | ---- | ---------------------------------- |
+| `AUTH_REQUIRED` | 401  | No authenticated session           |
+| `FORBIDDEN`     | 403  | Caller is not admin or super_admin |
+| `NOT_FOUND`     | 404  | `correction_id` does not exist     |
 
 **Frontend Usage**
+
 - Admin Corrections queue (Beta): approve or dismiss each pending correction
 - On approval: the `suggested_value` is applied to the specified `field_name` on the listing record
 
 **Analytics Event Emitted**
+
 - `admin_correction_approved` — when `decision = 'approved'`; properties: `{ correction_id, listing_id }`
 - `admin_correction_dismissed` — when `decision = 'dismissed'`; properties: `{ correction_id }`
 
@@ -3612,7 +3702,7 @@ interface CreateCategoryInput {
   action: 'create'
   name: string
   slug: string
-  parent_id?: string            // uuid; null for top-level categories
+  parent_id?: string // uuid; null for top-level categories
   description?: string
   icon?: string
   display_order?: number
@@ -3621,7 +3711,7 @@ interface CreateCategoryInput {
 // Update
 interface UpdateCategoryInput {
   action: 'update'
-  id: string                    // uuid
+  id: string // uuid
   name?: string
   slug?: string
   description?: string
@@ -3633,7 +3723,7 @@ interface UpdateCategoryInput {
 // Reorder
 interface ReorderCategoriesInput {
   action: 'reorder'
-  ordered_ids: string[]         // uuid[] — full ordered list at the same level (same parent_id)
+  ordered_ids: string[] // uuid[] — full ordered list at the same level (same parent_id)
 }
 ```
 
@@ -3642,7 +3732,7 @@ interface ReorderCategoriesInput {
 ```typescript
 // create
 interface CreateCategoryResponse {
-  category_id: string           // uuid
+  category_id: string // uuid
 }
 
 // update / reorder
@@ -3652,28 +3742,32 @@ interface CategoryMutationResponse {
 ```
 
 **Validation Rules**
+
 - `name` required for `create`; max 200 chars
 - `slug` required for `create`; must be lowercase, URL-safe (letters, digits, hyphens only); must be unique across all categories — return `409 SLUG_CONFLICT` on duplicate
 - `slug` for `update`: same format rules if provided; uniqueness re-checked
 - `reorder` `ordered_ids` must be a non-empty array of valid UUIDs
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing required fields or slug format violation |
-| `SLUG_CONFLICT` | 409 | Slug is already in use by another category |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code               | HTTP | When                                             |
+| ------------------ | ---- | ------------------------------------------------ |
+| `VALIDATION_ERROR` | 400  | Missing required fields or slug format violation |
+| `SLUG_CONFLICT`    | 409  | Slug is already in use by another category       |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                         |
+| `FORBIDDEN`        | 403  | Caller is not admin or super_admin               |
 
 **Frontend Usage**
+
 - Admin Categories management screen (if built at MVP; deferred to Beta if not prioritized)
 - Category tree rendered with drag-to-reorder support within each parent level
 
 **Analytics Event Emitted**
+
 - `admin_category_created` — properties: `{ category_id, name }`
 - `admin_category_updated` — properties: `{ category_id, changed_fields: string[] }`
 
@@ -3701,13 +3795,13 @@ interface CreateCollectionInput {
   title: string
   slug: string
   description?: string
-  cover_image_path?: string     // Storage path
+  cover_image_path?: string // Storage path
 }
 
 // manageCollections — Update
 interface UpdateCollectionInput {
   action: 'update'
-  collection_id: string         // uuid
+  collection_id: string // uuid
   title?: string
   slug?: string
   description?: string
@@ -3719,28 +3813,28 @@ interface UpdateCollectionInput {
 // manageCollections — Delete
 interface DeleteCollectionInput {
   action: 'delete'
-  collection_id: string         // uuid
+  collection_id: string // uuid
 }
 
 // manageCollectionItems — Add
 interface AddCollectionItemInput {
   action: 'add'
-  collection_id: string         // uuid
-  listing_id: string            // uuid
+  collection_id: string // uuid
+  listing_id: string // uuid
   display_order?: number
 }
 
 // manageCollectionItems — Remove
 interface RemoveCollectionItemInput {
   action: 'remove'
-  collection_id: string         // uuid
-  listing_id: string            // uuid
+  collection_id: string // uuid
+  listing_id: string // uuid
 }
 
 // manageCollectionItems — Reorder
 interface ReorderCollectionItemsInput {
   action: 'reorder'
-  collection_id: string         // uuid
+  collection_id: string // uuid
   ordered_listing_ids: string[] // uuid[] — complete ordered list
 }
 ```
@@ -3750,7 +3844,7 @@ interface ReorderCollectionItemsInput {
 ```typescript
 // create collection
 interface CreateCollectionResponse {
-  collection_id: string         // uuid
+  collection_id: string // uuid
 }
 
 // update collection
@@ -3776,28 +3870,32 @@ interface CollectionItemMutationResponse {
 ```
 
 **Validation Rules**
+
 - `title` required for `create`; max 200 chars
 - `slug` required for `create`; must be lowercase, URL-safe (letters, digits, hyphens only); `UNIQUE` on `collections.slug` — return `409 SLUG_CONFLICT` on duplicate
 - Adding a listing already in the collection returns `409 DUPLICATE_ITEM` (enforced by `UNIQUE (collection_id, listing_id)` on `collection_items`)
 - `ordered_listing_ids` for reorder must all belong to the given collection
 
 **Permission Checks**
+
 - Admin role check (service_role client)
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Missing required fields or slug format violation |
-| `SLUG_CONFLICT` | 409 | Slug is already in use by another collection |
-| `DUPLICATE_ITEM` | 409 | Listing is already in this collection |
-| `AUTH_REQUIRED` | 401 | No authenticated session |
-| `FORBIDDEN` | 403 | Caller is not admin or super_admin |
+| Code               | HTTP | When                                             |
+| ------------------ | ---- | ------------------------------------------------ |
+| `VALIDATION_ERROR` | 400  | Missing required fields or slug format violation |
+| `SLUG_CONFLICT`    | 409  | Slug is already in use by another collection     |
+| `DUPLICATE_ITEM`   | 409  | Listing is already in this collection            |
+| `AUTH_REQUIRED`    | 401  | No authenticated session                         |
+| `FORBIDDEN`        | 403  | Caller is not admin or super_admin               |
 
 **Frontend Usage**
+
 - Admin Collections screen: create, edit, and delete collections; manage listing membership and order
 
 **Analytics Event Emitted**
+
 - `admin_collection_created` — properties: `{ collection_id, title }`
 - `admin_collection_updated` — properties: `{ collection_id, changed_fields: string[] }`
 - `admin_collection_item_added` — properties: `{ collection_id, listing_id }`
@@ -3807,6 +3905,7 @@ interface CollectionItemMutationResponse {
 
 **Audit Log Entry**
 `INSERT INTO admin_audit_log (admin_user_id, action='collection_[created|updated|deleted|item_added|item_removed|items_reordered]', target_table='collections', target_id=$collection_id, ...)`
+
 ---
 
 ## Section 10: Receipt & Community Spend
@@ -3827,10 +3926,10 @@ interface CollectionItemMutationResponse {
 ```typescript
 // multipart/form-data
 interface UploadReceiptRequest {
-  file: File               // Receipt image file
-  bucket: 'receipts'       // Must be literal 'receipts' for this flow
-  entity_type: 'receipt'   // Must be literal 'receipt' for this flow
-  entity_id: string        // Must equal auth.uid() — enforced server-side
+  file: File // Receipt image file
+  bucket: 'receipts' // Must be literal 'receipts' for this flow
+  entity_type: 'receipt' // Must be literal 'receipt' for this flow
+  entity_id: string // Must equal auth.uid() — enforced server-side
 }
 ```
 
@@ -3839,7 +3938,7 @@ interface UploadReceiptRequest {
 ```typescript
 interface UploadReceiptResponse {
   data: {
-    path: string           // Storage path: receipts/[user_id]/[uuid].[ext]
+    path: string // Storage path: receipts/[user_id]/[uuid].[ext]
   }
 }
 ```
@@ -3863,12 +3962,12 @@ interface UploadReceiptResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `entity_id` does not match `auth.uid()` |
-| `VALIDATION_ERROR` | 400 | MIME type not allowed, file exceeds 10MB, or `entity_id` missing |
-| `UPLOAD_FAILED` | 500 | Supabase Storage write failed |
+| Code               | HTTP | When                                                             |
+| ------------------ | ---- | ---------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                                 |
+| `FORBIDDEN`        | 403  | `entity_id` does not match `auth.uid()`                          |
+| `VALIDATION_ERROR` | 400  | MIME type not allowed, file exceeds 10MB, or `entity_id` missing |
+| `UPLOAD_FAILED`    | 500  | Supabase Storage write failed                                    |
 
 **Frontend Usage**
 
@@ -3897,13 +3996,13 @@ None — storage uploads are not cached
 
 ```typescript
 interface CreateReceiptSubmissionArgs {
-  client_idempotency_key: string    // UUID generated client-side; required for dedup
-  image_path: string                // Storage path from prior /api/upload call
-  listing_id?: string               // UUID — optional matched listing
-  raw_business_name?: string        // Free-text business name if listing_id not known
-  amount: number                    // Purchase amount in USD
-  spend_date: string                // ISO date string: "YYYY-MM-DD"
-  category_id?: string              // UUID — optional category attribution
+  client_idempotency_key: string // UUID generated client-side; required for dedup
+  image_path: string // Storage path from prior /api/upload call
+  listing_id?: string // UUID — optional matched listing
+  raw_business_name?: string // Free-text business name if listing_id not known
+  amount: number // Purchase amount in USD
+  spend_date: string // ISO date string: "YYYY-MM-DD"
+  category_id?: string // UUID — optional category attribution
 }
 ```
 
@@ -3912,9 +4011,9 @@ interface CreateReceiptSubmissionArgs {
 ```typescript
 interface CreateReceiptSubmissionResponse {
   data: {
-    spend_event_id: string          // UUID of the created spend_events row
-    status: 'pending'               // Always 'pending' for receipt submissions requiring review
-    message: string                 // Human-readable confirmation
+    spend_event_id: string // UUID of the created spend_events row
+    status: 'pending' // Always 'pending' for receipt submissions requiring review
+    message: string // Human-readable confirmation
   }
 }
 ```
@@ -3940,13 +4039,13 @@ interface CreateReceiptSubmissionResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Any field fails validation (see rules above) |
-| `FORBIDDEN` | 403 | `image_path` does not start with `receipts/[auth.uid()]/` |
-| `NOT_FOUND` | 404 | `image_path` does not exist in storage |
-| `SERVER_ERROR` | 500 | Database write failed |
+| Code               | HTTP | When                                                      |
+| ------------------ | ---- | --------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                          |
+| `VALIDATION_ERROR` | 400  | Any field fails validation (see rules above)              |
+| `FORBIDDEN`        | 403  | `image_path` does not start with `receipts/[auth.uid()]/` |
+| `NOT_FOUND`        | 404  | `image_path` does not exist in storage                    |
+| `SERVER_ERROR`     | 500  | Database write failed                                     |
 
 > On idempotency key conflict: return `{ data: { spend_event_id: "[existing_id]", status: 'pending', message: "Receipt already submitted." } }` with HTTP 200.
 
@@ -3980,8 +4079,8 @@ None — receipt lists are fetched dynamically; no ISR paths to revalidate
 // Query parameters
 interface ListReceiptsParams {
   status?: 'uploaded' | 'processing' | 'parsed' | 'confirmed' | 'rejected'
-  page?: number     // Default: 1
-  limit?: number    // Default: 20; maximum: 100
+  page?: number // Default: 1
+  limit?: number // Default: 20; maximum: 100
 }
 ```
 
@@ -3990,17 +4089,17 @@ interface ListReceiptsParams {
 ```typescript
 interface ListReceiptsResponse {
   data: Array<{
-    id: string                     // spend_events.id (UUID)
-    amount: number                 // spend_events.amount
-    spend_date: string             // ISO date string
-    status: string                 // receipt_uploads.status
-    created_at: string             // ISO 8601 timestamp
+    id: string // spend_events.id (UUID)
+    amount: number // spend_events.amount
+    spend_date: string // ISO date string
+    status: string // receipt_uploads.status
+    created_at: string // ISO 8601 timestamp
     listing: {
       id: string
       name: string
       slug: string
       logo_path: string | null
-    } | null                       // null for unattributed entries
+    } | null // null for unattributed entries
     raw_business_name: string | null
     // image_path is intentionally excluded — use getReceiptImageUrl action
   }>
@@ -4028,10 +4127,10 @@ interface ListReceiptsResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Invalid `status` filter value |
+| Code               | HTTP | When                          |
+| ------------------ | ---- | ----------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session              |
+| `VALIDATION_ERROR` | 400  | Invalid `status` filter value |
 
 **Frontend Usage**
 
@@ -4060,7 +4159,7 @@ None — dynamic per-user data; no ISR
 
 ```typescript
 interface GetReceiptImageUrlArgs {
-  spend_event_id: string    // UUID of the spend_events row
+  spend_event_id: string // UUID of the spend_events row
 }
 ```
 
@@ -4069,8 +4168,8 @@ interface GetReceiptImageUrlArgs {
 ```typescript
 interface GetReceiptImageUrlResponse {
   data: {
-    signed_url: string      // 15-minute signed URL for direct storage access
-    expires_at: string      // ISO 8601 timestamp of URL expiry
+    signed_url: string // 15-minute signed URL for direct storage access
+    expires_at: string // ISO 8601 timestamp of URL expiry
   }
 }
 ```
@@ -4091,12 +4190,12 @@ interface GetReceiptImageUrlResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `spend_events.user_id` does not match `auth.uid()` |
-| `NOT_FOUND` | 404 | `spend_event_id` does not exist or has no associated receipt upload |
-| `SERVER_ERROR` | 500 | Storage signed URL generation failed |
+| Code            | HTTP | When                                                                |
+| --------------- | ---- | ------------------------------------------------------------------- |
+| `AUTH_REQUIRED` | 401  | No valid session                                                    |
+| `FORBIDDEN`     | 403  | `spend_events.user_id` does not match `auth.uid()`                  |
+| `NOT_FOUND`     | 404  | `spend_event_id` does not exist or has no associated receipt upload |
+| `SERVER_ERROR`  | 500  | Storage signed URL generation failed                                |
 
 **Frontend Usage**
 
@@ -4126,12 +4225,12 @@ None
 
 ```typescript
 interface CreateSpendLogArgs {
-  client_idempotency_key: string    // UUID generated client-side; required for dedup
-  listing_id: string                // UUID — required; must reference a published listing
-  amount: number                    // Purchase amount in USD
-  spend_date: string                // ISO date string: "YYYY-MM-DD"
-  category_id?: string              // UUID — optional category attribution
-  aggregate_opt_out?: boolean       // Default false — user opts out of community aggregation
+  client_idempotency_key: string // UUID generated client-side; required for dedup
+  listing_id: string // UUID — required; must reference a published listing
+  amount: number // Purchase amount in USD
+  spend_date: string // ISO date string: "YYYY-MM-DD"
+  category_id?: string // UUID — optional category attribution
+  aggregate_opt_out?: boolean // Default false — user opts out of community aggregation
 }
 ```
 
@@ -4140,8 +4239,8 @@ interface CreateSpendLogArgs {
 ```typescript
 interface CreateSpendLogResponse {
   data: {
-    spend_event_id: string          // UUID of the created spend_events row
-    status: 'confirmed'             // Manual logs are confirmed immediately (no receipt review)
+    spend_event_id: string // UUID of the created spend_events row
+    status: 'confirmed' // Manual logs are confirmed immediately (no receipt review)
   }
 }
 ```
@@ -4163,12 +4262,12 @@ interface CreateSpendLogResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Any field fails validation (see rules above) |
-| `NOT_FOUND` | 404 | `listing_id` does not reference a published listing |
-| `SERVER_ERROR` | 500 | Database write failed |
+| Code               | HTTP | When                                                |
+| ------------------ | ---- | --------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                    |
+| `VALIDATION_ERROR` | 400  | Any field fails validation (see rules above)        |
+| `NOT_FOUND`        | 404  | `listing_id` does not reference a published listing |
+| `SERVER_ERROR`     | 500  | Database write failed                               |
 
 > On idempotency key conflict: return `{ data: { spend_event_id: "[existing_id]", status: 'confirmed' } }` with HTTP 200.
 
@@ -4200,9 +4299,9 @@ None
 ```typescript
 // Query parameters
 interface CommunitySpendParams {
-  city_id?: string                              // UUID — filter to a specific city
-  category_id?: string                          // UUID — filter to a specific category
-  period?: '7d' | '30d' | '90d' | '1y'         // Default: '30d'
+  city_id?: string // UUID — filter to a specific city
+  category_id?: string // UUID — filter to a specific category
+  period?: '7d' | '30d' | '90d' | '1y' // Default: '30d'
 }
 ```
 
@@ -4211,10 +4310,10 @@ interface CommunitySpendParams {
 ```typescript
 interface CommunitySpendResponse {
   data: {
-    total_spend: number               // Sum of qualifying spend in USD
-    transaction_count: number         // Count of qualifying spend_events rows
-    unique_businesses: number         // Count of distinct businesses in the aggregate
-    period_label: string              // Human-readable: "Last 30 days", "Last year", etc.
+    total_spend: number // Sum of qualifying spend in USD
+    transaction_count: number // Count of qualifying spend_events rows
+    unique_businesses: number // Count of distinct businesses in the aggregate
+    period_label: string // Human-readable: "Last 30 days", "Last year", etc.
     by_category?: Array<{
       category_id: string
       category_name: string
@@ -4222,7 +4321,7 @@ interface CommunitySpendResponse {
       transaction_count: number
     }>
     by_day?: Array<{
-      date: string                    // ISO date: "YYYY-MM-DD"
+      date: string // ISO date: "YYYY-MM-DD"
       total_spend: number
     }>
   }
@@ -4245,9 +4344,9 @@ interface CommunitySpendResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Invalid `period` value or malformed UUID parameter |
+| Code               | HTTP | When                                               |
+| ------------------ | ---- | -------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Invalid `period` value or malformed UUID parameter |
 
 **Frontend Usage**
 
@@ -4284,7 +4383,7 @@ ISR 1 hour — `community_impact_daily` is updated once per day via scheduled ag
 ```typescript
 // Query parameters
 interface FlowSummaryParams {
-  city_id?: string    // UUID — filters to a single city; omit for nationwide
+  city_id?: string // UUID — filters to a single city; omit for nationwide
 }
 ```
 
@@ -4293,14 +4392,14 @@ interface FlowSummaryParams {
 ```typescript
 interface FlowSummaryResponse {
   data: {
-    total_dollars_circulated: number      // Aggregate spend in USD across the period
-    total_businesses_supported: number    // Distinct businesses with attributed spend
+    total_dollars_circulated: number // Aggregate spend in USD across the period
+    total_businesses_supported: number // Distinct businesses with attributed spend
     city: {
       name: string
       slug: string
-    } | null                              // null when city_id not provided (nationwide)
-    period: string                        // "All time" or specific period label
-    last_updated: string                  // ISO 8601 timestamp from flow_map_snapshots
+    } | null // null when city_id not provided (nationwide)
+    period: string // "All time" or specific period label
+    last_updated: string // ISO 8601 timestamp from flow_map_snapshots
   }
 }
 ```
@@ -4319,9 +4418,9 @@ interface FlowSummaryResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Malformed `city_id` UUID |
+| Code               | HTTP | When                     |
+| ------------------ | ---- | ------------------------ |
+| `VALIDATION_ERROR` | 400  | Malformed `city_id` UUID |
 
 **Frontend Usage**
 
@@ -4351,8 +4450,8 @@ ISR 1 hour — flow node aggregates are recomputed nightly; 1-hour ISR is suffic
 ```typescript
 // Query parameters
 interface AnonymizedFlowParams {
-  city_id: string           // UUID — required; no national flow graph at V3
-  snapshot_date?: string    // ISO date "YYYY-MM-DD"; defaults to most recent snapshot
+  city_id: string // UUID — required; no national flow graph at V3
+  snapshot_date?: string // ISO date "YYYY-MM-DD"; defaults to most recent snapshot
 }
 ```
 
@@ -4363,23 +4462,23 @@ interface AnonymizedFlowResponse {
   data: {
     snapshot_date: string
     nodes: Array<{
-      id: string            // flow_nodes.id
+      id: string // flow_nodes.id
       node_type: 'business' | 'category' | 'city'
-      label: string         // Display name for this node
+      label: string // Display name for this node
       total_inflow: number
       total_outflow: number
-      node_weight: number   // Normalized 0–1; drives visual sizing
+      node_weight: number // Normalized 0–1; drives visual sizing
     }>
     edges: Array<{
       source_node_id: string
       target_node_id: string
       total_amount: number
-      edge_weight: number   // Normalized 0–1; drives edge thickness
+      edge_weight: number // Normalized 0–1; drives edge thickness
     }>
     meta: {
       node_count: number
       edge_count: number
-      computed_at: string   // ISO 8601 timestamp
+      computed_at: string // ISO 8601 timestamp
     }
   }
 }
@@ -4400,10 +4499,10 @@ interface AnonymizedFlowResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `city_id` missing, malformed UUID, or invalid `snapshot_date` format |
-| `NOT_FOUND` | 404 | No snapshot exists for the requested city and date |
+| Code               | HTTP | When                                                                 |
+| ------------------ | ---- | -------------------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | `city_id` missing, malformed UUID, or invalid `snapshot_date` format |
+| `NOT_FOUND`        | 404  | No snapshot exists for the requested city and date                   |
 
 **Frontend Usage**
 
@@ -4433,7 +4532,7 @@ ISR 24 hours — snapshots are computed once per night; daily ISR matches comput
 ```typescript
 // Query parameters
 interface PersonalImpactParams {
-  period?: '30d' | '90d' | '1y' | 'all'    // Default: '30d'
+  period?: '30d' | '90d' | '1y' | 'all' // Default: '30d'
 }
 ```
 
@@ -4442,13 +4541,13 @@ interface PersonalImpactParams {
 ```typescript
 interface PersonalImpactResponse {
   data: {
-    total_spend: number                          // Sum of authenticated user's spend in period
-    businesses_supported: number                 // Count of distinct listing_ids in period
+    total_spend: number // Sum of authenticated user's spend in period
+    businesses_supported: number // Count of distinct listing_ids in period
     top_categories: Array<{
       category_name: string
       total_spend: number
     }>
-    period_label: string                         // "Last 30 days", "Last 90 days", etc.
+    period_label: string // "Last 30 days", "Last 90 days", etc.
   }
 }
 ```
@@ -4467,10 +4566,10 @@ interface PersonalImpactResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | Invalid `period` value |
+| Code               | HTTP | When                   |
+| ------------------ | ---- | ---------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session       |
+| `VALIDATION_ERROR` | 400  | Invalid `period` value |
 
 **Frontend Usage**
 
@@ -4500,7 +4599,7 @@ None — dynamic per-user data; no ISR
 // Path parameter: id = listing UUID
 // Query parameters
 interface EntityImpactParams {
-  period?: '30d' | '90d' | '1y' | 'all'    // Default: '30d'
+  period?: '30d' | '90d' | '1y' | 'all' // Default: '30d'
 }
 ```
 
@@ -4509,10 +4608,10 @@ interface EntityImpactParams {
 ```typescript
 interface EntityImpactResponse {
   data: {
-    listing_id: string                   // UUID of the listing
-    total_attributed_spend: number       // SUM of spend_events.amount for this listing
-    transaction_count: number            // COUNT of qualifying spend_events rows
-    period_label: string                 // Human-readable period description
+    listing_id: string // UUID of the listing
+    total_attributed_spend: number // SUM of spend_events.amount for this listing
+    transaction_count: number // COUNT of qualifying spend_events rows
+    period_label: string // Human-readable period description
   }
 }
 ```
@@ -4533,12 +4632,12 @@ interface EntityImpactResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | Listing exists but `owner_user_id` does not match `auth.uid()` |
-| `NOT_FOUND` | 404 | Listing does not exist or `deleted_at IS NOT NULL` |
-| `VALIDATION_ERROR` | 400 | Invalid `period` value or malformed UUID |
+| Code               | HTTP | When                                                           |
+| ------------------ | ---- | -------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                               |
+| `FORBIDDEN`        | 403  | Listing exists but `owner_user_id` does not match `auth.uid()` |
+| `NOT_FOUND`        | 404  | Listing does not exist or `deleted_at IS NOT NULL`             |
+| `VALIDATION_ERROR` | 400  | Invalid `period` value or malformed UUID                       |
 
 **Frontend Usage**
 
@@ -4576,8 +4675,8 @@ None — dynamic per-listing data; no ISR
 // Path parameter: id = vendor listing UUID
 // Query parameters
 interface ListVendorProductsParams {
-  page?: number     // Default: 1
-  limit?: number    // Default: 20; maximum: 100
+  page?: number // Default: 1
+  limit?: number // Default: 20; maximum: 100
 }
 ```
 
@@ -4592,18 +4691,18 @@ interface ListVendorProductsResponse {
     description: string | null
     price: number
     compare_at_price: number | null
-    currency: string                    // "USD"
-    inventory_count: number | null      // null = unlimited
+    currency: string // "USD"
+    inventory_count: number | null // null = unlimited
     track_inventory: boolean
-    is_active: boolean                  // Derived: status === 'active'
+    is_active: boolean // Derived: status === 'active'
     cover_image_path: string | null
     variants: Array<{
       id: string
       name: string
-      options: Record<string, string>   // e.g., { "color": "red", "size": "M" }
+      options: Record<string, string> // e.g., { "color": "red", "size": "M" }
       price_delta: number
       inventory_count: number | null
-      is_active: boolean                // product_variants.is_active
+      is_active: boolean // product_variants.is_active
     }> | null
   }>
   meta: {
@@ -4632,10 +4731,10 @@ interface ListVendorProductsResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Listing does not exist or is not published |
-| `LISTING_NOT_VENDOR` | 422 | Listing exists and is published but `entity_type` is not `'vendor'` |
+| Code                 | HTTP | When                                                                |
+| -------------------- | ---- | ------------------------------------------------------------------- |
+| `NOT_FOUND`          | 404  | Listing does not exist or is not published                          |
+| `LISTING_NOT_VENDOR` | 422  | Listing exists and is published but `entity_type` is not `'vendor'` |
 
 **Frontend Usage**
 
@@ -4681,7 +4780,7 @@ interface GetProductDetailResponse {
     currency: string
     inventory_count: number | null
     track_inventory: boolean
-    is_active: boolean                   // Derived: status === 'active'
+    is_active: boolean // Derived: status === 'active'
     is_digital: boolean
     cover_image_path: string | null
     tags: string[] | null
@@ -4720,10 +4819,10 @@ interface GetProductDetailResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Product does not exist or parent listing is not published |
-| `PRODUCT_INACTIVE` | 410 | Product exists (`deleted_at IS NULL`) but `status` is not `'active'` |
+| Code               | HTTP | When                                                                 |
+| ------------------ | ---- | -------------------------------------------------------------------- |
+| `NOT_FOUND`        | 404  | Product does not exist or parent listing is not published            |
+| `PRODUCT_INACTIVE` | 410  | Product exists (`deleted_at IS NULL`) but `status` is not `'active'` |
 
 > Use 410 Gone (not 404) for inactive products so that search engines and CDN caches can distinguish "never existed" from "existed but is no longer available." This distinction matters for crawl budget and storefront link management.
 
@@ -4754,13 +4853,13 @@ ISR 30 minutes
 
 ```typescript
 interface CreateProductArgs {
-  vendor_listing_id: string     // UUID — must be a listing owned by auth.uid()
+  vendor_listing_id: string // UUID — must be a listing owned by auth.uid()
   name: string
   description?: string
-  price: number                 // USD; must be > 0
-  compare_at_price?: number     // Must be > price when provided
-  track_inventory?: boolean     // Default: false
-  inventory_count?: number      // Required when track_inventory = true; must be ≥ 0
+  price: number // USD; must be > 0
+  compare_at_price?: number // Must be > price when provided
+  track_inventory?: boolean // Default: false
+  inventory_count?: number // Required when track_inventory = true; must be ≥ 0
 }
 ```
 
@@ -4769,9 +4868,9 @@ interface CreateProductArgs {
 ```typescript
 interface CreateProductResponse {
   data: {
-    product_id: string      // UUID of the created products row
-    slug: string            // Auto-generated from vendor slug + product name
-    status: 'draft'         // New products always start as draft
+    product_id: string // UUID of the created products row
+    slug: string // Auto-generated from vendor slug + product name
+    status: 'draft' // New products always start as draft
   }
 }
 ```
@@ -4795,14 +4894,14 @@ interface CreateProductResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `listings.owner_user_id` does not match `auth.uid()` |
-| `NOT_FOUND` | 404 | `vendor_listing_id` does not reference a valid listing |
-| `VALIDATION_ERROR` | 400 | Any field fails validation (see rules above) |
-| `STRIPE_CONNECT_REQUIRED` | 422 | `stripe_connect_status` is not `'active'` |
-| `LISTING_NOT_VENDOR` | 422 | Listing exists and is owned by user but `entity_type` is not `'vendor'` |
+| Code                      | HTTP | When                                                                    |
+| ------------------------- | ---- | ----------------------------------------------------------------------- |
+| `AUTH_REQUIRED`           | 401  | No valid session                                                        |
+| `FORBIDDEN`               | 403  | `listings.owner_user_id` does not match `auth.uid()`                    |
+| `NOT_FOUND`               | 404  | `vendor_listing_id` does not reference a valid listing                  |
+| `VALIDATION_ERROR`        | 400  | Any field fails validation (see rules above)                            |
+| `STRIPE_CONNECT_REQUIRED` | 422  | `stripe_connect_status` is not `'active'`                               |
+| `LISTING_NOT_VENDOR`      | 422  | Listing exists and is owned by user but `entity_type` is not `'vendor'` |
 
 **Frontend Usage**
 
@@ -4830,14 +4929,14 @@ None at creation — product is a draft and not yet publicly visible; no ISR pat
 
 ```typescript
 interface UpdateProductArgs {
-  product_id: string            // UUID of the product to update
+  product_id: string // UUID of the product to update
   name?: string
   description?: string
   price?: number
-  compare_at_price?: number     // Set to null to remove strikethrough price
+  compare_at_price?: number // Set to null to remove strikethrough price
   track_inventory?: boolean
   inventory_count?: number
-  is_active?: boolean           // true = set status to 'active'; false = set status to 'draft'
+  is_active?: boolean // true = set status to 'active'; false = set status to 'draft'
 }
 ```
 
@@ -4847,7 +4946,7 @@ interface UpdateProductArgs {
 interface UpdateProductResponse {
   data: {
     product_id: string
-    updated_at: string          // ISO 8601 timestamp
+    updated_at: string // ISO 8601 timestamp
   }
 }
 ```
@@ -4871,13 +4970,13 @@ interface UpdateProductResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | Product's parent listing is not owned by `auth.uid()` |
-| `NOT_FOUND` | 404 | Product does not exist or `deleted_at IS NOT NULL` |
-| `VALIDATION_ERROR` | 400 | Any field fails validation |
-| `STRIPE_CONNECT_REQUIRED` | 422 | `is_active = true` requested but `stripe_connect_status != 'active'` |
+| Code                      | HTTP | When                                                                 |
+| ------------------------- | ---- | -------------------------------------------------------------------- |
+| `AUTH_REQUIRED`           | 401  | No valid session                                                     |
+| `FORBIDDEN`               | 403  | Product's parent listing is not owned by `auth.uid()`                |
+| `NOT_FOUND`               | 404  | Product does not exist or `deleted_at IS NOT NULL`                   |
+| `VALIDATION_ERROR`        | 400  | Any field fails validation                                           |
+| `STRIPE_CONNECT_REQUIRED` | 422  | `is_active = true` requested but `stripe_connect_status != 'active'` |
 
 **Frontend Usage**
 
@@ -4924,9 +5023,9 @@ interface GetVendorStorefrontResponse {
       cover_image_path: string | null
     }
     vendor_details: {
-      storefront_description: string | null    // listing_details_vendor.storefront_description
-      shipping_info: string | null             // listing_details_vendor.shipping_info
-      return_policy: string | null             // listing_details_vendor.return_policy
+      storefront_description: string | null // listing_details_vendor.storefront_description
+      shipping_info: string | null // listing_details_vendor.shipping_info
+      return_policy: string | null // listing_details_vendor.return_policy
       // stripe_connect_id: NEVER returned
       // stripe_connect_status: NEVER returned
     }
@@ -4938,9 +5037,9 @@ interface GetVendorStorefrontResponse {
       compare_at_price: number | null
       cover_image_path: string | null
       is_active: boolean
-      has_variants: boolean                    // true when variants jsonb is non-null
-    }>                                         // First 12 active products
-    product_count: number                      // Total active product count for this vendor
+      has_variants: boolean // true when variants jsonb is non-null
+    }> // First 12 active products
+    product_count: number // Total active product count for this vendor
   }
 }
 ```
@@ -4960,10 +5059,10 @@ interface GetVendorStorefrontResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `NOT_FOUND` | 404 | Listing does not exist, is not published, or `deleted_at IS NOT NULL` |
-| `LISTING_NOT_VENDOR` | 422 | Listing exists and is published but `entity_type` is not `'vendor'` |
+| Code                 | HTTP | When                                                                  |
+| -------------------- | ---- | --------------------------------------------------------------------- |
+| `NOT_FOUND`          | 404  | Listing does not exist, is not published, or `deleted_at IS NOT NULL` |
+| `LISTING_NOT_VENDOR` | 422  | Listing exists and is published but `entity_type` is not `'vendor'`   |
 
 **Frontend Usage**
 
@@ -4996,12 +5095,12 @@ ISR 30 minutes
 interface TrackCTAClickBody {
   event_name: 'cta_click'
   entity_type: 'listing' | 'product'
-  entity_id: string                    // UUID of the listing or product
+  entity_id: string // UUID of the listing or product
   properties: {
     cta_type: 'shop' | 'buy-now' | 'book' | 'order' | string
-    listing_id: string                 // UUID — always required even when entity_type = 'product'
-    product_id?: string                // UUID — required when entity_type = 'product'
-    destination_url: string            // The external URL the user is navigating to
+    listing_id: string // UUID — always required even when entity_type = 'product'
+    product_id?: string // UUID — required when entity_type = 'product'
+    destination_url: string // The external URL the user is navigating to
   }
 }
 ```
@@ -5034,9 +5133,9 @@ interface TrackCTAClickResponse {
 
 **Errors**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | Any required field missing or invalid |
+| Code               | HTTP | When                                  |
+| ------------------ | ---- | ------------------------------------- |
+| `VALIDATION_ERROR` | 400  | Any required field missing or invalid |
 
 **Frontend Usage**
 

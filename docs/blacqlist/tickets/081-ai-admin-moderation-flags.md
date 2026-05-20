@@ -1,15 +1,19 @@
 # Ticket 081: AI admin moderation flags — surface quality issues in admin queue
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 15: AI
 
 ## Priority
+
 P3
 
 ## Feature Area
+
 AI / Admin
 
 ---
@@ -33,6 +37,7 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 ## Scope
 
 **In scope:**
+
 - `lib/ai/prompts/moderation-flags.ts` — versioned prompt template for the moderation flags call; accepts a structured listing record and returns a typed flags array
 - `lib/ai/services/moderation-flags.ts` — server-side service wrapping the Anthropic API call; validates response shape; handles timeout (10s) and API errors with graceful degradation
 - Server Action `generateModerationFlags(listingId: string): Promise<ModerationFlag[]>` in `lib/actions/ai-actions.ts`; reads listing + `listing_details_business` records using service role client; calls the AI service; writes flag rows to `moderation_queue`
@@ -42,6 +47,7 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 - `AI_FEATURES_ENABLED` guard: check at the top of `generateModerationFlags`; if false, return `[]` immediately
 
 **Out of scope:**
+
 - AI-assisted content suggestions for owners (future AI ticket)
 - Admin ability to manually add moderation flags (Ticket 038 scope)
 - Automated publishing or rejection based on AI flag severity (product decision deferred)
@@ -51,14 +57,14 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 038: Admin listings table | Blocking ticket | In Progress |
-| Ticket 039: Admin listing detail and edit | Blocking ticket | In Progress |
-| Ticket 079: AI service foundation | Blocking ticket | Must be completed first |
-| `moderation_queue` table (Ticket 012) | Database | Must exist |
-| `ANTHROPIC_API_KEY` environment variable | Infrastructure | Must be set in all environments where AI is enabled |
-| `AI_FEATURES_ENABLED` environment variable | Infrastructure | Must be defined in `.env.example` |
+| Dependency                                 | Type            | Status                                              |
+| ------------------------------------------ | --------------- | --------------------------------------------------- |
+| Ticket 038: Admin listings table           | Blocking ticket | In Progress                                         |
+| Ticket 039: Admin listing detail and edit  | Blocking ticket | In Progress                                         |
+| Ticket 079: AI service foundation          | Blocking ticket | Must be completed first                             |
+| `moderation_queue` table (Ticket 012)      | Database        | Must exist                                          |
+| `ANTHROPIC_API_KEY` environment variable   | Infrastructure  | Must be set in all environments where AI is enabled |
+| `AI_FEATURES_ENABLED` environment variable | Infrastructure  | Must be defined in `.env.example`                   |
 
 **Risk:** Ticket 079 is listed as a dependency. If that ticket does not yet exist as a formal ticket in the backlog, this ticket assumes an AI service foundation (Anthropic SDK client initialization at `lib/ai/client.ts`) has been established. If not, the developer must create `lib/ai/client.ts` as the first step of this ticket.
 
@@ -122,24 +128,28 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 ## Implementation Notes
 
 **Files to create:**
+
 - `lib/ai/client.ts` — Anthropic SDK client initialization (if not already created by Ticket 079)
 - `lib/ai/prompts/moderation-flags.ts` — prompt builder; accepts `ListingRecord & { description: string }`; returns a structured prompt string
 - `lib/ai/services/moderation-flags.ts` — calls Anthropic API, parses response JSON, returns `ModerationFlag[]`
 - `supabase/migrations/[timestamp]_add-ai-flags-to-moderation-queue.sql` — schema migration
 
 **Files to modify:**
+
 - `lib/actions/ai-actions.ts` (or create) — add `generateModerationFlags` Server Action
 - `lib/actions/listing-actions.ts` — after successful listing INSERT, fire `generateModerationFlags(listingId)` without awaiting
 - `app/admin/listings/components/ListingsTable.tsx` — add `FlagBadge` column; update the admin listings query to JOIN `moderation_queue` flags
 - `.env.example` — add `AI_FEATURES_ENABLED=false` and `ANTHROPIC_API_KEY=` with comments
 
 **Key patterns:**
+
 - Follow the service layer pattern: prompt logic in `lib/ai/prompts/`, API call in `lib/ai/services/`, orchestration in `lib/actions/`
 - Fire-and-forget: in `listing-actions.ts`, use `generateModerationFlags(listingId).catch(err => captureException(err))` — never `await`
 - Response parsing: the AI response must be valid JSON matching the `ModerationFlag[]` type; if parsing fails, log and return `[]`
 - Prompt version: include `PROMPT_VERSION = 'v1'` as a constant; store alongside flag rows in `moderation_queue.notes` field
 
 **Do not:**
+
 - Call the Anthropic API from any client component
 - Store the Anthropic API key in any `NEXT_PUBLIC_*` variable
 - Block listing creation on AI flag generation — it is strictly fire-and-forget
@@ -164,13 +174,13 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Anthropic API timeout (> 10s) | Listing creation succeeds; no flags appear; error logged to Sentry; no user-visible impact |
-| Anthropic API returns malformed JSON | Same as timeout — `[]` returned; error logged; listing creation unaffected |
-| `AI_FEATURES_ENABLED` not set | Treated as `false`; no API call made; admin table shows no flag badges |
-| DB write for flags fails | Error logged to Sentry; listing creation unaffected; admin sees no flags for this listing |
-| Flag badge DB query fails | Badge is silently omitted for the affected row; no error shown in admin table |
+| Failure                              | User-visible behavior                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Anthropic API timeout (> 10s)        | Listing creation succeeds; no flags appear; error logged to Sentry; no user-visible impact |
+| Anthropic API returns malformed JSON | Same as timeout — `[]` returned; error logged; listing creation unaffected                 |
+| `AI_FEATURES_ENABLED` not set        | Treated as `false`; no API call made; admin table shows no flag badges                     |
+| DB write for flags fails             | Error logged to Sentry; listing creation unaffected; admin sees no flags for this listing  |
+| Flag badge DB query fails            | Badge is silently omitted for the affected row; no error shown in admin table              |
 
 ---
 
@@ -194,13 +204,13 @@ As an admin, I want to see AI-generated quality flags on submitted listings, so 
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Flags generated on new listing | Admin | 1. Set `AI_FEATURES_ENABLED=true`. 2. Create a listing with a 20-character description and no category. 3. Wait 15s. 4. Check admin listings table. | Listing row shows an amber or red flag badge with at least 1 flag; popover shows `description_too_short` and/or `missing_category` |
-| QA-2 | AI disabled — no flags generated | Admin | 1. Set `AI_FEATURES_ENABLED=false`. 2. Create a listing. 3. Check admin listings table. | No flag badge shown; `moderation_queue` has no AI-generated rows for this listing |
-| QA-3 | API error graceful degradation | Admin | 1. Set `ANTHROPIC_API_KEY` to an invalid value. 2. Create a listing. | Listing creates successfully; no flag badge; Sentry captures the AI error |
-| QA-4 | Listing with high-quality content | Admin | 1. Create a listing with 500+ char description, category set, contact info present. 2. Wait 15s. | Either no flags or only `info`-severity flags; no false `critical` or `warning` flags |
-| QA-5 | Flag popover on mobile at 375px | Admin | 1. Open `/admin/listings` on a 375px viewport. 2. Tap a flag badge. | Popover opens full-width below the badge; readable; tapping outside closes it |
+| #    | Scenario                          | Role  | Steps                                                                                                                                               | Expected result                                                                                                                    |
+| ---- | --------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Flags generated on new listing    | Admin | 1. Set `AI_FEATURES_ENABLED=true`. 2. Create a listing with a 20-character description and no category. 3. Wait 15s. 4. Check admin listings table. | Listing row shows an amber or red flag badge with at least 1 flag; popover shows `description_too_short` and/or `missing_category` |
+| QA-2 | AI disabled — no flags generated  | Admin | 1. Set `AI_FEATURES_ENABLED=false`. 2. Create a listing. 3. Check admin listings table.                                                             | No flag badge shown; `moderation_queue` has no AI-generated rows for this listing                                                  |
+| QA-3 | API error graceful degradation    | Admin | 1. Set `ANTHROPIC_API_KEY` to an invalid value. 2. Create a listing.                                                                                | Listing creates successfully; no flag badge; Sentry captures the AI error                                                          |
+| QA-4 | Listing with high-quality content | Admin | 1. Create a listing with 500+ char description, category set, contact info present. 2. Wait 15s.                                                    | Either no flags or only `info`-severity flags; no false `critical` or `warning` flags                                              |
+| QA-5 | Flag popover on mobile at 375px   | Admin | 1. Open `/admin/listings` on a 375px viewport. 2. Tap a flag badge.                                                                                 | Popover opens full-width below the badge; readable; tapping outside closes it                                                      |
 
 ---
 

@@ -24,73 +24,78 @@ Per `route-map.md`: "This route map supersedes [ADR-010] with the more SEO-optim
 
 ## Files Created
 
-| File | What it is |
-|---|---|
-| `data/mock-entity-page.ts` | Types (`EntityPageData`, `BusinessDetails`, `ServiceItem`, `WeeklyHours`, `CTAType`) + 17 CTA labels + Peach & Rye Kitchen mock record + `getEntityPageBySlug()` + `getCtaLabel()` |
-| `components/entity-page/EntityPageHero.tsx` | Cover area with gradient overlay, tier-based heights, trust/featured badges, CTA button (`id="hero-cta"`), save/share placeholders |
-| `components/entity-page/EntityQuickActionBar.tsx` | Sticky bar that appears when hero CTA scrolls out of view; slide-up mobile / fade-in desktop |
-| `components/entity-page/EntityAtAGlance.tsx` | Category, location, hours (with live open/closed status), phone/email/website, social links |
-| `components/entity-page/EntityStorySection.tsx` | Description with amber-border lead paragraph; expand/collapse "Read more" toggle |
-| `components/entity-page/EntityOfferingsSection.tsx` | Services list with price column; "Show all N services" expand toggle |
-| `components/entity-page/EntityMediaGallery.tsx` | Gallery grid + keyboard-accessible lightbox; hidden entirely when no images |
-| `components/entity-page/EntityTrustSection.tsx` | StatusBadge + tier description + unclaimed claim prompt + reviews stub |
-| `components/entity-page/EntityCommunityConnection.tsx` | Reviews placeholder + "Suggest a correction" community link |
-| `components/entity-page/EntityPlatformActivity.tsx` | Save count display; hidden entirely if save_count is 0 |
-| `components/entity-page/EntityRelatedDiscovery.tsx` | EntityCard grid (desktop 3-col / mobile horizontal scroll); hidden if < 3 related |
-| `app/[citySlug]/business/[listingSlug]/page.tsx` | Server Component route: `generateMetadata`, `notFound()` guard, all 10 sections in background-rhythm order |
+| File                                                   | What it is                                                                                                                                                                         |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data/mock-entity-page.ts`                             | Types (`EntityPageData`, `BusinessDetails`, `ServiceItem`, `WeeklyHours`, `CTAType`) + 17 CTA labels + Peach & Rye Kitchen mock record + `getEntityPageBySlug()` + `getCtaLabel()` |
+| `components/entity-page/EntityPageHero.tsx`            | Cover area with gradient overlay, tier-based heights, trust/featured badges, CTA button (`id="hero-cta"`), save/share placeholders                                                 |
+| `components/entity-page/EntityQuickActionBar.tsx`      | Sticky bar that appears when hero CTA scrolls out of view; slide-up mobile / fade-in desktop                                                                                       |
+| `components/entity-page/EntityAtAGlance.tsx`           | Category, location, hours (with live open/closed status), phone/email/website, social links                                                                                        |
+| `components/entity-page/EntityStorySection.tsx`        | Description with amber-border lead paragraph; expand/collapse "Read more" toggle                                                                                                   |
+| `components/entity-page/EntityOfferingsSection.tsx`    | Services list with price column; "Show all N services" expand toggle                                                                                                               |
+| `components/entity-page/EntityMediaGallery.tsx`        | Gallery grid + keyboard-accessible lightbox; hidden entirely when no images                                                                                                        |
+| `components/entity-page/EntityTrustSection.tsx`        | StatusBadge + tier description + unclaimed claim prompt + reviews stub                                                                                                             |
+| `components/entity-page/EntityCommunityConnection.tsx` | Reviews placeholder + "Suggest a correction" community link                                                                                                                        |
+| `components/entity-page/EntityPlatformActivity.tsx`    | Save count display; hidden entirely if save_count is 0                                                                                                                             |
+| `components/entity-page/EntityRelatedDiscovery.tsx`    | EntityCard grid (desktop 3-col / mobile horizontal scroll); hidden if < 3 related                                                                                                  |
+| `app/[citySlug]/business/[listingSlug]/page.tsx`       | Server Component route: `generateMetadata`, `notFound()` guard, all 10 sections in background-rhythm order                                                                         |
 
 ---
 
 ## Section Background Rhythm
 
-| Section | Background |
-|---|---|
-| Hero | `bg-deep-bg` (contained wrapper) |
-| At a Glance | `bg-white` |
-| Our Story | `bg-cream` |
-| Services & Offerings | `bg-white` |
-| Gallery | `bg-deep-bg` |
-| Trust & Verification | `bg-pale-lavender` |
-| Community | `bg-white` |
-| On The BLACQList | `bg-cream` |
-| You Might Also Like | `bg-pale-lavender` |
+| Section              | Background                       |
+| -------------------- | -------------------------------- |
+| Hero                 | `bg-deep-bg` (contained wrapper) |
+| At a Glance          | `bg-white`                       |
+| Our Story            | `bg-cream`                       |
+| Services & Offerings | `bg-white`                       |
+| Gallery              | `bg-deep-bg`                     |
+| Trust & Verification | `bg-pale-lavender`               |
+| Community            | `bg-white`                       |
+| On The BLACQList     | `bg-cream`                       |
+| You Might Also Like  | `bg-pale-lavender`               |
 
 ---
 
 ## Component Architecture
 
-| Component | Type | Why |
-|---|---|---|
-| `EntityPageHero` | Server | No interactivity; pure display |
-| `EntityQuickActionBar` | Client | IntersectionObserver + visibility state |
-| `EntityAtAGlance` | Client | `suppressHydrationWarning` for live open/closed time computation |
-| `EntityStorySection` | Client | Expand/collapse toggle state |
-| `EntityOfferingsSection` | Client | Expand/collapse toggle state |
-| `EntityMediaGallery` | Client | Lightbox open/close state, keyboard handling |
-| `EntityTrustSection` | Server | Pure display |
-| `EntityCommunityConnection` | Server | Pure display |
-| `EntityPlatformActivity` | Server | Pure display |
-| `EntityRelatedDiscovery` | Server | Reuses `EntityCard` |
+| Component                   | Type   | Why                                                              |
+| --------------------------- | ------ | ---------------------------------------------------------------- |
+| `EntityPageHero`            | Server | No interactivity; pure display                                   |
+| `EntityQuickActionBar`      | Client | IntersectionObserver + visibility state                          |
+| `EntityAtAGlance`           | Client | `suppressHydrationWarning` for live open/closed time computation |
+| `EntityStorySection`        | Client | Expand/collapse toggle state                                     |
+| `EntityOfferingsSection`    | Client | Expand/collapse toggle state                                     |
+| `EntityMediaGallery`        | Client | Lightbox open/close state, keyboard handling                     |
+| `EntityTrustSection`        | Server | Pure display                                                     |
+| `EntityCommunityConnection` | Server | Pure display                                                     |
+| `EntityPlatformActivity`    | Server | Pure display                                                     |
+| `EntityRelatedDiscovery`    | Server | Reuses `EntityCard`                                              |
 
 ---
 
 ## Key Implementation Notes
 
 ### Open/Closed Status
+
 Computed directly during render using `suppressHydrationWarning` on the indicator elements. This is the correct pattern for time-based UI that differs between server and client renders — the server renders a value based on render time; the client hydrates with its own computed value and `suppressHydrationWarning` suppresses the mismatch warning.
 
 ### IntersectionObserver Target
+
 `EntityPageHero` renders its CTA button with `id="hero-cta"`. `EntityQuickActionBar` observes this element on mount — when it scrolls out of the viewport, the bar becomes visible. `tabIndex` on all bar elements is toggled to `-1` when hidden to keep keyboard order clean.
 
 ### Tier-Based Hero
+
 - Free: 360px desktop, contained, rounded top corners
-- Standard: 400px desktop, contained, rounded top corners  
+- Standard: 400px desktop, contained, rounded top corners
 - Premium: 560px desktop, full-bleed via negative margins breaking out of the 960px container
 
 ### Social Links
+
 Lucide React in this project's version does not include brand icons (Instagram, Facebook, etc.). Social links are rendered as text links with an `ExternalLink` icon — functional and accessible. When brand icons become available (via package update or custom icon set), they can be dropped in with no structural changes.
 
 ### Mock Entity
+
 Peach & Rye Kitchen demonstrates: premium tier, certified trust, physical location, full hours (Mon closed, Tue–Sun open), full social links, 7 services (triggers "Show all" toggle), multi-paragraph description (triggers "Read more" toggle), 3 related entities (enables Related Discovery section), 892 saves (enables Platform Activity section).
 
 ---
@@ -105,25 +110,25 @@ When Supabase listings are seeded, `getEntityPageBySlug()` can be replaced with 
 
 ## What Was NOT Built
 
-| Item | Reason |
-|---|---|
-| Owner editing (claim, edit listing) | Scoped out — requires auth (ticket 014) |
-| Admin moderation | Scoped out — requires admin dashboard (future ticket) |
-| Marketplace checkout | Scoped out — out of MVP |
-| Real media gallery images | No Supabase Storage items; gallery hidden with `images={undefined}` |
+| Item                                 | Reason                                                                                                                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner editing (claim, edit listing)  | Scoped out — requires auth (ticket 014)                                                                                                                                                      |
+| Admin moderation                     | Scoped out — requires admin dashboard (future ticket)                                                                                                                                        |
+| Marketplace checkout                 | Scoped out — out of MVP                                                                                                                                                                      |
+| Real media gallery images            | No Supabase Storage items; gallery hidden with `images={undefined}`                                                                                                                          |
 | Professional / Creative entity types | Architecture is ready; `entity_type` is typed; only `business` template implemented. Add `listing_details_professional` / `listing_details_creative` data types when those tables are seeded |
-| `generateStaticParams` | Not yet — requires real DB data; add when listings are seeded for build-time pre-rendering |
-| ISR `revalidate` | Not set — add `export const revalidate = 3600` when connected to Supabase |
+| `generateStaticParams`               | Not yet — requires real DB data; add when listings are seeded for build-time pre-rendering                                                                                                   |
+| ISR `revalidate`                     | Not set — add `export const revalidate = 3600` when connected to Supabase                                                                                                                    |
 
 ---
 
 ## Components Reused
 
-| Component | File |
-|---|---|
-| `StatusBadge` | `components/ui/status-badge.tsx` |
-| `Badge` | `components/ui/badge.tsx` |
-| `EntityCard` | `components/entities/EntityCard.tsx` |
+| Component     | File                                 |
+| ------------- | ------------------------------------ |
+| `StatusBadge` | `components/ui/status-badge.tsx`     |
+| `Badge`       | `components/ui/badge.tsx`            |
+| `EntityCard`  | `components/entities/EntityCard.tsx` |
 
 ---
 
@@ -173,12 +178,12 @@ pnpm lint          # ✅ zero errors
 
 ## Next Tickets to Build
 
-| Priority | Ticket | Description |
-|---|---|---|
-| P1 | 014 | Auth flows — unlocks save button and owner dashboard |
-| P1 | 025–026 | Search API + real DB reads — replaces mock data; enables entity page real data |
-| P1 | 032–033 | Add Business form — lets owners create listings |
-| P2 | 027–028 | City landing pages — city-level discovery |
-| P2 | 029 | Full Discover page — pagination, sort, mobile filters |
-| P2 | 040 | Claim listing flow — lets owners claim unclaimed pages |
-| P3 | 050 | Community reviews — review submission and display |
+| Priority | Ticket  | Description                                                                    |
+| -------- | ------- | ------------------------------------------------------------------------------ |
+| P1       | 014     | Auth flows — unlocks save button and owner dashboard                           |
+| P1       | 025–026 | Search API + real DB reads — replaces mock data; enables entity page real data |
+| P1       | 032–033 | Add Business form — lets owners create listings                                |
+| P2       | 027–028 | City landing pages — city-level discovery                                      |
+| P2       | 029     | Full Discover page — pagination, sort, mobile filters                          |
+| P2       | 040     | Claim listing flow — lets owners claim unclaimed pages                         |
+| P3       | 050     | Community reviews — review submission and display                              |

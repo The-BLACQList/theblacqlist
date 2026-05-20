@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useActionState } from "react"
-import { updateTrustTier } from "@/lib/actions/admin/updateTrustTier"
-import type { UpdateTrustTierState } from "@/lib/actions/admin/updateTrustTier"
+import { useActionState } from 'react'
+import { updateTrustTier } from '@/lib/actions/admin/updateTrustTier'
+import type { UpdateTrustTierState } from '@/lib/actions/admin/updateTrustTier'
 
 interface Props {
   listingId: string
@@ -12,9 +12,9 @@ interface Props {
 const initial: UpdateTrustTierState = {}
 
 const TIERS = [
-  { value: "unverified", label: "Unverified" },
-  { value: "verified",   label: "Verified" },
-  { value: "certified",  label: "Certified" },
+  { value: 'unverified', label: 'Unverified' },
+  { value: 'verified', label: 'Verified' },
+  { value: 'certified', label: 'Certified' },
 ] as const
 
 export function TrustTierActions({ listingId, currentTier }: Props) {
@@ -33,10 +33,7 @@ export function TrustTierActions({ listingId, currentTier }: Props) {
       <input type="hidden" name="listing_id" value={listingId} />
 
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="trust-tier-select"
-          className="font-subhead text-xs text-charcoal/60"
-        >
+        <label htmlFor="trust-tier-select" className="font-subhead text-xs text-charcoal/60">
           New tier
         </label>
         <select
@@ -54,10 +51,7 @@ export function TrustTierActions({ listingId, currentTier }: Props) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="trust-tier-reason"
-          className="font-subhead text-xs text-charcoal/60"
-        >
+        <label htmlFor="trust-tier-reason" className="font-subhead text-xs text-charcoal/60">
           Reason <span aria-hidden="true">*</span>
         </label>
         <textarea
@@ -81,7 +75,7 @@ export function TrustTierActions({ listingId, currentTier }: Props) {
         disabled={pending}
         className="h-8 px-4 rounded-full bg-brand-black text-white font-body font-bold text-xs hover:bg-charcoal transition-colors disabled:opacity-50"
       >
-        {pending ? "Saving…" : "Update tier"}
+        {pending ? 'Saving…' : 'Update tier'}
       </button>
     </form>
   )

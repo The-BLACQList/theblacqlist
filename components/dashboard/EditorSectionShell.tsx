@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useActionState } from "react"
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
-import type { UpdateListingContentState } from "@/lib/actions/dashboard/updateListingContent"
-import type { UpdateCtaState } from "@/lib/actions/dashboard/updateCta"
+import { useActionState } from 'react'
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import type { UpdateListingContentState } from '@/lib/actions/dashboard/updateListingContent'
+import type { UpdateCtaState } from '@/lib/actions/dashboard/updateCta'
 
 type SaveState = UpdateListingContentState | UpdateCtaState
 
@@ -28,13 +28,16 @@ export function EditorSectionShell({ title, children, listingId, action }: Props
         {children}
 
         {/* Feedback */}
-        {state && "error" in state && (
-          <div role="alert" className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+        {state && 'error' in state && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
+          >
             <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
-        {state && "success" in state && (
+        {state && 'success' in state && (
           <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
             <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-green-700">Saved successfully.</p>
@@ -48,7 +51,7 @@ export function EditorSectionShell({ title, children, listingId, action }: Props
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? "Saving…" : "Save"}
+            {isPending ? 'Saving…' : 'Save'}
           </button>
         </div>
       </form>

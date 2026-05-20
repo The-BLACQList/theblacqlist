@@ -1,26 +1,26 @@
-import type { Metadata } from "next"
-import { Lato, Quicksand } from "next/font/google"
-import "./globals.css"
-import { PublicHeader } from "@/components/nav/public-header"
-import { PublicFooter } from "@/components/nav/public-footer"
+import type { Metadata } from 'next'
+import { Lato, Quicksand } from 'next/font/google'
+import './globals.css'
+import { PublicHeader } from '@/components/nav/public-header'
+import { PublicFooter } from '@/components/nav/public-footer'
 
 const lato = Lato({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-lato",
-  display: "swap",
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-lato',
+  display: 'swap',
 })
 
 const quicksand = Quicksand({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-  variable: "--font-quicksand",
-  display: "swap",
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-quicksand',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: "The BLACQList",
-  description: "Discover and support Black-owned businesses.",
+  title: 'The BLACQList',
+  description: 'Discover and support Black-owned businesses.',
 }
 
 export default function RootLayout({
@@ -29,10 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${lato.variable} ${quicksand.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${lato.variable} ${quicksand.variable} h-full antialiased`}>
       <body className="min-h-full bg-white text-foreground flex flex-col">
         {/* Skip link — first focusable element; becomes visible on focus */}
         <a

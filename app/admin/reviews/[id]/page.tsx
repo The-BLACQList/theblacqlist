@@ -1,13 +1,13 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import type { Metadata } from "next"
-import { Star } from "lucide-react"
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Star } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
-import { ReviewModerationActions } from "@/components/admin/ReviewModerationActions"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
+import { ReviewModerationActions } from '@/components/admin/ReviewModerationActions'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -17,19 +17,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params
   const serviceClient = createServiceClient()
   const { data } = await serviceClient
-    .from("reviews")
-    .select("listings(name)")
-    .eq("id", id)
+    .from('reviews')
+    .select('listings(name)')
+    .eq('id', id)
     .maybeSingle()
   const listing = data?.listings as { name: string } | null
-  return { title: listing?.name ? `Review — ${listing.name}` : "Review Detail" }
+  return { title: listing?.name ? `Review — ${listing.name}` : 'Review Detail' }
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-4 py-2 border-b border-charcoal/8 last:border-0">
       <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal/60 pt-0.5">{label}</dt>
-      <dd className="flex-1 font-body text-sm text-brand-black">{value ?? <span className="text-charcoal/40">—</span>}</dd>
+      <dd className="flex-1 font-body text-sm text-brand-black">
+        {value ?? <span className="text-charcoal/40">—</span>}
+      </dd>
     </div>
   )
 }
@@ -40,11 +42,13 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
-          className={`size-4 ${i < rating ? "fill-amber-400 text-amber-400" : "fill-none text-charcoal/20"}`}
+          className={`size-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'fill-none text-charcoal/20'}`}
           aria-hidden="true"
         />
       ))}
-      <span className="ml-1.5 font-subhead text-sm font-semibold text-brand-black">{rating} / 5</span>
+      <span className="ml-1.5 font-subhead text-sm font-semibold text-brand-black">
+        {rating} / 5
+      </span>
     </span>
   )
 }
@@ -55,11 +59,11 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
   const serviceClient = createServiceClient()
 
   const { data: review } = await serviceClient
-    .from("reviews")
+    .from('reviews')
     .select(
-      "id, status, rating, title, body, visit_date, is_verified_purchase, rejection_reason, reviewed_at, created_at, reviewer_user_id, reviewed_by, listing_id, listings(id, name, slug, entity_type, cities(slug))"
+      'id, status, rating, title, body, visit_date, is_verified_purchase, rejection_reason, reviewed_at, created_at, reviewer_user_id, reviewed_by, listing_id, listings(id, name, slug, entity_type, cities(slug))'
     )
-    .eq("id", id)
+    .eq('id', id)
     .maybeSingle()
 
   if (!review) notFound()
@@ -75,26 +79,24 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
   // Fetch reviewer profile — fall back to auth email if display_name is unset
   const { data: reviewerProfile } = review.reviewer_user_id
     ? await serviceClient
-        .from("profiles")
-        .select("display_name")
-        .eq("id", review.reviewer_user_id)
+        .from('profiles')
+        .select('display_name')
+        .eq('id', review.reviewer_user_id)
         .maybeSingle()
     : { data: null }
 
   let reviewerLabel = reviewerProfile?.display_name ?? null
   if (!reviewerLabel && review.reviewer_user_id) {
-    const { data: authUser } = await serviceClient.auth.admin.getUserById(
-      review.reviewer_user_id
-    )
+    const { data: authUser } = await serviceClient.auth.admin.getUserById(review.reviewer_user_id)
     reviewerLabel = authUser.user?.email ?? null
   }
 
   // Fetch admin reviewer profile if already decided
   const { data: adminProfile } = review.reviewed_by
     ? await serviceClient
-        .from("profiles")
-        .select("display_name")
-        .eq("id", review.reviewed_by)
+        .from('profiles')
+        .select('display_name')
+        .eq('id', review.reviewed_by)
         .maybeSingle()
     : { data: null }
 
@@ -103,7 +105,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
       ? buildEntityUrl(listing.entity_type, listing.cities?.slug, listing.slug)
       : null
 
-  const isReviewable = review.status === "intake" || review.status === "pending_approval"
+  const isReviewable = review.status === 'intake' || review.status === 'pending_approval'
 
   return (
     <div className="space-y-6">
@@ -119,7 +121,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
       <div className="flex flex-col md:flex-row md:items-start gap-4">
         <div className="flex-1">
           <h1 className="font-headline text-2xl text-brand-black">
-            Review — {listing?.name ?? "Unknown Business"}
+            Review — {listing?.name ?? 'Unknown Business'}
           </h1>
           <div className="flex items-center gap-3 mt-1.5">
             <AdminStatusBadge status={review.status} />
@@ -153,21 +155,15 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 {review.visit_date && (
                   <Row
                     label="Visit date"
-                    value={new Date(review.visit_date).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
+                    value={new Date(review.visit_date).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
                     })}
                   />
                 )}
-                <Row
-                  label="Verified visit"
-                  value={review.is_verified_purchase ? "Yes" : "No"}
-                />
-                <Row
-                  label="Submitted"
-                  value={new Date(review.created_at).toLocaleString()}
-                />
+                <Row label="Verified visit" value={review.is_verified_purchase ? 'Yes' : 'No'} />
+                <Row label="Submitted" value={new Date(review.created_at).toLocaleString()} />
               </dl>
             </div>
           </div>
@@ -176,10 +172,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Reviewer</h2>
             <dl>
-              <Row
-                label="Name"
-                value={reviewerLabel ?? "Unknown user"}
-              />
+              <Row label="Name" value={reviewerLabel ?? 'Unknown user'} />
               <Row
                 label="User ID"
                 value={
@@ -234,15 +227,11 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
               <dl>
                 <Row
                   label="Decided by"
-                  value={adminProfile?.display_name ?? review.reviewed_by ?? "—"}
+                  value={adminProfile?.display_name ?? review.reviewed_by ?? '—'}
                 />
                 <Row
                   label="Decided at"
-                  value={
-                    review.reviewed_at
-                      ? new Date(review.reviewed_at).toLocaleString()
-                      : null
-                  }
+                  value={review.reviewed_at ? new Date(review.reviewed_at).toLocaleString() : null}
                 />
                 {review.rejection_reason && (
                   <Row
@@ -268,8 +257,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
                 <p className="font-subhead text-sm text-charcoal/60">
-                  This review is{" "}
-                  <strong>{review.status.replace(/_/g, " ")}</strong>. No further
+                  This review is <strong>{review.status.replace(/_/g, ' ')}</strong>. No further
                   action needed.
                 </p>
               </div>

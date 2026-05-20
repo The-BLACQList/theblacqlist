@@ -1,41 +1,41 @@
-import type { Metadata } from "next"
-import { Mail, MessageSquare, Briefcase, Shield } from "lucide-react"
-import { Section } from "@/components/layout/section"
-import { PageHeader } from "@/components/layout/page-header"
+import type { Metadata } from 'next'
+import { Mail, MessageSquare, Briefcase, Shield } from 'lucide-react'
+import { Section } from '@/components/layout/section'
+import { PageHeader } from '@/components/layout/page-header'
 
 export const metadata: Metadata = {
-  title: "Contact | The BLACQList",
+  title: 'Contact | The BLACQList',
   description: "Reach the team behind The BLACQList. We'd love to hear from you.",
 }
 
 const CONTACT_CHANNELS = [
   {
     icon: MessageSquare,
-    heading: "General inquiries",
-    body: "Questions about the platform, feedback, or anything else.",
-    email: "hello@theblacqlist.com",
-    label: "hello@theblacqlist.com",
+    heading: 'General inquiries',
+    body: 'Questions about the platform, feedback, or anything else.',
+    email: 'hello@theblacqlist.com',
+    label: 'hello@theblacqlist.com',
   },
   {
     icon: Briefcase,
-    heading: "Business support",
-    body: "Help claiming your page, editing your listing, or navigating your dashboard.",
-    email: "business@theblacqlist.com",
-    label: "business@theblacqlist.com",
+    heading: 'Business support',
+    body: 'Help claiming your page, editing your listing, or navigating your dashboard.',
+    email: 'business@theblacqlist.com',
+    label: 'business@theblacqlist.com',
   },
   {
     icon: Mail,
-    heading: "Press & media",
-    body: "Press inquiries, interview requests, and media kit.",
-    email: "press@theblacqlist.com",
-    label: "press@theblacqlist.com",
+    heading: 'Press & media',
+    body: 'Press inquiries, interview requests, and media kit.',
+    email: 'press@theblacqlist.com',
+    label: 'press@theblacqlist.com',
   },
   {
     icon: Shield,
-    heading: "Privacy & legal",
-    body: "Data requests, privacy concerns, and legal inquiries.",
-    email: "privacy@theblacqlist.com",
-    label: "privacy@theblacqlist.com",
+    heading: 'Privacy & legal',
+    body: 'Data requests, privacy concerns, and legal inquiries.',
+    email: 'privacy@theblacqlist.com',
+    label: 'privacy@theblacqlist.com',
   },
 ]
 
@@ -77,12 +77,15 @@ export default function ContactPage() {
           <h2 className="font-headline text-2xl text-brand-black">Response times</h2>
           <div className="mt-6 space-y-4">
             {[
-              { type: "Business support", time: "Within 48 hours" },
-              { type: "General inquiries", time: "Within 3–5 business days" },
-              { type: "Press requests", time: "Within 2 business days" },
-              { type: "Privacy requests", time: "Within 30 days" },
+              { type: 'Business support', time: 'Within 48 hours' },
+              { type: 'General inquiries', time: 'Within 3–5 business days' },
+              { type: 'Press requests', time: 'Within 2 business days' },
+              { type: 'Privacy requests', time: 'Within 30 days' },
             ].map(({ type, time }) => (
-              <div key={type} className="flex items-center justify-between border-b border-charcoal/10 pb-4 last:border-0 last:pb-0">
+              <div
+                key={type}
+                className="flex items-center justify-between border-b border-charcoal/10 pb-4 last:border-0 last:pb-0"
+              >
                 <span className="font-subhead text-sm text-charcoal">{type}</span>
                 <span className="font-subhead text-sm font-semibold text-brand-black">{time}</span>
               </div>

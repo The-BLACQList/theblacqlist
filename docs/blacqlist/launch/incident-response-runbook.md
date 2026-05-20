@@ -8,11 +8,11 @@
 
 ## Severity Definitions
 
-| Level | Condition | Response SLA | Who responds |
-|---|---|---|---|
-| **SEV1** | Platform completely down OR data loss actively occurring OR auth broken for all users | < 15 minutes | Engineering lead + all available engineers |
-| **SEV2** | Major feature broken for all users — search returns nothing, listing pages 500, claims submission fails, Stripe checkout broken | < 1 hour | Engineering lead |
-| **SEV3** | Single feature degraded or broken for a subset of users — images not loading, analytics not recording, one page errors | < 24 hours | On-call engineer |
+| Level    | Condition                                                                                                                       | Response SLA | Who responds                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------ |
+| **SEV1** | Platform completely down OR data loss actively occurring OR auth broken for all users                                           | < 15 minutes | Engineering lead + all available engineers |
+| **SEV2** | Major feature broken for all users — search returns nothing, listing pages 500, claims submission fails, Stripe checkout broken | < 1 hour     | Engineering lead                           |
+| **SEV3** | Single feature degraded or broken for a subset of users — images not loading, analytics not recording, one page errors          | < 24 hours   | On-call engineer                           |
 
 When in doubt, treat it as the higher severity. It is always better to escalate a SEV3 to SEV2 than to under-respond to a real SEV1.
 
@@ -34,12 +34,14 @@ Contact information: stored in the team's primary communication channel (not in 
 ### Step 1: Detect
 
 **Sources that generate alerts:**
+
 - Sentry: error rate spike → Slack/email notification (configured in Ticket 094)
 - Vercel: deployment failure notification
 - Uptime monitor: HTTP 5xx or non-response → Slack/email
 - User report: message to support email or social media
 
 **First action on detection:**
+
 1. Open Vercel Dashboard → The BLACQList → Functions / Logs — check for error spikes
 2. Open Sentry — check for new error groups in the last 15 minutes
 3. Open the affected page or route yourself and reproduce the issue
@@ -50,14 +52,14 @@ Contact information: stored in the team's primary communication channel (not in 
 
 Answer these questions before taking any action:
 
-| Question | Where to check |
-|---|---|
-| Is the entire platform down? | Visit `theblacqlist.com` from a fresh browser or incognito window |
-| Is it one route or all routes? | Test homepage, `/discover`, one entity page, `/sign-in` |
-| Was there a recent deployment? | Vercel Dashboard → Deployments — check timestamp of the current production deployment |
-| Was there a recent migration? | Check `supabase/migrations/` — what was last applied to production? |
-| Is the database reachable? | Supabase Dashboard → Database — check connection count and query latency |
-| Is it a Supabase edge / quota issue? | Supabase Dashboard → Project Settings → Usage |
+| Question                             | Where to check                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------------- |
+| Is the entire platform down?         | Visit `theblacqlist.com` from a fresh browser or incognito window                     |
+| Is it one route or all routes?       | Test homepage, `/discover`, one entity page, `/sign-in`                               |
+| Was there a recent deployment?       | Vercel Dashboard → Deployments — check timestamp of the current production deployment |
+| Was there a recent migration?        | Check `supabase/migrations/` — what was last applied to production?                   |
+| Is the database reachable?           | Supabase Dashboard → Database — check connection count and query latency              |
+| Is it a Supabase edge / quota issue? | Supabase Dashboard → Project Settings → Usage                                         |
 
 **SEV determination after triage:** Update the severity if the triage reveals it is different from initial assessment.
 
@@ -68,6 +70,7 @@ Answer these questions before taking any action:
 **Within 5 minutes of confirming a SEV1 or SEV2:**
 
 Internal Slack update (post in engineering channel):
+
 ```
 🚨 [SEV1/SEV2] Incident in progress
 What: [One sentence describing what is broken]
@@ -77,6 +80,7 @@ Next update: [Time — typically 15–30 min]
 ```
 
 User-facing status message (post on social / send to known affected users for SEV1):
+
 ```
 We're aware of an issue affecting [feature name] and our team is working to resolve it.
 We'll have an update within [time window]. Thank you for your patience.
@@ -101,6 +105,7 @@ Use when: a recent code deployment introduced the problem and there were no migr
 5. Test: visit the previously broken page → confirm it works
 
 CLI alternative:
+
 ```bash
 vercel rollback [deployment-url-of-last-good-deploy]
 ```
@@ -148,12 +153,14 @@ Use when: the platform is behaving correctly but a dependency is down.
 ### Step 5: Resolve
 
 The incident is resolved when:
+
 - The broken feature is functional again
 - All Section 9 smoke tests from `deployment-plan.md` pass
 - No new errors appearing in Sentry for the affected route/operation
 - The root cause is identified (even if not yet fixed permanently)
 
 Post-resolution Slack update:
+
 ```
 ✅ Incident resolved
 Duration: [start time] → [end time]
@@ -181,30 +188,36 @@ Write the post-mortem within 48 hours of resolution. Store it in `docs/blacqlist
 **Author:** [Name]
 
 ## Impact
+
 [Who was affected, what could they not do, estimated number of users impacted]
 
 ## Timeline
-| Time | Event |
-|---|---|
+
+| Time  | Event                   |
+| ----- | ----------------------- |
 | HH:MM | Incident first detected |
-| HH:MM | Triage completed |
-| HH:MM | Mitigation started |
-| HH:MM | Incident resolved |
+| HH:MM | Triage completed        |
+| HH:MM | Mitigation started      |
+| HH:MM | Incident resolved       |
 
 ## Root Cause
+
 [One paragraph explaining what caused the incident. Technical specifics.]
 
 ## What Went Well
+
 - [Item 1]
 - [Item 2]
 
 ## What Could Be Better
+
 - [Item 1]
 - [Item 2]
 
 ## Action Items
-| Item | Owner | Due |
-|---|---|---|
+
+| Item                                  | Owner  | Due    |
+| ------------------------------------- | ------ | ------ |
 | [Specific task to prevent recurrence] | [Name] | [Date] |
 ```
 
@@ -212,16 +225,16 @@ Write the post-mortem within 48 hours of resolution. Store it in `docs/blacqlist
 
 ## Quick Reference — Dashboard URLs
 
-| Resource | Where to find it |
-|---|---|
-| Production deployments | Vercel Dashboard → [Project] → Deployments |
-| Production logs | Vercel Dashboard → [Project] → Functions → Logs |
-| Sentry errors | Sentry dashboard → The BLACQList project |
-| Supabase DB health | Supabase Dashboard (prod project) → Database |
-| Supabase logs | Supabase Dashboard → Logs Explorer |
-| PITR restore | Supabase Dashboard → Settings → Backups |
-| Stripe webhook status | Stripe Dashboard → Developers → Webhooks |
-| Uptime monitor | Configured in Ticket 094 — see monitoring plan doc |
+| Resource               | Where to find it                                   |
+| ---------------------- | -------------------------------------------------- |
+| Production deployments | Vercel Dashboard → [Project] → Deployments         |
+| Production logs        | Vercel Dashboard → [Project] → Functions → Logs    |
+| Sentry errors          | Sentry dashboard → The BLACQList project           |
+| Supabase DB health     | Supabase Dashboard (prod project) → Database       |
+| Supabase logs          | Supabase Dashboard → Logs Explorer                 |
+| PITR restore           | Supabase Dashboard → Settings → Backups            |
+| Stripe webhook status  | Stripe Dashboard → Developers → Webhooks           |
+| Uptime monitor         | Configured in Ticket 094 — see monitoring plan doc |
 
 ---
 

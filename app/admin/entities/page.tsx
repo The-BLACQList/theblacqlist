@@ -1,17 +1,17 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
-export const metadata: Metadata = { title: "Pending Entities" }
+export const metadata: Metadata = { title: 'Pending Entities' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -21,7 +21,7 @@ interface PageProps {
 
 export default async function AdminEntitiesPage({ searchParams }: PageProps) {
   await requireAdmin()
-  const { status = "pending", page = "1" } = await searchParams
+  const { status = 'pending', page = '1' } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page))
   const limit = 25
@@ -30,21 +30,20 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
   const serviceClient = createServiceClient()
 
   const { data: listings, count } = await serviceClient
-    .from("listings")
-    .select(
-      "id, name, entity_type, status, trust_tier, created_at, tagline, categories(name)",
-      { count: "exact" }
-    )
-    .eq("status", status)
-    .order("created_at", { ascending: true })
+    .from('listings')
+    .select('id, name, entity_type, status, trust_tier, created_at, tagline, categories(name)', {
+      count: 'exact',
+    })
+    .eq('status', status)
+    .order('created_at', { ascending: true })
     .range(offset, offset + limit - 1)
 
   const totalPages = Math.ceil((count ?? 0) / limit)
 
   const STATUS_TABS = [
-    { value: "pending", label: "Pending" },
-    { value: "published", label: "Published" },
-    { value: "rejected", label: "Rejected" },
+    { value: 'pending', label: 'Pending' },
+    { value: 'published', label: 'Published' },
+    { value: 'rejected', label: 'Rejected' },
   ]
 
   return (
@@ -64,8 +63,8 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
             href={`/admin/entities?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? "border-amber-gold text-amber-gold"
-                : "border-transparent text-charcoal/60 hover:text-brand-black"
+                ? 'border-amber-gold text-amber-gold'
+                : 'border-transparent text-charcoal/60 hover:text-brand-black'
             }`}
           >
             {label}
@@ -76,9 +75,7 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
       {/* Table */}
       {!listings || listings.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">
-            No {status} entities found.
-          </p>
+          <p className="font-subhead text-sm text-charcoal/60">No {status} entities found.</p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
@@ -120,12 +117,12 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="font-body text-xs text-charcoal/60 capitalize">
-                        {listing.entity_type.replace(/_/g, " ")}
+                        {listing.entity_type.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <span className="font-body text-xs text-charcoal/60">
-                        {category?.name ?? "—"}
+                        {category?.name ?? '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

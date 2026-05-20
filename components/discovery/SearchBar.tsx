@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import type { Route } from "next"
-import { Search } from "lucide-react"
+import { useState, useCallback } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import type { Route } from 'next'
+import { Search } from 'lucide-react'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 
 interface SearchBarProps {
   placeholder?: string
@@ -14,14 +14,14 @@ interface SearchBarProps {
 }
 
 export function SearchBar({
-  placeholder = "Search businesses, categories, or cities…",
-  targetPath = "/search",
+  placeholder = 'Search businesses, categories, or cities…',
+  targetPath = '/search',
 }: SearchBarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [query, setQuery] = useState(searchParams.get("q") ?? "")
+  const [query, setQuery] = useState(searchParams.get('q') ?? '')
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -29,9 +29,9 @@ export function SearchBar({
       const params = new URLSearchParams(searchParams.toString())
       const trimmed = query.trim()
       if (trimmed) {
-        params.set("q", trimmed)
+        params.set('q', trimmed)
       } else {
-        params.delete("q")
+        params.delete('q')
       }
       // Navigate to targetPath preserving other filter params, or stay on
       // the current page if it's already the target path.

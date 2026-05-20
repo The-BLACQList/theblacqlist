@@ -1,7 +1,7 @@
-import { Star, BadgeCheck, MessageSquare } from "lucide-react"
-import type { EntityPageData, ReviewItem } from "@/types"
-import { ReviewForm } from "@/components/entity-page/ReviewForm"
-import { OwnerRespondForm } from "@/components/entity-page/OwnerRespondForm"
+import { Star, BadgeCheck, MessageSquare } from 'lucide-react'
+import type { EntityPageData, ReviewItem } from '@/types'
+import { ReviewForm } from '@/components/entity-page/ReviewForm'
+import { OwnerRespondForm } from '@/components/entity-page/OwnerRespondForm'
 
 interface Props {
   entity: EntityPageData
@@ -10,17 +10,15 @@ interface Props {
   hasReviewed: boolean
 }
 
-function StarRow({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
-  const px = size === "md" ? "size-5" : "size-4"
+function StarRow({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
+  const px = size === 'md' ? 'size-5' : 'size-4'
   return (
     <span className="inline-flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
           className={`${px} ${
-            i < rating
-              ? "fill-amber-gold text-amber-gold"
-              : "fill-transparent text-charcoal/20"
+            i < rating ? 'fill-amber-gold text-amber-gold' : 'fill-transparent text-charcoal/20'
           }`}
           aria-hidden="true"
         />
@@ -31,7 +29,7 @@ function StarRow({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
 function ReviewCard({
@@ -43,7 +41,7 @@ function ReviewCard({
   isOwner: boolean
   listingId: string
 }) {
-  const displayName = review.reviewer_display_name ?? "BLACQList Community Member"
+  const displayName = review.reviewer_display_name ?? 'BLACQList Community Member'
   const initial = displayName.charAt(0).toUpperCase()
 
   return (
@@ -127,12 +125,8 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
   const roundedAvg = avg !== null ? Math.round(avg * 10) / 10 : null
 
   return (
-    <section
-      aria-labelledby="reviews-heading"
-      className="bg-white py-12 md:py-16"
-    >
+    <section aria-labelledby="reviews-heading" className="bg-white py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
-
         {/* Header — only shown when reviews exist */}
         {hasReviews && roundedAvg !== null && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -149,7 +143,7 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
                   {roundedAvg.toFixed(1)}
                 </span>
                 <span className="font-body text-sm text-charcoal/60">
-                  ({entity.review_count} {entity.review_count === 1 ? "review" : "reviews"})
+                  ({entity.review_count} {entity.review_count === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
             </div>
@@ -179,14 +173,11 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
         {canReview && (
           <div className="max-w-xl">
             {hasReviews && (
-              <h3 className="font-headline text-lg text-brand-black mb-4">
-                Share your experience
-              </h3>
+              <h3 className="font-headline text-lg text-brand-black mb-4">Share your experience</h3>
             )}
             <ReviewForm listingId={entity.id} listingName={entity.name} />
           </div>
         )}
-
       </div>
     </section>
   )

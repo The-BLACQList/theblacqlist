@@ -16,6 +16,7 @@
 The Discover page serves users who have browsing intent rather than specific search intent — they want to explore what exists on the platform without committing to a keyword. It is the complement to `/search`: search is query-driven, discover is facet-driven. The page shares filter components and the listing card grid with the search results page (Ticket 026) and should reuse those components aggressively rather than rebuilding them.
 
 Source artifacts:
+
 - `docs/blacqlist/ux/mvp-screen-map.md` — Discover page detailed spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 2 (search/filter states, reusable here)
 - `docs/blacqlist/architecture/api-contract.md` — Endpoint 1 (GET /api/search, called with no `q`)
@@ -33,6 +34,7 @@ This ticket depends on Ticket 025 (search API — called with no `q`), Ticket 02
 ## Scope
 
 **In scope:**
+
 - `app/discover/page.tsx` — Server Component. Reads `searchParams` (city, category, type, trust_tier, page). Fetches first page from `GET /api/search` (no `q` param). No ISR — fully dynamic (`export const dynamic = 'force-dynamic'`).
 - Page header: platform total listing count ("[N] businesses listed" — prominent count, not a heading), subtitle "Discover Black-owned businesses across America"
 - Filter bar: City dropdown, Category dropdown, Entity Type radio/select — all `"use client"` components (reused from Ticket 026 `SearchFilterBar`). Filters update URL params immediately. Sticky on desktop scroll (using `position: sticky` on the filter bar).
@@ -48,6 +50,7 @@ This ticket depends on Ticket 025 (search API — called with no `q`), Ticket 02
 - Analytics: `search_performed` event (with `q: null`, `filters: { city, category, type, trust_tier }`, `result_count: N`) on every filter change
 
 **Out of scope:**
+
 - Keyword search on this page (users who know what to search go to `/search`)
 - Sort controls beyond default recency (V1)
 - Advanced filters (subcategory, price range, distance) (V1)
@@ -58,12 +61,12 @@ This ticket depends on Ticket 025 (search API — called with no `q`), Ticket 02
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-025: `GET /api/search` endpoint (called with no `q`) | Blocking API dependency | Not started |
+| Dependency                                                                                             | Type                                 | Status      |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------ | ----------- |
+| BLACQ-025: `GET /api/search` endpoint (called with no `q`)                                             | Blocking API dependency              | Not started |
 | BLACQ-026: `SearchFilterBar`, `ActiveFilterChips`, `ListingCardGrid`, `ListingCardSkeleton` components | Blocking UI dependency — reuse these | Not started |
-| BLACQ-015: `ListingCard` component | Blocking UI dependency | Not started |
-| `POST /api/analytics/event` (Endpoint 17) | Soft dependency — fire-and-forget | Not started |
+| BLACQ-015: `ListingCard` component                                                                     | Blocking UI dependency               | Not started |
+| `POST /api/analytics/event` (Endpoint 17)                                                              | Soft dependency — fire-and-forget    | Not started |
 
 ---
 
@@ -115,14 +118,17 @@ This ticket depends on Ticket 025 (search API — called with no `q`), Ticket 02
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/discover/page.tsx` — Server Component. Reads `searchParams`, fetches initial results from `GET /api/search` (no `q`), renders `DiscoverPageHeader` + `DiscoverPageClient`.
 - `app/discover/components/DiscoverPageClient.tsx` — `"use client"`. Load More state. Reuses `SearchFilterBar`, `ActiveFilterChips`, `ListingCardGrid` from `app/search/components/` (or from `components/discovery/` if shared).
 - `components/discover/DiscoverPageHeader.tsx` — Server Component. Props: `totalCount: number`. Displays count and subtitle.
 
 **Files to modify:**
+
 - If `SearchFilterBar` and `ActiveFilterChips` are in `app/search/components/`, move them to `components/discovery/` so they can be shared by both `/search` and `/discover` pages. This refactor is scoped to this ticket.
 
 **Key patterns:**
+
 ```typescript
 // app/discover/page.tsx
 export const dynamic = 'force-dynamic'
@@ -139,7 +145,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Dis
       limit: '24',
     }).toString()}`
   ).then(r => r.json())
-  
+
   return (
     <>
       <DiscoverPageHeader totalCount={results.meta.total} />
@@ -158,6 +164,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Dis
 - The "Claimed only" toggle adds/removes `trust_tier=claimed` from the URL params. It is a separate control from the City/Category/Type dropdowns, but still part of the filter bar.
 
 **Do not:**
+
 - Build a new version of `ListingCard` or `ListingCardGrid` — import from Ticket 026's components.
 - Add a keyword search bar to the Discover page — users who want keyword search go to `/search`.
 - Add ISR — this page must be fully dynamic.
@@ -181,12 +188,12 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Dis
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| API returns 500 | Server error | "Discover isn't working right now. Try again." + "Try again" button | Retry re-fetches with current filters |
-| Load More fails | API error on page N | Toast "Couldn't load more. Try again." — Load More button re-enables | User retries |
-| API returns rate limit 429 | Too many requests | Same error state as 500 — do not expose rate limit detail | Wait and retry |
-| All filters active, 0 results | Valid filters, no matches | Empty state with "Nothing here yet", active filter labels, "Clear all filters" CTA | Clear filters |
+| Failure                       | Condition                 | User sees                                                                          | Recovery                              |
+| ----------------------------- | ------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------- |
+| API returns 500               | Server error              | "Discover isn't working right now. Try again." + "Try again" button                | Retry re-fetches with current filters |
+| Load More fails               | API error on page N       | Toast "Couldn't load more. Try again." — Load More button re-enables               | User retries                          |
+| API returns rate limit 429    | Too many requests         | Same error state as 500 — do not expose rate limit detail                          | Wait and retry                        |
+| All filters active, 0 results | Valid filters, no matches | Empty state with "Nothing here yet", active filter labels, "Clear all filters" CTA | Clear filters                         |
 
 ---
 
@@ -210,16 +217,16 @@ export default async function DiscoverPage({ searchParams }: { searchParams: Dis
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-029-1 | Default state | Navigate to `/discover` | All listings shown, ordered by newest first; total count displayed; no active filter chips |
-| QA-029-2 | City filter | Change City dropdown to "Atlanta" | URL becomes `?city=atlanta`; only Atlanta listings shown; city chip in active filters |
-| QA-029-3 | Claimed only toggle | Toggle "Claimed only" on | URL adds `trust_tier=claimed`; only claimed listings shown |
-| QA-029-4 | Filter chip removal | With city filter active, click `×` | City removed from URL; results reset to all cities |
-| QA-029-5 | Empty state | Apply filters with no matches | "Nothing here yet" empty state with "Clear all filters" button |
-| QA-029-6 | Load More | Default state with 50+ listings | 24 cards shown; Load More shows correct remaining count; click appends next 24 |
-| QA-029-7 | Mobile filter drawer | View at 375px, tap "Filters" | Drawer opens with City, Category, Type, Claimed-only controls. Filters apply on drawer close or real-time. |
-| QA-029-8 | Analytics event | Apply a filter | `search_performed` event fires with `q: null` in network tab |
+| ID       | Test                 | Steps                              | Expected                                                                                                   |
+| -------- | -------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| QA-029-1 | Default state        | Navigate to `/discover`            | All listings shown, ordered by newest first; total count displayed; no active filter chips                 |
+| QA-029-2 | City filter          | Change City dropdown to "Atlanta"  | URL becomes `?city=atlanta`; only Atlanta listings shown; city chip in active filters                      |
+| QA-029-3 | Claimed only toggle  | Toggle "Claimed only" on           | URL adds `trust_tier=claimed`; only claimed listings shown                                                 |
+| QA-029-4 | Filter chip removal  | With city filter active, click `×` | City removed from URL; results reset to all cities                                                         |
+| QA-029-5 | Empty state          | Apply filters with no matches      | "Nothing here yet" empty state with "Clear all filters" button                                             |
+| QA-029-6 | Load More            | Default state with 50+ listings    | 24 cards shown; Load More shows correct remaining count; click appends next 24                             |
+| QA-029-7 | Mobile filter drawer | View at 375px, tap "Filters"       | Drawer opens with City, Category, Type, Claimed-only controls. Filters apply on drawer close or real-time. |
+| QA-029-8 | Analytics event      | Apply a filter                     | `search_performed` event fires with `q: null` in network tab                                               |
 
 ---
 

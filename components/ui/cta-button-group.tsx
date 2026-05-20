@@ -1,7 +1,7 @@
-import Link from "next/link"
+import Link from 'next/link'
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface CTAButton {
   label: string
@@ -12,7 +12,7 @@ interface CTAButton {
 interface CTAButtonGroupProps {
   primary: CTAButton
   secondary?: CTAButton
-  align?: "left" | "center"
+  align?: 'left' | 'center'
   stackOnMobile?: boolean
   className?: string
 }
@@ -20,15 +20,15 @@ interface CTAButtonGroupProps {
 export function CTAButtonGroup({
   primary,
   secondary,
-  align = "left",
+  align = 'left',
   stackOnMobile = true,
   className,
 }: CTAButtonGroupProps) {
   const containerClasses = cn(
-    "flex",
-    stackOnMobile ? "flex-col md:flex-row" : "flex-row",
-    "gap-3",
-    align === "center" && "items-center justify-center",
+    'flex',
+    stackOnMobile ? 'flex-col md:flex-row' : 'flex-row',
+    'gap-3',
+    align === 'center' && 'items-center justify-center',
     className
   )
 
@@ -40,9 +40,7 @@ export function CTAButtonGroup({
       >
         <Link
           href={primary.href}
-          {...(primary.external
-            ? { target: "_blank", rel: "noopener noreferrer" }
-            : {})}
+          {...(primary.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         >
           {primary.label}
         </Link>
@@ -55,9 +53,7 @@ export function CTAButtonGroup({
         >
           <Link
             href={secondary.href}
-            {...(secondary.external
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
+            {...(secondary.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           >
             {secondary.label}
           </Link>

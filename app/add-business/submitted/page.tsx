@@ -1,17 +1,17 @@
-import Link from "next/link"
-import { CheckCircle } from "lucide-react"
+import Link from 'next/link'
+import { CheckCircle } from 'lucide-react'
 
 interface Props {
   searchParams: Promise<{ name?: string }>
 }
 
 export const metadata = {
-  title: "Submission Received — The BLACQList",
+  title: 'Submission Received — The BLACQList',
 }
 
 export default async function SubmittedPage({ searchParams }: Props) {
   const { name } = await searchParams
-  const listingName = name ? decodeURIComponent(name) : "Your listing"
+  const listingName = name ? decodeURIComponent(name) : 'Your listing'
 
   return (
     <main className="min-h-screen bg-pale-lavender pt-16 pb-16 px-4 flex items-center justify-center">
@@ -31,9 +31,8 @@ export default async function SubmittedPage({ searchParams }: Props) {
         </h1>
 
         <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-sm mx-auto mb-8">
-          Our team will verify your listing before it goes live. Free listings are
-          typically published within 1–3 business days. We&apos;ll be in touch if we
-          need anything.
+          Our team will verify your listing before it goes live. Free listings are typically
+          published within 1–3 business days. We&apos;ll be in touch if we need anything.
         </p>
 
         <div className="bg-white rounded-2xl border border-charcoal/10 p-5 text-left mb-8">
@@ -42,9 +41,9 @@ export default async function SubmittedPage({ searchParams }: Props) {
           </p>
           <ol className="flex flex-col gap-3">
             {[
-              "Our team reviews your submission for completeness.",
-              "We verify that your business meets our community guidelines.",
-              "Your listing goes live on The BLACQList.",
+              'Our team reviews your submission for completeness.',
+              'We verify that your business meets our community guidelines.',
+              'Your listing goes live on The BLACQList.',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15 font-subhead text-xs font-bold text-amber-gold mt-0.5">

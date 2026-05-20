@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 14: Monetization and Sponsorship Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Monetization
 
 ---
@@ -40,6 +45,7 @@ As a platform engineer, I want the plans and subscriptions schema and Stripe cli
 ## Scope
 
 **In scope:**
+
 - Migration: `plans` table (plan definitions + Stripe Price IDs)
 - Migration: `subscriptions` table (per-listing subscription tracking)
 - `lib/stripe.ts` — Stripe SDK singleton; initialized with `STRIPE_SECRET_KEY` env var
@@ -48,6 +54,7 @@ As a platform engineer, I want the plans and subscriptions schema and Stripe cli
 - TypeScript types: `Plan`, `Subscription`, `SubscriptionStatus` in `types/billing.ts`
 
 **Out of scope:**
+
 - Stripe Connect — V2 only; do NOT implement
 - Stripe Checkout flow (Ticket 076)
 - Stripe webhook handler (Ticket 078)
@@ -59,11 +66,11 @@ As a platform engineer, I want the plans and subscriptions schema and Stripe cli
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 002 — Supabase project setup | Infrastructure | Not started |
-| Ticket 009 — `listings` base table (subscriptions FK target) | Blocking ticket | Not started |
-| Stripe account creation and product/price configuration | External | Must be done before Stripe Price IDs can be seeded |
+| Dependency                                                   | Type            | Status                                             |
+| ------------------------------------------------------------ | --------------- | -------------------------------------------------- |
+| Ticket 002 — Supabase project setup                          | Infrastructure  | Not started                                        |
+| Ticket 009 — `listings` base table (subscriptions FK target) | Blocking ticket | Not started                                        |
+| Stripe account creation and product/price configuration      | External        | Must be done before Stripe Price IDs can be seeded |
 
 **Risk:** The Stripe Price IDs used in seed data must be created in the Stripe Dashboard (or via Stripe CLI) before the seed runs. Use a placeholder value (`price_PLACEHOLDER_STANDARD`, etc.) in the migration file with a comment: `-- TODO: Replace with real Stripe Price IDs before running in staging/production`. The migration will run locally without real IDs; the real IDs must be set before Ticket 076 is tested.
 
@@ -154,6 +161,7 @@ INSERT INTO plans (plan_name, display_name, stripe_price_id, monthly_price_cents
 ```
 
 **RLS:**
+
 - `plans` — `anon` and `authenticated` SELECT all active plans (used for public pricing page); no INSERT/UPDATE/DELETE except service role
 - `subscriptions` — `authenticated` SELECT own records only (`user_id = auth.uid()`); no client INSERT/UPDATE/DELETE — all changes via webhook (Ticket 078) or Server Action (Ticket 076) using service role
 
@@ -164,6 +172,7 @@ INSERT INTO plans (plan_name, display_name, stripe_price_id, monthly_price_cents
 No endpoints in this ticket. This is DB schema and SDK setup only.
 
 **`lib/stripe.ts` pattern:**
+
 ```typescript
 import Stripe from 'stripe'
 
@@ -172,7 +181,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',     // pin to a specific API version
+  apiVersion: '2024-06-20', // pin to a specific API version
   typescript: true,
 })
 ```
@@ -184,19 +193,26 @@ The `stripe` export is used by Ticket 076 (checkout) and Ticket 078 (webhook han
 ## Implementation Notes
 
 **Files to create:**
+
 - `supabase/migrations/[timestamp]_create_plans_table.sql` — plans table + seed data
 - `supabase/migrations/[timestamp]_create_subscriptions_table.sql` — subscriptions table (separate migration, run after plans)
 - `lib/stripe.ts` — Stripe SDK singleton
 - `types/billing.ts` — TypeScript interfaces
 
 **Files to modify:**
+
 - `docs/blacqlist/architecture/environment-plan.md` — document `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` as required variables for V1 staging and production
 
 **TypeScript interfaces (`types/billing.ts`):**
+
 ```typescript
 export type SubscriptionStatus =
-  | 'active' | 'past_due' | 'canceled'
-  | 'incomplete' | 'trialing' | 'paused'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'
+  | 'trialing'
+  | 'paused'
 
 export interface Plan {
   id: string
@@ -216,8 +232,8 @@ export interface Subscription {
   stripe_subscription_id: string | null
   stripe_customer_id: string | null
   status: SubscriptionStatus
-  current_period_start: string | null   // ISO 8601
-  current_period_end: string | null     // ISO 8601
+  current_period_start: string | null // ISO 8601
+  current_period_end: string | null // ISO 8601
   canceled_at: string | null
   created_at: string
   updated_at: string
@@ -225,6 +241,7 @@ export interface Subscription {
 ```
 
 **Do not:**
+
 - Implement Stripe Connect — this is explicitly V2 (ADR-007)
 - Store Stripe Price IDs in code outside the `plans` table seed data — they are managed in the DB
 - Expose `STRIPE_SECRET_KEY` to the client — this key is server-only
@@ -248,11 +265,11 @@ export interface Subscription {
 
 ## Failure States
 
-| Failure | Condition | Behavior |
-|---|---|---|
-| `STRIPE_SECRET_KEY` missing | App starts without the env var | `lib/stripe.ts` throws at module load time with a clear error message |
-| Stripe API unreachable | Network issue at startup | The singleton is created successfully (connection is not tested at init time); failures surface at call time in Ticket 076/078 |
-| Duplicate active subscription attempted | INSERT into `subscriptions` violates unique partial index | Postgres constraint error; caught in the service layer (Ticket 078) |
+| Failure                                 | Condition                                                 | Behavior                                                                                                                       |
+| --------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `STRIPE_SECRET_KEY` missing             | App starts without the env var                            | `lib/stripe.ts` throws at module load time with a clear error message                                                          |
+| Stripe API unreachable                  | Network issue at startup                                  | The singleton is created successfully (connection is not tested at init time); failures surface at call time in Ticket 076/078 |
+| Duplicate active subscription attempted | INSERT into `subscriptions` violates unique partial index | Postgres constraint error; caught in the service layer (Ticket 078)                                                            |
 
 ---
 
@@ -272,13 +289,13 @@ No UI in this ticket.
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Plans seed | Admin | `SELECT * FROM plans ORDER BY monthly_price_cents` | 3 rows: Free ($0), Standard ($19), Premium ($49) |
-| QA-2 | Subscriptions table structure | Admin | `\d subscriptions` in psql | All columns, constraints, and indexes present |
-| QA-3 | Unique active subscription | Admin | Attempt to INSERT a second non-canceled subscription for the same `listing_id` | Postgres unique index violation; INSERT rejected |
-| QA-4 | Stripe client init | Engineer | Import `stripe` from `lib/stripe.ts`; call `stripe.customers.list()` in a test script | Returns a valid Stripe response (or test-mode mock); no TypeScript errors |
-| QA-5 | Missing env var | Engineer | Start the app without `STRIPE_SECRET_KEY` | App fails at startup with: "STRIPE_SECRET_KEY environment variable is not set." |
+| #    | Scenario                      | Role     | Steps                                                                                 | Expected result                                                                 |
+| ---- | ----------------------------- | -------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| QA-1 | Plans seed                    | Admin    | `SELECT * FROM plans ORDER BY monthly_price_cents`                                    | 3 rows: Free ($0), Standard ($19), Premium ($49)                                |
+| QA-2 | Subscriptions table structure | Admin    | `\d subscriptions` in psql                                                            | All columns, constraints, and indexes present                                   |
+| QA-3 | Unique active subscription    | Admin    | Attempt to INSERT a second non-canceled subscription for the same `listing_id`        | Postgres unique index violation; INSERT rejected                                |
+| QA-4 | Stripe client init            | Engineer | Import `stripe` from `lib/stripe.ts`; call `stripe.customers.list()` in a test script | Returns a valid Stripe response (or test-mode mock); no TypeScript errors       |
+| QA-5 | Missing env var               | Engineer | Start the app without `STRIPE_SECRET_KEY`                                             | App fails at startup with: "STRIPE_SECRET_KEY environment variable is not set." |
 
 ---
 

@@ -1,12 +1,12 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ArrowLeft } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createGuideAction } from "@/lib/actions/editorial/guides"
-import { GuideAdminForm } from "@/components/editorial/AdminEditorialForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createGuideAction } from '@/lib/actions/editorial/guides'
+import { GuideAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "New Guide" }
+export const metadata: Metadata = { title: 'New Guide' }
 
 export default async function NewGuidePage() {
   await requireAdmin()
@@ -28,10 +28,7 @@ export default async function NewGuidePage() {
       </div>
 
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-        <GuideAdminForm
-          action={createGuideAction}
-          redirectOnSuccess="/admin/guides"
-        />
+        <GuideAdminForm action={createGuideAction} redirectOnSuccess="/admin/guides" />
       </div>
     </div>
   )

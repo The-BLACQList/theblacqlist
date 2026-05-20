@@ -7,7 +7,6 @@
 // See docs/blacqlist/ai/ai-safety-and-approval-plan.md for full rules.
 
 export const PROMPT_TEMPLATES = {
-
   // ─── Business-side agents ────────────────────────────────────────────────
 
   LISTING_DESCRIPTION: `You are a copywriter helping a Black-owned business get discovered online. Write a compelling business description for "{{listing_name}}", a {{category_name}} business in {{city_name}}.
@@ -176,7 +175,6 @@ Requirements for Instagram version (max 150 chars + hashtags):
 - Do not include URLs
 
 Write three versions labeled "Instagram:", "Facebook:", and "X:" with each on its own line.`,
-
 } as const
 
 export type PromptTemplateKey = keyof typeof PROMPT_TEMPLATES
@@ -184,15 +182,15 @@ export type PromptTemplateKey = keyof typeof PROMPT_TEMPLATES
 // Agent type → prompt template mapping.
 // Used by the provider to look up the right template for a given agent.
 export const AGENT_PROMPT_MAP: Record<string, PromptTemplateKey> = {
-  listing_description:  "LISTING_DESCRIPTION",
-  seo_coach_title:      "SEO_TITLE",
-  seo_coach_description: "SEO_DESCRIPTION",
-  social_caption_instagram: "SOCIAL_CAPTION_INSTAGRAM",
-  social_caption_facebook:  "SOCIAL_CAPTION_FACEBOOK",
-  social_caption_x:         "SOCIAL_CAPTION_X",
-  review_response:      "REVIEW_RESPONSE",
-  analytics_explainer:  "ANALYTICS_SUMMARY",
-  collection_builder:   "COLLECTION_SUGGESTION",
-  guide_writer:         "GUIDE_SECTION",
-  social_media_admin:   "SOCIAL_POST_ADMIN",
+  listing_description: 'LISTING_DESCRIPTION',
+  seo_coach_title: 'SEO_TITLE',
+  seo_coach_description: 'SEO_DESCRIPTION',
+  social_caption_instagram: 'SOCIAL_CAPTION_INSTAGRAM',
+  social_caption_facebook: 'SOCIAL_CAPTION_FACEBOOK',
+  social_caption_x: 'SOCIAL_CAPTION_X',
+  review_response: 'REVIEW_RESPONSE',
+  analytics_explainer: 'ANALYTICS_SUMMARY',
+  collection_builder: 'COLLECTION_SUGGESTION',
+  guide_writer: 'GUIDE_SECTION',
+  social_media_admin: 'SOCIAL_POST_ADMIN',
 }

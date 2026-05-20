@@ -1,15 +1,15 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { PageHeader } from "@/components/layout/page-header"
-import { Button } from "@/components/ui/button"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "Jobs | The BLACQList",
+  title: 'Jobs | The BLACQList',
   description:
-    "Find career opportunities at Black-owned companies. Build your career while supporting the community.",
+    'Find career opportunities at Black-owned companies. Build your career while supporting the community.',
 }
 
 export default function JobsPage() {
@@ -30,10 +30,9 @@ export default function JobsPage() {
           Jobs Board Coming in Beta
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
-          Black-owned businesses will be able to post open roles directly on
-          their BLACQList Page, and job seekers will be able to filter
-          opportunities by industry, city, and job type. Supporting Black
-          businesses extends to where you work, not just where you spend.
+          Black-owned businesses will be able to post open roles directly on their BLACQList Page,
+          and job seekers will be able to filter opportunities by industry, city, and job type.
+          Supporting Black businesses extends to where you work, not just where you spend.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Button

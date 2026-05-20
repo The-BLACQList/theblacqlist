@@ -1,25 +1,25 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useActionState } from "react"
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
-import { updateListingContentAction } from "@/lib/actions/dashboard/updateListingContent"
+import { useState } from 'react'
+import { useActionState } from 'react'
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
 
-type Day = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
+type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 type DayHours = { open: string; close: string; closed: boolean }
 type WeeklyHours = Record<Day, DayHours>
 
 const DAYS: { key: Day; label: string }[] = [
-  { key: "monday",    label: "Mon" },
-  { key: "tuesday",   label: "Tue" },
-  { key: "wednesday", label: "Wed" },
-  { key: "thursday",  label: "Thu" },
-  { key: "friday",    label: "Fri" },
-  { key: "saturday",  label: "Sat" },
-  { key: "sunday",    label: "Sun" },
+  { key: 'monday', label: 'Mon' },
+  { key: 'tuesday', label: 'Tue' },
+  { key: 'wednesday', label: 'Wed' },
+  { key: 'thursday', label: 'Thu' },
+  { key: 'friday', label: 'Fri' },
+  { key: 'saturday', label: 'Sat' },
+  { key: 'sunday', label: 'Sun' },
 ]
 
-const DEFAULT_DAY: DayHours = { open: "09:00", close: "17:00", closed: false }
+const DEFAULT_DAY: DayHours = { open: '09:00', close: '17:00', closed: false }
 
 function buildDefault(existing: Partial<WeeklyHours> | null): WeeklyHours {
   const out = {} as WeeklyHours
@@ -99,13 +99,16 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
           })}
         </div>
 
-        {state && "error" in state && (
-          <div role="alert" className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+        {state && 'error' in state && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
+          >
             <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
-        {state && "success" in state && (
+        {state && 'success' in state && (
           <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
             <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-green-700">Hours saved.</p>
@@ -119,7 +122,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? "Saving…" : "Save hours"}
+            {isPending ? 'Saving…' : 'Save hours'}
           </button>
         </div>
       </form>

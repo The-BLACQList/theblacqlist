@@ -1,26 +1,33 @@
 # Ticket 035: Claim Form and Verification Document Upload (/claim/[listing-id])
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Core Workflow / Claim
 
 ## Context
+
 After a business owner finds their listing on the claim entry page (Ticket 034), they must complete the claim verification form to submit an ownership claim. This form collects the claimant's relationship to the business, contact details, and an optional verification document. On submission, the claim record is created in the database and enters the admin review queue (Ticket 040). This page is the second and final step of the user-facing claim flow. Source: `docs/blacqlist/ux/mvp-screen-map.md` Claim Form screen; `docs/blacqlist/ux/core-user-flows.md` Flow 9; `docs/blacqlist/architecture/api-contract.md` Section 5 endpoints 23–24; `docs/blacqlist/data/database-schema-plan.md` claims table; `docs/blacqlist/architecture/server-actions-plan.md` `createClaim` action.
 
 ## User Story
+
 As a business owner, I want to complete the claim verification form for my listing and optionally upload a proof document, so that the BLACQList team can review and approve my ownership request.
 
 ## Scope
 
 **In scope:**
+
 - `app/claim/[listing-id]/page.tsx` — Server Component; validates `listing_id` param, fetches the listing, checks if listing is published, renders page or redirects
 - `app/claim/[listing-id]/_components/ClaimForm.tsx` — Client Component; `react-hook-form` + `zod` validation
 - **Listing preview card** at top: read-only card showing the listing being claimed — cover image thumbnail, business name, city, category, trust_tier badge. "Not this listing? Go back →" link (routes to `/claim`)
@@ -36,6 +43,7 @@ As a business owner, I want to complete the claim verification form for my listi
 - Confirmation state: after successful submit, replace form content with inline success state (no redirect): green checkmark icon, heading "Claim submitted.", body "We'll review your claim within 3–5 business days and notify you at [user.email]. Your listing page is available for visitors in the meantime.", two action links: "View your listing →" and "Track your claim →" (`/account/claims`)
 
 **Out of scope:**
+
 - Admin review of the claim (Ticket 040, 039)
 - Claim approval or rejection emails (handled in admin actions)
 - The claims status tracking page `/account/claims` (Ticket 036)
@@ -43,13 +51,13 @@ As a business owner, I want to complete the claim verification form for my listi
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 034 (claim entry page) | Blocking ticket | Users arrive from the entry page; claim form depends on a valid listing_id |
-| Ticket 030 (media upload Route Handler) | Blocking ticket | Document upload calls `POST /api/upload` with `bucket=verification-docs` |
-| Ticket 011 (engagement tables migration — `claims` table) | Blocking ticket | `createClaim` SA inserts into `claims` table |
-| `createClaim` SA (`lib/actions/claims/createClaim.ts`) | Code dependency | Must exist; follows seven-step pattern from `server-actions-plan.md` |
-| `lib/email/resend.ts` + `claimReceived` template | Code dependency | `createClaim` SA sends notification email to admin on submit |
+| Dependency                                                | Type            | Status                                                                     |
+| --------------------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
+| Ticket 034 (claim entry page)                             | Blocking ticket | Users arrive from the entry page; claim form depends on a valid listing_id |
+| Ticket 030 (media upload Route Handler)                   | Blocking ticket | Document upload calls `POST /api/upload` with `bucket=verification-docs`   |
+| Ticket 011 (engagement tables migration — `claims` table) | Blocking ticket | `createClaim` SA inserts into `claims` table                               |
+| `createClaim` SA (`lib/actions/claims/createClaim.ts`)    | Code dependency | Must exist; follows seven-step pattern from `server-actions-plan.md`       |
+| `lib/email/resend.ts` + `claimReceived` template          | Code dependency | `createClaim` SA sends notification email to admin on submit               |
 
 ## UX Notes
 
@@ -115,14 +123,17 @@ As a business owner, I want to complete the claim verification form for my listi
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/claim/[listing-id]/page.tsx` — Server Component: fetches listing by `params.listingId`; returns `notFound()` if listing not found or `status != 'published'`; passes listing data to `ClaimForm`
 - `app/claim/[listing-id]/_components/ClaimForm.tsx` — Client Component with form state, upload handling, SA call
 - `lib/actions/claims/createClaim.ts` — Server Action following the seven-step pattern
 
 **Files to modify:**
+
 - `lib/validations/claim.ts` — create file with zod schema for the claim form
 
 **Key patterns for `createClaim` SA:**
+
 ```typescript
 // Step 1: getUser
 // Step 2: safeParse input
@@ -146,6 +157,7 @@ As a business owner, I want to complete the claim verification form for my listi
 - If listing `trust_tier` is already `'claimed'` or `'verified'`: show an inline banner at the top of the page: "This listing is already claimed. If you believe this is incorrect, contact support." — do not show the claim form
 
 **Do not:**
+
 - Allow `claimant_user_id` to be provided by the client — always set `auth.uid()` server-side
 - Upload documents before the user's session is verified
 - Show the raw document storage path in any response to the client
@@ -165,15 +177,15 @@ As a business owner, I want to complete the claim verification form for my listi
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| CLAIM_ALREADY_OPEN | User already has pending or under_review claim for this listing | Error banner: "You already have a pending claim for this listing." with link to `/account/claims` | User views their existing claim status |
-| LISTING_ALREADY_CLAIMED | Listing already has an approved owner | Error banner: "This listing has already been claimed." with support contact | User contacts support if they believe it's an error |
-| RATE_LIMITED | User has 3+ open claims | Error banner: "Maximum open claims reached. Resolve an existing claim first." | User waits for a claim to be resolved |
-| Document upload failure | Network error during upload | Inline error below upload zone: "Upload failed. Try again." Retry button | User retries upload; form data not lost |
-| Document wrong type | Non-image/non-PDF uploaded | Inline error: "Accepted formats: JPG, PNG, PDF" | User selects correct file type |
-| SERVER_ERROR on submit | 500 from createClaim SA | Error banner: "Submission failed. Please try again." | Retry Submit button re-fires the SA |
-| NOT_FOUND listing | listing_id is invalid or listing deleted | Next.js `notFound()` — 404 page with "That page doesn't exist" + search bar | User searches for their listing again from `/claim` |
+| Failure                 | Condition                                                       | User sees                                                                                         | Recovery                                            |
+| ----------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| CLAIM_ALREADY_OPEN      | User already has pending or under_review claim for this listing | Error banner: "You already have a pending claim for this listing." with link to `/account/claims` | User views their existing claim status              |
+| LISTING_ALREADY_CLAIMED | Listing already has an approved owner                           | Error banner: "This listing has already been claimed." with support contact                       | User contacts support if they believe it's an error |
+| RATE_LIMITED            | User has 3+ open claims                                         | Error banner: "Maximum open claims reached. Resolve an existing claim first."                     | User waits for a claim to be resolved               |
+| Document upload failure | Network error during upload                                     | Inline error below upload zone: "Upload failed. Try again." Retry button                          | User retries upload; form data not lost             |
+| Document wrong type     | Non-image/non-PDF uploaded                                      | Inline error: "Accepted formats: JPG, PNG, PDF"                                                   | User selects correct file type                      |
+| SERVER_ERROR on submit  | 500 from createClaim SA                                         | Error banner: "Submission failed. Please try again."                                              | Retry Submit button re-fires the SA                 |
+| NOT_FOUND listing       | listing_id is invalid or listing deleted                        | Next.js `notFound()` — 404 page with "That page doesn't exist" + search bar                       | User searches for their listing again from `/claim` |
 
 ## Edge Cases
 
@@ -195,13 +207,13 @@ As a business owner, I want to complete the claim verification form for my listi
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path — no document | Sign in → navigate to `/claim/[unclaimed-listing-id]` → fill all required fields → Submit | Claim record created with `status: 'pending'`; success state renders; user email shown in confirmation |
-| QA-2 | Happy path — with document | Same as QA-1 but upload a valid PDF before Submit | `verification_doc_paths` array has 1 item in the claims record; success state renders |
-| QA-3 | Already claimed listing | Navigate to `/claim/[claimed-listing-id]` | Page renders with "This listing is already claimed" banner; form is not shown |
-| QA-4 | CLAIM_ALREADY_OPEN | Submit claim for a listing that current user already has a pending claim on | Error banner rendered: "You already have a pending claim"; link to `/account/claims` present |
-| QA-5 | Invalid listing_id | Navigate to `/claim/[non-existent-uuid]` | Next.js 404 page renders |
+| ID   | Test                       | Steps                                                                                     | Expected                                                                                               |
+| ---- | -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| QA-1 | Happy path — no document   | Sign in → navigate to `/claim/[unclaimed-listing-id]` → fill all required fields → Submit | Claim record created with `status: 'pending'`; success state renders; user email shown in confirmation |
+| QA-2 | Happy path — with document | Same as QA-1 but upload a valid PDF before Submit                                         | `verification_doc_paths` array has 1 item in the claims record; success state renders                  |
+| QA-3 | Already claimed listing    | Navigate to `/claim/[claimed-listing-id]`                                                 | Page renders with "This listing is already claimed" banner; form is not shown                          |
+| QA-4 | CLAIM_ALREADY_OPEN         | Submit claim for a listing that current user already has a pending claim on               | Error banner rendered: "You already have a pending claim"; link to `/account/claims` present           |
+| QA-5 | Invalid listing_id         | Navigate to `/claim/[non-existent-uuid]`                                                  | Next.js 404 page renders                                                                               |
 
 ## Security Notes
 

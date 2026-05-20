@@ -17,10 +17,12 @@ Unlike a basic business directory, The BLACQList presents every listed entity th
 The long-term differentiator is the **dollar-flow map** — a visual network that shows how community dollars circulate through Black-owned businesses, vendors, creatives, and events — making the Black economy visible in a way no platform has done before.
 
 **Taglines:**
+
 > Find & Be Found.
 > Find what you need. Support who matters. Keep the dollar moving.
 
 **Brand positioning:**
+
 > Atlanta-born. National from day one. Community-powered everywhere.
 
 ---
@@ -67,12 +69,12 @@ The Black dollar recirculates within the Black community at a historically low r
 
 ### What The BLACQList Closes
 
-| Gap | What the platform does |
-|---|---|
-| Discovery gap | National, city-aware, category-aware search with community context |
-| Representation gap | BLACQList Pages — micro-website quality for every listed entity |
-| Trust gap | Graduated verification, community corrections, reviews, endorsements |
-| Impact gap | Receipt uploads + marketplace transactions feed a visible dollar-flow map |
+| Gap                | What the platform does                                                    |
+| ------------------ | ------------------------------------------------------------------------- |
+| Discovery gap      | National, city-aware, category-aware search with community context        |
+| Representation gap | BLACQList Pages — micro-website quality for every listed entity           |
+| Trust gap          | Graduated verification, community corrections, reviews, endorsements      |
+| Impact gap         | Receipt uploads + marketplace transactions feed a visible dollar-flow map |
 
 ---
 
@@ -139,11 +141,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Discover what exists. Learn about businesses they didn't know about. Share interesting finds.
 
 **Pains:**
+
 - Has no reliable starting point for Black-owned discovery
 - Existing results are generic and lack community context
 - Can't tell which businesses are still open or worth visiting
 
 **Key workflows:**
+
 - Browse homepage → click city or category → scan results → share a Page
 - Click a shared link → view BLACQList Page → click CTA or save
 
@@ -160,11 +164,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Build a reliable shortlist of trusted businesses. Track their support. Share with friends and family.
 
 **Pains:**
+
 - Bookmarks and mental lists don't scale
 - No single place to track all Black-owned businesses they've used
 - No way to share a curated list with someone asking for recommendations
 
 **Key workflows:**
+
 - Search → find listing → save to personal list
 - Open saved list → visit or share
 - Browse editorial collections → discover new saves
@@ -183,11 +189,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Find, evaluate, and purchase from a Black-owned business with minimum friction. Confirm quality before buying.
 
 **Pains:**
+
 - High-intent search returns generic results with no trust context
 - Hard to tell if a business offers what they need without calling
 - Checkout from multiple platforms is fragmented
 
 **Key workflows:**
+
 - Search by product/service type + city → view BLACQList Page → click CTA (book/order/call)
 - Browse marketplace → add to cart → check out (V2)
 - View reviews → decide to buy → complete transaction
@@ -205,12 +213,14 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Get found. Look better online than on any other platform. Drive bookings, calls, or walk-ins. Build trust with new customers.
 
 **Pains:**
+
 - Google Business profile looks identical to a national chain
 - Yelp reduces them to a star rating
 - Building and maintaining a website takes time and money they don't have
 - No platform specifically built for their community context
 
 **Key workflows:**
+
 - Claim existing listing → complete Page → publish
 - Create new listing → fill Page → publish
 - Log in → update hours, add a service, change CTA
@@ -230,11 +240,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Establish credibility. Be discoverable by people who need their specific expertise. Drive consultation requests or bookings.
 
 **Pains:**
+
 - LinkedIn is not a discovery platform for community-specific services
 - Google results are dominated by large firms, not solo practitioners
 - Credentials and community context are invisible in generic search
 
 **Key workflows:**
+
 - Create Professional Page → add credentials, services, portfolio → publish
 - Update availability or service offerings
 - Review consultation requests or analytics
@@ -252,11 +264,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Showcase work. Be discoverable for commissions, bookings, collaborations. Drive traffic to their portfolio or booking link.
 
 **Pains:**
+
 - Instagram is great for visibility but not for discovery with commercial intent
 - Portfolio sites require maintenance and don't surface in community-specific searches
 - Booking and commission flows are scattered across DMs, email, and third-party tools
 
 **Key workflows:**
+
 - Create Creative Page → upload portfolio → add booking link → publish
 - Add new work → share Page → monitor analytics
 - Appear in event searches (as a performer or vendor)
@@ -274,11 +288,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Sell products to an engaged community of buyers. Build a community-trusted storefront. Reach customers who are actively looking to support Black-owned sellers.
 
 **Pains:**
+
 - Etsy and Shopify are crowded and lack community context
 - Maintaining a separate e-commerce site is expensive and time-consuming
 - Marketplace platforms take large cuts without providing community value
 
 **Key workflows:**
+
 - Upgrade Business Page to vendor storefront → connect Stripe → add products → go live
 - Receive order notification → fulfill → mark shipped
 - View vendor analytics → see revenue, top products, pending orders
@@ -296,11 +312,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Drive attendance. Reach the community beyond their existing network. Sell tickets or collect RSVPs.
 
 **Pains:**
+
 - Eventbrite is generic and expensive
 - Social media events have low organic reach
 - Community event discovery is fragmented across multiple platforms
 
 **Key workflows:**
+
 - Create Event Page → set date, location, ticket link → publish
 - Update event details before the date
 - View click-through count on ticket link
@@ -318,11 +336,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Post an opportunity. Reach qualified candidates who are aligned with the community and culture of the hiring organization.
 
 **Pains:**
+
 - Indeed and LinkedIn are crowded and expensive
 - No existing platform targets specifically the Black professional talent pool
 - Job posts go unseen without community distribution
 
 **Key workflows:**
+
 - Create job listing → set description, apply link, deadline → publish
 - Edit or remove listing before expiry
 - View apply-link click count
@@ -340,11 +360,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Run targeted campaigns that generate real community goodwill and measurable reach. Align brand with The BLACQList's community credibility.
 
 **Pains:**
+
 - Generic ad platforms lack community specificity and credibility
 - Sponsorships on other platforms are not performance-measurable at the community level
 - Cultural misalignment in advertising undermines brand trust in Black communities
 
 **Key workflows:**
+
 - Submit sponsorship inquiry → receive proposal → approve campaign → review performance
 - (V3) Self-serve: create campaign → set budget → target by city/category → launch → view analytics
 
@@ -361,11 +383,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Maintain platform integrity. Approve claims quickly. Keep listing data accurate and fresh. Surface quality problems before users encounter them.
 
 **Pains:**
+
 - Moderation at scale requires tooling, not just database access
 - Claim fraud is a real risk — bad actors could claim competitors' listings
 - Review moderation requires judgment, not just keyword filtering
 
 **Key workflows:**
+
 - Review claim queue → approve or reject with reason
 - Review verification documents → grant or deny verified badge
 - Edit any listing for accuracy
@@ -385,11 +409,13 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 **Goals:** Create compelling editorial content that gives users a reason to engage beyond search. Surface the best of the platform through curation.
 
 **Pains:**
+
 - No CMS exists yet — editorial is manual
 - Curated content needs to be linked to real BLACQList Pages (not just text)
 - Quality editorial takes time; automation is a V3 concern
 
 **Key workflows:**
+
 - Create collection → select and describe featured listings → publish
 - Write BLACQLight article → link to relevant Pages → publish
 - Create city guide → organize by category and vibe → publish
@@ -409,6 +435,7 @@ The AI layer is not a search bar upgrade. It is a culturally-fluent concierge th
 The entry surface for all users. The homepage and browsable landing pages are the first impression for new users arriving from search engines, social shares, and direct navigation.
 
 **Components:**
+
 - Homepage: hero, category grid, city spotlight, featured entities, editorial teaser
 - City landing pages: auto-generated from listing data, SEO-optimized, showing top listings per city
 - Category landing pages: auto-generated, SEO-optimized, filterable by city
@@ -425,6 +452,7 @@ The entry surface for all users. The homepage and browsable landing pages are th
 The primary commercial intent surface. Users arrive with something specific in mind — the search experience determines whether they find it.
 
 **Components:**
+
 - Full-text keyword search (name, description, category, city, tags)
 - Category filter (top-level + subcategory)
 - City / metro filter
@@ -448,6 +476,7 @@ The primary commercial intent surface. Users arrive with something specific in m
 SEO-critical discovery entry points that capture organic search traffic from people searching "[category] + [city] + Black-owned."
 
 **Components:**
+
 - `/atlanta` — city landing page with top listings, categories, editorial spotlight
 - `/atlanta/restaurants` — city + category landing page
 - `/professionals/chicago` — entity type + city
@@ -466,6 +495,7 @@ SEO-critical discovery entry points that capture organic search traffic from peo
 The core product artifact. Every listed entity gets a Page that functions as a micro-website, not a database record.
 
 **Business Page template (MVP):**
+
 - Hero section: cover image, business name, tagline, primary CTA button, trust badge
 - About: description, founding story
 - Category + subcategory tags
@@ -484,6 +514,7 @@ The core product artifact. Every listed entity gets a Page that functions as a m
 - Related listings (V1): "More in [category] in [city]"
 
 **Professional Page template (V1):**
+
 - Bio, credentials, certifications
 - Services with pricing or "contact for pricing"
 - Portfolio (images + case study links)
@@ -491,12 +522,14 @@ The core product artifact. Every listed entity gets a Page that functions as a m
 - Consultation/booking CTA
 
 **Creative Page template (V1):**
+
 - Bio, medium/genre/discipline tags
 - Portfolio gallery (images + video embed links)
 - Booking/commission link
 - Event appearances (linked to Event Pages)
 
 **Event Page template (V1):**
+
 - Name, date/time, end time
 - Location (address or "Virtual")
 - Description, cover image
@@ -505,6 +538,7 @@ The core product artifact. Every listed entity gets a Page that functions as a m
 - Auto-archive after event date
 
 **Job Listing template (V1):**
+
 - Title, company, location (or remote)
 - Description, apply link, deadline
 - Optional link to employer BLACQList Page
@@ -521,11 +555,13 @@ The core product artifact. Every listed entity gets a Page that functions as a m
 How new entities enter the platform — either through a business owner creating their own listing, or through a community member submitting a business they know about.
 
 **Create flow (business owner):**
+
 - Multi-step form: entity type → basic info → contact → category/city → media → CTA → review → publish
 - Duplicate detection warning before creation
 - Listing enters as unclaimed until ownership is verified
 
 **Community submission flow:**
+
 - Lightweight form: entity name, category, city, website or phone
 - Submitted listing is unverified, clearly marked, visible in search
 - Admin reviews community submissions before they become full listings (optional queue)
@@ -541,6 +577,7 @@ How new entities enter the platform — either through a business owner creating
 How a business owner proves they own an existing unclaimed listing.
 
 **Flow:**
+
 1. Owner searches the platform for their business
 2. Selects the listing → clicks "Claim this business"
 3. Enters verification info: business name, contact email, business phone or website
@@ -550,6 +587,7 @@ How a business owner proves they own an existing unclaimed listing.
 7. Admin rejects → owner receives rejection email with reason and instructions to resubmit
 
 **Anti-fraud considerations:**
+
 - One claim per listing (subsequent claims trigger admin review of prior claim)
 - Email domain matching (if owner email matches website domain, auto-pre-approve for admin confirmation)
 - Document upload is optional at MVP, required for Verified badge in V1
@@ -565,6 +603,7 @@ How a business owner proves they own an existing unclaimed listing.
 The business owner's control center for managing their BLACQList Page and understanding their performance.
 
 **MVP dashboard:**
+
 - Page preview link
 - Claim status indicator (pending / approved / rejected)
 - Page view count (last 7 days, last 30 days)
@@ -579,6 +618,7 @@ The business owner's control center for managing their BLACQList Page and unders
 - Unpublish Page option
 
 **V1 additions:**
+
 - Analytics: 30-day and 90-day trend charts for views, clicks, saves
 - Review management: view reviews, respond to reviews
 - Trust status + verification submission
@@ -586,6 +626,7 @@ The business owner's control center for managing their BLACQList Page and unders
 - AI Page optimization suggestions
 
 **V2 additions:**
+
 - Vendor dashboard (orders, revenue, product management) if vendor feature enabled
 - Receipt upload from dashboard for off-platform sales
 
@@ -596,6 +637,7 @@ The business owner's control center for managing their BLACQList Page and unders
 The internal tool for managing platform quality, claim review, content moderation, and operations.
 
 **MVP admin dashboard:**
+
 - All listings view with filters: status (unclaimed, claimed, verified, flagged), city, category, entity type
 - Claim queue: pending claims with verification info, approve/reject with reason
 - Create / edit / delete any listing
@@ -604,6 +646,7 @@ The internal tool for managing platform quality, claim review, content moderatio
 - Basic platform stats: total listings, new listings this week, pending claims, total users
 
 **V1 additions:**
+
 - Review moderation queue
 - Community correction queue
 - Trust verification document review
@@ -612,6 +655,7 @@ The internal tool for managing platform quality, claim review, content moderatio
 - Email log for claim notifications
 
 **V2 additions:**
+
 - Vendor / marketplace order management
 - Refund processing
 - AI-assisted flagging for stale or suspicious listings
@@ -625,20 +669,22 @@ How listed entities move from unclaimed to verified to certified — the trust s
 
 **Trust tiers:**
 
-| Tier | Badge | How achieved |
-|---|---|---|
-| Unclaimed | No badge | Community-submitted; no owner action taken |
-| Claimed | Blue claimed badge | Owner submitted claim; admin approved |
-| Verified | Gold verified badge | Owner submitted documents; admin reviewed |
+| Tier                | Badge                 | How achieved                                                                |
+| ------------------- | --------------------- | --------------------------------------------------------------------------- |
+| Unclaimed           | No badge              | Community-submitted; no owner action taken                                  |
+| Claimed             | Blue claimed badge    | Owner submitted claim; admin approved                                       |
+| Verified            | Gold verified badge   | Owner submitted documents; admin reviewed                                   |
 | BLACQList Certified | Amber certified badge | Highest tier; criteria include: verified + 6+ reviews + active for 90+ days |
 
 **Verified tier requirements (V1):**
+
 - Business must be claimed
 - Owner uploads: business license, EIN letter, or equivalent government documentation
 - Admin reviews documents within 48 hours (target SLA)
 - Verification granted for 12 months; annual renewal required
 
 **Certified tier requirements (V1):**
+
 - Must be verified
 - 6 or more approved reviews with 4.0+ average
 - Account active (owner logged in) within last 90 days
@@ -655,6 +701,7 @@ How listed entities move from unclaimed to verified to certified — the trust s
 Community trust through structured, moderated reviews.
 
 **Components:**
+
 - Star rating (1–5) + text review body
 - Review submission (logged-in users only, on claimed listings)
 - Review display on BLACQList Page: average rating, count, most recent reviews
@@ -669,6 +716,7 @@ Community trust through structured, moderated reviews.
 **V1 scope:** Full review flow, moderation queue, business owner response, review display in search results.
 
 **Policy considerations:**
+
 - Only logged-in users can review (reduces spam)
 - One review per user per listing (prevents duplicate reviews)
 - Business owners cannot review their own listing or competitors
@@ -681,12 +729,14 @@ Community trust through structured, moderated reviews.
 The community engagement layer — how users build personal lists and spread the platform.
 
 **Saves:**
+
 - Save button on any listing (search results card + BLACQList Page)
 - Requires logged-in account
 - Saved listings accessible from user account dashboard
 - Save count visible to business owner in dashboard
 
 **Shares:**
+
 - Share button on every BLACQList Page
 - Actions: copy link, share to Instagram, share to Facebook, share to X/Twitter
 - OG metadata on every Page ensures rich preview on all social platforms
@@ -703,6 +753,7 @@ The community engagement layer — how users build personal lists and spread the
 The commerce layer that turns discovery into transactions on-platform.
 
 **Components:**
+
 - Vendor storefront extension on Business Page
 - Product listing pages (title, images, price, description, variants)
 - Cart
@@ -728,6 +779,7 @@ The commerce layer that turns discovery into transactions on-platform.
 How off-platform spend enters the community data layer.
 
 **Flow:**
+
 1. User opens receipt upload flow (supporter dashboard or homepage CTA)
 2. Captures photo of receipt from device camera
 3. OCR processing suggests the business name and category
@@ -736,6 +788,7 @@ How off-platform spend enters the community data layer.
 6. Anonymized aggregate contribution to community spend data
 
 **Privacy model:**
+
 - Individual receipt data is private to the user — never publicly identifiable
 - Only aggregate, anonymized data (total spend in category, total spend in city) is visible externally
 - User can delete all receipt data from their account
@@ -751,6 +804,7 @@ How off-platform spend enters the community data layer.
 The aggregate view of where and how much the community has spent with Black-owned businesses.
 
 **Components:**
+
 - Personal spend log (from marketplace purchases + receipt uploads)
 - Personal spend dashboard: total spend, by category, by month
 - Community spend aggregate: total $ circulated, by city, by category (anonymized)
@@ -758,6 +812,7 @@ The aggregate view of where and how much the community has spent with Black-owne
 - Spend milestone gamification (V3): streaks, community rankings, milestones
 
 **Privacy rules:**
+
 - Individual spend data is private
 - Business/vendor nodes are shown on community aggregate with their consent
 - Buyer identity is never exposed in any aggregate or public view
@@ -775,6 +830,7 @@ The aggregate view of where and how much the community has spent with Black-owne
 The long-term differentiator. A visual graph showing how dollars circulate through the Black community economy.
 
 **Components:**
+
 - Visual graph of community commerce circulation
 - Business/vendor nodes (opt-in, shown with consent)
 - Buyer nodes: anonymized, shown as volume/weight on edges
@@ -784,6 +840,7 @@ The long-term differentiator. A visual graph showing how dollars circulate throu
 - Embed option for community organizations, media, advocacy groups
 
 **Data requirements before visualization can launch:**
+
 - At minimum 6 months of marketplace transaction data + receipt uploads
 - Minimum 500 participating community members contributing spend data
 - Business/vendor opt-in campaign (businesses must choose to appear)
@@ -801,6 +858,7 @@ The long-term differentiator. A visual graph showing how dollars circulate throu
 Content that gives users a reason to engage beyond a single search session.
 
 **Components:**
+
 - **BLACQLight articles:** Long-form editorial features — business spotlights, community stories, industry deep-dives
 - **Curated collections:** Admin-assembled lists of BLACQList Pages around a theme ("Best Black-owned Bookstores in Atlanta," "Top Black Chefs to Follow")
 - **City guides:** Comprehensive curated guides to Black-owned experiences in a specific city
@@ -820,23 +878,27 @@ Content that gives users a reason to engage beyond a single search session.
 AI-assisted features that make the platform smarter for shoppers, business owners, and admins.
 
 **Shopper-side (V2):**
+
 - Conversational discovery: "I'm looking for a Black-owned caterer for a Juneteenth dinner in Atlanta for 50 people"
 - Returns: ranked, contextualized recommendations with reasoning
 - Culturally fluent — trained on community context, not generic retail
 - Accessible from homepage as a distinct interaction mode (not the default search)
 
 **Business-side (V2):**
+
 - Page optimization suggestions: reviews the listing and suggests improvements to description, category selection, service list, and CTA configuration
 - Quality score: rates the completeness and quality of the Page
 - Prompted, not automated — owner chooses when to run it
 
 **Admin/curator (V3):**
+
 - Surfaces trending entities for editorial consideration
 - Flags stale listings (no owner activity in 90+ days, broken links)
 - Recommends collection themes based on listing data and search trends
 - AI-assisted duplicate detection on new listing submissions
 
 **Policy:**
+
 - All AI calls are server-side only — no client-side API key exposure
 - AI responses always include a brief reasoning trace visible to the user
 - AI features are behind feature flags — any feature that produces poor results is disabled, not shipped
@@ -850,34 +912,39 @@ How The BLACQList generates revenue sustainably without compromising platform in
 
 **Listing tiers (V1):**
 
-| Tier | Price | Included |
-|---|---|---|
-| Free | $0 | Basic BLACQList Page, claim, limited gallery (4 images), basic analytics |
-| Standard | TBD/mo | Full gallery (12 images), all Page sections, enhanced analytics, response to reviews |
-| Premium | TBD/mo | Everything in Standard + Featured search placement, analytics trends, AI page optimization |
+| Tier     | Price  | Included                                                                                   |
+| -------- | ------ | ------------------------------------------------------------------------------------------ |
+| Free     | $0     | Basic BLACQList Page, claim, limited gallery (4 images), basic analytics                   |
+| Standard | TBD/mo | Full gallery (12 images), all Page sections, enhanced analytics, response to reviews       |
+| Premium  | TBD/mo | Everything in Standard + Featured search placement, analytics trends, AI page optimization |
 
 **Sponsored placements (V1):**
+
 - Featured placements in city/category search results (top of results page, clearly labeled "Sponsored")
 - Featured collection sponsorship (a sponsor powers an editorial collection)
 - Homepage featured slot (limited, premium pricing)
 - All sponsored placements are clearly labeled — no dark patterns
 
 **Marketplace fees (V2):**
+
 - Platform takes a percentage of each marketplace transaction (exact % TBD, target 8–12%)
 - Applied via Stripe Connect application fee
 - Disclosed to vendors before onboarding
 
 **Job posting fees (V2):**
+
 - Job listings are free for 30 days at MVP
 - Paid boosted placement: featured at top of jobs page
 - Extended duration (60/90 days): paid
 
 **Event promotion fees (V2):**
+
 - Basic event listing: free
 - Featured event placement on city/category pages: paid
 - Event collection sponsorship: paid
 
 **Sponsor campaign packages (V3):**
+
 - City-targeted brand campaigns
 - Category-targeted placements
 - Community impact report sponsorship
@@ -890,6 +957,7 @@ How The BLACQList generates revenue sustainably without compromising platform in
 Data that makes the platform better for every stakeholder.
 
 **Listing-level analytics (business owner dashboard):**
+
 - Page views (7-day, 30-day, all-time)
 - CTA click-through rate
 - Save count, share count
@@ -897,6 +965,7 @@ Data that makes the platform better for every stakeholder.
 - Review average and count
 
 **Platform analytics (admin dashboard):**
+
 - Total listings by city, by category, by entity type, by trust status
 - New listings per week
 - Claim queue volume and resolution time
@@ -906,6 +975,7 @@ Data that makes the platform better for every stakeholder.
 - Top-performing Pages (most viewed, most saved)
 
 **Community impact analytics (public-facing, V3):**
+
 - Total community spend tracked (aggregate, anonymized)
 - Total $ by city (top 10 cities)
 - Total $ by category
@@ -922,6 +992,7 @@ The MVP is the smallest version of The BLACQList that delivers real value to a r
 ### MVP Definition
 
 A real user can:
+
 1. Search for a Black-owned business and find a polished result
 2. View a BLACQList Page that looks meaningfully better than a Google Business listing
 3. Save and share that listing
@@ -931,12 +1002,14 @@ A real user can:
 ### MVP Feature Set
 
 **Public Discovery**
+
 - [ ] Homepage: hero, category grid, city spotlight, featured listings carousel
 - [ ] City landing pages (auto-generated from listing data)
 - [ ] Category landing pages (auto-generated)
 - [ ] City + category combination pages
 
 **Search**
+
 - [ ] Keyword full-text search
 - [ ] Category filter
 - [ ] City filter
@@ -944,6 +1017,7 @@ A real user can:
 - [ ] Empty state with suggestions
 
 **BLACQList Pages — Business Template**
+
 - [ ] Hero (cover image, name, tagline, primary CTA)
 - [ ] About section
 - [ ] Category tags, location, hours, contact info
@@ -957,16 +1031,19 @@ A real user can:
 - [ ] Server-rendered HTML (indexable by Google)
 
 **Entity Submission**
+
 - [ ] Business owner create listing flow (multi-step)
 - [ ] Community submission form (lightweight)
 - [ ] Duplicate detection warning
 
 **Claim Workflow**
+
 - [ ] Search for existing listing → claim → submit verification info
 - [ ] Admin claim queue: review, approve, reject with reason
 - [ ] Email: claim submitted, claim approved, claim rejected
 
 **Owner Dashboard**
+
 - [ ] Page view count, CTA click count, save count
 - [ ] Edit all Page fields
 - [ ] Upload logo and cover image
@@ -976,6 +1053,7 @@ A real user can:
 - [ ] Claim status indicator
 
 **User Accounts**
+
 - [ ] Sign up (email + password)
 - [ ] Sign in / sign out
 - [ ] Password reset
@@ -983,10 +1061,12 @@ A real user can:
 - [ ] Role assignment (supporter vs. business owner)
 
 **Supporter Saves**
+
 - [ ] Save any listing (logged-in users)
 - [ ] Saved list view in account
 
 **Admin Dashboard**
+
 - [ ] All listings view with status filters
 - [ ] Claim queue management
 - [ ] Create / edit / delete any listing
@@ -995,35 +1075,42 @@ A real user can:
 - [ ] Basic platform stats (total listings, new this week, pending claims)
 
 **Reviews (conservative MVP)**
+
 - [ ] Review submission form (logged-in, on claimed listings)
 - [ ] Reviews logged but held in admin queue — not displayed until moderated
 - [ ] Star rating input + text body
 
 **Verification Statuses**
+
 - [ ] Unclaimed / Claimed badges visible on Pages and search cards
 - [ ] Verified and Certified badges: data model ready, UI present but not yet earnable at MVP
 
 **Starter Analytics Events**
+
 - [ ] Page view tracked
 - [ ] CTA click tracked
 - [ ] Save tracked
 - [ ] Search query logged
 
 **Receipt Upload — Beta Intake**
+
 - [ ] Receipt photo upload form accessible from supporter account
 - [ ] Data stored: business name (user-entered or OCR-suggested), category, amount, date
 - [ ] No visualization yet — data pipeline seeding only
 
 **Flow Map — Data Model Only**
+
 - [ ] `spend_events` table with: user_id, business_id, amount, source (marketplace/receipt), category, date
 - [ ] No visualization. No public display.
 
 **Editorial Foundation**
+
 - [ ] Admin can create a collection (title, description, list of BLACQList Page IDs)
 - [ ] Collections are publicly viewable at `/collection/[slug]`
 - [ ] No full CMS — admin creates via dashboard form
 
 **SEO Foundation**
+
 - [ ] All pages server-rendered
 - [ ] Sitemap generated and submitted
 - [ ] robots.txt configured
@@ -1031,11 +1118,11 @@ A real user can:
 
 ### Launch Data Requirements
 
-| City | Minimum listings | Target |
-|---|---|---|
-| Atlanta | 150+ | 300+ |
-| Houston | 50+ | 100+ |
-| Chicago | 50+ | 100+ |
+| City    | Minimum listings | Target |
+| ------- | ---------------- | ------ |
+| Atlanta | 150+             | 300+   |
+| Houston | 50+              | 100+   |
+| Chicago | 50+              | 100+   |
 
 40% of seed listings must have at least one image (logo or cover photo). All seed listings must have: name, category, city, description, contact method.
 
@@ -1045,27 +1132,27 @@ A real user can:
 
 The following are explicitly deferred. Do not build any of these until the MVP gate criteria are met.
 
-| Feature | Deferred to | Reason |
-|---|---|---|
-| Full marketplace checkout | V2 | Commerce layer complexity; requires Stripe Connect legal review |
-| Full Stripe Connect marketplace | V2 | Vendor onboarding, KYC, payout rails — significant compliance work |
-| Vendor storefronts | V2 | Depends on healthy directory; validate directory first |
-| Full AI concierge / conversational search | V2 | Requires high listing data quality; premature without validated data |
-| AI Page optimization suggestions | V2 | Same dependency as concierge |
-| Full flow-map visualization | V3 | Requires months of real transaction + receipt data |
-| Sponsor reporting dashboard | V3 | Sponsors are manual at MVP; self-serve comes later |
-| Advanced personalized recommendations | V2 | Requires behavioral data not yet generated |
-| Mobile app (iOS / Android) | V4 | Validate responsive web first |
-| Complex vendor-to-vendor supply chain | Future | Out of scope for current platform vision |
-| Automated verification | V3 | Requires third-party API integrations and legal review |
-| Advanced paid subscription management | V1 | Listing tiers come after directory is validated |
-| Multi-city editorial automation | V2 | Manual editorial first; automation after patterns emerge |
-| Community forums or message boards | Never (current vision) | Not a social network |
-| Complex multi-tenancy / white-label | Future | No confirmed demand at this stage |
-| B2B procurement or supplier directory | Future | Different product category |
-| International listings | Future | US-only; international is a V4+ decision |
-| Recurring events | V2 | Single events first; recurring adds scheduling complexity |
-| On-platform job applications | V3 | Apply link off-platform is sufficient at V1 |
+| Feature                                   | Deferred to            | Reason                                                               |
+| ----------------------------------------- | ---------------------- | -------------------------------------------------------------------- |
+| Full marketplace checkout                 | V2                     | Commerce layer complexity; requires Stripe Connect legal review      |
+| Full Stripe Connect marketplace           | V2                     | Vendor onboarding, KYC, payout rails — significant compliance work   |
+| Vendor storefronts                        | V2                     | Depends on healthy directory; validate directory first               |
+| Full AI concierge / conversational search | V2                     | Requires high listing data quality; premature without validated data |
+| AI Page optimization suggestions          | V2                     | Same dependency as concierge                                         |
+| Full flow-map visualization               | V3                     | Requires months of real transaction + receipt data                   |
+| Sponsor reporting dashboard               | V3                     | Sponsors are manual at MVP; self-serve comes later                   |
+| Advanced personalized recommendations     | V2                     | Requires behavioral data not yet generated                           |
+| Mobile app (iOS / Android)                | V4                     | Validate responsive web first                                        |
+| Complex vendor-to-vendor supply chain     | Future                 | Out of scope for current platform vision                             |
+| Automated verification                    | V3                     | Requires third-party API integrations and legal review               |
+| Advanced paid subscription management     | V1                     | Listing tiers come after directory is validated                      |
+| Multi-city editorial automation           | V2                     | Manual editorial first; automation after patterns emerge             |
+| Community forums or message boards        | Never (current vision) | Not a social network                                                 |
+| Complex multi-tenancy / white-label       | Future                 | No confirmed demand at this stage                                    |
+| B2B procurement or supplier directory     | Future                 | Different product category                                           |
+| International listings                    | Future                 | US-only; international is a V4+ decision                             |
+| Recurring events                          | V2                     | Single events first; recurring adds scheduling complexity            |
+| On-platform job applications              | V3                     | Apply link off-platform is sufficient at V1                          |
 
 ---
 
@@ -1074,6 +1161,7 @@ The following are explicitly deferred. Do not build any of these until the MVP g
 The MVP is successful when all of the following are true, measured within 60 days of public launch:
 
 ### User-facing
+
 - [ ] 500+ unique users have performed a search
 - [ ] 50+ users have saved at least one listing
 - [ ] 25+ users have shared a listing via the share button
@@ -1081,12 +1169,14 @@ The MVP is successful when all of the following are true, measured within 60 day
 - [ ] Zero reports of the platform being inaccessible or non-functional for more than 30 minutes
 
 ### Business owner-facing
+
 - [ ] 50+ business owners have claimed or created a listing
 - [ ] 80%+ of claimed listings have at least one uploaded image (logo or cover)
 - [ ] Median time from signup to published BLACQList Page ≤ 20 minutes
 - [ ] Admin claim queue is resolved within 48 hours for 90%+ of submissions
 
 ### Platform quality
+
 - [ ] At least 150 Atlanta listings, 50+ Houston, 50+ Chicago at launch
 - [ ] BLACQList Pages for all seed listings are server-rendered and indexable
 - [ ] At least 10 seed BLACQList Pages rank on page 1 of Google for "[business name] Atlanta" within 30 days
@@ -1094,6 +1184,7 @@ The MVP is successful when all of the following are true, measured within 60 day
 - [ ] No PII is logged, no secrets are committed
 
 ### Qualitative
+
 - [ ] At least 3 non-team users describe a BLACQList Page as looking "better than Google" or "better than Yelp" without prompting
 - [ ] At least 1 business owner says the Page represents their business better than any other platform
 
@@ -1102,12 +1193,15 @@ The MVP is successful when all of the following are true, measured within 60 day
 ## Later Product Stages
 
 ### MVP (launch)
+
 Public discovery, BLACQList Pages (business template), claim/create/manage, basic auth, saves/shares, admin dashboard, basic analytics, receipt beta, editorial foundation.
 
 ### Beta (post-MVP validation)
+
 Invite-only access to early features. Used to validate V1 features with willing users before full rollout. Timing: 4–8 weeks post-MVP launch.
 
 ### V1 — Trust & Grow (8–12 weeks post-MVP)
+
 - Reviews + moderation
 - Professional, Creative, Event, and Job Page templates
 - Trust verification (Verified badge + document review)
@@ -1120,6 +1214,7 @@ Invite-only access to early features. Used to validate V1 features with willing 
 - Platform analytics dashboard (admin)
 
 ### V1.5 — Monetization Hardening (4–6 weeks post-V1)
+
 - Subscription management (Stripe Customer Portal)
 - Sponsored placement self-serve tooling
 - Job posting fees (paid listings with boost)
@@ -1127,6 +1222,7 @@ Invite-only access to early features. Used to validate V1 features with willing 
 - Refund and cancellation handling for paid tiers
 
 ### V2 — Commerce Layer (10–14 weeks post-V1.5)
+
 - Marketplace: vendor storefronts, product listings, cart, checkout, Stripe Connect
 - Receipt upload flow (full: OCR, category confirm, personal spend log)
 - Personal spend dashboard (supporter)
@@ -1137,6 +1233,7 @@ Invite-only access to early features. Used to validate V1 features with willing 
 - Job posting on-platform apply (V2 option)
 
 ### V3 — Intelligence & Impact Layer (12–16 weeks post-V2)
+
 - Full interactive dollar-flow map
 - AI concierge (public, full conversational discovery)
 - AI admin/curator agent
@@ -1146,6 +1243,7 @@ Invite-only access to early features. Used to validate V1 features with willing 
 - Dollar-flow embed for external sites
 
 ### Future Ecosystem (V4+)
+
 - iOS and Android native app
 - 25+ city depth
 - Spanish-language support
@@ -1158,46 +1256,57 @@ Invite-only access to early features. Used to validate V1 features with willing 
 ## Risks
 
 ### 1. Scope Creep
+
 **Risk:** The platform has 19 modules and 44+ features. Without disciplined phasing, the team builds too much before validating anything.
 **Mitigation:** All non-MVP features are explicitly locked. Any scope addition requires documented justification and product lead approval. MVP gate criteria must be met before V1 work begins.
 
 ### 2. Marketplace Complexity
+
 **Risk:** Marketplace features (Stripe Connect, fulfillment, disputes, refunds) are significantly more complex than directory features. Underestimating this extends the timeline and risks quality issues.
 **Mitigation:** Marketplace is V2, not MVP. Legal and compliance review begins in V1. Stripe Connect architecture is designed but not implemented until vendor supply is confirmed.
 
 ### 3. Verification Sensitivity
+
 **Risk:** Verifying that a business is Black-owned involves sensitive identity, legal, and cultural considerations. Getting this wrong — either accepting fraudulent claims or rejecting legitimate ones — damages platform credibility.
 **Mitigation:** Graduated trust system (claimed → verified → certified) means no listing is all-or-nothing. Verification is manual and human-reviewed. Criteria are documented and consistently applied.
 
 ### 4. Data Quality
+
 **Risk:** Search, AI features, and the flow map all depend on listing data being complete, accurate, and up-to-date. A platform with poor data quality fails even with good infrastructure.
 **Mitigation:** Seed data QA before launch. Admin tools for data correction. Community correction flow. AI-assisted quality scoring on listings (V2).
 
 ### 5. Search Quality
+
 **Risk:** If search returns irrelevant or low-quality results, users abandon. PostgreSQL FTS may not be sufficient for diverse query patterns.
 **Mitigation:** PostgreSQL FTS + `pg_trgm` covers most MVP patterns. Monitoring search quality with query analytics from day one. Migration path to Algolia/Typesense is planned and documented.
 
 ### 6. Moderation
+
 **Risk:** Reviews, community corrections, and user-submitted content require active moderation. Unmoderated content can damage trust and expose legal liability.
 **Mitigation:** Reviews are held in a queue before display at MVP (conservative). Moderation tooling in V1. Community-flagging as a force multiplier.
 
 ### 7. Legal / Privacy
+
 **Risk:** Receipt upload (storing spend data), the flow map (even anonymized), and marketplace (Stripe, vendor agreements, sales tax) all carry legal and privacy considerations.
 **Mitigation:** Privacy policy reviewed before launch. Receipt data is private and deletable. Flow map is anonymized with published methodology. Marketplace vendor agreement reviewed by counsel before V2.
 
 ### 8. Payment Complexity
+
 **Risk:** Stripe Connect for marketplace payouts involves KYC, tax forms, delayed payouts, and disputes. Underbuilding this creates vendor complaints and platform liability.
 **Mitigation:** Stripe Connect is V2. All payment features are tested in Stripe test mode before production. A documented vendor agreement precedes marketplace launch.
 
 ### 9. Community Trust
+
 **Risk:** The platform's credibility depends on the community trusting that it is genuinely community-powered, not extractive. Any feature or business decision that feels exploitative (intrusive ads, selling data, unfair monetization) risks this trust permanently.
 **Mitigation:** Monetization is transparent and value-aligned (better presence, not pay-to-find). Data policies are published clearly. Community correction and feedback mechanisms are built in.
 
 ### 10. User Adoption
+
 **Risk:** Cold-start problem: the platform has no value without listings, and no listings without business owners, and no business owners without a community to reach.
 **Mitigation:** Seed data strategy (150+ Atlanta listings at launch via outreach + scraping + partnerships with community organizations). Launch event/campaign tied to Atlanta community networks.
 
 ### 11. Business Owner Onboarding
+
 **Risk:** Business owners who are not technically sophisticated may abandon the claim or create flow before completing their Page, leading to incomplete, low-quality listings.
 **Mitigation:** Claim and create flows are designed for non-technical users (step-by-step, minimal required fields, in-context guidance). Email drip for business owners who start but don't complete. Page quality score and completion prompts in the owner dashboard.
 
@@ -1208,12 +1317,14 @@ Invite-only access to early features. Used to validate V1 features with willing 
 Before any phase goes live to real users, the following minimum standards must be met.
 
 ### Code
+
 - `tsc --noEmit` passes with zero errors
 - ESLint passes with zero errors
 - No secrets or credentials committed to version control
 - No `console.log` in production code
 
 ### Security
+
 - All protected routes blocked for unauthenticated users (tested via direct URL, not just UI)
 - Business owners cannot access or modify other owners' listings (tested via direct API call)
 - Admin routes blocked for non-admin users
@@ -1222,33 +1333,39 @@ Before any phase goes live to real users, the following minimum standards must b
 - HTTPS enforced in production
 
 ### Performance
+
 - BLACQList Pages load in under 2 seconds on simulated 4G mobile
 - Search returns results in under 1.5 seconds
 - Lighthouse score ≥ 80 on BLACQList Page (mobile)
 
 ### SEO
+
 - All BLACQList Pages are server-rendered (verified in page source)
 - Unique title, meta description, and OG tags on every Page
 - Sitemap submitted and valid
 
 ### Accessibility
+
 - All form inputs have visible labels
 - Tab order is logical on all primary flows
 - Color contrast meets WCAG AA on all UI
 - Error messages are descriptive and inline
 
 ### Mobile
+
 - Homepage, search, and BLACQList Page all render correctly at 375px
 - Primary CTAs are thumb-reachable on mobile
 - All forms are usable with mobile keyboard open
 
 ### Operations
+
 - Sentry (or equivalent) installed and alerting
 - Database backups confirmed (Supabase point-in-time recovery enabled)
 - Rollback plan documented for each deployment
 - On-call coverage confirmed for launch week
 
 ### Legal
+
 - Privacy Policy published and linked
 - Terms of Service published and linked
 - DMCA contact published
@@ -1286,18 +1403,18 @@ With the PRD approved, the recommended sequence is:
 **Immediate next artifacts (in order):**
 
 1. **UX flows** — `docs/blacqlist/ux/user-flows.md`
-   Run: *Act as the UX Flow agent — create user flows for the 5 core MVP workflows: (1) search → discover → save, (2) claim a listing, (3) create a new listing, (4) admin claim review, (5) supporter account + saved list.*
+   Run: _Act as the UX Flow agent — create user flows for the 5 core MVP workflows: (1) search → discover → save, (2) claim a listing, (3) create a new listing, (4) admin claim review, (5) supporter account + saved list._
 
 2. **Screen map** — `docs/blacqlist/ux/screen-map.md`
-   Run: *Act as the UX Flow agent — create the full screen map for the BLACQList MVP, covering all public, authenticated, owner, and admin screens.*
+   Run: _Act as the UX Flow agent — create the full screen map for the BLACQList MVP, covering all public, authenticated, owner, and admin screens._
 
 3. **Data model** — `docs/blacqlist/data/data-model.md`
-   Run: *Act as the Schema Data agent — create the data model for The BLACQList MVP entities: listings, categories, cities, users, roles, claims, saves, media_attachments, spend_events.*
+   Run: _Act as the Schema Data agent — create the data model for The BLACQList MVP entities: listings, categories, cities, users, roles, claims, saves, media_attachments, spend_events._
 
 4. **API contract** — `docs/blacqlist/architecture/api-contract.md`
-   Run: *Act as the API Integration agent — create the API contract for the BLACQList MVP, covering search, listing CRUD, claim workflow, owner dashboard, and admin dashboard endpoints.*
+   Run: _Act as the API Integration agent — create the API contract for the BLACQList MVP, covering search, listing CRUD, claim workflow, owner dashboard, and admin dashboard endpoints._
 
 5. **Dev tickets** — `docs/blacqlist/tickets/`
-   Run: *Act as the Dev Ticket Writer — create the first 10 dev tickets for the BLACQList MVP, starting with: project setup, base schema, auth, search, BLACQList Page, claim flow, owner dashboard, admin dashboard, saves, and seed data import.*
+   Run: _Act as the Dev Ticket Writer — create the first 10 dev tickets for the BLACQList MVP, starting with: project setup, base schema, auth, search, BLACQList Page, claim flow, owner dashboard, admin dashboard, saves, and seed data import._
 
 Once UX flows, screen map, and data model are approved — implementation can begin.

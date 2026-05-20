@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 14: Monetization and Sponsorship Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Monetization / Admin
 
 ---
@@ -40,6 +45,7 @@ As a platform admin, I want to create and manage featured listing slots, so that
 ## Scope
 
 **In scope:**
+
 - Migration: `featured_slots` table with all fields defined below
 - `app/admin/sponsorships/page.tsx` — Server Component; admin-only; renders active and upcoming slots
 - Admin sponsorships table columns: Listing name, Slot type, City (if applicable), Category (if applicable), Start date, End date, Active status, Actions
@@ -51,6 +57,7 @@ As a platform admin, I want to create and manage featured listing slots, so that
 - Cache strategy: featured slot data is fetched once per page render (server-side); no real-time updates needed at MVP
 
 **Out of scope:**
+
 - Self-serve sponsorship purchase for vendors — admin-only at MVP
 - Payment processing for sponsored placements — handled off-platform (invoicing); this ticket is management-only
 - Sponsored placement analytics — deferred
@@ -60,14 +67,14 @@ As a platform admin, I want to create and manage featured listing slots, so that
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 009 — `listings` base table (FK for featured_slots) | Blocking ticket | Not started |
-| Ticket 037 — Admin layout and auth guard | Blocking ticket | Not started |
-| Ticket 012 — `admin_audit_log` table | Blocking ticket | Not started |
+| Dependency                                                              | Type            | Status      |
+| ----------------------------------------------------------------------- | --------------- | ----------- |
+| Ticket 009 — `listings` base table (FK for featured_slots)              | Blocking ticket | Not started |
+| Ticket 037 — Admin layout and auth guard                                | Blocking ticket | Not started |
+| Ticket 012 — `admin_audit_log` table                                    | Blocking ticket | Not started |
 | Ticket 027 — City landing pages (ListingCard component to add badge to) | Soft dependency | Not started |
-| Ticket 028 — City-category landing pages | Soft dependency | Not started |
-| Ticket 016 — Homepage (FeaturedListingCard component) | Soft dependency | Not started |
+| Ticket 028 — City-category landing pages                                | Soft dependency | Not started |
+| Ticket 016 — Homepage (FeaturedListingCard component)                   | Soft dependency | Not started |
 
 ---
 
@@ -79,6 +86,7 @@ As a platform admin, I want to create and manage featured listing slots, so that
 - **Exit points:** Listing name link → admin listing detail; Deactivate → in-place row update
 
 **Create slot form (inline panel or modal):**
+
 - Listing search (text search autocomplete against published listings)
 - Slot type: radio group (`homepage` / `city` / `category`)
 - City slug: text input; required if `slot_type = 'city'` or `'category'`
@@ -88,6 +96,7 @@ As a platform admin, I want to create and manage featured listing slots, so that
 - Save button
 
 **"Sponsored" badge on listing cards (public-facing):**
+
 - Small badge in the top-left corner of the listing card image area
 - Text: "Sponsored" in Quicksand Bold Italic
 - Background: Amber Gold `#E2A428`; text: Brand Black `#000000`
@@ -159,6 +168,7 @@ CREATE TRIGGER set_featured_slots_updated_at
 ```
 
 **RLS:**
+
 - `anon` and `authenticated` SELECT: `WHERE is_active = true AND now() BETWEEN starts_at AND ends_at` — only active, current slots visible publicly
 - Admin INSERT/UPDATE: service role only
 - No public INSERT/UPDATE/DELETE
@@ -172,21 +182,24 @@ CREATE TRIGGER set_featured_slots_updated_at
 No new Route Handler endpoints in this ticket. The sponsorship data is read server-side by page Server Components using `getActiveSlotsForContext()` from `lib/services/featuredSlots.ts`.
 
 **`getActiveSlotsForContext` signature:**
+
 ```typescript
 export async function getActiveSlotsForContext(
   type: 'homepage' | 'city' | 'category',
   citySlug?: string,
   categorySlug?: string
-): Promise<Set<string>>   // Set of listing IDs with active sponsored placement
+): Promise<Set<string>> // Set of listing IDs with active sponsored placement
 ```
 
 Usage in city page Server Component:
+
 ```typescript
 const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 // Pass to listing card: <ListingCard isSponsored={sponsoredListingIds.has(listing.id)} ... />
 ```
 
 **Cache strategy:** `getActiveSlotsForContext` is called within Server Components; no explicit caching needed beyond the ISR revalidation of the parent page. When admin creates or deactivates a slot, call `revalidatePath` for the affected pages:
+
 - `slot_type = 'homepage'`: `revalidatePath('/')`
 - `slot_type = 'city'`: `revalidatePath('/[citySlug]')`
 - `slot_type = 'category'`: `revalidatePath('/[citySlug]/[categorySlug]')`
@@ -196,6 +209,7 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 ## Implementation Notes
 
 **Files to create:**
+
 - `supabase/migrations/[timestamp]_create_featured_slots_table.sql`
 - `app/admin/sponsorships/page.tsx`
 - `lib/actions/admin/createFeaturedSlot.ts`
@@ -205,6 +219,7 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 - `components/admin/sponsorships/CreateSlotDialog.tsx` — create form in a Dialog
 
 **Files to modify:**
+
 - Admin sidebar nav — add "Sponsorships" link
 - `components/discovery/ListingCard.tsx` — add `isSponsored?: boolean` prop; render "Sponsored" badge when true
 - `components/discovery/FeaturedListingCard.tsx` — same `isSponsored` prop pattern
@@ -213,6 +228,7 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 - Homepage (`app/page.tsx`) — call `getActiveSlotsForContext('homepage')`
 
 **Key patterns:**
+
 - `getActiveSlotsForContext` returns a `Set<string>` of listing IDs for O(1) lookup when rendering each card
 - Pass `isSponsored` as a prop to `ListingCard` — do not fetch slot data inside the card component
 - Zod validation for create slot: `ends_at` must be after `starts_at`; `city_slug` required for city/category types; `category_slug` required for category type
@@ -220,6 +236,7 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 - `insertAuditLog` required for both `createFeaturedSlot` and `deactivateFeaturedSlot`
 
 **Do not:**
+
 - Fetch active slots client-side — this is a server-side data fetch for ISR pages
 - Allow overlapping active slots for the same listing in the same context — the DB does not enforce this; add a server-side check in `createFeaturedSlot` if `slot_type + city_slug + category_slug` already has an active slot for this listing
 
@@ -243,12 +260,12 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Slot creation fails | DB constraint violation or Stripe error | Toast in admin: "Couldn't create slot. Check dates and try again." | Correct form and retry |
-| Deactivation fails | DB error | Toast: "Couldn't deactivate slot. Try again." | Retry |
+| Failure                             | Condition                               | User sees                                                              | Recovery                                   |
+| ----------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------ |
+| Slot creation fails                 | DB constraint violation or Stripe error | Toast in admin: "Couldn't create slot. Check dates and try again."     | Correct form and retry                     |
+| Deactivation fails                  | DB error                                | Toast: "Couldn't deactivate slot. Try again."                          | Retry                                      |
 | `getActiveSlotsForContext` DB error | Supabase unreachable during page render | No "Sponsored" badges shown; page still renders (graceful degradation) | DB recovers; next page render shows badges |
-| Admin table fails to load | Fetch error | Error state with retry in admin table | Retry |
+| Admin table fails to load           | Fetch error                             | Error state with retry in admin table                                  | Retry                                      |
 
 ---
 
@@ -274,14 +291,14 @@ const sponsoredListingIds = await getActiveSlotsForContext('city', citySlug)
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Create homepage slot | Admin | Open `/admin/sponsorships`; create a homepage slot for listing X with starts_at=today, ends_at=tomorrow | Slot appears in table; homepage listing card for listing X shows "Sponsored" badge after revalidation |
-| QA-2 | Create city slot | Admin | Create a city slot for city="atlanta", listing Y | Atlanta city page shows "Sponsored" badge on listing Y |
-| QA-3 | Deactivate slot | Admin | Click "Deactivate" on an active slot; confirm | Slot row shows "Inactive"; badge removed from city page after revalidation |
-| QA-4 | Expired slot not shown | Admin | Create a slot with `ends_at` in the past | No "Sponsored" badge on any public page; slot appears in admin table with expired indicator |
-| QA-5 | DB constraint: end before start | Admin | Create slot with `ends_at` before `starts_at` | Validation error: "End date must be after start date." |
-| QA-6 | Non-admin forbidden | Supporter | Call `createFeaturedSlot` SA | Returns `FORBIDDEN` |
+| #    | Scenario                        | Role      | Steps                                                                                                   | Expected result                                                                                       |
+| ---- | ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| QA-1 | Create homepage slot            | Admin     | Open `/admin/sponsorships`; create a homepage slot for listing X with starts_at=today, ends_at=tomorrow | Slot appears in table; homepage listing card for listing X shows "Sponsored" badge after revalidation |
+| QA-2 | Create city slot                | Admin     | Create a city slot for city="atlanta", listing Y                                                        | Atlanta city page shows "Sponsored" badge on listing Y                                                |
+| QA-3 | Deactivate slot                 | Admin     | Click "Deactivate" on an active slot; confirm                                                           | Slot row shows "Inactive"; badge removed from city page after revalidation                            |
+| QA-4 | Expired slot not shown          | Admin     | Create a slot with `ends_at` in the past                                                                | No "Sponsored" badge on any public page; slot appears in admin table with expired indicator           |
+| QA-5 | DB constraint: end before start | Admin     | Create slot with `ends_at` before `starts_at`                                                           | Validation error: "End date must be after start date."                                                |
+| QA-6 | Non-admin forbidden             | Supporter | Call `createFeaturedSlot` SA                                                                            | Returns `FORBIDDEN`                                                                                   |
 
 ---
 

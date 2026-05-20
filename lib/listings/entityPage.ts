@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server'
 import type {
   EntityPageData,
   BusinessDetails,
@@ -7,8 +7,8 @@ import type {
   CTAType,
   GalleryImage,
   ReviewItem,
-} from "@/types"
-import type { DiscoveryEntity } from "@/types"
+} from '@/types'
+import type { DiscoveryEntity } from '@/types'
 
 // Internal type matching the Supabase nested select result
 type RawRow = {
@@ -83,12 +83,12 @@ function toDiscoveryEntity(raw: RawRow): DiscoveryEntity {
     id: raw.id,
     slug: raw.slug,
     name: raw.name,
-    tagline: raw.tagline ?? "",
-    description: raw.listing_details_business?.description ?? "",
-    entity_type: raw.entity_type as DiscoveryEntity["entity_type"],
-    location_type: raw.location_type as DiscoveryEntity["location_type"],
-    trust_tier: raw.trust_tier as DiscoveryEntity["trust_tier"],
-    tier: raw.tier as DiscoveryEntity["tier"],
+    tagline: raw.tagline ?? '',
+    description: raw.listing_details_business?.description ?? '',
+    entity_type: raw.entity_type as DiscoveryEntity['entity_type'],
+    location_type: raw.location_type as DiscoveryEntity['location_type'],
+    trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
+    tier: raw.tier as DiscoveryEntity['tier'],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -96,9 +96,9 @@ function toDiscoveryEntity(raw: RawRow): DiscoveryEntity {
     avg_rating: raw.avg_rating,
     review_count: raw.review_count,
     save_count: raw.save_count,
-    category: raw.categories ?? { name: "General", slug: "general" },
+    category: raw.categories ?? { name: 'General', slug: 'general' },
     city: raw.cities
-      ? { name: raw.cities.name, slug: raw.cities.slug, state_abbr: raw.cities.states?.code ?? "" }
+      ? { name: raw.cities.name, slug: raw.cities.slug, state_abbr: raw.cities.states?.code ?? '' }
       : null,
   }
 }
@@ -107,11 +107,11 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const supabase = await createClient()
 
   const { data } = await supabase
-    .from("listings")
+    .from('listings')
     .select(LISTING_SELECT)
-    .eq("slug", slug)
-    .eq("status", "published")
-    .is("deleted_at", null)
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (!data) return null
@@ -124,33 +124,35 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: relatedData },
   ] = await Promise.all([
     supabase
-      .from("services")
-      .select("id, name, description, price_display, display_order")
-      .eq("listing_id", raw.id)
-      .is("deleted_at", null)
-      .order("display_order"),
+      .from('services')
+      .select('id, name, description, price_display, display_order')
+      .eq('listing_id', raw.id)
+      .is('deleted_at', null)
+      .order('display_order'),
     supabase
-      .from("media_attachments")
-      .select("id, file_path, alt_text, display_order")
-      .eq("entity_type", "listing")
-      .eq("entity_id", raw.id)
-      .eq("is_approved", true)
-      .order("display_order"),
+      .from('media_attachments')
+      .select('id, file_path, alt_text, display_order')
+      .eq('entity_type', 'listing')
+      .eq('entity_id', raw.id)
+      .eq('is_approved', true)
+      .order('display_order'),
     supabase
-      .from("reviews")
-      .select("id, rating, title, body, published_at, is_verified_purchase, reviewer_user_id, owner_response, owner_responded_at")
-      .eq("listing_id", raw.id)
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
+      .from('reviews')
+      .select(
+        'id, rating, title, body, published_at, is_verified_purchase, reviewer_user_id, owner_response, owner_responded_at'
+      )
+      .eq('listing_id', raw.id)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
       .limit(10),
     supabase
-      .from("listings")
+      .from('listings')
       .select(LISTING_SELECT)
-      .eq("category_id", raw.category_id)
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .neq("id", raw.id)
-      .order("save_count", { ascending: false })
+      .eq('category_id', raw.category_id)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .neq('id', raw.id)
+      .order('save_count', { ascending: false })
       .limit(6),
   ])
 
@@ -160,19 +162,19 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const reviewerNameMap: Record<string, string> = {}
   if (reviewerIds.length > 0) {
     const { data: reviewerProfiles } = await supabase
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", reviewerIds)
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', reviewerIds)
     for (const p of reviewerProfiles ?? []) {
       if (p.display_name) reviewerNameMap[p.id] = p.display_name
     }
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const images: GalleryImage[] = (mediaData ?? []).map((m) => ({
     id: m.id,
     src: `${supabaseUrl}/storage/v1/object/public/listing-media/${m.file_path}`,
-    alt: m.alt_text ?? "",
+    alt: m.alt_text ?? '',
   }))
 
   const reviews: ReviewItem[] = (reviewsData ?? []).map((r) => ({
@@ -182,7 +184,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     body: r.body ?? null,
     published_at: r.published_at ?? null,
     is_verified_purchase: r.is_verified_purchase,
-    reviewer_display_name: r.reviewer_user_id ? (reviewerNameMap[r.reviewer_user_id] ?? null) : null,
+    reviewer_display_name: r.reviewer_user_id
+      ? (reviewerNameMap[r.reviewer_user_id] ?? null)
+      : null,
     owner_response: r.owner_response ?? null,
     owner_responded_at: r.owner_responded_at ?? null,
   }))
@@ -191,7 +195,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const cityData = raw.cities
 
   const details: BusinessDetails = {
-    description: det?.description ?? "",
+    description: det?.description ?? '',
     address: det?.address_line_1 ?? null,
     address_line2: det?.address_line_2 ?? null,
     city_name: det?.city_text ?? cityData?.name ?? null,
@@ -208,7 +212,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       youtube: det?.social_youtube ?? null,
       twitter: det?.social_twitter ?? null,
     } as SocialLinks,
-    cta_type: (det?.cta_type ?? "learn-more") as CTAType,
+    cta_type: (det?.cta_type ?? 'learn-more') as CTAType,
     cta_url: det?.cta_url ?? null,
     cta_label_override: det?.cta_label_override ?? null,
     ships_nationwide: det?.ships_nationwide ?? raw.ships_nationwide,
@@ -216,7 +220,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     services: (servicesData ?? []).map((s) => ({
       id: s.id,
       name: s.name,
-      description: s.description ?? "",
+      description: s.description ?? '',
       price: s.price_display,
     })),
   }
@@ -225,11 +229,11 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     id: raw.id,
     slug: raw.slug,
     name: raw.name,
-    tagline: raw.tagline ?? "",
-    entity_type: raw.entity_type as EntityPageData["entity_type"],
-    location_type: raw.location_type as EntityPageData["location_type"],
-    trust_tier: raw.trust_tier as EntityPageData["trust_tier"],
-    tier: raw.tier as EntityPageData["tier"],
+    tagline: raw.tagline ?? '',
+    entity_type: raw.entity_type as EntityPageData['entity_type'],
+    location_type: raw.location_type as EntityPageData['location_type'],
+    trust_tier: raw.trust_tier as EntityPageData['trust_tier'],
+    tier: raw.tier as EntityPageData['tier'],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -238,9 +242,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     review_count: raw.review_count,
     save_count: raw.save_count,
     owner_user_id: raw.owner_user_id,
-    category: raw.categories ?? { name: "General", slug: "general" },
+    category: raw.categories ?? { name: 'General', slug: 'general' },
     city: cityData
-      ? { name: cityData.name, slug: cityData.slug, state_abbr: cityData.states?.code ?? "" }
+      ? { name: cityData.name, slug: cityData.slug, state_abbr: cityData.states?.code ?? '' }
       : null,
     details,
     related: (relatedData ?? []).map((r) => toDiscoveryEntity(r as unknown as RawRow)),

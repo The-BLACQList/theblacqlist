@@ -1,26 +1,33 @@
 # Ticket 038: Admin Listings Table (/admin/listings)
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Admin / Listings
 
 ## Context
+
 The admin listings table is the primary moderation surface for platform content. Admins use it to review pending submissions, search for specific listings, filter by status or city, and perform inline approve/reject actions. It is the most frequently used admin screen after the claims queue. Without this screen, admins cannot approve submitted listings, and the platform's supply of published content cannot grow. Source: `docs/blacqlist/ux/mvp-screen-map.md` Admin Listings screen; `docs/blacqlist/architecture/api-contract.md` Section 9 endpoints 42–44; `docs/blacqlist/data/database-schema-plan.md` listings table.
 
 ## User Story
+
 As a platform admin, I want to view, filter, and search all listings regardless of status, and approve or reject pending listings directly from the table, so that I can efficiently manage the submission queue without navigating to each listing's detail page for routine actions.
 
 ## Scope
 
 **In scope:**
+
 - `app/admin/listings/page.tsx` — Server Component; reads `searchParams` for filters; passes to Client Component; handles pagination
 - `app/admin/listings/_components/AdminListingsTable.tsx` — Client Component; renders the table with filter controls and row actions
 - **Table columns:** Checkbox (bulk select), Name (clickable → `/admin/listings/[id]`), Entity Type badge, City, Category, Status badge (color-coded), Trust Tier badge, Created date (`MM/DD/YYYY`), Actions kebab menu
@@ -47,6 +54,7 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 - Loading: table skeleton (10 row placeholders with gray cells)
 
 **Out of scope:**
+
 - Admin Listing Detail edit form (Ticket 039)
 - Claims management (Ticket 040)
 - Bulk approve or bulk reject (deferred — flag only at MVP)
@@ -55,13 +63,13 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 (admin layout + auth guard) | Blocking ticket | Admin shell must exist before this page can render |
-| `GET /api/admin/listings` Route Handler | Blocking ticket | Must be implemented (or replaced with direct server-side Supabase query in the Server Component) |
-| `approveEntity` SA (`lib/actions/admin/approveEntity.ts`) | Code dependency | Must exist for inline approve |
-| `rejectEntity` SA (`lib/actions/admin/rejectEntity.ts`) | Code dependency | Must exist for inline reject |
-| `lib/admin/serviceRoleClient.ts` | Code dependency | Stats and listings queries use service_role |
+| Dependency                                                | Type            | Status                                                                                           |
+| --------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------ |
+| Ticket 037 (admin layout + auth guard)                    | Blocking ticket | Admin shell must exist before this page can render                                               |
+| `GET /api/admin/listings` Route Handler                   | Blocking ticket | Must be implemented (or replaced with direct server-side Supabase query in the Server Component) |
+| `approveEntity` SA (`lib/actions/admin/approveEntity.ts`) | Code dependency | Must exist for inline approve                                                                    |
+| `rejectEntity` SA (`lib/actions/admin/rejectEntity.ts`)   | Code dependency | Must exist for inline reject                                                                     |
+| `lib/admin/serviceRoleClient.ts`                          | Code dependency | Stats and listings queries use service_role                                                      |
 
 ## UX Notes
 
@@ -132,6 +140,7 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/listings/page.tsx` — Server Component; reads `searchParams`; calls service_role Supabase query; passes data + pagination to Client Component
 - `app/admin/listings/_components/AdminListingsTable.tsx` — Client Component; table, filters, filter URL params, row actions
 - `app/admin/listings/_components/ApproveConfirmPopover.tsx` — inline approve confirmation
@@ -141,9 +150,11 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 - `lib/actions/admin/rejectEntity.ts` — Server Action (if not already created)
 
 **Files to modify:**
+
 - None
 
 **Key patterns:**
+
 - Filter state in URL: use `useSearchParams` + `useRouter` + `usePathname` for filter controls in the Client Component; changing any filter calls `router.push` with updated params — see frontend rules for the filter pattern
 - Optimistic updates for approve/reject: update the row's `status` in local state immediately; roll back if SA returns error
 - Service_role query in Server Component:
@@ -158,6 +169,7 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 - Pass filter values from `searchParams` to the query: `if (status) query = query.eq('status', status)`
 
 **Do not:**
+
 - Revalidate the homepage or listing pages from this table — the `approveEntity` SA handles `revalidatePath` and `revalidateTag` internally
 - Allow bulk delete from this table — too high a risk of accidental mass data loss; bulk delete is Super Admin-only and out of scope for MVP
 - Show the `admin_notes` column in the table — it is internal and should only appear in the detail view
@@ -176,14 +188,14 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Approve INVALID_STATUS_TRANSITION | Listing is not in `pending` status | Toast: "This listing cannot be approved in its current state." | No action needed; row state rolled back |
-| Reject missing reason | Admin submits rejection with empty textarea | Inline error: "Rejection reason is required" | Admin enters reason and resubmits |
-| SA SERVER_ERROR | Approve or reject returns 500 | Toast: "Action failed. Please try again." | Admin retries; optimistic update reverted |
-| Delete confirmation skipped | Accidental click on "Delete permanently" | Dialog requires explicit "Delete permanently" button click — can't be accidentally triggered by one click | Admin clicks Cancel |
-| Filter combination returns 0 | No listings match applied filters | "No listings match your filters." with Clear filters button | Admin clears filters |
-| Listings fetch failure | Service_role query fails on page load | Next.js `error.tsx` with retry | Admin refreshes page |
+| Failure                           | Condition                                   | User sees                                                                                                 | Recovery                                  |
+| --------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Approve INVALID_STATUS_TRANSITION | Listing is not in `pending` status          | Toast: "This listing cannot be approved in its current state."                                            | No action needed; row state rolled back   |
+| Reject missing reason             | Admin submits rejection with empty textarea | Inline error: "Rejection reason is required"                                                              | Admin enters reason and resubmits         |
+| SA SERVER_ERROR                   | Approve or reject returns 500               | Toast: "Action failed. Please try again."                                                                 | Admin retries; optimistic update reverted |
+| Delete confirmation skipped       | Accidental click on "Delete permanently"    | Dialog requires explicit "Delete permanently" button click — can't be accidentally triggered by one click | Admin clicks Cancel                       |
+| Filter combination returns 0      | No listings match applied filters           | "No listings match your filters." with Clear filters button                                               | Admin clears filters                      |
+| Listings fetch failure            | Service_role query fails on page load       | Next.js `error.tsx` with retry                                                                            | Admin refreshes page                      |
 
 ## Edge Cases
 
@@ -204,13 +216,13 @@ As a platform admin, I want to view, filter, and search all listings regardless 
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Table loads | Admin navigates to `/admin/listings` | Table renders with rows, all columns visible, pagination controls present |
-| QA-2 | Status filter | Apply `status=pending` filter | Only pending listings show; URL updates to `?status=pending` |
-| QA-3 | Inline approve | Kebab → Approve → Confirm on a pending listing | Row status badge changes to "Published"; success toast shown |
-| QA-4 | Inline reject | Kebab → Reject → enter reason → Confirm on a pending listing | Row status updates; rejection reason stored in `moderation_notes` |
-| QA-5 | Delete confirmation | Kebab → Delete → "Delete permanently" | Row removed from table; soft delete confirmed in DB (`deleted_at` set) |
+| ID   | Test                | Steps                                                        | Expected                                                                  |
+| ---- | ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| QA-1 | Table loads         | Admin navigates to `/admin/listings`                         | Table renders with rows, all columns visible, pagination controls present |
+| QA-2 | Status filter       | Apply `status=pending` filter                                | Only pending listings show; URL updates to `?status=pending`              |
+| QA-3 | Inline approve      | Kebab → Approve → Confirm on a pending listing               | Row status badge changes to "Published"; success toast shown              |
+| QA-4 | Inline reject       | Kebab → Reject → enter reason → Confirm on a pending listing | Row status updates; rejection reason stored in `moderation_notes`         |
+| QA-5 | Delete confirmation | Kebab → Delete → "Delete permanently"                        | Row removed from table; soft delete confirmed in DB (`deleted_at` set)    |
 
 ## Security Notes
 

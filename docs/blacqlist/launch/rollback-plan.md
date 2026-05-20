@@ -100,13 +100,13 @@ For each statement in the problematic migration, write the reverse. **Do not exe
 
 Example reversal patterns:
 
-| Original statement | Reverse statement |
-|---|---|
-| `CREATE TABLE ai_suggestions (...)` | `DROP TABLE IF EXISTS ai_suggestions;` |
-| `CREATE INDEX ai_suggestions_listing_id_idx ON ai_suggestions(listing_id);` | `DROP INDEX IF EXISTS ai_suggestions_listing_id_idx;` |
-| `ALTER TABLE ai_suggestions ENABLE ROW LEVEL SECURITY;` | (no reversal needed — RLS enable is safe) |
-| `CREATE POLICY "..." ON ai_suggestions ...` | `DROP POLICY IF EXISTS "..." ON ai_suggestions;` |
-| `ADD COLUMN new_field text` | `ALTER TABLE [table] DROP COLUMN IF EXISTS new_field;` |
+| Original statement                                                          | Reverse statement                                      |
+| --------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `CREATE TABLE ai_suggestions (...)`                                         | `DROP TABLE IF EXISTS ai_suggestions;`                 |
+| `CREATE INDEX ai_suggestions_listing_id_idx ON ai_suggestions(listing_id);` | `DROP INDEX IF EXISTS ai_suggestions_listing_id_idx;`  |
+| `ALTER TABLE ai_suggestions ENABLE ROW LEVEL SECURITY;`                     | (no reversal needed — RLS enable is safe)              |
+| `CREATE POLICY "..." ON ai_suggestions ...`                                 | `DROP POLICY IF EXISTS "..." ON ai_suggestions;`       |
+| `ADD COLUMN new_field text`                                                 | `ALTER TABLE [table] DROP COLUMN IF EXISTS new_field;` |
 
 Write the full reverse migration in order — **reverse order of original statements**:
 
@@ -148,6 +148,7 @@ Run the full smoke test suite from `prelaunch-smoke-test.md`.
 ### Step 7 — Post-mortem
 
 File a P1 incident ticket within 24 hours documenting:
+
 - What the migration was supposed to do
 - What went wrong
 - What the fix is
@@ -207,6 +208,7 @@ Run the full smoke test suite. Confirm all P0 tests pass before notifying users 
 ### Step 6 — Post-mortem (required)
 
 A PITR restore means data loss occurred. A full post-mortem is required within 48 hours:
+
 - What migration caused the issue
 - What data was lost (if any)
 - What process change prevents recurrence
@@ -270,9 +272,9 @@ If receipt uploads are causing errors or a privacy concern is identified:
 1. Add `RECEIPTS_UPLOAD_ENABLED=false` as an environment variable in Vercel Production
 2. In `app/api/upload/[bucket]/route.ts`, add a check at the top of the POST handler:
    ```typescript
-   if (bucket === "receipt-uploads" && process.env.RECEIPTS_UPLOAD_ENABLED === "false") {
+   if (bucket === 'receipt-uploads' && process.env.RECEIPTS_UPLOAD_ENABLED === 'false') {
      return NextResponse.json(
-       { error: "Receipt uploads are temporarily unavailable.", code: "FEATURE_PAUSED" },
+       { error: 'Receipt uploads are temporarily unavailable.', code: 'FEATURE_PAUSED' },
        { status: 503 }
      )
    }
@@ -361,11 +363,11 @@ Post in team `#incidents` Slack channel:
 
 ## Rollback Decision Authority
 
-| Severity | Who can authorize rollback |
-|---|---|
-| P0 — Site down / security breach / data breach | On-call Engineer (immediate, no approval needed) |
-| P0 — Partial but critical flow broken | On-call Engineer + notify Tech Lead within 15 minutes |
-| P1 — Specific feature broken | Tech Lead decision: hotfix vs rollback |
-| P2+ | No rollback — log and fix in next deployment |
+| Severity                                       | Who can authorize rollback                            |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| P0 — Site down / security breach / data breach | On-call Engineer (immediate, no approval needed)      |
+| P0 — Partial but critical flow broken          | On-call Engineer + notify Tech Lead within 15 minutes |
+| P1 — Specific feature broken                   | Tech Lead decision: hotfix vs rollback                |
+| P2+                                            | No rollback — log and fix in next deployment          |
 
 **When in doubt about severity:** Roll back. An unneeded rollback costs 5 minutes. A delayed rollback during a real incident costs user trust.
