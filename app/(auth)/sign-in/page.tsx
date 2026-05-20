@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { Suspense, useActionState, useState } from "react"
 import { useFormStatus } from "react-dom"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -24,7 +24,7 @@ function SubmitButton() {
   )
 }
 
-export default function SignInPage() {
+function SignInContent() {
   const searchParams = useSearchParams()
   const next = searchParams.get("next") ?? ""
   const error = searchParams.get("error")
@@ -171,5 +171,13 @@ export default function SignInPage() {
         </Link>
       </p>
     </>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInContent />
+    </Suspense>
   )
 }
