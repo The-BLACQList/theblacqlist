@@ -1,27 +1,7 @@
 "use server"
 
 import { createClient, createServiceClient } from "@/lib/supabase/server"
-import { VALID_CTA_TYPES } from "@/lib/constants/listing"
-
-// ─── Valid enum values ────────────────────────────────────────────────────────
-
-export const VALID_ENTITY_TYPES = [
-  "business",
-  "restaurant",
-  "service_provider",
-  "creative",
-  "professional",
-  "vendor",
-] as const
-
-export const VALID_LOCATION_TYPES = [
-  "physical",
-  "virtual",
-  "hybrid",
-  "service_area",
-  "national",
-  "traveling",
-] as const
+import { VALID_CTA_TYPES, VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from "@/lib/constants/listing"
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────

@@ -3,7 +3,8 @@
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
-import { type CreateServiceState, VALID_DELIVERY_MODES } from "@/lib/actions/marketplace/createService"
+import { type CreateServiceState } from "@/lib/actions/marketplace/createService"
+import { VALID_DELIVERY_MODES } from "@/lib/constants/marketplace"
 import { type UpdateServiceState } from "@/lib/actions/marketplace/updateService"
 
 interface ListingOption {

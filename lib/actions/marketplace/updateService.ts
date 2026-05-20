@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient, createServiceClient } from "@/lib/supabase/server"
-import { VALID_DELIVERY_MODES } from "./createService"
+import { VALID_DELIVERY_MODES } from "@/lib/constants/marketplace"
 
 type FieldErrors = Partial<Record<string, string>>
 

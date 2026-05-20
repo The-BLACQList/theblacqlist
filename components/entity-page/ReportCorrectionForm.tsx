@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from "react"
 import { Loader2, Flag, X, CheckCircle } from "lucide-react"
-import { submitCorrectionAction, CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from "@/lib/actions/corrections/submitCorrection"
+import { submitCorrectionAction } from "@/lib/actions/corrections/submitCorrection"
+import { CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from "@/lib/constants/corrections"
 import { cn } from "@/lib/utils"
 
 interface Props {

@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { VALID_SHIPPING_OPTIONS } from "@/lib/constants/marketplace"
 
 type FieldErrors = Partial<Record<string, string>>
 
@@ -8,14 +9,6 @@ export type CreateProductState =
   | { success: true; productId: string; globalSlug: string }
   | { error: string; fieldErrors?: FieldErrors }
   | null
-
-export const VALID_SHIPPING_OPTIONS = [
-  "shipping",
-  "pickup",
-  "both",
-  "digital",
-  "none",
-] as const
 
 function generateSlug(name: string): string {
   return name

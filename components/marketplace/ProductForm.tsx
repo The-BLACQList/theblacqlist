@@ -3,7 +3,8 @@
 import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
-import { type CreateProductState, VALID_SHIPPING_OPTIONS } from "@/lib/actions/marketplace/createProduct"
+import { type CreateProductState } from "@/lib/actions/marketplace/createProduct"
+import { VALID_SHIPPING_OPTIONS } from "@/lib/constants/marketplace"
 import { type UpdateProductState } from "@/lib/actions/marketplace/updateProduct"
 
 interface ListingOption {
