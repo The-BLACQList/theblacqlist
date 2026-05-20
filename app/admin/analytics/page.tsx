@@ -1,14 +1,14 @@
-import type { Metadata } from "next"
-import { requireAdmin } from "@/lib/admin/guard"
-import { createClient } from "@/lib/supabase/server"
-import { createServiceClient } from "@/lib/supabase/server"
+import type { Metadata } from 'next'
+import { requireAdmin } from '@/lib/admin/guard'
+import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: "Analytics" }
+export const metadata: Metadata = { title: 'Analytics' }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDuration(ms: number | null): string {
-  if (ms === null) return "—"
+  if (ms === null) return '—'
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(1)}s`
 }
@@ -16,7 +16,7 @@ function formatDuration(ms: number | null): string {
 function weekLabel(weeksAgo: number): string {
   const d = new Date()
   d.setDate(d.getDate() - weeksAgo * 7)
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function buildWeeklyBuckets(
@@ -43,15 +43,7 @@ function buildWeeklyBuckets(
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  sub,
-}: {
-  label: string
-  value: string | number
-  sub?: string
-}) {
+function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4">
       <p className="font-body text-xs text-charcoal/50">{label}</p>
@@ -93,9 +85,9 @@ export default async function AdminAnalyticsPage() {
   const supabase = await createClient()
   const service = createServiceClient()
 
-  const now         = new Date()
-  const since7d     = new Date(now.getTime() -  7 * 24 * 60 * 60 * 1000).toISOString()
-  const since56d    = new Date(now.getTime() - 56 * 24 * 60 * 60 * 1000).toISOString()
+  const now = new Date()
+  const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const since56d = new Date(now.getTime() - 56 * 24 * 60 * 60 * 1000).toISOString()
   const since7dDate = since7d.slice(0, 10)
 
   const [
@@ -111,59 +103,50 @@ export default async function AdminAnalyticsPage() {
     topQueriesResult,
     jobLogResult,
   ] = await Promise.all([
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }),
 
     supabase
-      .from("profiles")
-      .select("created_at")
-      .gte("created_at", since56d)
-      .order("created_at", { ascending: true }),
+      .from('profiles')
+      .select('created_at')
+      .gte('created_at', since56d)
+      .order('created_at', { ascending: true }),
 
-    supabase.from("claims").select("id", { count: "exact", head: true }),
+    supabase.from('claims').select('id', { count: 'exact', head: true }),
 
-    supabase
-      .from("claims")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", since7d),
+    supabase.from('claims').select('id', { count: 'exact', head: true }).gte('created_at', since7d),
 
-    supabase.from("saves").select("id", { count: "exact", head: true }),
+    supabase.from('saves').select('id', { count: 'exact', head: true }),
 
-    supabase
-      .from("saves")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", since7d),
+    supabase.from('saves').select('id', { count: 'exact', head: true }).gte('created_at', since7d),
 
     service
-      .from("search_events")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", since7d),
+      .from('search_events')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', since7d),
 
-    service
-      .from("entity_analytics_daily")
-      .select("page_views")
-      .gte("snapshot_date", since7dDate),
+    service.from('entity_analytics_daily').select('page_views').gte('snapshot_date', since7dDate),
 
     // New functions not yet in generated types — cast through any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service as any).rpc("get_top_listings_by_views", { limit_n: 10, days_back: 30 }),
+    (service as any).rpc('get_top_listings_by_views', { limit_n: 10, days_back: 30 }),
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service as any).rpc("get_top_search_queries", { limit_n: 10, days_back: 30 }),
+    (service as any).rpc('get_top_search_queries', { limit_n: 10, days_back: 30 }),
 
     // analytics_job_log not yet in generated types — cast through any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (service.from("analytics_job_log" as any) as any)
-      .select("run_date, listings_processed, duration_ms, status, created_at")
-      .order("created_at", { ascending: false })
+    (service.from('analytics_job_log' as any) as any)
+      .select('run_date, listings_processed, duration_ms, status, created_at')
+      .order('created_at', { ascending: false })
       .limit(5),
   ])
 
-  const totalUsers   = totalUsersResult.count   ?? 0
-  const totalClaims  = totalClaimsResult.count  ?? 0
-  const claimsWeek   = claimsWeekResult.count   ?? 0
-  const totalSaves   = totalSavesResult.count   ?? 0
-  const savesWeek    = savesWeekResult.count     ?? 0
-  const searchesWeek = searchesWeekResult.count  ?? 0
+  const totalUsers = totalUsersResult.count ?? 0
+  const totalClaims = totalClaimsResult.count ?? 0
+  const claimsWeek = claimsWeekResult.count ?? 0
+  const totalSaves = totalSavesResult.count ?? 0
+  const savesWeek = savesWeekResult.count ?? 0
+  const searchesWeek = searchesWeekResult.count ?? 0
 
   const pageViewsWeek = (pageViewsWeekResult.data ?? []).reduce(
     (sum, r) => sum + (r.page_views ?? 0),
@@ -171,8 +154,8 @@ export default async function AdminAnalyticsPage() {
   )
 
   const recentProfiles = recentProfilesResult.data ?? []
-  const weeklyBuckets  = buildWeeklyBuckets(recentProfiles, 8)
-  const maxWeekCount   = Math.max(...weeklyBuckets.map((b) => b.count), 1)
+  const weeklyBuckets = buildWeeklyBuckets(recentProfiles, 8)
+  const maxWeekCount = Math.max(...weeklyBuckets.map((b) => b.count), 1)
 
   const topListings = ((topListingsResult.data as unknown) ?? []) as {
     listing_id: string
@@ -199,7 +182,6 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8">
-
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
         <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
@@ -212,14 +194,22 @@ export default async function AdminAnalyticsPage() {
         <SectionHeading>Platform health</SectionHeading>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard label="Registered users" value={totalUsers.toLocaleString()} />
-          <StatCard label="Total claims"     value={totalClaims.toLocaleString()} sub={`+${claimsWeek} this week`} />
-          <StatCard label="Total saves"      value={totalSaves.toLocaleString()}  sub={`+${savesWeek} this week`} />
-          <StatCard label="Searches"         value={searchesWeek.toLocaleString()} sub="this week" />
-          <StatCard label="Page views"       value={pageViewsWeek.toLocaleString()} sub="this week" />
+          <StatCard
+            label="Total claims"
+            value={totalClaims.toLocaleString()}
+            sub={`+${claimsWeek} this week`}
+          />
+          <StatCard
+            label="Total saves"
+            value={totalSaves.toLocaleString()}
+            sub={`+${savesWeek} this week`}
+          />
+          <StatCard label="Searches" value={searchesWeek.toLocaleString()} sub="this week" />
+          <StatCard label="Page views" value={pageViewsWeek.toLocaleString()} sub="this week" />
           <StatCard
             label="Last aggregation"
-            value={lastJob ? lastJob.run_date : "—"}
-            sub={lastJob ? lastJob.status : "no runs yet"}
+            value={lastJob ? lastJob.run_date : '—'}
+            sub={lastJob ? lastJob.status : 'no runs yet'}
           />
         </div>
       </div>
@@ -238,7 +228,6 @@ export default async function AdminAnalyticsPage() {
 
       {/* Top content + top searches */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         <div>
           <SectionHeading>Top pages by views — last 30 days</SectionHeading>
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
@@ -250,9 +239,15 @@ export default async function AdminAnalyticsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">#</th>
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Listing</th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Views</th>
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                      #
+                    </th>
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                      Listing
+                    </th>
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                      Views
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-charcoal/5">
@@ -260,7 +255,9 @@ export default async function AdminAnalyticsPage() {
                     <tr key={row.listing_id} className="hover:bg-[#f9f9fb]">
                       <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
                       <td className="px-4 py-2.5">
-                        <p className="font-subhead text-sm text-brand-black truncate max-w-[180px]">{row.listing_name}</p>
+                        <p className="font-subhead text-sm text-brand-black truncate max-w-[180px]">
+                          {row.listing_name}
+                        </p>
                         {row.city_name && (
                           <p className="font-body text-xs text-charcoal/50">{row.city_name}</p>
                         )}
@@ -287,10 +284,18 @@ export default async function AdminAnalyticsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">#</th>
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Query</th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Searches</th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">Avg results</th>
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                      #
+                    </th>
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                      Query
+                    </th>
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                      Searches
+                    </th>
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                      Avg results
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-charcoal/5">
@@ -304,7 +309,7 @@ export default async function AdminAnalyticsPage() {
                         {row.search_count.toLocaleString()}
                       </td>
                       <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50 hidden md:table-cell">
-                        {row.avg_results ?? "—"}
+                        {row.avg_results ?? '—'}
                       </td>
                     </tr>
                   ))}
@@ -321,26 +326,36 @@ export default async function AdminAnalyticsPage() {
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {jobLog.length === 0 ? (
             <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
-              No aggregation runs yet. Run{" "}
+              No aggregation runs yet. Run{' '}
               <code className="font-mono text-xs bg-charcoal/5 px-1 rounded">
                 SELECT aggregate_entity_analytics()
-              </code>{" "}
+              </code>{' '}
               in the SQL editor.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Date</th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Listings</th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Duration</th>
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    Date
+                  </th>
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    Listings
+                  </th>
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    Duration
+                  </th>
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-charcoal/5">
                 {jobLog.map((run) => (
                   <tr key={run.created_at} className="hover:bg-[#f9f9fb]">
-                    <td className="px-4 py-2.5 font-body text-sm text-brand-black">{run.run_date}</td>
+                    <td className="px-4 py-2.5 font-body text-sm text-brand-black">
+                      {run.run_date}
+                    </td>
                     <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
                       {run.listings_processed.toLocaleString()}
                     </td>
@@ -350,11 +365,11 @@ export default async function AdminAnalyticsPage() {
                     <td className="px-4 py-2.5">
                       <span
                         className={
-                          run.status === "success"
-                            ? "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-green-50 text-green-700 border border-green-200"
-                            : run.status === "failed"
-                            ? "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-red-50 text-red-700 border border-red-200"
-                            : "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          run.status === 'success'
+                            ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-green-50 text-green-700 border border-green-200'
+                            : run.status === 'failed'
+                              ? 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-red-50 text-red-700 border border-red-200'
+                              : 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold font-subhead bg-yellow-50 text-yellow-700 border border-yellow-200'
                         }
                       >
                         {run.status}
@@ -367,7 +382,6 @@ export default async function AdminAnalyticsPage() {
           )}
         </div>
       </div>
-
     </div>
   )
 }

@@ -2,8 +2,8 @@
 // Safe to import in "use client" components only — never in Server Components.
 // All calls are fire-and-forget. Analytics must never break the user experience.
 
-const ANALYTICS_ENDPOINT = "/api/analytics/event"
-const SESSION_STORAGE_KEY = "blacq_sid"
+const ANALYTICS_ENDPOINT = '/api/analytics/event'
+const SESSION_STORAGE_KEY = 'blacq_sid'
 
 function getSessionId(): string {
   try {
@@ -15,7 +15,7 @@ function getSessionId(): string {
     return sid
   } catch {
     // sessionStorage unavailable (SSR guard, private browsing restrictions)
-    return ""
+    return ''
   }
 }
 
@@ -34,25 +34,22 @@ interface TrackEventInput {
  */
 export function track(input: TrackEventInput): void {
   const payload = {
-    event_name:  input.event_name,
-    entity_id:   input.entity_id,
+    event_name: input.event_name,
+    entity_id: input.entity_id,
     entity_type: input.entity_type,
-    properties:  input.properties,
-    session_id:  getSessionId(),
+    properties: input.properties,
+    session_id: getSessionId(),
   }
 
   const body = JSON.stringify(payload)
 
   try {
-    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-      navigator.sendBeacon(
-        ANALYTICS_ENDPOINT,
-        new Blob([body], { type: "application/json" })
-      )
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([body], { type: 'application/json' }))
     } else {
       void fetch(ANALYTICS_ENDPOINT, {
-        method:    "POST",
-        headers:   { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body,
         keepalive: true,
       })

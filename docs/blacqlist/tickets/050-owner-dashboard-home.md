@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 8: Owner Dashboard
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Owner Dashboard
 
 ---
@@ -40,6 +45,7 @@ As a business owner, I want to see how my listing is performing at a glance and 
 ## Scope
 
 **In scope:**
+
 - `app/dashboard/page.tsx` — Server Component; authenticated Owner-only; fetches data from `GET /api/dashboard`
 - Role-based redirect: if the authenticated user has no owner role for any listing → redirect to `/account` (supporters don't have a `/dashboard` in MVP)
 - **Three dashboard states:**
@@ -61,6 +67,7 @@ As a business owner, I want to see how my listing is performing at a glance and 
 - Error state (analytics fetch failure): stat cards show `—` with a small "Couldn't load" label + "Retry" text link; rest of dashboard renders normally
 
 **Out of scope:**
+
 - Page Editor (`/dashboard/page`) — separate ticket
 - Services Manager (`/dashboard/services`) — separate ticket
 - Detailed analytics views (V1)
@@ -70,14 +77,14 @@ As a business owner, I want to see how my listing is performing at a glance and 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 013 — Auth middleware (owner role check) | Blocking ticket | Not started |
-| Ticket 014 — Account sidebar layout (Dashboard sidebar variant) | Blocking ticket | Not started |
-| Ticket 049 — Analytics event ingestion API | Blocking ticket | `entity_analytics_daily` must have data |
-| Ticket 009 — `entity_analytics_daily` table and aggregation | Blocking ticket | Not started |
-| `GET /api/dashboard` Route Handler | API | Not started (created in this ticket) |
-| `ShareButton` component | Component | Must exist from Ticket 047 |
+| Dependency                                                      | Type            | Status                                  |
+| --------------------------------------------------------------- | --------------- | --------------------------------------- |
+| Ticket 013 — Auth middleware (owner role check)                 | Blocking ticket | Not started                             |
+| Ticket 014 — Account sidebar layout (Dashboard sidebar variant) | Blocking ticket | Not started                             |
+| Ticket 049 — Analytics event ingestion API                      | Blocking ticket | `entity_analytics_daily` must have data |
+| Ticket 009 — `entity_analytics_daily` table and aggregation     | Blocking ticket | Not started                             |
+| `GET /api/dashboard` Route Handler                              | API             | Not started (created in this ticket)    |
+| `ShareButton` component                                         | Component       | Must exist from Ticket 047              |
 
 ---
 
@@ -93,21 +100,24 @@ As a business owner, I want to see how my listing is performing at a glance and 
 
 **Three states detail (from `empty-loading-error-success-states.md` § 11.1):**
 
-| State | Claim status banner | Stats | Checklist | Page preview |
-|---|---|---|---|---|
-| No listing | Hidden | Hidden | Hidden | Hidden; show "Create your page" empty state instead |
-| Draft / Pending | Amber Gold banner if claim pending | `—` with "Stats begin once your page is published" | Prominent (expanded, not collapsed) | Show listing name + status badge (Draft / Pending) |
-| Published | Hidden (if approved) or banner (if claim still under review) | 7-day stats | Show if incomplete; hidden if 5/5 complete for 7+ days | Show with "View live page →" |
+| State           | Claim status banner                                          | Stats                                              | Checklist                                              | Page preview                                        |
+| --------------- | ------------------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------- |
+| No listing      | Hidden                                                       | Hidden                                             | Hidden                                                 | Hidden; show "Create your page" empty state instead |
+| Draft / Pending | Amber Gold banner if claim pending                           | `—` with "Stats begin once your page is published" | Prominent (expanded, not collapsed)                    | Show listing name + status badge (Draft / Pending)  |
+| Published       | Hidden (if approved) or banner (if claim still under review) | 7-day stats                                        | Show if incomplete; hidden if 5/5 complete for 7+ days | Show with "View live page →"                        |
 
 **Loading state (from § 11.1):**
+
 - Skeleton: status banner area + 4 stat card skeletons + page preview card skeleton + quick action button stubs
 - Each stat card skeleton: two lines — metric value (large) + label (small)
 
 **Error state (analytics only):**
+
 - Stat cards show `—` with a small "Couldn't load" label + "Retry" text link per card
 - The page preview card, quick actions, and completion checklist still render
 
 **Mobile behavior:**
+
 - Dashboard sidebar collapses to a bottom nav bar: Overview, My Page, Services, Settings tabs
 - Stat cards: 1×4 column stack on mobile (full-width each)
 - Quick actions: stacked vertically, full-width buttons
@@ -222,10 +232,10 @@ interface DashboardOverviewResponse {
 
 **Error codes:**
 
-| Code | HTTP | UI behavior |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | Middleware redirects to `/sign-in?next=/dashboard` |
-| `FORBIDDEN` | 403 | Redirect to `/account` (supporter with no listings) |
+| Code            | HTTP | UI behavior                                         |
+| --------------- | ---- | --------------------------------------------------- |
+| `AUTH_REQUIRED` | 401  | Middleware redirects to `/sign-in?next=/dashboard`  |
+| `FORBIDDEN`     | 403  | Redirect to `/account` (supporter with no listings) |
 
 **Analytics event emitted:** `dashboard_viewed` — properties: `{ listing_count: number }` — fire-and-forget from the page component
 
@@ -234,6 +244,7 @@ interface DashboardOverviewResponse {
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/dashboard/page.tsx` — Server Component; fetches `/api/dashboard`; branches on listing state; renders appropriate sections
 - `app/api/dashboard/route.ts` — Route Handler; GET; authenticated; JOINs listings + details + claims + analytics + completion data
 - `components/dashboard/StatCard.tsx` — individual metric card with label, count, and skeleton variant
@@ -245,9 +256,11 @@ interface DashboardOverviewResponse {
 - `components/dashboard/DashboardEmptyState.tsx` — "Create your BLACQList Page" empty state for owners with no listing
 
 **Files to modify:**
+
 - Dashboard sidebar nav component — "Overview" item active on `/dashboard`
 
 **Key patterns:**
+
 - Server Component data fetching: fetch `/api/dashboard` from the page component using `fetch` with `{ cache: 'no-store' }` (dashboard is fully dynamic)
 - Role check: if the API returns an empty `listings` array (supporter with no listings), render `DashboardEmptyState`; if `listings[0].status` is `'draft'`, render the draft state
 - Stat cards load in parallel with a `<Suspense>` boundary wrapping `StatRow`; if the analytics data is `null` or all zeros and `published_at` is within the last day, show the "Stats begin once your page is published" note
@@ -255,6 +268,7 @@ interface DashboardOverviewResponse {
 - Fire `dashboard_viewed` analytics event as a fire-and-forget fetch (from a `useEffect` in a minimal "use client" wrapper or from a `<DashboardAnalyticsEvent>` Client Component)
 
 **Do not:**
+
 - Show the dashboard to authenticated supporters — redirect to `/account`
 - Make the stats row block the rest of the dashboard from rendering — use `<Suspense>` so the stat cards can stream in
 - Hardcode the checklist item names — derive them from `completion_status` object returned by the API
@@ -283,14 +297,14 @@ interface DashboardOverviewResponse {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Dashboard API fails | `/api/dashboard` returns 500 | Error boundary or inline: "Couldn't load your dashboard." + "Try again" button | Retry re-fetches |
-| Analytics data missing | No rows in `entity_analytics_daily` for this listing | Stat cards show `—` with note | No action needed; data will appear once the aggregation runs |
-| Analytics fetch partial failure | Some stat cards fail to load | Each failing stat card shows `—` + "Couldn't load" + "Retry" per card | Retry per card |
-| Owner has no listing | `listings[]` is empty | "Create your BLACQList Page" empty state | CTAs guide to `/claim` or `/add-business` |
-| Session expired | 401 from `/api/dashboard` | Middleware redirect to `/sign-in?next=/dashboard` | Re-authenticate |
-| Supporter accesses `/dashboard` | No owner role | Redirect to `/account` (silent, no error message) | N/A |
+| Failure                         | Condition                                            | User sees                                                                      | Recovery                                                     |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Dashboard API fails             | `/api/dashboard` returns 500                         | Error boundary or inline: "Couldn't load your dashboard." + "Try again" button | Retry re-fetches                                             |
+| Analytics data missing          | No rows in `entity_analytics_daily` for this listing | Stat cards show `—` with note                                                  | No action needed; data will appear once the aggregation runs |
+| Analytics fetch partial failure | Some stat cards fail to load                         | Each failing stat card shows `—` + "Couldn't load" + "Retry" per card          | Retry per card                                               |
+| Owner has no listing            | `listings[]` is empty                                | "Create your BLACQList Page" empty state                                       | CTAs guide to `/claim` or `/add-business`                    |
+| Session expired                 | 401 from `/api/dashboard`                            | Middleware redirect to `/sign-in?next=/dashboard`                              | Re-authenticate                                              |
+| Supporter accesses `/dashboard` | No owner role                                        | Redirect to `/account` (silent, no error message)                              | N/A                                                          |
 
 ---
 
@@ -318,15 +332,15 @@ interface DashboardOverviewResponse {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: published listing | 1. Log in as owner with a published listing that has 7d analytics data. 2. Navigate to `/dashboard`. | Stat cards show correct 7-day counts. Page preview card shows listing. Checklist shows correct completion. Quick actions render. |
-| QA-2 | No listing empty state | 1. Log in as owner with no listing. 2. Navigate to `/dashboard`. | "Create your BLACQList Page" empty state renders with two CTA buttons. No stat cards or checklist. |
-| QA-3 | Draft listing state | 1. Log in as owner with a draft listing. 2. Navigate to `/dashboard`. | Stat cards show `—` with "Stats begin once your page is published". Checklist shown prominently. |
-| QA-4 | Claim pending banner | 1. Log in as owner with a pending claim. 2. Navigate to `/dashboard`. | Amber Gold claim status banner renders above the page preview card. |
-| QA-5 | Analytics error | 1. Force the analytics data to fail (e.g., temporarily block the query). 2. Navigate to `/dashboard`. | Each stat card shows `—` with "Couldn't load" and a "Retry" link. Page preview, quick actions, and checklist still render. |
-| QA-6 | Supporter access | 1. Log in as a supporter (no owner role). 2. Navigate to `/dashboard`. | Redirected to `/account`. Dashboard page is not rendered. |
-| QA-7 | Mobile at 375px | 1. Open `/dashboard` on a 375px device. 2. Scroll and interact. | Stat cards stack 2×2. Quick actions stack vertically. Bottom nav shows "Overview" as active. Completion checklist is usable. |
+| ID   | Test                          | Steps                                                                                                 | Expected                                                                                                                         |
+| ---- | ----------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: published listing | 1. Log in as owner with a published listing that has 7d analytics data. 2. Navigate to `/dashboard`.  | Stat cards show correct 7-day counts. Page preview card shows listing. Checklist shows correct completion. Quick actions render. |
+| QA-2 | No listing empty state        | 1. Log in as owner with no listing. 2. Navigate to `/dashboard`.                                      | "Create your BLACQList Page" empty state renders with two CTA buttons. No stat cards or checklist.                               |
+| QA-3 | Draft listing state           | 1. Log in as owner with a draft listing. 2. Navigate to `/dashboard`.                                 | Stat cards show `—` with "Stats begin once your page is published". Checklist shown prominently.                                 |
+| QA-4 | Claim pending banner          | 1. Log in as owner with a pending claim. 2. Navigate to `/dashboard`.                                 | Amber Gold claim status banner renders above the page preview card.                                                              |
+| QA-5 | Analytics error               | 1. Force the analytics data to fail (e.g., temporarily block the query). 2. Navigate to `/dashboard`. | Each stat card shows `—` with "Couldn't load" and a "Retry" link. Page preview, quick actions, and checklist still render.       |
+| QA-6 | Supporter access              | 1. Log in as a supporter (no owner role). 2. Navigate to `/dashboard`.                                | Redirected to `/account`. Dashboard page is not rendered.                                                                        |
+| QA-7 | Mobile at 375px               | 1. Open `/dashboard` on a 375px device. 2. Scroll and interact.                                       | Stat cards stack 2×2. Quick actions stack vertically. Bottom nav shows "Overview" as active. Completion checklist is usable.     |
 
 ---
 

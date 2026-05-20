@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 7: Saves, Reviews, Corrections, Sharing
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Reviews / Intake
 
 ---
@@ -40,6 +45,7 @@ As a logged-in supporter, I want to submit a star rating and written review for 
 ## Scope
 
 **In scope:**
+
 - `lib/actions/reviews/createReview.ts` — Server Action
 - `lib/actions/reviews/updateReview.ts` — Server Action
 - `lib/actions/reviews/deleteOwnReview.ts` — Server Action
@@ -58,6 +64,7 @@ As a logged-in supporter, I want to submit a star rating and written review for 
 - All three SAs follow the 7-step Server Action pattern; no cache invalidation (reviews are not displayed publicly at MVP)
 
 **Out of scope:**
+
 - Public display of reviews on the listing page (V1)
 - Admin moderation interface for reviews (Beta/V1 — `moderateReview` SA)
 - Owner responses to reviews (Beta — `respondToReview` SA)
@@ -68,14 +75,14 @@ As a logged-in supporter, I want to submit a star rating and written review for 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 011 — `reviews` table migration | Blocking ticket | Not started |
-| Ticket 013 — Auth middleware | Blocking ticket | Not started |
-| Ticket 014 — BLACQList Page layout and authenticated state | Blocking ticket | Not started |
-| `lib/validations/review.ts` — zod schema | New file | Created in this ticket |
-| `SignInModal` component | Component | Must exist from Ticket 045 or earlier |
-| Ticket 049 — Analytics event ingestion API | Soft dependency | Fire-and-forget; stub if not yet shipped |
+| Dependency                                                 | Type            | Status                                   |
+| ---------------------------------------------------------- | --------------- | ---------------------------------------- |
+| Ticket 011 — `reviews` table migration                     | Blocking ticket | Not started                              |
+| Ticket 013 — Auth middleware                               | Blocking ticket | Not started                              |
+| Ticket 014 — BLACQList Page layout and authenticated state | Blocking ticket | Not started                              |
+| `lib/validations/review.ts` — zod schema                   | New file        | Created in this ticket                   |
+| `SignInModal` component                                    | Component       | Must exist from Ticket 045 or earlier    |
+| Ticket 049 — Analytics event ingestion API                 | Soft dependency | Fire-and-forget; stub if not yet shipped |
 
 ---
 
@@ -156,11 +163,11 @@ As a logged-in supporter, I want to submit a star rating and written review for 
 
 **Server Actions:**
 
-| Action | File | Auth | Cache | Audit | Email |
-|---|---|---|---|---|---|
-| `createReview` | `lib/actions/reviews/createReview.ts` | supporter | No | No | No |
-| `updateReview` | `lib/actions/reviews/updateReview.ts` | supporter | No | No | No |
-| `deleteOwnReview` | `lib/actions/reviews/deleteOwnReview.ts` | supporter | No | No | No |
+| Action            | File                                     | Auth      | Cache | Audit | Email |
+| ----------------- | ---------------------------------------- | --------- | ----- | ----- | ----- |
+| `createReview`    | `lib/actions/reviews/createReview.ts`    | supporter | No    | No    | No    |
+| `updateReview`    | `lib/actions/reviews/updateReview.ts`    | supporter | No    | No    | No    |
+| `deleteOwnReview` | `lib/actions/reviews/deleteOwnReview.ts` | supporter | No    | No    | No    |
 
 **No cache invalidation for any review action at MVP** — reviews are not displayed on public ISR-cached pages. When the public review display is built (V1), `revalidatePath` will be added to `createReview` and `deleteOwnReview`.
 
@@ -169,40 +176,41 @@ As a logged-in supporter, I want to submit a star rating and written review for 
 ```typescript
 // createReview
 interface CreateReviewInput {
-  listing_id: string   // UUID
-  rating: number       // 1–5
-  body: string         // min 20, max 1000 chars
+  listing_id: string // UUID
+  rating: number // 1–5
+  body: string // min 20, max 1000 chars
 }
 
 // updateReview
 interface UpdateReviewInput {
-  review_id: string    // UUID; must be owned by auth.uid() and status='intake'
-  rating: number       // 1–5
-  body: string         // min 20, max 1000 chars
+  review_id: string // UUID; must be owned by auth.uid() and status='intake'
+  rating: number // 1–5
+  body: string // min 20, max 1000 chars
 }
 
 // deleteOwnReview
 interface DeleteOwnReviewInput {
-  review_id: string    // UUID; must be owned by auth.uid() and status='intake'
+  review_id: string // UUID; must be owned by auth.uid() and status='intake'
 }
 ```
 
 **Error codes:**
 
-| Code | Condition | UI shows |
-|---|---|---|
-| `AUTH_REQUIRED` | Not authenticated | Should not reach SA — form gated to authenticated users |
-| `REVIEW_ALREADY_EXISTS` | Duplicate review attempt | Show "Edit your existing review" inline; switch to edit mode |
-| `NOT_FOUND` | Review ID not found or not owned | Toast: "Review not found." |
-| `INVALID_STATUS_TRANSITION` | Review status is not `'intake'` | Toast: "This review can no longer be edited." |
-| `VALIDATION_ERROR` | Body too short, rating missing | Inline field errors below each field |
-| `OPERATION_FAILED` | Unexpected DB error | Toast: "Couldn't submit review. Try again." |
+| Code                        | Condition                        | UI shows                                                     |
+| --------------------------- | -------------------------------- | ------------------------------------------------------------ |
+| `AUTH_REQUIRED`             | Not authenticated                | Should not reach SA — form gated to authenticated users      |
+| `REVIEW_ALREADY_EXISTS`     | Duplicate review attempt         | Show "Edit your existing review" inline; switch to edit mode |
+| `NOT_FOUND`                 | Review ID not found or not owned | Toast: "Review not found."                                   |
+| `INVALID_STATUS_TRANSITION` | Review status is not `'intake'`  | Toast: "This review can no longer be edited."                |
+| `VALIDATION_ERROR`          | Body too short, rating missing   | Inline field errors below each field                         |
+| `OPERATION_FAILED`          | Unexpected DB error              | Toast: "Couldn't submit review. Try again."                  |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `lib/actions/reviews/createReview.ts` — Server Action
 - `lib/actions/reviews/updateReview.ts` — Server Action
 - `lib/actions/reviews/deleteOwnReview.ts` — Server Action
@@ -212,9 +220,11 @@ interface DeleteOwnReviewInput {
 - `components/reviews/ReviewsSection.tsx` — "use client"; section container with placeholder + conditional form
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — import and render `<ReviewsSection listingId={listing.id} listingName={listing.name} existingReview={userReview} isAuthenticated={!!user} />`
 
 **Key patterns:**
+
 - All three SAs follow the 7-step pattern from `server-actions-plan.md` § 3
 - `createReview` Step 3: before INSERT, `SELECT id FROM reviews WHERE reviewer_user_id = auth.uid() AND listing_id = input.listing_id`; if found, return `REVIEW_ALREADY_EXISTS` with the existing review's ID in the `data` field so the UI can switch to edit mode
 - `deleteOwnReview` is a hard delete (not soft delete) per the server-actions-plan inventory
@@ -223,6 +233,7 @@ interface DeleteOwnReviewInput {
 - Form pre-fill for edit mode: `useForm` default values set from `existingReview`
 
 **Do not:**
+
 - Render any submitted reviews publicly at MVP
 - Call `revalidatePath` from any review action at MVP
 - Allow editing a review with `status != 'intake'` — this guard must be at the SA level, not just the UI
@@ -249,14 +260,14 @@ interface DeleteOwnReviewInput {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| SA error on submit | DB error | Toast: "Couldn't submit review. Try again." Form values preserved | Retry submit |
-| Duplicate review | Already reviewed this listing | Form switches to edit mode showing the existing review | Edit or delete existing review |
-| SA error on update | DB error | Toast: "Couldn't update review. Try again." Form preserved | Retry |
-| SA error on delete | DB error | Toast: "Couldn't delete review. Try again." Review card stays visible | Retry |
-| Invalid status on edit/delete | Review moved out of `'intake'` by admin action | Toast: "This review can no longer be edited." Edit/Delete options hidden | None needed at MVP |
-| Session expired | 401 during SA call | Toast: "Your session expired." + "Sign in" link | Re-authenticate |
+| Failure                       | Condition                                      | User sees                                                                | Recovery                       |
+| ----------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------ |
+| SA error on submit            | DB error                                       | Toast: "Couldn't submit review. Try again." Form values preserved        | Retry submit                   |
+| Duplicate review              | Already reviewed this listing                  | Form switches to edit mode showing the existing review                   | Edit or delete existing review |
+| SA error on update            | DB error                                       | Toast: "Couldn't update review. Try again." Form preserved               | Retry                          |
+| SA error on delete            | DB error                                       | Toast: "Couldn't delete review. Try again." Review card stays visible    | Retry                          |
+| Invalid status on edit/delete | Review moved out of `'intake'` by admin action | Toast: "This review can no longer be edited." Edit/Delete options hidden | None needed at MVP             |
+| Session expired               | 401 during SA call                             | Toast: "Your session expired." + "Sign in" link                          | Re-authenticate                |
 
 ---
 
@@ -285,14 +296,14 @@ interface DeleteOwnReviewInput {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: submit review | 1. Log in. 2. Navigate to a BLACQList Page. 3. Select 4 stars. 4. Enter 50+ chars of review text. 5. Click "Submit review". | `createReview` SA called. Review inserted with `status='intake'`. Thank-you message replaces form. `review_submitted` analytics event fired. |
-| QA-2 | Edit review | 1. Submit a review. 2. Click "Edit". 3. Change rating to 5. 4. Click "Update review". | Form pre-fills. `updateReview` SA called. Success message shows. DB record updated. |
-| QA-3 | Delete review | 1. With an existing review, click "Delete". 2. Confirm. | `deleteOwnReview` SA called. Review deleted from DB. Blank intake form shown. |
-| QA-4 | Validation: body too short | 1. Select 3 stars. 2. Type 10 chars in textarea. 3. Click submit. | Inline error: "Review must be at least 20 characters." Submit blocked. |
-| QA-5 | Unauthenticated user | 1. Log out. 2. Navigate to a BLACQList Page. 3. Scroll to reviews section. | No form shown. Placeholder text shown. "Sign in to leave a review" link present. |
-| QA-6 | Public display confirm | 1. Submit a review. 2. Open the BLACQList Page in an incognito window. | Placeholder text only visible: "Reviews coming soon." No review content displayed publicly. |
+| ID   | Test                       | Steps                                                                                                                       | Expected                                                                                                                                     |
+| ---- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: submit review  | 1. Log in. 2. Navigate to a BLACQList Page. 3. Select 4 stars. 4. Enter 50+ chars of review text. 5. Click "Submit review". | `createReview` SA called. Review inserted with `status='intake'`. Thank-you message replaces form. `review_submitted` analytics event fired. |
+| QA-2 | Edit review                | 1. Submit a review. 2. Click "Edit". 3. Change rating to 5. 4. Click "Update review".                                       | Form pre-fills. `updateReview` SA called. Success message shows. DB record updated.                                                          |
+| QA-3 | Delete review              | 1. With an existing review, click "Delete". 2. Confirm.                                                                     | `deleteOwnReview` SA called. Review deleted from DB. Blank intake form shown.                                                                |
+| QA-4 | Validation: body too short | 1. Select 3 stars. 2. Type 10 chars in textarea. 3. Click submit.                                                           | Inline error: "Review must be at least 20 characters." Submit blocked.                                                                       |
+| QA-5 | Unauthenticated user       | 1. Log out. 2. Navigate to a BLACQList Page. 3. Scroll to reviews section.                                                  | No form shown. Placeholder text shown. "Sign in to leave a review" link present.                                                             |
+| QA-6 | Public display confirm     | 1. Submit a review. 2. Open the BLACQList Page in an incognito window.                                                      | Placeholder text only visible: "Reviews coming soon." No review content displayed publicly.                                                  |
 
 ---
 

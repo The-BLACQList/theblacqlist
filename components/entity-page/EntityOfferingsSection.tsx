@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import type { EntityPageData } from "@/types"
+import { useState } from 'react'
+import type { EntityPageData } from '@/types'
 
 const VISIBLE_COUNT = 6
 
@@ -19,10 +19,7 @@ export function EntityOfferingsSection({ entity }: Props) {
   const hasMore = services.length > VISIBLE_COUNT
 
   return (
-    <section
-      aria-labelledby="offerings-heading"
-      className="bg-white py-12 md:py-16"
-    >
+    <section aria-labelledby="offerings-heading" className="bg-white py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
         <h2
           id="offerings-heading"
@@ -31,10 +28,7 @@ export function EntityOfferingsSection({ entity }: Props) {
           Services &amp; Offerings
         </h2>
 
-        <div
-          className="divide-y divide-charcoal/10"
-          aria-label="Services list"
-        >
+        <div className="divide-y divide-charcoal/10" aria-label="Services list">
           {visibleServices.map((service) => (
             <div
               key={service.id}
@@ -66,9 +60,7 @@ export function EntityOfferingsSection({ entity }: Props) {
             className="mt-6 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2 transition-colors"
             aria-expanded={expanded}
           >
-            {expanded
-              ? "Show fewer services"
-              : `Show all ${services.length} services`}
+            {expanded ? 'Show fewer services' : `Show all ${services.length} services`}
           </button>
         )}
       </div>

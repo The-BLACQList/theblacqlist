@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 13: Marketplace Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Marketplace / Admin
 
 ---
@@ -40,6 +45,7 @@ As a platform admin, I want to review vendor products and deactivate any that vi
 ## Scope
 
 **In scope:**
+
 - `app/admin/products/page.tsx` — Server Component; admin-only auth guard; renders the product moderation table
 - Product table columns: Product name, Vendor name (linked to the listing), Price, Status (Active / Inactive badge), Flagged indicator, Created at, Actions
 - Filters: by vendor (text search), by status (`all` / `active` / `inactive`), by flagged (`flagged` / `all`)
@@ -53,6 +59,7 @@ As a platform admin, I want to review vendor products and deactivate any that vi
 - `insertAuditLog` is called for every mutation using the shared helper from `lib/admin/audit.ts`
 
 **Out of scope:**
+
 - Product creation from admin (vendors create their own products)
 - Viewing or editing product content/images from admin — only status changes
 - Bulk deactivation — deferred
@@ -62,14 +69,14 @@ As a platform admin, I want to review vendor products and deactivate any that vi
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
+| Dependency                                                              | Type            | Status      |
+| ----------------------------------------------------------------------- | --------------- | ----------- |
 | Ticket 073 — `createProduct` / product dashboard (products exist in DB) | Blocking ticket | Not started |
-| Ticket 071 — `products` table migration | Blocking ticket | Not started |
-| Ticket 037 — Admin layout, navigation, and auth guard | Blocking ticket | Not started |
-| Ticket 012 — `admin_audit_log` and `moderation_queue` tables | Blocking ticket | Not started |
-| `lib/admin/audit.ts` — `insertAuditLog` helper | Infrastructure | Not started |
-| `lib/admin/serviceRoleClient.ts` — `createServiceRoleClient` | Infrastructure | Not started |
+| Ticket 071 — `products` table migration                                 | Blocking ticket | Not started |
+| Ticket 037 — Admin layout, navigation, and auth guard                   | Blocking ticket | Not started |
+| Ticket 012 — `admin_audit_log` and `moderation_queue` tables            | Blocking ticket | Not started |
+| `lib/admin/audit.ts` — `insertAuditLog` helper                          | Infrastructure  | Not started |
+| `lib/admin/serviceRoleClient.ts` — `createServiceRoleClient`            | Infrastructure  | Not started |
 
 ---
 
@@ -82,17 +89,21 @@ As a platform admin, I want to review vendor products and deactivate any that vi
 - **Exit points:** Vendor name link → admin listing detail (`/admin/listings/[id]`); deactivate → in-place row update; navigate back from AlertDialog via Cancel
 
 **Filter bar layout:**
+
 ```
 [Search vendor name...]  [Status: All ▾]  [Flagged: All ▾]
 ```
+
 Filters apply immediately on change — no submit button. Active filters shown as chips below the bar.
 
 **Table row states:**
+
 - Normal row: white background
 - Flagged row: amber left border or amber badge in the Flagged column
 - Inactive row: slightly muted text color (`text-[#595758]`)
 
 **Deactivate dialog:**
+
 - Heading: "Deactivate product"
 - Body: "This product will be removed from the vendor's storefront immediately."
 - Reason textarea: required; placeholder "Reason for deactivation (required)"; max 500 chars
@@ -147,35 +158,41 @@ Filters apply immediately on change — no submit button. Active filters shown a
 All three mutations are Server Actions (not Route Handlers) — they mutate data, write to `admin_audit_log`, and revalidate ISR cache.
 
 **`deactivateProduct` input:**
+
 ```typescript
 { productId: string, reason: string }   // reason: 1–500 chars
 ```
 
 **`reactivateProduct` input:**
+
 ```typescript
-{ productId: string }
+{
+  productId: string
+}
 ```
 
 **`flagProductForReview` input:**
+
 ```typescript
 { productId: string, flagReason?: string }
 ```
 
 **Error codes:**
 
-| Code | Condition | User sees |
-|---|---|---|
-| `FORBIDDEN` | Caller is not admin | 403; middleware should have caught this |
-| `NOT_FOUND` | Product does not exist | Toast: "Product not found." |
-| `ALREADY_FLAGGED` | Product already has an open flag in `moderation_queue` | Toast: "This product is already flagged for review." |
-| `VALIDATION_ERROR` | Deactivation reason missing or too long | Inline error in the dialog |
-| `INTERNAL_ERROR` | Unexpected DB error | Toast: "Something went wrong." |
+| Code               | Condition                                              | User sees                                            |
+| ------------------ | ------------------------------------------------------ | ---------------------------------------------------- |
+| `FORBIDDEN`        | Caller is not admin                                    | 403; middleware should have caught this              |
+| `NOT_FOUND`        | Product does not exist                                 | Toast: "Product not found."                          |
+| `ALREADY_FLAGGED`  | Product already has an open flag in `moderation_queue` | Toast: "This product is already flagged for review." |
+| `VALIDATION_ERROR` | Deactivation reason missing or too long                | Inline error in the dialog                           |
+| `INTERNAL_ERROR`   | Unexpected DB error                                    | Toast: "Something went wrong."                       |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/products/page.tsx` — admin product table; Server Component; admin-only
 - `lib/actions/admin/deactivateProduct.ts`
 - `lib/actions/admin/reactivateProduct.ts`
@@ -184,10 +201,12 @@ All three mutations are Server Actions (not Route Handlers) — they mutate data
 - `components/admin/products/DeactivateProductDialog.tsx` — `AlertDialog` with reason textarea
 
 **Files to modify:**
+
 - Admin sidebar nav component — add "Products" link under a "Marketplace" section group
 - `lib/errors/codes.ts` — add `ALREADY_FLAGGED` if not present
 
 **Key patterns:**
+
 - Admin auth check at the top of every Server Action: query `user_roles` for `role IN ('admin', 'super_admin')` using `createServiceRoleClient()`; return `FORBIDDEN` if not admin
 - Use `insertAuditLog` from `lib/admin/audit.ts` for every mutation — this is non-optional
 - After each mutation, call `revalidateTag(\`vendor-${listingId}\`)` to invalidate the public storefront cache
@@ -195,6 +214,7 @@ All three mutations are Server Actions (not Route Handlers) — they mutate data
 - Filter parameters: accept `status` (`'all'` | `'active'` | `'inactive'`), `vendorSearch` (text), `flagged` (`'all'` | `'flagged'`) as URL search params; persist in URL
 
 **Do not:**
+
 - Create products from admin — the table is read-only except for status changes
 - Hard-delete products — use status changes only (`status = 'inactive'`)
 - Skip `insertAuditLog` on any admin mutation
@@ -221,13 +241,13 @@ All three mutations are Server Actions (not Route Handlers) — they mutate data
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Product not found | Product deleted between table load and action | Toast: "Product not found." | Table refreshes on next navigation |
-| Already flagged | Product already has an open moderation flag | Toast: "This product is already flagged for review." | No duplicate flag created |
-| Validation error (deactivate) | Reason is empty or > 500 chars | Inline error in dialog | User corrects and resubmits |
-| Server error | Unexpected DB error | Toast: "Something went wrong. Please try again." | Retry |
-| Page fetch fails | Admin products table fails to load | Error boundary with "Couldn't load products." + retry | Retry re-fetches |
+| Failure                       | Condition                                     | User sees                                             | Recovery                           |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| Product not found             | Product deleted between table load and action | Toast: "Product not found."                           | Table refreshes on next navigation |
+| Already flagged               | Product already has an open moderation flag   | Toast: "This product is already flagged for review."  | No duplicate flag created          |
+| Validation error (deactivate) | Reason is empty or > 500 chars                | Inline error in dialog                                | User corrects and resubmits        |
+| Server error                  | Unexpected DB error                           | Toast: "Something went wrong. Please try again."      | Retry                              |
+| Page fetch fails              | Admin products table fails to load            | Error boundary with "Couldn't load products." + retry | Retry re-fetches                   |
 
 ---
 
@@ -254,16 +274,16 @@ All three mutations are Server Actions (not Route Handlers) — they mutate data
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Table renders | Admin | Navigate to `/admin/products` | All products listed; vendor names, prices, status badges correct |
-| QA-2 | Deactivate with reason | Admin | Click "Deactivate" on active product; enter reason "Policy violation"; confirm | Product status → Inactive; badge updated; audit log entry created with reason |
-| QA-3 | Deactivate without reason | Admin | Click "Deactivate"; leave reason blank; click confirm | Inline validation error; product NOT deactivated |
-| QA-4 | Reactivate | Admin | Click "Reactivate" on inactive product; confirm | Product status → Active; audit log entry created |
-| QA-5 | Flag for review | Admin | Click "Flag for review" | `moderation_queue` row created; "Flagged" badge appears on product row |
-| QA-6 | Duplicate flag | Admin | Click "Flag for review" on already-flagged product | Toast: "This product is already flagged for review." — no duplicate created |
-| QA-7 | Status filter | Admin | Set Status filter to "Inactive" | Only inactive products shown in table |
-| QA-8 | Non-admin access | Supporter | Call `deactivateProduct` SA directly | Returns `FORBIDDEN` |
+| #    | Scenario                  | Role      | Steps                                                                          | Expected result                                                               |
+| ---- | ------------------------- | --------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| QA-1 | Table renders             | Admin     | Navigate to `/admin/products`                                                  | All products listed; vendor names, prices, status badges correct              |
+| QA-2 | Deactivate with reason    | Admin     | Click "Deactivate" on active product; enter reason "Policy violation"; confirm | Product status → Inactive; badge updated; audit log entry created with reason |
+| QA-3 | Deactivate without reason | Admin     | Click "Deactivate"; leave reason blank; click confirm                          | Inline validation error; product NOT deactivated                              |
+| QA-4 | Reactivate                | Admin     | Click "Reactivate" on inactive product; confirm                                | Product status → Active; audit log entry created                              |
+| QA-5 | Flag for review           | Admin     | Click "Flag for review"                                                        | `moderation_queue` row created; "Flagged" badge appears on product row        |
+| QA-6 | Duplicate flag            | Admin     | Click "Flag for review" on already-flagged product                             | Toast: "This product is already flagged for review." — no duplicate created   |
+| QA-7 | Status filter             | Admin     | Set Status filter to "Inactive"                                                | Only inactive products shown in table                                         |
+| QA-8 | Non-admin access          | Supporter | Call `deactivateProduct` SA directly                                           | Returns `FORBIDDEN`                                                           |
 
 ---
 

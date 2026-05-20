@@ -1,17 +1,17 @@
-import type { Metadata } from "next"
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { PROMPT_TEMPLATES } from "@/lib/ai/prompts"
+import type { Metadata } from 'next'
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { PROMPT_TEMPLATES } from '@/lib/ai/prompts'
 
-export const metadata: Metadata = { title: "AI Tools" }
+export const metadata: Metadata = { title: 'AI Tools' }
 
 function formatRelativeTime(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
   const mins = Math.floor(diff / 60_000)
-  if (mins < 1)   return "just now"
-  if (mins < 60)  return `${mins}m ago`
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
   const hrs = Math.floor(mins / 60)
-  if (hrs  < 24)  return `${hrs}h ago`
+  if (hrs < 24) return `${hrs}h ago`
   const days = Math.floor(hrs / 24)
   return `${days}d ago`
 }
@@ -26,11 +26,11 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending:  "bg-amber-100 text-amber-700",
-  approved: "bg-blue-100 text-blue-700",
-  applied:  "bg-green-100 text-green-700",
-  rejected: "bg-red-100 text-red-700",
-  expired:  "bg-charcoal/10 text-charcoal/50",
+  pending: 'bg-amber-100 text-amber-700',
+  approved: 'bg-blue-100 text-blue-700',
+  applied: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
+  expired: 'bg-charcoal/10 text-charcoal/50',
 }
 
 export default async function AdminAiToolsPage() {
@@ -40,37 +40,35 @@ export default async function AdminAiToolsPage() {
 
   const [totalResult, pendingResult, approvedResult, appliedResult, recentResult] =
     await Promise.all([
-      serviceClient
-        .from("ai_suggestions")
-        .select("id", { count: "exact", head: true }),
+      serviceClient.from('ai_suggestions').select('id', { count: 'exact', head: true }),
 
       serviceClient
-        .from("ai_suggestions")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
+        .from('ai_suggestions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
 
       serviceClient
-        .from("ai_suggestions")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "approved"),
+        .from('ai_suggestions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'approved'),
 
       serviceClient
-        .from("ai_suggestions")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "applied"),
+        .from('ai_suggestions')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'applied'),
 
       serviceClient
-        .from("ai_suggestions")
-        .select("id, listing_id, agent_type, suggestion_type, status, created_at")
-        .order("created_at", { ascending: false })
+        .from('ai_suggestions')
+        .select('id, listing_id, agent_type, suggestion_type, status, created_at')
+        .order('created_at', { ascending: false })
         .limit(50),
     ])
 
-  const total    = totalResult.count    ?? 0
-  const pending  = pendingResult.count  ?? 0
+  const total = totalResult.count ?? 0
+  const pending = pendingResult.count ?? 0
   const approved = approvedResult.count ?? 0
-  const applied  = appliedResult.count  ?? 0
-  const recent   = recentResult.data    ?? []
+  const applied = appliedResult.count ?? 0
+  const recent = recentResult.data ?? []
 
   const promptKeys = Object.keys(PROMPT_TEMPLATES) as Array<keyof typeof PROMPT_TEMPLATES>
 
@@ -92,19 +90,19 @@ export default async function AdminAiToolsPage() {
             Provider: Mock mode — No AI provider connected
           </p>
           <p className="font-body text-xs text-charcoal/50 mt-0.5">
-            The Anthropic API is not configured. All suggestions are generated from mock data.
-            See <span className="font-mono">docs/blacqlist/ai/ai-agent-roadmap.md</span> for
-            V2 Provider phase gates.
+            The Anthropic API is not configured. All suggestions are generated from mock data. See{' '}
+            <span className="font-mono">docs/blacqlist/ai/ai-agent-roadmap.md</span> for V2 Provider
+            phase gates.
           </p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total suggestions"    value={total.toLocaleString()} />
-        <StatCard label="Pending review"       value={pending.toLocaleString()} />
-        <StatCard label="Approved"             value={approved.toLocaleString()} />
-        <StatCard label="Applied to listings"  value={applied.toLocaleString()} />
+        <StatCard label="Total suggestions" value={total.toLocaleString()} />
+        <StatCard label="Pending review" value={pending.toLocaleString()} />
+        <StatCard label="Approved" value={approved.toLocaleString()} />
+        <StatCard label="Applied to listings" value={applied.toLocaleString()} />
       </div>
 
       {/* Recent suggestions table */}
@@ -145,7 +143,7 @@ export default async function AdminAiToolsPage() {
                 {recent.map((row) => (
                   <tr key={row.id} className="hover:bg-pale-lavender/10 transition-colors">
                     <td className="px-5 py-3 font-mono text-[11px] text-charcoal/40 max-w-[120px] truncate">
-                      {row.listing_id ? row.listing_id.slice(0, 8) + "…" : "—"}
+                      {row.listing_id ? row.listing_id.slice(0, 8) + '…' : '—'}
                     </td>
                     <td className="px-5 py-3 font-body text-xs text-charcoal/60 hidden md:table-cell">
                       {row.agent_type}
@@ -156,7 +154,7 @@ export default async function AdminAiToolsPage() {
                     <td className="px-5 py-3">
                       <span
                         className={`px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${
-                          STATUS_STYLES[row.status] ?? "bg-charcoal/10 text-charcoal/50"
+                          STATUS_STYLES[row.status] ?? 'bg-charcoal/10 text-charcoal/50'
                         }`}
                       >
                         {row.status}
@@ -180,7 +178,8 @@ export default async function AdminAiToolsPage() {
             Prompt templates ({promptKeys.length})
           </h2>
           <p className="font-body text-xs text-charcoal/50 mt-0.5">
-            Defined in <span className="font-mono">lib/ai/prompts.ts</span> — no API calls, string constants only.
+            Defined in <span className="font-mono">lib/ai/prompts.ts</span> — no API calls, string
+            constants only.
           </p>
         </div>
         <ul className="divide-y divide-charcoal/5">
@@ -194,15 +193,22 @@ export default async function AdminAiToolsPage() {
 
       {/* Roadmap */}
       <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-5">
-        <p className="font-subhead text-sm font-semibold text-brand-black mb-2">
-          AI agent roadmap
-        </p>
+        <p className="font-subhead text-sm font-semibold text-brand-black mb-2">AI agent roadmap</p>
         <div className="space-y-1.5">
           {[
-            { phase: "Foundation (now)", detail: "Data model, checklist, placeholder UI, prompt templates — no API calls" },
-            { phase: "V2 Mock", detail: "Hardcoded mock suggestions; approval workflow active" },
-            { phase: "V2 Provider", detail: "Anthropic API connected; real generation; audit log live" },
-            { phase: "V3 Autonomous", detail: "Background agents; ai_agent_runs table; continuous curation" },
+            {
+              phase: 'Foundation (now)',
+              detail: 'Data model, checklist, placeholder UI, prompt templates — no API calls',
+            },
+            { phase: 'V2 Mock', detail: 'Hardcoded mock suggestions; approval workflow active' },
+            {
+              phase: 'V2 Provider',
+              detail: 'Anthropic API connected; real generation; audit log live',
+            },
+            {
+              phase: 'V3 Autonomous',
+              detail: 'Background agents; ai_agent_runs table; continuous curation',
+            },
           ].map(({ phase, detail }) => (
             <div key={phase} className="flex items-start gap-3">
               <span className="font-subhead text-xs font-semibold text-charcoal/50 w-36 shrink-0 mt-0.5">

@@ -1,18 +1,23 @@
 # Ticket 066: Supporter receipts history list view (/account/receipts)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 11: Receipt Upload and Community Spend Beta
 
 ## Priority
+
 P2
 
 ## Estimate
+
 S (1–2h)
 
 ## Feature Area
+
 Supporter Account
 
 ---
@@ -36,6 +41,7 @@ As an authenticated supporter, I want to see a list of my submitted receipts and
 ## Scope
 
 **In scope:**
+
 - `app/account/receipts/page.tsx` — Server Component; auth guard; server-side initial fetch of the current user's `receipt_uploads`; renders `ReceiptsHistoryList`
 - `components/spend/ReceiptsHistoryList.tsx` — Client Component; list of receipt rows with pagination
 - Each receipt row shows: business name (from `listings.name` if `listing_id` is set, else "Unknown business"), amount formatted as dollars, purchase date, status badge (`pending_review` / `approved` / `rejected`), submitted_at relative time (e.g., "3 days ago")
@@ -48,6 +54,7 @@ As an authenticated supporter, I want to see a list of my submitted receipts and
 - Signed URL is for supporter use (own receipts) — the SA must check `receipt_uploads.user_id = auth.uid()`; if the supporter role cannot call this SA directly, expose a separate `GET /api/receipts/[id]/signed-url` Route Handler (Ticket 063) instead — use the Route Handler for supporter access, reserve the SA for admin access
 
 **Out of scope:**
+
 - Deleting a submitted receipt (V1)
 - Editing a submitted receipt after submission (V1)
 - Spend totals / impact summary on this page (Ticket 069 handles personal impact data)
@@ -57,14 +64,14 @@ As an authenticated supporter, I want to see a list of my submitted receipts and
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 014 — Auth flows | Blocking ticket | Not started |
-| Ticket 015 — App shell + account sidebar layout | Blocking ticket | Not started |
-| Ticket 046 — Saved listings page (follow layout patterns for account pages) | Reference ticket | Not started |
-| Ticket 063 — `GET /api/receipts/[id]/signed-url` Route Handler | Blocking ticket (for photo view) | Not started |
-| Ticket 064 — Receipt submission form (produces test data; also needs link back to this page) | Soft dependency | Not started |
-| `receipt_uploads` table | Database | Must exist |
+| Dependency                                                                                   | Type                             | Status      |
+| -------------------------------------------------------------------------------------------- | -------------------------------- | ----------- |
+| Ticket 014 — Auth flows                                                                      | Blocking ticket                  | Not started |
+| Ticket 015 — App shell + account sidebar layout                                              | Blocking ticket                  | Not started |
+| Ticket 046 — Saved listings page (follow layout patterns for account pages)                  | Reference ticket                 | Not started |
+| Ticket 063 — `GET /api/receipts/[id]/signed-url` Route Handler                               | Blocking ticket (for photo view) | Not started |
+| Ticket 064 — Receipt submission form (produces test data; also needs link back to this page) | Soft dependency                  | Not started |
+| `receipt_uploads` table                                                                      | Database                         | Must exist  |
 
 ---
 
@@ -123,13 +130,16 @@ No Server Actions in this ticket — the page is read-only. The upload navigatio
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/account/receipts/page.tsx` — Server Component; reads `?status` and `?page` search params; fetches initial data server-side; renders `ReceiptsHistoryList`
 - `components/spend/ReceiptsHistoryList.tsx` — Client Component; list with expand, filter, and pagination
 
 **Files to modify:**
+
 - `app/account/layout.tsx` (or sidebar nav component) — add "Receipts" nav item
 
 **Key patterns:**
+
 - Use the Supabase client with `auth.uid()` inside the Server Component for the initial server-side data fetch — RLS ensures the query only returns the current user's rows
 - Signed URL fetch in the expand: call `fetch('/api/receipts/[id]/signed-url')` when `onAccordionItemOpen` fires; do not pre-fetch all rows
 - `?uploaded=true` detection: check in `page.tsx` server-side via `searchParams.uploaded`; pass a boolean prop to the Client Component; the Client Component reads it and renders the success banner, then uses `router.replace` to strip the query param after displaying
@@ -138,6 +148,7 @@ No Server Actions in this ticket — the page is read-only. The upload navigatio
 - Relative time: use `Intl.RelativeTimeFormat` or the `date-fns` `formatDistanceToNow` function — check if `date-fns` is already installed before using it
 
 **Do not:**
+
 - Pre-fetch signed URLs for all rows on page load — only fetch on expand
 - Expose `file_path` raw storage paths in the UI — always use the signed URL from the Route Handler
 - Allow modification or deletion of receipts (this is a read-only history view at MVP)
@@ -160,11 +171,11 @@ No Server Actions in this ticket — the page is read-only. The upload navigatio
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Server-side receipts query fails | Error banner: "Could not load your receipts. Please refresh the page." |
+| Failure                              | User-visible behavior                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Server-side receipts query fails     | Error banner: "Could not load your receipts. Please refresh the page."                            |
 | Signed URL fetch fails on row expand | Error message in the expanded row: "Could not load receipt image." — other metadata still visible |
-| Unauthenticated user visits the page | Redirect to `/sign-in?next=/account/receipts` |
+| Unauthenticated user visits the page | Redirect to `/sign-in?next=/account/receipts`                                                     |
 
 ---
 
@@ -190,14 +201,14 @@ No Server Actions in this ticket — the page is read-only. The upload navigatio
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path — list visible | supporter | Submit 3 receipts; navigate to `/account/receipts` | 3 receipt rows shown with correct metadata and status badges |
-| QA-2 | Post-upload success banner | supporter | Submit a receipt via Ticket 064 form | Redirect to `/account/receipts?uploaded=true`; banner "Receipt submitted. We'll review it within 48 hours." shown |
-| QA-3 | Expand row and view image | supporter | Click a receipt row | Row expands; receipt image loads (signed URL fetched on demand) |
-| QA-4 | Rejected receipt detail | supporter | Approve a receipt via admin, then reject it via admin with a reason; view the receipt as the supporter | Row shows "Rejected" badge; rejection reason visible in expanded view |
-| QA-5 | Status filter | supporter | Select "Approved" filter | Only approved receipts shown; URL updates to `?status=approved` |
-| QA-6 | Empty state | supporter (no receipts) | Visit `/account/receipts` | Empty state shown with "Upload Your First Receipt" CTA |
+| #    | Scenario                   | Role                    | Steps                                                                                                  | Expected result                                                                                                   |
+| ---- | -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path — list visible  | supporter               | Submit 3 receipts; navigate to `/account/receipts`                                                     | 3 receipt rows shown with correct metadata and status badges                                                      |
+| QA-2 | Post-upload success banner | supporter               | Submit a receipt via Ticket 064 form                                                                   | Redirect to `/account/receipts?uploaded=true`; banner "Receipt submitted. We'll review it within 48 hours." shown |
+| QA-3 | Expand row and view image  | supporter               | Click a receipt row                                                                                    | Row expands; receipt image loads (signed URL fetched on demand)                                                   |
+| QA-4 | Rejected receipt detail    | supporter               | Approve a receipt via admin, then reject it via admin with a reason; view the receipt as the supporter | Row shows "Rejected" badge; rejection reason visible in expanded view                                             |
+| QA-5 | Status filter              | supporter               | Select "Approved" filter                                                                               | Only approved receipts shown; URL updates to `?status=approved`                                                   |
+| QA-6 | Empty state                | supporter (no receipts) | Visit `/account/receipts`                                                                              | Empty state shown with "Upload Your First Receipt" CTA                                                            |
 
 ---
 

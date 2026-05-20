@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 7: Saves, Reviews, Corrections, Sharing
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 S (1–2h)
 
 ## Feature Area
+
 Analytics / Infrastructure
 
 ---
@@ -42,6 +47,7 @@ As the platform, I need every user interaction to be recorded in a structured an
 ## Scope
 
 **In scope:**
+
 - `app/api/analytics/event/route.ts` — Route Handler; exports `POST` handler
 - Accepts the `AnalyticsEventBody` shape (see API Notes below)
 - Validates `event_name` against a server-side allowlist of the defined event names (see below)
@@ -56,6 +62,7 @@ As the platform, I need every user interaction to be recorded in a structured an
 - All other error paths log server-side and return 200 — the client must never see an unexpected error from this endpoint
 
 **Out of scope:**
+
 - `entity_analytics_daily` aggregation job (this is a background/cron concern)
 - Real-time dashboard data (the dashboard reads from pre-aggregated tables)
 - Full analytics reporting UI
@@ -66,10 +73,10 @@ As the platform, I need every user interaction to be recorded in a structured an
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 012 — `analytics_events` table migration | Blocking ticket | Not started |
-| `NEXT_PUBLIC_SUPABASE_URL` and service role key for direct DB insert | Environment | Must be configured |
+| Dependency                                                           | Type            | Status             |
+| -------------------------------------------------------------------- | --------------- | ------------------ |
+| Ticket 012 — `analytics_events` table migration                      | Blocking ticket | Not started        |
+| `NEXT_PUBLIC_SUPABASE_URL` and service role key for direct DB insert | Environment     | Must be configured |
 
 ---
 
@@ -133,25 +140,26 @@ for_business_page_viewed
 
 ```typescript
 interface AnalyticsEventBody {
-  event_name: string                           // Must be in the 45-event allowlist
-  entity_type?: string                         // E.g., 'listing', 'collection'
-  entity_id?: string                           // UUID of the entity being interacted with
-  properties?: Record<string, unknown>         // Max 5KB serialized
-  session_id?: string                          // Client-generated session identifier
+  event_name: string // Must be in the 45-event allowlist
+  entity_type?: string // E.g., 'listing', 'collection'
+  entity_id?: string // UUID of the entity being interacted with
+  properties?: Record<string, unknown> // Max 5KB serialized
+  session_id?: string // Client-generated session identifier
 }
 ```
 
 **Response shape:**
+
 ```typescript
 { "data": { "success": true } }   // HTTP 200 — always 200 on success or non-critical failure
 ```
 
 **Error responses:**
 
-| Code | HTTP | When |
-|---|---|---|
-| `VALIDATION_ERROR` | 400 | `event_name` not in allowlist, or `properties` exceeds 5KB |
-| `RATE_LIMITED` | 429 | >300 events/min per `session_id` — client silently swallows |
+| Code               | HTTP | When                                                        |
+| ------------------ | ---- | ----------------------------------------------------------- |
+| `VALIDATION_ERROR` | 400  | `event_name` not in allowlist, or `properties` exceeds 5KB  |
+| `RATE_LIMITED`     | 429  | >300 events/min per `session_id` — client silently swallows |
 
 **Important:** All other error paths (DB insert failure, auth lookup failure) must log server-side but return 200. The endpoint must never return a 500 to the client.
 
@@ -160,6 +168,7 @@ interface AnalyticsEventBody {
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/analytics/event/route.ts` — Route Handler; POST only
 - `lib/analytics/insertAnalyticsEvent.ts` — direct DB insert helper for RSC; same schema insert; bypasses HTTP
 - `lib/analytics/eventNames.ts` — `const EVENT_NAMES: readonly string[]` — the 45 allowed event names as a typed tuple
@@ -215,9 +224,13 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         { cookies: { getAll: () => cookieStore.getAll() } }
       )
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       userId = user?.id ?? null
-    } catch { /* anonymous */ }
+    } catch {
+      /* anonymous */
+    }
 
     // Hash IP
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null
@@ -239,7 +252,6 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ data: { success: true } })
-
   } catch (err) {
     // Non-critical failure — log and return 200 anyway (fire-and-forget contract)
     console.error('[analytics/event] Insert failed:', err)
@@ -289,12 +301,13 @@ export async function insertAnalyticsEvent(input: AnalyticsEventInput): Promise<
 fetch('/api/analytics/event', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ event_name: 'listing_page_viewed', entity_id: listingId })
+  body: JSON.stringify({ event_name: 'listing_page_viewed', entity_id: listingId }),
 })
 // No .then(), no .catch() — swallow completely in the caller
 ```
 
 **Do not:**
+
 - Await the analytics fetch in any client component
 - Surface analytics failures to the user in any form
 - Log `user_id` or `listing_id` (which are UUIDs and not PII) in error messages — log only the event_name and a sanitized error
@@ -318,13 +331,13 @@ fetch('/api/analytics/event', {
 
 ## Failure States
 
-| Failure | Condition | User sees | Behavior |
-|---|---|---|---|
-| DB insert fails | Supabase unavailable or network error | Nothing | Error logged server-side; 200 returned to client |
-| Auth lookup fails | Cookie parsing error | Nothing | `user_id` treated as null; insert proceeds anonymously |
-| Invalid event_name | Not in allowlist | 400 returned to client | Client may log error silently; no UI impact (fire-and-forget callers swallow all responses) |
-| Rate limit exceeded | >300/min per session_id | 429 returned | Client swallows silently per fire-and-forget contract |
-| Properties too large | >5KB payload | 400 returned | Client swallows silently |
+| Failure              | Condition                             | User sees              | Behavior                                                                                    |
+| -------------------- | ------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| DB insert fails      | Supabase unavailable or network error | Nothing                | Error logged server-side; 200 returned to client                                            |
+| Auth lookup fails    | Cookie parsing error                  | Nothing                | `user_id` treated as null; insert proceeds anonymously                                      |
+| Invalid event_name   | Not in allowlist                      | 400 returned to client | Client may log error silently; no UI impact (fire-and-forget callers swallow all responses) |
+| Rate limit exceeded  | >300/min per session_id               | 429 returned           | Client swallows silently per fire-and-forget contract                                       |
+| Properties too large | >5KB payload                          | 400 returned           | Client swallows silently                                                                    |
 
 ---
 
@@ -348,15 +361,15 @@ fetch('/api/analytics/event', {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Valid event — anonymous | POST `{ event_name: 'listing_page_viewed', entity_id: '[valid-uuid]' }` without auth | 200 `{ data: { success: true } }`. Row in `analytics_events` with `user_id = null`. `ip_address_hash` is a 64-char hex string. |
-| QA-2 | Valid event — authenticated | POST same body with a valid session cookie | 200. Row in `analytics_events` with correct `user_id`. |
-| QA-3 | Invalid event_name | POST `{ event_name: 'fake_event' }` | 400 `{ error: 'Invalid event name.', code: 'VALIDATION_ERROR' }`. No DB row created. |
-| QA-4 | Properties too large | POST with `properties` containing 6KB of data | 400. No DB row created. |
-| QA-5 | DB failure resilience | Temporarily disable the `analytics_events` table. POST a valid event. | 200 returned. Error logged server-side. No 500 to client. |
-| QA-6 | Rate limit | POST 301 events/min with same `session_id` | First 300 return 200. Request 301 returns 429. |
-| QA-7 | Server-side insert helper | Call `insertAnalyticsEvent` from a Server Component with a valid event. | Row inserted in `analytics_events` with `source = 'server'`. No HTTP round trip. |
+| ID   | Test                        | Steps                                                                                | Expected                                                                                                                       |
+| ---- | --------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| QA-1 | Valid event — anonymous     | POST `{ event_name: 'listing_page_viewed', entity_id: '[valid-uuid]' }` without auth | 200 `{ data: { success: true } }`. Row in `analytics_events` with `user_id = null`. `ip_address_hash` is a 64-char hex string. |
+| QA-2 | Valid event — authenticated | POST same body with a valid session cookie                                           | 200. Row in `analytics_events` with correct `user_id`.                                                                         |
+| QA-3 | Invalid event_name          | POST `{ event_name: 'fake_event' }`                                                  | 400 `{ error: 'Invalid event name.', code: 'VALIDATION_ERROR' }`. No DB row created.                                           |
+| QA-4 | Properties too large        | POST with `properties` containing 6KB of data                                        | 400. No DB row created.                                                                                                        |
+| QA-5 | DB failure resilience       | Temporarily disable the `analytics_events` table. POST a valid event.                | 200 returned. Error logged server-side. No 500 to client.                                                                      |
+| QA-6 | Rate limit                  | POST 301 events/min with same `session_id`                                           | First 300 return 200. Request 301 returns 429.                                                                                 |
+| QA-7 | Server-side insert helper   | Call `insertAnalyticsEvent` from a Server Component with a valid event.              | Row inserted in `analytics_events` with `source = 'server'`. No HTTP round trip.                                               |
 
 ---
 

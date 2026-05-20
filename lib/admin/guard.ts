@@ -1,10 +1,10 @@
-import { redirect } from "next/navigation"
-import { createClient, createServiceClient } from "@/lib/supabase/server"
-import type { Json } from "@/lib/supabase/types"
+import { redirect } from 'next/navigation'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import type { Json } from '@/lib/supabase/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type AdminRole = "admin" | "super_admin"
+export type AdminRole = 'admin' | 'super_admin'
 
 export interface AdminSession {
   user: { id: string; email: string | undefined }
@@ -21,17 +21,17 @@ export async function requireAdmin(): Promise<AdminSession> {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/admin")
+  if (!user) redirect('/sign-in?next=/admin')
 
   const serviceClient = createServiceClient()
   const { data: roleRow } = await serviceClient
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .in("role", ["admin", "super_admin"])
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .in('role', ['admin', 'super_admin'])
     .maybeSingle()
 
-  if (!roleRow) redirect("/")
+  if (!roleRow) redirect('/')
 
   return {
     user: { id: user.id, email: user.email },
@@ -50,10 +50,10 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   const serviceClient = createServiceClient()
   const { data: roleRow } = await serviceClient
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .in("role", ["admin", "super_admin"])
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .in('role', ['admin', 'super_admin'])
     .maybeSingle()
 
   if (!roleRow) return null
@@ -82,7 +82,7 @@ export async function writeAuditLog({
   afterState?: Record<string, unknown> | null
 }): Promise<void> {
   const serviceClient = createServiceClient()
-  await serviceClient.from("admin_audit_log").insert({
+  await serviceClient.from('admin_audit_log').insert({
     admin_user_id: adminUserId,
     action,
     target_table: targetTable,

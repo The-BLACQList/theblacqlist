@@ -1,8 +1,8 @@
-import type { LucideIcon } from "lucide-react"
-import Link from "next/link"
+import type { LucideIcon } from 'lucide-react'
+import Link from 'next/link'
 
-import { CTAButtonGroup } from "@/components/ui/cta-button-group"
-import { cn } from "@/lib/utils"
+import { CTAButtonGroup } from '@/components/ui/cta-button-group'
+import { cn } from '@/lib/utils'
 
 interface EmptyStateAction {
   label: string
@@ -31,37 +31,17 @@ export function EmptyState({
   className,
   level = 2,
 }: EmptyStateProps) {
-  const Heading = `h${level}` as "h1" | "h2" | "h3"
+  const Heading = `h${level}` as 'h1' | 'h2' | 'h3'
 
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center text-center py-16 px-4 gap-4",
-        className
-      )}
-    >
-      {Icon && (
-        <Icon
-          className={cn("size-12 text-charcoal", iconClassName)}
-          aria-hidden="true"
-        />
-      )}
+    <div className={cn('flex flex-col items-center text-center py-16 px-4 gap-4', className)}>
+      {Icon && <Icon className={cn('size-12 text-charcoal', iconClassName)} aria-hidden="true" />}
 
-      <Heading className="font-headline text-xl md:text-2xl text-brand-black">
-        {heading}
-      </Heading>
+      <Heading className="font-headline text-xl md:text-2xl text-brand-black">{heading}</Heading>
 
-      {body && (
-        <p className="font-body text-base text-charcoal max-w-sm">{body}</p>
-      )}
+      {body && <p className="font-body text-base text-charcoal max-w-sm">{body}</p>}
 
-      {action && (
-        <CTAButtonGroup
-          primary={action}
-          align="center"
-          stackOnMobile={false}
-        />
-      )}
+      {action && <CTAButtonGroup primary={action} align="center" stackOnMobile={false} />}
 
       {secondaryAction && (
         <Link
@@ -74,4 +54,3 @@ export function EmptyState({
     </div>
   )
 }
-

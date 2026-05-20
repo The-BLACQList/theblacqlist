@@ -1,15 +1,19 @@
 # Ticket 090: SEO audit — `sitemap.xml`, `robots.txt`, Google Search Console submission
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 17: Security, QA, Accessibility, Launch
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 SEO
 
 ---
@@ -33,6 +37,7 @@ As a potential user searching Google for Black-owned businesses in their city, I
 **In scope:**
 
 **1. `sitemap.xml` verification and fixes**
+
 - Verify `app/sitemap.ts` generates a valid XML sitemap accessible at `[production-url]/sitemap.xml`
 - Required URL groups in the sitemap:
   - All published BLACQList Pages: `[domain]/[city-slug]/business/[listing-slug]`
@@ -45,6 +50,7 @@ As a potential user searching Google for Black-owned businesses in their city, I
 - Validate sitemap XML with an online validator (e.g., `xmlvalidator.net`) — no validation errors allowed
 
 **2. `robots.txt` verification and fixes**
+
 - Verify `app/robots.ts` generates the correct `robots.txt` accessible at `[production-url]/robots.txt`
 - Required `Disallow` rules: `/admin`, `/dashboard`, `/account`, `/api`, `/sign-in`, `/sign-up`, `/onboarding`, `/reset-password`, `/verify-email`, `/claim`
 - `Allow: /` for all other paths
@@ -52,6 +58,7 @@ As a potential user searching Google for Black-owned businesses in their city, I
 - Test that Googlebot is not blocked (`User-agent: *` must have `Disallow` only for authenticated/private paths)
 
 **3. OG tag audit**
+
 - Sample 10 published BLACQList Pages and 5 city pages
 - For each, verify via `curl -A "facebookexternalhit/1.1" [url]` or a social preview tool (opengraph.xyz):
   - `og:title` — present, non-empty, matches page title
@@ -61,25 +68,30 @@ As a potential user searching Google for Black-owned businesses in their city, I
   - `twitter:card` — present (use `summary_large_image`)
 
 **4. JSON-LD structured data spot-check**
+
 - Spot-check 5 published BLACQList Pages using Google's Rich Results Test (search.google.com/test/rich-results)
 - Verify `LocalBusiness` schema is present and valid: `@type`, `name`, `description`, `url`, `address`, `telephone` (if available), `openingHours` (if available), `image`
 - Zero validation errors in the Rich Results Test for each checked page
 
 **5. Canonical URL verification**
+
 - Verify `<link rel="canonical" href="...">` is present on all entity pages, city pages, and static pages
 - Canonical URL must match the clean production URL (not a URL with trailing slash, query string, or staging domain)
 
 **6. Page title uniqueness check**
+
 - Spot-check 10 different BLACQList Pages — each must have a unique `<title>` tag
 - Format: `[Business Name] — [City] | The BLACQList`
 - Homepage title: `The BLACQList — Discover Black-Owned Businesses`
 
 **7. Post-launch: Google Search Console submission** (action items for after production deployment, not for staging)
+
 - Submit sitemap URL to Google Search Console at `https://search.google.com/search-console`
 - Document the property verification method used (HTML tag meta in root layout or DNS record)
 - Request indexing for the homepage and 5 priority listing pages
 
 **Out of scope:**
+
 - Bing Webmaster Tools submission (deferred)
 - Schema markup for non-listing pages (deferred)
 - Search engine ranking analysis (V1 — requires live traffic data)
@@ -88,13 +100,13 @@ As a potential user searching Google for Black-owned businesses in their city, I
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 023: BLACQList Page SEO metadata, OG image, JSON-LD, sitemap | Must be implemented and complete | In Progress |
-| Ticket 027: City landing pages | Must exist for city page sitemap entries | In Progress |
-| All BLACQList Page tickets (020–024) | Must be implemented for OG audit | In Progress |
-| Staging environment with seed data | Infrastructure | Required |
-| Production deployment (Ticket 092) | Required for Google Search Console submission | Must happen after this ticket's pre-launch work |
+| Dependency                                                          | Type                                          | Status                                          |
+| ------------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| Ticket 023: BLACQList Page SEO metadata, OG image, JSON-LD, sitemap | Must be implemented and complete              | In Progress                                     |
+| Ticket 027: City landing pages                                      | Must exist for city page sitemap entries      | In Progress                                     |
+| All BLACQList Page tickets (020–024)                                | Must be implemented for OG audit              | In Progress                                     |
+| Staging environment with seed data                                  | Infrastructure                                | Required                                        |
+| Production deployment (Ticket 092)                                  | Required for Google Search Console submission | Must happen after this ticket's pre-launch work |
 
 ---
 
@@ -113,6 +125,7 @@ No design changes.
 ## Data Notes
 
 **`sitemap.ts` data queries:**
+
 - `SELECT slug, city_id, updated_at FROM listings WHERE status = 'published' AND deleted_at IS NULL AND flag_status = 'none'` — for listing page URLs
 - JOIN to `cities` to get `city_slug` for the URL construction
 - `SELECT slug, updated_at FROM cities WHERE is_active = true` — for city pages
@@ -132,13 +145,16 @@ No new API endpoints. `sitemap.ts` and `robots.ts` are Next.js App Router built-
 ## Implementation Notes
 
 **Files to modify:**
+
 - `app/sitemap.ts` — verify and fix all URL groups; ensure `lastmod` is included; add pagination support (`generateSitemaps` function from Next.js for large sitemaps)
 - `app/robots.ts` — verify all `Disallow` rules; add `Sitemap` reference
 
 **Files to create:**
+
 - `docs/blacqlist/launch/seo-audit-checklist.md` — completed checklist with pass/fail per item and notes on any issues found and resolved
 
 **Sitemap pagination pattern (for future-proofing):**
+
 ```ts
 // app/sitemap.ts — generate up to 1000 URLs per sitemap; use generateSitemaps for more
 export async function generateSitemaps() {
@@ -149,11 +165,12 @@ export async function generateSitemaps() {
 
 export default async function sitemap({ id }: { id: number }): Promise<MetadataRoute.Sitemap> {
   const listings = await getPublishedListings({ offset: id * 1000, limit: 1000 })
-  return listings.map(l => ({ url: `.../${l.slug}`, lastModified: l.updated_at }))
+  return listings.map((l) => ({ url: `.../${l.slug}`, lastModified: l.updated_at }))
 }
 ```
 
 **OG audit tool command:**
+
 ```bash
 curl -A "facebookexternalhit/1.1" https://staging.theblacqlist.com/atlanta-ga/business/sweet-auburn-bbq-atl \
   | grep -E "og:|twitter:|canonical"
@@ -162,6 +179,7 @@ curl -A "facebookexternalhit/1.1" https://staging.theblacqlist.com/atlanta-ga/bu
 **Rich Results Test:** Cannot be automated — must be run manually at search.google.com/test/rich-results for each of the 5 checked pages.
 
 **Do not:**
+
 - Include staging or preview URLs in the sitemap (sitemap must only reference production URLs)
 - Include `/og/` image generation routes in the sitemap (these are not indexable pages)
 - Disallow `/discover` or `/search` in `robots.txt` (these are public discovery pages that should be indexed)
@@ -187,13 +205,13 @@ curl -A "facebookexternalhit/1.1" https://staging.theblacqlist.com/atlanta-ga/bu
 
 ## Failure States
 
-| Failure | Resolution |
-|---|---|
-| Sitemap XML validation error | Fix the `sitemap.ts` output; re-validate |
-| OG image returns 404 | Verify OG image route exists at `app/og/...`; check `next.config.ts` for route exclusions |
-| JSON-LD Rich Results Test errors | Fix the `generateMetadata` function in the listing page component (Ticket 023) |
-| Canonical URL points to staging domain | Update `NEXT_PUBLIC_APP_URL` env var; rebuild and retest |
-| `robots.txt` blocks Googlebot from public pages | Remove incorrect `Disallow` rule; verify `Allow: /` is present |
+| Failure                                         | Resolution                                                                                |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Sitemap XML validation error                    | Fix the `sitemap.ts` output; re-validate                                                  |
+| OG image returns 404                            | Verify OG image route exists at `app/og/...`; check `next.config.ts` for route exclusions |
+| JSON-LD Rich Results Test errors                | Fix the `generateMetadata` function in the listing page component (Ticket 023)            |
+| Canonical URL points to staging domain          | Update `NEXT_PUBLIC_APP_URL` env var; rebuild and retest                                  |
+| `robots.txt` blocks Googlebot from public pages | Remove incorrect `Disallow` rule; verify `Allow: /` is present                            |
 
 ---
 
@@ -213,13 +231,13 @@ This ticket has no direct accessibility impact. SEO metadata changes (`<title>`,
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Sitemap valid XML | Developer | Navigate to `/sitemap.xml`; copy content; validate at xmlvalidator.net | Zero validation errors |
-| QA-2 | Robots.txt correct | Developer | Navigate to `/robots.txt`; verify all Disallow rules | All private paths disallowed; `/discover`, `/search`, `city/` allowed |
-| QA-3 | OG tags on listing page | Developer | Run curl OG audit command on 3 different listing pages | All four OG tags present and non-empty for each |
-| QA-4 | JSON-LD structured data | Developer | Run Rich Results Test on one listing page | `LocalBusiness` schema present; zero validation errors |
-| QA-5 | Canonical URL format | Developer | View source of any listing page; find `<link rel="canonical">` | URL matches production domain format; no trailing slash; no query string |
+| #    | Scenario                | Role      | Steps                                                                  | Expected result                                                          |
+| ---- | ----------------------- | --------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| QA-1 | Sitemap valid XML       | Developer | Navigate to `/sitemap.xml`; copy content; validate at xmlvalidator.net | Zero validation errors                                                   |
+| QA-2 | Robots.txt correct      | Developer | Navigate to `/robots.txt`; verify all Disallow rules                   | All private paths disallowed; `/discover`, `/search`, `city/` allowed    |
+| QA-3 | OG tags on listing page | Developer | Run curl OG audit command on 3 different listing pages                 | All four OG tags present and non-empty for each                          |
+| QA-4 | JSON-LD structured data | Developer | Run Rich Results Test on one listing page                              | `LocalBusiness` schema present; zero validation errors                   |
+| QA-5 | Canonical URL format    | Developer | View source of any listing page; find `<link rel="canonical">`         | URL matches production domain format; no trailing slash; no query string |
 
 ---
 

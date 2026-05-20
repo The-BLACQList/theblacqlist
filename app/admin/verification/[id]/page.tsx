@@ -1,14 +1,14 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import type { Metadata } from "next"
-import { FileText, ImageIcon } from "lucide-react"
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { FileText, ImageIcon } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
-import { VerificationDecisionForm } from "@/components/admin/VerificationDecisionForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
+import { VerificationDecisionForm } from '@/components/admin/VerificationDecisionForm'
 
-export const metadata: Metadata = { title: "Verify Listing" }
+export const metadata: Metadata = { title: 'Verify Listing' }
 
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -34,13 +34,15 @@ export default async function VerificationDetailPage({ params }: Props) {
   const serviceClient = createServiceClient()
 
   const { data: listing } = await serviceClient
-    .from("listings")
-    .select(`
+    .from('listings')
+    .select(
+      `
       id, name, slug, status, trust_tier, verification_status,
       verification_docs, verification_notes, verified_at, verified_by,
       listing_details_business(description, phone, email, website_url)
-    `)
-    .eq("id", id)
+    `
+    )
+    .eq('id', id)
     .maybeSingle()
 
   if (!listing) notFound()
@@ -53,12 +55,12 @@ export default async function VerificationDetailPage({ params }: Props) {
   } | null
 
   const pendingQueueItem = await serviceClient
-    .from("moderation_queue")
-    .select("id, created_at")
-    .eq("entity_id", id)
-    .eq("queue_type", "verification")
-    .in("status", ["pending", "assigned"])
-    .order("created_at", { ascending: false })
+    .from('moderation_queue')
+    .select('id, created_at')
+    .eq('entity_id', id)
+    .eq('queue_type', 'verification')
+    .in('status', ['pending', 'assigned'])
+    .order('created_at', { ascending: false })
     .maybeSingle()
 
   const queueItem = pendingQueueItem.data
@@ -69,9 +71,7 @@ export default async function VerificationDetailPage({ params }: Props) {
     : []
   const signedDocs: { path: string; url: string }[] = []
   for (const path of docPaths) {
-    const { data } = await serviceClient.storage
-      .from("receipt-uploads")
-      .createSignedUrl(path, 3600)
+    const { data } = await serviceClient.storage.from('receipt-uploads').createSignedUrl(path, 3600)
     if (data?.signedUrl) signedDocs.push({ path, url: data.signedUrl })
   }
 
@@ -107,7 +107,7 @@ export default async function VerificationDetailPage({ params }: Props) {
         <dl>
           <Row label="Status" value={listing.status} />
           <Row label="Trust tier" value={listing.trust_tier} />
-          <Row label="Verification" value={listing.verification_status ?? "Not yet set"} />
+          <Row label="Verification" value={listing.verification_status ?? 'Not yet set'} />
           <Row label="Email" value={details?.email} />
           <Row label="Phone" value={details?.phone} />
           <Row label="Website" value={details?.website_url} />
@@ -117,12 +117,12 @@ export default async function VerificationDetailPage({ params }: Props) {
           {listing.verified_at && (
             <Row
               label="Verified at"
-              value={new Date(listing.verified_at).toLocaleString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+              value={new Date(listing.verified_at).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             />
           )}
@@ -135,21 +135,22 @@ export default async function VerificationDetailPage({ params }: Props) {
           Verification documents
           {docPaths.length > 0 && (
             <span className="ml-2 font-subhead text-xs text-charcoal/50 font-normal">
-              {docPaths.length} file{docPaths.length !== 1 ? "s" : ""}
+              {docPaths.length} file{docPaths.length !== 1 ? 's' : ''}
             </span>
           )}
         </h2>
         {signedDocs.length === 0 ? (
-          <p className="font-body text-sm text-charcoal/50">
-            No documents uploaded yet.
-          </p>
+          <p className="font-body text-sm text-charcoal/50">No documents uploaded yet.</p>
         ) : (
           <ul className="space-y-2">
             {signedDocs.map(({ path, url }) => {
-              const filename = path.split("/").pop() ?? path
-              const isPdf = filename.toLowerCase().endsWith(".pdf")
+              const filename = path.split('/').pop() ?? path
+              const isPdf = filename.toLowerCase().endsWith('.pdf')
               return (
-                <li key={path} className="flex items-center gap-3 rounded-lg border border-charcoal/10 px-4 py-2.5">
+                <li
+                  key={path}
+                  className="flex items-center gap-3 rounded-lg border border-charcoal/10 px-4 py-2.5"
+                >
                   {isPdf ? (
                     <FileText className="size-4 shrink-0 text-charcoal/40" aria-hidden="true" />
                   ) : (
@@ -188,11 +189,11 @@ export default async function VerificationDetailPage({ params }: Props) {
         <div className="rounded-xl border border-charcoal/10 bg-white p-6">
           <h2 className="font-headline text-base text-brand-black mb-1">Verification decision</h2>
           <p className="font-body text-xs text-charcoal/50 mb-4">
-            Requested{" "}
-            {new Date(queueItem.created_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
+            Requested{' '}
+            {new Date(queueItem.created_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
             })}
           </p>
           <VerificationDecisionForm listingId={listing.id} />

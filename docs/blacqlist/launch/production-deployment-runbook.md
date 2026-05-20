@@ -38,14 +38,14 @@ If the Vercel project does not yet exist, complete this section once. Skip to St
 
 Vercel auto-detects all of these for Next.js. Confirm they match; do not override unless shown otherwise:
 
-| Setting | Value |
-|---|---|
-| Framework preset | Next.js |
-| Build command | `pnpm build` |
+| Setting          | Value                   |
+| ---------------- | ----------------------- |
+| Framework preset | Next.js                 |
+| Build command    | `pnpm build`            |
 | Output directory | `.next` (auto-detected) |
-| Install command | `pnpm install` |
-| Node.js version | 20.x |
-| Root directory | `/` (repository root) |
+| Install command  | `pnpm install`          |
+| Node.js version  | 20.x                    |
+| Root directory   | `/` (repository root)   |
 
 If Vercel shows a different install command (e.g., `npm install`), override it to `pnpm install`.
 
@@ -88,15 +88,15 @@ The production database URL (direct connection, not pooled) is stored in your te
 
 **Migration order:**
 
-| # | File | Description | Risk |
-|---|---|---|---|
-| 1 | `20260510000000_initial_blacqlist_mvp_schema.sql` | Core tables: users, listings, cities, categories, saves, claims | Low — additive |
-| 2 | `20260510000001_mvp_rls_policies.sql` | RLS policies for all MVP tables | Low — additive |
-| 3 | `20260511000000_editorial_foundation.sql` | Collections, guides, BLACQLight editorial | Low — additive |
-| 4 | `20260511000001_receipt_community_spend.sql` | Receipt uploads, spend events, community spend | Low — additive |
-| 5 | `20260511000002_marketplace_foundation.sql` | Products, services, vendor storefronts, orders | Low — additive |
-| 6 | `20260511000003_monetization_foundation.sql` | Plans, subscriptions, sponsored placements — defines `set_updated_at()` | Low — additive |
-| 7 | `20260511000004_ai_foundation.sql` | AI suggestions, generation requests — depends on `set_updated_at()` from migration 6 | Low — additive |
+| #   | File                                              | Description                                                                          | Risk           |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------- |
+| 1   | `20260510000000_initial_blacqlist_mvp_schema.sql` | Core tables: users, listings, cities, categories, saves, claims                      | Low — additive |
+| 2   | `20260510000001_mvp_rls_policies.sql`             | RLS policies for all MVP tables                                                      | Low — additive |
+| 3   | `20260511000000_editorial_foundation.sql`         | Collections, guides, BLACQLight editorial                                            | Low — additive |
+| 4   | `20260511000001_receipt_community_spend.sql`      | Receipt uploads, spend events, community spend                                       | Low — additive |
+| 5   | `20260511000002_marketplace_foundation.sql`       | Products, services, vendor storefronts, orders                                       | Low — additive |
+| 6   | `20260511000003_monetization_foundation.sql`      | Plans, subscriptions, sponsored placements — defines `set_updated_at()`              | Low — additive |
+| 7   | `20260511000004_ai_foundation.sql`                | AI suggestions, generation requests — depends on `set_updated_at()` from migration 6 | Low — additive |
 
 **Before running migration 6:** Confirm that migration 5 has applied successfully. Migration 7 depends on the `set_updated_at()` function created in migration 6 — if migration 6 fails, migration 7 will error.
 
@@ -168,10 +168,10 @@ ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
 
 Vercel will show the required DNS records. Add them at your domain registrar:
 
-| Record type | Name | Value |
-|---|---|---|
-| A | `@` | `76.76.21.21` (Vercel's IP — confirm in Vercel dashboard) |
-| CNAME | `www` | `cname.vercel-dns.com` |
+| Record type | Name  | Value                                                     |
+| ----------- | ----- | --------------------------------------------------------- |
+| A           | `@`   | `76.76.21.21` (Vercel's IP — confirm in Vercel dashboard) |
+| CNAME       | `www` | `cname.vercel-dns.com`                                    |
 
 DNS propagation: typically 5–30 minutes; up to 48 hours in rare cases. Vercel Dashboard will show "Valid Configuration" once DNS is confirmed.
 
@@ -204,6 +204,7 @@ The Vercel Deployments page will show a green "Ready" status. If the build fails
 Within 5 minutes of successful deployment, run every item in `prelaunch-smoke-test.md`.
 
 If any smoke test fails, assess severity:
+
 - **P0 failure** (site down, auth broken, all data missing): initiate rollback immediately via `rollback-plan.md`
 - **P1 failure** (specific critical flow broken): evaluate whether hotfix is faster than rollback; document the decision
 - **P2/P3 failure**: log as a known issue, do not rollback, fix in next deploy
@@ -215,27 +216,32 @@ If any smoke test fails, assess severity:
 Confirm each item within 30 minutes of deployment:
 
 ### Application
+
 - [ ] `https://theblacqlist.com` loads and the homepage renders correctly
 - [ ] `https://www.theblacqlist.com` redirects to `https://theblacqlist.com`
 - [ ] HTTPS is enforced — `http://theblacqlist.com` redirects to `https://`
 - [ ] All smoke tests in `prelaunch-smoke-test.md` pass
 
 ### Supabase
+
 - [ ] Supabase production dashboard shows all 7 migrations applied
 - [ ] Seed data counts correct (51 states, 13 cities, 25+ categories, 3 plans)
 - [ ] Admin user exists in `user_roles` with `role = 'admin'`
 - [ ] RLS enabled on all tables (Supabase Dashboard → Database → Tables → each table shows RLS = enabled)
 
 ### Vercel
+
 - [ ] Vercel Dashboard shows deployment status = Ready (green)
 - [ ] Vercel Analytics is enabled and receiving data (Dashboard → Analytics)
 - [ ] No environment variable warnings in Vercel project settings
 
 ### Monitoring
+
 - [ ] Sentry is receiving events — trigger a test error and confirm it appears in Sentry within 60 seconds
 - [ ] Vercel Analytics shows pageview data for the homepage after the smoke test
 
 ### Auth
+
 - [ ] Sign-up creates an account and sends verification email to the inbox (not spam) within 2 minutes
 - [ ] Auth callback URL `https://theblacqlist.com/auth/callback` is working — test by completing sign-up through email verification
 - [ ] `/dashboard` redirects to sign-in when accessed without a session

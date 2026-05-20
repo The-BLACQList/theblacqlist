@@ -46,6 +46,7 @@ The hero and a select few high-impact sections use deep dark backgrounds (`#1919
 **Content width:** BLACQList Pages use a maximum content width of 960px, centered with auto horizontal margins (`max-w-[960px] mx-auto`). This is narrower than typical marketing pages and intentional — it produces a more editorial, focused reading experience.
 
 **Full-bleed elements:** Two categories of element bleed to the full viewport width regardless of the 960px content constraint:
+
 - The hero section cover image (always full viewport width)
 - Section backgrounds (background colors extend to viewport edges; content inside the background is still constrained to 960px)
 
@@ -55,12 +56,12 @@ The hero and a select few high-impact sections use deep dark backgrounds (`#1919
 
 **Responsive layout summary:**
 
-| Viewport | Content width | Padding | Notable behavior |
-|---|---|---|---|
-| Mobile (375px) | Full viewport | 16px horizontal padding | Single column; bottom sticky action bar; hero image above entity name |
-| Tablet (768px) | Full viewport | 24px horizontal padding | Single column; begins to use horizontal row layouts for At-a-Glance |
-| Desktop (1024px+) | 960px max, centered | 32px horizontal padding | Full layout; sticky action bar appears at top; all multi-column grids active |
-| Large desktop (1280px+) | 960px max (no wider) | Auto outside margins | Outer margins visible; page feels contained and editorial rather than stretched |
+| Viewport                | Content width        | Padding                 | Notable behavior                                                                |
+| ----------------------- | -------------------- | ----------------------- | ------------------------------------------------------------------------------- |
+| Mobile (375px)          | Full viewport        | 16px horizontal padding | Single column; bottom sticky action bar; hero image above entity name           |
+| Tablet (768px)          | Full viewport        | 24px horizontal padding | Single column; begins to use horizontal row layouts for At-a-Glance             |
+| Desktop (1024px+)       | 960px max, centered  | 32px horizontal padding | Full layout; sticky action bar appears at top; all multi-column grids active    |
+| Large desktop (1280px+) | 960px max (no wider) | Auto outside margins    | Outer margins visible; page feels contained and editorial rather than stretched |
 
 ---
 
@@ -70,22 +71,23 @@ The hero and a select few high-impact sections use deep dark backgrounds (`#1919
 
 **Background color alternation pattern for a Business Page (the primary template):**
 
-| Section | Background |
-|---|---|
-| Hero | Full-bleed cover image + gradient overlay; background beneath image is `#19191E` |
-| Quick Action Bar | `#19191E` (Dark) — desktop top bar; on mobile, `#19191E` sticky bottom bar |
-| At-a-Glance | `#FFFFFF` (White) |
-| Story | `#FCFAF4` (Cream) |
-| What They Offer | `#FFFFFF` (White) |
-| Media | `#19191E` (Deep Background) — the gallery feels like a curated editorial spread |
-| Trust | `#E9E9F7` (Pale Lavender) — a distinct, calm register for credibility content |
-| Community Connection | `#FFFFFF` (White) |
-| Platform Activity | `#FCFAF4` (Cream) |
-| Related Discovery | `#E9E9F7` (Pale Lavender) |
+| Section              | Background                                                                       |
+| -------------------- | -------------------------------------------------------------------------------- |
+| Hero                 | Full-bleed cover image + gradient overlay; background beneath image is `#19191E` |
+| Quick Action Bar     | `#19191E` (Dark) — desktop top bar; on mobile, `#19191E` sticky bottom bar       |
+| At-a-Glance          | `#FFFFFF` (White)                                                                |
+| Story                | `#FCFAF4` (Cream)                                                                |
+| What They Offer      | `#FFFFFF` (White)                                                                |
+| Media                | `#19191E` (Deep Background) — the gallery feels like a curated editorial spread  |
+| Trust                | `#E9E9F7` (Pale Lavender) — a distinct, calm register for credibility content    |
+| Community Connection | `#FFFFFF` (White)                                                                |
+| Platform Activity    | `#FCFAF4` (Cream)                                                                |
+| Related Discovery    | `#E9E9F7` (Pale Lavender)                                                        |
 
 The rhythm alternates between White and Cream for content sections, uses Pale Lavender for trust-adjacent and discovery sections, and uses Deep Background for the hero and gallery. This rhythm keeps the page visually active without being busy.
 
 **Within-section spacing:**
+
 - Section heading to first content element: 24px
 - Between content items within a section (service rows, review cards): 16px
 - Card internal padding: 24px
@@ -97,21 +99,21 @@ The rhythm alternates between White and Cream for content sections, uses Pale La
 
 All sizes below are defined in points and described in approximate Tailwind equivalents for reference. The exact rendering depends on the font metrics of Glacial Indifference, Lato, and Quicksand as loaded.
 
-| Element | Font | Weight/Style | Desktop size | Mobile size | Color |
-|---|---|---|---|---|---|
-| Entity name (h1) | Glacial Indifference | Bold | 40px | 28px | `#FFFFFF` (on dark hero) |
-| Section header (h2) | Glacial Indifference | Bold | 28px | 22px | `#000000` on light; `#FFFFFF` on dark |
-| Sub-section header (h3) | Lato | Regular | 18px | 16px | `#000000` on light; `#FFFFFF` on dark |
-| Body copy | Quicksand | Bold Italic | 16px | 15px | `#000000` on light; `#FFFFFF` on dark |
-| CTA label | Quicksand | Bold Italic | 16px | 15px | `#000000` (on Amber Gold button); `#FFFFFF` (on dark button) |
-| Category/city label | Lato | Regular | 14px | 13px | `#595758` (Charcoal) on light backgrounds |
-| Trust badge text | Lato | Regular | 13px | 12px | Color defined per tier (see Section 9) |
-| Hours / metadata | Lato | Regular | 14px | 13px | `#595758` (Charcoal) |
-| Price in services | Lato | Regular | 14px | 14px | `#E2A428` (Amber Gold) on light; `#FFD867` (Light Gold) on dark |
-| Review text | Quicksand | Bold Italic | 15px | 14px | `#000000` |
-| Tagline | Lato | Regular | 18px | 15px | `#E9E9F7` (Pale Lavender) on dark hero |
-| Save count / activity | Lato | Regular | 14px | 13px | `#595758` (Charcoal) |
-| "Read more" / expand toggle | Lato | Regular | 14px | 13px | `#E2A428` (Amber Gold) |
+| Element                     | Font                 | Weight/Style | Desktop size | Mobile size | Color                                                           |
+| --------------------------- | -------------------- | ------------ | ------------ | ----------- | --------------------------------------------------------------- |
+| Entity name (h1)            | Glacial Indifference | Bold         | 40px         | 28px        | `#FFFFFF` (on dark hero)                                        |
+| Section header (h2)         | Glacial Indifference | Bold         | 28px         | 22px        | `#000000` on light; `#FFFFFF` on dark                           |
+| Sub-section header (h3)     | Lato                 | Regular      | 18px         | 16px        | `#000000` on light; `#FFFFFF` on dark                           |
+| Body copy                   | Quicksand            | Bold Italic  | 16px         | 15px        | `#000000` on light; `#FFFFFF` on dark                           |
+| CTA label                   | Quicksand            | Bold Italic  | 16px         | 15px        | `#000000` (on Amber Gold button); `#FFFFFF` (on dark button)    |
+| Category/city label         | Lato                 | Regular      | 14px         | 13px        | `#595758` (Charcoal) on light backgrounds                       |
+| Trust badge text            | Lato                 | Regular      | 13px         | 12px        | Color defined per tier (see Section 9)                          |
+| Hours / metadata            | Lato                 | Regular      | 14px         | 13px        | `#595758` (Charcoal)                                            |
+| Price in services           | Lato                 | Regular      | 14px         | 14px        | `#E2A428` (Amber Gold) on light; `#FFD867` (Light Gold) on dark |
+| Review text                 | Quicksand            | Bold Italic  | 15px         | 14px        | `#000000`                                                       |
+| Tagline                     | Lato                 | Regular      | 18px         | 15px        | `#E9E9F7` (Pale Lavender) on dark hero                          |
+| Save count / activity       | Lato                 | Regular      | 14px         | 13px        | `#595758` (Charcoal)                                            |
+| "Read more" / expand toggle | Lato                 | Regular      | 14px         | 13px        | `#E2A428` (Amber Gold)                                          |
 
 **Line height:** Body copy uses a line height of 1.6 (generous for Quicksand Bold Italic at body sizes). Headings use a line height of 1.15 (tight, editorial). Metadata rows use a line height of 1.4.
 
@@ -157,13 +159,13 @@ If the entity has uploaded a logo, it appears as a circular-cropped image of 64p
 
 **Free/Standard vs Premium hero summary:**
 
-| Element | Free / Standard | Premium |
-|---|---|---|
-| Image width | Constrained to 960px content container with visible page background on sides | Full viewport width, edge-to-edge |
-| Image border radius | 12px top corners, 0 bottom (since content continues below) | 0 (no radius — full bleed) |
-| Gradient overlay | Present | Present (same spec) |
-| Max image height | 440px desktop | 560px desktop |
-| All other elements | Identical | Identical |
+| Element             | Free / Standard                                                              | Premium                           |
+| ------------------- | ---------------------------------------------------------------------------- | --------------------------------- |
+| Image width         | Constrained to 960px content container with visible page background on sides | Full viewport width, edge-to-edge |
+| Image border radius | 12px top corners, 0 bottom (since content continues below)                   | 0 (no radius — full bleed)        |
+| Gradient overlay    | Present                                                                      | Present (same spec)               |
+| Max image height    | 440px desktop                                                                | 560px desktop                     |
+| All other elements  | Identical                                                                    | Identical                         |
 
 ---
 
@@ -279,6 +281,7 @@ The Quick Action Bar is a secondary navigation element that maintains access to 
 Full-width bar, 56px height, Deep Background (`#19191E`) background, 1px top border in `rgba(255, 255, 255, 0.1)`.
 
 Left-to-right content:
+
 1. Primary CTA button — Amber Gold background, Brand Black Quicksand Bold Italic label, full-width but leaving room for the icon buttons. This button fills approximately 55% of the bar width.
 2. Phone icon button — White icon, 44px tap target, only rendered if the entity has a phone number. Icon-only on mobile. Tap opens `tel:` link.
 3. Map/Directions icon button — White pin icon, 44px tap target, only rendered if the entity has a physical address. Tap opens maps link. Hidden for service-area businesses and remote/online entities.
@@ -291,19 +294,20 @@ The three or four icon buttons fill the remaining 45% of the bar width, distribu
 Full-width bar, 52px height, Deep Background (`#19191E`) background.
 
 Left-to-right content:
+
 - Left side: Entity name in Lato Regular 14px White (truncated with ellipsis if longer than 200px). This orients the user who may have scrolled far down the page.
 - Right side: Flex row of action elements: Primary CTA button (same Amber Gold style, not full-width — sized to its label), then a phone button with icon + truncated phone number in White Lato Regular 13px (only if phone exists), then map button (icon only), then Save button (icon + "Save" label in White 13px), then Share button (icon + "Share" label in White 13px).
 
 ### 4.3 Mobile vs Desktop Differences
 
-| Element | Mobile | Desktop |
-|---|---|---|
-| Position | Fixed bottom | Fixed top (below platform nav) |
-| Height | 56px | 52px |
-| Primary CTA width | ~55% of bar | Auto-width, content-fit |
-| Entity name | Not shown | Shown (left side) |
-| Phone button | Icon only | Icon + truncated number |
-| Gap between CTA and icons | 8px | 16px |
+| Element                   | Mobile       | Desktop                        |
+| ------------------------- | ------------ | ------------------------------ |
+| Position                  | Fixed bottom | Fixed top (below platform nav) |
+| Height                    | 56px         | 52px                           |
+| Primary CTA width         | ~55% of bar  | Auto-width, content-fit        |
+| Entity name               | Not shown    | Shown (left side)              |
+| Phone button              | Icon only    | Icon + truncated number        |
+| Gap between CTA and icons | 8px          | 16px                           |
 
 ---
 
@@ -319,14 +323,14 @@ The At-a-Glance section is the first content section below the hero. Its job is 
 
 **Item specifications:**
 
-| Item | Icon | Label | Detail | Condition |
-|---|---|---|---|---|
-| Category | Category icon (from brand icon set) in 18px Charcoal | None | Category name in Lato Regular 14px Charcoal | Always shown |
-| City | Pin icon, 16px Charcoal | None | City name in Lato Regular 14px Charcoal | Always shown |
-| Hours | Clock icon, 16px | "Open now" in 13px green (`#16A34A`) or "Closed" in 13px Charcoal | Today's hours range in Lato Regular 13px Charcoal. "Opens at [time]" shown when closed. | Only shown for entities with hours |
-| Phone | Phone icon, 16px Amber Gold | None | Phone number as tappable link, Lato Regular 14px Brand Black | Only shown if phone exists |
-| Email | Envelope icon, 16px Charcoal | None | Email address as `mailto:` link, truncated if longer than 24 chars, Lato Regular 14px Brand Black | Only shown if email exists |
-| Website | Globe icon, 16px Charcoal | None | Domain only (strip `https://www.`) as external link, Lato Regular 14px Amber Gold | Only shown if website exists |
+| Item     | Icon                                                 | Label                                                             | Detail                                                                                            | Condition                          |
+| -------- | ---------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Category | Category icon (from brand icon set) in 18px Charcoal | None                                                              | Category name in Lato Regular 14px Charcoal                                                       | Always shown                       |
+| City     | Pin icon, 16px Charcoal                              | None                                                              | City name in Lato Regular 14px Charcoal                                                           | Always shown                       |
+| Hours    | Clock icon, 16px                                     | "Open now" in 13px green (`#16A34A`) or "Closed" in 13px Charcoal | Today's hours range in Lato Regular 13px Charcoal. "Opens at [time]" shown when closed.           | Only shown for entities with hours |
+| Phone    | Phone icon, 16px Amber Gold                          | None                                                              | Phone number as tappable link, Lato Regular 14px Brand Black                                      | Only shown if phone exists         |
+| Email    | Envelope icon, 16px Charcoal                         | None                                                              | Email address as `mailto:` link, truncated if longer than 24 chars, Lato Regular 14px Brand Black | Only shown if email exists         |
+| Website  | Globe icon, 16px Charcoal                            | None                                                              | Domain only (strip `https://www.`) as external link, Lato Regular 14px Amber Gold                 | Only shown if website exists       |
 
 **Event variant:** Date/time block replaces hours. Displayed as: calendar icon + "SAT 14 JUN · 7:00 PM" in Glacial Indifference Bold 16px Brand Black. Location below on same row or second line.
 
@@ -369,6 +373,7 @@ Same typography rules as 6.1. No heading — the product name from the hero serv
 **Service item layout:** Each service is a row item with a subtle bottom border in Pale Lavender (`#E9E9F7`). No card shadows — clean row list, not a card grid.
 
 Each row contains:
+
 - Service name: Lato Medium (semibold) 16px Brand Black, left-aligned
 - Service description (if provided): Quicksand Bold Italic 14px Charcoal, below the name, maximum 2 lines with ellipsis
 - Price (if provided): Right-aligned within the row, Lato Regular 14px Amber Gold. If no price, this space is empty (no "Contact for pricing" placeholder in this design).
@@ -419,6 +424,7 @@ Each row contains:
 **Section heading:** "Products" in Glacial Indifference Bold 28px Brand Black.
 
 **Product card grid:** 2-column on mobile, 3-column on desktop with 16px gap between cards. Each product card:
+
 - Product image: square (1:1 aspect ratio), full width of the card column, 8px top border radius matching the card
 - Product name: Lato Regular 15px Brand Black, 2-line max with ellipsis
 - Price: Lato Regular 15px Amber Gold
@@ -445,6 +451,7 @@ Each row contains:
 **Lightbox behavior:** Opens as a modal overlay on the full viewport. Background: `rgba(0, 0, 0, 0.92)`. The current image is centered with max dimensions of 90% viewport width and 85% viewport height, maintaining its original aspect ratio. Image counter in White Lato Regular 14px in the upper-right corner: "3 / 12". Navigation: left and right arrow buttons (40px × 40px, semi-transparent dark background, White icon) on each side of the image. On mobile: swipe left/right with no visible arrow buttons. A close button (×) in the upper-left corner. Escape key closes on desktop. All lightbox controls are keyboard and screen-reader accessible.
 
 **Gallery limits by tier:**
+
 - Free: 6 images maximum. After 6, no additional images render even if submitted.
 - Standard and Premium: 12 images maximum.
 
@@ -478,16 +485,17 @@ Badges appear in two contexts: small (in the hero overlay and on listing cards i
 
 **Tier specifications:**
 
-| Tier | Background | Text color | Border | Icon | Text |
-|---|---|---|---|---|---|
-| Unclaimed | `#595758` (Charcoal) | `#FFFFFF` White | None | None | "Unclaimed" |
-| Claimed | `#3B82F6` (Blue) | `#FFFFFF` White | None | Checkmark icon 12px White | "Claimed" |
-| Verified (V1) | `#D4A017` (muted gold) | `#000000` Brand Black | None | Checkmark icon 12px Brand Black | "Verified" |
-| BLACQList Certified (V1) | `#E2A428` (Amber Gold) | `#000000` Brand Black | None | Star icon 12px Brand Black | "BLACQList Certified" |
+| Tier                     | Background             | Text color            | Border | Icon                            | Text                  |
+| ------------------------ | ---------------------- | --------------------- | ------ | ------------------------------- | --------------------- |
+| Unclaimed                | `#595758` (Charcoal)   | `#FFFFFF` White       | None   | None                            | "Unclaimed"           |
+| Claimed                  | `#3B82F6` (Blue)       | `#FFFFFF` White       | None   | Checkmark icon 12px White       | "Claimed"             |
+| Verified (V1)            | `#D4A017` (muted gold) | `#000000` Brand Black | None   | Checkmark icon 12px Brand Black | "Verified"            |
+| BLACQList Certified (V1) | `#E2A428` (Amber Gold) | `#000000` Brand Black | None   | Star icon 12px Brand Black      | "BLACQList Certified" |
 
 **Important color note:** The BLACQList Certified badge uses Amber Gold as a background with Brand Black text — the only instance where Amber Gold is used as a background color that is not a CTA button. This is intentional: Certified is the highest earned status and the visual intensity of the full Amber Gold background communicates its significance. Do not add this treatment to any other badge tier.
 
 **Featured / Sponsored badge (separate system from trust badges):**
+
 - Amber Gold `#E2A428` outlined pill: 1.5px Amber Gold border, transparent background, Amber Gold text, optional star or bolt icon in Amber Gold.
 - Size: same dimensions as trust badge at the same context (small for listing cards, standard for the Page itself).
 - Label: "Featured" or "Sponsored" depending on placement type.
@@ -502,6 +510,7 @@ Badges appear in two contexts: small (in the hero overlay and on listing cards i
 **Section heading:** "Trust & Verification" in Glacial Indifference Bold 28px Brand Black.
 
 **Primary badge display:** The current trust tier badge at standard size (32px height), displayed prominently. Below the badge, a one-line description of what the tier means in plain language:
+
 - Unclaimed: "This page has not yet been claimed by the owner."
 - Claimed: "The business owner has claimed and verified this page."
 - Verified (V1): "This entity has been verified by The BLACQList team."
@@ -538,6 +547,7 @@ On Unclaimed pages, two separate prompts appear — one in the Trust section and
 **Review card:** Pale Lavender (`#E9E9F7`) background, 1px Pale Lavender border, 8px border radius, 24px padding.
 
 Card contents (top to bottom):
+
 - Reviewer display name: Lato Regular 15px Brand Black (left), review date: Lato Regular 13px Charcoal (right)
 - Star rating: 5-star row, Amber Gold filled stars, Pale Lavender empty stars. 16px star size.
 - Review text: Quicksand Bold Italic 15px Brand Black, line height 1.6
@@ -607,14 +617,14 @@ A small, low-prominence row at the very bottom of the Community Connection secti
 
 ### 12.2 Entity-Type Heading Variants
 
-| Entity type | Section heading |
-|---|---|
-| Business | "More [Category] in [City]" (e.g., "More Hair Salons in Atlanta") |
-| Professional | "More [Profession Type] in [City]" (e.g., "More Attorneys in Atlanta") |
-| Creative | "More [Medium/Genre] Creatives in [City]" |
-| Event | Two headings stacked: "More events from [Organizer Name]" and "More events in [City]" — each with their own card row |
-| Job | "More jobs at [Employer Name]" and "More jobs in [City]" — two separate rows |
-| Vendor | "More from [Vendor Name]" (their other product categories) and "More vendors in [City]" |
+| Entity type  | Section heading                                                                                                      |
+| ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Business     | "More [Category] in [City]" (e.g., "More Hair Salons in Atlanta")                                                    |
+| Professional | "More [Profession Type] in [City]" (e.g., "More Attorneys in Atlanta")                                               |
+| Creative     | "More [Medium/Genre] Creatives in [City]"                                                                            |
+| Event        | Two headings stacked: "More events from [Organizer Name]" and "More events in [City]" — each with their own card row |
+| Job          | "More jobs at [Employer Name]" and "More jobs in [City]" — two separate rows                                         |
+| Vendor       | "More from [Vendor Name]" (their other product categories) and "More vendors in [City]"                              |
 
 When two rows are shown (Event, Job, Vendor), each row has its own heading and its own 3-card set. The two rows are stacked vertically with 32px between them.
 
@@ -622,20 +632,20 @@ When two rows are shown (Event, Job, Vendor), each row has its own heading and i
 
 ## 13. Premium vs Free Page Differences
 
-| Feature | Free | Standard | Premium |
-|---|---|---|---|
-| Hero image width | Constrained within 960px content container; page background visible on sides | Constrained within 960px content container | Full-bleed viewport-width, edge-to-edge |
-| Hero image height (desktop) | 360px max | 400px max | 560px max |
-| Hero corner radius | 12px top corners | 12px top corners | None (full bleed) |
-| Gradient overlay | Present | Present | Present (same spec) |
-| Gallery image limit | 6 images | 12 images | 12 images |
-| Featured badge eligibility | Not eligible | Not eligible | Eligible (if purchased) |
-| Sponsored placement eligibility | Not eligible | Not eligible | Eligible (if purchased) |
-| Logo display | Yes | Yes | Yes |
-| Cover image | Yes | Yes | Yes |
-| All 10 sections | Yes | Yes | Yes |
-| Owner analytics access | Basic (7-day window, MVP dashboard stats only) | Standard (30-day window) | Enhanced (90-day window + weekly trends) |
-| Visual badge on Page | None (no tier indicator shown to visitors) | None | None — tier is an owner benefit, not a public label |
+| Feature                         | Free                                                                         | Standard                                   | Premium                                             |
+| ------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------- |
+| Hero image width                | Constrained within 960px content container; page background visible on sides | Constrained within 960px content container | Full-bleed viewport-width, edge-to-edge             |
+| Hero image height (desktop)     | 360px max                                                                    | 400px max                                  | 560px max                                           |
+| Hero corner radius              | 12px top corners                                                             | 12px top corners                           | None (full bleed)                                   |
+| Gradient overlay                | Present                                                                      | Present                                    | Present (same spec)                                 |
+| Gallery image limit             | 6 images                                                                     | 12 images                                  | 12 images                                           |
+| Featured badge eligibility      | Not eligible                                                                 | Not eligible                               | Eligible (if purchased)                             |
+| Sponsored placement eligibility | Not eligible                                                                 | Not eligible                               | Eligible (if purchased)                             |
+| Logo display                    | Yes                                                                          | Yes                                        | Yes                                                 |
+| Cover image                     | Yes                                                                          | Yes                                        | Yes                                                 |
+| All 10 sections                 | Yes                                                                          | Yes                                        | Yes                                                 |
+| Owner analytics access          | Basic (7-day window, MVP dashboard stats only)                               | Standard (30-day window)                   | Enhanced (90-day window + weekly trends)            |
+| Visual badge on Page            | None (no tier indicator shown to visitors)                                   | None                                       | None — tier is an owner benefit, not a public label |
 
 **Design rule:** Listing tier is never shown to visitors on the public Page. Visitors should not be able to identify whether a listing is Free, Standard, or Premium. The tier affects the design dimensions (hero bleed, gallery count) but is not labelled anywhere on the public Page.
 
@@ -648,6 +658,7 @@ When two rows are shown (Event, Job, Vendor), each row has its own heading and i
 The Featured badge indicates that a Premium-tier business has purchased featured placement. It is a transparency signal — it tells visitors that placement was paid for, so it must be visually distinguishable from trust tier badges.
 
 **Visual spec:**
+
 - Shape: pill, same dimensions as trust badges (small: 26px height; standard: 32px height)
 - Background: transparent
 - Border: 1.5px Amber Gold (`#E2A428`)
@@ -686,7 +697,7 @@ Stacked vertical list. Each item occupies one full row: icon (16px) + label text
 Full-width text block, 16px horizontal padding, same expand/collapse behavior. Reading width approximately 343px — this is acceptable for body text at 15px.
 
 **Services list:**
-Single column, full-width rows. Service name on one line, description below (if provided), price right-aligned on the name line. 
+Single column, full-width rows. Service name on one line, description below (if provided), price right-aligned on the name line.
 
 **Media gallery:**
 The featured large image is rendered full-width (375px × 240px). Remaining gallery images in a 2-column grid below (each image approximately 180px × 180px square). "View all photos" link below the grid.
@@ -711,6 +722,7 @@ The following requirements apply to every BLACQList Page regardless of entity ty
 ### 16.1 Heading Hierarchy
 
 Every BLACQList Page must maintain a strict heading hierarchy:
+
 - `h1`: Entity name (one per page, in the hero section)
 - `h2`: Each major section heading ("About", "Services", "Photos", "Trust & Verification", "Community Reviews", "Related")
 - `h3`: Sub-section headings within a section (service item names, individual review headings if used, collection names)
@@ -719,15 +731,15 @@ No heading level may be skipped. Do not use an `h3` where an `h2` has not been e
 
 ### 16.2 Image Alt Text
 
-| Image | Alt text rule |
-|---|---|
-| Cover image | "[Entity name] — cover photo" as the default. If the owner provides a description during upload, use that instead. |
-| Gallery images | "[Entity name] — photo [n]" as the default (e.g., "Reign Cuts — photo 3"). If the owner provides captions, use those. |
-| Logo | "[Entity name] logo" |
-| Portfolio images | Owner-provided title or "[Creative name] — portfolio piece [n]" |
-| Product images | Product name as alt text |
-| Trust badge icon | Decorative — `alt=""`. The badge text is the accessible label. |
-| Decorative gradient overlays | CSS only — not `<img>` elements, so no alt text required |
+| Image                        | Alt text rule                                                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Cover image                  | "[Entity name] — cover photo" as the default. If the owner provides a description during upload, use that instead.    |
+| Gallery images               | "[Entity name] — photo [n]" as the default (e.g., "Reign Cuts — photo 3"). If the owner provides captions, use those. |
+| Logo                         | "[Entity name] logo"                                                                                                  |
+| Portfolio images             | Owner-provided title or "[Creative name] — portfolio piece [n]"                                                       |
+| Product images               | Product name as alt text                                                                                              |
+| Trust badge icon             | Decorative — `alt=""`. The badge text is the accessible label.                                                        |
+| Decorative gradient overlays | CSS only — not `<img>` elements, so no alt text required                                                              |
 
 ### 16.3 Interactive Element Accessibility
 
@@ -748,25 +760,26 @@ No heading level may be skipped. Do not use an `h3` where an `h2` has not been e
 ### 16.4 Trust Badge Accessibility
 
 Trust badges communicate status through both color and text. To ensure accessibility:
+
 - The badge text ("Unclaimed", "Claimed", "Verified", "BLACQList Certified") is always visible — status is never communicated by color alone.
 - The badge container should have `role="status"` to indicate to screen readers that this is a meaningful status label.
 - Icons within badges (checkmark, star) are decorative and marked `aria-hidden="true"`. The badge text provides the accessible meaning.
 
 ### 16.5 Color Contrast Constraints
 
-| Color combination | Contrast ratio | Use allowed |
-|---|---|---|
-| White text on Deep Background `#19191E` | Passes WCAG AA at all sizes | Yes — use freely |
-| Brand Black text on White | Passes WCAG AAA | Yes — use freely |
-| Brand Black text on Cream `#FCFAF4` | Passes WCAG AAA | Yes — use freely |
-| Brand Black text on Pale Lavender `#E9E9F7` | Passes WCAG AA | Yes |
-| Brand Black text on Amber Gold `#E2A428` (button label) | Passes WCAG AA at 16px+ | Yes — use only on CTA buttons at 16px or larger |
-| Amber Gold text on White | Fails WCAG AA at body text sizes | NEVER use as body text. Use only for action links at 14px+ with bold weight, or for prices and metadata at 14px+. |
-| Amber Gold text on Cream `#FCFAF4` | Fails WCAG AA at small sizes | Use only for action links at 14px Bold or larger. Not for body copy or fine print. |
-| Charcoal `#595758` text on White | Passes WCAG AA | Yes — use for metadata and secondary labels |
-| White text on Charcoal `#595758` badge | Passes WCAG AA | Yes — Unclaimed badge |
-| White text on Blue `#3B82F6` badge | Passes WCAG AA | Yes — Claimed badge |
-| Brand Black text on Amber Gold badge (Certified) | Passes WCAG AA | Yes — BLACQList Certified badge only |
+| Color combination                                       | Contrast ratio                   | Use allowed                                                                                                       |
+| ------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| White text on Deep Background `#19191E`                 | Passes WCAG AA at all sizes      | Yes — use freely                                                                                                  |
+| Brand Black text on White                               | Passes WCAG AAA                  | Yes — use freely                                                                                                  |
+| Brand Black text on Cream `#FCFAF4`                     | Passes WCAG AAA                  | Yes — use freely                                                                                                  |
+| Brand Black text on Pale Lavender `#E9E9F7`             | Passes WCAG AA                   | Yes                                                                                                               |
+| Brand Black text on Amber Gold `#E2A428` (button label) | Passes WCAG AA at 16px+          | Yes — use only on CTA buttons at 16px or larger                                                                   |
+| Amber Gold text on White                                | Fails WCAG AA at body text sizes | NEVER use as body text. Use only for action links at 14px+ with bold weight, or for prices and metadata at 14px+. |
+| Amber Gold text on Cream `#FCFAF4`                      | Fails WCAG AA at small sizes     | Use only for action links at 14px Bold or larger. Not for body copy or fine print.                                |
+| Charcoal `#595758` text on White                        | Passes WCAG AA                   | Yes — use for metadata and secondary labels                                                                       |
+| White text on Charcoal `#595758` badge                  | Passes WCAG AA                   | Yes — Unclaimed badge                                                                                             |
+| White text on Blue `#3B82F6` badge                      | Passes WCAG AA                   | Yes — Claimed badge                                                                                               |
+| Brand Black text on Amber Gold badge (Certified)        | Passes WCAG AA                   | Yes — BLACQList Certified badge only                                                                              |
 
 **Enforcement rule:** Amber Gold as a text color on any light surface (White, Cream, Pale Lavender) is acceptable only for interactive text elements (links, expand toggles, prices, action labels) at 14px Bold or larger. It must never appear as body copy or fine print. Every design using Amber Gold text must be checked against this constraint before implementation.
 
@@ -784,33 +797,33 @@ Trust badges communicate status through both color and text. To ensure accessibi
 
 This table summarizes which sections and features are active in each phase of the product roadmap.
 
-| Feature / Section | MVP | Beta | V1 | V2 |
-|---|---|---|---|---|
-| Business Page (all 10 sections) | Active | — | — | — |
-| Professional Page template | — | Active | — | — |
-| Creative Page template | — | Active | — | — |
-| Event Page template | — | Active | — | — |
-| Job Page template | — | Active | — | — |
-| Vendor Page template (full) | — | — | Active | — |
-| Product sub-page | — | — | — | Active |
-| Service sub-page | — | — | Active | — |
-| Trust: Unclaimed badge | Active | — | — | — |
-| Trust: Claimed badge | Active | — | — | — |
-| Trust: Verified badge | — | — | Active | — |
-| Trust: BLACQList Certified badge | — | — | Active | — |
-| Reviews display | — | — | Active | — |
-| Reviews submission | — | — | Active | — |
-| Owner responses to reviews | — | — | Active | — |
-| Community corrections prompt | — | Active | — | — |
-| Collection appearances | — | — | Active | — |
-| Save count display | Active | — | — | — |
-| Named services with pricing | Active | — | Enhanced | — |
-| Video embeds in Media | — | — | Active | — |
-| Product grid | — | — | — | Active |
-| Marketplace "Add to Cart" | — | — | — | Active |
-| Featured / Sponsored badge | Active (design only) | — | Active (purchasable) | — |
-| Premium full-bleed hero | Active | — | — | — |
+| Feature / Section                | MVP                  | Beta   | V1                   | V2     |
+| -------------------------------- | -------------------- | ------ | -------------------- | ------ |
+| Business Page (all 10 sections)  | Active               | —      | —                    | —      |
+| Professional Page template       | —                    | Active | —                    | —      |
+| Creative Page template           | —                    | Active | —                    | —      |
+| Event Page template              | —                    | Active | —                    | —      |
+| Job Page template                | —                    | Active | —                    | —      |
+| Vendor Page template (full)      | —                    | —      | Active               | —      |
+| Product sub-page                 | —                    | —      | —                    | Active |
+| Service sub-page                 | —                    | —      | Active               | —      |
+| Trust: Unclaimed badge           | Active               | —      | —                    | —      |
+| Trust: Claimed badge             | Active               | —      | —                    | —      |
+| Trust: Verified badge            | —                    | —      | Active               | —      |
+| Trust: BLACQList Certified badge | —                    | —      | Active               | —      |
+| Reviews display                  | —                    | —      | Active               | —      |
+| Reviews submission               | —                    | —      | Active               | —      |
+| Owner responses to reviews       | —                    | —      | Active               | —      |
+| Community corrections prompt     | —                    | Active | —                    | —      |
+| Collection appearances           | —                    | —      | Active               | —      |
+| Save count display               | Active               | —      | —                    | —      |
+| Named services with pricing      | Active               | —      | Enhanced             | —      |
+| Video embeds in Media            | —                    | —      | Active               | —      |
+| Product grid                     | —                    | —      | —                    | Active |
+| Marketplace "Add to Cart"        | —                    | —      | —                    | Active |
+| Featured / Sponsored badge       | Active (design only) | —      | Active (purchasable) | —      |
+| Premium full-bleed hero          | Active               | —      | —                    | —      |
 
 ---
 
-*This document is the design direction source of truth for BLACQList Pages. All mockups, prototypes, and frontend implementations of BLACQList Pages must reference this document. Changes to any design decision in this document require version notation and must be communicated to frontend engineering and QA before implementation changes are made.*
+_This document is the design direction source of truth for BLACQList Pages. All mockups, prototypes, and frontend implementations of BLACQList Pages must reference this document. Changes to any design decision in this document require version notation and must be communicated to frontend engineering and QA before implementation changes are made._

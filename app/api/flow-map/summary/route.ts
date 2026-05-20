@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { createServiceClient } from "@/lib/supabase/server"
+import { NextResponse } from 'next/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 // GET /api/flow-map/summary
 // Public. Returns anonymized aggregate flow data.
@@ -11,12 +11,15 @@ export async function GET() {
 
   // Total spend from non-opt-out spend_events
   const { data: spendRows, error: spendError } = await serviceClient
-    .from("spend_events")
-    .select("amount_cents, listing_id")
-    .eq("aggregate_opt_out", false)
+    .from('spend_events')
+    .select('amount_cents, listing_id')
+    .eq('aggregate_opt_out', false)
 
   if (spendError) {
-    return NextResponse.json({ error: "Failed to load flow data.", code: "SERVER_ERROR" }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to load flow data.', code: 'SERVER_ERROR' },
+      { status: 500 }
+    )
   }
 
   const rows = spendRows ?? []
@@ -26,19 +29,19 @@ export async function GET() {
 
   // Top business nodes
   const { data: businessNodes } = await serviceClient
-    .from("flow_nodes")
-    .select("entity_id, total_amount_cents, transaction_count")
-    .eq("node_type", "business")
-    .order("total_amount_cents", { ascending: false })
+    .from('flow_nodes')
+    .select('entity_id, total_amount_cents, transaction_count')
+    .eq('node_type', 'business')
+    .order('total_amount_cents', { ascending: false })
     .limit(10)
 
   const businessIds = (businessNodes ?? []).map((n) => n.entity_id)
   let businessMap: Record<string, { name: string; slug: string }> = {}
   if (businessIds.length > 0) {
     const { data: listings } = await serviceClient
-      .from("listings")
-      .select("id, name, slug")
-      .in("id", businessIds)
+      .from('listings')
+      .select('id, name, slug')
+      .in('id', businessIds)
     businessMap = Object.fromEntries(
       (listings ?? []).map((l) => [l.id, { name: l.name, slug: l.slug }])
     )
@@ -46,43 +49,40 @@ export async function GET() {
 
   const topBusinesses = (businessNodes ?? []).map((n) => ({
     entity_id: n.entity_id,
-    name: businessMap[n.entity_id]?.name ?? "Unknown Business",
-    slug: businessMap[n.entity_id]?.slug ?? "",
+    name: businessMap[n.entity_id]?.name ?? 'Unknown Business',
+    slug: businessMap[n.entity_id]?.slug ?? '',
     total_amount_cents: n.total_amount_cents,
     transaction_count: n.transaction_count,
   }))
 
   // Top city nodes
   const { data: cityNodes } = await serviceClient
-    .from("flow_nodes")
-    .select("entity_id, total_amount_cents, transaction_count")
-    .eq("node_type", "city")
-    .order("total_amount_cents", { ascending: false })
+    .from('flow_nodes')
+    .select('entity_id, total_amount_cents, transaction_count')
+    .eq('node_type', 'city')
+    .order('total_amount_cents', { ascending: false })
     .limit(10)
 
   const cityIds = (cityNodes ?? []).map((n) => n.entity_id)
   let cityMap: Record<string, string> = {}
   if (cityIds.length > 0) {
-    const { data: cities } = await serviceClient
-      .from("cities")
-      .select("id, name")
-      .in("id", cityIds)
+    const { data: cities } = await serviceClient.from('cities').select('id, name').in('id', cityIds)
     cityMap = Object.fromEntries((cities ?? []).map((c) => [c.id, c.name]))
   }
 
   const topCities = (cityNodes ?? []).map((n) => ({
     entity_id: n.entity_id,
-    name: cityMap[n.entity_id] ?? "Unknown City",
+    name: cityMap[n.entity_id] ?? 'Unknown City',
     total_amount_cents: n.total_amount_cents,
     transaction_count: n.transaction_count,
   }))
 
   // Edges meeting the 5-transaction minimum threshold (privacy guard)
   const { data: edges } = await serviceClient
-    .from("flow_edges")
-    .select("id, source_node_id, target_node_id, total_amount_cents, transaction_count")
-    .gte("transaction_count", 5)
-    .order("total_amount_cents", { ascending: false })
+    .from('flow_edges')
+    .select('id, source_node_id, target_node_id, total_amount_cents, transaction_count')
+    .gte('transaction_count', 5)
+    .order('total_amount_cents', { ascending: false })
     .limit(50)
 
   return NextResponse.json({

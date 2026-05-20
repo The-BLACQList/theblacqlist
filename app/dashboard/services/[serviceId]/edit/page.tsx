@@ -1,18 +1,18 @@
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
-import { requireOwner } from "@/lib/dashboard/guard"
-import { createClient } from "@/lib/supabase/server"
-import { ServiceForm } from "@/components/marketplace/ServiceForm"
-import { updateServiceAction } from "@/lib/actions/marketplace/updateService"
+import { requireOwner } from '@/lib/dashboard/guard'
+import { createClient } from '@/lib/supabase/server'
+import { ServiceForm } from '@/components/marketplace/ServiceForm'
+import { updateServiceAction } from '@/lib/actions/marketplace/updateService'
 
 interface Props {
   params: Promise<{ serviceId: string }>
 }
 
-export const metadata: Metadata = { title: "Edit Service | Dashboard" }
+export const metadata: Metadata = { title: 'Edit Service | Dashboard' }
 
 export default async function EditServicePage({ params }: Props) {
   const { serviceId } = await params
@@ -21,15 +21,17 @@ export default async function EditServicePage({ params }: Props) {
 
   const [{ data: listings }, { data: service }] = await Promise.all([
     supabase
-      .from("listings")
-      .select("id, name")
-      .eq("owner_user_id", owner.user.id)
-      .is("deleted_at", null)
-      .order("name", { ascending: true }),
+      .from('listings')
+      .select('id, name')
+      .eq('owner_user_id', owner.user.id)
+      .is('deleted_at', null)
+      .order('name', { ascending: true }),
     supabase
-      .from("marketplace_services")
-      .select("id, name, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, status, listing_id")
-      .eq("id", serviceId)
+      .from('marketplace_services')
+      .select(
+        'id, name, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, status, listing_id'
+      )
+      .eq('id', serviceId)
       .maybeSingle(),
   ])
 
@@ -58,16 +60,18 @@ export default async function EditServicePage({ params }: Props) {
           listings={listings ?? []}
           defaultListingId={service.listing_id}
           defaultValues={{
-            service_id:              service.id,
-            name:                    service.name,
-            description:             service.description ?? "",
-            starting_price_dollars:  service.starting_price_cents ? String(service.starting_price_cents / 100) : "",
-            price_display_text:      service.price_display_text ?? "",
-            duration_text:           service.duration_text ?? "",
-            delivery_mode:           service.delivery_mode ?? "in_person",
-            booking_url:             service.booking_url ?? "",
-            cover_image_url:         service.cover_image_url ?? "",
-            status:                  service.status ?? "draft",
+            service_id: service.id,
+            name: service.name,
+            description: service.description ?? '',
+            starting_price_dollars: service.starting_price_cents
+              ? String(service.starting_price_cents / 100)
+              : '',
+            price_display_text: service.price_display_text ?? '',
+            duration_text: service.duration_text ?? '',
+            delivery_mode: service.delivery_mode ?? 'in_person',
+            booking_url: service.booking_url ?? '',
+            cover_image_url: service.cover_image_url ?? '',
+            status: service.status ?? 'draft',
           }}
           submitLabel="Save changes"
         />

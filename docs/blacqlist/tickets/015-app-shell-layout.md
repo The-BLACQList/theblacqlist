@@ -1,24 +1,31 @@
 # Ticket 015: App Shell — Root Layout, Navigation, Fonts, Brand Tokens, Global CSS
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 2: Public Marketing and Discovery Shell
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Frontend Shell
 
 ## Context
+
 The app shell is the frame inside which every screen on the BLACQList platform renders. It provides the root Next.js layout, font loading, brand CSS variables, global navigation, and the footer. Without this ticket, no screen can render in its correct visual context. Every subsequent frontend ticket depends on the shell existing. Source: `docs/blacqlist/ux/mvp-screen-map.md` (navigation model, all screen layouts), design brief brand reference.
 
 ## User Story
+
 As a visitor, I want to see a consistent branded navigation and footer on every page so that I can orient myself, navigate to discovery, and access my account from anywhere on the platform.
 
 ## Scope
+
 - `app/layout.tsx` — root layout with `<html lang="en">`, font class application, and global metadata defaults
 - `app/globals.css` — brand color CSS variables, Tailwind base, font-face declarations
 - `components/nav/Navbar.tsx` — desktop and mobile navigation with logo, nav links, and auth CTA
@@ -32,6 +39,7 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 - Skip-to-content link as the first focusable element inside `<body>`
 
 ## Out of Scope
+
 - Individual page content (each page is a separate ticket)
 - Auth flows themselves (Ticket 014)
 - Admin navigation (separate admin shell ticket)
@@ -39,9 +47,11 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 - Mobile bottom navigation bar — deferred to after primary screens are implemented
 
 ## Dependencies
+
 - Depends on: Ticket 001 — Next.js project initialization (project must exist with Next.js 14+ App Router, TypeScript, Tailwind, shadcn/ui configured)
 
 ## UX Notes
+
 - **Screen:** Global — appears on every public page
 - **Routes:** All public routes (`/`, `/discover`, `/search`, `/for-business`, `/about`, `/city/[slug]`, `/collection/[slug]`)
 - **Entry points:** Every page load
@@ -54,17 +64,18 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 - **Footer:** Four columns on desktop (About BLACQList, Discover, For Businesses, Legal). Single column stack on mobile. Above the columns: BLACQList wordmark and tagline. Below the columns: copyright line, privacy policy link, terms link.
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/design-brief.md`
 - **Brand colors (CSS variables in `globals.css`):**
   ```css
   :root {
     --color-brand-black: #000000;
-    --color-deep-bg: #19191E;
+    --color-deep-bg: #19191e;
     --color-charcoal: #595758;
-    --color-amber-gold: #E2A428;
-    --color-light-gold: #FFD867;
-    --color-pale-lavender: #E9E9F7;
-    --color-cream: #FCFAF4;
+    --color-amber-gold: #e2a428;
+    --color-light-gold: #ffd867;
+    --color-pale-lavender: #e9e9f7;
+    --color-cream: #fcfaf4;
     --font-headline: var(--font-glacial), sans-serif;
     --font-subhead: var(--font-lato), sans-serif;
     --font-body: var(--font-quicksand), sans-serif;
@@ -83,12 +94,14 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 - **States:** Default / Loading (not applicable) / Error (not applicable for shell) / Authenticated vs Unauthenticated
 
 ## Data Notes
+
 - **Tables read:** `user_roles` (to determine nav avatar dropdown options) via `GET /api/me`
 - **Operations:** SELECT only (nav rendering)
 - **Auth state:** Read from Supabase session via `supabase.auth.getUser()` in a Server Component; passed to the nav Client Component as a prop
 - **Migration required:** No
 
 ## API Notes
+
 - **`GET /api/me`** (`lib/actions/account/getMe` or via Supabase session) — called once per layout render to determine auth state and roles
 - The root layout Server Component calls `supabase.auth.getUser()` to get the session. The session user (or null) is passed as a prop to the nav Client Component.
 - Roles are fetched alongside the session: `SELECT role FROM user_roles WHERE user_id = auth.uid()` — result passed as prop to nav
@@ -97,6 +110,7 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/layout.tsx` — Root layout; Server Component
 - `app/globals.css` — Brand variables, Tailwind directives, font-face for Glacial Indifference
 - `components/nav/Navbar.tsx` — Server Component shell; extracts scroll-dependent behavior to a child Client Component
@@ -109,9 +123,11 @@ As a visitor, I want to see a consistent branded navigation and footer on every 
 - `public/fonts/GlacialIndifference-Bold.woff2` — font file must be sourced and added to the repo
 
 **Files to modify:**
+
 - `tailwind.config.ts` — Add brand color aliases (`amber-gold`, `deep-bg`, `cream`, `charcoal`, `pale-lavender`) and font family aliases
 
 **Font loading in `app/layout.tsx`:**
+
 ```typescript
 import localFont from 'next/font/local'
 import { Lato, Quicksand } from 'next/font/google'
@@ -126,6 +142,7 @@ const quicksand = Quicksand({ subsets: ['latin'], weight: ['700'], variable: '--
 ```
 
 **Navbar transparent scroll behavior (homepage only):**
+
 ```typescript
 'use client'
 // NavbarClient.tsx
@@ -140,24 +157,25 @@ useEffect(() => {
   return () => window.removeEventListener('scroll', handler)
 }, [isHomepage])
 
-const bgClass = isHomepage && !isScrolled
-  ? 'bg-transparent'
-  : 'bg-[#19191E]'
+const bgClass = isHomepage && !isScrolled ? 'bg-transparent' : 'bg-[#19191E]'
 ```
 
 **Key patterns:**
+
 - Pass `user: User | null` and `roles: string[]` as props from the root layout Server Component to `Navbar` — do not call `supabase.auth.getUser()` inside a Client Component
 - Use `cn()` from `lib/utils` for conditional Tailwind class merging
 - The mobile drawer uses `shadcn/ui Sheet` with `side="right"`
 - The avatar dropdown uses `shadcn/ui DropdownMenu`
 
 **Do not:**
+
 - Put `"use client"` on the root layout
 - Fetch auth state inside `NavLinks` or `Footer` — only in the root layout Server Component
 - Use `window.location` for navigation — use Next.js `Link` and `useRouter`
 - Hard-code the Supabase session in the nav — always read from the server-side session
 
 ## Acceptance Criteria
+
 - [ ] Root layout renders on every public route with correct brand fonts (Glacial Indifference for headings, Lato for body, Quicksand for CTAs)
 - [ ] Brand CSS variables are defined and applied globally — `var(--color-amber-gold)` resolves to `#E2A428` in DevTools
 - [ ] Navbar displays "Sign In" text link + "Sign Up" Amber Gold button for unauthenticated users
@@ -171,19 +189,21 @@ const bgClass = isHomepage && !isScrolled
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Session fetch fails in root layout | Nav renders unauthenticated state (sign-in + sign-up CTAs). User is not shown an error. If they try to access a protected route, middleware redirects to sign-in. |
-| Font files fail to load (network error or missing woff2) | Next.js font fallback activates. Page renders with system sans-serif fonts. No visual error. |
-| Supabase client fails to initialize | Console error server-side. Nav renders unauthenticated state. No visible error to the user. |
+| Failure                                                  | User-visible behavior                                                                                                                                             |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session fetch fails in root layout                       | Nav renders unauthenticated state (sign-in + sign-up CTAs). User is not shown an error. If they try to access a protected route, middleware redirects to sign-in. |
+| Font files fail to load (network error or missing woff2) | Next.js font fallback activates. Page renders with system sans-serif fonts. No visual error.                                                                      |
+| Supabase client fails to initialize                      | Console error server-side. Nav renders unauthenticated state. No visible error to the user.                                                                       |
 
 ## Edge Cases
+
 - User signs out while a nav dropdown is open — the dropdown should close on sign-out and the nav should immediately reflect unauthenticated state; this is handled by `revalidatePath('/')` called from the `signOut` Server Action plus client-side router refresh
 - Window resize from mobile to desktop while drawer is open — drawer should close or become hidden when viewport exceeds `md` breakpoint
 - Long display names in the avatar dropdown — truncate at 20 characters with `truncate` Tailwind class
 - User with multiple roles (owner of multiple listings) — avatar dropdown shows "My Dashboard" (any owner role is sufficient to show this link)
 
 ## Accessibility Notes
+
 - [ ] Skip-to-content link is the first element in `<body>` and links to `id="main-content"` on the page's `<main>` element
 - [ ] Mobile drawer (`Sheet`) traps focus when open — shadcn/ui handles this via `@radix-ui/react-dialog` internals
 - [ ] Mobile drawer returns focus to the hamburger button when closed
@@ -194,20 +214,22 @@ const bgClass = isHomepage && !isScrolled
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Anonymous nav state | Anonymous | Open homepage; inspect navbar | "Sign In" text link and "Sign Up" Amber Gold button visible; no avatar or dashboard link |
-| QA-2 | Authenticated owner nav state | Owner | Sign in as a user with owner role; inspect navbar | Avatar visible; dropdown shows "My Dashboard" and "Sign Out"; no "Sign Up" button |
-| QA-3 | Active link indicator | Any | Navigate to `/discover`; inspect nav links | "Discover" link renders in Amber Gold with `aria-current="page"` attribute |
-| QA-4 | Mobile drawer at 375px | Any | Open browser at 375px width; load homepage | Hamburger icon visible; tap hamburger → drawer slides in from right with all nav links; tap × → drawer closes |
-| QA-5 | Skip-to-content keyboard access | Any | Load any page; press Tab once | "Skip to content" link appears and is focused; pressing Enter skips to `#main-content` |
+| #    | Scenario                        | Role      | Steps                                             | Expected result                                                                                               |
+| ---- | ------------------------------- | --------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Anonymous nav state             | Anonymous | Open homepage; inspect navbar                     | "Sign In" text link and "Sign Up" Amber Gold button visible; no avatar or dashboard link                      |
+| QA-2 | Authenticated owner nav state   | Owner     | Sign in as a user with owner role; inspect navbar | Avatar visible; dropdown shows "My Dashboard" and "Sign Out"; no "Sign Up" button                             |
+| QA-3 | Active link indicator           | Any       | Navigate to `/discover`; inspect nav links        | "Discover" link renders in Amber Gold with `aria-current="page"` attribute                                    |
+| QA-4 | Mobile drawer at 375px          | Any       | Open browser at 375px width; load homepage        | Hamburger icon visible; tap hamburger → drawer slides in from right with all nav links; tap × → drawer closes |
+| QA-5 | Skip-to-content keyboard access | Any       | Load any page; press Tab once                     | "Skip to content" link appears and is focused; pressing Enter skips to `#main-content`                        |
 
 ## Security Notes
+
 - Auth state is read server-side via `supabase.auth.getUser()` — never trust client-side session state alone for rendering decisions
 - The session cookie is httpOnly — JavaScript in the browser cannot read the session token
 - Sign-out must invalidate the server-side session via `supabase.auth.signOut()` in the Server Action — client-side cookie deletion alone is insufficient
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

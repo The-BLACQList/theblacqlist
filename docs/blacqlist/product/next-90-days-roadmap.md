@@ -17,23 +17,23 @@ This roadmap covers Day 0 through Day 90 post-launch. It is divided into three p
 
 ### Engineering Priorities
 
-| Priority | Task | Owner | Tickets |
-|---|---|---|---|
-| P0 | Resolve all P0/P1 bugs surfaced by soft launch testers | Tech Lead | New bug tickets as reported |
-| P0 | Confirm all Phase 18 tickets complete (091–095) | Tech Lead | 091, 092, 093, 094, 095 |
-| P0 | Verify production monitoring active: Sentry alerts, Vercel alert emails | Tech Lead | Ticket 094 |
-| P1 | Deploy hotfixes for known remaining issues (BRM-01 through BRL-03 from `mvp-release-readiness-checklist.md`) | Tech Lead | Hotfix tickets as needed |
-| P1 | Confirm `sitemap.xml` auto-generates and has been submitted to Google Search Console | Tech Lead | Ticket 090 partial |
+| Priority | Task                                                                                                         | Owner     | Tickets                     |
+| -------- | ------------------------------------------------------------------------------------------------------------ | --------- | --------------------------- |
+| P0       | Resolve all P0/P1 bugs surfaced by soft launch testers                                                       | Tech Lead | New bug tickets as reported |
+| P0       | Confirm all Phase 18 tickets complete (091–095)                                                              | Tech Lead | 091, 092, 093, 094, 095     |
+| P0       | Verify production monitoring active: Sentry alerts, Vercel alert emails                                      | Tech Lead | Ticket 094                  |
+| P1       | Deploy hotfixes for known remaining issues (BRM-01 through BRL-03 from `mvp-release-readiness-checklist.md`) | Tech Lead | Hotfix tickets as needed    |
+| P1       | Confirm `sitemap.xml` auto-generates and has been submitted to Google Search Console                         | Tech Lead | Ticket 090 partial          |
 
 ### Product Priorities
 
-| Priority | Task | Owner |
-|---|---|---|
-| P0 | Hit seed data threshold: 150 ATL, 50 HOU, 50 CHI with ≥40% images | Product Lead + team |
-| P0 | Public announcement sign-off (Tech Lead + Product Lead) | Both |
-| P1 | First editorial collection published | Product Lead |
-| P1 | Claim queue running with ≤48h SLA | Admin |
-| P1 | Business outreach to 50 unclaimed seed listings sent | Product Lead |
+| Priority | Task                                                              | Owner               |
+| -------- | ----------------------------------------------------------------- | ------------------- |
+| P0       | Hit seed data threshold: 150 ATL, 50 HOU, 50 CHI with ≥40% images | Product Lead + team |
+| P0       | Public announcement sign-off (Tech Lead + Product Lead)           | Both                |
+| P1       | First editorial collection published                              | Product Lead        |
+| P1       | Claim queue running with ≤48h SLA                                 | Admin               |
+| P1       | Business outreach to 50 unclaimed seed listings sent              | Product Lead        |
 
 ### Day 30 Success Criteria
 
@@ -59,12 +59,12 @@ From `ruthless-mvp-and-roadmap.md` MVP done-when criteria:
 
 These tickets provide the data layer the team needs to measure growth and identify improvements:
 
-| Ticket | Title | Priority |
-|---|---|---|
-| [082](../tickets/082-analytics-daily-aggregation.md) | Entity analytics daily aggregation — Supabase scheduled Edge Function | P2 |
-| [083](../tickets/083-owner-analytics-dashboard.md) | Owner analytics dashboard — 7/30-day charts (`/dashboard/analytics`) | P2 |
-| [084](../tickets/084-admin-platform-analytics.md) | Admin platform analytics dashboard (`/admin/analytics`) | P2 |
-| [085](../tickets/085-search-analytics.md) | Search analytics — trending queries, zero-result queries | P2 |
+| Ticket                                               | Title                                                                 | Priority |
+| ---------------------------------------------------- | --------------------------------------------------------------------- | -------- |
+| [082](../tickets/082-analytics-daily-aggregation.md) | Entity analytics daily aggregation — Supabase scheduled Edge Function | P2       |
+| [083](../tickets/083-owner-analytics-dashboard.md)   | Owner analytics dashboard — 7/30-day charts (`/dashboard/analytics`)  | P2       |
+| [084](../tickets/084-admin-platform-analytics.md)    | Admin platform analytics dashboard (`/admin/analytics`)               | P2       |
+| [085](../tickets/085-search-analytics.md)            | Search analytics — trending queries, zero-result queries              | P2       |
 
 Complete 082 before 083 — the dashboard depends on the aggregated data from the Edge Function.
 
@@ -72,12 +72,12 @@ Complete 082 before 083 — the dashboard depends on the aggregated data from th
 
 These unblock Beta launch and surface any remaining quality issues before public growth:
 
-| Ticket | Title | Priority |
-|---|---|---|
-| [086](../tickets/086-security-audit.md) | Security audit — RLS verification, auth boundary, OWASP review | P0 |
-| [087](../tickets/087-accessibility-audit.md) | Accessibility audit and WCAG AA remediation — all MVP screens | P1 |
-| [088](../tickets/088-performance-optimization.md) | Performance optimization — Core Web Vitals, ISR, image optimization | P1 |
-| [090](../tickets/090-seo-audit.md) | SEO audit — sitemap.xml, robots.txt, Search Console submission | P1 |
+| Ticket                                            | Title                                                               | Priority |
+| ------------------------------------------------- | ------------------------------------------------------------------- | -------- |
+| [086](../tickets/086-security-audit.md)           | Security audit — RLS verification, auth boundary, OWASP review      | P0       |
+| [087](../tickets/087-accessibility-audit.md)      | Accessibility audit and WCAG AA remediation — all MVP screens       | P1       |
+| [088](../tickets/088-performance-optimization.md) | Performance optimization — Core Web Vitals, ISR, image optimization | P1       |
+| [090](../tickets/090-seo-audit.md)                | SEO audit — sitemap.xml, robots.txt, Search Console submission      | P1       |
 
 Target: LCP <2.5s, CLS <0.1, INP <200ms (from ticket 088). These are required before Beta outreach.
 
@@ -85,13 +85,13 @@ Target: LCP <2.5s, CLS <0.1, INP <200ms (from ticket 088). These are required be
 
 These come from the Beta scope in `ruthless-mvp-and-roadmap.md`. Write tickets for each before building:
 
-| Feature | Description | Depends on |
-|---|---|---|
-| Reviews display (moderated) | Reviews submitted during MVP now visible after admin approval; admin moderation queue live | Existing `reviews` table + intake from ticket 048 |
-| Basic trust verification intake | Verified badge document upload form; admin review queue | Ticket 035 pattern (doc upload), new admin queue |
-| Community corrections | Flag-incorrect-info button on BLACQList Pages; admin correction queue + resolution email | Existing admin infrastructure |
-| At least one non-business page template | Professional or Creative Page template available to beta users | Ticket 020 pattern (new listing type) |
-| Supporter dashboard | Recently viewed listings, suggested businesses based on saved categories | Tickets 045, 046 |
+| Feature                                 | Description                                                                                | Depends on                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| Reviews display (moderated)             | Reviews submitted during MVP now visible after admin approval; admin moderation queue live | Existing `reviews` table + intake from ticket 048 |
+| Basic trust verification intake         | Verified badge document upload form; admin review queue                                    | Ticket 035 pattern (doc upload), new admin queue  |
+| Community corrections                   | Flag-incorrect-info button on BLACQList Pages; admin correction queue + resolution email   | Existing admin infrastructure                     |
+| At least one non-business page template | Professional or Creative Page template available to beta users                             | Ticket 020 pattern (new listing type)             |
+| Supporter dashboard                     | Recently viewed listings, suggested businesses based on saved categories                   | Tickets 045, 046                                  |
 
 Write Beta tickets as: `096-reviews-display.md`, `097-trust-verification-intake.md`, etc., continuing from the existing ticket 095.
 
@@ -121,17 +121,18 @@ V1 is defined in `ruthless-mvp-and-roadmap.md`. Begin formal scoping with the fo
 
 **V1 Features to Scope:**
 
-| Feature | Current state | V1 target |
-|---|---|---|
-| Reviews | Submitted but not displayed (intake only) | Publicly displayed, moderated, with business owner response |
-| Trust tiers | Claimed badge only; Verified/Certified badges in UI but not earnable | Full Verified document review + admin grant; Certified auto-grant criteria active |
-| Editorial CMS | Admin can create collections | BLACQLight articles (rich text), full collection editor, city guide foundation |
-| Enhanced analytics | Owner sees views/saves/clicks | 30/90-day trend charts, search impression count, review count in dashboard |
-| Listing tiers | Free only (plans table exists, no tier enforcement) | Free / Starter / Growth / Premium tiers with feature gating |
-| Sponsored placements | Table exists, no admin UI, no injection in search | Admin-managed sponsored placement in search results (labeled "Sponsored") |
-| Stripe integration | None | Stripe subscription checkout; webhook handler for lifecycle events |
+| Feature              | Current state                                                        | V1 target                                                                         |
+| -------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Reviews              | Submitted but not displayed (intake only)                            | Publicly displayed, moderated, with business owner response                       |
+| Trust tiers          | Claimed badge only; Verified/Certified badges in UI but not earnable | Full Verified document review + admin grant; Certified auto-grant criteria active |
+| Editorial CMS        | Admin can create collections                                         | BLACQLight articles (rich text), full collection editor, city guide foundation    |
+| Enhanced analytics   | Owner sees views/saves/clicks                                        | 30/90-day trend charts, search impression count, review count in dashboard        |
+| Listing tiers        | Free only (plans table exists, no tier enforcement)                  | Free / Starter / Growth / Premium tiers with feature gating                       |
+| Sponsored placements | Table exists, no admin UI, no injection in search                    | Admin-managed sponsored placement in search results (labeled "Sponsored")         |
+| Stripe integration   | None                                                                 | Stripe subscription checkout; webhook handler for lifecycle events                |
 
 **Stripe planning prerequisite:** Before writing any Stripe tickets, confirm:
+
 - Stripe account fully verified (business entity + bank account)
 - Decision on live key rollout timing (V1 vs V1.5)
 - Reference ticket group 075–078 in `ticket-index.md`
@@ -150,16 +151,19 @@ Write V1 tickets using the same format as `docs/blacqlist/tickets/`. Continue nu
 ### Day 90 Success Criteria
 
 **MVP done-when criteria check** (from `ruthless-mvp-and-roadmap.md`):
+
 - [ ] 500+ unique searches completed since launch
 - [ ] 50+ saves by logged-in users
 - [ ] 50+ owner claims submitted (any combination of approved/pending)
 
 **Beta health check:**
+
 - [ ] At least 2 Beta features used by 5+ real users without critical bugs
 - [ ] No open P0 bugs
 - [ ] Claim resolution SLA being met consistently (≤48h average)
 
 **V1 readiness check:**
+
 - [ ] V1 feature scope agreed by Tech Lead and Product Lead
 - [ ] V1 tickets written and estimated
 - [ ] Phase 17 audits complete
@@ -171,19 +175,19 @@ Write V1 tickets using the same format as `docs/blacqlist/tickets/`. Continue nu
 
 Pull every Monday from Vercel Analytics + Supabase queries. Fill in this table:
 
-| Metric | Week 1 | Week 2 | Week 3 | Week 4 | Week 6 | Week 8 | Week 12 |
-|---|---|---|---|---|---|---|---|
-| Unique visitors | | | | | | | |
-| Search queries/day (avg) | | | | | | | |
-| Listing page views | | | | | | | |
-| User registrations | | | | | | | |
-| Saves | | | | | | | |
-| Shares | | | | | | | |
-| Claims submitted | | | | | | | |
-| Claims approved | | | | | | | |
-| Collections published | | | | | | | |
-| Receipt uploads | | | | | | | |
-| Sentry errors (weekly total) | | | | | | | |
+| Metric                       | Week 1 | Week 2 | Week 3 | Week 4 | Week 6 | Week 8 | Week 12 |
+| ---------------------------- | ------ | ------ | ------ | ------ | ------ | ------ | ------- |
+| Unique visitors              |        |        |        |        |        |        |         |
+| Search queries/day (avg)     |        |        |        |        |        |        |         |
+| Listing page views           |        |        |        |        |        |        |         |
+| User registrations           |        |        |        |        |        |        |         |
+| Saves                        |        |        |        |        |        |        |         |
+| Shares                       |        |        |        |        |        |        |         |
+| Claims submitted             |        |        |        |        |        |        |         |
+| Claims approved              |        |        |        |        |        |        |         |
+| Collections published        |        |        |        |        |        |        |         |
+| Receipt uploads              |        |        |        |        |        |        |         |
+| Sentry errors (weekly total) |        |        |        |        |        |        |         |
 
 **Queries to run weekly:**
 
@@ -211,14 +215,14 @@ WHERE created_at >= now() - interval '7 days';
 
 Per `ruthless-mvp-and-roadmap.md` Do-Not-Build-Yet list — these are explicitly deferred and not in scope for Day 0–90:
 
-| Feature | Blocked until |
-|---|---|
-| Marketplace cart + checkout | V2 |
-| Stripe Connect vendor payouts | V2 |
-| AI conversational discovery | V2 (beta) |
-| Full dollar-flow map visualization | V3 |
-| iOS / Android native app | V4 |
-| Near-me geo search | V2 |
-| Community forums | Never (current vision) |
+| Feature                            | Blocked until          |
+| ---------------------------------- | ---------------------- |
+| Marketplace cart + checkout        | V2                     |
+| Stripe Connect vendor payouts      | V2                     |
+| AI conversational discovery        | V2 (beta)              |
+| Full dollar-flow map visualization | V3                     |
+| iOS / Android native app           | V4                     |
+| Near-me geo search                 | V2                     |
+| Community forums                   | Never (current vision) |
 
 Any request to add these before their phase requires written justification and Product Lead sign-off.

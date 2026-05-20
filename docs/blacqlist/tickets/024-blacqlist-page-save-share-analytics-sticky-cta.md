@@ -18,6 +18,7 @@ The save button, share button, and sticky CTA bar are the engagement layer on th
 This ticket is a `"use client"` feature — it requires browser APIs (IntersectionObserver, Web Share API, Clipboard API, navigator.onLine) and React state for save state management.
 
 Source artifacts:
+
 - `docs/blacqlist/design/blacqlist-page-design-system.md` — Sections 4.1, 4.2, 4.3 (Quick Action Bar), Section 3.1 (save/share in hero)
 - `docs/blacqlist/ux/mvp-screen-map.md` — BLACQList Page: save button, share button, mobile sticky CTA bar
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 3.6 (save button states), Section 8 (global save states)
@@ -36,6 +37,7 @@ This ticket depends on Ticket 022 (hero section with CTA button rendered, contac
 ## Scope
 
 **In scope:**
+
 - Save button: `"use client"` component, reads save state from `GET /api/saves?listing_id=` on mount (authenticated users only), optimistic toggle (heart outline → heart filled Amber Gold), calls `POST /api/saves` on save, `DELETE /api/saves?listing_id=` on unsave. Anonymous user clicking save: opens sign-in modal (not a redirect). Save error: toast "Couldn't save. Try again." with inline Retry. Unsaved = outline heart (White on dark, Charcoal on light); Saved = filled heart Amber Gold.
 - Share button: copies `window.location.href` to clipboard (Clipboard API), shows toast "Link copied!". On mobile, calls Web Share API (`navigator.share`) if available — falls back to clipboard copy if not. Fires analytics event `listing_shared` on share.
 - Sticky Quick Action Bar: fixed `bottom-0` on mobile (56px height, Deep Background `#19191E`, 1px top border `rgba(255,255,255,0.1)`), fixed just below platform nav on desktop (52px height, Deep Background). Visibility controlled by IntersectionObserver: bar becomes visible when the hero CTA button scrolls above the viewport top; bar hides when the contact section enters the viewport. Slide-up from bottom on mobile (200ms ease-out), slide-down from above on desktop. Bar contains: primary CTA button (~55% width mobile, auto-width desktop), phone icon button (only if `details.phone` exists), map/directions icon button (only if address exists — hidden for online/service-area), save icon button, share icon button. Desktop bar also shows: entity name (Lato Regular 14px White, left side, truncated at 200px).
@@ -49,6 +51,7 @@ This ticket depends on Ticket 022 (hero section with CTA button rendered, contac
 - The hero CTA button from Ticket 021 (`HeroSection.tsx`) must be updated to add an IntersectionObserver ref and a `cta_clicked` analytics call — coordinate with Ticket 021 implementer
 
 **Out of scope:**
+
 - Save API implementation (Ticket 049 or the API-layer tickets)
 - Owner analytics dashboard (separate ticket)
 - Save count display (Platform Activity section — V1)
@@ -59,16 +62,16 @@ This ticket depends on Ticket 022 (hero section with CTA button rendered, contac
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-022: Hero section with primary CTA button element rendered (needed for IntersectionObserver target) | Blocking ticket | Not started |
-| BLACQ-022: Contact section rendered (needed for IntersectionObserver hide trigger) | Blocking ticket | Not started |
-| `POST /api/saves` — Save entity (Endpoint 14) | API dependency | Not started |
-| `DELETE /api/saves` — Unsave entity (Endpoint 15) | API dependency | Not started |
-| `GET /api/saves` — Check save state (Endpoint 16, filtered by `listing_id`) | API dependency | Not started |
-| `POST /api/analytics/event` — Analytics event logger (Endpoint 17) | API dependency | Not started — fire-and-forget; stub with console.log if not implemented |
-| Auth session availability on the client (Supabase `@supabase/ssr`) | Infrastructure | Must be configured |
-| shadcn/ui `Toast` component and toast provider | UI infrastructure | Must be installed |
+| Dependency                                                                                                | Type              | Status                                                                  |
+| --------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------------------------------------- |
+| BLACQ-022: Hero section with primary CTA button element rendered (needed for IntersectionObserver target) | Blocking ticket   | Not started                                                             |
+| BLACQ-022: Contact section rendered (needed for IntersectionObserver hide trigger)                        | Blocking ticket   | Not started                                                             |
+| `POST /api/saves` — Save entity (Endpoint 14)                                                             | API dependency    | Not started                                                             |
+| `DELETE /api/saves` — Unsave entity (Endpoint 15)                                                         | API dependency    | Not started                                                             |
+| `GET /api/saves` — Check save state (Endpoint 16, filtered by `listing_id`)                               | API dependency    | Not started                                                             |
+| `POST /api/analytics/event` — Analytics event logger (Endpoint 17)                                        | API dependency    | Not started — fire-and-forget; stub with console.log if not implemented |
+| Auth session availability on the client (Supabase `@supabase/ssr`)                                        | Infrastructure    | Must be configured                                                      |
+| shadcn/ui `Toast` component and toast provider                                                            | UI infrastructure | Must be installed                                                       |
 
 ---
 
@@ -138,6 +141,7 @@ This ticket depends on Ticket 022 (hero section with CTA button rendered, contac
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/business/[listing-slug]/components/SaveButton.tsx` — `"use client"`. Props: `listingId: string`, `initialIsSaved: boolean`, `listingName: string`. Manages save state with optimistic updates. Shows sign-in modal for anonymous users.
 - `app/[city-slug]/business/[listing-slug]/components/ShareButton.tsx` — `"use client"`. Props: `listingName: string`. Uses `navigator.share` or `navigator.clipboard.writeText`. Fires analytics on share.
 - `app/[city-slug]/business/[listing-slug]/components/StickyCtaBar.tsx` — `"use client"`. Props: `listingName: string`, `ctaType: string`, `ctaUrl: string | null`, `ctaPhone: string | null`, `hasAddress: boolean`, `initialIsSaved: boolean`, `listingId: string`. Manages IntersectionObserver and bar visibility state. Composes SaveButton and ShareButton inside the bar.
@@ -145,6 +149,7 @@ This ticket depends on Ticket 022 (hero section with CTA button rendered, contac
 - `lib/analytics/useAnalytics.ts` — `useAnalytics()` hook: `fireEvent(eventName: string, properties?: object)` — wrapper around `fetch('/api/analytics/event', ...)` that is fire-and-forget. No await. No error surface.
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — Pass `is_saved` from `EntityPageData` as `initialIsSaved` prop to `SaveButton` and `StickyCtaBar`. Add `id="contact-section"` to the contact section wrapper.
 - `app/[city-slug]/business/[listing-slug]/components/HeroSection.tsx` (Ticket 021) — Add `id="hero-cta-button"` to the primary CTA button wrapper div. Add `cta_clicked` analytics event on CTA click. Add `SaveButton` and `ShareButton` components in the hero.
 
@@ -185,20 +190,30 @@ function SaveButton({ listingId, initialIsSaved, listingName }: SaveButtonProps)
 useEffect(() => {
   const heroCta = document.getElementById('hero-cta-button')
   const contactSection = document.getElementById('contact-section')
-  const heroObserver = new IntersectionObserver(([e]) => {
-    if (!e.isIntersecting) setBarVisible(true)
-    else setBarVisible(false)
-  }, { threshold: 0 })
-  const contactObserver = new IntersectionObserver(([e]) => {
-    if (e.isIntersecting) setBarVisible(false)
-  }, { threshold: 0 })
+  const heroObserver = new IntersectionObserver(
+    ([e]) => {
+      if (!e.isIntersecting) setBarVisible(true)
+      else setBarVisible(false)
+    },
+    { threshold: 0 }
+  )
+  const contactObserver = new IntersectionObserver(
+    ([e]) => {
+      if (e.isIntersecting) setBarVisible(false)
+    },
+    { threshold: 0 }
+  )
   if (heroCta) heroObserver.observe(heroCta)
   if (contactSection) contactObserver.observe(contactSection)
-  return () => { heroObserver.disconnect(); contactObserver.disconnect() }
+  return () => {
+    heroObserver.disconnect()
+    contactObserver.disconnect()
+  }
 }, [])
 ```
 
 **Do not:**
+
 - Use `display: none` for the sticky bar visibility — use `visibility: hidden` + `tabindex="-1"` so the CSS transition works.
 - Show the sign-in modal as a full-page redirect — it must be an in-page modal.
 - Await analytics events — always fire-and-forget.
@@ -227,15 +242,15 @@ useEffect(() => {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Save API returns 401 | Session expired mid-page | Sign-in modal appears | User signs in and returns to page |
-| Save API returns 404 | Listing removed since page load | Toast: "This listing is no longer available." Save button remains in pre-action state | N/A |
-| Clipboard API not available | HTTP context (non-HTTPS) or browser restriction | Toast: "Couldn't copy link. Please copy from the address bar." | User manually copies URL |
-| Web Share API fails | User cancels or share sheet error | Fall back to clipboard copy silently | Clipboard copy attempt |
-| IntersectionObserver not supported | Very old browser | Sticky bar always visible (no IntersectionObserver-based show/hide) | Acceptable degradation |
-| Analytics event fails | Network error on `POST /api/analytics/event` | Nothing visible to user — fire-and-forget | No recovery needed |
-| Phone number null but sticky bar renders | Data race or bad prop | Phone icon not rendered (guard: `{details.phone && <PhoneButton />}`) | N/A — hidden by condition |
+| Failure                                  | Condition                                       | User sees                                                                             | Recovery                          |
+| ---------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------- |
+| Save API returns 401                     | Session expired mid-page                        | Sign-in modal appears                                                                 | User signs in and returns to page |
+| Save API returns 404                     | Listing removed since page load                 | Toast: "This listing is no longer available." Save button remains in pre-action state | N/A                               |
+| Clipboard API not available              | HTTP context (non-HTTPS) or browser restriction | Toast: "Couldn't copy link. Please copy from the address bar."                        | User manually copies URL          |
+| Web Share API fails                      | User cancels or share sheet error               | Fall back to clipboard copy silently                                                  | Clipboard copy attempt            |
+| IntersectionObserver not supported       | Very old browser                                | Sticky bar always visible (no IntersectionObserver-based show/hide)                   | Acceptable degradation            |
+| Analytics event fails                    | Network error on `POST /api/analytics/event`    | Nothing visible to user — fire-and-forget                                             | No recovery needed                |
+| Phone number null but sticky bar renders | Data race or bad prop                           | Phone icon not rendered (guard: `{details.phone && <PhoneButton />}`)                 | N/A — hidden by condition         |
 
 ---
 
@@ -265,16 +280,16 @@ useEffect(() => {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-024-1 | Authenticated save | Sign in, navigate to an unsaved listing page, click save | Heart fills Amber Gold immediately; `POST /api/saves` fires in network tab; `save_added` analytics event fires |
-| QA-024-2 | Save error recovery | Mock `POST /api/saves` to return 500, click save | Heart reverts to outline; toast "Couldn't save. Try again." with Retry button appears for 5 seconds |
-| QA-024-3 | Anonymous save flow | While not signed in, click save button | Sign-in modal appears with correct heading, sign-in link, and create-account link; page does not redirect |
-| QA-024-4 | Sticky bar visibility | Scroll past hero CTA on a listing page | Bar slides up from bottom on mobile (200ms) after hero CTA exits viewport; bar hides when contact section enters viewport |
-| QA-024-5 | Share — clipboard copy | Click share button on desktop (no Web Share API) | "Link copied!" toast appears for 2 seconds; clipboard contains the page URL |
-| QA-024-6 | Sticky bar keyboard navigation | Tab to sticky bar elements when bar is visible | All CTA, phone, directions, save, share buttons are reachable; when bar is hidden, none are reachable via Tab |
-| QA-024-7 | Mobile sticky bar layout | View on 375px viewport | Bar: Amber Gold CTA ~55% width, then evenly spaced icon buttons (phone if exists, directions if address exists, save, share); no labels on icons |
-| QA-024-8 | Save state from SSR | Sign in, save a listing, hard-reload the page | Save button loads with filled Amber Gold heart (from `EntityPageData.is_saved = true`) — no flash of unsaved state |
+| ID       | Test                           | Steps                                                    | Expected                                                                                                                                         |
+| -------- | ------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-024-1 | Authenticated save             | Sign in, navigate to an unsaved listing page, click save | Heart fills Amber Gold immediately; `POST /api/saves` fires in network tab; `save_added` analytics event fires                                   |
+| QA-024-2 | Save error recovery            | Mock `POST /api/saves` to return 500, click save         | Heart reverts to outline; toast "Couldn't save. Try again." with Retry button appears for 5 seconds                                              |
+| QA-024-3 | Anonymous save flow            | While not signed in, click save button                   | Sign-in modal appears with correct heading, sign-in link, and create-account link; page does not redirect                                        |
+| QA-024-4 | Sticky bar visibility          | Scroll past hero CTA on a listing page                   | Bar slides up from bottom on mobile (200ms) after hero CTA exits viewport; bar hides when contact section enters viewport                        |
+| QA-024-5 | Share — clipboard copy         | Click share button on desktop (no Web Share API)         | "Link copied!" toast appears for 2 seconds; clipboard contains the page URL                                                                      |
+| QA-024-6 | Sticky bar keyboard navigation | Tab to sticky bar elements when bar is visible           | All CTA, phone, directions, save, share buttons are reachable; when bar is hidden, none are reachable via Tab                                    |
+| QA-024-7 | Mobile sticky bar layout       | View on 375px viewport                                   | Bar: Amber Gold CTA ~55% width, then evenly spaced icon buttons (phone if exists, directions if address exists, save, share); no labels on icons |
+| QA-024-8 | Save state from SSR            | Sign in, save a listing, hard-reload the page            | Save button loads with filled Amber Gold heart (from `EntityPageData.is_saved = true`) — no flash of unsaved state                               |
 
 ---
 

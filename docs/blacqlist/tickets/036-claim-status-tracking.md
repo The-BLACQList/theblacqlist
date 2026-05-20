@@ -1,26 +1,33 @@
 # Ticket 036: Claim Status Tracking Page (/account/claims)
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P2
 
 ## Feature Area
+
 Core Workflow / Claim / Account
 
 ## Context
+
 After submitting a claim, business owners need a way to track the review status without contacting support. This page surfaces all of the current user's claims — their status, timeline, and available actions (withdraw or resubmit). It is also the landing target for the "View your claim status" link in confirmation screens and email notifications. Without this page, claimants are left with no visibility into whether their claim is progressing. Source: `docs/blacqlist/ux/mvp-screen-map.md` (Account Screens); `docs/blacqlist/architecture/api-contract.md` Section 5 endpoint 25 (`GET /api/claims/status`); `docs/blacqlist/architecture/server-actions-plan.md` `withdrawClaim` action; `docs/blacqlist/data/database-schema-plan.md` claims table.
 
 ## User Story
+
 As a business owner who has submitted a claim, I want to see all my pending and past claims with their current status and available actions, so that I know where my ownership request stands without needing to contact support.
 
 ## Scope
 
 **In scope:**
+
 - `app/account/claims/page.tsx` — Server Component; fetches all claims for `auth.uid()` from `GET /api/claims/status` (list variant) or direct Supabase query; renders list; handles auth guard
 - For each claim, display:
   - Listing name + cover thumbnail (64×64px or branded placeholder)
@@ -45,6 +52,7 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 - Loading: skeleton list (2 claim row placeholders)
 
 **Out of scope:**
+
 - Admin claim management (Ticket 040)
 - Editing a submitted claim (not supported at MVP)
 - Claim appeal workflow (post-MVP)
@@ -52,12 +60,12 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 035 (claim form) | Blocking ticket | Users arrive from claim submission confirmation |
-| Ticket 011 (engagement tables migration — `claims` table) | Blocking ticket | Claims data must exist in DB |
-| `withdrawClaim` SA (`lib/actions/claims/withdrawClaim.ts`) | Code dependency | Must exist; follows seven-step pattern |
-| Ticket 015 (auth middleware) | Blocking ticket | Route requires authenticated session |
+| Dependency                                                 | Type            | Status                                          |
+| ---------------------------------------------------------- | --------------- | ----------------------------------------------- |
+| Ticket 035 (claim form)                                    | Blocking ticket | Users arrive from claim submission confirmation |
+| Ticket 011 (engagement tables migration — `claims` table)  | Blocking ticket | Claims data must exist in DB                    |
+| `withdrawClaim` SA (`lib/actions/claims/withdrawClaim.ts`) | Code dependency | Must exist; follows seven-step pattern          |
+| Ticket 015 (auth middleware)                               | Blocking ticket | Route requires authenticated session            |
 
 ## UX Notes
 
@@ -116,15 +124,18 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/account/claims/page.tsx` — Server Component; fetches claims list; renders `ClaimsList` with claim data
 - `app/account/claims/_components/ClaimsList.tsx` — Client Component; renders list with withdraw dialog and SA call
 - `app/account/claims/_components/ClaimRow.tsx` — individual claim row component
 - `lib/actions/claims/withdrawClaim.ts` — Server Action following the seven-step pattern
 
 **Files to modify:**
+
 - Account sidebar navigation component — add "Claims" link if not already present
 
 **Key patterns for `withdrawClaim` SA:**
+
 ```typescript
 // Step 1: getUser
 // Step 2: safeParse { claim_id: z.string().uuid() }
@@ -142,6 +153,7 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 - Cover image URL: generate from `cover_image_path` via `supabase.storage.from('listing-media').getPublicUrl(path)` in the Server Component; pass pre-generated URL to client
 
 **Do not:**
+
 - Expose `verification_doc_paths` to the client — the claimant should not see their document storage paths
 - Allow `status` to be set to anything other than `'withdrawn'` from this page — all other transitions are admin-only
 - Show rejection reason from other users' claims — RLS ensures this cannot happen, but verify the query scope
@@ -159,12 +171,12 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Withdrawal server error | `withdrawClaim` returns `SERVER_ERROR` | Toast: "Withdrawal failed. Please try again." — optimistic update rolled back | Retry button in toast; claim status restored to previous in UI |
-| INVALID_STATUS_TRANSITION | Claim already approved or rejected | Toast: "This claim can no longer be withdrawn." | No action — user acknowledged |
-| Claims fetch failure | Server Component Supabase query fails | Next.js `error.tsx` with "Something went wrong" + retry | User refreshes page |
-| Listing deleted | Associated listing was removed between claim submission and viewing | Claim row shows "[Listing Unavailable]" as the name; no thumbnail; status still shown | No recovery needed — claim status is still informative |
+| Failure                   | Condition                                                           | User sees                                                                             | Recovery                                                       |
+| ------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Withdrawal server error   | `withdrawClaim` returns `SERVER_ERROR`                              | Toast: "Withdrawal failed. Please try again." — optimistic update rolled back         | Retry button in toast; claim status restored to previous in UI |
+| INVALID_STATUS_TRANSITION | Claim already approved or rejected                                  | Toast: "This claim can no longer be withdrawn."                                       | No action — user acknowledged                                  |
+| Claims fetch failure      | Server Component Supabase query fails                               | Next.js `error.tsx` with "Something went wrong" + retry                               | User refreshes page                                            |
+| Listing deleted           | Associated listing was removed between claim submission and viewing | Claim row shows "[Listing Unavailable]" as the name; no thumbnail; status still shown | No recovery needed — claim status is still informative         |
 
 ## Edge Cases
 
@@ -183,13 +195,13 @@ As a business owner who has submitted a claim, I want to see all my pending and 
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Pending claim visible | Sign in as user with a pending claim → navigate to `/account/claims` | Claim row shows "Pending" badge, submitted date, "Withdraw claim" button |
-| QA-2 | Withdraw happy path | Claim list with `status: 'pending'` → click "Withdraw claim" → confirm in dialog | Claim status updates to "Withdrawn" in UI; SA confirms status in DB |
-| QA-3 | Approved claim | Sign in as user with approved claim | Row shows "Approved" badge and "View your dashboard →" Amber Gold button |
-| QA-4 | Rejected claim | Sign in as user with rejected claim that has a rejection reason | Rejection reason text displayed; "Resubmit claim →" link present |
-| QA-5 | Empty state | Sign in as user with no claims | Empty state with heading and "Claim a listing →" CTA renders |
+| ID   | Test                  | Steps                                                                            | Expected                                                                 |
+| ---- | --------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| QA-1 | Pending claim visible | Sign in as user with a pending claim → navigate to `/account/claims`             | Claim row shows "Pending" badge, submitted date, "Withdraw claim" button |
+| QA-2 | Withdraw happy path   | Claim list with `status: 'pending'` → click "Withdraw claim" → confirm in dialog | Claim status updates to "Withdrawn" in UI; SA confirms status in DB      |
+| QA-3 | Approved claim        | Sign in as user with approved claim                                              | Row shows "Approved" badge and "View your dashboard →" Amber Gold button |
+| QA-4 | Rejected claim        | Sign in as user with rejected claim that has a rejection reason                  | Rejection reason text displayed; "Resubmit claim →" link present         |
+| QA-5 | Empty state           | Sign in as user with no claims                                                   | Empty state with heading and "Claim a listing →" CTA renders             |
 
 ## Security Notes
 

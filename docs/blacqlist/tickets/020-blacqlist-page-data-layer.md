@@ -1,24 +1,31 @@
 # Ticket 020: BLACQList Page — Route, Data Layer, and Page Component
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 2: Public Marketing and Discovery Shell
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Core Workflow
 
 ## Context
+
 The BLACQList Page is the central product screen — the public-facing page for each business, professional, creative, event, or job listing. It is the destination of every sharing link, search result, and QR code the platform generates. It must load fast, be indexable by search engines, and display the full listing profile: cover image, name, trust badge, description, hours, contact information, links, services, and media gallery. This ticket implements the route, data fetch, TypeScript type, and Server Component for the listing page. UI sub-sections (gallery, review widget, related listings, save button) are implemented in separate follow-on tickets. Source: `docs/blacqlist/architecture/api-contract.md` → Endpoint 5 (Get Entity Page by Slug), `docs/blacqlist/data/database-schema-plan.md` → listings, listing_details_business, listing_hours, listing_links, services, media_attachments tables.
 
 ## User Story
+
 As a visitor, I want to view a complete, fast-loading public page for a Black-owned business, so that I can learn about the business, find its hours and contact info, and decide whether to visit or hire them.
 
 ## Scope
+
 - `app/[city-slug]/[entity-type]/[listing-slug]/page.tsx` — Server Component with `export const revalidate = 3600` (1-hour ISR)
 - `generateStaticParams()` — queries all published listings at build time to pre-render pages; `dynamicParams = true` for listings added after build
 - `generateMetadata()` — per-listing SEO title, description, OG image, canonical URL, noindex flag
@@ -32,6 +39,7 @@ As a visitor, I want to view a complete, fast-loading public page for a Black-ow
 - JSON-LD `LocalBusiness` schema in `<head>` via `generateMetadata` script injection
 
 ## Out of Scope
+
 - Services section UI (separate ticket — depends on this data layer existing)
 - Media gallery carousel (separate ticket)
 - Review submission widget and review list (separate ticket)
@@ -43,18 +51,19 @@ As a visitor, I want to view a complete, fast-loading public page for a Black-ow
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 009 — Core entity tables (listings, cities, categories tables must exist) | Blocking ticket | Not started |
+| Dependency                                                                                                                                 | Type            | Status      |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | ----------- |
+| Ticket 009 — Core entity tables (listings, cities, categories tables must exist)                                                           | Blocking ticket | Not started |
 | Ticket 010 — Listing sub-tables migration (listing_details_business, listing_hours, listing_links, services, media_attachments must exist) | Blocking ticket | Not started |
-| Ticket 013 — RLS policies (anonymous SELECT on published listings must be enabled) | Blocking ticket | Not started |
-| Ticket 015 — App shell layout (root layout with nav and footer must exist) | Blocking ticket | Done |
-| Ticket 019 — 404 / error boundary pages (listing-specific not-found.tsx must exist for notFound() to invoke the correct UI) | Informs UX | Not started |
-| Ticket 001 — Next.js project initialization (project and Supabase client helper must exist) | Blocking | Done |
+| Ticket 013 — RLS policies (anonymous SELECT on published listings must be enabled)                                                         | Blocking ticket | Not started |
+| Ticket 015 — App shell layout (root layout with nav and footer must exist)                                                                 | Blocking ticket | Done        |
+| Ticket 019 — 404 / error boundary pages (listing-specific not-found.tsx must exist for notFound() to invoke the correct UI)                | Informs UX      | Not started |
+| Ticket 001 — Next.js project initialization (project and Supabase client helper must exist)                                                | Blocking        | Done        |
 
 **Risk:** `generateStaticParams` queries Supabase at build time. If Supabase is unavailable during CI/CD build, the build will fail. Add a `try/catch` that returns an empty array on error, allowing the build to succeed and falling back to on-demand SSR with `dynamicParams = true`.
 
 ## UX Notes
+
 - **Screen:** BLACQList Page — full-bleed hero + constrained content layout
 - **Route:** `/[city-slug]/[entity-type]/[listing-slug]`  
   Example: `/atlanta/business/beloved-bookstore`
@@ -69,6 +78,7 @@ As a visitor, I want to view a complete, fast-loading public page for a Black-ow
   - Primary CTA button: full-width, sticky to bottom of viewport on mobile
 
 ### BLACQList Page Layout (top to bottom)
+
 1. **Cover image hero** — Full-bleed, 400px tall desktop / 280px mobile. If no cover image: gradient placeholder using brand colors. Logo badge overlaid at bottom-left of hero.
 2. **Listing header** — Trust tier badge (`unclaimed` / `claimed` / `verified` / `certified`), listing name in Glacial Indifference, category + city pills, `avg_rating` star row (if reviews exist), save button
 3. **About section** — `details.description` rendered as rich text (sanitized HTML or plain text per what is stored); section heading "About [Name]"
@@ -77,6 +87,7 @@ As a visitor, I want to view a complete, fast-loading public page for a Black-ow
 6. **Primary CTA button** — derived from `details.cta_type` and `details.cta_url`; label defaults to type ("Book Now", "Order Online", "Visit Website", "Get a Quote", "Apply Now", "Get Directions"); Amber Gold, full-width on mobile, centered on desktop
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/design-brief.md`
 - **Cover image hero:**
   - Container: `relative w-full h-[280px] md:h-[400px] overflow-hidden`
@@ -99,6 +110,7 @@ As a visitor, I want to view a complete, fast-loading public page for a Black-ow
 - **Components to use:** `next/image` for cover and logo images, shadcn/ui `Badge` for trust tier badges, `Button` for CTA, `Card` and `CardContent` for contact card
 
 ## Data Notes
+
 - **Data model:** `docs/blacqlist/data/database-schema-plan.md` — `listings`, `listing_details_business`, `listing_hours`, `listing_links`, `services`, `media_attachments`, `categories`, `cities`
 - **Tables read:** All of the above — joined in `getListingPageData()`
 - **Operations:** SELECT only — all server-side in the page component via `getListingPageData()`
@@ -116,7 +128,8 @@ The function performs a single Supabase query with selects across related tables
 ```typescript
 const { data, error } = await supabase
   .from('listings')
-  .select(`
+  .select(
+    `
     *,
     categories ( id, name, slug ),
     cities ( id, name, slug ),
@@ -125,7 +138,8 @@ const { data, error } = await supabase
     listing_links ( * ),
     services ( * ),
     media_attachments ( id, file_path, alt_text, display_order, width, height )
-  `)
+  `
+  )
   .eq('slug', listingSlug)
   .eq('status', 'published')
   .is('deleted_at', null)
@@ -136,6 +150,7 @@ const { data, error } = await supabase
 Services must be filtered to `is_visible = true` after the join (`.filter('services.is_visible', 'eq', true)` syntax may vary by Supabase client version — apply in-memory filter as fallback).
 
 ## API Notes
+
 - **API contract:** `docs/blacqlist/architecture/api-contract.md` → Section 5 — Get Entity Page by Slug
 - **Endpoint involved:**
   - `GET /api/listings/[city-slug]/[entity-type]/[listing-slug]` — full listing page data
@@ -149,14 +164,17 @@ Services must be filtered to `is_visible = true` after the join (`.filter('servi
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/[entity-type]/[listing-slug]/page.tsx` — Server Component
 - `lib/data/listings.ts` — `getListingPageData(params)` function
 - `types/listing.ts` — `ListingPageData` TypeScript interface (matches Endpoint 5 response shape)
 
 **Files to modify:**
+
 - `app/[city-slug]/[entity-type]/[listing-slug]/loading.tsx` — (if Ticket 019 was implemented first) confirm `ListingPageSkeleton` layout matches the actual page layout
 
 **`types/listing.ts` — Core type:**
+
 ```typescript
 export interface ListingPageData {
   listing: {
@@ -244,6 +262,7 @@ export interface ListingPageData {
 ```
 
 **`lib/data/listings.ts` — `getListingPageData()` pattern:**
+
 ```typescript
 import { createServerComponentClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
@@ -258,7 +277,8 @@ export async function getListingPageData(params: {
 
   const { data, error } = await supabase
     .from('listings')
-    .select(`
+    .select(
+      `
       id, name, slug, entity_type, tagline, status, trust_tier, tier,
       logo_path, cover_image_path, avg_rating, review_count, save_count,
       published_at, noindex, canonical_url, meta_title, meta_description,
@@ -270,7 +290,8 @@ export async function getListingPageData(params: {
       listing_links ( platform, url, display_order ),
       services ( id, name, description, price, price_type, price_note, duration_minutes, cta_type, cta_url, display_order, is_visible ),
       media_attachments ( id, file_path, alt_text, display_order, width, height )
-    `)
+    `
+    )
     .eq('slug', params.listingSlug)
     .is('deleted_at', null)
     .single()
@@ -301,21 +322,19 @@ export async function getListingPageData(params: {
       listing_tier: data.tier,
     },
     details: data.listing_details_business ?? null,
-    media: (data.media_attachments ?? [])
-      .sort((a, b) => a.display_order - b.display_order),
+    media: (data.media_attachments ?? []).sort((a, b) => a.display_order - b.display_order),
     services: (data.services ?? [])
-      .filter(s => s.is_visible)
+      .filter((s) => s.is_visible)
       .sort((a, b) => a.display_order - b.display_order),
-    listing_hours: (data.listing_hours ?? [])
-      .sort((a, b) => a.day_of_week - b.day_of_week),
-    listing_links: (data.listing_links ?? [])
-      .sort((a, b) => a.display_order - b.display_order),
+    listing_hours: (data.listing_hours ?? []).sort((a, b) => a.day_of_week - b.day_of_week),
+    listing_links: (data.listing_links ?? []).sort((a, b) => a.display_order - b.display_order),
     is_saved: false, // anonymous; implement saved state in save button ticket
   }
 }
 ```
 
 **`app/[city-slug]/[entity-type]/[listing-slug]/page.tsx` — Page Component pattern:**
+
 ```typescript
 import { getListingPageData } from '@/lib/data/listings'
 import { generateListingMetadata } from '@/lib/seo/listing'
@@ -457,6 +476,7 @@ export default async function ListingPage({ params }: { params: {
 ```
 
 **`generateMetadata` + `cache()` pattern — avoid double fetch:**
+
 ```typescript
 import { cache } from 'react'
 const getCachedListingData = cache(getListingPageData)
@@ -466,6 +486,7 @@ const getCachedListingData = cache(getListingPageData)
 ```
 
 **`generateMetadata` SEO output:**
+
 ```typescript
 export async function generateMetadata({ params }): Promise<Metadata> {
   const data = await getCachedListingData({ ... }).catch(() => null)
@@ -495,6 +516,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 **JSON-LD LocalBusiness schema:**
 
 Inject via a `<script type="application/ld+json">` in the page component's return (not `generateMetadata`):
+
 ```tsx
 <script
   type="application/ld+json"
@@ -505,24 +527,29 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
       name: listing.name,
       url: details?.website_url ?? listing.canonical_url,
       telephone: details?.phone,
-      address: details?.address_line_1 ? {
-        '@type': 'PostalAddress',
-        streetAddress: details.address_line_1,
-        addressLocality: details.city_text ?? listing.city?.name,
-        addressRegion: details.state,
-        postalCode: details.zip,
-      } : undefined,
-      aggregateRating: listing.avg_rating ? {
-        '@type': 'AggregateRating',
-        ratingValue: listing.avg_rating,
-        reviewCount: listing.review_count,
-      } : undefined,
+      address: details?.address_line_1
+        ? {
+            '@type': 'PostalAddress',
+            streetAddress: details.address_line_1,
+            addressLocality: details.city_text ?? listing.city?.name,
+            addressRegion: details.state,
+            postalCode: details.zip,
+          }
+        : undefined,
+      aggregateRating: listing.avg_rating
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: listing.avg_rating,
+            reviewCount: listing.review_count,
+          }
+        : undefined,
     }),
   }}
 />
 ```
 
 **Sub-components to create (stub implementations acceptable at this ticket stage):**
+
 - `components/listing/TrustBadge.tsx` — receives `tier` prop, renders the correct badge variant
 - `components/listing/CategoryPill.tsx` — small pill linking to `/discover?category=[slug]`
 - `components/listing/CityPill.tsx` — small pill linking to `/city/[slug]`
@@ -531,6 +558,7 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 - `components/listing/PrimaryCtaButton.tsx` — Amber Gold CTA, full-width on mobile with sticky behavior
 
 **Key patterns:**
+
 - Use `export const revalidate = 3600` (1 hour ISR) — not `getStaticProps`
 - Use `export const dynamicParams = true` — new listings added after build render on first request and are then cached
 - Use `React.cache()` to deduplicate the `getListingPageData` call between `generateMetadata` and the page component within a single request — this is critical to avoid two Supabase roundtrips per page load
@@ -541,6 +569,7 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 - `generateStaticParams` limit of 1000 listings at MVP — increase when listing count grows; Vercel ISR handles on-demand pages beyond this
 
 **Do not:**
+
 - Call `supabase.auth.getUser()` in this page's Server Component — this page is public and anonymous; auth is not needed for the public view
 - Use `useEffect` or client-side data fetching for the listing data — all fetching happens server-side
 - Store full CDN URLs in state or variables — always derive them from storage paths at render time
@@ -548,6 +577,7 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 - Implement the save button state (`is_saved`) with real auth data in this ticket — leave `is_saved: false` as a placeholder; the save button integration is a separate ticket
 
 ## Acceptance Criteria
+
 - [ ] Navigating to `/atlanta/business/beloved-bookstore` (with a seeded listing at that slug) renders the full listing page with cover image hero, listing name in Glacial Indifference, trust tier badge, category and city pills, description, hours table, contact card, and primary CTA button
 - [ ] `generateStaticParams` returns an array of params for all published listings — confirmed by checking Next.js build output
 - [ ] `dynamicParams = true` allows a listing URL not in `generateStaticParams` to render on first request (confirmed by adding a new listing and hitting its URL without rebuilding)
@@ -564,17 +594,18 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Listing not found | Slug does not exist in `listings` table | Listing-specific 404 page from Ticket 019 | User can search or browse from 404 CTA |
-| Listing is soft-deleted | `deleted_at IS NOT NULL` — RLS hides the row | 404 page (RLS returns no row, treated as not found) | N/A — intentional |
-| Listing unpublished or flagged | `status != 'published'` or `flag_status != 'none'` | 404 page | Admin must re-publish or clear flag |
-| Wrong entity-type in URL | URL has `/business/` but listing is `entity_type = 'professional'` | 301 redirect to correct URL | Redirect resolves automatically |
-| Cover image storage path returns 404 | Image deleted from Supabase Storage bucket | Gradient fallback background renders | No action needed — fallback is branded |
-| Supabase outage during `generateStaticParams` | Build-time query fails | Empty array returned — all routes fall back to on-demand ISR | Pages render on first visit; cached after first render |
-| `details` row missing for a published listing | `listing_details_business` row not created | About section, hours, and contact card are hidden; listing name and trust badge still render | Owner must complete their profile; moderation queue flags incomplete listings |
+| Failure                                       | Condition                                                          | User sees                                                                                    | Recovery                                                                      |
+| --------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Listing not found                             | Slug does not exist in `listings` table                            | Listing-specific 404 page from Ticket 019                                                    | User can search or browse from 404 CTA                                        |
+| Listing is soft-deleted                       | `deleted_at IS NOT NULL` — RLS hides the row                       | 404 page (RLS returns no row, treated as not found)                                          | N/A — intentional                                                             |
+| Listing unpublished or flagged                | `status != 'published'` or `flag_status != 'none'`                 | 404 page                                                                                     | Admin must re-publish or clear flag                                           |
+| Wrong entity-type in URL                      | URL has `/business/` but listing is `entity_type = 'professional'` | 301 redirect to correct URL                                                                  | Redirect resolves automatically                                               |
+| Cover image storage path returns 404          | Image deleted from Supabase Storage bucket                         | Gradient fallback background renders                                                         | No action needed — fallback is branded                                        |
+| Supabase outage during `generateStaticParams` | Build-time query fails                                             | Empty array returned — all routes fall back to on-demand ISR                                 | Pages render on first visit; cached after first render                        |
+| `details` row missing for a published listing | `listing_details_business` row not created                         | About section, hours, and contact card are hidden; listing name and trust badge still render | Owner must complete their profile; moderation queue flags incomplete listings |
 
 ## Edge Cases
+
 - Listing with no `cover_image_path` — gradient placeholder renders; no broken image shown
 - Listing with no `listing_hours` rows — hours section is hidden entirely; no "hours not available" message shown to public (owner must add hours)
 - Listing with no `details.description` — about section is hidden entirely; page renders without it
@@ -585,6 +616,7 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 - User navigates to listing page during Supabase downtime — Server Component throws; root error boundary from Ticket 019 catches and renders the error page with retry
 
 ## Accessibility Notes
+
 - [ ] `<h1>` is the listing name — only one `<h1>` per page
 - [ ] Cover image has descriptive `alt` text: `"[listing name] cover image"`
 - [ ] Logo image has descriptive `alt` text: `"[listing name] logo"`
@@ -598,17 +630,18 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Listing page renders | Anonymous | Seed a published listing; navigate to its URL | All page sections render: hero, listing header (name + trust badge + category), about, hours, contact card |
-| QA-2 | SEO metadata | Anonymous | Navigate to a listing; view page source | `<title>` matches `meta_title` or falls back to format `"[name] — [category] in [city] — The BLACQList"`; `<meta name="description">` present |
-| QA-3 | 404 for unpublished listing | Anonymous | Navigate to URL of a draft listing | Listing-specific 404 page renders ("This business page isn't available.") |
-| QA-4 | Entity-type redirect | Anonymous | Navigate to `/atlanta/business/[slug]` where the listing's actual entity_type is `professional` | 301 redirect to `/atlanta/professional/[slug]`; final page renders correctly |
-| QA-5 | Storage path resolved to URL | Anonymous | Inspect rendered HTML for a listing with a cover image | `<img>` src is a full Supabase CDN URL, not a raw storage path |
-| QA-6 | Listing page at 375px | Anonymous | Set viewport to 375px; load a listing page | Single column layout; hero 280px tall; CTA full-width; no horizontal overflow |
-| QA-7 | JSON-LD present | Anonymous | View page source; search for `application/ld+json` | JSON-LD script tag present with correct `name` and `@type` values |
+| #    | Scenario                     | Role      | Steps                                                                                           | Expected result                                                                                                                               |
+| ---- | ---------------------------- | --------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Listing page renders         | Anonymous | Seed a published listing; navigate to its URL                                                   | All page sections render: hero, listing header (name + trust badge + category), about, hours, contact card                                    |
+| QA-2 | SEO metadata                 | Anonymous | Navigate to a listing; view page source                                                         | `<title>` matches `meta_title` or falls back to format `"[name] — [category] in [city] — The BLACQList"`; `<meta name="description">` present |
+| QA-3 | 404 for unpublished listing  | Anonymous | Navigate to URL of a draft listing                                                              | Listing-specific 404 page renders ("This business page isn't available.")                                                                     |
+| QA-4 | Entity-type redirect         | Anonymous | Navigate to `/atlanta/business/[slug]` where the listing's actual entity_type is `professional` | 301 redirect to `/atlanta/professional/[slug]`; final page renders correctly                                                                  |
+| QA-5 | Storage path resolved to URL | Anonymous | Inspect rendered HTML for a listing with a cover image                                          | `<img>` src is a full Supabase CDN URL, not a raw storage path                                                                                |
+| QA-6 | Listing page at 375px        | Anonymous | Set viewport to 375px; load a listing page                                                      | Single column layout; hero 280px tall; CTA full-width; no horizontal overflow                                                                 |
+| QA-7 | JSON-LD present              | Anonymous | View page source; search for `application/ld+json`                                              | JSON-LD script tag present with correct `name` and `@type` values                                                                             |
 
 ## Security Notes
+
 - `getListingPageData` uses the anonymous Supabase client — RLS enforces the published filter at the database layer. Do not use the service role key for public listing page data.
 - `owner_user_id` is never included in the `ListingPageData` type for anonymous requests — it is not selected in the query. If owner preview (draft view) is implemented later, it must be a separate authenticated function.
 - `details.description` must be treated as plain text at MVP — do not render it as HTML via `dangerouslySetInnerHTML` without a sanitization step (e.g., DOMPurify). If rich text is needed, implement sanitization first.
@@ -616,6 +649,7 @@ Inject via a `<script type="application/ld+json">` in the page component's retur
 - The `redirect()` call for canonical URL correction uses a 301 (permanent redirect) — confirm this is appropriate and not exploitable for open redirect (all redirect targets are derived from database values, not user-provided URL parameters).
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

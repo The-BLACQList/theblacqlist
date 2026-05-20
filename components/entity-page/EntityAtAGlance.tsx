@@ -1,39 +1,31 @@
-"use client"
+'use client'
 
 // This file uses a Client Component for the open/closed status indicator.
 // The surrounding layout is simple enough that co-locating the whole component
 // as a Client Component keeps the boundary clean.
 
-import { Phone, Mail, Globe, MapPin, ExternalLink } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import type { EntityPageData, WeeklyHours, DayHours } from "@/types"
-import { ReportCorrectionForm } from "@/components/entity-page/ReportCorrectionForm"
+import { Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
+import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
 
 type Day = keyof WeeklyHours
-const DAYS: Day[] = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-]
+const DAYS: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 const DAY_LABELS: Record<Day, string> = {
-  monday: "Mon",
-  tuesday: "Tue",
-  wednesday: "Wed",
-  thursday: "Thu",
-  friday: "Fri",
-  saturday: "Sat",
-  sunday: "Sun",
+  monday: 'Mon',
+  tuesday: 'Tue',
+  wednesday: 'Wed',
+  thursday: 'Thu',
+  friday: 'Fri',
+  saturday: 'Sat',
+  sunday: 'Sun',
 }
 
 function formatTime(t: string): string {
-  const [hStr, mStr] = t.split(":")
-  const h = parseInt(hStr ?? "0")
-  const m = mStr ?? "00"
-  const suffix = h >= 12 ? "PM" : "AM"
+  const [hStr, mStr] = t.split(':')
+  const h = parseInt(hStr ?? '0')
+  const m = mStr ?? '00'
+  const suffix = h >= 12 ? 'PM' : 'AM'
   const h12 = h % 12 || 12
   return `${h12}:${m} ${suffix}`
 }
@@ -44,10 +36,10 @@ function isOpenNow(hours: WeeklyHours): { open: boolean; label: string } {
   const dayKey = DAYS[dayIndex === 0 ? 6 : dayIndex - 1] as Day
   const today: DayHours = hours[dayKey]
 
-  if (today.closed) return { open: false, label: "Closed today" }
+  if (today.closed) return { open: false, label: 'Closed today' }
 
-  const [oh, om] = today.open.split(":").map(Number)
-  const [ch, cm] = today.close.split(":").map(Number)
+  const [oh, om] = today.open.split(':').map(Number)
+  const [ch, cm] = today.close.split(':').map(Number)
   const nowMins = now.getHours() * 60 + now.getMinutes()
   const openMins = (oh ?? 0) * 60 + (om ?? 0)
   const closeMins = (ch ?? 0) * 60 + (cm ?? 0)
@@ -64,7 +56,7 @@ function isOpenNow(hours: WeeklyHours): { open: boolean; label: string } {
       label: `Closed · Opens ${formatTime(today.open)}`,
     }
   }
-  return { open: false, label: "Closed now" }
+  return { open: false, label: 'Closed now' }
 }
 
 function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
@@ -74,12 +66,12 @@ function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
     <span
       suppressHydrationWarning
       className={`inline-flex items-center gap-1.5 font-subhead text-sm ${
-        status.open ? "text-green-600" : "text-charcoal/60"
+        status.open ? 'text-green-600' : 'text-charcoal/60'
       }`}
     >
       <span
         suppressHydrationWarning
-        className={`size-2 rounded-full ${status.open ? "bg-green-500" : "bg-charcoal/40"}`}
+        className={`size-2 rounded-full ${status.open ? 'bg-green-500' : 'bg-charcoal/40'}`}
         aria-hidden="true"
       />
       {status.label}
@@ -87,37 +79,32 @@ function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
   )
 }
 
-
 interface Props {
   entity: EntityPageData
 }
 
 export function EntityAtAGlance({ entity }: Props) {
   const { details } = entity
-  const hasAddress =
-    details.address && details.city_name && details.state_abbr
+  const hasAddress = details.address && details.city_name && details.state_abbr
 
   const fullAddress = hasAddress
     ? [
         details.address,
         details.address_line2,
-        `${details.city_name}, ${details.state_abbr} ${details.zip ?? ""}`.trim(),
+        `${details.city_name}, ${details.state_abbr} ${details.zip ?? ''}`.trim(),
       ]
         .filter(Boolean)
-        .join("\n")
+        .join('\n')
     : null
 
   const mapsHref = fullAddress
-    ? `https://maps.google.com/?q=${encodeURIComponent(fullAddress.replace(/\n/g, ", "))}`
+    ? `https://maps.google.com/?q=${encodeURIComponent(fullAddress.replace(/\n/g, ', '))}`
     : null
 
   const hasSocial = Object.values(details.social).some(Boolean)
 
   return (
-    <section
-      aria-labelledby="at-a-glance-heading"
-      className="bg-white py-12 md:py-16"
-    >
+    <section aria-labelledby="at-a-glance-heading" className="bg-white py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
         <h2
           id="at-a-glance-heading"
@@ -134,16 +121,13 @@ export function EntityAtAGlance({ entity }: Props) {
               <p className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-1.5">
                 Category
               </p>
-              <Badge
-                variant="secondary"
-                className="font-subhead text-sm rounded-full"
-              >
+              <Badge variant="secondary" className="font-subhead text-sm rounded-full">
                 {entity.category.name}
               </Badge>
             </div>
 
             {/* Location */}
-            {(hasAddress || entity.location_type !== "physical") && (
+            {(hasAddress || entity.location_type !== 'physical') && (
               <div>
                 <p className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-1.5">
                   Location
@@ -159,13 +143,11 @@ export function EntityAtAGlance({ entity }: Props) {
                       className="size-4 mt-0.5 text-amber-gold flex-shrink-0"
                       aria-hidden="true"
                     />
-                    <span className="group-hover:underline whitespace-pre-line">
-                      {fullAddress}
-                    </span>
+                    <span className="group-hover:underline whitespace-pre-line">{fullAddress}</span>
                   </a>
                 ) : (
                   <p className="font-body text-sm text-charcoal capitalize">
-                    {entity.location_type.replace(/-/g, " ")}
+                    {entity.location_type.replace(/-/g, ' ')}
                   </p>
                 )}
               </div>
@@ -190,9 +172,7 @@ export function EntityAtAGlance({ entity }: Props) {
                             {DAY_LABELS[day]}
                           </td>
                           <td className="py-1 text-charcoal/80">
-                            {h.closed
-                              ? "Closed"
-                              : `${formatTime(h.open)} – ${formatTime(h.close)}`}
+                            {h.closed ? 'Closed' : `${formatTime(h.open)} – ${formatTime(h.close)}`}
                           </td>
                         </tr>
                       )
@@ -214,7 +194,7 @@ export function EntityAtAGlance({ entity }: Props) {
                 <div className="flex flex-col gap-2">
                   {details.phone && (
                     <a
-                      href={`tel:${details.phone.replace(/\D/g, "")}`}
+                      href={`tel:${details.phone.replace(/\D/g, '')}`}
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black"
                     >
                       <Phone className="size-4 text-amber-gold flex-shrink-0" aria-hidden="true" />
@@ -238,7 +218,7 @@ export function EntityAtAGlance({ entity }: Props) {
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black break-all"
                     >
                       <Globe className="size-4 text-amber-gold flex-shrink-0" aria-hidden="true" />
-                      {details.website_url.replace(/^https?:\/\/(www\.)?/, "")}
+                      {details.website_url.replace(/^https?:\/\/(www\.)?/, '')}
                     </a>
                   )}
                 </div>
@@ -254,12 +234,12 @@ export function EntityAtAGlance({ entity }: Props) {
                 <div className="flex flex-col gap-1.5">
                   {(
                     [
-                      { key: "instagram", label: "Instagram" },
-                      { key: "facebook", label: "Facebook" },
-                      { key: "linkedin", label: "LinkedIn" },
-                      { key: "tiktok", label: "TikTok" },
-                      { key: "youtube", label: "YouTube" },
-                      { key: "twitter", label: "X / Twitter" },
+                      { key: 'instagram', label: 'Instagram' },
+                      { key: 'facebook', label: 'Facebook' },
+                      { key: 'linkedin', label: 'LinkedIn' },
+                      { key: 'tiktok', label: 'TikTok' },
+                      { key: 'youtube', label: 'YouTube' },
+                      { key: 'twitter', label: 'X / Twitter' },
                     ] as { key: keyof typeof details.social; label: string }[]
                   )
                     .filter(({ key }) => details.social[key])
@@ -271,7 +251,10 @@ export function EntityAtAGlance({ entity }: Props) {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black transition-colors"
                       >
-                        <ExternalLink className="size-3.5 flex-shrink-0 text-amber-gold" aria-hidden="true" />
+                        <ExternalLink
+                          className="size-3.5 flex-shrink-0 text-amber-gold"
+                          aria-hidden="true"
+                        />
                         {label}
                       </a>
                     ))}

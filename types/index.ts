@@ -1,23 +1,17 @@
 // ─── Discovery / Listing Types ───────────────────────────────────────────────
 
-export type EntityType =
-  | "business"
-  | "professional"
-  | "creative"
-  | "event"
-  | "job"
-  | "vendor"
+export type EntityType = 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
 
 export type LocationType =
-  | "physical"
-  | "online"
-  | "hybrid"
-  | "virtual-services"
-  | "ships-nationwide"
+  | 'physical'
+  | 'online'
+  | 'hybrid'
+  | 'virtual-services'
+  | 'ships-nationwide'
 
-export type TrustTier = "unclaimed" | "claimed" | "verified" | "certified"
+export type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 
-export type Tier = "free" | "standard" | "premium"
+export type Tier = 'free' | 'standard' | 'premium'
 
 export interface DiscoveryEntity {
   id: string
@@ -43,53 +37,53 @@ export interface DiscoveryEntity {
 // ─── CTA Types ────────────────────────────────────────────────────────────────
 
 export type CTAType =
-  | "book"
-  | "order"
-  | "call"
-  | "message"
-  | "visit"
-  | "get-quote"
-  | "shop"
-  | "subscribe"
-  | "contact"
-  | "commission"
-  | "inquire"
-  | "get-tickets"
-  | "rsvp"
-  | "register"
-  | "learn-more"
-  | "apply"
-  | "buy-now"
+  | 'book'
+  | 'order'
+  | 'call'
+  | 'message'
+  | 'visit'
+  | 'get-quote'
+  | 'shop'
+  | 'subscribe'
+  | 'contact'
+  | 'commission'
+  | 'inquire'
+  | 'get-tickets'
+  | 'rsvp'
+  | 'register'
+  | 'learn-more'
+  | 'apply'
+  | 'buy-now'
 
 export const CTA_LABELS: Record<CTAType, string> = {
-  book: "Book Now",
-  order: "Order Now",
-  call: "Call Now",
-  message: "Send Message",
-  visit: "Visit Us",
-  "get-quote": "Get a Quote",
-  shop: "Shop Now",
-  subscribe: "Subscribe",
-  contact: "Contact Us",
-  commission: "Commission Work",
-  inquire: "Inquire",
-  "get-tickets": "Get Tickets",
-  rsvp: "RSVP",
-  register: "Register",
-  "learn-more": "Learn More",
-  apply: "Apply Now",
-  "buy-now": "Buy Now",
+  book: 'Book Now',
+  order: 'Order Now',
+  call: 'Call Now',
+  message: 'Send Message',
+  visit: 'Visit Us',
+  'get-quote': 'Get a Quote',
+  shop: 'Shop Now',
+  subscribe: 'Subscribe',
+  contact: 'Contact Us',
+  commission: 'Commission Work',
+  inquire: 'Inquire',
+  'get-tickets': 'Get Tickets',
+  rsvp: 'RSVP',
+  register: 'Register',
+  'learn-more': 'Learn More',
+  apply: 'Apply Now',
+  'buy-now': 'Buy Now',
 }
 
 export function getCtaLabel(ctaType: CTAType, override: string | null): string {
-  return override?.trim() || CTA_LABELS[ctaType] || "Learn More"
+  return override?.trim() || CTA_LABELS[ctaType] || 'Learn More'
 }
 
 // ─── Entity Page Types ────────────────────────────────────────────────────────
 
 export interface DayHours {
-  open: string   // "HH:MM" 24-hour
-  close: string  // "HH:MM" 24-hour
+  open: string // "HH:MM" 24-hour
+  close: string // "HH:MM" 24-hour
   closed: boolean
 }
 

@@ -1,17 +1,19 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { ReceiptSubmissionForm } from "@/components/spend/ReceiptSubmissionForm"
+import { createClient } from '@/lib/supabase/server'
+import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 
-export const metadata: Metadata = { title: "Submit a Receipt" }
+export const metadata: Metadata = { title: 'Submit a Receipt' }
 
 export default async function NewReceiptPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect("/sign-in?next=/account/receipts/new")
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in?next=/account/receipts/new')
 
   return (
     <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">

@@ -1,24 +1,31 @@
 # Ticket 014: Auth Flows — Sign Up, Sign In, Sign Out, Email Verification, Password Reset
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 1: Database / Auth / RLS Foundation
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Auth
 
 ## Context
+
 Authentication is the gateway to every personalized experience on the BLACQList platform: saving listings, claiming a business, submitting a review, and accessing the owner dashboard. These five auth flows (sign-up, sign-in, sign-out, email verification, and password reset) must exist and work correctly before any authenticated feature can be built or tested. Source: `docs/blacqlist/ux/mvp-screen-map.md` section 2 (Auth Screens), `docs/blacqlist/ux/empty-loading-error-success-states.md` section 6, `docs/blacqlist/architecture/api-contract.md` section 2 (endpoints 11–13).
 
 ## User Story
+
 As a new visitor, I want to create an account, verify my email, and sign in so that I can save listings, submit claims, and access my dashboard.
 
 ## Scope
+
 - Five auth screens: `/sign-up`, `/sign-in`, `/forgot-password`, `/reset-password`, `/verify-email`
 - Server Actions: `signUp`, `signIn`, `signOut`, `sendPasswordReset`, `resetPassword`
 - Supabase Auth integration via `@supabase/ssr` with httpOnly cookie sessions
@@ -30,16 +37,19 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
 - `profiles` row and `user_roles` row with `role = 'supporter'` created atomically in the `signUp` Server Action via service_role
 
 ## Out of Scope
+
 - Onboarding flow (covered by a separate ticket)
 - OAuth (Google, Apple) sign-in — deferred to V1
 - Account deletion — `/account/settings` ticket
 - Role switching — covered by `setOnboardingRole` endpoint (API contract endpoint 13)
 
 ## Dependencies
+
 - Depends on: Ticket 013 — RLS policies must be in place (profiles and user_roles RLS required for profile creation and role reads)
 - Depends on: Ticket 015 — App shell layout (Navbar + root layout must exist for auth screens to render correctly inside the site structure)
 
 ## UX Notes
+
 - **Screen:** Auth Centered layout — centered card, no full nav, no footer. BLACQList wordmark at top of card.
 - **Routes:** `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email`
 - **Entry points:** Nav "Sign In" CTA, save button modal, claim page CTA, protected route redirects
@@ -60,6 +70,7 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
   - Reset password passwords don't match: inline error below confirm field
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/design-brief.md`
 - **Layout:** Auth centered — `max-w-sm mx-auto` centered card, `min-h-screen flex items-center justify-center bg-[#FCFAF4]`
 - **Card:** `bg-white rounded-2xl shadow-md p-8` on cream page background
@@ -71,6 +82,7 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
 - **States to implement:** Default / Loading (button spinner + disabled) / Error (inline field errors) / Success (inline success state — not a separate page except for verify-email)
 
 ## Data Notes
+
 - **Data model:** `docs/blacqlist/data/database-schema-plan.md` — `profiles`, `user_roles`
 - **Tables written on sign-up:**
   - `auth.users` (via `supabase.auth.signUp()`)
@@ -85,6 +97,7 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
   - ToS checkbox: required (validated client-side; form cannot submit without it)
 
 ## API Notes
+
 - **API contract:** `docs/blacqlist/architecture/api-contract.md` — Section 2 (endpoints 11–13)
 - **All auth flows use Server Actions**, not Route Handlers:
   - `lib/actions/auth/signUp.ts` — `signUp(FormValues): ActionResult<{ userId: string }>`
@@ -108,6 +121,7 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/(auth)/sign-up/page.tsx` — Sign-up page (Server Component shell)
 - `app/(auth)/sign-in/page.tsx` — Sign-in page (Server Component shell)
 - `app/(auth)/forgot-password/page.tsx` — Forgot password page
@@ -129,9 +143,11 @@ As a new visitor, I want to create an account, verify my email, and sign in so t
 - `middleware.ts` (modify if already exists) — Add auth redirect: unauthenticated users hitting `/dashboard/*` redirect to `/sign-in?next=[path]`; authenticated users hitting `/sign-in`, `/sign-up` redirect to their role-appropriate destination
 
 **Files to modify:**
+
 - `middleware.ts` — Add auth route protection and authenticated-user redirects from auth screens
 
 **Key patterns:**
+
 ```typescript
 // ActionResult pattern — all Server Actions return this shape
 type ActionResult<T> =
@@ -156,17 +172,19 @@ export async function signUp(values: SignUpValues): Promise<ActionResult<{ userI
 ```typescript
 // After sign-in: role-based redirect
 const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id)
-const isOwner = roles?.some(r => r.role === 'owner')
+const isOwner = roles?.some((r) => r.role === 'owner')
 const redirectTo = params.get('next') || (isOwner ? '/dashboard' : '/account/saved')
 redirect(redirectTo)
 ```
 
 **Do not:**
+
 - Use localStorage to store the session token — `@supabase/ssr` handles httpOnly cookies automatically
 - Trust the `role` field from the sign-up form payload in the service layer — always insert `'supporter'` as the initial role regardless of form input (the onboarding flow handles owner role assignment via endpoint 13)
 - Redirect on sign-up success — show inline success state only; user must verify email before accessing authenticated routes
 
 ## Acceptance Criteria
+
 - [ ] Given a new user submits the sign-up form with valid email, password (8+ chars, 1 number), display name, and ToS checked, then a `auth.users` row, a `profiles` row, and a `user_roles` row (`role = 'supporter'`) are created, and the UI shows "Check your email" inline success state without redirecting
 - [ ] Given a signed-up user clicks their verification email link, then `/verify-email` validates the Supabase token and redirects to `/onboarding`
 - [ ] Given a user signs in with valid credentials, then the session cookie is set and the user is redirected to `/account/saved` (supporter) or `/dashboard` (owner)
@@ -180,21 +198,22 @@ redirect(redirectTo)
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Email already registered | Inline error below email field: "An account with this email already exists. Sign in instead?" with link to `/sign-in` |
-| Incorrect password | Inline error below password field: "Email or password is incorrect." (do not specify which field is wrong) |
-| Account suspended | Inline error below form: "Your account has been suspended. Contact support@theblacqlist.com" |
-| Email not verified on sign-in | Inline notice: "Please verify your email. [Resend verification email]" — link triggers resend and shows "Email sent" inline |
-| Password too weak | Inline error below password field: "Password must be at least 8 characters and include a number." |
-| Verification token expired | "This verification link has expired." heading + "Resend verification email" button |
-| Verification token invalid/used | "This link isn't valid." heading + link to `/sign-in` |
-| Reset token expired | "This link has expired." with link to request a new reset |
-| Passwords don't match on reset | Inline error below confirm password field: "Passwords don't match." |
-| Server error on any form | Error below the submit button: "Something went wrong. Try again." Button re-enables. Form values preserved. |
-| Network timeout | Same as server error; form values preserved |
+| Failure                         | User-visible behavior                                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Email already registered        | Inline error below email field: "An account with this email already exists. Sign in instead?" with link to `/sign-in`       |
+| Incorrect password              | Inline error below password field: "Email or password is incorrect." (do not specify which field is wrong)                  |
+| Account suspended               | Inline error below form: "Your account has been suspended. Contact support@theblacqlist.com"                                |
+| Email not verified on sign-in   | Inline notice: "Please verify your email. [Resend verification email]" — link triggers resend and shows "Email sent" inline |
+| Password too weak               | Inline error below password field: "Password must be at least 8 characters and include a number."                           |
+| Verification token expired      | "This verification link has expired." heading + "Resend verification email" button                                          |
+| Verification token invalid/used | "This link isn't valid." heading + link to `/sign-in`                                                                       |
+| Reset token expired             | "This link has expired." with link to request a new reset                                                                   |
+| Passwords don't match on reset  | Inline error below confirm password field: "Passwords don't match."                                                         |
+| Server error on any form        | Error below the submit button: "Something went wrong. Try again." Button re-enables. Form values preserved.                 |
+| Network timeout                 | Same as server error; form values preserved                                                                                 |
 
 ## Edge Cases
+
 - User pastes email with leading/trailing whitespace — normalize with `.trim()` before passing to Supabase Auth
 - User navigates to `/sign-in?next=/dashboard/claim/123` — after sign-in, redirect must preserve the full `next` param including path and query string; validate that `next` starts with `/` to prevent open redirect attacks
 - User clicks sign-up submit multiple times quickly — button must be disabled during the in-flight request to prevent double account creation
@@ -202,6 +221,7 @@ redirect(redirectTo)
 - Session expires while user is on a protected page mid-flow — middleware handles this on the next navigation; Supabase SSR also handles token refresh automatically
 
 ## Accessibility Notes
+
 - [ ] All form inputs have associated `<label>` elements via `htmlFor` — no placeholder-only labels
 - [ ] Password show/hide toggle is a `<button>` with `aria-label="Show password"` / `aria-label="Hide password"` — not a `<div>` or `<span>`
 - [ ] Inline error messages are linked to their input via `aria-describedby` — shadcn/ui `FormMessage` handles this automatically
@@ -212,15 +232,16 @@ redirect(redirectTo)
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path sign-up | Anonymous | Navigate to `/sign-up`; fill display name, valid email, valid password (8+ chars, 1 number), select Supporter, check ToS; submit | Inline success state: "Check your email. We sent a verification link to [email]." No redirect. Supabase `auth.users`, `profiles`, and `user_roles` rows exist. |
-| QA-2 | Sign-in with valid credentials | Anonymous | Navigate to `/sign-in`; enter valid email and password; submit | Session cookie set; redirect to `/account/saved` (supporter) or `/dashboard` (owner) |
-| QA-3 | Sign-in with wrong password | Anonymous | Navigate to `/sign-in`; enter registered email, wrong password; submit | Inline error below password field: "Email or password is incorrect." Email field retains value. |
-| QA-4 | Email verification with expired token | Anonymous | Navigate to `/verify-email?token=expired-token-string` | "This verification link has expired." heading with "Resend verification email" button |
-| QA-5 | Authenticated user redirected from auth screen | Authenticated | Sign in; navigate directly to `/sign-in` | Redirected to `/dashboard` or `/account/saved` without rendering the sign-in form |
+| #    | Scenario                                       | Role          | Steps                                                                                                                            | Expected result                                                                                                                                                |
+| ---- | ---------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path sign-up                             | Anonymous     | Navigate to `/sign-up`; fill display name, valid email, valid password (8+ chars, 1 number), select Supporter, check ToS; submit | Inline success state: "Check your email. We sent a verification link to [email]." No redirect. Supabase `auth.users`, `profiles`, and `user_roles` rows exist. |
+| QA-2 | Sign-in with valid credentials                 | Anonymous     | Navigate to `/sign-in`; enter valid email and password; submit                                                                   | Session cookie set; redirect to `/account/saved` (supporter) or `/dashboard` (owner)                                                                           |
+| QA-3 | Sign-in with wrong password                    | Anonymous     | Navigate to `/sign-in`; enter registered email, wrong password; submit                                                           | Inline error below password field: "Email or password is incorrect." Email field retains value.                                                                |
+| QA-4 | Email verification with expired token          | Anonymous     | Navigate to `/verify-email?token=expired-token-string`                                                                           | "This verification link has expired." heading with "Resend verification email" button                                                                          |
+| QA-5 | Authenticated user redirected from auth screen | Authenticated | Sign in; navigate directly to `/sign-in`                                                                                         | Redirected to `/dashboard` or `/account/saved` without rendering the sign-in form                                                                              |
 
 ## Security Notes
+
 - Passwords are never logged, stored in application state, or included in error messages
 - The `?next=` redirect parameter must be validated server-side: only paths starting with `/` are accepted; external URLs are ignored and the default redirect is used instead
 - Supabase Auth handles password hashing — do not implement custom hashing
@@ -229,6 +250,7 @@ redirect(redirectTo)
 - Rate limiting on auth endpoints is enforced at the middleware layer — Supabase Auth also applies its own built-in rate limits on auth endpoints
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

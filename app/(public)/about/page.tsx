@@ -1,33 +1,33 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { PageHeader } from "@/components/layout/page-header"
-import { Button } from "@/components/ui/button"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "About | The BLACQList",
+  title: 'About | The BLACQList',
   description:
-    "We started in Atlanta with a simple belief: Black-owned businesses deserve better tools and more visibility. Today, that belief is a national platform.",
+    'We started in Atlanta with a simple belief: Black-owned businesses deserve better tools and more visibility. Today, that belief is a national platform.',
 }
 
 const PILLARS = [
   {
-    title: "Discovery with Depth",
-    body: "Not just a list of names — full business profiles that tell the story behind each venture.",
+    title: 'Discovery with Depth',
+    body: 'Not just a list of names — full business profiles that tell the story behind each venture.',
   },
   {
-    title: "Community Trust",
-    body: "A verification system built on real documentation and community reviews, not pay-to-play badges.",
+    title: 'Community Trust',
+    body: 'A verification system built on real documentation and community reviews, not pay-to-play badges.',
   },
   {
-    title: "Economic Circulation",
-    body: "Tools that help dollars move through Black communities — and show the impact in real time.",
+    title: 'Economic Circulation',
+    body: 'Tools that help dollars move through Black communities — and show the impact in real time.',
   },
   {
-    title: "Cultural Specificity",
-    body: "Built for Black-owned businesses specifically, not adapted from a generic directory.",
+    title: 'Cultural Specificity',
+    body: 'Built for Black-owned businesses specifically, not adapted from a generic directory.',
   },
 ]
 
@@ -43,25 +43,21 @@ export default function AboutPage() {
 
       <Section variant="white">
         <div className="max-w-2xl">
-          <SectionHeading subtitle="2024 · Atlanta, Georgia">
-            Where We Started
-          </SectionHeading>
+          <SectionHeading subtitle="2024 · Atlanta, Georgia">Where We Started</SectionHeading>
           <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
             <p>
-              We started with a simple observation: Black-owned businesses were
-              everywhere, but finding them — reliably, completely, with full
-              context — was harder than it should be.
+              We started with a simple observation: Black-owned businesses were everywhere, but
+              finding them — reliably, completely, with full context — was harder than it should be.
             </p>
             <p>
-              Generic directories weren&apos;t built with us in mind. Social media
-              pages came and went. Word of mouth couldn&apos;t scale. The tools
-              existed, but they weren&apos;t ours.
+              Generic directories weren&apos;t built with us in mind. Social media pages came and
+              went. Word of mouth couldn&apos;t scale. The tools existed, but they weren&apos;t
+              ours.
             </p>
             <p>
-              The BLACQList is the platform we built to fix that. A national
-              directory with the depth and trust that Black-owned businesses
-              deserve, and the discovery experience that Black consumers have
-              always needed.
+              The BLACQList is the platform we built to fix that. A national directory with the
+              depth and trust that Black-owned businesses deserve, and the discovery experience that
+              Black consumers have always needed.
             </p>
           </div>
         </div>
@@ -73,16 +69,9 @@ export default function AboutPage() {
         </SectionHeading>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {PILLARS.map((pillar) => (
-            <div
-              key={pillar.title}
-              className="rounded-lg border border-pale-lavender bg-white p-6"
-            >
-              <h3 className="font-headline text-base text-brand-black mb-2">
-                {pillar.title}
-              </h3>
-              <p className="font-subhead text-sm text-charcoal leading-relaxed">
-                {pillar.body}
-              </p>
+            <div key={pillar.title} className="rounded-lg border border-pale-lavender bg-white p-6">
+              <h3 className="font-headline text-base text-brand-black mb-2">{pillar.title}</h3>
+              <p className="font-subhead text-sm text-charcoal leading-relaxed">{pillar.body}</p>
             </div>
           ))}
         </div>

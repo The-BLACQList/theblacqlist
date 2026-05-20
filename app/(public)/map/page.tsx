@@ -1,15 +1,15 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { PageHeader } from "@/components/layout/page-header"
-import { Button } from "@/components/ui/button"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "Business Map | The BLACQList",
+  title: 'Business Map | The BLACQList',
   description:
-    "See Black-owned businesses plotted near you and across the country. Explore your neighborhood, your city, and beyond.",
+    'See Black-owned businesses plotted near you and across the country. Explore your neighborhood, your city, and beyond.',
 }
 
 export default function MapPage() {
@@ -30,9 +30,9 @@ export default function MapPage() {
           Map View Coming in V2
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
-          The interactive business map is planned for V2 with full location
-          search, category filtering, and city-level exploration. In the
-          meantime, browse the directory or search by city.
+          The interactive business map is planned for V2 with full location search, category
+          filtering, and city-level exploration. In the meantime, browse the directory or search by
+          city.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <Button

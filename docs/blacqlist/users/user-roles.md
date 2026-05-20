@@ -10,20 +10,20 @@ This document defines every user role on The BLACQList — their goals, context,
 
 ## Role Overview
 
-| Role | Introduced | Description |
-|---|---|---|
-| Anonymous Visitor | MVP | Not logged in. Can search and view Pages. Cannot save or review. |
-| Supporter / Discoverer | MVP | Logged-in community member who finds and supports Black-owned entities. |
-| Business Owner | MVP | Manages a claimed BLACQList Page for their business. |
-| Professional | V1 | Manages a claimed BLACQList Page for their individual professional practice. |
-| Creative | V1 | Manages a claimed BLACQList Page for their creative practice or brand. |
-| Event Organizer | V1 | Creates and manages Event Pages. May be a Business Owner or independent. |
-| Job Poster | V1 | Posts job or opportunity listings. May be a Business Owner or independent. |
-| Marketplace Vendor | V2 | Business owner who also manages a vendor storefront with purchasable products. |
-| Sponsor | V3 | Purchases sponsored placements and campaign packages. |
-| Editor | V1 | Internal role. Creates and manages BLACQLight articles, collections, and guides. |
-| Admin | MVP | Internal role. Full platform access for moderation, verification, and management. |
-| Super Admin | MVP | Internal role. System configuration and sensitive data access. |
+| Role                   | Introduced | Description                                                                       |
+| ---------------------- | ---------- | --------------------------------------------------------------------------------- |
+| Anonymous Visitor      | MVP        | Not logged in. Can search and view Pages. Cannot save or review.                  |
+| Supporter / Discoverer | MVP        | Logged-in community member who finds and supports Black-owned entities.           |
+| Business Owner         | MVP        | Manages a claimed BLACQList Page for their business.                              |
+| Professional           | V1         | Manages a claimed BLACQList Page for their individual professional practice.      |
+| Creative               | V1         | Manages a claimed BLACQList Page for their creative practice or brand.            |
+| Event Organizer        | V1         | Creates and manages Event Pages. May be a Business Owner or independent.          |
+| Job Poster             | V1         | Posts job or opportunity listings. May be a Business Owner or independent.        |
+| Marketplace Vendor     | V2         | Business owner who also manages a vendor storefront with purchasable products.    |
+| Sponsor                | V3         | Purchases sponsored placements and campaign packages.                             |
+| Editor                 | V1         | Internal role. Creates and manages BLACQLight articles, collections, and guides.  |
+| Admin                  | MVP        | Internal role. Full platform access for moderation, verification, and management. |
+| Super Admin            | MVP        | Internal role. System configuration and sensitive data access.                    |
 
 ---
 
@@ -38,6 +38,7 @@ This document defines every user role on The BLACQList — their goals, context,
 **Context:** On a mobile phone or desktop. Arrived via Google search, a social share link, or word of mouth. Has not signed up.
 
 **What they can do:**
+
 - Search by keyword, category, and city
 - Browse category and city landing pages
 - View any public BLACQList Page
@@ -46,6 +47,7 @@ This document defines every user role on The BLACQList — their goals, context,
 - Share a Page via link
 
 **What they cannot do:**
+
 - Save listings
 - Write reviews
 - Submit a claim
@@ -65,6 +67,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Mobile-first. In an everyday purchasing mindset. May be at home researching or in the moment searching for something nearby.
 
 **What they can do:**
+
 - Everything an Anonymous Visitor can do
 - Save listings to personal saved list
 - Organize saves (V1: basic list; V2: named lists)
@@ -74,11 +77,13 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Follow businesses and receive updates (V1: lightweight)
 
 **What they cannot do:**
+
 - Claim or manage listings
 - Access admin or editorial tools
 - Create sponsored placements
 
 **Primary workflows:**
+
 1. Search → find listing → save or share
 2. View saved list → visit or buy
 3. View BLACQList Page → write review (V1)
@@ -93,6 +98,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Small to mid-size Black-owned business. May have an existing website or social presence. Frustrated with how generic platforms represent them. Not necessarily technical.
 
 **What they can do:**
+
 - Search for and claim an existing listing
 - Create a new listing
 - Edit all fields on their BLACQList Page
@@ -107,12 +113,14 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Opt in to being visible on the dollar-flow map (V3)
 
 **What they cannot do:**
+
 - Approve other users' claims
 - Access other businesses' data
 - Access admin tools
 - Set sponsored placements directly (V1: must contact sales or use self-serve sponsor tools in V3)
 
 **Primary workflows:**
+
 1. Sign up → search for listing → claim → complete Page → go live
 2. Sign in → edit Page → update hours, add service, change CTA
 3. Sign in → view analytics → see Page performance (V1)
@@ -120,6 +128,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 5. Sign in → upgrade listing tier → enter payment (V1)
 
 **Pain points to design for:**
+
 - Not sure how to write a good business description (AI optimization agent can help in V2)
 - Doesn't know what category to choose (smart suggestions needed)
 - Doesn't have professional photography (gallery should work with phone photos)
@@ -134,6 +143,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Freelancer, consultant, attorney, therapist, coach, financial advisor, or other individual service provider. May have a website but no single platform that combines their story, credentials, reviews, and contact in one place.
 
 **What they can do:**
+
 - Everything a Business Owner can do, within the Professional Page template
 - Add credentials, certifications, and education
 - List individual services with pricing or "contact for pricing"
@@ -142,10 +152,12 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Enable booking or consultation request (via external link or contact form)
 
 **What they cannot do:**
+
 - Add multiple locations (professionals are tied to a single service area or virtual)
 - Post jobs under their professional profile (must create a separate job listing)
 
 **Primary workflows:**
+
 1. Sign up → create Professional Page → add credentials → publish
 2. Sign in → update availability or service offerings
 3. Sign in → view inquiries and analytics
@@ -159,6 +171,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Visual artist, photographer, musician, author, designer, filmmaker, performer. May have an Instagram but no platform that combines their portfolio, biography, booking information, and community trust signals.
 
 **What they can do:**
+
 - Everything a Business Owner can do, within the Creative Page template
 - Upload a rich portfolio (images, video links, audio samples)
 - List mediums, genres, or disciplines
@@ -167,6 +180,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Enable fan or follower saves (supporters can follow creatives)
 
 **Primary workflows:**
+
 1. Sign up → create Creative Page → upload portfolio → publish
 2. Sign in → add new work → share Page
 3. Sign in → view analytics → see which portfolio items drive the most engagement
@@ -180,6 +194,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Individual organizer, business owner (adding an event to their existing Page), or community organization hosting a one-time or recurring event.
 
 **What they can do:**
+
 - Create an Event Page (title, date/time, location or virtual, description, ticket/RSVP link, cover image)
 - Link Event Page to a Business or Professional Page (if they have one)
 - Add co-organizers or featured performers/vendors
@@ -189,6 +204,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Event auto-expiry:** Event Pages are automatically marked as "past" after the event date. Past events remain visible but are filtered out of search results unless the user explicitly searches for past events.
 
 **Primary workflows:**
+
 1. Create Event Page → set date + ticket link → publish
 2. Update event details → notify followers (V2)
 3. View event analytics → see click-through to ticket page
@@ -202,15 +218,18 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Business owner, HR manager, or independent hiring manager. May or may not have a BLACQList business Page.
 
 **What they can do:**
+
 - Create a Job/Opportunity listing (title, description, company, location, apply link, deadline)
 - Link to a Business Page if they have one
 - Set listing duration (30, 60, or 90 days — paid in V2)
 - Edit or remove the listing before it expires
 
 **What they cannot do:**
+
 - Receive applications through the platform (apply link directs off-platform at MVP)
 
 **Primary workflows:**
+
 1. Sign up or sign in → create job listing → set apply link → publish
 2. Sign in → edit listing details
 3. Sign in → view click-through count on apply link
@@ -224,6 +243,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** May already have a BLACQList Business Page. Sells handmade goods, branded merchandise, food products, apparel, beauty products, digital content, or other items.
 
 **What they can do:**
+
 - Upgrade their Business Page to include a vendor storefront
 - Create product listings (title, description, images, price, variants, inventory count)
 - Manage orders from their vendor dashboard
@@ -232,10 +252,12 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - View vendor-specific analytics (sales, revenue, top products)
 
 **What they cannot do:**
+
 - See other vendors' sales data
 - List services alongside products without a separate Professional or Business Page
 
 **Primary workflows:**
+
 1. Upgrade Business Page → connect Stripe → add products → go live
 2. Receive order notification → fulfill → mark shipped
 3. View vendor dashboard → see revenue, top products, pending orders
@@ -249,12 +271,14 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Brand, organization, or individual investor. Values community credibility over mass reach.
 
 **What they can do:**
+
 - Create and manage sponsored campaign packages
 - Target campaigns by city, category, or audience segment
 - Track campaign performance (impressions, clicks, conversions)
 - Access the sponsor dashboard
 
 **What they cannot do:**
+
 - Access any user's personal data
 - Override editorial decisions
 - Purchase guaranteed placement on specific BLACQList Pages without admin approval
@@ -268,6 +292,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Internal team member. May be a staff editor or trusted community contributor.
 
 **What they can do:**
+
 - Create BLACQLight articles
 - Create curated collections (e.g., "10 Black-owned bookstores worth visiting")
 - Create city guides
@@ -276,6 +301,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Edit and unpublish content
 
 **What they cannot do:**
+
 - Approve claims or verify businesses
 - Access financial or analytics data
 
@@ -288,6 +314,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Internal team member. Has elevated access to review, approve, and manage all platform content and user actions.
 
 **What they can do:**
+
 - View and edit all listings
 - Approve or reject claim requests
 - Manage the trust verification queue (V1)
@@ -299,6 +326,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 - Flag listings for quality review
 
 **What they cannot do:**
+
 - Change system configuration (Super Admin only)
 - Access financial data beyond basic platform stats
 
@@ -311,6 +339,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 **Context:** Founder or technical lead only. Minimal set of people.
 
 **What they can do:**
+
 - Everything Admin can do
 - Access system settings and environment configuration
 - View all financial reports
@@ -321,20 +350,20 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 
 ## Permission Matrix Summary
 
-| Permission | Anonymous | Supporter | Owner | Admin | Super Admin |
-|---|---|---|---|---|---|
-| View public Pages | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Search + browse | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Save listings | — | ✓ | ✓ | ✓ | ✓ |
-| Write reviews | — | ✓ (V1) | — | ✓ | ✓ |
-| Claim listing | — | — | ✓ | ✓ | ✓ |
-| Edit own Page | — | — | ✓ | ✓ | ✓ |
-| Edit any listing | — | — | — | ✓ | ✓ |
-| Approve claims | — | — | — | ✓ | ✓ |
-| View all listings (admin view) | — | — | — | ✓ | ✓ |
-| Manage users | — | — | — | ✓ | ✓ |
-| System config | — | — | — | — | ✓ |
-| Financial reports | — | — | ✓ (own) | — | ✓ |
+| Permission                     | Anonymous | Supporter | Owner   | Admin | Super Admin |
+| ------------------------------ | --------- | --------- | ------- | ----- | ----------- |
+| View public Pages              | ✓         | ✓         | ✓       | ✓     | ✓           |
+| Search + browse                | ✓         | ✓         | ✓       | ✓     | ✓           |
+| Save listings                  | —         | ✓         | ✓       | ✓     | ✓           |
+| Write reviews                  | —         | ✓ (V1)    | —       | ✓     | ✓           |
+| Claim listing                  | —         | —         | ✓       | ✓     | ✓           |
+| Edit own Page                  | —         | —         | ✓       | ✓     | ✓           |
+| Edit any listing               | —         | —         | —       | ✓     | ✓           |
+| Approve claims                 | —         | —         | —       | ✓     | ✓           |
+| View all listings (admin view) | —         | —         | —       | ✓     | ✓           |
+| Manage users                   | —         | —         | —       | ✓     | ✓           |
+| System config                  | —         | —         | —       | —     | ✓           |
+| Financial reports              | —         | —         | ✓ (own) | —     | ✓           |
 
 ---
 

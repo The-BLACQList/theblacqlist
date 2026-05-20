@@ -16,6 +16,7 @@
 City + category pages are the most SEO-valuable page type on the platform. They directly target high-intent transactional queries like "Black-owned hair salons Atlanta" or "Black-owned restaurants Chicago." Each page is a pre-scoped discovery grid for a specific city–category combination, statically generated with ISR and optimized for Google indexing. There are potentially hundreds of these pages (cities × categories), so `generateStaticParams` handles pre-generation of active combinations, with ISR fallback for new combinations.
 
 Source artifacts:
+
 - `docs/blacqlist/ux/mvp-screen-map.md` — City + Category page detailed spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Sections 4.2, 4.3
 - `docs/blacqlist/architecture/api-contract.md` — Endpoint 4: Get City + Category Page Data
@@ -35,6 +36,7 @@ This ticket depends on Ticket 027 (city pages) for shared components and the `[c
 ## Scope
 
 **In scope:**
+
 - `app/[city-slug]/[category-slug]/page.tsx` — Server Component, ISR `revalidate: 86400` (24 hours)
 - `generateStaticParams()` — generates all active city × category combinations where `listing_count > 0`. `dynamicParams = true` for future combinations. Batch size per `Promise.all` page — do not fetch all combinations in one query if count is large.
 - Data fetch: `GET /api/cities/[city-slug]/categories/[category-slug]` (Endpoint 4) — returns `city`, `category`, `listings[]` (paginated), `meta`
@@ -50,6 +52,7 @@ This ticket depends on Ticket 027 (city pages) for shared components and the `[c
 - `category_page_viewed` analytics event logged server-side (or via client-side fire-and-forget)
 
 **Out of scope:**
+
 - Subcategory filter (V1)
 - Sort by Newest or Rating (V1)
 - Trust tier filter (V1)
@@ -60,13 +63,13 @@ This ticket depends on Ticket 027 (city pages) for shared components and the `[c
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-027: City landing pages (shared `[city-slug]` route segment) | Blocking ticket | Not started |
-| BLACQ-015: `ListingCard` component | Blocking UI dependency | Not started |
-| `GET /api/cities/[city-slug]/categories/[category-slug]` (Endpoint 4) | Blocking API dependency | Not started |
-| `cities` × `categories` combinations with `listing_count > 0` seeded | Data | Must be seeded |
-| Route conflict resolution between `app/[city-slug]/[category-slug]/` and `app/[city-slug]/business/[listing-slug]/` confirmed | Architecture | Risk — verify before implementation |
+| Dependency                                                                                                                    | Type                    | Status                              |
+| ----------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------- |
+| BLACQ-027: City landing pages (shared `[city-slug]` route segment)                                                            | Blocking ticket         | Not started                         |
+| BLACQ-015: `ListingCard` component                                                                                            | Blocking UI dependency  | Not started                         |
+| `GET /api/cities/[city-slug]/categories/[category-slug]` (Endpoint 4)                                                         | Blocking API dependency | Not started                         |
+| `cities` × `categories` combinations with `listing_count > 0` seeded                                                          | Data                    | Must be seeded                      |
+| Route conflict resolution between `app/[city-slug]/[category-slug]/` and `app/[city-slug]/business/[listing-slug]/` confirmed | Architecture            | Risk — verify before implementation |
 
 ---
 
@@ -133,15 +136,18 @@ This ticket depends on Ticket 027 (city pages) for shared components and the `[c
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/[category-slug]/page.tsx` — Server Component. `generateStaticParams`. `generateMetadata`. `revalidate = 86400`. `dynamicParams = true`. Renders `SEOPageHeader`, `Breadcrumb`, `CityCategoryListingsClient`.
 - `app/[city-slug]/[category-slug]/components/CityCategoryListingsClient.tsx` — `"use client"`. Load More state. Appends results on Load More fetch. Renders `ListingCardGrid`.
 - `components/seo/SEOPageHeader.tsx` — Reusable header for category pages (also used by other discovery pages). Props: `heading`, `count`, `description?`.
 - `lib/services/cityCategory.ts` — `getCityCategoryPageData(citySlug, categorySlug, page, limit)` — fetches from Endpoint 4 or directly from Supabase.
 
 **Files to modify:**
+
 - None — new page files only
 
 **Key patterns:**
+
 ```typescript
 // app/[city-slug]/[category-slug]/page.tsx
 export const dynamicParams = true
@@ -184,6 +190,7 @@ export default async function CityCategoryPage({
 - `dynamicParams = true` ensures that new city+category combinations (added after build) are handled by ISR fallback — no 404 for valid but uncached combinations.
 
 **Do not:**
+
 - Conflict with the listing page route. The listing page has a 3-segment path (`/[city-slug]/business/[listing-slug]`) — always more specific than the 2-segment category page.
 - Use `DISTINCT ON` SQL for `generateStaticParams` if it is complex — a simple `JOIN` + `WHERE` gives the same result.
 - Render subcategory filter UI (V1 only).
@@ -207,13 +214,13 @@ export default async function CityCategoryPage({
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| City or category not found | Invalid slug | Branded 404 via `notFound()` | N/A |
-| API returns 500 | Server error during page render | Next.js error boundary catches; shows global error page with "Try again" | User retries |
-| Load More fails | API error on pagination request | Toast: "Couldn't load more. Try again." Load More button re-enables | User retries Load More |
-| No listings in city+category | Valid slugs, 0 published listings | Empty state with clear explanation and CTAs — 200 response | N/A |
-| `generateStaticParams` query slow at build | Large combinations count | Build time increases — acceptable at MVP scale. Add `LIMIT 5000` if needed. | Monitor build time |
+| Failure                                    | Condition                         | User sees                                                                   | Recovery               |
+| ------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------- | ---------------------- |
+| City or category not found                 | Invalid slug                      | Branded 404 via `notFound()`                                                | N/A                    |
+| API returns 500                            | Server error during page render   | Next.js error boundary catches; shows global error page with "Try again"    | User retries           |
+| Load More fails                            | API error on pagination request   | Toast: "Couldn't load more. Try again." Load More button re-enables         | User retries Load More |
+| No listings in city+category               | Valid slugs, 0 published listings | Empty state with clear explanation and CTAs — 200 response                  | N/A                    |
+| `generateStaticParams` query slow at build | Large combinations count          | Build time increases — acceptable at MVP scale. Add `LIMIT 5000` if needed. | Monitor build time     |
 
 ---
 
@@ -239,16 +246,16 @@ export default async function CityCategoryPage({
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-028-1 | Category page renders | Navigate to `/city/atlanta/hair-beauty` | h1 "Hair & Beauty in Atlanta", listing count, breadcrumb, grid of Hair & Beauty listings in Atlanta |
-| QA-028-2 | Breadcrumb navigation | Click "Atlanta" in breadcrumb | Navigates to `/city/atlanta` |
-| QA-028-3 | Invalid category | Navigate to `/city/atlanta/zzz-nonexistent` | Branded 404 page |
-| QA-028-4 | Empty combination | Navigate to valid city+category with 0 listings | Empty state with explanatory copy and CTAs; 200 response, page is indexable |
-| QA-028-5 | Route conflict test | Navigate to `/city/atlanta/business/test-listing-slug` | Correctly routes to the listing page, not the category page |
-| QA-028-6 | Load More | On a category page with 25 listings | 20 cards load; Load More shows "Load 5 more (5 remaining)"; click loads remaining 5; button hidden |
-| QA-028-7 | ISR cache | Load page twice within 24h | Second request has `x-nextjs-cache: HIT` |
-| QA-028-8 | Mobile layout | View at 375px | Breadcrumb single line; h1 wraps if needed; grid single column |
+| ID       | Test                  | Steps                                                  | Expected                                                                                            |
+| -------- | --------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| QA-028-1 | Category page renders | Navigate to `/city/atlanta/hair-beauty`                | h1 "Hair & Beauty in Atlanta", listing count, breadcrumb, grid of Hair & Beauty listings in Atlanta |
+| QA-028-2 | Breadcrumb navigation | Click "Atlanta" in breadcrumb                          | Navigates to `/city/atlanta`                                                                        |
+| QA-028-3 | Invalid category      | Navigate to `/city/atlanta/zzz-nonexistent`            | Branded 404 page                                                                                    |
+| QA-028-4 | Empty combination     | Navigate to valid city+category with 0 listings        | Empty state with explanatory copy and CTAs; 200 response, page is indexable                         |
+| QA-028-5 | Route conflict test   | Navigate to `/city/atlanta/business/test-listing-slug` | Correctly routes to the listing page, not the category page                                         |
+| QA-028-6 | Load More             | On a category page with 25 listings                    | 20 cards load; Load More shows "Load 5 more (5 remaining)"; click loads remaining 5; button hidden  |
+| QA-028-7 | ISR cache             | Load page twice within 24h                             | Second request has `x-nextjs-cache: HIT`                                                            |
+| QA-028-8 | Mobile layout         | View at 375px                                          | Breadcrumb single line; h1 wraps if needed; grid single column                                      |
 
 ---
 

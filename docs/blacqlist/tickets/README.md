@@ -8,58 +8,58 @@
 
 ## Ticket Index
 
-| ID | Title | Phase | Priority | Feature Area | Status |
-|---|---|---|---|---|---|
-| [001](./001-nextjs-project-init.md) | Next.js 14 project initialization and tooling | Phase 0: Setup and Foundation | P0 | Infrastructure | Draft |
-| [002](./002-supabase-setup.md) | Supabase project setup and environment configuration | Phase 0: Setup and Foundation | P0 | Infrastructure | Draft |
-| [003](./003-vercel-deployment-pipeline.md) | Vercel deployment pipeline and preview environments | Phase 0: Setup and Foundation | P0 | Infrastructure | Draft |
-| [004](./004-error-tracking-sentry.md) | Error tracking setup (Sentry) | Phase 0: Setup and Foundation | P1 | Infrastructure | Draft |
-| [005](./005-code-quality-tooling.md) | Code quality tooling (ESLint, Prettier, Husky, commitlint) | Phase 0: Setup and Foundation | P1 | Infrastructure | Draft |
-| [006](./006-geographic-tables-migration.md) | Geographic reference tables migration (states, cities) | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [007](./007-category-taxonomy-migration.md) | Category taxonomy migration and seed data | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [008](./008-user-profiles-roles-migration.md) | User profiles and roles migration | Phase 1: Database / Auth / RLS Foundation | P0 | Database / Auth | Draft |
-| [009](./009-listings-base-business-extension-migration.md) | Listings base table and business extension migration | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [010](./010-listing-supplementary-tables-migration.md) | Listing supplementary tables migration (hours, links, services, media) | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [011](./011-engagement-tables-migration.md) | Engagement tables migration (saves, claims, reviews, collections) | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [012](./012-analytics-audit-tables-migration.md) | Analytics and audit tables migration | Phase 1: Database / Auth / RLS Foundation | P0 | Database | Draft |
-| [013](./013-rls-policies-all-mvp-tables.md) | RLS policies for all 21 MVP tables | Phase 1: Database / Auth / RLS Foundation | P0 | Database / Security | Draft |
-| [014](./014-auth-flows.md) | Authentication flows (sign-up, sign-in, password reset, email verify) | Phase 1: Database / Auth / RLS Foundation | P0 | Auth | Draft |
-| [015](./015-app-shell-layout.md) | App shell — root layout, navigation, fonts, brand tokens, global CSS | Phase 2: Public Marketing and Discovery Shell | P0 | Frontend Shell | Draft |
-| [016](./016-homepage.md) | Homepage page component | Phase 2: Public Marketing and Discovery Shell | P1 | Discovery | Draft |
-| [017](./017-for-business-about-pages.md) | For Business and About static pages | Phase 2: Public Marketing and Discovery Shell | P2 | Marketing | Draft |
-| [018](./018-legal-pages.md) | Legal pages — Privacy Policy and Terms of Service | Phase 2: Public Marketing and Discovery Shell | P1 | Legal | Draft |
-| [019](./019-404-error-loading-pages.md) | 404, error boundary, and route-level loading pages | Phase 2: Public Marketing and Discovery Shell | P1 | Frontend Shell | Draft |
-| [020](./020-blacqlist-page-data-layer.md) | BLACQList Page — route, data layer, and page component | Phase 2: Public Marketing and Discovery Shell | P0 | Core Workflow | Draft |
-| [021](./021-blacqlist-page-hero-about-hours-contact-social.md) | BLACQList Page — hero, about, hours, contact, and social sections | Phase 3: BLACQList Page Build-Out | P1 | Core Workflow / BLACQList Page | Backlog |
-| [022](./022-blacqlist-page-gallery-services-cta.md) | BLACQList Page — gallery, services, and primary CTA section | Phase 3: BLACQList Page Build-Out | P1 | Core Workflow / BLACQList Page | Backlog |
-| [023](./023-blacqlist-page-seo-og-jsonld-sitemap.md) | BLACQList Page — SEO metadata, OG image, JSON-LD, and sitemap | Phase 3: BLACQList Page Build-Out | P1 | SEO / Infrastructure | Backlog |
-| [024](./024-blacqlist-page-save-share-analytics-sticky-cta.md) | BLACQList Page — save button, share button, analytics events, and sticky CTA bar | Phase 3: BLACQList Page Build-Out | P1 | Core Workflow / Engagement | Backlog |
-| [025](./025-search-api-endpoint.md) | Search API endpoint (GET /api/search) — FTS, pg_trgm fallback, filters, pagination | Phase 4: Search, Filters, City/Category Pages | P0 | API / Public Discovery | Backlog |
-| [026](./026-search-results-page.md) | Search results page (/search) — filter bar, listing grid, load more | Phase 4: Search, Filters, City/Category Pages | P1 | Public Discovery | Backlog |
-| [027](./027-city-landing-pages.md) | City landing pages (/[city-slug]) — ISR, hero, featured listings, category shortcuts | Phase 4: Search, Filters, City/Category Pages | P1 | Public Discovery / SEO | Backlog |
-| [028](./028-city-category-landing-pages.md) | City-category landing pages (/[city-slug]/[category-slug]) — ISR, breadcrumb, listing grid | Phase 4: Search, Filters, City/Category Pages | P1 | Public Discovery / SEO | Backlog |
-| [029](./029-discover-browse-page.md) | Discover / browse page (/discover) — facet-driven browsing, claimed-only toggle | Phase 4: Search, Filters, City/Category Pages | P2 | Public Discovery | Backlog |
-| [030](./030-media-upload-api.md) | Media upload API (POST /api/upload) — MIME validation, UUID paths, three-bucket support | Phase 5: Submit / Claim / Manage Foundation | P0 | API / Media | Backlog |
-| [031](./031-listing-duplicate-check-api.md) | Listing duplicate-check API (POST /api/listings/duplicate-check) | Phase 5: Submit / Claim / Manage Foundation | P1 | API / Entity Submission | Backlog |
-| [032](./032-add-business-form-steps-1-4.md) | Add Business multi-step form: steps 1–4 (entity type, basic info, contact, category/city) | Phase 5: Submit / Claim / Manage Foundation | P1 | Core Workflow / Entity Submission | Backlog |
-| [033](./033-add-business-form-steps-5-7.md) | Add Business multi-step form: steps 5–7 (media, CTA, preview/publish) | Phase 5: Submit / Claim / Manage Foundation | P1 | Core Workflow / Entity Submission | Backlog |
-| [034](./034-claim-entry-page.md) | Claim entry page (/claim) — search for existing listing to claim | Phase 5: Submit / Claim / Manage Foundation | P1 | Core Workflow / Claim | Backlog |
-| [035](./035-claim-form-doc-upload.md) | Claim form and verification document upload (/claim/[listing-id]) | Phase 5: Submit / Claim / Manage Foundation | P1 | Core Workflow / Claim | Backlog |
-| [036](./036-claim-status-tracking.md) | Claim status tracking page (/account/claims) | Phase 5: Submit / Claim / Manage Foundation | P2 | Core Workflow / Claim / Account | Backlog |
-| [037](./037-admin-layout-nav-auth-guard.md) | Admin layout, navigation, and auth guard | Phase 6: Admin Review and Verification | P0 | Admin / Auth | Backlog |
-| [038](./038-admin-listings-table.md) | Admin listings table (/admin/listings) | Phase 6: Admin Review and Verification | P1 | Admin / Listings | Backlog |
-| [039](./039-admin-listing-detail-edit.md) | Admin listing detail and edit (/admin/listings/[id]) | Phase 6: Admin Review and Verification | P1 | Admin / Listings | Backlog |
-| [040](./040-admin-claims-queue.md) | Admin claims queue (/admin/claims) | Phase 6: Admin Review and Verification | P0 | Admin / Claims | Backlog |
-| [041](./041-admin-claim-review-approve-reject.md) | Admin claim review — approve, reject, get signed doc URL (/admin/claims/[id]) | Phase 6: Admin Review and Verification | P0 | Admin / Claims | Backlog |
-| [042](./042-admin-users-table.md) | Admin users table — role management and suspension (/admin/users) | Phase 6: Admin Review and Verification | P1 | Admin / Users | Backlog |
-| [043](./043-admin-collections-management.md) | Admin collections management — CRUD, items, homepage-featured (/admin/collections) | Phase 6: Admin Review and Verification | P2 | Admin / Collections | Backlog |
-| [044](./044-admin-category-management.md) | Admin category management — create, edit, reorder, deactivate (/admin/categories) | Phase 6: Admin Review and Verification | P2 | Admin / Categories | Backlog |
-| [045](./045-save-unsave-api-button-component.md) | Save / unsave Route Handlers and SaveButton component | Phase 7: Saves, Reviews, Corrections, Sharing | P1 | API / Saves / Engagement | Backlog |
-| [046](./046-saved-listings-page.md) | Saved listings page (/account/saved) | Phase 7: Saves, Reviews, Corrections, Sharing | P1 | Account / Saves | Backlog |
-| [047](./047-share-functionality.md) | Share functionality — copy link, OG preview, Web Share API | Phase 7: Saves, Reviews, Corrections, Sharing | P2 | Saves / Engagement / Sharing | Backlog |
-| [048](./048-review-intake-server-actions.md) | Review intake — Server Actions and form components (MVP: intake only) | Phase 7: Saves, Reviews, Corrections, Sharing | P1 | Reviews / Engagement | Backlog |
-| [049](./049-analytics-event-ingestion-api.md) | Analytics event ingestion API (POST /api/analytics/event) | Phase 7: Saves, Reviews, Corrections, Sharing | P1 | API / Analytics | Backlog |
-| [050](./050-owner-dashboard-home.md) | Owner dashboard home (/dashboard) | Phase 8: Owner Dashboard | P1 | Dashboard / Analytics | Backlog |
+| ID                                                             | Title                                                                                      | Phase                                         | Priority | Feature Area                      | Status  |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------- | -------- | --------------------------------- | ------- |
+| [001](./001-nextjs-project-init.md)                            | Next.js 14 project initialization and tooling                                              | Phase 0: Setup and Foundation                 | P0       | Infrastructure                    | Draft   |
+| [002](./002-supabase-setup.md)                                 | Supabase project setup and environment configuration                                       | Phase 0: Setup and Foundation                 | P0       | Infrastructure                    | Draft   |
+| [003](./003-vercel-deployment-pipeline.md)                     | Vercel deployment pipeline and preview environments                                        | Phase 0: Setup and Foundation                 | P0       | Infrastructure                    | Draft   |
+| [004](./004-error-tracking-sentry.md)                          | Error tracking setup (Sentry)                                                              | Phase 0: Setup and Foundation                 | P1       | Infrastructure                    | Draft   |
+| [005](./005-code-quality-tooling.md)                           | Code quality tooling (ESLint, Prettier, Husky, commitlint)                                 | Phase 0: Setup and Foundation                 | P1       | Infrastructure                    | Draft   |
+| [006](./006-geographic-tables-migration.md)                    | Geographic reference tables migration (states, cities)                                     | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [007](./007-category-taxonomy-migration.md)                    | Category taxonomy migration and seed data                                                  | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [008](./008-user-profiles-roles-migration.md)                  | User profiles and roles migration                                                          | Phase 1: Database / Auth / RLS Foundation     | P0       | Database / Auth                   | Draft   |
+| [009](./009-listings-base-business-extension-migration.md)     | Listings base table and business extension migration                                       | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [010](./010-listing-supplementary-tables-migration.md)         | Listing supplementary tables migration (hours, links, services, media)                     | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [011](./011-engagement-tables-migration.md)                    | Engagement tables migration (saves, claims, reviews, collections)                          | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [012](./012-analytics-audit-tables-migration.md)               | Analytics and audit tables migration                                                       | Phase 1: Database / Auth / RLS Foundation     | P0       | Database                          | Draft   |
+| [013](./013-rls-policies-all-mvp-tables.md)                    | RLS policies for all 21 MVP tables                                                         | Phase 1: Database / Auth / RLS Foundation     | P0       | Database / Security               | Draft   |
+| [014](./014-auth-flows.md)                                     | Authentication flows (sign-up, sign-in, password reset, email verify)                      | Phase 1: Database / Auth / RLS Foundation     | P0       | Auth                              | Draft   |
+| [015](./015-app-shell-layout.md)                               | App shell — root layout, navigation, fonts, brand tokens, global CSS                       | Phase 2: Public Marketing and Discovery Shell | P0       | Frontend Shell                    | Draft   |
+| [016](./016-homepage.md)                                       | Homepage page component                                                                    | Phase 2: Public Marketing and Discovery Shell | P1       | Discovery                         | Draft   |
+| [017](./017-for-business-about-pages.md)                       | For Business and About static pages                                                        | Phase 2: Public Marketing and Discovery Shell | P2       | Marketing                         | Draft   |
+| [018](./018-legal-pages.md)                                    | Legal pages — Privacy Policy and Terms of Service                                          | Phase 2: Public Marketing and Discovery Shell | P1       | Legal                             | Draft   |
+| [019](./019-404-error-loading-pages.md)                        | 404, error boundary, and route-level loading pages                                         | Phase 2: Public Marketing and Discovery Shell | P1       | Frontend Shell                    | Draft   |
+| [020](./020-blacqlist-page-data-layer.md)                      | BLACQList Page — route, data layer, and page component                                     | Phase 2: Public Marketing and Discovery Shell | P0       | Core Workflow                     | Draft   |
+| [021](./021-blacqlist-page-hero-about-hours-contact-social.md) | BLACQList Page — hero, about, hours, contact, and social sections                          | Phase 3: BLACQList Page Build-Out             | P1       | Core Workflow / BLACQList Page    | Backlog |
+| [022](./022-blacqlist-page-gallery-services-cta.md)            | BLACQList Page — gallery, services, and primary CTA section                                | Phase 3: BLACQList Page Build-Out             | P1       | Core Workflow / BLACQList Page    | Backlog |
+| [023](./023-blacqlist-page-seo-og-jsonld-sitemap.md)           | BLACQList Page — SEO metadata, OG image, JSON-LD, and sitemap                              | Phase 3: BLACQList Page Build-Out             | P1       | SEO / Infrastructure              | Backlog |
+| [024](./024-blacqlist-page-save-share-analytics-sticky-cta.md) | BLACQList Page — save button, share button, analytics events, and sticky CTA bar           | Phase 3: BLACQList Page Build-Out             | P1       | Core Workflow / Engagement        | Backlog |
+| [025](./025-search-api-endpoint.md)                            | Search API endpoint (GET /api/search) — FTS, pg_trgm fallback, filters, pagination         | Phase 4: Search, Filters, City/Category Pages | P0       | API / Public Discovery            | Backlog |
+| [026](./026-search-results-page.md)                            | Search results page (/search) — filter bar, listing grid, load more                        | Phase 4: Search, Filters, City/Category Pages | P1       | Public Discovery                  | Backlog |
+| [027](./027-city-landing-pages.md)                             | City landing pages (/[city-slug]) — ISR, hero, featured listings, category shortcuts       | Phase 4: Search, Filters, City/Category Pages | P1       | Public Discovery / SEO            | Backlog |
+| [028](./028-city-category-landing-pages.md)                    | City-category landing pages (/[city-slug]/[category-slug]) — ISR, breadcrumb, listing grid | Phase 4: Search, Filters, City/Category Pages | P1       | Public Discovery / SEO            | Backlog |
+| [029](./029-discover-browse-page.md)                           | Discover / browse page (/discover) — facet-driven browsing, claimed-only toggle            | Phase 4: Search, Filters, City/Category Pages | P2       | Public Discovery                  | Backlog |
+| [030](./030-media-upload-api.md)                               | Media upload API (POST /api/upload) — MIME validation, UUID paths, three-bucket support    | Phase 5: Submit / Claim / Manage Foundation   | P0       | API / Media                       | Backlog |
+| [031](./031-listing-duplicate-check-api.md)                    | Listing duplicate-check API (POST /api/listings/duplicate-check)                           | Phase 5: Submit / Claim / Manage Foundation   | P1       | API / Entity Submission           | Backlog |
+| [032](./032-add-business-form-steps-1-4.md)                    | Add Business multi-step form: steps 1–4 (entity type, basic info, contact, category/city)  | Phase 5: Submit / Claim / Manage Foundation   | P1       | Core Workflow / Entity Submission | Backlog |
+| [033](./033-add-business-form-steps-5-7.md)                    | Add Business multi-step form: steps 5–7 (media, CTA, preview/publish)                      | Phase 5: Submit / Claim / Manage Foundation   | P1       | Core Workflow / Entity Submission | Backlog |
+| [034](./034-claim-entry-page.md)                               | Claim entry page (/claim) — search for existing listing to claim                           | Phase 5: Submit / Claim / Manage Foundation   | P1       | Core Workflow / Claim             | Backlog |
+| [035](./035-claim-form-doc-upload.md)                          | Claim form and verification document upload (/claim/[listing-id])                          | Phase 5: Submit / Claim / Manage Foundation   | P1       | Core Workflow / Claim             | Backlog |
+| [036](./036-claim-status-tracking.md)                          | Claim status tracking page (/account/claims)                                               | Phase 5: Submit / Claim / Manage Foundation   | P2       | Core Workflow / Claim / Account   | Backlog |
+| [037](./037-admin-layout-nav-auth-guard.md)                    | Admin layout, navigation, and auth guard                                                   | Phase 6: Admin Review and Verification        | P0       | Admin / Auth                      | Backlog |
+| [038](./038-admin-listings-table.md)                           | Admin listings table (/admin/listings)                                                     | Phase 6: Admin Review and Verification        | P1       | Admin / Listings                  | Backlog |
+| [039](./039-admin-listing-detail-edit.md)                      | Admin listing detail and edit (/admin/listings/[id])                                       | Phase 6: Admin Review and Verification        | P1       | Admin / Listings                  | Backlog |
+| [040](./040-admin-claims-queue.md)                             | Admin claims queue (/admin/claims)                                                         | Phase 6: Admin Review and Verification        | P0       | Admin / Claims                    | Backlog |
+| [041](./041-admin-claim-review-approve-reject.md)              | Admin claim review — approve, reject, get signed doc URL (/admin/claims/[id])              | Phase 6: Admin Review and Verification        | P0       | Admin / Claims                    | Backlog |
+| [042](./042-admin-users-table.md)                              | Admin users table — role management and suspension (/admin/users)                          | Phase 6: Admin Review and Verification        | P1       | Admin / Users                     | Backlog |
+| [043](./043-admin-collections-management.md)                   | Admin collections management — CRUD, items, homepage-featured (/admin/collections)         | Phase 6: Admin Review and Verification        | P2       | Admin / Collections               | Backlog |
+| [044](./044-admin-category-management.md)                      | Admin category management — create, edit, reorder, deactivate (/admin/categories)          | Phase 6: Admin Review and Verification        | P2       | Admin / Categories                | Backlog |
+| [045](./045-save-unsave-api-button-component.md)               | Save / unsave Route Handlers and SaveButton component                                      | Phase 7: Saves, Reviews, Corrections, Sharing | P1       | API / Saves / Engagement          | Backlog |
+| [046](./046-saved-listings-page.md)                            | Saved listings page (/account/saved)                                                       | Phase 7: Saves, Reviews, Corrections, Sharing | P1       | Account / Saves                   | Backlog |
+| [047](./047-share-functionality.md)                            | Share functionality — copy link, OG preview, Web Share API                                 | Phase 7: Saves, Reviews, Corrections, Sharing | P2       | Saves / Engagement / Sharing      | Backlog |
+| [048](./048-review-intake-server-actions.md)                   | Review intake — Server Actions and form components (MVP: intake only)                      | Phase 7: Saves, Reviews, Corrections, Sharing | P1       | Reviews / Engagement              | Backlog |
+| [049](./049-analytics-event-ingestion-api.md)                  | Analytics event ingestion API (POST /api/analytics/event)                                  | Phase 7: Saves, Reviews, Corrections, Sharing | P1       | API / Analytics                   | Backlog |
+| [050](./050-owner-dashboard-home.md)                           | Owner dashboard home (/dashboard)                                                          | Phase 8: Owner Dashboard                      | P1       | Dashboard / Analytics             | Backlog |
 
 ---
 
@@ -171,18 +171,18 @@ Phase 8 — Owner Dashboard
 
 ## Phase Summary
 
-| Phase | Tickets | Count | Description |
-|---|---|---|---|
-| Phase 0: Setup and Foundation | 001–005 | 5 | Next.js init, Supabase, Vercel, Sentry, ESLint/Prettier |
-| Phase 1: Database / Auth / RLS Foundation | 006–014 | 9 | All schema migrations, RLS policies, auth flows |
-| Phase 2: Public Marketing and Discovery Shell | 015–020 | 6 | App shell, homepage, static pages, BLACQList Page route/data layer |
-| Phase 3: BLACQList Page Build-Out | 021–024 | 4 | Page sections (hero/about/hours/gallery/services), SEO, engagement |
-| Phase 4: Search, Filters, City/Category Pages | 025–029 | 5 | Search API, search results page, city pages, city-category pages, discover |
-| Phase 5: Submit / Claim / Manage Foundation | 030–036 | 7 | Media upload, duplicate check, add-business form (7 steps), claim flow |
-| Phase 6: Admin Review and Verification | 037–044 | 8 | Admin layout, listings, claims queue, claim review, users, collections, categories |
-| Phase 7: Saves, Reviews, Corrections, Sharing | 045–049 | 5 | Save/unsave API, saved page, share, reviews, analytics API |
-| Phase 8: Owner Dashboard | 050 | 1 | Owner dashboard home — stats, claim status, completion checklist |
-| **Total** | **001–050** | **50** | |
+| Phase                                         | Tickets     | Count  | Description                                                                        |
+| --------------------------------------------- | ----------- | ------ | ---------------------------------------------------------------------------------- |
+| Phase 0: Setup and Foundation                 | 001–005     | 5      | Next.js init, Supabase, Vercel, Sentry, ESLint/Prettier                            |
+| Phase 1: Database / Auth / RLS Foundation     | 006–014     | 9      | All schema migrations, RLS policies, auth flows                                    |
+| Phase 2: Public Marketing and Discovery Shell | 015–020     | 6      | App shell, homepage, static pages, BLACQList Page route/data layer                 |
+| Phase 3: BLACQList Page Build-Out             | 021–024     | 4      | Page sections (hero/about/hours/gallery/services), SEO, engagement                 |
+| Phase 4: Search, Filters, City/Category Pages | 025–029     | 5      | Search API, search results page, city pages, city-category pages, discover         |
+| Phase 5: Submit / Claim / Manage Foundation   | 030–036     | 7      | Media upload, duplicate check, add-business form (7 steps), claim flow             |
+| Phase 6: Admin Review and Verification        | 037–044     | 8      | Admin layout, listings, claims queue, claim review, users, collections, categories |
+| Phase 7: Saves, Reviews, Corrections, Sharing | 045–049     | 5      | Save/unsave API, saved page, share, reviews, analytics API                         |
+| Phase 8: Owner Dashboard                      | 050         | 1      | Owner dashboard home — stats, claim status, completion checklist                   |
+| **Total**                                     | **001–050** | **50** |                                                                                    |
 
 ---
 
@@ -190,15 +190,15 @@ Phase 8 — Owner Dashboard
 
 These tickets are derived from the following planning artifacts:
 
-| Artifact | Path |
-|---|---|
-| Tech Stack Decision Record | `docs/blacqlist/architecture/tech-stack-decision.md` |
-| Environment Configuration Plan | `docs/blacqlist/architecture/environment-plan.md` |
-| Database Schema Plan (Part A) | `docs/blacqlist/data/database-schema-plan.md` |
-| RLS Policy Plan | `docs/blacqlist/data/rls-policy-plan.md` |
-| API Contract | `docs/blacqlist/architecture/api-contract.md` |
-| Server Actions Plan | `docs/blacqlist/architecture/server-actions-plan.md` |
-| MVP Screen Map | `docs/blacqlist/ux/mvp-screen-map.md` |
+| Artifact                                 | Path                                                      |
+| ---------------------------------------- | --------------------------------------------------------- |
+| Tech Stack Decision Record               | `docs/blacqlist/architecture/tech-stack-decision.md`      |
+| Environment Configuration Plan           | `docs/blacqlist/architecture/environment-plan.md`         |
+| Database Schema Plan (Part A)            | `docs/blacqlist/data/database-schema-plan.md`             |
+| RLS Policy Plan                          | `docs/blacqlist/data/rls-policy-plan.md`                  |
+| API Contract                             | `docs/blacqlist/architecture/api-contract.md`             |
+| Server Actions Plan                      | `docs/blacqlist/architecture/server-actions-plan.md`      |
+| MVP Screen Map                           | `docs/blacqlist/ux/mvp-screen-map.md`                     |
 | Empty / Loading / Error / Success States | `docs/blacqlist/ux/empty-loading-error-success-states.md` |
-| BLACQList Page Design System | `docs/blacqlist/design/blacqlist-page-design-system.md` |
-| Design Brief | `docs/blacqlist/design/design-brief.md` |
+| BLACQList Page Design System             | `docs/blacqlist/design/blacqlist-page-design-system.md`   |
+| Design Brief                             | `docs/blacqlist/design/design-brief.md`                   |

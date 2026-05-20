@@ -16,6 +16,7 @@
 Following the hero and informational sections (Ticket 021), the gallery, services, and primary CTA sections are the next three content zones on a Business BLACQList Page. The gallery demonstrates what the business looks like — it is the visual credibility layer. The services list communicates what the business sells or offers. The primary CTA card is a high-impact repeated action trigger positioned after the visitor has read enough to act. Together these three sections convert informed visitors into customers.
 
 Source artifacts:
+
 - `docs/blacqlist/design/blacqlist-page-design-system.md` — Sections 7.1, 8.1, 13
 - `docs/blacqlist/ux/mvp-screen-map.md` — Business BLACQList Page: gallery, services, and sticky CTA spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 3.5 (gallery loading), Section 3.4
@@ -34,6 +35,7 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 ## Scope
 
 **In scope:**
+
 - Gallery section (`#19191E` Deep Background): "Photos" h2 heading (Glacial Indifference Bold, White); mixed-size grid layout (desktop: one large featured image left + 2-column grid right; mobile: full-width featured + 2-column grid below); up to 12 images (Free tier: 6 max); each image is `next/image`; "View all [N] photos" Amber Gold text link; section hidden entirely when no gallery images exist
 - Lightbox: full-screen overlay (`rgba(0,0,0,0.92)` background), centered image (max 90vw × 85vh, aspect ratio preserved), image counter "3 / 12" (White, Lato Regular 14px, upper-right), left/right arrow buttons (40px × 40px, semi-transparent dark background, White icon), Escape key closes on desktop, swipe left/right on mobile, close button (×) upper-left, focus trapped within lightbox, focus returns to trigger on close
 - Services section (White background): "Services" h2 heading; row-list layout with bottom border per row in Pale Lavender; service name (Lato Medium 16px), description (Quicksand Bold Italic 14px Charcoal, 2-line max with ellipsis), price (right-aligned, Lato Regular 14px Amber Gold); up to 8 rows shown by default; "Show all [N] services" Amber Gold expand link if more than 8; section hidden entirely if no services exist
@@ -42,6 +44,7 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 - Gallery images ordered by `display_order` from `media` array
 
 **Out of scope:**
+
 - Save/share buttons and sticky CTA bar (Ticket 024)
 - SEO metadata (Ticket 023)
 - Reviews, related listings (V1)
@@ -53,13 +56,13 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-021: Hero, about, hours, contact, social sections | Blocking ticket | Not started |
-| BLACQ-020: Listing page data fetching and `EntityPageData` shape | Blocking ticket | Not started |
-| `EntityPageData.media` and `EntityPageData.services` arrays (Endpoint 5) | Data contract | Defined in api-contract.md |
-| `POST /api/analytics/event` endpoint (Endpoint 17) | API dependency | Not started — fire-and-forget; stub with console.log if not yet implemented |
-| Brand color tokens and font configuration | Design tokens | Must exist before this ticket |
+| Dependency                                                               | Type            | Status                                                                      |
+| ------------------------------------------------------------------------ | --------------- | --------------------------------------------------------------------------- |
+| BLACQ-021: Hero, about, hours, contact, social sections                  | Blocking ticket | Not started                                                                 |
+| BLACQ-020: Listing page data fetching and `EntityPageData` shape         | Blocking ticket | Not started                                                                 |
+| `EntityPageData.media` and `EntityPageData.services` arrays (Endpoint 5) | Data contract   | Defined in api-contract.md                                                  |
+| `POST /api/analytics/event` endpoint (Endpoint 17)                       | API dependency  | Not started — fire-and-forget; stub with console.log if not yet implemented |
+| Brand color tokens and font configuration                                | Design tokens   | Must exist before this ticket                                               |
 
 ---
 
@@ -119,6 +122,7 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/business/[listing-slug]/components/GallerySection.tsx` — Gallery grid with `"use client"` for lightbox state, skeleton, and error state
 - `app/[city-slug]/business/[listing-slug]/components/GalleryLightbox.tsx` — Lightbox overlay with focus trap, keyboard navigation, swipe support
 - `app/[city-slug]/business/[listing-slug]/components/ServicesSection.tsx` — Server Component, row list with expand toggle
@@ -126,9 +130,11 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 - `lib/utils/price.ts` — `formatPrice(price: number | null, price_type: string | null, price_note: string | null): string | null` utility
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — Add GallerySection, ServicesSection, PrimaryCtaCard in correct section order (after SocialLinksSection from Ticket 021)
 
 **Key patterns:**
+
 - `GallerySection` is a `"use client"` component because lightbox state (open/closed, current image index) requires `useState`. The gallery image list is passed as resolved URL props from the parent Server Component.
 - The lightbox uses `useEffect` for keyboard event listener (Escape to close, ArrowLeft/ArrowRight to navigate). Cleanup the event listener on unmount.
 - Swipe support on mobile: use `onTouchStart` + `onTouchEnd` to detect swipe direction. Threshold: 50px horizontal delta.
@@ -139,6 +145,7 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 - Gallery images: pass resolved CDN URLs (not storage paths) to the Gallery component. Generate URLs in the parent page Server Component: `media.map(m => ({ ...m, url: supabase.storage.from('listing-media').getPublicUrl(m.file_path).data.publicUrl }))`.
 
 **Do not:**
+
 - Put lightbox state in the parent page component (keep it local to GallerySection).
 - Render gallery images with `<img>` — always use `next/image` outside the lightbox. Inside the lightbox, `next/image` with `unoptimized` is acceptable since the lightbox serves full-size images.
 - Show an empty gallery section, empty services section, or empty heading when data is missing — hide the entire section.
@@ -167,14 +174,14 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Gallery image fails to load | Individual image CDN error | `next/image` error boundary renders image placeholder; other gallery images unaffected | No explicit retry per image |
-| Gallery section fetch error (if fetched separately) | API/network error on gallery data | "Gallery couldn't load. Try again." inline text — section-level failure does not affect rest of page | "Try again" link re-fetches gallery images |
-| CTA `cta_url` is null for a non-call CTA type | Data inconsistency | CTA card renders but button is disabled with `aria-disabled="true"` and a visible tooltip "Link unavailable" | Owner must update their page to fix |
-| Analytics event fails to fire | Network error on `POST /api/analytics/event` | User sees nothing — fire-and-forget, silently swallowed | N/A |
-| Services load but all have `is_visible = false` | Owner hid all services | Services section hidden entirely | N/A |
-| Price data is `price_type = 'custom'` with null `price_note` | Incomplete data | Price column is empty (no text rendered) — not shown as an error | N/A |
+| Failure                                                      | Condition                                    | User sees                                                                                                    | Recovery                                   |
+| ------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Gallery image fails to load                                  | Individual image CDN error                   | `next/image` error boundary renders image placeholder; other gallery images unaffected                       | No explicit retry per image                |
+| Gallery section fetch error (if fetched separately)          | API/network error on gallery data            | "Gallery couldn't load. Try again." inline text — section-level failure does not affect rest of page         | "Try again" link re-fetches gallery images |
+| CTA `cta_url` is null for a non-call CTA type                | Data inconsistency                           | CTA card renders but button is disabled with `aria-disabled="true"` and a visible tooltip "Link unavailable" | Owner must update their page to fix        |
+| Analytics event fails to fire                                | Network error on `POST /api/analytics/event` | User sees nothing — fire-and-forget, silently swallowed                                                      | N/A                                        |
+| Services load but all have `is_visible = false`              | Owner hid all services                       | Services section hidden entirely                                                                             | N/A                                        |
+| Price data is `price_type = 'custom'` with null `price_note` | Incomplete data                              | Price column is empty (no text rendered) — not shown as an error                                             | N/A                                        |
 
 ---
 
@@ -208,16 +215,16 @@ This ticket depends on Ticket 021 (hero, about, hours, contact sections). Save/s
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-022-1 | Gallery grid layout desktop | Navigate to a listing with 8 gallery images on a 1280px viewport | Featured large image on left half, 2-column grid on right, "View all 8 photos" link below grid |
-| QA-022-2 | Lightbox open/close/navigate | Click "View all photos", navigate with ArrowRight × 3, press Escape | Lightbox opens at photo 1; counter shows "1 / N"; ArrowRight advances counter; Escape closes and focus returns to "View all" link |
-| QA-022-3 | Free tier gallery cap | Navigate to a `listing_tier = 'free'` listing with 9 gallery images | Only 6 images visible in the gallery grid |
-| QA-022-4 | Services expand | Navigate to a listing with 10 services | 8 rows visible, "Show all 10 services" link below; click link reveals remaining 2 rows |
-| QA-022-5 | Empty gallery section | Navigate to a listing with no gallery images | Gallery section entirely absent — no heading, no grid, no empty state message |
-| QA-022-6 | CTA card call action | Navigate to a listing with `cta_type = 'call'`, click the primary CTA card | `tel:` link triggered (browser prompts to call on desktop or initiates call on mobile) |
-| QA-022-7 | Mobile gallery swipe | Open gallery lightbox on 375px viewport, swipe left | Next image shown; swipe right shows previous image; no arrow buttons visible |
-| QA-022-8 | Keyboard focus trap in lightbox | Open lightbox, press Tab repeatedly | Focus cycles only within lightbox: close button → prev arrow → image → next arrow → close button (wraps) |
+| ID       | Test                            | Steps                                                                      | Expected                                                                                                                          |
+| -------- | ------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| QA-022-1 | Gallery grid layout desktop     | Navigate to a listing with 8 gallery images on a 1280px viewport           | Featured large image on left half, 2-column grid on right, "View all 8 photos" link below grid                                    |
+| QA-022-2 | Lightbox open/close/navigate    | Click "View all photos", navigate with ArrowRight × 3, press Escape        | Lightbox opens at photo 1; counter shows "1 / N"; ArrowRight advances counter; Escape closes and focus returns to "View all" link |
+| QA-022-3 | Free tier gallery cap           | Navigate to a `listing_tier = 'free'` listing with 9 gallery images        | Only 6 images visible in the gallery grid                                                                                         |
+| QA-022-4 | Services expand                 | Navigate to a listing with 10 services                                     | 8 rows visible, "Show all 10 services" link below; click link reveals remaining 2 rows                                            |
+| QA-022-5 | Empty gallery section           | Navigate to a listing with no gallery images                               | Gallery section entirely absent — no heading, no grid, no empty state message                                                     |
+| QA-022-6 | CTA card call action            | Navigate to a listing with `cta_type = 'call'`, click the primary CTA card | `tel:` link triggered (browser prompts to call on desktop or initiates call on mobile)                                            |
+| QA-022-7 | Mobile gallery swipe            | Open gallery lightbox on 375px viewport, swipe left                        | Next image shown; swipe right shows previous image; no arrow buttons visible                                                      |
+| QA-022-8 | Keyboard focus trap in lightbox | Open lightbox, press Tab repeatedly                                        | Focus cycles only within lightbox: close button → prev arrow → image → next arrow → close button (wraps)                          |
 
 ---
 

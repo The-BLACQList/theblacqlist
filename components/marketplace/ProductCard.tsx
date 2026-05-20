@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { Package } from "lucide-react"
-import { CTAButton } from "./CTAButton"
+import Link from 'next/link'
+import { Package } from 'lucide-react'
+import { CTAButton } from './CTAButton'
 
 interface ProductCardProps {
   product: {
@@ -22,22 +22,23 @@ interface ProductCardProps {
 }
 
 function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", {
-    style:                 "currency",
-    currency:              "USD",
+  return (cents / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
     maximumFractionDigits: 0,
   })
 }
 
 export function ProductCard({ product, showVendor = false }: ProductCardProps) {
-  const priceLabel = product.price_display_text
-    ?? (product.price_cents ? formatPrice(product.price_cents) : "Contact for pricing")
+  const priceLabel =
+    product.price_display_text ??
+    (product.price_cents ? formatPrice(product.price_cents) : 'Contact for pricing')
 
   const compareLabel = product.compare_at_price_cents
     ? formatPrice(product.compare_at_price_cents)
     : null
 
-  const ctaType = product.external_purchase_url ? "shop-now" : "visit-website"
+  const ctaType = product.external_purchase_url ? 'shop-now' : 'visit-website'
 
   return (
     <article className="rounded-xl border border-charcoal/10 bg-white overflow-hidden flex flex-col">
@@ -65,20 +66,23 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
               <Link href={`/vendors/${product.vendor_slug}`} className="hover:text-charcoal">
                 {product.vendor_name}
               </Link>
-            ) : product.vendor_name}
+            ) : (
+              product.vendor_name
+            )}
           </p>
         )}
 
         <h3 className="font-headline text-base text-brand-black leading-snug">
-          <Link href={`/marketplace/products/${product.global_slug}`} className="hover:text-amber-gold transition-colors">
+          <Link
+            href={`/marketplace/products/${product.global_slug}`}
+            className="hover:text-amber-gold transition-colors"
+          >
             {product.name}
           </Link>
         </h3>
 
         {product.description && (
-          <p className="font-body text-xs text-charcoal/60 line-clamp-2">
-            {product.description}
-          </p>
+          <p className="font-body text-xs text-charcoal/60 line-clamp-2">{product.description}</p>
         )}
 
         {/* Price */}
@@ -91,11 +95,15 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
 
         {/* Shipping */}
         <p className="font-body text-[10px] text-charcoal/40 capitalize">
-          {product.shipping_options === "digital" ? "Digital delivery"
-            : product.shipping_options === "pickup" ? "Pickup only"
-            : product.shipping_options === "both" ? "Ships + pickup"
-            : product.shipping_options === "none" ? "No shipping"
-            : "Ships nationwide"}
+          {product.shipping_options === 'digital'
+            ? 'Digital delivery'
+            : product.shipping_options === 'pickup'
+              ? 'Pickup only'
+              : product.shipping_options === 'both'
+                ? 'Ships + pickup'
+                : product.shipping_options === 'none'
+                  ? 'No shipping'
+                  : 'Ships nationwide'}
         </p>
 
         {/* CTA */}

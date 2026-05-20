@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import Link from "next/link"
-import { Briefcase, Globe, MapPin, Plane, ArrowLeft } from "lucide-react"
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { Briefcase, Globe, MapPin, Plane, ArrowLeft } from 'lucide-react'
 
-import { createServiceClient } from "@/lib/supabase/server"
-import { CTAButton } from "@/components/marketplace/CTAButton"
+import { createServiceClient } from '@/lib/supabase/server'
+import { CTAButton } from '@/components/marketplace/CTAButton'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -14,13 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const serviceClient = createServiceClient()
   const { data } = await serviceClient
-    .from("marketplace_services")
-    .select("name, description")
-    .eq("global_slug", slug)
-    .eq("status", "active")
+    .from('marketplace_services')
+    .select('name, description')
+    .eq('global_slug', slug)
+    .eq('status', 'active')
     .maybeSingle()
 
-  if (!data) return { title: "Service | BLACQList Marketplace" }
+  if (!data) return { title: 'Service | BLACQList Marketplace' }
 
   return {
     title: `${data.name} | BLACQList Marketplace`,
@@ -31,17 +31,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const revalidate = 1800
 
 const DELIVERY_LABELS: Record<string, string> = {
-  virtual:   "Virtual",
-  in_person: "In person",
-  travel:    "Provider travels to you",
-  hybrid:    "Virtual + in person",
+  virtual: 'Virtual',
+  in_person: 'In person',
+  travel: 'Provider travels to you',
+  hybrid: 'Virtual + in person',
 }
 
 const DELIVERY_ICONS: Record<string, React.ElementType> = {
-  virtual:   Globe,
+  virtual: Globe,
   in_person: MapPin,
-  travel:    Plane,
-  hybrid:    Globe,
+  travel: Plane,
+  hybrid: Globe,
 }
 
 export default async function ServiceDetailPage({ params }: Props) {
@@ -49,10 +49,10 @@ export default async function ServiceDetailPage({ params }: Props) {
   const serviceClient = createServiceClient()
 
   const { data: svc } = await serviceClient
-    .from("marketplace_services")
-    .select("*, listings(id, name, slug, trust_tier)")
-    .eq("global_slug", slug)
-    .eq("status", "active")
+    .from('marketplace_services')
+    .select('*, listings(id, name, slug, trust_tier)')
+    .eq('global_slug', slug)
+    .eq('status', 'active')
     .maybeSingle()
 
   if (!svc) notFound()
@@ -61,20 +61,21 @@ export default async function ServiceDetailPage({ params }: Props) {
   const listing = svc.listings as ListingRef
 
   function formatPrice(cents: number): string {
-    return (cents / 100).toLocaleString("en-US", {
-      style:                 "currency",
-      currency:              "USD",
+    return (cents / 100).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
       maximumFractionDigits: 0,
     })
   }
 
-  const priceLabel = svc.price_display_text
-    ?? (svc.starting_price_cents != null
+  const priceLabel =
+    svc.price_display_text ??
+    (svc.starting_price_cents != null
       ? `Starting at ${formatPrice(svc.starting_price_cents)}`
-      : "Contact for pricing")
+      : 'Contact for pricing')
 
-  const ctaType  = svc.booking_url ? "book-now" : "request-quote"
-  const ctaLabel = svc.booking_url ? "Book Now" : "Request Quote"
+  const ctaType = svc.booking_url ? 'book-now' : 'request-quote'
+  const ctaLabel = svc.booking_url ? 'Book Now' : 'Request Quote'
   const DeliveryIcon = DELIVERY_ICONS[svc.delivery_mode] ?? Briefcase
 
   return (
@@ -83,11 +84,21 @@ export default async function ServiceDetailPage({ params }: Props) {
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
-            <li><Link href="/marketplace" className="hover:text-charcoal">Marketplace</Link></li>
+            <li>
+              <Link href="/marketplace" className="hover:text-charcoal">
+                Marketplace
+              </Link>
+            </li>
             <li aria-hidden="true">/</li>
-            <li><Link href="/marketplace/services" className="hover:text-charcoal">Services</Link></li>
+            <li>
+              <Link href="/marketplace/services" className="hover:text-charcoal">
+                Services
+              </Link>
+            </li>
             <li aria-hidden="true">/</li>
-            <li className="text-charcoal truncate max-w-[200px]" aria-current="page">{svc.name}</li>
+            <li className="text-charcoal truncate max-w-[200px]" aria-current="page">
+              {svc.name}
+            </li>
           </ol>
         </nav>
 
@@ -112,8 +123,11 @@ export default async function ServiceDetailPage({ params }: Props) {
           <div className="space-y-5">
             {listing && (
               <p className="font-subhead text-sm text-charcoal/50">
-                Offered by{" "}
-                <Link href={`/vendors/${listing.slug}`} className="font-semibold text-brand-black hover:text-amber-gold">
+                Offered by{' '}
+                <Link
+                  href={`/vendors/${listing.slug}`}
+                  className="font-semibold text-brand-black hover:text-amber-gold"
+                >
                   {listing.name}
                 </Link>
               </p>

@@ -1,16 +1,16 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { Plus, Package, ExternalLink } from "lucide-react"
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { Plus, Package, ExternalLink } from 'lucide-react'
 
-import { requireOwner } from "@/lib/dashboard/guard"
-import { createClient } from "@/lib/supabase/server"
+import { requireOwner } from '@/lib/dashboard/guard'
+import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: "Products | Dashboard" }
+export const metadata: Metadata = { title: 'Products | Dashboard' }
 
 const STATUS_STYLES: Record<string, string> = {
-  active:   "bg-green-100 text-green-700",
-  draft:    "bg-charcoal/10 text-charcoal/60",
-  archived: "bg-amber-100 text-amber-700",
+  active: 'bg-green-100 text-green-700',
+  draft: 'bg-charcoal/10 text-charcoal/60',
+  archived: 'bg-amber-100 text-amber-700',
 }
 
 export default async function DashboardProductsPage() {
@@ -19,30 +19,35 @@ export default async function DashboardProductsPage() {
 
   // Fetch owner's listing IDs
   const { data: listings } = await supabase
-    .from("listings")
-    .select("id, name")
-    .eq("owner_user_id", owner.user.id)
-    .is("deleted_at", null)
+    .from('listings')
+    .select('id, name')
+    .eq('owner_user_id', owner.user.id)
+    .is('deleted_at', null)
 
   const listingIds = (listings ?? []).map((l) => l.id)
   const listingNameById: Record<string, string> = {}
   for (const l of listings ?? []) listingNameById[l.id] = l.name
 
-  const { data: rows } = listingIds.length > 0
-    ? await supabase
-        .from("marketplace_products")
-        .select("id, name, global_slug, status, price_cents, price_display_text, listing_id")
-        .in("listing_id", listingIds)
-        .order("created_at", { ascending: false })
-    : { data: [] }
+  const { data: rows } =
+    listingIds.length > 0
+      ? await supabase
+          .from('marketplace_products')
+          .select('id, name, global_slug, status, price_cents, price_display_text, listing_id')
+          .in('listing_id', listingIds)
+          .order('created_at', { ascending: false })
+      : { data: [] }
 
   const products = (rows ?? []).map((p) => ({
     ...p,
-    listing_name: listingNameById[p.listing_id] ?? "—",
+    listing_name: listingNameById[p.listing_id] ?? '—',
   }))
 
   function formatPrice(cents: number): string {
-    return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+    return (cents / 100).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    })
   }
 
   return (
@@ -83,11 +88,21 @@ export default async function DashboardProductsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-pale-lavender/40">
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">Product</th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden sm:table-cell">Listing</th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden md:table-cell">Price</th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">Status</th>
-                <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">Actions</th>
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  Product
+                </th>
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden sm:table-cell">
+                  Listing
+                </th>
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden md:table-cell">
+                  Price
+                </th>
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  Status
+                </th>
+                <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-charcoal/5">
@@ -101,17 +116,19 @@ export default async function DashboardProductsPage() {
                   </td>
                   <td className="px-5 py-4 hidden md:table-cell">
                     <p className="font-body text-xs text-charcoal/60">
-                      {p.price_display_text ?? (p.price_cents ? formatPrice(p.price_cents) : "—")}
+                      {p.price_display_text ?? (p.price_cents ? formatPrice(p.price_cents) : '—')}
                     </p>
                   </td>
                   <td className="px-5 py-4">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${STATUS_STYLES[p.status] ?? "bg-charcoal/10 text-charcoal/60"}`}>
+                    <span
+                      className={`inline-flex px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-charcoal/10 text-charcoal/60'}`}
+                    >
                       {p.status}
                     </span>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {p.status === "active" && p.global_slug && (
+                      {p.status === 'active' && p.global_slug && (
                         <Link
                           href={`/marketplace/products/${p.global_slug}`}
                           target="_blank"

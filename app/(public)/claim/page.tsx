@@ -1,14 +1,14 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { MapPin } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { MapPin } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { ClaimSearchForm } from "@/components/claim/ClaimSearchForm"
+import { createClient } from '@/lib/supabase/server'
+import { ClaimSearchForm } from '@/components/claim/ClaimSearchForm'
 
 export const metadata: Metadata = {
-  title: "Claim a Listing | The BLACQList",
+  title: 'Claim a Listing | The BLACQList',
   description:
-    "Find and claim your Black-owned business on The BLACQList to update your information, add photos, and connect with your community.",
+    'Find and claim your Black-owned business on The BLACQList to update your information, add photos, and connect with your community.',
 }
 
 interface PageProps {
@@ -17,7 +17,7 @@ interface PageProps {
 
 export default async function ClaimPage({ searchParams }: PageProps) {
   const { q } = await searchParams
-  const query = q?.trim() ?? ""
+  const query = q?.trim() ?? ''
 
   let results: Array<{
     id: string
@@ -31,13 +31,11 @@ export default async function ClaimPage({ searchParams }: PageProps) {
   if (query) {
     const supabase = await createClient()
     const { data } = await supabase
-      .from("listings")
-      .select(
-        "id, name, slug, trust_tier, listing_details_business(city_text), categories(name)"
-      )
-      .eq("status", "published")
-      .ilike("name", `%${query}%`)
-      .order("name")
+      .from('listings')
+      .select('id, name, slug, trust_tier, listing_details_business(city_text), categories(name)')
+      .eq('status', 'published')
+      .ilike('name', `%${query}%`)
+      .order('name')
       .limit(10)
 
     results = (data ?? []) as typeof results
@@ -52,8 +50,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
             Claim a listing
           </h1>
           <p className="font-body text-base text-charcoal leading-relaxed">
-            Find your business and submit a claim to manage your page on The
-            BLACQList.
+            Find your business and submit a claim to manage your page on The BLACQList.
           </p>
         </div>
 
@@ -71,26 +68,24 @@ export default async function ClaimPage({ searchParams }: PageProps) {
                   No matching businesses found
                 </p>
                 <p className="font-body text-sm text-charcoal/60">
-                  Try a different name, or{" "}
+                  Try a different name, or{' '}
                   <Link
                     href="/add-business"
                     className="text-amber-gold hover:text-light-gold underline underline-offset-2"
                   >
                     add your business
-                  </Link>{" "}
+                  </Link>{' '}
                   if it isn&apos;t listed yet.
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
                 <p className="font-subhead text-xs text-charcoal/60 mb-3">
-                  {results.length} result{results.length !== 1 ? "s" : ""} for
-                  &ldquo;{query}&rdquo;
+                  {results.length} result{results.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
                 </p>
                 {results.map((listing) => {
-                  const city =
-                    listing.listing_details_business?.city_text
-                  const isAlreadyClaimed = listing.trust_tier !== "unclaimed"
+                  const city = listing.listing_details_business?.city_text
+                  const isAlreadyClaimed = listing.trust_tier !== 'unclaimed'
 
                   return (
                     <div
@@ -138,7 +133,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
 
         {!query && (
           <p className="font-body text-sm text-center text-charcoal/50 mt-8">
-            Don&apos;t see your business?{" "}
+            Don&apos;t see your business?{' '}
             <Link
               href="/add-business"
               className="text-amber-gold hover:text-light-gold underline underline-offset-2"

@@ -1,15 +1,19 @@
 # Ticket 082: Entity analytics daily aggregation — Supabase scheduled Edge Function
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 16: Analytics and Reporting
 
 ## Priority
+
 P2
 
 ## Feature Area
+
 Analytics
 
 ---
@@ -33,6 +37,7 @@ As a business owner, I want my analytics dashboard to show accurate daily metric
 ## Scope
 
 **In scope:**
+
 - Supabase Edge Function at `supabase/functions/aggregate-analytics/index.ts`; uses the Supabase service_role client (via `SUPABASE_SERVICE_ROLE_KEY` env var, available to Edge Functions as a built-in Supabase secret)
 - Aggregation logic: for each `listing_id` with events on `yesterday` (`NOW() - INTERVAL '1 day'` truncated to the day in UTC), compute counts by event type: `page_views`, `cta_clicks`, `saves`, `shares`
 - Search impressions aggregation: count `search_events` rows where `listing_id` is not null and `created_at::date = yesterday` — write to `entity_analytics_daily.search_impressions`
@@ -43,6 +48,7 @@ As a business owner, I want my analytics dashboard to show accurate daily metric
 - Job run log: write a row to a new `analytics_job_log` table on each run with `run_date`, `listings_processed`, `errors`, `duration_ms`, `status` (`'success'` / `'partial'` / `'failed'`)
 
 **Out of scope:**
+
 - Real-time analytics aggregation (deferred)
 - Hourly aggregation (deferred)
 - Owner-facing analytics dashboard UI (Ticket 083)
@@ -52,13 +58,13 @@ As a business owner, I want my analytics dashboard to show accurate daily metric
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 012: Analytics and audit tables migration | Blocking ticket | In Progress |
-| Ticket 049: Analytics event ingestion API | Blocking ticket | In Progress |
-| `UNIQUE (listing_id, date)` on `entity_analytics_daily` | Database constraint | Must exist before UPSERT works |
-| `pg_cron` extension | Supabase configuration | Must be enabled on production Supabase project (verify in Dashboard → Extensions) |
-| Supabase Edge Functions deployment | Infrastructure | Supabase CLI required |
+| Dependency                                              | Type                   | Status                                                                            |
+| ------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| Ticket 012: Analytics and audit tables migration        | Blocking ticket        | In Progress                                                                       |
+| Ticket 049: Analytics event ingestion API               | Blocking ticket        | In Progress                                                                       |
+| `UNIQUE (listing_id, date)` on `entity_analytics_daily` | Database constraint    | Must exist before UPSERT works                                                    |
+| `pg_cron` extension                                     | Supabase configuration | Must be enabled on production Supabase project (verify in Dashboard → Extensions) |
+| Supabase Edge Functions deployment                      | Infrastructure         | Supabase CLI required                                                             |
 
 ---
 
@@ -114,14 +120,17 @@ No UI in this ticket.
 ## Implementation Notes
 
 **Files to create:**
+
 - `supabase/functions/aggregate-analytics/index.ts` — Deno Edge Function; exports `serve()` handler
 - `supabase/migrations/[timestamp]_add-unique-constraint-entity-analytics-daily.sql`
 - `supabase/migrations/[timestamp]_create-analytics-job-log.sql`
 
 **Files to modify:**
+
 - `supabase/config.toml` — add `[functions.aggregate-analytics]` entry if needed for local testing
 
 **Key patterns:**
+
 - Use the Supabase Deno client from `@supabase/supabase-js` in the Edge Function, initialized with the service role key from `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')`
 - Aggregate in a single SQL query using `GROUP BY listing_id, event_name` and `FILTER (WHERE event_name = 'page_view')` — do not run N queries for N event types
 - Idempotency: the UPSERT `ON CONFLICT (listing_id, date) DO UPDATE` ensures safe re-runs; the job can be manually triggered to backfill a missed day by passing `?date=YYYY-MM-DD` in the request body
@@ -129,11 +138,13 @@ No UI in this ticket.
 - Backfill support: accept optional `date` parameter in the request body; if present, aggregate for that specific date instead of yesterday
 
 **Do not:**
+
 - Use `await` on each individual listing in a sequential loop — batch the aggregation with a single SQL INSERT ... SELECT query
 - Write to `analytics_events` from the Edge Function — it is read-only from the aggregation function's perspective
 - Run the aggregation function during peak traffic hours — the 2:00 AM UTC schedule avoids US daytime load
 
 **SQL aggregation query pattern:**
+
 ```sql
 INSERT INTO entity_analytics_daily (listing_id, date, page_views, cta_clicks, saves, shares, search_impressions)
 SELECT
@@ -174,12 +185,12 @@ ON CONFLICT (listing_id, date) DO UPDATE SET
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Edge Function times out (> 150s Supabase Edge limit) | Job log row written with `status = 'partial'`; Sentry error captured; next night's run processes new events correctly |
-| `pg_cron` fails to trigger the function | No aggregation for that day; admin can manually trigger via Supabase Dashboard → Edge Functions → Invoke; analytics_job_log has no row for the missed date |
-| `analytics_events` table has no rows for yesterday | Function runs, writes zero rows to `entity_analytics_daily`, logs `listings_processed = 0, status = 'success'` |
-| UPSERT fails due to missing `UNIQUE` constraint | Migration must run first; document this prerequisite in the function's README |
+| Failure                                              | User-visible behavior                                                                                                                                      |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Edge Function times out (> 150s Supabase Edge limit) | Job log row written with `status = 'partial'`; Sentry error captured; next night's run processes new events correctly                                      |
+| `pg_cron` fails to trigger the function              | No aggregation for that day; admin can manually trigger via Supabase Dashboard → Edge Functions → Invoke; analytics_job_log has no row for the missed date |
+| `analytics_events` table has no rows for yesterday   | Function runs, writes zero rows to `entity_analytics_daily`, logs `listings_processed = 0, status = 'success'`                                             |
+| UPSERT fails due to missing `UNIQUE` constraint      | Migration must run first; document this prerequisite in the function's README                                                                              |
 
 ---
 
@@ -200,13 +211,13 @@ This is a backend/infrastructure ticket. No accessibility requirements.
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Normal nightly aggregation | System (cron) | 1. Seed `analytics_events` with 50 rows for yesterday across 5 listing IDs. 2. Invoke Edge Function. 3. Query `entity_analytics_daily` for yesterday. | 5 rows exist; counts match seeded events by type |
-| QA-2 | Idempotency | System | 1. Run the function twice for the same date. 2. Query `entity_analytics_daily`. | Exactly one row per listing per date; no duplicates |
-| QA-3 | Backfill via date param | Admin (manual invoke) | 1. POST to Edge Function with `{"date": "2026-01-15"}`. 2. Query `entity_analytics_daily` for `2026-01-15`. | Correct aggregate rows written for that past date |
-| QA-4 | Authentication gate | System | 1. POST to Edge Function without `Authorization` header. | 401 response; no DB writes |
-| QA-5 | Job log written | System | 1. Run the function. 2. Query `analytics_job_log`. | One new row with correct `run_date`, non-zero `duration_ms`, `status = 'success'` or `'partial'` |
+| #    | Scenario                   | Role                  | Steps                                                                                                                                                 | Expected result                                                                                  |
+| ---- | -------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| QA-1 | Normal nightly aggregation | System (cron)         | 1. Seed `analytics_events` with 50 rows for yesterday across 5 listing IDs. 2. Invoke Edge Function. 3. Query `entity_analytics_daily` for yesterday. | 5 rows exist; counts match seeded events by type                                                 |
+| QA-2 | Idempotency                | System                | 1. Run the function twice for the same date. 2. Query `entity_analytics_daily`.                                                                       | Exactly one row per listing per date; no duplicates                                              |
+| QA-3 | Backfill via date param    | Admin (manual invoke) | 1. POST to Edge Function with `{"date": "2026-01-15"}`. 2. Query `entity_analytics_daily` for `2026-01-15`.                                           | Correct aggregate rows written for that past date                                                |
+| QA-4 | Authentication gate        | System                | 1. POST to Edge Function without `Authorization` header.                                                                                              | 401 response; no DB writes                                                                       |
+| QA-5 | Job log written            | System                | 1. Run the function. 2. Query `analytics_job_log`.                                                                                                    | One new row with correct `run_date`, non-zero `duration_ms`, `status = 'success'` or `'partial'` |
 
 ---
 

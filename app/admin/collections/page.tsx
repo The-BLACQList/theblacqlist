@@ -1,17 +1,17 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { Plus } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Plus } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: "Collections" }
+export const metadata: Metadata = { title: 'Collections' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -20,13 +20,11 @@ export default async function AdminCollectionsPage() {
   const serviceClient = createServiceClient()
 
   const { data: collections } = await serviceClient
-    .from("collections")
-    .select("id, title, slug, is_active, display_order, created_at")
-    .order("display_order", { ascending: true })
+    .from('collections')
+    .select('id, title, slug, is_active, display_order, created_at')
+    .order('display_order', { ascending: true })
 
-  const { data: counts } = await serviceClient
-    .from("collection_items")
-    .select("collection_id")
+  const { data: counts } = await serviceClient.from('collection_items').select('collection_id')
 
   const countMap: Record<string, number> = {}
   for (const row of counts ?? []) {
@@ -96,9 +94,7 @@ export default async function AdminCollectionsPage() {
               {items.map((c) => (
                 <tr key={c.id} className="hover:bg-[#f9f9fb] transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-subhead text-sm font-semibold text-brand-black">
-                      {c.title}
-                    </p>
+                    <p className="font-subhead text-sm font-semibold text-brand-black">{c.title}</p>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className="font-body text-xs text-charcoal/50">{c.slug}</span>
@@ -112,11 +108,11 @@ export default async function AdminCollectionsPage() {
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-subhead font-semibold ${
                         c.is_active
-                          ? "bg-green-50 text-green-700"
-                          : "bg-charcoal/5 text-charcoal/60"
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-charcoal/5 text-charcoal/60'
                       }`}
                     >
-                      {c.is_active ? "Active" : "Inactive"}
+                      {c.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">

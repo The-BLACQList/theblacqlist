@@ -1,15 +1,19 @@
 # Ticket 085: Search analytics — trending queries, zero-result queries (`/admin/analytics/search`)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 16: Analytics and Reporting
 
 ## Priority
+
 P2
 
 ## Feature Area
+
 Analytics / Admin
 
 ---
@@ -31,6 +35,7 @@ As a platform admin, I want to see which search queries are most popular and whi
 ## Scope
 
 **In scope:**
+
 - `app/(admin)/admin/analytics/search/page.tsx` — Server Component; reads filter params from URL search params; queries `search_events` via service role client
 - Table 1: **Top queries** — top 50 search queries by occurrence count; columns: Query, Count, Avg results returned, Cities (top city for this query), Period
 - Table 2: **Zero-result queries** — queries where `results_count = 0`, sorted by frequency DESC, top 50; columns: Query, Count (how many times it returned zero results), Last searched
@@ -40,6 +45,7 @@ As a platform admin, I want to see which search queries are most popular and whi
 - Page-level `loading.tsx` with table skeleton
 
 **Out of scope:**
+
 - Click-through from a query to the search results page pre-filled with that query (deferred)
 - Saved / bookmarked query views (deferred)
 - Trend over time for individual queries (deferred)
@@ -48,11 +54,11 @@ As a platform admin, I want to see which search queries are most popular and whi
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 025: Search API endpoint (writes `search_events`) | Blocking ticket — data source | In Progress |
-| Ticket 084: Admin platform analytics (links to this page) | Soft dependency | In Progress |
-| Ticket 037: Admin layout and auth guard | Blocking ticket | In Progress |
+| Dependency                                                | Type                          | Status      |
+| --------------------------------------------------------- | ----------------------------- | ----------- |
+| Ticket 025: Search API endpoint (writes `search_events`)  | Blocking ticket — data source | In Progress |
+| Ticket 084: Admin platform analytics (links to this page) | Soft dependency               | In Progress |
+| Ticket 037: Admin layout and auth guard                   | Blocking ticket               | In Progress |
 
 ---
 
@@ -103,21 +109,25 @@ As a platform admin, I want to see which search queries are most popular and whi
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/(admin)/admin/analytics/search/page.tsx`
 - `app/(admin)/admin/analytics/search/loading.tsx`
 - `app/(admin)/admin/analytics/search/components/SearchQueryTable.tsx` — reusable table component used for both top queries and zero-result queries; accepts `rows`, `columns`, and `exportUrl` props
 - `app/api/admin/analytics/search/export/route.ts` — CSV export Route Handler
 
 **Files to modify:**
+
 - None — the filter components are self-contained in the page
 
 **Key patterns:**
+
 - Filters are URL-based (`useSearchParams` in a `"use client"` filter component; Server Component reads `searchParams` prop): allows sharing filter state via URL
 - Both tables are rendered in the same Server Component with parallel data fetching via `Promise.all()`
 - CSV export route streams data using Node.js `Readable` or returns a pre-built string — do not load the entire dataset into memory as a JSON object before writing CSV
 - Sanitize CSV values: wrap any field containing commas or quotes in double quotes; escape internal double quotes
 
 **Do not:**
+
 - Use a CSV generation library — implement the simple two-column CSV manually to avoid adding a dependency
 - Block the page render on the CSV export — the export is a separate request triggered by clicking the button
 
@@ -139,11 +149,11 @@ As a platform admin, I want to see which search queries are most popular and whi
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Database query fails | Error state with "Couldn't load search analytics. Try refreshing." |
-| CSV export fails | "Download failed. Try again." toast; no partial file downloaded |
-| Invalid filter param in URL | Default to 30-day period, no city filter; do not throw an error |
+| Failure                           | User-visible behavior                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------- |
+| Database query fails              | Error state with "Couldn't load search analytics. Try refreshing."                          |
+| CSV export fails                  | "Download failed. Try again." toast; no partial file downloaded                             |
+| Invalid filter param in URL       | Default to 30-day period, no city filter; do not throw an error                             |
 | `search_events` table has no rows | Empty state on both tables: "No search data yet. Data appears after users begin searching." |
 
 ---
@@ -169,13 +179,13 @@ As a platform admin, I want to see which search queries are most popular and whi
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Top queries displayed correctly | Admin | 1. Navigate to `/admin/analytics/search`. 2. Compare top query count against a direct `search_events` DB query. | Table matches DB query result |
-| QA-2 | Zero-result queries | Admin | 1. Submit a search for "zzz_nonexistent_business" (should return 0 results). 2. Navigate to `/admin/analytics/search`. | The submitted query appears in the zero-result queries table |
-| QA-3 | Period filter | Admin | 1. Set period to "7 days." 2. Note query counts. 3. Set period to "90 days." | Counts differ appropriately; URL params update |
-| QA-4 | City filter | Admin | 1. Set city to "Atlanta." | Both tables update to show only Atlanta queries |
-| QA-5 | CSV export | Admin | 1. Click "Download CSV" on the top queries table. | CSV file downloads; opens correctly in a spreadsheet app; column headers match table; all rows present (not capped at 50) |
+| #    | Scenario                        | Role  | Steps                                                                                                                  | Expected result                                                                                                           |
+| ---- | ------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Top queries displayed correctly | Admin | 1. Navigate to `/admin/analytics/search`. 2. Compare top query count against a direct `search_events` DB query.        | Table matches DB query result                                                                                             |
+| QA-2 | Zero-result queries             | Admin | 1. Submit a search for "zzz_nonexistent_business" (should return 0 results). 2. Navigate to `/admin/analytics/search`. | The submitted query appears in the zero-result queries table                                                              |
+| QA-3 | Period filter                   | Admin | 1. Set period to "7 days." 2. Note query counts. 3. Set period to "90 days."                                           | Counts differ appropriately; URL params update                                                                            |
+| QA-4 | City filter                     | Admin | 1. Set city to "Atlanta."                                                                                              | Both tables update to show only Atlanta queries                                                                           |
+| QA-5 | CSV export                      | Admin | 1. Click "Download CSV" on the top queries table.                                                                      | CSV file downloads; opens correctly in a spreadsheet app; column headers match table; all rows present (not capped at 50) |
 
 ---
 

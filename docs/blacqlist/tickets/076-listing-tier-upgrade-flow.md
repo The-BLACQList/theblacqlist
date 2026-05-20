@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 14: Monetization and Sponsorship Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Monetization
 
 ---
@@ -40,6 +45,7 @@ As a business owner, I want to upgrade my listing tier directly from my dashboar
 ## Scope
 
 **In scope:**
+
 - `app/dashboard/billing/page.tsx` — Server Component; authenticated Owner-only; renders pricing comparison and current subscription status
 - Pricing comparison card: three columns (Free, Standard, Premium); feature list per tier from `plans.features`; current tier highlighted; Upgrade buttons for Standard and Premium (disabled if already on that tier or higher)
 - Current subscription status card: plan name, billing period, next renewal date, "Manage subscription" button
@@ -50,6 +56,7 @@ As a business owner, I want to upgrade my listing tier directly from my dashboar
 - Stripe Customer creation/retrieval: if `subscriptions.stripe_customer_id` is null (free-tier owner), create a new Stripe Customer with `email = user.email` and `metadata.listing_id = listingId`; store the Customer ID in the `subscriptions` table before creating the Checkout Session
 
 **Out of scope:**
+
 - Stripe webhook handler (Ticket 078) — this ticket creates sessions; Ticket 078 handles post-payment confirmation
 - Displaying invoice history — deferred
 - Downgrading tiers (only upgrades at MVP) — self-service downgrade via Customer Portal
@@ -60,13 +67,13 @@ As a business owner, I want to upgrade my listing tier directly from my dashboar
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 075 — Plans and subscriptions tables + Stripe client | Blocking ticket | Not started |
-| Ticket 078 — Stripe webhook handler (must be deployed before Checkout can complete end-to-end) | Soft dependency | Not started |
-| Ticket 050 — Owner dashboard home (dashboard layout) | Blocking ticket | Not started |
-| Ticket 014 — Auth flows | Blocking ticket | Not started |
-| Stripe products and prices configured in Stripe Dashboard | External dependency | Must exist; real Price IDs must replace seed placeholders |
+| Dependency                                                                                     | Type                | Status                                                    |
+| ---------------------------------------------------------------------------------------------- | ------------------- | --------------------------------------------------------- |
+| Ticket 075 — Plans and subscriptions tables + Stripe client                                    | Blocking ticket     | Not started                                               |
+| Ticket 078 — Stripe webhook handler (must be deployed before Checkout can complete end-to-end) | Soft dependency     | Not started                                               |
+| Ticket 050 — Owner dashboard home (dashboard layout)                                           | Blocking ticket     | Not started                                               |
+| Ticket 014 — Auth flows                                                                        | Blocking ticket     | Not started                                               |
+| Stripe products and prices configured in Stripe Dashboard                                      | External dependency | Must exist; real Price IDs must replace seed placeholders |
 
 **Risk:** End-to-end testing requires Ticket 078 (webhook) to be deployed. The Checkout Session can be created and the redirect can be tested independently; the subscription update after payment requires the webhook. Use Stripe CLI (`stripe listen --forward-to localhost:3000/api/webhooks/stripe`) to test locally.
 
@@ -80,6 +87,7 @@ As a business owner, I want to upgrade my listing tier directly from my dashboar
 - **Exit points:** "Upgrade" → Stripe hosted checkout (external) → `/dashboard?upgrade=success`; "Manage subscription" → Stripe Customer Portal (external) → `/dashboard/billing`
 
 **Pricing comparison layout:**
+
 ```
 ┌──────────┐  ┌──────────┐  ┌──────────┐
 │  Free    │  │ Standard │  │ Premium  │
@@ -140,7 +148,7 @@ As a business owner, I want to upgrade my listing tier directly from my dashboar
 // Input
 {
   listingId: string
-  planId: string          // UUID of the target plan (Standard or Premium)
+  planId: string // UUID of the target plan (Standard or Premium)
 }
 
 // Returns on success
@@ -150,10 +158,11 @@ ActionResult<{ checkoutUrl: string }>
 ```
 
 **Stripe Checkout Session configuration:**
+
 ```typescript
 await stripe.checkout.sessions.create({
   mode: 'subscription',
-  customer: stripeCustomerId,     // existing customer or newly created
+  customer: stripeCustomerId, // existing customer or newly created
   line_items: [{ price: plan.stripe_price_id, quantity: 1 }],
   success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?upgrade=success`,
   cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/billing`,
@@ -182,19 +191,20 @@ ActionResult<{ portalUrl: string }>
 
 **Error codes to handle:**
 
-| Code | Condition | User sees |
-|---|---|---|
-| `FORBIDDEN` | Caller does not own the listing | Toast: "You don't have permission to manage this listing." |
-| `INVALID_PLAN` | Requested plan does not exist or is free | Toast: "Invalid plan selection." |
+| Code                 | Condition                                | User sees                                                           |
+| -------------------- | ---------------------------------------- | ------------------------------------------------------------------- |
+| `FORBIDDEN`          | Caller does not own the listing          | Toast: "You don't have permission to manage this listing."          |
+| `INVALID_PLAN`       | Requested plan does not exist or is free | Toast: "Invalid plan selection."                                    |
 | `ALREADY_SUBSCRIBED` | Listing is already on the requested plan | "Upgrade" button is disabled (UX prevents this; SA is a safety net) |
-| `STRIPE_ERROR` | Stripe API returns an error | Toast: "Couldn't connect to billing. Please try again." |
-| `INTERNAL_ERROR` | Unexpected DB error | Toast: "Something went wrong. Please try again." |
+| `STRIPE_ERROR`       | Stripe API returns an error              | Toast: "Couldn't connect to billing. Please try again."             |
+| `INTERNAL_ERROR`     | Unexpected DB error                      | Toast: "Something went wrong. Please try again."                    |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/dashboard/billing/page.tsx` — pricing comparison + subscription status page
 - `lib/actions/billing/createCheckoutSession.ts`
 - `lib/actions/billing/createPortalSession.ts`
@@ -203,17 +213,20 @@ ActionResult<{ portalUrl: string }>
 - `components/dashboard/billing/UpgradeSuccessBanner.tsx` — success banner rendered on `/dashboard` when `?upgrade=success` is in the URL
 
 **Files to modify:**
+
 - `app/dashboard/page.tsx` — render `UpgradeSuccessBanner` when `searchParams.upgrade === 'success'`
 - Dashboard sidebar nav — add "Billing" link
 - `lib/errors/codes.ts` — add `INVALID_PLAN`, `ALREADY_SUBSCRIBED`, `STRIPE_ERROR`
 
 **Key patterns:**
+
 - `createCheckoutSession` is a Server Action. After the SA returns `{ data: { checkoutUrl } }`, the Client Component calls `router.push(checkoutUrl)` or uses a `<a href={checkoutUrl}>` link. Do NOT use Next.js `redirect()` inside a Server Action that returns data — return the URL and let the client redirect.
 - Ownership check: same pattern as Ticket 073 — query `listings.owner_user_id = auth.uid()`
 - Stripe Customer creation: use `stripe.customers.create()` then immediately UPDATE the DB before creating the Checkout Session — this ensures the Customer ID is persisted even if the Checkout Session creation fails
 - Feature flags in pricing cards: derive from `plans.features` JSONB array (fetched from DB) — do not hardcode feature lists in the component
 
 **Do not:**
+
 - Implement Stripe Connect — this is explicitly V2
 - Show invoice history — deferred
 - Trust the `?upgrade=success` URL parameter for subscription state — Ticket 078 (webhook) updates the actual subscription status; the success banner is just UX feedback
@@ -239,13 +252,13 @@ ActionResult<{ portalUrl: string }>
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Stripe API error during checkout session creation | Stripe returns an error | Toast: "Couldn't connect to billing. Please try again." | Retry by clicking Upgrade again |
-| Owner cancels Stripe Checkout | User clicks "Cancel" on Stripe's hosted page | Redirected to `/dashboard/billing`; no toast; billing page renders normally | No action needed |
-| `createPortalSession` fails — no Customer ID | Owner is on Free and has no `stripe_customer_id` | Toast: "You don't have an active subscription to manage." | Upgrade first |
-| Server error | Unexpected DB error in SA | Toast: "Something went wrong. Please try again." | Retry |
-| Invalid plan requested | Plan ID not found in `plans` table | Toast: "Invalid plan selection." | Reload the page |
+| Failure                                           | Condition                                        | User sees                                                                   | Recovery                        |
+| ------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------- |
+| Stripe API error during checkout session creation | Stripe returns an error                          | Toast: "Couldn't connect to billing. Please try again."                     | Retry by clicking Upgrade again |
+| Owner cancels Stripe Checkout                     | User clicks "Cancel" on Stripe's hosted page     | Redirected to `/dashboard/billing`; no toast; billing page renders normally | No action needed                |
+| `createPortalSession` fails — no Customer ID      | Owner is on Free and has no `stripe_customer_id` | Toast: "You don't have an active subscription to manage."                   | Upgrade first                   |
+| Server error                                      | Unexpected DB error in SA                        | Toast: "Something went wrong. Please try again."                            | Retry                           |
+| Invalid plan requested                            | Plan ID not found in `plans` table               | Toast: "Invalid plan selection."                                            | Reload the page                 |
 
 ---
 
@@ -272,15 +285,15 @@ ActionResult<{ portalUrl: string }>
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Pricing page renders | Owner (Free tier) | Navigate to `/dashboard/billing` | Free highlighted; Standard and Premium upgrade buttons enabled |
-| QA-2 | Upgrade flow (Stripe test mode) | Owner | Click "Upgrade to Standard"; complete Stripe Checkout with test card `4242 4242 4242 4242` | Redirected to `/dashboard?upgrade=success`; success banner shown |
-| QA-3 | Upgrade button disabled for current plan | Owner (Standard) | Navigate to `/dashboard/billing` | Standard "Upgrade" button is disabled with tooltip "This is your current plan" |
-| QA-4 | Customer Portal | Owner (Standard) | Click "Manage subscription" | Redirected to Stripe Customer Portal |
-| QA-5 | Stripe Checkout cancelled | Owner | Start upgrade; click "Cancel" on Stripe page | Redirected to `/dashboard/billing`; no error shown |
-| QA-6 | Ownership check | Supporter | Call `createCheckoutSession` with another owner's listing ID | Returns `FORBIDDEN` |
-| QA-7 | Mobile at 375px | Owner | Open `/dashboard/billing` at 375px | Pricing cards stack vertically; CTA buttons are full-width; readable |
+| #    | Scenario                                 | Role              | Steps                                                                                      | Expected result                                                                |
+| ---- | ---------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| QA-1 | Pricing page renders                     | Owner (Free tier) | Navigate to `/dashboard/billing`                                                           | Free highlighted; Standard and Premium upgrade buttons enabled                 |
+| QA-2 | Upgrade flow (Stripe test mode)          | Owner             | Click "Upgrade to Standard"; complete Stripe Checkout with test card `4242 4242 4242 4242` | Redirected to `/dashboard?upgrade=success`; success banner shown               |
+| QA-3 | Upgrade button disabled for current plan | Owner (Standard)  | Navigate to `/dashboard/billing`                                                           | Standard "Upgrade" button is disabled with tooltip "This is your current plan" |
+| QA-4 | Customer Portal                          | Owner (Standard)  | Click "Manage subscription"                                                                | Redirected to Stripe Customer Portal                                           |
+| QA-5 | Stripe Checkout cancelled                | Owner             | Start upgrade; click "Cancel" on Stripe page                                               | Redirected to `/dashboard/billing`; no error shown                             |
+| QA-6 | Ownership check                          | Supporter         | Call `createCheckoutSession` with another owner's listing ID                               | Returns `FORBIDDEN`                                                            |
+| QA-7 | Mobile at 375px                          | Owner             | Open `/dashboard/billing` at 375px                                                         | Pricing cards stack vertically; CTA buttons are full-width; readable           |
 
 ---
 

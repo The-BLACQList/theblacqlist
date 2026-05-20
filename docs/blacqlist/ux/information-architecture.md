@@ -27,16 +27,16 @@ The BLACQList is a national Black discovery, marketplace, and community commerce
 
 ## 2. Top-Level Sections
 
-| Section | Description | Auth Required | Introduced |
-|---|---|---|---|
-| **Public Discovery** | Homepage, search, city pages, category pages, entity Pages, marketplace, events, jobs | No | MVP |
-| **Editorial** | BLACQLight articles, curated collections, city guides | No | V1 |
-| **Account** | Sign in/up, saved listings, reviews, orders, spend, receipts, settings | Yes | MVP |
-| **Owner Dashboard** | Claim, create, manage Page, analytics, products, services, upgrade | Yes (Owner role) | MVP |
-| **Vendor Dashboard** | Storefront management, product listings, order management, payouts | Yes (Vendor role) | V2 |
-| **Sponsor Dashboard** | Campaign creation, targeting, performance analytics | Yes (Sponsor role) | V3 |
-| **Admin** | Listing management, claim review, verification queue, editorial, analytics, system | Yes (Admin/Super Admin) | MVP |
-| **Marketing / Static** | For Business, For Vendors, For Sponsors, About, Pricing, legal pages | No | MVP |
+| Section                | Description                                                                           | Auth Required           | Introduced |
+| ---------------------- | ------------------------------------------------------------------------------------- | ----------------------- | ---------- |
+| **Public Discovery**   | Homepage, search, city pages, category pages, entity Pages, marketplace, events, jobs | No                      | MVP        |
+| **Editorial**          | BLACQLight articles, curated collections, city guides                                 | No                      | V1         |
+| **Account**            | Sign in/up, saved listings, reviews, orders, spend, receipts, settings                | Yes                     | MVP        |
+| **Owner Dashboard**    | Claim, create, manage Page, analytics, products, services, upgrade                    | Yes (Owner role)        | MVP        |
+| **Vendor Dashboard**   | Storefront management, product listings, order management, payouts                    | Yes (Vendor role)       | V2         |
+| **Sponsor Dashboard**  | Campaign creation, targeting, performance analytics                                   | Yes (Sponsor role)      | V3         |
+| **Admin**              | Listing management, claim review, verification queue, editorial, analytics, system    | Yes (Admin/Super Admin) | MVP        |
+| **Marketing / Static** | For Business, For Vendors, For Sponsors, About, Pricing, legal pages                  | No                      | MVP        |
 
 ---
 
@@ -503,15 +503,16 @@ Examples:
 
 The five primary paths by which a user reaches a BLACQList Page:
 
-| # | Entry Point | Path | Notes |
-|---|---|---|---|
-| 1 | **Direct URL / Search engine** | Google → `/[city]/[category]/[slug]` | Primary organic traffic source. Pages must be server-rendered with full SEO metadata. |
-| 2 | **Platform search** | `/search?q=[query]&city=[city]` → listing card → Page | Primary in-product discovery path. Card click navigates to the Page URL. |
-| 3 | **City or category landing page** | `/city/[city]` or `/city/[city]/[category]` → listing card → Page | Browsing-intent path. Listings surface as cards on these pages. |
-| 4 | **Editorial collection or article** | `/collection/[slug]` or `/blacqlight/[slug]` → Page link | V1. Curated discovery. Collection members are explicitly linked Pages. |
-| 5 | **Shared link** | External social share or copy-link → Page URL | Any surface can generate a share link. OG tags ensure preview renders on social. |
+| #   | Entry Point                         | Path                                                              | Notes                                                                                 |
+| --- | ----------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | **Direct URL / Search engine**      | Google → `/[city]/[category]/[slug]`                              | Primary organic traffic source. Pages must be server-rendered with full SEO metadata. |
+| 2   | **Platform search**                 | `/search?q=[query]&city=[city]` → listing card → Page             | Primary in-product discovery path. Card click navigates to the Page URL.              |
+| 3   | **City or category landing page**   | `/city/[city]` or `/city/[city]/[category]` → listing card → Page | Browsing-intent path. Listings surface as cards on these pages.                       |
+| 4   | **Editorial collection or article** | `/collection/[slug]` or `/blacqlight/[slug]` → Page link          | V1. Curated discovery. Collection members are explicitly linked Pages.                |
+| 5   | **Shared link**                     | External social share or copy-link → Page URL                     | Any surface can generate a share link. OG tags ensure preview renders on social.      |
 
 Additional entry points as the platform grows:
+
 - Saved list (`/account/saved`) → Page (Supporter path, MVP)
 - Homepage featured section → Page (editorial or algorithmic)
 - Related listings section on another Page (V1)
@@ -523,70 +524,70 @@ Additional entry points as the platform grows:
 
 ### Business Page cross-links:
 
-| From | Links to | Why |
-|---|---|---|
-| Business Page | City landing page `/city/[city]` | Breadcrumb, category/location context |
-| Business Page | Category landing page `/city/[city]/[category]` | Breadcrumb |
-| Business Page | Collection pages featuring this Page | "Featured in" badge or inline collection link (V1) |
-| Business Page | Related listings (same city + category) | "More in [category]" row (V1) |
-| Business Page | Event Pages linked from this business | Upcoming events section (V1) |
-| Business Page | Job Pages linked from this business | "We're hiring" section (V1) |
-| Business Page | Marketplace product pages | Product grid (V2) |
+| From          | Links to                                        | Why                                                |
+| ------------- | ----------------------------------------------- | -------------------------------------------------- |
+| Business Page | City landing page `/city/[city]`                | Breadcrumb, category/location context              |
+| Business Page | Category landing page `/city/[city]/[category]` | Breadcrumb                                         |
+| Business Page | Collection pages featuring this Page            | "Featured in" badge or inline collection link (V1) |
+| Business Page | Related listings (same city + category)         | "More in [category]" row (V1)                      |
+| Business Page | Event Pages linked from this business           | Upcoming events section (V1)                       |
+| Business Page | Job Pages linked from this business             | "We're hiring" section (V1)                        |
+| Business Page | Marketplace product pages                       | Product grid (V2)                                  |
 
 ### City Landing Page cross-links:
 
-| From | Links to | Why |
-|---|---|---|
-| City Page | Category sub-pages for that city | Top categories nav, quick-access pills |
-| City Page | Individual listing Pages in that city | Featured listings grid |
-| City Page | Collections scoped to that city | "Top collections in [city]" (V1) |
-| City Page | City Guide for that city | Editorial link (V2) |
-| City Page | Events in that city | Events section or link (V1) |
-| City Page | Jobs in that city | Jobs section or link (V1) |
+| From      | Links to                              | Why                                    |
+| --------- | ------------------------------------- | -------------------------------------- |
+| City Page | Category sub-pages for that city      | Top categories nav, quick-access pills |
+| City Page | Individual listing Pages in that city | Featured listings grid                 |
+| City Page | Collections scoped to that city       | "Top collections in [city]" (V1)       |
+| City Page | City Guide for that city              | Editorial link (V2)                    |
+| City Page | Events in that city                   | Events section or link (V1)            |
+| City Page | Jobs in that city                     | Jobs section or link (V1)              |
 
 ### Collection Page cross-links:
 
-| From | Links to | Why |
-|---|---|---|
-| Collection | Each member BLACQList Page | Primary purpose of a collection |
-| Collection | City page(s) represented in the collection | Contextual navigation |
-| Collection | Related collections | "More collections" (V1) |
-| Collection | BLACQLight article that references this collection | Editorial linkage (V1) |
+| From       | Links to                                           | Why                             |
+| ---------- | -------------------------------------------------- | ------------------------------- |
+| Collection | Each member BLACQList Page                         | Primary purpose of a collection |
+| Collection | City page(s) represented in the collection         | Contextual navigation           |
+| Collection | Related collections                                | "More collections" (V1)         |
+| Collection | BLACQLight article that references this collection | Editorial linkage (V1)          |
 
 ### Search Results cross-links:
 
-| From | Links to | Why |
-|---|---|---|
-| Search Results | Individual listing Pages | Primary click target on each card |
-| Search Results | City landing page for active city filter | "Browse all in [city]" suggestion |
+| From           | Links to                                  | Why                                |
+| -------------- | ----------------------------------------- | ---------------------------------- |
+| Search Results | Individual listing Pages                  | Primary click target on each card  |
+| Search Results | City landing page for active city filter  | "Browse all in [city]" suggestion  |
 | Search Results | Category landing page for active category | "See all in [category]" suggestion |
 
 ### Account / Saved List cross-links:
 
-| From | Links to | Why |
-|---|---|---|
-| Saved List | Individual listing Pages | Re-visit saved entity |
-| Order History | Vendor Page, Product Page | Re-purchase or revisit (V2) |
+| From            | Links to                              | Why                          |
+| --------------- | ------------------------------------- | ---------------------------- |
+| Saved List      | Individual listing Pages              | Re-visit saved entity        |
+| Order History   | Vendor Page, Product Page             | Re-purchase or revisit (V2)  |
 | Spend Dashboard | Listing Pages for logged transactions | Connect spend to entity (V2) |
 
 ---
 
 ## 8. SEO Architecture
 
-| URL Tier | SEO Intent | Priority | Key Signal |
-|---|---|---|---|
-| **Homepage** `/` | Brand authority, national top-level query | Critical | Domain authority, brand name recognition, featured entity signals |
-| **City Pages** `/city/[city]` | Local discovery intent ("Black-owned businesses in Atlanta") | Critical | City-level keyword density, listing count, freshness |
-| **City + Category Pages** `/city/[city]/[category]` | Transactional local intent ("Black-owned restaurants Atlanta") | Critical | Category + city co-occurrence, listing density, structured data |
-| **Individual Listing Pages** `/[city]/[category]/[slug]` | Name + location queries ("Buttermilk Kitchen Atlanta soul food") | High | Entity-specific title, description, schema.org LocalBusiness, reviews (V1) |
-| **State Pages** `/state/[state]` | Mid-funnel state-level queries | Medium | State + keyword co-occurrence |
-| **National** `/national` | Broad awareness queries | Medium | Breadth signal, category diversity |
-| **Collections** `/collection/[slug]` | Editorial + long-tail intent ("best Black-owned bookstores") | Medium | Unique editorial copy, link equity from articles |
-| **BLACQLight Articles** `/blacqlight/[slug]` | Informational + discovery intent, backlinkable | Medium | Original editorial content, internal linking to Pages |
-| **City Guides** `/guide/[slug]` | Local editorial intent, high shareability | Medium (V2) | Long-form, geographically rich content |
-| **Event Pages** `/[city]/events/[slug]` | Time-bound event queries | Low / time-bound | Structured event schema; de-indexed or archived post-event |
-| **Job Pages** `/[city]/jobs/[slug]` | Job title + city queries | Low / time-bound | Job structured data; expire on deadline |
-| **Marketplace Pages** `/marketplace/[...]` | Product + category queries | Medium (V2) | Product schema, pricing data, merchant trust signals |
+| URL Tier                                                 | SEO Intent                                                       | Priority         | Key Signal                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| **Homepage** `/`                                         | Brand authority, national top-level query                        | Critical         | Domain authority, brand name recognition, featured entity signals          |
+| **City Pages** `/city/[city]`                            | Local discovery intent ("Black-owned businesses in Atlanta")     | Critical         | City-level keyword density, listing count, freshness                       |
+| **City + Category Pages** `/city/[city]/[category]`      | Transactional local intent ("Black-owned restaurants Atlanta")   | Critical         | Category + city co-occurrence, listing density, structured data            |
+| **Individual Listing Pages** `/[city]/[category]/[slug]` | Name + location queries ("Buttermilk Kitchen Atlanta soul food") | High             | Entity-specific title, description, schema.org LocalBusiness, reviews (V1) |
+| **State Pages** `/state/[state]`                         | Mid-funnel state-level queries                                   | Medium           | State + keyword co-occurrence                                              |
+| **National** `/national`                                 | Broad awareness queries                                          | Medium           | Breadth signal, category diversity                                         |
+| **Collections** `/collection/[slug]`                     | Editorial + long-tail intent ("best Black-owned bookstores")     | Medium           | Unique editorial copy, link equity from articles                           |
+| **BLACQLight Articles** `/blacqlight/[slug]`             | Informational + discovery intent, backlinkable                   | Medium           | Original editorial content, internal linking to Pages                      |
+| **City Guides** `/guide/[slug]`                          | Local editorial intent, high shareability                        | Medium (V2)      | Long-form, geographically rich content                                     |
+| **Event Pages** `/[city]/events/[slug]`                  | Time-bound event queries                                         | Low / time-bound | Structured event schema; de-indexed or archived post-event                 |
+| **Job Pages** `/[city]/jobs/[slug]`                      | Job title + city queries                                         | Low / time-bound | Job structured data; expire on deadline                                    |
+| **Marketplace Pages** `/marketplace/[...]`               | Product + category queries                                       | Medium (V2)      | Product schema, pricing data, merchant trust signals                       |
 
 ### SEO Requirements at MVP:
 
@@ -604,79 +605,79 @@ Additional entry points as the platform grows:
 
 These are the distinct content types in the platform — not UI components. Each has its own data model, lifecycle, and permissions.
 
-| Content Type | Description | Introduced | Entity/Table |
-|---|---|---|---|
-| **Listing (base)** | The shared record underlying all entity Pages. Contains name, city, category, status, owner. | MVP | `listings` |
-| **Business Page** | Full business profile template. Extends Listing with hours, gallery, services, CTAs, social links. | MVP | `listings` + `business_pages` |
-| **Professional Page** | Individual practice profile. Extends Listing with bio, credentials, portfolio, services. | V1 | `listings` + `professional_pages` |
-| **Creative Page** | Creative portfolio + booking. Extends Listing with medium, portfolio, event appearances. | V1 | `listings` + `creative_pages` |
-| **Event Page** | Time-bounded event. Extends Listing with date, location/virtual, ticket link, auto-expiry. | V1 | `listings` + `event_pages` |
-| **Job Page** | Job/opportunity listing. Extends Listing with role, description, apply link, deadline. | V1 | `listings` + `job_pages` |
-| **Vendor Page** | Commerce-enabled business profile. Extends Business Page with product grid, storefront settings. | V2 | `listings` + `vendor_pages` |
-| **Product** | Individual purchasable item. Linked to Vendor Page. Has price, variants, inventory. | V2 | `products` |
-| **Service** | Named offering within a Business or Professional Page. Has description, optional price. | MVP (embedded) | `services` |
-| **Collection** | Editorially curated set of listing Pages. Has title, description, cover image, member list. | V1 | `collections` |
-| **City Guide** | Long-form editorial content for a specific city. Contains curated sections with embedded Pages. | V2 | `guides` |
-| **BLACQLight Article** | Editorial article. May reference listings. Has author, publish date, body, tags. | V1 | `articles` |
-| **Review** | Star rating + text by a Supporter. Linked to a Listing. Has status (pending/published/removed). | V1 | `reviews` |
-| **Spend Event** | A logged community spend transaction. Linked to a Listing. Source: receipt upload or marketplace order. | V2 | `spend_events` |
-| **Analytics Event** | A tracked platform action (Page view, CTA click, save, share). Not user-visible; powers dashboards. | MVP (basic) | `analytics_events` |
-| **User** | Platform account. Has role(s), email, display name, auth credential. | MVP | `users` |
-| **Claim** | A request by a User to become the Owner of a Listing. Has status (pending/approved/rejected). | MVP | `claims` |
-| **Correction** | A community-submitted flag indicating incorrect or outdated listing information. | V1 | `corrections` |
-| **Sponsor Campaign** | A paid promotional placement package. Has budget, targeting, placements, duration. | V3 | `sponsor_campaigns` |
+| Content Type           | Description                                                                                             | Introduced     | Entity/Table                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- | -------------- | --------------------------------- |
+| **Listing (base)**     | The shared record underlying all entity Pages. Contains name, city, category, status, owner.            | MVP            | `listings`                        |
+| **Business Page**      | Full business profile template. Extends Listing with hours, gallery, services, CTAs, social links.      | MVP            | `listings` + `business_pages`     |
+| **Professional Page**  | Individual practice profile. Extends Listing with bio, credentials, portfolio, services.                | V1             | `listings` + `professional_pages` |
+| **Creative Page**      | Creative portfolio + booking. Extends Listing with medium, portfolio, event appearances.                | V1             | `listings` + `creative_pages`     |
+| **Event Page**         | Time-bounded event. Extends Listing with date, location/virtual, ticket link, auto-expiry.              | V1             | `listings` + `event_pages`        |
+| **Job Page**           | Job/opportunity listing. Extends Listing with role, description, apply link, deadline.                  | V1             | `listings` + `job_pages`          |
+| **Vendor Page**        | Commerce-enabled business profile. Extends Business Page with product grid, storefront settings.        | V2             | `listings` + `vendor_pages`       |
+| **Product**            | Individual purchasable item. Linked to Vendor Page. Has price, variants, inventory.                     | V2             | `products`                        |
+| **Service**            | Named offering within a Business or Professional Page. Has description, optional price.                 | MVP (embedded) | `services`                        |
+| **Collection**         | Editorially curated set of listing Pages. Has title, description, cover image, member list.             | V1             | `collections`                     |
+| **City Guide**         | Long-form editorial content for a specific city. Contains curated sections with embedded Pages.         | V2             | `guides`                          |
+| **BLACQLight Article** | Editorial article. May reference listings. Has author, publish date, body, tags.                        | V1             | `articles`                        |
+| **Review**             | Star rating + text by a Supporter. Linked to a Listing. Has status (pending/published/removed).         | V1             | `reviews`                         |
+| **Spend Event**        | A logged community spend transaction. Linked to a Listing. Source: receipt upload or marketplace order. | V2             | `spend_events`                    |
+| **Analytics Event**    | A tracked platform action (Page view, CTA click, save, share). Not user-visible; powers dashboards.     | MVP (basic)    | `analytics_events`                |
+| **User**               | Platform account. Has role(s), email, display name, auth credential.                                    | MVP            | `users`                           |
+| **Claim**              | A request by a User to become the Owner of a Listing. Has status (pending/approved/rejected).           | MVP            | `claims`                          |
+| **Correction**         | A community-submitted flag indicating incorrect or outdated listing information.                        | V1             | `corrections`                     |
+| **Sponsor Campaign**   | A paid promotional placement package. Has budget, targeting, placements, duration.                      | V3             | `sponsor_campaigns`               |
 
 ---
 
 ## 10. Phase-by-Phase IA Growth
 
-| Section / Page Type | Prototype | MVP | V1 | V2 | V3 |
-|---|---|---|---|---|---|
-| Homepage | Static design only | Live | + trending, editorial teaser | + marketplace teaser | + impact stats |
-| Search Results | — | Live | + sort, trust filter, entity type filter | + map toggle | — |
-| City Landing Pages | — | Live (Atlanta, Houston, Chicago) | + state pages, expanded cities | + marketplace, near me, neighborhoods | — |
-| Category Landing Pages | — | Live | + sub-categories, trust filter | — | — |
-| Business BLACQList Page | Static design only | Live | + reviews, related listings, correction link | — | + flow map indicator |
-| Professional Page | — | — | Live | — | — |
-| Creative Page | — | — | Live | — | — |
-| Event Page | — | — | Live | — | — |
-| Job Page | — | — | Live | — | — |
-| Vendor Page | — | — | — | Live | — |
-| Product Page | — | — | — | Live | — |
-| Service Page (sub-page) | — | Embedded only | Live as sub-page | — | — |
-| Collections Index + Pages | — | — | Live | — | — |
-| BLACQLight Articles | — | — | Live | — | — |
-| City Guides | — | — | — | Live | — |
-| Marketplace Home + Category | — | — | — | Live | — |
-| Events Home | — | — | Live | — | — |
-| Jobs Home | — | — | Live | — | — |
-| Map View | — | — | — | Live | — |
-| Sign In / Sign Up | — | Live | — | — | — |
-| Onboarding Flow | — | Live | + role branching | — | — |
-| Account — Saved | — | Live | + named lists | — | — |
-| Account — Reviews | — | — | Live | — | — |
-| Account — Orders | — | — | — | Live | — |
-| Account — Spend / Receipts | — | — | — | Live | — |
-| Account — Settings | — | Live (basic) | + notifications | + privacy | — |
-| Claim Flow | — | Live | — | — | — |
-| Add Your Business Flow | — | Live | — | — | — |
-| Owner Dashboard Home | — | Live | + analytics, reviews, events, jobs, upgrade | + products, orders, payouts | — |
-| Vendor Dashboard | — | — | — | Live | — |
-| Sponsor Dashboard | — | — | — | — | Live |
-| Admin Dashboard | — | Live (basic) | + queues, editorial, analytics, sponsored | + marketplace, receipts | + flow-map data |
-| Admin Claim Queue | — | Live | — | — | — |
-| Admin Verification Queue | — | — | Live | — | — |
-| Admin Corrections Queue | — | — | Live | — | — |
-| Admin Reviews Queue | — | — | Live | — | — |
-| Admin Editorial Tools | — | — | Live | + guides | — |
-| Admin Analytics | — | Basic stats only | Full analytics dashboard | + marketplace, spend | + impact analytics |
-| For Business Page | Static only | Live | — | — | — |
-| For Vendors Page | — | — | — | Live | — |
-| For Sponsors Page | — | — | — | — | Live |
-| Pricing Page | — | — | Live (V1 tiers) | + vendor/job fees | + sponsor packages |
-| Legal Pages (Privacy, Terms, DMCA, Cookies) | — | Live | Updated for reviews | Updated for marketplace | Updated for AI |
-| 404 / 500 / Maintenance | — | Live | — | — | — |
-| Dollar-Flow Map | — | — | — | — | Live |
+| Section / Page Type                         | Prototype          | MVP                              | V1                                           | V2                                    | V3                   |
+| ------------------------------------------- | ------------------ | -------------------------------- | -------------------------------------------- | ------------------------------------- | -------------------- |
+| Homepage                                    | Static design only | Live                             | + trending, editorial teaser                 | + marketplace teaser                  | + impact stats       |
+| Search Results                              | —                  | Live                             | + sort, trust filter, entity type filter     | + map toggle                          | —                    |
+| City Landing Pages                          | —                  | Live (Atlanta, Houston, Chicago) | + state pages, expanded cities               | + marketplace, near me, neighborhoods | —                    |
+| Category Landing Pages                      | —                  | Live                             | + sub-categories, trust filter               | —                                     | —                    |
+| Business BLACQList Page                     | Static design only | Live                             | + reviews, related listings, correction link | —                                     | + flow map indicator |
+| Professional Page                           | —                  | —                                | Live                                         | —                                     | —                    |
+| Creative Page                               | —                  | —                                | Live                                         | —                                     | —                    |
+| Event Page                                  | —                  | —                                | Live                                         | —                                     | —                    |
+| Job Page                                    | —                  | —                                | Live                                         | —                                     | —                    |
+| Vendor Page                                 | —                  | —                                | —                                            | Live                                  | —                    |
+| Product Page                                | —                  | —                                | —                                            | Live                                  | —                    |
+| Service Page (sub-page)                     | —                  | Embedded only                    | Live as sub-page                             | —                                     | —                    |
+| Collections Index + Pages                   | —                  | —                                | Live                                         | —                                     | —                    |
+| BLACQLight Articles                         | —                  | —                                | Live                                         | —                                     | —                    |
+| City Guides                                 | —                  | —                                | —                                            | Live                                  | —                    |
+| Marketplace Home + Category                 | —                  | —                                | —                                            | Live                                  | —                    |
+| Events Home                                 | —                  | —                                | Live                                         | —                                     | —                    |
+| Jobs Home                                   | —                  | —                                | Live                                         | —                                     | —                    |
+| Map View                                    | —                  | —                                | —                                            | Live                                  | —                    |
+| Sign In / Sign Up                           | —                  | Live                             | —                                            | —                                     | —                    |
+| Onboarding Flow                             | —                  | Live                             | + role branching                             | —                                     | —                    |
+| Account — Saved                             | —                  | Live                             | + named lists                                | —                                     | —                    |
+| Account — Reviews                           | —                  | —                                | Live                                         | —                                     | —                    |
+| Account — Orders                            | —                  | —                                | —                                            | Live                                  | —                    |
+| Account — Spend / Receipts                  | —                  | —                                | —                                            | Live                                  | —                    |
+| Account — Settings                          | —                  | Live (basic)                     | + notifications                              | + privacy                             | —                    |
+| Claim Flow                                  | —                  | Live                             | —                                            | —                                     | —                    |
+| Add Your Business Flow                      | —                  | Live                             | —                                            | —                                     | —                    |
+| Owner Dashboard Home                        | —                  | Live                             | + analytics, reviews, events, jobs, upgrade  | + products, orders, payouts           | —                    |
+| Vendor Dashboard                            | —                  | —                                | —                                            | Live                                  | —                    |
+| Sponsor Dashboard                           | —                  | —                                | —                                            | —                                     | Live                 |
+| Admin Dashboard                             | —                  | Live (basic)                     | + queues, editorial, analytics, sponsored    | + marketplace, receipts               | + flow-map data      |
+| Admin Claim Queue                           | —                  | Live                             | —                                            | —                                     | —                    |
+| Admin Verification Queue                    | —                  | —                                | Live                                         | —                                     | —                    |
+| Admin Corrections Queue                     | —                  | —                                | Live                                         | —                                     | —                    |
+| Admin Reviews Queue                         | —                  | —                                | Live                                         | —                                     | —                    |
+| Admin Editorial Tools                       | —                  | —                                | Live                                         | + guides                              | —                    |
+| Admin Analytics                             | —                  | Basic stats only                 | Full analytics dashboard                     | + marketplace, spend                  | + impact analytics   |
+| For Business Page                           | Static only        | Live                             | —                                            | —                                     | —                    |
+| For Vendors Page                            | —                  | —                                | —                                            | Live                                  | —                    |
+| For Sponsors Page                           | —                  | —                                | —                                            | —                                     | Live                 |
+| Pricing Page                                | —                  | —                                | Live (V1 tiers)                              | + vendor/job fees                     | + sponsor packages   |
+| Legal Pages (Privacy, Terms, DMCA, Cookies) | —                  | Live                             | Updated for reviews                          | Updated for marketplace               | Updated for AI       |
+| 404 / 500 / Maintenance                     | —                  | Live                             | —                                            | —                                     | —                    |
+| Dollar-Flow Map                             | —                  | —                                | —                                            | —                                     | Live                 |
 
 ---
 

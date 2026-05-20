@@ -19,6 +19,7 @@ The foundation is intentionally minimal — no feature logic, no real data, no d
 **Voice:** Polished, modern, warm, editorial, premium — but approachable. Not corporate or clinical. Not a generic SaaS product.
 
 **Color application:**
+
 - `#19191E` Deep Background — nav, hero sections, dark feature bands
 - `#000000` Brand Black — editorial headings on light backgrounds, footer
 - `#E2A428` Amber Gold — **primary CTAs only** (Sign Up, Claim Your Page, primary actions). Never decorative.
@@ -28,6 +29,7 @@ The foundation is intentionally minimal — no feature logic, no real data, no d
 - `#FCFAF4` Cream — text on dark, warm section backgrounds
 
 **Typography hierarchy:**
+
 - Headlines: Glacial Indifference Bold (self-hosted) via `font-headline` — currently falling back to `sans-serif` until font file is placed at `public/fonts/glacial-indifference/GlacialIndifference-Bold.otf`
 - Subheads / UI labels: Lato via `font-subhead` — loaded via `next/font/google`
 - Body / tags: Quicksand via `font-body` — loaded via `next/font/google`
@@ -42,23 +44,23 @@ The foundation is intentionally minimal — no feature logic, no real data, no d
 
 ### Server vs. Client Components
 
-| Component | Boundary | Reason |
-|---|---|---|
-| `PublicHeader` | Server | Static nav structure; no state required |
-| `MobileNav` | `"use client"` | Sheet open/close state + `usePathname` for route-change close |
-| `PublicFooter` | Server | Static content only |
-| `Container` | Server | Pure layout, no interactivity |
-| `Section` | Server | Pure layout, no interactivity |
-| `PageHeader` | Server | Semantic heading, no interactivity |
-| `SectionHeading` | Server | Semantic heading, no interactivity |
-| `StatusBadge` | Server | Static trust tier display |
-| `CTAButtonGroup` | Server | `asChild` + `Link` — no browser state |
-| `EmptyState` | Server | Static informational display |
-| `CardGrid` | Server | Layout wrapper only |
-| `LoadingState` (skeletons) | Server | Static shimmer — `aria-hidden` |
-| `ErrorState` | `"use client"` | `reset` callback must be passed; `role="alert"` |
-| `SaveIconButton` | `"use client"` | Optimistic toggle state + `event.stopPropagation()` |
-| `EntityCard` | Server | `Link` wrapping — no state; SaveIconButton is a client island inside |
+| Component                  | Boundary       | Reason                                                               |
+| -------------------------- | -------------- | -------------------------------------------------------------------- |
+| `PublicHeader`             | Server         | Static nav structure; no state required                              |
+| `MobileNav`                | `"use client"` | Sheet open/close state + `usePathname` for route-change close        |
+| `PublicFooter`             | Server         | Static content only                                                  |
+| `Container`                | Server         | Pure layout, no interactivity                                        |
+| `Section`                  | Server         | Pure layout, no interactivity                                        |
+| `PageHeader`               | Server         | Semantic heading, no interactivity                                   |
+| `SectionHeading`           | Server         | Semantic heading, no interactivity                                   |
+| `StatusBadge`              | Server         | Static trust tier display                                            |
+| `CTAButtonGroup`           | Server         | `asChild` + `Link` — no browser state                                |
+| `EmptyState`               | Server         | Static informational display                                         |
+| `CardGrid`                 | Server         | Layout wrapper only                                                  |
+| `LoadingState` (skeletons) | Server         | Static shimmer — `aria-hidden`                                       |
+| `ErrorState`               | `"use client"` | `reset` callback must be passed; `role="alert"`                      |
+| `SaveIconButton`           | `"use client"` | Optimistic toggle state + `event.stopPropagation()`                  |
+| `EntityCard`               | Server         | `Link` wrapping — no state; SaveIconButton is a client island inside |
 
 ### Fixed Header Offset
 
@@ -84,13 +86,13 @@ Usage: wrap every Section's content. Never apply max-width directly to Section �
 
 Full-bleed background wrapper with named variants. Outer div bleeds full-width; inner Container constrains content to 960px with `py-12 md:py-16` vertical padding.
 
-| Variant | Background |
-|---|---|
-| `white` (default) | `#ffffff` |
-| `cream` | `#FCFAF4` |
-| `deep-bg` | `#19191E` |
-| `pale-lavender` | `#E9E9F7` |
-| `brand-black` | `#000000` |
+| Variant           | Background |
+| ----------------- | ---------- |
+| `white` (default) | `#ffffff`  |
+| `cream`           | `#FCFAF4`  |
+| `deep-bg`         | `#19191E`  |
+| `pale-lavender`   | `#E9E9F7`  |
+| `brand-black`     | `#000000`  |
 
 #### `components/layout/page-header.tsx`
 
@@ -150,12 +152,12 @@ Radix-based Sheet drawer. Opens from the right on mobile.
 
 Trust tier status pills for business listings. Four tiers, two sizes.
 
-| Tier | Background | Text | Icon |
-|---|---|---|---|
-| `unclaimed` | `charcoal` | white | none |
-| `claimed` | blue-600 | white | checkmark |
-| `verified` | white border | `brand-black` | checkmark |
-| `certified` | `amber-gold` | `brand-black` | star |
+| Tier        | Background   | Text          | Icon      |
+| ----------- | ------------ | ------------- | --------- |
+| `unclaimed` | `charcoal`   | white         | none      |
+| `claimed`   | blue-600     | white         | checkmark |
+| `verified`  | white border | `brand-black` | checkmark |
+| `certified` | `amber-gold` | `brand-black` | star      |
 
 - ARIA: `role="status"`, icon `aria-hidden="true"`, visible text label always present
 - Sizes: `small` (h-[26px]) and `standard` (h-[32px])
@@ -191,12 +193,12 @@ Responsive grid wrapper. Uses a static column lookup table to prevent Tailwind p
 
 Named skeleton exports for each common UI structure. All wrapped in `aria-hidden="true"`.
 
-| Export | Mirrors |
-|---|---|
-| `ListingCardSkeleton` | `EntityCard` (image + content rows) |
-| `SectionSkeleton({ lines })` | Section with title + N text lines |
-| `HeroSkeleton` | Profile hero (image + name + tagline) |
-| `StatCardSkeleton` | Dashboard stat card (label + number + sublabel) |
+| Export                       | Mirrors                                         |
+| ---------------------------- | ----------------------------------------------- |
+| `ListingCardSkeleton`        | `EntityCard` (image + content rows)             |
+| `SectionSkeleton({ lines })` | Section with title + N text lines               |
+| `HeroSkeleton`               | Profile hero (image + name + tagline)           |
+| `StatCardSkeleton`           | Dashboard stat card (label + number + sublabel) |
 
 #### `components/ui/error-state.tsx` — `"use client"`
 
@@ -233,15 +235,16 @@ Business / entity listing card. Server Component with an embedded `SaveIconButto
 
 Installed via `shadcn@4.7.0` (Tailwind v4 compatible):
 
-| Component | File | Used By |
-|---|---|---|
-| `Button` | `components/ui/button.tsx` | CTAButtonGroup, MobileNav, ErrorState, EmptyState |
-| `Badge` | `components/ui/badge.tsx` | Available for future use |
-| `Skeleton` | `components/ui/skeleton.tsx` | LoadingState skeletons |
-| `Sheet` | `components/ui/sheet.tsx` | MobileNav drawer |
-| `Separator` | `components/ui/separator.tsx` | MobileNav sheet interior |
+| Component   | File                          | Used By                                           |
+| ----------- | ----------------------------- | ------------------------------------------------- |
+| `Button`    | `components/ui/button.tsx`    | CTAButtonGroup, MobileNav, ErrorState, EmptyState |
+| `Badge`     | `components/ui/badge.tsx`     | Available for future use                          |
+| `Skeleton`  | `components/ui/skeleton.tsx`  | LoadingState skeletons                            |
+| `Sheet`     | `components/ui/sheet.tsx`     | MobileNav drawer                                  |
+| `Separator` | `components/ui/separator.tsx` | MobileNav sheet interior                          |
 
 Additional packages installed:
+
 - `class-variance-authority@0.7.1` — required by Button and Badge CVA variants
 - `lucide-react@1.14.0` — icons (Search, Bookmark, BookmarkCheck, Star, CheckCircle, X, etc.)
 - `@radix-ui/react-slot` — Button `asChild` prop
@@ -274,49 +277,52 @@ Additional packages installed:
 
 These are intentionally not in scope for the UI foundation:
 
-| Deferred item | Reason | Ticket |
-|---|---|---|
-| Active nav link highlight | Requires `usePathname` client wrapper — feature-page concern | 015 |
-| Glacial Indifference font | Requires manual download (not on Google Fonts) | 001 notes |
-| AuthenticatedLayout (sidebar nav) | Not needed until dashboard features begin | 020+ |
-| Real API calls in SaveIconButton | Backend not ready | 045 |
-| Modal dialogs, toasts, alerts | Per-feature — built as needed | 015+ |
-| Dark mode | Not in product brief | Later |
+| Deferred item                     | Reason                                                       | Ticket    |
+| --------------------------------- | ------------------------------------------------------------ | --------- |
+| Active nav link highlight         | Requires `usePathname` client wrapper — feature-page concern | 015       |
+| Glacial Indifference font         | Requires manual download (not on Google Fonts)               | 001 notes |
+| AuthenticatedLayout (sidebar nav) | Not needed until dashboard features begin                    | 020+      |
+| Real API calls in SaveIconButton  | Backend not ready                                            | 045       |
+| Modal dialogs, toasts, alerts     | Per-feature — built as needed                                | 015+      |
+| Dark mode                         | Not in product brief                                         | Later     |
 
 ---
 
 ## 7. Verification
 
-| Check | Result |
-|---|---|
-| `pnpm tsc --noEmit` | ✓ Zero errors |
-| `pnpm lint` | ✓ Zero errors |
-| App shell (header + footer + main) wired | ✓ `app/layout.tsx` updated |
-| Placeholder homepage uses Container | ✓ `app/page.tsx` updated |
-| All 15 requested components created | ✓ See Section 4 |
-| No product features implemented | ✓ |
-| No real API calls | ✓ (SaveIconButton has TODO comment) |
-| Amber Gold used only for CTAs | ✓ |
-| shadcn/ui components as base | ✓ |
-| TypeScript: no `any`, all props typed | ✓ |
-| Server Components by default | ✓ (3 client components only) |
-| Mobile tap targets ≥ 44px | ✓ |
+| Check                                    | Result                              |
+| ---------------------------------------- | ----------------------------------- |
+| `pnpm tsc --noEmit`                      | ✓ Zero errors                       |
+| `pnpm lint`                              | ✓ Zero errors                       |
+| App shell (header + footer + main) wired | ✓ `app/layout.tsx` updated          |
+| Placeholder homepage uses Container      | ✓ `app/page.tsx` updated            |
+| All 15 requested components created      | ✓ See Section 4                     |
+| No product features implemented          | ✓                                   |
+| No real API calls                        | ✓ (SaveIconButton has TODO comment) |
+| Amber Gold used only for CTAs            | ✓                                   |
+| shadcn/ui components as base             | ✓                                   |
+| TypeScript: no `any`, all props typed    | ✓                                   |
+| Server Components by default             | ✓ (3 client components only)        |
+| Mobile tap targets ≥ 44px                | ✓                                   |
 
 ---
 
 ## 8. Files Created
 
 **Layout:**
+
 - `components/layout/container.tsx`
 - `components/layout/section.tsx`
 - `components/layout/page-header.tsx`
 
 **Navigation:**
+
 - `components/nav/public-header.tsx`
 - `components/nav/mobile-nav.tsx`
 - `components/nav/public-footer.tsx`
 
 **UI atoms (custom):**
+
 - `components/ui/section-heading.tsx`
 - `components/ui/status-badge.tsx`
 - `components/ui/cta-button-group.tsx`
@@ -328,6 +334,7 @@ These are intentionally not in scope for the UI foundation:
 - `components/ui/entity-card.tsx`
 
 **shadcn/ui base:**
+
 - `components/ui/button.tsx`
 - `components/ui/badge.tsx`
 - `components/ui/skeleton.tsx`
@@ -335,6 +342,7 @@ These are intentionally not in scope for the UI foundation:
 - `components/ui/separator.tsx`
 
 **App shell:**
+
 - `app/layout.tsx` — updated with PublicHeader + PublicFooter
 - `app/page.tsx` — updated to use Container
 

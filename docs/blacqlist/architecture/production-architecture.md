@@ -90,27 +90,27 @@ This is the most performance-critical path in the system. It must produce a full
 
 ### Scale Targets
 
-| Metric | Launch | 12 months |
-|---|---|---|
-| Seed listings | 300+ (3 cities) | 5,000+ |
-| Monthly visitors | — | 50,000 |
-| Monthly page views | — | ~250,000 (estimate) |
-| Business owners (claimed) | 30–50 at launch | 1,500+ |
+| Metric                    | Launch          | 12 months           |
+| ------------------------- | --------------- | ------------------- |
+| Seed listings             | 300+ (3 cities) | 5,000+              |
+| Monthly visitors          | —               | 50,000              |
+| Monthly page views        | —               | ~250,000 (estimate) |
+| Business owners (claimed) | 30–50 at launch | 1,500+              |
 
 These targets are well within single-region Supabase and Vercel serverless capacity at MVP and V1. The search architecture upgrade (PostgreSQL → Algolia) is the only infrastructure change driven by scale within the 12-month window.
 
 ### ISR Strategy
 
-| Route | Strategy | Revalidation interval |
-|---|---|---|
-| `/[city-slug]/business/[listing-slug]` | ISR with `generateStaticParams` for all published listings | 1 hour |
-| `/city/[city-slug]` | ISR with `generateStaticParams` for all cities | 24 hours |
-| `/city/[city-slug]/[category-slug]` | ISR with `generateStaticParams` for all active combinations | 24 hours |
-| `/collection/[slug]` | ISR with `generateStaticParams` for all published collections | 1 hour |
-| `/`, `/discover` | ISR | 30 minutes |
-| `/search` | Dynamic — always server-rendered, no cache | None |
-| `/dashboard/*`, `/account/*`, `/admin/*` | Dynamic — session-dependent, never cached | None |
-| `/privacy`, `/terms`, `/cookies`, `/dmca` | Fully static | No revalidation |
+| Route                                     | Strategy                                                      | Revalidation interval |
+| ----------------------------------------- | ------------------------------------------------------------- | --------------------- |
+| `/[city-slug]/business/[listing-slug]`    | ISR with `generateStaticParams` for all published listings    | 1 hour                |
+| `/city/[city-slug]`                       | ISR with `generateStaticParams` for all cities                | 24 hours              |
+| `/city/[city-slug]/[category-slug]`       | ISR with `generateStaticParams` for all active combinations   | 24 hours              |
+| `/collection/[slug]`                      | ISR with `generateStaticParams` for all published collections | 1 hour                |
+| `/`, `/discover`                          | ISR                                                           | 30 minutes            |
+| `/search`                                 | Dynamic — always server-rendered, no cache                    | None                  |
+| `/dashboard/*`, `/account/*`, `/admin/*`  | Dynamic — session-dependent, never cached                     | None                  |
+| `/privacy`, `/terms`, `/cookies`, `/dmca` | Fully static                                                  | No revalidation       |
 
 On-demand revalidation (`revalidateTag` or `revalidatePath`) is called from Server Actions when an owner saves a Page edit or an admin publishes a listing, so the public Page reflects changes before the 1-hour TTL expires.
 
@@ -130,13 +130,13 @@ Next.js 14+ App Router. TypeScript strict mode. All components Server Components
 
 The App Router folder structure uses route groups (parenthesized directories) to separate layout shells without affecting URL paths.
 
-| Route Group | Folder | Shared Layout | Routes |
-|---|---|---|---|
-| Public | `app/(public)/` | Top nav, footer, cookie banner | `/`, `/discover`, `/search`, `/city/*`, entity pages, legal pages |
-| Auth | `app/(auth)/` | Centered minimal layout, no nav | `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email` |
-| Onboarding | `app/(onboarding)/` | Progress indicator, no full nav | `/onboarding` |
-| Dashboard | `app/(dashboard)/` | Sidebar nav, top bar, mobile nav | `/dashboard/*`, `/account/*`, `/claim`, `/add-business` |
-| Admin | `app/(admin)/` | Admin sidebar, breadcrumbs, role gate | `/admin/*` |
+| Route Group | Folder              | Shared Layout                         | Routes                                                                         |
+| ----------- | ------------------- | ------------------------------------- | ------------------------------------------------------------------------------ |
+| Public      | `app/(public)/`     | Top nav, footer, cookie banner        | `/`, `/discover`, `/search`, `/city/*`, entity pages, legal pages              |
+| Auth        | `app/(auth)/`       | Centered minimal layout, no nav       | `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password`, `/verify-email` |
+| Onboarding  | `app/(onboarding)/` | Progress indicator, no full nav       | `/onboarding`                                                                  |
+| Dashboard   | `app/(dashboard)/`  | Sidebar nav, top bar, mobile nav      | `/dashboard/*`, `/account/*`, `/claim`, `/add-business`                        |
+| Admin       | `app/(admin)/`      | Admin sidebar, breadcrumbs, role gate | `/admin/*`                                                                     |
 
 ### Server vs. Client Component Boundaries
 
@@ -144,18 +144,18 @@ The default is always Server Component. Client Components are added when a speci
 
 Components that must be `"use client"`:
 
-| Component | Reason |
-|---|---|
-| Search filter bar | `useSearchParams`, `useRouter` for URL state management |
-| Save button | `onClick` handler, optimistic UI state |
-| Page editor form | `react-hook-form`, `useState`, autosave effect |
-| Claim form and create-business form | `react-hook-form`, multi-step state |
-| Admin approve/reject action buttons | `onClick`, confirmation dialog |
-| Image gallery uploader | `useState`, drag-to-reorder |
-| Mobile navigation | `useState` for open/close toggle |
-| Cookie consent banner | `localStorage`, `useState` |
-| `/near-me` geo detection (V2) | `navigator.geolocation` browser API |
-| OG share button | `navigator.clipboard` or `navigator.share` |
+| Component                           | Reason                                                  |
+| ----------------------------------- | ------------------------------------------------------- |
+| Search filter bar                   | `useSearchParams`, `useRouter` for URL state management |
+| Save button                         | `onClick` handler, optimistic UI state                  |
+| Page editor form                    | `react-hook-form`, `useState`, autosave effect          |
+| Claim form and create-business form | `react-hook-form`, multi-step state                     |
+| Admin approve/reject action buttons | `onClick`, confirmation dialog                          |
+| Image gallery uploader              | `useState`, drag-to-reorder                             |
+| Mobile navigation                   | `useState` for open/close toggle                        |
+| Cookie consent banner               | `localStorage`, `useState`                              |
+| `/near-me` geo detection (V2)       | `navigator.geolocation` browser API                     |
+| OG share button                     | `navigator.clipboard` or `navigator.share`              |
 
 All other components — entity pages, city pages, search results list, analytics display, admin list views — remain Server Components. Data is fetched in Server Components and passed as props to any Client Component children that need it.
 
@@ -163,11 +163,11 @@ All other components — entity pages, city pages, search results list, analytic
 
 No global state library at MVP or V1. Three state categories and their patterns:
 
-| State type | Pattern | Where |
-|---|---|---|
-| URL-driven state (filters, search params, pagination) | `useSearchParams` + `useRouter` | Client Component filter bars |
-| Local UI state (modals, open/close, form step) | `useState`, `useReducer` | Client Components |
-| Server state (remote data) | Server Components for initial render; Server Actions for mutations | Server Components + `revalidatePath` |
+| State type                                            | Pattern                                                            | Where                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------ |
+| URL-driven state (filters, search params, pagination) | `useSearchParams` + `useRouter`                                    | Client Component filter bars         |
+| Local UI state (modals, open/close, form step)        | `useState`, `useReducer`                                           | Client Components                    |
+| Server state (remote data)                            | Server Components for initial render; Server Actions for mutations | Server Components + `revalidatePath` |
 
 Global state libraries (Zustand, Jotai) are not added unless a demonstrated need arises where distant Client Components share state that cannot be lifted to a Server Component or URL param.
 
@@ -185,14 +185,14 @@ Form state requirements:
 
 ### Required Files Per Route Segment
 
-| File | Purpose | Required for |
-|---|---|---|
-| `page.tsx` | Rendered page content | Every accessible URL |
-| `layout.tsx` | Shared layout and shell | Route groups; dashboard; admin |
-| `loading.tsx` | Suspense fallback skeleton | All data-heavy pages |
-| `error.tsx` | Runtime error boundary | All routes that fetch remote data |
-| `not-found.tsx` | 404 content | Entity detail routes |
-| `route.ts` | API endpoint handler | All `/api/` routes |
+| File            | Purpose                    | Required for                      |
+| --------------- | -------------------------- | --------------------------------- |
+| `page.tsx`      | Rendered page content      | Every accessible URL              |
+| `layout.tsx`    | Shared layout and shell    | Route groups; dashboard; admin    |
+| `loading.tsx`   | Suspense fallback skeleton | All data-heavy pages              |
+| `error.tsx`     | Runtime error boundary     | All routes that fetch remote data |
+| `not-found.tsx` | 404 content                | Entity detail routes              |
+| `route.ts`      | API endpoint handler       | All `/api/` routes                |
 
 ### OG Image Generation
 
@@ -207,11 +207,13 @@ Every BLACQList Page generates a unique Open Graph image via the `/og/[...params
 The backend is split between two execution contexts. The decision rule is clear:
 
 **Use Server Actions for:**
+
 - All mutations owned by the app: create listing, edit listing, submit claim, save/unsave, upload image, approve claim, flag listing, update user settings
 - Any mutation that originates from a form or button in the product UI
 - Operations that must invalidate the ISR cache after completing (`revalidatePath`, `revalidateTag`)
 
 **Use Route Handlers (`app/api/`) for:**
+
 - The public search endpoint (`GET /api/search`) — needed as a standalone endpoint callable by external clients or future mobile apps
 - Webhook receivers (`/api/webhooks/stripe`, `/api/webhooks/resend`) — POST endpoints called by external services with their own signature verification requirements
 - Signed URL generation for private storage assets — needs to return a URL without a full page re-render
@@ -265,15 +267,15 @@ Errors are caught at the service boundary. Services return typed result objects 
 
 The error classification and response pattern:
 
-| Error type | HTTP status | Client response |
-|---|---|---|
-| Validation failure | 400 | `{ error: "Validation failed", code: "VALIDATION_ERROR", fields: {...} }` |
-| Missing or invalid session | 401 | `{ error: "Authentication required" }` |
-| Valid session, insufficient role | 403 | `{ error: "Access denied" }` |
-| Resource not found | 404 | `{ error: "Not found" }` |
-| State conflict (duplicate) | 409 | `{ error: "...", code: "ALREADY_EXISTS", existingId: "..." }` |
-| Business rule violation | 422 | `{ error: "...", code: "..." }` |
-| Unexpected failure | 500 | `{ error: "Something went wrong" }` |
+| Error type                       | HTTP status | Client response                                                           |
+| -------------------------------- | ----------- | ------------------------------------------------------------------------- |
+| Validation failure               | 400         | `{ error: "Validation failed", code: "VALIDATION_ERROR", fields: {...} }` |
+| Missing or invalid session       | 401         | `{ error: "Authentication required" }`                                    |
+| Valid session, insufficient role | 403         | `{ error: "Access denied" }`                                              |
+| Resource not found               | 404         | `{ error: "Not found" }`                                                  |
+| State conflict (duplicate)       | 409         | `{ error: "...", code: "ALREADY_EXISTS", existingId: "..." }`             |
+| Business rule violation          | 422         | `{ error: "...", code: "..." }`                                           |
+| Unexpected failure               | 500         | `{ error: "Something went wrong" }`                                       |
 
 Raw database errors and stack traces must never reach the client. All unexpected errors are caught, logged server-side with full context (operation, user ID, error), and returned to the client as a generic 500 response.
 
@@ -281,16 +283,16 @@ Raw database errors and stack traces must never reach the client. All unexpected
 
 Operations that must not block a user request run as Supabase Edge Functions triggered on a schedule or by a database webhook.
 
-| Job | Trigger | Payload | Phase |
-|---|---|---|---|
-| Auto-archive expired events and jobs | Daily cron | Listings where `auto_archive_at <= now()` or `auto_expire_at <= now()` | Beta |
-| Stale listing detection | Daily cron | Listings where `last_edited_by_owner_at` is null or > 180 days ago | V1 |
-| Sponsored placement expiry | Daily cron | Listings where `sponsored_expires_at <= now()` and `is_sponsored = true` | V1 |
-| Welcome email | Post-signup webhook on `users` insert | `{ user_id, email, display_name }` | MVP |
-| Claim approved email | Post-approval Server Action call | `{ claim_id, user_id, listing_name }` | MVP |
-| Claim rejected email | Post-rejection Server Action call | `{ claim_id, user_id, listing_name, reason }` | MVP |
-| Stripe subscription sync | Stripe webhook | Subscription event payload | V1 |
-| BLACQList Certified auto-grant | PostgreSQL trigger on `reviews` table | Fires on review insert or status update to published | V1 |
+| Job                                  | Trigger                               | Payload                                                                  | Phase |
+| ------------------------------------ | ------------------------------------- | ------------------------------------------------------------------------ | ----- |
+| Auto-archive expired events and jobs | Daily cron                            | Listings where `auto_archive_at <= now()` or `auto_expire_at <= now()`   | Beta  |
+| Stale listing detection              | Daily cron                            | Listings where `last_edited_by_owner_at` is null or > 180 days ago       | V1    |
+| Sponsored placement expiry           | Daily cron                            | Listings where `sponsored_expires_at <= now()` and `is_sponsored = true` | V1    |
+| Welcome email                        | Post-signup webhook on `users` insert | `{ user_id, email, display_name }`                                       | MVP   |
+| Claim approved email                 | Post-approval Server Action call      | `{ claim_id, user_id, listing_name }`                                    | MVP   |
+| Claim rejected email                 | Post-rejection Server Action call     | `{ claim_id, user_id, listing_name, reason }`                            | MVP   |
+| Stripe subscription sync             | Stripe webhook                        | Subscription event payload                                               | V1    |
+| BLACQList Certified auto-grant       | PostgreSQL trigger on `reviews` table | Fires on review insert or status update to published                     | V1    |
 
 All background jobs must be idempotent. Running the same job twice must not produce duplicate side effects. Daily cron jobs check for rows not already in the target state before updating them.
 
@@ -315,11 +317,11 @@ Supabase managed PostgreSQL. PgBouncer connection pooling in transaction mode (r
 
 Every table that represents a persistent entity carries:
 
-| Field | Type | Default | Notes |
-|---|---|---|---|
-| `id` | `uuid` | `gen_random_uuid()` | Primary key |
-| `created_at` | `timestamptz` | `now()` | Set on insert, never updated |
-| `updated_at` | `timestamptz` | `now()` | Updated by trigger on every UPDATE |
+| Field        | Type          | Default             | Notes                              |
+| ------------ | ------------- | ------------------- | ---------------------------------- |
+| `id`         | `uuid`        | `gen_random_uuid()` | Primary key                        |
+| `created_at` | `timestamptz` | `now()`             | Set on insert, never updated       |
+| `updated_at` | `timestamptz` | `now()`             | Updated by trigger on every UPDATE |
 
 Entry tables with user attribution also carry `submitted_by` and `updated_by` (FK to `users.id` with `ON DELETE SET NULL`).
 
@@ -328,49 +330,51 @@ Entry tables with user attribution also carry `submitted_by` and `updated_by` (F
 Every entity type on the platform shares a single `listings` base table. Entity-type-specific fields live in `listing_details_*` extension tables, each with a one-to-one FK back to `listings.id` with `ON DELETE CASCADE`.
 
 This design means:
+
 - Search, discovery, SEO, status, trust, and admin fields are consistent across all entity types — they are always on `listings`
 - Adding a new entity type requires only a new `listing_details_*` table
 - RLS policies on `listings` apply universally; extension tables inherit access through their FK
 
 The six extension tables:
 
-| Table | Entity type | Phase |
-|---|---|---|
-| `listing_details_business` | Business | MVP |
-| `listing_details_professional` | Professional | Beta |
-| `listing_details_creative` | Creative | Beta |
-| `listing_details_event` | Event | Beta |
-| `listing_details_job` | Job | Beta |
-| `listing_details_vendor` | Vendor | V2 |
+| Table                          | Entity type  | Phase |
+| ------------------------------ | ------------ | ----- |
+| `listing_details_business`     | Business     | MVP   |
+| `listing_details_professional` | Professional | Beta  |
+| `listing_details_creative`     | Creative     | Beta  |
+| `listing_details_event`        | Event        | Beta  |
+| `listing_details_job`          | Job          | Beta  |
+| `listing_details_vendor`       | Vendor       | V2    |
 
 Sub-entity tables (children of top-level entities, not searchable themselves):
 
-| Table | Parent | Phase |
-|---|---|---|
-| `services` | `listings` where `entity_type IN ('business', 'professional')` | MVP |
-| `products` | `listings` where `entity_type = 'vendor'` | V2 |
+| Table      | Parent                                                         | Phase |
+| ---------- | -------------------------------------------------------------- | ----- |
+| `services` | `listings` where `entity_type IN ('business', 'professional')` | MVP   |
+| `products` | `listings` where `entity_type = 'vendor'`                      | V2    |
 
 ### Supporting Tables
 
-| Table | Purpose | Phase |
-|---|---|---|
-| `users` | Auth and profile; FK target for `owner_user_id`, `submitted_by`, `updated_by` across all tables | MVP |
-| `user_roles` | Role assignments; one row per user-role pair (allows multiple roles per user) | MVP |
-| `categories` | Hierarchical category tree; top-level and subcategories | MVP |
-| `cities` | City/metro reference table with SEO slugs and geo data | MVP |
-| `claims` | Ownership claim requests; FK to listing and claiming user | MVP |
-| `saves` | User-listing save associations; FK to both | MVP |
-| `media_attachments` | Polymorphic media store; `entity_type` + `entity_id` pattern | MVP |
-| `analytics_events` | Page views, CTA clicks, shares, search events | MVP |
-| `collections` | Editorial curated collections | MVP |
-| `collection_listings` | Junction table: collections ↔ listings | MVP |
-| `reviews` | Star ratings and text reviews | V1 |
-| `spend_events` | Tracked spend linked to listings and users | V2 |
-| `admin_audit_log` | Record of all admin mutations | MVP |
+| Table                 | Purpose                                                                                         | Phase |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ----- |
+| `users`               | Auth and profile; FK target for `owner_user_id`, `submitted_by`, `updated_by` across all tables | MVP   |
+| `user_roles`          | Role assignments; one row per user-role pair (allows multiple roles per user)                   | MVP   |
+| `categories`          | Hierarchical category tree; top-level and subcategories                                         | MVP   |
+| `cities`              | City/metro reference table with SEO slugs and geo data                                          | MVP   |
+| `claims`              | Ownership claim requests; FK to listing and claiming user                                       | MVP   |
+| `saves`               | User-listing save associations; FK to both                                                      | MVP   |
+| `media_attachments`   | Polymorphic media store; `entity_type` + `entity_id` pattern                                    | MVP   |
+| `analytics_events`    | Page views, CTA clicks, shares, search events                                                   | MVP   |
+| `collections`         | Editorial curated collections                                                                   | MVP   |
+| `collection_listings` | Junction table: collections ↔ listings                                                          | MVP   |
+| `reviews`             | Star ratings and text reviews                                                                   | V1    |
+| `spend_events`        | Tracked spend linked to listings and users                                                      | V2    |
+| `admin_audit_log`     | Record of all admin mutations                                                                   | MVP   |
 
 ### Full-Text Search Index
 
 The `listings` table carries a `search_vector tsvector` column that concatenates:
+
 - `name` (weight A — highest)
 - `category name` (denormalized or joined — weight B)
 - `city name` (weight B)
@@ -386,6 +390,7 @@ The `pg_trgm` extension provides fuzzy matching via trigram similarity. Fuzzy ma
 All schema changes are represented as migration files managed by the Supabase CLI.
 
 Workflow:
+
 1. Make schema changes in the local Supabase development environment
 2. Run `supabase db diff --file [name]` to generate a migration file
 3. Review the migration for correctness and safety
@@ -403,12 +408,12 @@ RLS is enabled on all tables. Every table has explicit policies. The absence of 
 
 The core RLS patterns on `listings`:
 
-| Policy | Condition |
-|---|---|
-| Public read of published listings | `status = 'published' AND deleted_at IS NULL AND flag_status = 'none'` |
-| Owner read of own listings (any status) | `auth.uid() = owner_user_id` |
-| Owner update of own listings | `auth.uid() = owner_user_id AND status != 'archived'` |
-| Admin full access | `auth.uid() IN (SELECT user_id FROM user_roles WHERE role IN ('admin', 'super_admin'))` |
+| Policy                                  | Condition                                                                               |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| Public read of published listings       | `status = 'published' AND deleted_at IS NULL AND flag_status = 'none'`                  |
+| Owner read of own listings (any status) | `auth.uid() = owner_user_id`                                                            |
+| Owner update of own listings            | `auth.uid() = owner_user_id AND status != 'archived'`                                   |
+| Admin full access                       | `auth.uid() IN (SELECT user_id FROM user_roles WHERE role IN ('admin', 'super_admin'))` |
 
 Extension tables inherit access through their FK — a user who can read a `listings` row can read the associated `listing_details_business` row through a join, because the extension table policy checks access via the parent listing's policy.
 
@@ -424,27 +429,27 @@ Supabase Auth. Email + password at MVP. Google OAuth at V1. Apple OAuth at V2 (r
 
 Sessions use JWT stored in httpOnly cookies. The `@supabase/ssr` package manages the cookie-based session on both server and client. The Supabase client on the server reads the session from cookies on every server-side request. Session refresh is handled automatically by the Supabase client.
 
-| Property | Value |
-|---|---|
-| Session storage | httpOnly, SameSite=Lax cookie |
-| Token type | Supabase JWT (not exposed to client JS) |
-| Session duration | Supabase default (1 week with refresh) |
-| Refresh strategy | Automatic via Supabase SSR helpers |
-| Expiry handling | Redirect to `/sign-in?next=[original-path]` |
+| Property         | Value                                       |
+| ---------------- | ------------------------------------------- |
+| Session storage  | httpOnly, SameSite=Lax cookie               |
+| Token type       | Supabase JWT (not exposed to client JS)     |
+| Session duration | Supabase default (1 week with refresh)      |
+| Refresh strategy | Automatic via Supabase SSR helpers          |
+| Expiry handling  | Redirect to `/sign-in?next=[original-path]` |
 
 Sessions are never stored in `localStorage`. Client-side JavaScript does not have direct access to the JWT token.
 
 ### Auth Flows
 
-| Flow | Trigger | Steps | Post-action |
-|---|---|---|---|
-| Sign up | User submits `/sign-up` form | Create Supabase Auth user → create `users` row → assign Supporter role in `user_roles` → send verification email | Redirect to `/verify-email` screen |
-| Email verification | User clicks link in verification email | Supabase validates token → marks email verified | Redirect to `/onboarding` |
-| Sign in | User submits `/sign-in` form | Supabase validates credentials → sets httpOnly session cookie | Redirect to `?next=` param or `/dashboard` |
-| Sign out | User clicks sign out | Supabase clears session cookie | Redirect to `/` |
-| Password reset | User submits `/forgot-password` form | Supabase sends reset email | Always shows success message (no email enumeration) |
-| Reset password | User clicks link in reset email | Validate token → user sets new password | Redirect to `/sign-in` |
-| Google OAuth (V1) | User clicks "Continue with Google" | Redirect to Google → OAuth callback → create or link Supabase Auth user → set session | Redirect to `/onboarding` (new user) or `/dashboard` (returning user) |
+| Flow               | Trigger                                | Steps                                                                                                            | Post-action                                                           |
+| ------------------ | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Sign up            | User submits `/sign-up` form           | Create Supabase Auth user → create `users` row → assign Supporter role in `user_roles` → send verification email | Redirect to `/verify-email` screen                                    |
+| Email verification | User clicks link in verification email | Supabase validates token → marks email verified                                                                  | Redirect to `/onboarding`                                             |
+| Sign in            | User submits `/sign-in` form           | Supabase validates credentials → sets httpOnly session cookie                                                    | Redirect to `?next=` param or `/dashboard`                            |
+| Sign out           | User clicks sign out                   | Supabase clears session cookie                                                                                   | Redirect to `/`                                                       |
+| Password reset     | User submits `/forgot-password` form   | Supabase sends reset email                                                                                       | Always shows success message (no email enumeration)                   |
+| Reset password     | User clicks link in reset email        | Validate token → user sets new password                                                                          | Redirect to `/sign-in`                                                |
+| Google OAuth (V1)  | User clicks "Continue with Google"     | Redirect to Google → OAuth callback → create or link Supabase Auth user → set session                            | Redirect to `/onboarding` (new user) or `/dashboard` (returning user) |
 
 ### Role Management
 
@@ -452,17 +457,18 @@ Roles are stored in the `user_roles` table, not embedded in the JWT. This allows
 
 The `user_roles` table structure:
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | PK |
-| `user_id` | `uuid` FK → `users.id` ON DELETE CASCADE | The user |
-| `role` | `text` CHECK IN ('supporter', 'owner', 'editor', 'admin', 'super_admin') | The assigned role |
-| `assigned_by` | `uuid` FK → `users.id` ON DELETE SET NULL | Who assigned the role (null for system-assigned) |
-| `created_at` | `timestamptz` | When assigned |
+| Column        | Type                                                                     | Notes                                            |
+| ------------- | ------------------------------------------------------------------------ | ------------------------------------------------ |
+| `id`          | `uuid`                                                                   | PK                                               |
+| `user_id`     | `uuid` FK → `users.id` ON DELETE CASCADE                                 | The user                                         |
+| `role`        | `text` CHECK IN ('supporter', 'owner', 'editor', 'admin', 'super_admin') | The assigned role                                |
+| `assigned_by` | `uuid` FK → `users.id` ON DELETE SET NULL                                | Who assigned the role (null for system-assigned) |
+| `created_at`  | `timestamptz`                                                            | When assigned                                    |
 
 A user can have multiple rows (multiple roles). The `owner` role is assigned by the system when a claim is approved. The `admin` role is assigned only by a `super_admin` through the admin users interface.
 
 Role checks happen server-side on every protected operation:
+
 1. Session is read from the httpOnly cookie via the Supabase server client
 2. The `user_roles` table is queried for the authenticated user's roles
 3. The required role is asserted; if not present, return `403` or redirect
@@ -475,15 +481,15 @@ The client never trusts its own role claim. Even if a client sends a request ass
 
 Protected route patterns:
 
-| Pattern | Check | On failure |
-|---|---|---|
-| `/dashboard(.*)` | Valid session | Redirect to `/sign-in?next=[path]` |
-| `/account(.*)` | Valid session | Redirect to `/sign-in?next=[path]` |
-| `/claim(.*)` | Valid session | Redirect to `/sign-in?next=[path]` |
-| `/add-business` | Valid session | Redirect to `/sign-in?next=[path]` |
-| `/onboarding` | Valid session | Redirect to `/sign-in` |
-| `/admin(.*)` | Valid session + admin or super_admin role | Redirect to `/` (no indication of admin route existence) |
-| `/sign-in`, `/sign-up` | Already authenticated → redirect | Redirect to `/dashboard` |
+| Pattern                | Check                                     | On failure                                               |
+| ---------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| `/dashboard(.*)`       | Valid session                             | Redirect to `/sign-in?next=[path]`                       |
+| `/account(.*)`         | Valid session                             | Redirect to `/sign-in?next=[path]`                       |
+| `/claim(.*)`           | Valid session                             | Redirect to `/sign-in?next=[path]`                       |
+| `/add-business`        | Valid session                             | Redirect to `/sign-in?next=[path]`                       |
+| `/onboarding`          | Valid session                             | Redirect to `/sign-in`                                   |
+| `/admin(.*)`           | Valid session + admin or super_admin role | Redirect to `/` (no indication of admin route existence) |
+| `/sign-in`, `/sign-up` | Already authenticated → redirect          | Redirect to `/dashboard`                                 |
 
 Admin role checking in middleware uses a Supabase service client to query `user_roles`. This is the first layer of defense; server-side role checks within each admin page are the second layer.
 
@@ -495,11 +501,11 @@ Admin role checking in middleware uses a Supabase service client to query `user_
 
 Three buckets in Supabase Storage. Bucket structure defined before any upload code is written.
 
-| Bucket | Access | Contents | Path pattern |
-|---|---|---|---|
-| `listing-media` | Public (CDN-served) | Logos, cover images, gallery images, product images | `[entity_type]/[listing_id]/[timestamp]-[filename]` |
-| `verification-docs` | Private (signed URLs only) | Business license uploads, EIN documents, identity docs | `claims/[claim_id]/[timestamp]-[filename]` |
-| `receipts` | Private (signed URLs only) | User receipt photos | `receipts/[user_id]/[timestamp]-[filename]` |
+| Bucket              | Access                     | Contents                                               | Path pattern                                        |
+| ------------------- | -------------------------- | ------------------------------------------------------ | --------------------------------------------------- |
+| `listing-media`     | Public (CDN-served)        | Logos, cover images, gallery images, product images    | `[entity_type]/[listing_id]/[timestamp]-[filename]` |
+| `verification-docs` | Private (signed URLs only) | Business license uploads, EIN documents, identity docs | `claims/[claim_id]/[timestamp]-[filename]`          |
+| `receipts`          | Private (signed URLs only) | User receipt photos                                    | `receipts/[user_id]/[timestamp]-[filename]`         |
 
 ### Access Rules
 
@@ -515,15 +521,15 @@ All file validation happens server-side in the upload service before any write t
 
 Server-side validation rules:
 
-| Check | Rule | Failure response |
-|---|---|---|
-| MIME type | `image/jpeg`, `image/png`, `image/webp` only | `400` with specific error message |
-| File size — logo | Max 2 MB | `400` |
-| File size — cover image | Max 5 MB | `400` |
-| File size — gallery image | Max 5 MB | `400` |
-| File size — verification doc | Max 10 MB | `400` |
-| File size — receipt | Max 10 MB | `400` |
-| Gallery count | Enforced against tier limit before accepting upload | `409` if limit reached |
+| Check                        | Rule                                                | Failure response                  |
+| ---------------------------- | --------------------------------------------------- | --------------------------------- |
+| MIME type                    | `image/jpeg`, `image/png`, `image/webp` only        | `400` with specific error message |
+| File size — logo             | Max 2 MB                                            | `400`                             |
+| File size — cover image      | Max 5 MB                                            | `400`                             |
+| File size — gallery image    | Max 5 MB                                            | `400`                             |
+| File size — verification doc | Max 10 MB                                           | `400`                             |
+| File size — receipt          | Max 10 MB                                           | `400`                             |
+| Gallery count                | Enforced against tier limit before accepting upload | `409` if limit reached            |
 
 ### Storage Paths
 
@@ -541,14 +547,14 @@ The `listings` table carries a `search_vector tsvector` column maintained by a t
 
 Vector composition:
 
-| Source field | Weight | Rationale |
-|---|---|---|
-| `listings.name` | A (highest) | Business name is the strongest search signal |
-| `categories.name` (joined) | B | Category match is highly relevant |
-| `cities.name` (joined) | B | City match is highly relevant for local intent |
-| `listing_details_business.description` | C | Body text, lower weight |
-| `listings.tagline` | C | Short descriptor |
-| `listings.service_area_description` | D | Geographic context |
+| Source field                           | Weight      | Rationale                                      |
+| -------------------------------------- | ----------- | ---------------------------------------------- |
+| `listings.name`                        | A (highest) | Business name is the strongest search signal   |
+| `categories.name` (joined)             | B           | Category match is highly relevant              |
+| `cities.name` (joined)                 | B           | City match is highly relevant for local intent |
+| `listing_details_business.description` | C           | Body text, lower weight                        |
+| `listings.tagline`                     | C           | Short descriptor                               |
+| `listings.service_area_description`    | D           | Geographic context                             |
 
 A `GIN` index on `search_vector` provides fast FTS query execution.
 
@@ -558,14 +564,14 @@ The `pg_trgm` extension is installed. Trigram similarity is used as a fallback w
 
 `GET /api/search` is a public Route Handler. It accepts the following query parameters:
 
-| Parameter | Type | Notes |
-|---|---|---|
-| `q` | string | Free-text query. Converted to FTS query with `plainto_tsquery` or `websearch_to_tsquery` |
-| `city` | string | City slug. Joined to `cities` table and filtered as `city_id` |
-| `category` | string | Category slug. Joined to `categories` table and filtered as `category_id` |
-| `type` | string | Entity type. One of: `business`, `professional`, `creative`, `event`, `job`, `vendor` |
-| `page` | integer | Default 1 |
-| `limit` | integer | Default 20, max 100 |
+| Parameter  | Type    | Notes                                                                                    |
+| ---------- | ------- | ---------------------------------------------------------------------------------------- |
+| `q`        | string  | Free-text query. Converted to FTS query with `plainto_tsquery` or `websearch_to_tsquery` |
+| `city`     | string  | City slug. Joined to `cities` table and filtered as `city_id`                            |
+| `category` | string  | Category slug. Joined to `categories` table and filtered as `category_id`                |
+| `type`     | string  | Entity type. One of: `business`, `professional`, `creative`, `event`, `job`, `vendor`    |
+| `page`     | integer | Default 1                                                                                |
+| `limit`    | integer | Default 20, max 100                                                                      |
 
 Response envelope:
 
@@ -579,6 +585,7 @@ Response envelope:
 Sort order: relevance (`ts_rank`) descending, then `published_at` descending as a tiebreaker. Sponsored listings receive a ranking boost applied in the query (not by reordering in application code).
 
 The search endpoint applies the following filters unconditionally regardless of query params:
+
 - `status = 'published'`
 - `deleted_at IS NULL`
 - `flag_status = 'none'`
@@ -595,6 +602,7 @@ The upgrade to Algolia is triggered when any one of the following conditions is 
 - AI-assisted conversational search (V2) requires vector similarity, which cannot be served by PostgreSQL FTS alone
 
 Migration approach when triggered:
+
 1. Build the Algolia index in parallel from existing Supabase data (batch sync script)
 2. Keep PostgreSQL as source of truth — Algolia is a read replica for search only
 3. Implement a webhook from Supabase (via Supabase database webhooks or Edge Functions) to sync listing updates to Algolia in real time
@@ -609,18 +617,19 @@ PostgreSQL FTS is never removed — it remains the source of truth. Only the sea
 
 ### Phase Scope
 
-| Phase | Payment scope |
-|---|---|
-| MVP | No payments |
-| V1 | Stripe subscriptions for listing tier upgrades (Standard, Premium) |
-| V1.5 | Stripe Customer Portal for self-service subscription management |
-| V2 | Stripe Connect for vendor marketplace payouts |
+| Phase | Payment scope                                                      |
+| ----- | ------------------------------------------------------------------ |
+| MVP   | No payments                                                        |
+| V1    | Stripe subscriptions for listing tier upgrades (Standard, Premium) |
+| V1.5  | Stripe Customer Portal for self-service subscription management    |
+| V2    | Stripe Connect for vendor marketplace payouts                      |
 
 ### V1: Listing Tier Subscriptions
 
 Stripe Products and Prices are created for two paid listing tiers: Standard and Premium. Free tier requires no Stripe record.
 
 Subscription flow:
+
 1. Business owner visits `/dashboard/upgrade`
 2. Server Action creates a Stripe Checkout Session with the appropriate Price ID and the user's Stripe Customer ID (created on first subscription or retrieved from `users.stripe_customer_id`)
 3. User is redirected to Stripe-hosted Checkout
@@ -630,16 +639,16 @@ Subscription flow:
 
 Stripe fields stored on `users`:
 
-| Field | Notes |
-|---|---|
+| Field                | Notes                                                  |
+| -------------------- | ------------------------------------------------------ |
 | `stripe_customer_id` | Created on first subscription attempt; null until then |
 
 Stripe fields on `listings`:
 
-| Field | Notes |
-|---|---|
-| `tier` | `'free'` / `'standard'` / `'premium'`; updated by webhook handler |
-| `stripe_subscription_id` | Current active subscription ID; null for free tier |
+| Field                    | Notes                                                             |
+| ------------------------ | ----------------------------------------------------------------- |
+| `tier`                   | `'free'` / `'standard'` / `'premium'`; updated by webhook handler |
+| `stripe_subscription_id` | Current active subscription ID; null for free tier                |
 
 ### V1.5: Stripe Customer Portal
 
@@ -648,6 +657,7 @@ The `/dashboard/billing` route generates a Stripe Customer Portal session server
 ### V2: Stripe Connect (Marketplace Payouts)
 
 Vendor onboarding flow:
+
 1. Vendor clicks "Connect Stripe" in their vendor dashboard
 2. Server Action creates a Stripe Connect Account Link for an Express account
 3. Vendor completes KYC on Stripe-hosted onboarding
@@ -655,6 +665,7 @@ Vendor onboarding flow:
 5. Webhook handler sets `listing_details_vendor.stripe_connect_id` and updates `stripe_connect_status` to `'active'`
 
 Marketplace purchase flow (V2):
+
 1. Buyer adds product to cart
 2. Server Action creates a Stripe Payment Intent with `transfer_data.destination` set to the vendor's `stripe_connect_id` and a platform application fee
 3. Buyer completes payment via Stripe Elements embedded checkout
@@ -698,6 +709,7 @@ This query result is cached in memory (or via a simple `unstable_cache` wrapper 
 The full dollar-flow map visualization reads from aggregated `spend_events` data. The graph nodes are businesses; edges are spend flows between a supporter's location and the business. The visualization library (D3.js or React Flow — see ADR open decision) renders this as an interactive graph.
 
 No schema changes are required at V3. The `spend_events` table established in V2 is the complete data source. The only V3 addition is:
+
 - A `flow_map_opt_in` boolean field on `listings` (default `false`) — businesses appear as nodes only when they have opted in
 - The aggregate query and graph data API endpoint
 - The client-side visualization component
@@ -710,10 +722,10 @@ No schema changes are required at V3. The `spend_events` table established in V2
 
 All AI features are V2 and later. No AI integration at MVP or Beta. No AI integration at V1 beyond the data being ready.
 
-| Phase | AI capability |
-|---|---|
-| V2 | Business Page optimization suggestions for owners; conversational discovery search |
-| V3 | Admin curation agent (surfaces trending listings, flags stale content) |
+| Phase | AI capability                                                                      |
+| ----- | ---------------------------------------------------------------------------------- |
+| V2    | Business Page optimization suggestions for owners; conversational discovery search |
+| V3    | Admin curation agent (surfaces trending listings, flags stale content)             |
 
 ### Provider
 
@@ -747,6 +759,7 @@ If the rate limit is exceeded, the server returns `429` with a `Retry-After` hea
 ### Response Handling
 
 At V2, AI responses are simple request/response (no streaming to the client). The Server Action:
+
 1. Checks rate limit
 2. Sends prompt to Anthropic API with a timeout of 10 seconds
 3. Parses the response into a typed suggestions object
@@ -768,27 +781,27 @@ Two analytics layers from day one:
 
 Event schema:
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | PK |
-| `event_name` | `text` | `'page_view'`, `'cta_click'`, `'save'`, `'unsave'`, `'share'`, `'search_submitted'`, `'search_result_clicked'` |
-| `listing_id` | `uuid` FK → `listings.id` ON DELETE SET NULL | The listing the event is attributed to; null for non-listing events like search |
-| `user_id` | `uuid` FK → `users.id` ON DELETE SET NULL | Null for anonymous events |
-| `properties` | `jsonb` | Event-specific metadata (e.g., `{cta_type: 'book'}` for CTA clicks, `{query: 'natural hair atlanta'}` for searches) |
-| `created_at` | `timestamptz` | Event timestamp |
+| Field        | Type                                         | Notes                                                                                                               |
+| ------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `id`         | `uuid`                                       | PK                                                                                                                  |
+| `event_name` | `text`                                       | `'page_view'`, `'cta_click'`, `'save'`, `'unsave'`, `'share'`, `'search_submitted'`, `'search_result_clicked'`      |
+| `listing_id` | `uuid` FK → `listings.id` ON DELETE SET NULL | The listing the event is attributed to; null for non-listing events like search                                     |
+| `user_id`    | `uuid` FK → `users.id` ON DELETE SET NULL    | Null for anonymous events                                                                                           |
+| `properties` | `jsonb`                                      | Event-specific metadata (e.g., `{cta_type: 'book'}` for CTA clicks, `{query: 'natural hair atlanta'}` for searches) |
+| `created_at` | `timestamptz`                                | Event timestamp                                                                                                     |
 
 **Vercel Analytics:** Automatic Core Web Vitals tracking, page performance, and geographic traffic distribution. No configuration required — enabled by adding the Vercel Analytics package and the `<Analytics />` component to the root layout.
 
 ### Event Capture Points
 
-| Event | When | Server or client |
-|---|---|---|
-| `page_view` | On every entity page render | Server-side (inside Server Component, non-blocking) |
-| `cta_click` | When the primary CTA button is clicked | Client-side (event handler on Client Component) |
-| `save` | When a listing is saved | Client-side (after optimistic UI update) |
-| `share` | When the share button is clicked | Client-side |
-| `search_submitted` | When the search form is submitted | Client-side |
-| `search_result_clicked` | When a search result listing card is clicked | Client-side |
+| Event                   | When                                         | Server or client                                    |
+| ----------------------- | -------------------------------------------- | --------------------------------------------------- |
+| `page_view`             | On every entity page render                  | Server-side (inside Server Component, non-blocking) |
+| `cta_click`             | When the primary CTA button is clicked       | Client-side (event handler on Client Component)     |
+| `save`                  | When a listing is saved                      | Client-side (after optimistic UI update)            |
+| `share`                 | When the share button is clicked             | Client-side                                         |
+| `search_submitted`      | When the search form is submitted            | Client-side                                         |
+| `search_result_clicked` | When a search result listing card is clicked | Client-side                                         |
 
 `page_view` fires server-side to ensure coverage without JavaScript. All other events fire client-side.
 
@@ -826,17 +839,17 @@ Every admin mutation writes a row to `admin_audit_log`. This is non-negotiable �
 
 `admin_audit_log` schema:
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | PK |
-| `admin_user_id` | `uuid` FK → `users.id` ON DELETE SET NULL | The admin who performed the action |
-| `action` | `text` | String enum: `'listing_status_changed'`, `'claim_approved'`, `'claim_rejected'`, `'listing_flagged'`, `'user_suspended'`, `'role_assigned'`, `'listing_deleted'`, etc. |
-| `target_table` | `text` | The table that was mutated: `'listings'`, `'claims'`, `'users'`, etc. |
-| `target_id` | `uuid` | The PK of the mutated record |
-| `before_state` | `jsonb` | Snapshot of the record before the mutation (only changed fields, not the full row) |
-| `after_state` | `jsonb` | Snapshot of the record after the mutation |
-| `notes` | `text` | Optional admin-provided reason or context |
-| `created_at` | `timestamptz` | When the action occurred |
+| Field           | Type                                      | Notes                                                                                                                                                                  |
+| --------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `uuid`                                    | PK                                                                                                                                                                     |
+| `admin_user_id` | `uuid` FK → `users.id` ON DELETE SET NULL | The admin who performed the action                                                                                                                                     |
+| `action`        | `text`                                    | String enum: `'listing_status_changed'`, `'claim_approved'`, `'claim_rejected'`, `'listing_flagged'`, `'user_suspended'`, `'role_assigned'`, `'listing_deleted'`, etc. |
+| `target_table`  | `text`                                    | The table that was mutated: `'listings'`, `'claims'`, `'users'`, etc.                                                                                                  |
+| `target_id`     | `uuid`                                    | The PK of the mutated record                                                                                                                                           |
+| `before_state`  | `jsonb`                                   | Snapshot of the record before the mutation (only changed fields, not the full row)                                                                                     |
+| `after_state`   | `jsonb`                                   | Snapshot of the record after the mutation                                                                                                                              |
+| `notes`         | `text`                                    | Optional admin-provided reason or context                                                                                                                              |
+| `created_at`    | `timestamptz`                             | When the action occurred                                                                                                                                               |
 
 The audit log write is included in the same database transaction as the mutation where possible, so there are no audit rows without a corresponding state change.
 
@@ -874,19 +887,19 @@ Three environments: `local`, `staging`, `production`. Each has its own Supabase 
 
 Required environment variables:
 
-| Variable | Accessible | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Client + server | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client + server | Supabase anon key (limited by RLS) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only | Supabase service role key (bypasses RLS) — never expose |
-| `STRIPE_SECRET_KEY` | Server only | Stripe secret key |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client | Stripe publishable key |
-| `STRIPE_WEBHOOK_SECRET` | Server only | Stripe webhook signature secret |
-| `RESEND_API_KEY` | Server only | Resend API key |
-| `ANTHROPIC_API_KEY` | Server only | Anthropic API key (V2) |
-| `NEXT_PUBLIC_APP_URL` | Client + server | The canonical public URL (for OG image generation, canonical URLs) |
-| `SENTRY_DSN` | Server only | Sentry project DSN |
-| `NEXT_PUBLIC_SENTRY_DSN` | Client | Sentry DSN for frontend errors |
+| Variable                             | Accessible      | Purpose                                                            |
+| ------------------------------------ | --------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Client + server | Supabase project URL                                               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Client + server | Supabase anon key (limited by RLS)                                 |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Server only     | Supabase service role key (bypasses RLS) — never expose            |
+| `STRIPE_SECRET_KEY`                  | Server only     | Stripe secret key                                                  |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Client          | Stripe publishable key                                             |
+| `STRIPE_WEBHOOK_SECRET`              | Server only     | Stripe webhook signature secret                                    |
+| `RESEND_API_KEY`                     | Server only     | Resend API key                                                     |
+| `ANTHROPIC_API_KEY`                  | Server only     | Anthropic API key (V2)                                             |
+| `NEXT_PUBLIC_APP_URL`                | Client + server | The canonical public URL (for OG image generation, canonical URLs) |
+| `SENTRY_DSN`                         | Server only     | Sentry project DSN                                                 |
+| `NEXT_PUBLIC_SENTRY_DSN`             | Client          | Sentry DSN for frontend errors                                     |
 
 `NEXT_PUBLIC_` prefixed variables are bundled into the client. All others are server-side only. The Supabase service role key, Stripe secret key, Resend API key, and Anthropic API key must never have the `NEXT_PUBLIC_` prefix.
 
@@ -897,6 +910,7 @@ Required environment variables:
 ### `next.config.ts`
 
 Key configuration requirements:
+
 - `images.remotePatterns`: allow the Supabase project's storage domain for Next.js Image optimization
 - `experimental.serverActions`: confirm enabled (default in Next.js 14+)
 - No public environment variables containing secrets
@@ -904,6 +918,7 @@ Key configuration requirements:
 ### Cache Invalidation
 
 ISR cache invalidation via `revalidatePath` and `revalidateTag`:
+
 - When an owner saves a Page edit, `revalidatePath('/[city-slug]/business/[listing-slug]')` is called
 - When an admin publishes a new listing, both the listing page and its city/category page caches are revalidated
 - When a listing is featured or sponsored status changes, the homepage and relevant city pages are revalidated
@@ -914,13 +929,13 @@ ISR cache invalidation via `revalidatePath` and `revalidateTag`:
 
 ### Services
 
-| Service | Purpose | Phase |
-|---|---|---|
-| Sentry | Frontend and backend error tracking and alerting | Phase 0 (pre-launch) |
-| Vercel Analytics | Core Web Vitals, page performance, traffic | Phase 0 |
-| Supabase Dashboard | DB query performance, connection pool utilization, storage usage | Phase 0 |
-| Resend Dashboard | Email delivery rates, bounces, complaints | MVP |
-| Stripe Dashboard | Subscription health, failed payments, dispute rate | V1 |
+| Service            | Purpose                                                          | Phase                |
+| ------------------ | ---------------------------------------------------------------- | -------------------- |
+| Sentry             | Frontend and backend error tracking and alerting                 | Phase 0 (pre-launch) |
+| Vercel Analytics   | Core Web Vitals, page performance, traffic                       | Phase 0              |
+| Supabase Dashboard | DB query performance, connection pool utilization, storage usage | Phase 0              |
+| Resend Dashboard   | Email delivery rates, bounces, complaints                        | MVP                  |
+| Stripe Dashboard   | Subscription health, failed payments, dispute rate               | V1                   |
 
 ### Structured Logging
 
@@ -940,6 +955,7 @@ Server-side logs for Server Actions and Route Handlers use structured JSON forma
 ```
 
 PII rules for logging:
+
 - Never log email addresses, phone numbers, or physical addresses
 - User IDs (UUIDs) are acceptable in logs for debugging
 - Listing names are acceptable
@@ -948,15 +964,16 @@ PII rules for logging:
 
 ### Log Levels
 
-| Level | Use |
-|---|---|
-| `info` | Normal operations: successful auth, record created, record updated, job completed |
-| `warn` | Recoverable issues: auth failure, permission denial, rate limit reached, external API degraded |
-| `error` | Failures: unexpected server error, external API timeout, database error, job failure |
+| Level   | Use                                                                                            |
+| ------- | ---------------------------------------------------------------------------------------------- |
+| `info`  | Normal operations: successful auth, record created, record updated, job completed              |
+| `warn`  | Recoverable issues: auth failure, permission denial, rate limit reached, external API degraded |
+| `error` | Failures: unexpected server error, external API timeout, database error, job failure           |
 
 ### Alerting
 
 Sentry alert rules (configured before launch):
+
 - Error rate spike: alert if error rate increases > 5x baseline in a 5-minute window
 - New error type: alert on first occurrence of any new error fingerprint
 - P95 latency: Vercel analytics alert if P95 response time exceeds 3 seconds for entity pages
@@ -965,21 +982,21 @@ All alerts route to the engineering Slack channel and email. On-call rotation is
 
 ### Logging Events Required
 
-| Event | Level | Fields to capture |
-|---|---|---|
-| Successful sign in | `info` | `user_id`, `method` (email or oauth), timestamp |
-| Failed sign in attempt | `warn` | IP address, timestamp (never log the attempted email) |
-| Permission denial | `warn` | `user_id`, route, operation |
-| Claim submitted | `info` | `user_id`, `listing_id`, `claim_id` |
-| Claim approved | `info` | `admin_user_id`, `claim_id`, `listing_id` |
-| Listing published | `info` | `user_id`, `listing_id`, `entity_type` |
-| Listing flagged | `info` | `admin_user_id`, `listing_id`, `flag_reason` |
-| File upload | `info` | `user_id`, `bucket`, `file_size_bytes`, `entity_type` |
-| Stripe webhook received | `info` | `event_type`, `stripe_event_id` |
-| Stripe webhook failed | `error` | `event_type`, `stripe_event_id`, error details |
-| External API call (Resend, Anthropic) | `info` | service, endpoint, `duration_ms` |
-| External API failure | `error` | service, endpoint, HTTP status or error message |
-| Unexpected server error | `error` | Full error, stack trace, request context (no PII) |
+| Event                                 | Level   | Fields to capture                                     |
+| ------------------------------------- | ------- | ----------------------------------------------------- |
+| Successful sign in                    | `info`  | `user_id`, `method` (email or oauth), timestamp       |
+| Failed sign in attempt                | `warn`  | IP address, timestamp (never log the attempted email) |
+| Permission denial                     | `warn`  | `user_id`, route, operation                           |
+| Claim submitted                       | `info`  | `user_id`, `listing_id`, `claim_id`                   |
+| Claim approved                        | `info`  | `admin_user_id`, `claim_id`, `listing_id`             |
+| Listing published                     | `info`  | `user_id`, `listing_id`, `entity_type`                |
+| Listing flagged                       | `info`  | `admin_user_id`, `listing_id`, `flag_reason`          |
+| File upload                           | `info`  | `user_id`, `bucket`, `file_size_bytes`, `entity_type` |
+| Stripe webhook received               | `info`  | `event_type`, `stripe_event_id`                       |
+| Stripe webhook failed                 | `error` | `event_type`, `stripe_event_id`, error details        |
+| External API call (Resend, Anthropic) | `info`  | service, endpoint, `duration_ms`                      |
+| External API failure                  | `error` | service, endpoint, HTTP status or error message       |
+| Unexpected server error               | `error` | Full error, stack trace, request context (no PII)     |
 
 ---
 
@@ -1013,7 +1030,7 @@ At V2 when marketplace products are added, the volume of product images will inc
 
 A single Supabase project at MVP and V1. The `listings` table will reach approximately 5,000 rows at 12 months — well within single-instance PostgreSQL capability. No sharding, partitioning, or read replicas are required in the 12-month window.
 
-At V1+ when analytics events accumulate at higher rates (page views * listings * months), the `analytics_events` table will grow fastest. Plan a time-based partitioning strategy for `analytics_events` at V1 if write volume exceeds 1M rows per month. This is a schema change that can be applied without downtime.
+At V1+ when analytics events accumulate at higher rates (page views _ listings _ months), the `analytics_events` table will grow fastest. Plan a time-based partitioning strategy for `analytics_events` at V1 if write volume exceeds 1M rows per month. This is a schema change that can be applied without downtime.
 
 ### Application Scale
 

@@ -1,18 +1,23 @@
 # Ticket 065: Admin receipts review queue (/admin/receipts)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 11: Receipt Upload and Community Spend Beta
 
 ## Priority
+
 P2
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Admin / Spend
 
 ---
@@ -36,6 +41,7 @@ As an admin, I want to review submitted receipts and approve or reject them with
 ## Scope
 
 **In scope:**
+
 - `app/admin/receipts/page.tsx` — Server Component; queries `receipt_uploads` with filters; renders `ReceiptsQueueTable`
 - `components/admin/receipts/ReceiptsQueueTable.tsx` — Client Component (`"use client"`); data table with columns: submitter display name, business name (from `listings.name` if `listing_id` is set, else "Unknown"), amount (formatted as dollars), purchase date, status badge, submitted_at
 - Filter bar: status filter (`pending_review`, `approved`, `rejected`; default: `pending_review`), date range filter (from/to date inputs); filters update URL search params, not local state
@@ -49,6 +55,7 @@ As an admin, I want to review submitted receipts and approve or reject them with
 - Loading, empty, and error states
 
 **Out of scope:**
+
 - Bulk approve/reject of multiple receipts (V1)
 - OCR re-processing trigger (V2)
 - Email notification to the supporter on approve/reject (V1 — note for future ticket)
@@ -58,16 +65,16 @@ As an admin, I want to review submitted receipts and approve or reject them with
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 — Admin layout, nav, auth guard | Blocking ticket | Not started |
-| Ticket 063 — Receipt upload API (populates `receipt_uploads` table) | Blocking ticket | Not started |
-| Ticket 064 — Receipt submission form (populates test data) | Soft dependency (can test with direct DB inserts) | Not started |
-| `receipt_uploads` table with `status`, `rejection_reason`, `client_idempotency_key` columns | Database | Must exist |
-| `admin_audit_log` table (Ticket 012) — INSERT-only trigger must be in place | Database | Must exist |
-| `getReceiptImageUrl` SA — `lib/actions/spend/getReceiptImageUrl.ts` | Server Action | Must be created in this ticket |
-| `approveReceipt` SA — `lib/actions/admin/approveReceipt.ts` | Server Action | Must be created in this ticket |
-| `rejectReceipt` SA — `lib/actions/admin/rejectReceipt.ts` | Server Action | Must be created in this ticket |
+| Dependency                                                                                  | Type                                              | Status                         |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------ |
+| Ticket 037 — Admin layout, nav, auth guard                                                  | Blocking ticket                                   | Not started                    |
+| Ticket 063 — Receipt upload API (populates `receipt_uploads` table)                         | Blocking ticket                                   | Not started                    |
+| Ticket 064 — Receipt submission form (populates test data)                                  | Soft dependency (can test with direct DB inserts) | Not started                    |
+| `receipt_uploads` table with `status`, `rejection_reason`, `client_idempotency_key` columns | Database                                          | Must exist                     |
+| `admin_audit_log` table (Ticket 012) — INSERT-only trigger must be in place                 | Database                                          | Must exist                     |
+| `getReceiptImageUrl` SA — `lib/actions/spend/getReceiptImageUrl.ts`                         | Server Action                                     | Must be created in this ticket |
+| `approveReceipt` SA — `lib/actions/admin/approveReceipt.ts`                                 | Server Action                                     | Must be created in this ticket |
+| `rejectReceipt` SA — `lib/actions/admin/rejectReceipt.ts`                                   | Server Action                                     | Must be created in this ticket |
 
 ---
 
@@ -134,7 +141,7 @@ As an admin, I want to review submitted receipts and approve or reject them with
 ```typescript
 // Input
 interface ApproveReceiptInput {
-  receipt_id: string  // UUID
+  receipt_id: string // UUID
 }
 // Returns: ActionResult<{ id: string }>
 // Auth: admin or super_admin
@@ -146,7 +153,7 @@ interface ApproveReceiptInput {
 ```typescript
 // Input
 interface RejectReceiptInput {
-  receipt_id: string       // UUID
+  receipt_id: string // UUID
   rejection_reason: string // Required; min 10 chars; max 500 chars
 }
 // Returns: ActionResult<{ id: string }>
@@ -159,7 +166,7 @@ interface RejectReceiptInput {
 ```typescript
 // Input
 interface GetReceiptImageUrlInput {
-  receipt_id: string  // UUID
+  receipt_id: string // UUID
 }
 // Returns: ActionResult<{ signed_url: string; expires_at: string }>
 // Auth: admin or super_admin
@@ -173,6 +180,7 @@ interface GetReceiptImageUrlInput {
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/receipts/page.tsx` — Server Component; server-side initial fetch with URL search params; renders `ReceiptsQueueTable`
 - `components/admin/receipts/ReceiptsQueueTable.tsx` — Client Component; table + filter bar
 - `components/admin/receipts/ReceiptDetailModal.tsx` — Client Component; modal with signed URL fetch, metadata, and actions
@@ -181,9 +189,11 @@ interface GetReceiptImageUrlInput {
 - `lib/actions/spend/getReceiptImageUrl.ts` — Server Action
 
 **Files to modify:**
+
 - `app/admin/layout.tsx` — add "Receipts" nav item to the admin sidebar
 
 **Key patterns:**
+
 - Follow the seven-step Server Action pattern for `approveReceipt`, `rejectReceipt`, and `getReceiptImageUrl`
 - `getReceiptImageUrl` must use `createServiceRoleClient()` — the `receipts` bucket is private; anon/authenticated client cannot generate signed URLs
 - `admin_audit_log` is INSERT-only (DB trigger blocks UPDATE/DELETE) — use `createServiceRoleClient()` for audit log writes; never attempt to UPDATE or DELETE audit rows
@@ -192,6 +202,7 @@ interface GetReceiptImageUrlInput {
 - Optimistic status update: on SA success, update the row in local state using `useState` or `useOptimistic`
 
 **Do not:**
+
 - Store the signed URL anywhere (not in state across modal close, not in a cookie, not in the DB)
 - Call `revalidatePath` from `approveReceipt` or `rejectReceipt` — receipt status changes do not affect any ISR-cached public page at MVP
 - Use `getSession()` — use `getUser()` in all SAs
@@ -215,13 +226,13 @@ interface GetReceiptImageUrlInput {
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| `getReceiptImageUrl` SA fails | Error message inside the modal: "Could not load receipt image." Approve/Reject actions still available. |
-| `approveReceipt` SA returns error | Error toast: "Could not approve receipt. Please try again." Status badge reverts to previous state. |
-| `rejectReceipt` SA returns error | Error toast: "Could not reject receipt. Please try again." |
-| Page load query fails | Error banner: "Could not load receipts queue. Please refresh the page." |
-| `rejection_reason` is empty on submit | Reject confirm button remains disabled — no submission possible |
+| Failure                               | User-visible behavior                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `getReceiptImageUrl` SA fails         | Error message inside the modal: "Could not load receipt image." Approve/Reject actions still available. |
+| `approveReceipt` SA returns error     | Error toast: "Could not approve receipt. Please try again." Status badge reverts to previous state.     |
+| `rejectReceipt` SA returns error      | Error toast: "Could not reject receipt. Please try again."                                              |
+| Page load query fails                 | Error banner: "Could not load receipts queue. Please refresh the page."                                 |
+| `rejection_reason` is empty on submit | Reject confirm button remains disabled — no submission possible                                         |
 
 ---
 
@@ -247,14 +258,14 @@ interface GetReceiptImageUrlInput {
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Default table view | admin | Navigate to `/admin/receipts` | Table shows `pending_review` receipts; status filter shows "Pending Review" |
-| QA-2 | View receipt image | admin | Click any row | Modal opens; receipt image loads (may take a moment); metadata fields displayed |
-| QA-3 | Approve receipt | admin | Open a `pending_review` receipt modal; click Approve | Modal closes; row status badge changes to "Approved"; `receipt_uploads.status = 'approved'` in DB |
-| QA-4 | Reject receipt — reason required | admin | Open a `pending_review` receipt modal; click Reject; try to confirm without a reason | Confirm button disabled; no submission |
-| QA-5 | Reject receipt — with reason | admin | Enter rejection reason; confirm | Row status badge changes to "Rejected"; `rejection_reason` populated in DB; audit log row inserted |
-| QA-6 | Filter by date range | admin | Set from/to date filters; submit | Table shows only receipts within the date range; URL params updated |
+| #    | Scenario                         | Role  | Steps                                                                                | Expected result                                                                                    |
+| ---- | -------------------------------- | ----- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| QA-1 | Default table view               | admin | Navigate to `/admin/receipts`                                                        | Table shows `pending_review` receipts; status filter shows "Pending Review"                        |
+| QA-2 | View receipt image               | admin | Click any row                                                                        | Modal opens; receipt image loads (may take a moment); metadata fields displayed                    |
+| QA-3 | Approve receipt                  | admin | Open a `pending_review` receipt modal; click Approve                                 | Modal closes; row status badge changes to "Approved"; `receipt_uploads.status = 'approved'` in DB  |
+| QA-4 | Reject receipt — reason required | admin | Open a `pending_review` receipt modal; click Reject; try to confirm without a reason | Confirm button disabled; no submission                                                             |
+| QA-5 | Reject receipt — with reason     | admin | Enter rejection reason; confirm                                                      | Row status badge changes to "Rejected"; `rejection_reason` populated in DB; audit log row inserted |
+| QA-6 | Filter by date range             | admin | Set from/to date filters; submit                                                     | Table shows only receipts within the date range; URL params updated                                |
 
 ---
 

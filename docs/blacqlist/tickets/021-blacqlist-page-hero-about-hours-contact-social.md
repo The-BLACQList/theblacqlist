@@ -16,6 +16,7 @@
 The BLACQList Page is the atomic unit of the platform — the product promise made tangible. Every listed business receives a polished micro-website that functions as its digital home. This ticket implements the above-the-fold sections and the core informational content: hero, about (story), hours of operation, contact information, and social links. These five sections are the first content a visitor sees and must immediately communicate who the business is, whether they are open, and how to reach them.
 
 Source artifacts:
+
 - `docs/blacqlist/design/blacqlist-page-design-system.md` — Sections 2, 3.1, 5, 6.1, 7.1, 15, 16
 - `docs/blacqlist/ux/mvp-screen-map.md` — Business BLACQList Page detailed spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 3
@@ -34,6 +35,7 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 ## Scope
 
 **In scope:**
+
 - Hero section: full-bleed cover image (Free/Standard tier: boxed within 960px container; Premium tier: true full-bleed), bottom-to-top gradient overlay (`rgba(0,0,0,0.72)` → transparent), entity name (h1, Glacial Indifference Bold), tagline (Lato Regular, Pale Lavender, mobile-hidden), trust badge (Unclaimed = Charcoal; Claimed = Blue `#3B82F6`), primary CTA button (Amber Gold, label from `cta_type`), logo treatment (circular crop, 64px desktop / 48px mobile with 1.5px White border), tier-based hero dimensions
 - At-a-Glance section: category, city, hours (open/closed computed from current time + listing timezone), phone (`tel:` link), email (`mailto:` link), website (external link, Amber Gold)
 - About / Story section: description text (Quicksand Bold Italic), expand/collapse at 200 words with "Read more" / "Read less" Amber Gold toggle, smooth height transition, paragraph breaks from double newlines
@@ -45,6 +47,7 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 - All sections are Server Components — no client state required
 
 **Out of scope:**
+
 - Gallery section (Ticket 022)
 - Services section (Ticket 022)
 - Primary CTA card section (Ticket 022)
@@ -58,13 +61,13 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-020: Listing page data fetching and route (`/[city-slug]/business/[listing-slug]`) | Blocking ticket | Not started |
-| BLACQ-002: Supabase project setup and storage buckets | Infrastructure | Done |
-| `EntityPageData` TypeScript interface from API Endpoint 5 | Data contract | Defined in api-contract.md |
-| Glacial Indifference Bold, Lato Regular, Quicksand Bold Italic font loading | Design | Must be configured in project before this ticket |
-| Brand color tokens in Tailwind config (`#E2A428`, `#19191E`, `#FCFAF4`, `#E9E9F7`, `#595758`) | Design tokens | Must exist before this ticket |
+| Dependency                                                                                    | Type            | Status                                           |
+| --------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------ |
+| BLACQ-020: Listing page data fetching and route (`/[city-slug]/business/[listing-slug]`)      | Blocking ticket | Not started                                      |
+| BLACQ-002: Supabase project setup and storage buckets                                         | Infrastructure  | Done                                             |
+| `EntityPageData` TypeScript interface from API Endpoint 5                                     | Data contract   | Defined in api-contract.md                       |
+| Glacial Indifference Bold, Lato Regular, Quicksand Bold Italic font loading                   | Design          | Must be configured in project before this ticket |
+| Brand color tokens in Tailwind config (`#E2A428`, `#19191E`, `#FCFAF4`, `#E9E9F7`, `#595758`) | Design tokens   | Must exist before this ticket                    |
 
 ---
 
@@ -130,6 +133,7 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/business/[listing-slug]/components/HeroSection.tsx` — Hero image, gradient overlay, entity name, tagline, trust badge, logo, primary CTA button placeholder (save/share buttons are Ticket 024)
 - `app/[city-slug]/business/[listing-slug]/components/AtAGlanceSection.tsx` — Category, city, hours indicator, phone, email, website in horizontal/vertical responsive row
 - `app/[city-slug]/business/[listing-slug]/components/AboutSection.tsx` — Description with ExpandableText
@@ -140,9 +144,11 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 - `lib/utils/hours.ts` — `getOpenStatus(listing_hours, cityTimezone): { isOpen: boolean; todayHours: string; nextOpenTime: string | null }` utility
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` (Ticket 020) — Import and compose all section components, pass `EntityPageData` props
 
 **Key patterns:**
+
 - All section components are Server Components (no `"use client"` directive). They receive props from the parent page Server Component.
 - `next/image` with `priority` on the hero cover image (above the fold). Use `sizes` prop: `"100vw"` for Premium full-bleed, `"(max-width: 960px) 100vw, 960px"` for Free/Standard.
 - Tier check: `listing.listing_tier === 'premium'` determines full-bleed vs. boxed hero treatment. Pass `isPremium` boolean prop to `HeroSection`.
@@ -153,6 +159,7 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 - For address: detect OS with `navigator.userAgent` to link to Google Maps vs. Apple Maps — but since these are Server Components, generate a Google Maps URL by default (`https://maps.google.com/?q=...`). Apple Maps detection is a Client Component concern and is deferred to V1.
 
 **Do not:**
+
 - Add `"use client"` to section components unless the component requires browser APIs or React state.
 - Implement save/share button functionality (Ticket 024).
 - Hardcode any colors — use Tailwind config tokens.
@@ -181,14 +188,14 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Cover image fails to load | Storage path invalid or CDN error | `next/image` built-in error boundary renders an empty placeholder; hero gradient and text remain visible over the `#19191E` background | No explicit retry; page remains functional without the image |
-| Logo fails to load | Logo storage path invalid | Logo circle is hidden; entity name remains visible in correct position | No retry needed |
-| No description provided | `details.description = null` | About section is hidden entirely; no empty heading or blank space | None — expected state |
-| No hours data | `listing_hours` is empty array | Hours row in At-a-Glance is hidden; Hours section is hidden | None — expected state |
-| Open/closed computation error | Timezone data invalid or missing | Default to "See hours below" in At-a-Glance, full hours table still renders | N/A |
-| No contact fields | phone/email/website/address all null | Contact section hidden entirely | None — expected state |
+| Failure                       | Condition                            | User sees                                                                                                                              | Recovery                                                     |
+| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Cover image fails to load     | Storage path invalid or CDN error    | `next/image` built-in error boundary renders an empty placeholder; hero gradient and text remain visible over the `#19191E` background | No explicit retry; page remains functional without the image |
+| Logo fails to load            | Logo storage path invalid            | Logo circle is hidden; entity name remains visible in correct position                                                                 | No retry needed                                              |
+| No description provided       | `details.description = null`         | About section is hidden entirely; no empty heading or blank space                                                                      | None — expected state                                        |
+| No hours data                 | `listing_hours` is empty array       | Hours row in At-a-Glance is hidden; Hours section is hidden                                                                            | None — expected state                                        |
+| Open/closed computation error | Timezone data invalid or missing     | Default to "See hours below" in At-a-Glance, full hours table still renders                                                            | N/A                                                          |
+| No contact fields             | phone/email/website/address all null | Contact section hidden entirely                                                                                                        | None — expected state                                        |
 
 ---
 
@@ -222,16 +229,16 @@ This ticket depends on Ticket 020 (listing page data fetching and route setup). 
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
+| ID       | Test                                 | Steps                                                                                                                                                      | Expected                                                                                                                                                                                                                          |
+| -------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | QA-021-1 | Happy path — full data Business page | Navigate to a published Business listing with all fields populated (name, tagline, cover image, logo, phone, email, website, address, hours, social links) | All sections render correctly: hero with image+gradient+name+tagline+CTA+trust badge; At-a-Glance with all items; About with description; Hours with weekly schedule; Contact with all four items; Social with all platform icons |
-| QA-021-2 | Open/closed indicator accuracy | Navigate to a Business page where current time is within the listed hours for today | "Open now" shown in green in At-a-Glance and today's row highlighted in Hours section |
-| QA-021-3 | Unclaimed listing claim prompt | Navigate to a listing with `trust_tier = 'unclaimed'` | Charcoal trust badge, claim prompt band visible above At-a-Glance, "Claim This Page" Amber Gold button present |
-| QA-021-4 | Mobile 375px layout | Open the page on a 375px viewport | Hero image 240px tall, tagline hidden, entity name 28px, CTA full-width, At-a-Glance single-column stacked |
-| QA-021-5 | Missing optional fields | Navigate to a listing where phone, email, website, address, logo, tagline, social links, and description are all null | Hero renders with name and CTA (no logo, no tagline); At-a-Glance shows only category + city; About section hidden; Contact section hidden; Social section hidden; no broken layouts or empty section headings |
-| QA-021-6 | Description expand/collapse | Navigate to a listing with a description longer than 200 words | Description truncated at ~4 lines with gradient fade and "Read more" link. Clicking "Read more" expands full text smoothly. "Read less" collapses it. |
-| QA-021-7 | Premium tier full-bleed hero | Navigate to a listing with `listing_tier = 'premium'` | Hero image extends edge-to-edge with no side margins and no border-radius on the image container |
-| QA-021-8 | Keyboard navigation | Tab through the page | Focus moves in logical order: CTA button → share/save (Ticket 024) → phone → email → website → address → social icons. All elements reachable with Tab, activatable with Enter/Space. |
+| QA-021-2 | Open/closed indicator accuracy       | Navigate to a Business page where current time is within the listed hours for today                                                                        | "Open now" shown in green in At-a-Glance and today's row highlighted in Hours section                                                                                                                                             |
+| QA-021-3 | Unclaimed listing claim prompt       | Navigate to a listing with `trust_tier = 'unclaimed'`                                                                                                      | Charcoal trust badge, claim prompt band visible above At-a-Glance, "Claim This Page" Amber Gold button present                                                                                                                    |
+| QA-021-4 | Mobile 375px layout                  | Open the page on a 375px viewport                                                                                                                          | Hero image 240px tall, tagline hidden, entity name 28px, CTA full-width, At-a-Glance single-column stacked                                                                                                                        |
+| QA-021-5 | Missing optional fields              | Navigate to a listing where phone, email, website, address, logo, tagline, social links, and description are all null                                      | Hero renders with name and CTA (no logo, no tagline); At-a-Glance shows only category + city; About section hidden; Contact section hidden; Social section hidden; no broken layouts or empty section headings                    |
+| QA-021-6 | Description expand/collapse          | Navigate to a listing with a description longer than 200 words                                                                                             | Description truncated at ~4 lines with gradient fade and "Read more" link. Clicking "Read more" expands full text smoothly. "Read less" collapses it.                                                                             |
+| QA-021-7 | Premium tier full-bleed hero         | Navigate to a listing with `listing_tier = 'premium'`                                                                                                      | Hero image extends edge-to-edge with no side margins and no border-radius on the image container                                                                                                                                  |
+| QA-021-8 | Keyboard navigation                  | Tab through the page                                                                                                                                       | Focus moves in logical order: CTA button → share/save (Ticket 024) → phone → email → website → address → social icons. All elements reachable with Tab, activatable with Enter/Space.                                             |
 
 ---
 

@@ -1,42 +1,50 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { approveReceiptAction } from "@/lib/actions/spend/approveReceipt"
-import { rejectReceiptAction } from "@/lib/actions/spend/rejectReceipt"
-import { ReceiptStatusBadge } from "@/components/spend/ReceiptStatusBadge"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { approveReceiptAction } from '@/lib/actions/spend/approveReceipt'
+import { rejectReceiptAction } from '@/lib/actions/spend/rejectReceipt'
+import { ReceiptStatusBadge } from '@/components/spend/ReceiptStatusBadge'
 
-export const metadata: Metadata = { title: "Receipts — Admin" }
+export const metadata: Metadata = { title: 'Receipts — Admin' }
 
-type StatusFilter = "pending_review" | "approved" | "rejected" | "all"
+type StatusFilter = 'pending_review' | 'approved' | 'rejected' | 'all'
 
 interface Props {
   searchParams: Promise<{ status?: string }>
 }
 
 function formatDollars(cents: number) {
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+  return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 export default async function AdminReceiptsPage({ searchParams }: Props) {
   await requireAdmin()
   const { status: statusParam } = await searchParams
   const activeFilter: StatusFilter =
-    statusParam === "approved" ? "approved"
-    : statusParam === "rejected" ? "rejected"
-    : statusParam === "all" ? "all"
-    : "pending_review"
+    statusParam === 'approved'
+      ? 'approved'
+      : statusParam === 'rejected'
+        ? 'rejected'
+        : statusParam === 'all'
+          ? 'all'
+          : 'pending_review'
 
   const serviceClient = createServiceClient()
 
   let query = serviceClient
-    .from("receipt_uploads")
-    .select(`
+    .from('receipt_uploads')
+    .select(
+      `
       id,
       user_id,
       raw_business_name,
@@ -49,12 +57,13 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
       rejection_reason,
       listing_id,
       listings(name, slug)
-    `)
-    .order("created_at", { ascending: false })
+    `
+    )
+    .order('created_at', { ascending: false })
     .limit(100)
 
-  if (activeFilter !== "all") {
-    query = query.eq("status", activeFilter)
+  if (activeFilter !== 'all') {
+    query = query.eq('status', activeFilter)
   }
 
   const { data: receipts } = await query
@@ -62,16 +71,16 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
   const receiptList = receipts ?? []
 
   const tabs: { label: string; value: StatusFilter }[] = [
-    { label: "Pending review", value: "pending_review" },
-    { label: "Approved", value: "approved" },
-    { label: "Rejected", value: "rejected" },
-    { label: "All", value: "all" },
+    { label: 'Pending review', value: 'pending_review' },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Rejected', value: 'rejected' },
+    { label: 'All', value: 'all' },
   ]
 
   const tabCls = (v: StatusFilter) =>
     v === activeFilter
-      ? "font-subhead text-sm font-semibold text-brand-black border-b-2 border-amber-gold pb-2"
-      : "font-subhead text-sm text-charcoal/50 hover:text-brand-black pb-2 transition-colors"
+      ? 'font-subhead text-sm font-semibold text-brand-black border-b-2 border-amber-gold pb-2'
+      : 'font-subhead text-sm text-charcoal/50 hover:text-brand-black pb-2 transition-colors'
 
   return (
     <div className="space-y-6">
@@ -87,7 +96,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
         {tabs.map((tab) => (
           <Link
             key={tab.value}
-            href={`/admin/receipts${tab.value === "pending_review" ? "" : `?status=${tab.value}`}`}
+            href={`/admin/receipts${tab.value === 'pending_review' ? '' : `?status=${tab.value}`}`}
             className={tabCls(tab.value)}
           >
             {tab.label}
@@ -99,7 +108,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm font-semibold text-brand-black">No receipts</p>
           <p className="font-body text-xs text-charcoal/50 mt-1">
-            No {activeFilter === "all" ? "" : activeFilter.replace("_", " ")} receipts found.
+            No {activeFilter === 'all' ? '' : activeFilter.replace('_', ' ')} receipts found.
           </p>
         </div>
       ) : (
@@ -107,7 +116,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
           <div className="divide-y divide-charcoal/5">
             {receiptList.map((receipt) => {
               const listing = receipt.listings as { name: string; slug: string } | null
-              const businessLabel = listing?.name ?? receipt.raw_business_name ?? "Unknown business"
+              const businessLabel = listing?.name ?? receipt.raw_business_name ?? 'Unknown business'
 
               return (
                 <div key={receipt.id} className="p-5 space-y-3">
@@ -148,9 +157,15 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                     <ReceiptStatusBadge status={receipt.status} />
                   </div>
 
-                  {receipt.status === "pending_review" && (
+                  {receipt.status === 'pending_review' && (
                     <div className="flex items-center gap-3 pt-1">
-                      <form action={approveReceiptAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>}>
+                      <form
+                        action={
+                          approveReceiptAction.bind(null, null) as unknown as (
+                            formData: FormData
+                          ) => Promise<void>
+                        }
+                      >
                         <input type="hidden" name="receipt_id" value={receipt.id} />
                         <button
                           type="submit"
@@ -159,7 +174,14 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                           Approve
                         </button>
                       </form>
-                      <form action={rejectReceiptAction.bind(null, null) as unknown as (formData: FormData) => Promise<void>} className="flex items-center gap-2">
+                      <form
+                        action={
+                          rejectReceiptAction.bind(null, null) as unknown as (
+                            formData: FormData
+                          ) => Promise<void>
+                        }
+                        className="flex items-center gap-2"
+                      >
                         <input type="hidden" name="receipt_id" value={receipt.id} />
                         <input
                           name="rejection_reason"

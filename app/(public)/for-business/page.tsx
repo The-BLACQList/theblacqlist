@@ -1,32 +1,32 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Container } from "@/components/layout/container"
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { Button } from "@/components/ui/button"
+import { Container } from '@/components/layout/container'
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: "List Your Business | The BLACQList",
+  title: 'List Your Business | The BLACQList',
   description:
     "Your BLACQList Page is more than a directory listing — it's your digital headquarters. Tell your story. Showcase your services. Get discovered.",
 }
 
 const WHAT_YOU_GET = [
   {
-    title: "A Professional Business Profile",
-    body: "Cover photo, logo, your story, and a services menu — all on one page that looks as good as you are.",
+    title: 'A Professional Business Profile',
+    body: 'Cover photo, logo, your story, and a services menu — all on one page that looks as good as you are.',
   },
   {
-    title: "Hours, Contact & Social Media",
-    body: "Give your customers everything they need to find you, call you, and follow you — without leaving your page.",
+    title: 'Hours, Contact & Social Media',
+    body: 'Give your customers everything they need to find you, call you, and follow you — without leaving your page.',
   },
   {
-    title: "Community Reviews & Verification",
-    body: "Earn trust through authentic community reviews and our tiered verification system — from Claimed to Certified.",
+    title: 'Community Reviews & Verification',
+    body: 'Earn trust through authentic community reviews and our tiered verification system — from Claimed to Certified.',
   },
   {
-    title: "Analytics That Matter",
+    title: 'Analytics That Matter',
     body: "See who's finding your page, how they found you, and what they're looking at — so you can grow smarter.",
   },
 ]
@@ -47,9 +47,8 @@ export default function ForBusinessPage() {
             You deserve a better page.
           </h1>
           <p className="font-subhead text-pale-lavender text-lg md:text-xl leading-relaxed max-w-xl mb-8">
-            Your BLACQList Page is your digital headquarters — tell your story,
-            showcase your services, and get found by the community that wants
-            to support you.
+            Your BLACQList Page is your digital headquarters — tell your story, showcase your
+            services, and get found by the community that wants to support you.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -75,16 +74,9 @@ export default function ForBusinessPage() {
         </SectionHeading>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {WHAT_YOU_GET.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-lg border border-pale-lavender p-6"
-            >
-              <h3 className="font-headline text-base text-brand-black mb-2">
-                {item.title}
-              </h3>
-              <p className="font-subhead text-sm text-charcoal leading-relaxed">
-                {item.body}
-              </p>
+            <div key={item.title} className="rounded-lg border border-pale-lavender p-6">
+              <h3 className="font-headline text-base text-brand-black mb-2">{item.title}</h3>
+              <p className="font-subhead text-sm text-charcoal leading-relaxed">{item.body}</p>
             </div>
           ))}
         </div>
@@ -97,15 +89,21 @@ export default function ForBusinessPage() {
         </SectionHeading>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           {[
-            { tier: "Unclaimed", desc: "Listed but not yet managed by the owner." },
-            { tier: "Claimed", desc: "Owner has verified their identity and taken control of the page." },
-            { tier: "Verified", desc: "Business documentation confirmed. Community trust established." },
-            { tier: "Certified", desc: "Top tier. Full documentation, reviews, and community standing." },
+            { tier: 'Unclaimed', desc: 'Listed but not yet managed by the owner.' },
+            {
+              tier: 'Claimed',
+              desc: 'Owner has verified their identity and taken control of the page.',
+            },
+            {
+              tier: 'Verified',
+              desc: 'Business documentation confirmed. Community trust established.',
+            },
+            {
+              tier: 'Certified',
+              desc: 'Top tier. Full documentation, reviews, and community standing.',
+            },
           ].map((t) => (
-            <div
-              key={t.tier}
-              className="rounded-lg border border-pale-lavender bg-white p-4"
-            >
+            <div key={t.tier} className="rounded-lg border border-pale-lavender bg-white p-4">
               <p className="font-headline text-sm text-brand-black mb-1">{t.tier}</p>
               <p className="font-subhead text-xs text-charcoal leading-relaxed">{t.desc}</p>
             </div>

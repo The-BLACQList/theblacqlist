@@ -1,18 +1,23 @@
 # Ticket 063: Receipt upload API — POST to receipts bucket, signed URL generation
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 11: Receipt Upload and Community Spend Beta
 
 ## Priority
+
 P2
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Spend / Receipts
 
 ---
@@ -42,6 +47,7 @@ As an authenticated supporter, I want to upload a receipt image to the platform,
 ## Scope
 
 **In scope:**
+
 - `app/api/receipts/upload/route.ts` — POST Route Handler
   - Accepts `multipart/form-data` with fields: `file` (required), `listing_id` (optional UUID), `amount_cents` (optional integer), `purchase_date` (optional ISO date string), `notes` (optional text), `client_idempotency_key` (required UUID generated client-side)
   - Validates file: MIME type from magic bytes (not `Content-Type` header) — allowed: `image/jpeg`, `image/png`, `image/webp`, `image/heic`; max file size: 10MB
@@ -58,6 +64,7 @@ As an authenticated supporter, I want to upload a receipt image to the platform,
 - Error handling per the standard error shape in `docs/blacqlist/architecture/error-handling-standard.md`
 
 **Out of scope:**
+
 - OCR processing of the uploaded image (stub handled in Ticket 064's UI layer)
 - Admin review / approve / reject of receipts (Ticket 065)
 - Spend event creation from receipts (Ticket 067)
@@ -68,13 +75,13 @@ As an authenticated supporter, I want to upload a receipt image to the platform,
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 002 — Supabase project setup (Storage buckets configured) | Blocking ticket | Not started |
-| Ticket 014 — Auth flows (session management) | Blocking ticket | Not started |
-| Ticket 030 — Media upload API (core upload pattern to follow) | Reference ticket | Not started |
+| Dependency                                                             | Type               | Status                              |
+| ---------------------------------------------------------------------- | ------------------ | ----------------------------------- |
+| Ticket 002 — Supabase project setup (Storage buckets configured)       | Blocking ticket    | Not started                         |
+| Ticket 014 — Auth flows (session management)                           | Blocking ticket    | Not started                         |
+| Ticket 030 — Media upload API (core upload pattern to follow)          | Reference ticket   | Not started                         |
 | `receipt_uploads` table migration with `client_idempotency_key` column | Database migration | Must exist — verify before starting |
-| `receipts` Supabase Storage bucket (private, not public) | Infrastructure | Must be configured |
+| `receipts` Supabase Storage bucket (private, not public)               | Infrastructure     | Must be configured                  |
 
 ---
 
@@ -97,23 +104,23 @@ No frontend UI in this ticket. The response shapes below define what Ticket 064'
 - **Table:** `receipt_uploads`
 - **Key fields:**
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | `uuid` | PK, `gen_random_uuid()` |
-| `user_id` | `uuid` | FK → `auth.users(id)` ON DELETE CASCADE; set to `auth.uid()` |
-| `listing_id` | `uuid` | FK → `listings(id)` ON DELETE SET NULL; nullable |
-| `file_path` | `text` | Supabase Storage path in `receipts` bucket — NOT the URL |
-| `amount_cents` | `integer` | Optional; user-entered or OCR-parsed |
-| `purchase_date` | `date` | Optional; user-entered or OCR-parsed |
-| `notes` | `text` | Optional free-text |
-| `status` | `text` | CHECK IN (`'pending_review'`, `'approved'`, `'rejected'`); default `'pending_review'` |
-| `client_idempotency_key` | `uuid` | UNIQUE constraint; generated client-side; prevents duplicate submissions |
-| `ocr_raw_data` | `jsonb` | Nullable; OCR output if processed (V2) |
-| `submitted_by` | `uuid` | FK → `auth.users(id)` ON DELETE SET NULL; same as `user_id` at submission |
-| `updated_by` | `uuid` | FK → `auth.users(id)` ON DELETE SET NULL |
-| `source` | `text` | `'web'` or `'mobile'` |
-| `created_at` | `timestamptz` | `now()` |
-| `updated_at` | `timestamptz` | trigger-updated |
+| Field                    | Type          | Notes                                                                                 |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------- |
+| `id`                     | `uuid`        | PK, `gen_random_uuid()`                                                               |
+| `user_id`                | `uuid`        | FK → `auth.users(id)` ON DELETE CASCADE; set to `auth.uid()`                          |
+| `listing_id`             | `uuid`        | FK → `listings(id)` ON DELETE SET NULL; nullable                                      |
+| `file_path`              | `text`        | Supabase Storage path in `receipts` bucket — NOT the URL                              |
+| `amount_cents`           | `integer`     | Optional; user-entered or OCR-parsed                                                  |
+| `purchase_date`          | `date`        | Optional; user-entered or OCR-parsed                                                  |
+| `notes`                  | `text`        | Optional free-text                                                                    |
+| `status`                 | `text`        | CHECK IN (`'pending_review'`, `'approved'`, `'rejected'`); default `'pending_review'` |
+| `client_idempotency_key` | `uuid`        | UNIQUE constraint; generated client-side; prevents duplicate submissions              |
+| `ocr_raw_data`           | `jsonb`       | Nullable; OCR output if processed (V2)                                                |
+| `submitted_by`           | `uuid`        | FK → `auth.users(id)` ON DELETE SET NULL; same as `user_id` at submission             |
+| `updated_by`             | `uuid`        | FK → `auth.users(id)` ON DELETE SET NULL                                              |
+| `source`                 | `text`        | `'web'` or `'mobile'`                                                                 |
+| `created_at`             | `timestamptz` | `now()`                                                                               |
+| `updated_at`             | `timestamptz` | trigger-updated                                                                       |
 
 - **Operations:**
   - INSERT into `receipt_uploads` with `ON CONFLICT (client_idempotency_key) DO NOTHING RETURNING *`
@@ -141,12 +148,12 @@ No frontend UI in this ticket. The response shapes below define what Ticket 064'
 ```typescript
 // Form fields
 interface ReceiptUploadFields {
-  file: File                           // Required. Receipt image.
-  client_idempotency_key: string       // Required. UUID generated client-side.
-  listing_id?: string                  // Optional. UUID of the Black-owned business.
-  amount_cents?: string                // Optional. Integer as string (form data is strings).
-  purchase_date?: string               // Optional. ISO 8601 date: "2026-05-07"
-  notes?: string                       // Optional. Max 500 chars.
+  file: File // Required. Receipt image.
+  client_idempotency_key: string // Required. UUID generated client-side.
+  listing_id?: string // Optional. UUID of the Black-owned business.
+  amount_cents?: string // Optional. Integer as string (form data is strings).
+  purchase_date?: string // Optional. ISO 8601 date: "2026-05-07"
+  notes?: string // Optional. Max 500 chars.
 }
 ```
 
@@ -156,20 +163,20 @@ interface ReceiptUploadFields {
 interface ReceiptUploadResponse {
   id: string
   status: 'pending_review'
-  file_path: string                    // Storage path — NOT the signed URL
+  file_path: string // Storage path — NOT the signed URL
 }
 // Envelope: { data: ReceiptUploadResponse }
 ```
 
 **Errors:**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `VALIDATION_ERROR` | 400 | File missing, invalid MIME type, size exceeded, invalid UUID |
-| `FILE_TOO_LARGE` | 400 | File exceeds 10MB |
-| `INVALID_FILE_TYPE` | 400 | MIME type not in allowed list |
-| `OPERATION_FAILED` | 500 | Supabase Storage upload failed or DB insert failed |
+| Code                | HTTP | When                                                         |
+| ------------------- | ---- | ------------------------------------------------------------ |
+| `AUTH_REQUIRED`     | 401  | No valid session                                             |
+| `VALIDATION_ERROR`  | 400  | File missing, invalid MIME type, size exceeded, invalid UUID |
+| `FILE_TOO_LARGE`    | 400  | File exceeds 10MB                                            |
+| `INVALID_FILE_TYPE` | 400  | MIME type not in allowed list                                |
+| `OPERATION_FAILED`  | 500  | Supabase Storage upload failed or DB insert failed           |
 
 ### GET /api/receipts/[id]/signed-url
 
@@ -180,33 +187,36 @@ interface ReceiptUploadResponse {
 
 ```typescript
 interface SignedUrlResponse {
-  signed_url: string       // 15-minute expiry
-  expires_at: string       // ISO 8601: "2026-05-07T14:15:00Z"
+  signed_url: string // 15-minute expiry
+  expires_at: string // ISO 8601: "2026-05-07T14:15:00Z"
 }
 // Envelope: { data: SignedUrlResponse }
 ```
 
 **Errors:**
 
-| Code | HTTP | When |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `NOT_FOUND` | 404 | Receipt ID not found or does not belong to `auth.uid()` |
-| `OPERATION_FAILED` | 500 | Signed URL generation failed |
+| Code               | HTTP | When                                                    |
+| ------------------ | ---- | ------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | No valid session                                        |
+| `NOT_FOUND`        | 404  | Receipt ID not found or does not belong to `auth.uid()` |
+| `OPERATION_FAILED` | 500  | Signed URL generation failed                            |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/receipts/upload/route.ts` — POST Route Handler
 - `app/api/receipts/[id]/signed-url/route.ts` — GET Route Handler
 - `lib/validations/spend.ts` — zod schemas for receipt upload fields
 
 **Files to modify:**
+
 - None — this is a net-new API surface
 
 **Key patterns:**
+
 - Follow the Ticket 030 upload pattern for the core `file → storage → db` flow — do not duplicate MIME validation logic; extract to a shared helper in `lib/storage/validateFile.ts` if it does not already exist
 - Never trust the `Content-Type` request header for MIME type — always validate from magic bytes (see Ticket 030 note on `file-type` package versioning: use v16.x for CommonJS, or confirm ESM config before using v19+)
 - Storage path format: `receipts/{user_id}/{Date.now()}-{uuid}.{ext}` — include timestamp prefix for natural ordering
@@ -215,6 +225,7 @@ interface SignedUrlResponse {
 - Set `receipts` bucket as **private** (not public) in Supabase Storage configuration — signed URLs are the only access path
 
 **Do not:**
+
 - Store signed URLs in the database — generate them at request time only
 - Use the `Content-Type` header for file type validation
 - Return 409 for an idempotent duplicate — return 200 with the existing record
@@ -236,12 +247,12 @@ interface SignedUrlResponse {
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Supabase Storage upload fails mid-flight | Route Handler returns `{ error: 'Upload failed. Please try again.', code: 'OPERATION_FAILED' }` (500); no DB row inserted |
-| DB insert fails after successful storage upload | Route Handler returns `OPERATION_FAILED` (500); the orphaned storage file is acceptable at MVP (cleanup in V1) |
-| Signed URL generation fails | Route Handler returns `OPERATION_FAILED` (500); caller should show "Could not load receipt image" |
-| Receipt ID not found (or wrong owner) | 404 — no information leak about other users' receipts |
+| Failure                                         | User-visible behavior                                                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Supabase Storage upload fails mid-flight        | Route Handler returns `{ error: 'Upload failed. Please try again.', code: 'OPERATION_FAILED' }` (500); no DB row inserted |
+| DB insert fails after successful storage upload | Route Handler returns `OPERATION_FAILED` (500); the orphaned storage file is acceptable at MVP (cleanup in V1)            |
+| Signed URL generation fails                     | Route Handler returns `OPERATION_FAILED` (500); caller should show "Could not load receipt image"                         |
+| Receipt ID not found (or wrong owner)           | 404 — no information leak about other users' receipts                                                                     |
 
 ---
 
@@ -262,15 +273,15 @@ No UI in this ticket. Accessibility requirements are in Ticket 064 (the form).
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Successful upload | supporter | POST a valid JPEG < 10MB with all fields | 200 response; row in `receipt_uploads` with `status='pending_review'`; file visible in `receipts` bucket at the stored path |
-| QA-2 | Idempotency key deduplication | supporter | POST same `client_idempotency_key` twice | Both return 200; exactly one row in `receipt_uploads` |
-| QA-3 | File too large | supporter | POST a file > 10MB | 400 response with `code: 'FILE_TOO_LARGE'` |
-| QA-4 | Invalid file type | supporter | POST a PDF | 400 response with `code: 'INVALID_FILE_TYPE'` |
-| QA-5 | Signed URL — correct owner | supporter | Upload a receipt; GET `/api/receipts/[id]/signed-url` as the same user | 200 response with a `signed_url`; URL loads the image in a browser |
-| QA-6 | Signed URL — wrong owner | supporter (different user) | GET `/api/receipts/[id]/signed-url` for a receipt belonging to another user | 404 response |
-| QA-7 | Unauthenticated access | anonymous | POST to upload endpoint; GET signed URL endpoint | Both return 401 |
+| #    | Scenario                      | Role                       | Steps                                                                       | Expected result                                                                                                             |
+| ---- | ----------------------------- | -------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Successful upload             | supporter                  | POST a valid JPEG < 10MB with all fields                                    | 200 response; row in `receipt_uploads` with `status='pending_review'`; file visible in `receipts` bucket at the stored path |
+| QA-2 | Idempotency key deduplication | supporter                  | POST same `client_idempotency_key` twice                                    | Both return 200; exactly one row in `receipt_uploads`                                                                       |
+| QA-3 | File too large                | supporter                  | POST a file > 10MB                                                          | 400 response with `code: 'FILE_TOO_LARGE'`                                                                                  |
+| QA-4 | Invalid file type             | supporter                  | POST a PDF                                                                  | 400 response with `code: 'INVALID_FILE_TYPE'`                                                                               |
+| QA-5 | Signed URL — correct owner    | supporter                  | Upload a receipt; GET `/api/receipts/[id]/signed-url` as the same user      | 200 response with a `signed_url`; URL loads the image in a browser                                                          |
+| QA-6 | Signed URL — wrong owner      | supporter (different user) | GET `/api/receipts/[id]/signed-url` for a receipt belonging to another user | 404 response                                                                                                                |
+| QA-7 | Unauthenticated access        | anonymous                  | POST to upload endpoint; GET signed URL endpoint                            | Both return 401                                                                                                             |
 
 ---
 

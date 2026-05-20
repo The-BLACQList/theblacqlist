@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 7: Saves, Reviews, Corrections, Sharing
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Account / Saves
 
 ---
@@ -38,6 +43,7 @@ As a logged-in supporter, I want to see all the listings I've saved in one place
 ## Scope
 
 **In scope:**
+
 - `app/account/saved/page.tsx` — Server Component; authenticated; fetches first page of saved listings via `GET /api/saves`
 - Grid of listing cards using the existing `ListingCard` component; each card renders `SaveButton` with `initialSaved={true}`
 - Unsave from this page: clicking the save button on a card calls `DELETE /api/saves`, removes the card from the grid optimistically; toast "Removed from saved listings." with 5-second "Undo" action
@@ -51,6 +57,7 @@ As a logged-in supporter, I want to see all the listings I've saved in one place
 - Error state: "Couldn't load your saved listings" + "Try again" button (retries the fetch)
 
 **Out of scope:**
+
 - Save/unsave from other pages (Ticket 045)
 - Filtering or sorting saved listings (post-MVP)
 - Organizing saves into folders or lists (V1)
@@ -60,14 +67,14 @@ As a logged-in supporter, I want to see all the listings I've saved in one place
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 045 — Save/unsave API routes and SaveButton component | Blocking ticket | Not started |
-| Ticket 013 — Auth middleware (authenticated route guard) | Blocking ticket | Not started |
-| Ticket 014 — Account sidebar layout | Blocking ticket | Not started |
-| `GET /api/saves` Route Handler | API | Implemented in Ticket 045 |
-| `ListingCard` component | Component | Must exist from search/discovery tickets |
-| `ListingCardSkeleton` component | Component | Must exist from search/discovery tickets |
+| Dependency                                                   | Type            | Status                                   |
+| ------------------------------------------------------------ | --------------- | ---------------------------------------- |
+| Ticket 045 — Save/unsave API routes and SaveButton component | Blocking ticket | Not started                              |
+| Ticket 013 — Auth middleware (authenticated route guard)     | Blocking ticket | Not started                              |
+| Ticket 014 — Account sidebar layout                          | Blocking ticket | Not started                              |
+| `GET /api/saves` Route Handler                               | API             | Implemented in Ticket 045                |
+| `ListingCard` component                                      | Component       | Must exist from search/discovery tickets |
+| `ListingCardSkeleton` component                              | Component       | Must exist from search/discovery tickets |
 
 ---
 
@@ -82,12 +89,12 @@ As a logged-in supporter, I want to see all the listings I've saved in one place
 
 **Unsave from this page (from `empty-loading-error-success-states.md` § 12):**
 
-| State | What user sees |
-|---|---|
-| Tap unsave | Heart spinner briefly; card removed from grid optimistically |
-| Unsave success | Card gone. Toast: "Removed from saved listings." with 5-second "Undo" action |
-| Unsave error | Card reappears in grid. Toast: "Couldn't remove. Try again." |
-| Undo: tap | `POST /api/saves` called; card reappears at its original position (or top of grid if position not tracked); toast: "Listing saved." |
+| State          | What user sees                                                                                                                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Tap unsave     | Heart spinner briefly; card removed from grid optimistically                                                                        |
+| Unsave success | Card gone. Toast: "Removed from saved listings." with 5-second "Undo" action                                                        |
+| Unsave error   | Card reappears in grid. Toast: "Couldn't remove. Try again."                                                                        |
+| Undo: tap      | `POST /api/saves` called; card reappears at its original position (or top of grid if position not tracked); toast: "Listing saved." |
 
 **Load More behavior:** The button displays the count of remaining saves: "Load 24 more (N remaining)". When the last page is loaded and no more saves exist, the button is hidden. If a `Load More` fetch fails, show an inline error below the grid: "Couldn't load more. Try again." — the existing grid remains visible.
 
@@ -130,6 +137,7 @@ As a logged-in supporter, I want to see all the listings I've saved in one place
 `GET /api/saves?page=1&limit=24`
 
 Response envelope:
+
 ```typescript
 {
   data: SavedListingCard[],  // extends SearchResult + saved_at
@@ -139,11 +147,11 @@ Response envelope:
 
 **Errors:**
 
-| Code | HTTP | UI behavior |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | Middleware redirects to `/sign-in?next=/account/saved` before page renders |
-| `VALIDATION_ERROR` | 400 | Should not occur with UI-controlled parameters; log and show error state |
-| Network / 500 | — | Full-page error state: "Couldn't load your saved listings" + "Try again" button |
+| Code               | HTTP | UI behavior                                                                     |
+| ------------------ | ---- | ------------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`    | 401  | Middleware redirects to `/sign-in?next=/account/saved` before page renders      |
+| `VALIDATION_ERROR` | 400  | Should not occur with UI-controlled parameters; log and show error state        |
+| Network / 500      | —    | Full-page error state: "Couldn't load your saved listings" + "Try again" button |
 
 **Load More pagination:** Client-side `useState` for the current page; on "Load More" click, fetch the next page and append results to the existing array. Do not use `router.push` — keep the page URL clean.
 
@@ -152,10 +160,12 @@ Response envelope:
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/account/saved/page.tsx` — Server Component; fetches page 1 of saves; renders `SavedListingsGrid` with initial data
 - `components/account/SavedListingsGrid.tsx` — "use client"; manages local grid state, optimistic unsave, undo, load more pagination
 
 **Files to modify:**
+
 - Account sidebar nav component — ensure "Saved" item is active on `/account/saved`
 - Mobile bottom nav bar component — ensure "Saved" tab is active on `/account/saved`
 
@@ -166,32 +176,33 @@ Response envelope:
 const [saves, setSaves] = useState(initialSaves)
 
 function handleUnsave(listingId: string) {
-  const removed = saves.find(s => s.id === listingId)
-  setSaves(prev => prev.filter(s => s.id !== listingId)) // optimistic remove
+  const removed = saves.find((s) => s.id === listingId)
+  setSaves((prev) => prev.filter((s) => s.id !== listingId)) // optimistic remove
   fetch(`/api/saves?listing_id=${listingId}`, { method: 'DELETE' })
-    .then(res => {
+    .then((res) => {
       if (!res.ok) throw new Error()
-      toast("Removed from saved listings.", {
+      toast('Removed from saved listings.', {
         duration: 5000,
         action: {
-          label: "Undo",
-          onClick: () => handleUndo(removed)
-        }
+          label: 'Undo',
+          onClick: () => handleUndo(removed),
+        },
       })
     })
     .catch(() => {
-      setSaves(prev => [removed, ...prev]) // rollback
+      setSaves((prev) => [removed, ...prev]) // rollback
       toast.error("Couldn't remove. Try again.")
     })
 }
 
 function handleUndo(listing: SavedListingCard) {
-  setSaves(prev => [listing, ...prev]) // optimistic re-add
-  fetch('/api/saves', { method: 'POST', body: JSON.stringify({ listing_id: listing.id }) })
-    .catch(() => {
-      setSaves(prev => prev.filter(s => s.id !== listing.id)) // rollback
+  setSaves((prev) => [listing, ...prev]) // optimistic re-add
+  fetch('/api/saves', { method: 'POST', body: JSON.stringify({ listing_id: listing.id }) }).catch(
+    () => {
+      setSaves((prev) => prev.filter((s) => s.id !== listing.id)) // rollback
       toast.error("Couldn't undo. Try again.")
-    })
+    }
+  )
 }
 ```
 
@@ -201,6 +212,7 @@ function handleUndo(listing: SavedListingCard) {
 - Use the `listingName` prop on `SaveButton` for accessible labels: "Remove [Business Name] from saved"
 
 **Do not:**
+
 - Re-fetch the full list after each unsave — remove from local state and sync in background
 - Show a loading state on the full page while Load More is in progress — only the Load More button should show a spinner
 - Navigate the user away on unsave
@@ -225,13 +237,13 @@ function handleUndo(listing: SavedListingCard) {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Initial fetch fails | Network error or 500 | "Couldn't load your saved listings." + "Try again" button | Retry re-runs the fetch |
+| Failure               | Condition                   | User sees                                                                   | Recovery                                  |
+| --------------------- | --------------------------- | --------------------------------------------------------------------------- | ----------------------------------------- |
+| Initial fetch fails   | Network error or 500        | "Couldn't load your saved listings." + "Try again" button                   | Retry re-runs the fetch                   |
 | Load More fetch fails | Network error on pagination | Inline below grid: "Couldn't load more. Try again." — existing cards remain | Retry button re-runs the pagination fetch |
-| Unsave fails | DELETE returns error | Card reappears in grid; toast: "Couldn't remove. Try again." | None needed — card is visible again |
-| Session expired | 401 | Middleware redirect to `/sign-in?next=/account/saved` | Re-authenticate; returns to saved page |
-| Undo fails | POST after undo fails | Toast: "Couldn't undo. Try again." — card was already removed from grid | User can re-save from any listing card |
+| Unsave fails          | DELETE returns error        | Card reappears in grid; toast: "Couldn't remove. Try again."                | None needed — card is visible again       |
+| Session expired       | 401                         | Middleware redirect to `/sign-in?next=/account/saved`                       | Re-authenticate; returns to saved page    |
+| Undo fails            | POST after undo fails       | Toast: "Couldn't undo. Try again." — card was already removed from grid     | User can re-save from any listing card    |
 
 ---
 
@@ -259,14 +271,14 @@ function handleUndo(listing: SavedListingCard) {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: view saves | 1. Log in with an account that has 5+ saved listings. 2. Navigate to `/account/saved`. | Grid renders with correct count badge. All saved listing cards display. |
-| QA-2 | Unsave with undo | 1. Click the save button on a card. 2. Click "Undo" in the toast within 5 seconds. | Card removed immediately on click. Toast with Undo appears. Card reappears on Undo click. |
-| QA-3 | Load More pagination | 1. Log in with 30+ saved listings. 2. Scroll to the bottom of the first page. 3. Click "Load 24 more (N remaining)". | Next page of cards appends to the grid. Button label updates. Hidden when all loaded. |
-| QA-4 | Empty state | 1. Log in with an account that has zero saves. 2. Navigate to `/account/saved`. | Empty state renders: "Nothing saved yet." + "Start exploring" button + search link. |
-| QA-5 | Unauthenticated access | 1. Log out. 2. Navigate to `/account/saved`. | Middleware redirects to `/sign-in?next=/account/saved`. |
-| QA-6 | Mobile at 375px | 1. Open on 375px device. 2. Scroll, unsave a card, use Load More. | 1-column grid. Full-width cards. Bottom nav "Saved" tab active. All actions functional. |
+| ID   | Test                   | Steps                                                                                                                | Expected                                                                                  |
+| ---- | ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: view saves | 1. Log in with an account that has 5+ saved listings. 2. Navigate to `/account/saved`.                               | Grid renders with correct count badge. All saved listing cards display.                   |
+| QA-2 | Unsave with undo       | 1. Click the save button on a card. 2. Click "Undo" in the toast within 5 seconds.                                   | Card removed immediately on click. Toast with Undo appears. Card reappears on Undo click. |
+| QA-3 | Load More pagination   | 1. Log in with 30+ saved listings. 2. Scroll to the bottom of the first page. 3. Click "Load 24 more (N remaining)". | Next page of cards appends to the grid. Button label updates. Hidden when all loaded.     |
+| QA-4 | Empty state            | 1. Log in with an account that has zero saves. 2. Navigate to `/account/saved`.                                      | Empty state renders: "Nothing saved yet." + "Start exploring" button + search link.       |
+| QA-5 | Unauthenticated access | 1. Log out. 2. Navigate to `/account/saved`.                                                                         | Middleware redirects to `/sign-in?next=/account/saved`.                                   |
+| QA-6 | Mobile at 375px        | 1. Open on 375px device. 2. Scroll, unsave a card, use Load More.                                                    | 1-column grid. Full-width cards. Bottom nav "Saved" tab active. All actions functional.   |
 
 ---
 

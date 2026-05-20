@@ -10,11 +10,11 @@
 
 The BLACQList operates across three environments. Each environment exists for a distinct purpose and is backed by a separate Supabase project. No production data ever flows to local or staging.
 
-| Environment | Purpose | Supabase Project | Stripe Mode | URL |
-|---|---|---|---|---|
-| Local Development | Daily engineering work, schema changes, feature development | Local instance (Docker via Supabase CLI) | Test or none | `http://localhost:3000` |
-| Staging / Preview | QA sign-off, product owner review, design review before merge | Dedicated staging project | Test mode (`sk_test_...`) | Vercel preview URLs |
-| Production | Live product serving real users | Dedicated production project | Live mode (`sk_live_...`) | `https://theblacqlist.com` |
+| Environment       | Purpose                                                       | Supabase Project                         | Stripe Mode               | URL                        |
+| ----------------- | ------------------------------------------------------------- | ---------------------------------------- | ------------------------- | -------------------------- |
+| Local Development | Daily engineering work, schema changes, feature development   | Local instance (Docker via Supabase CLI) | Test or none              | `http://localhost:3000`    |
+| Staging / Preview | QA sign-off, product owner review, design review before merge | Dedicated staging project                | Test mode (`sk_test_...`) | Vercel preview URLs        |
+| Production        | Live product serving real users                               | Dedicated production project             | Live mode (`sk_live_...`) | `https://theblacqlist.com` |
 
 ### Ground rules
 
@@ -103,6 +103,7 @@ supabase db seed
 Seed file location: `supabase/seed.sql`
 
 Minimum seed data:
+
 - 3–5 listings per entity type (restaurant, retail, service, entertainment)
 - 2–3 test users with different roles: standard user, business owner, admin
 - At least one verified and one unverified listing (to test both states)
@@ -140,6 +141,7 @@ Preview deployments use the "Preview" environment variable set in Vercel. All PR
 One Supabase project is dedicated to staging. All preview deployments point to the same staging database. This is acceptable for this project at current scale.
 
 Implications:
+
 - Test data created in one PR's preview may be visible in another PR's preview
 - Do not use staging for performance benchmarking or load testing
 - Reset staging DB data before major QA cycles if contamination is a concern
@@ -147,18 +149,18 @@ Implications:
 
 ### Staging environment variables (set in Vercel under "Preview")
 
-| Variable | Value |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Staging Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Staging anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Staging service role key |
-| `NEXT_PUBLIC_SITE_URL` | `https://theblacqlist.vercel.app` (or primary staging domain) |
-| `RESEND_API_KEY` | Resend test mode key or staging key |
-| `RESEND_FROM_EMAIL` | Staging from address |
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN (tagged as `staging` environment) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` — Stripe test mode |
-| `STRIPE_SECRET_KEY` | `sk_test_...` — Stripe test mode |
-| `STRIPE_WEBHOOK_SECRET` | Staging webhook signing secret |
+| Variable                             | Value                                                         |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Staging Supabase project URL                                  |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Staging anon key                                              |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Staging service role key                                      |
+| `NEXT_PUBLIC_SITE_URL`               | `https://theblacqlist.vercel.app` (or primary staging domain) |
+| `RESEND_API_KEY`                     | Resend test mode key or staging key                           |
+| `RESEND_FROM_EMAIL`                  | Staging from address                                          |
+| `NEXT_PUBLIC_SENTRY_DSN`             | Sentry DSN (tagged as `staging` environment)                  |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` — Stripe test mode                              |
+| `STRIPE_SECRET_KEY`                  | `sk_test_...` — Stripe test mode                              |
+| `STRIPE_WEBHOOK_SECRET`              | Staging webhook signing secret                                |
 
 ### Email in staging
 
@@ -246,62 +248,62 @@ Variables are organized by service group. Phase callouts indicate when each vari
 
 ### Group A: Supabase — All Phases
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes | Yes | Supabase project URL (public, used by client and server) | Supabase Dashboard → Settings → API | No — Client + Server |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Yes | Yes | Supabase anon key — public, subject to RLS; safe in client code | Supabase Dashboard → Settings → API | No — Client + Server |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Yes | Yes | Service role key — bypasses all RLS; never expose to client | Supabase Dashboard → Settings → API | Yes — Server only |
+| Variable                        | Local | Staging | Production | Description                                                     | Where to get it                     | Server only?         |
+| ------------------------------- | ----- | ------- | ---------- | --------------------------------------------------------------- | ----------------------------------- | -------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes   | Yes     | Yes        | Supabase project URL (public, used by client and server)        | Supabase Dashboard → Settings → API | No — Client + Server |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes   | Yes     | Yes        | Supabase anon key — public, subject to RLS; safe in client code | Supabase Dashboard → Settings → API | No — Client + Server |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Yes   | Yes     | Yes        | Service role key — bypasses all RLS; never expose to client     | Supabase Dashboard → Settings → API | Yes — Server only    |
 
 ### Group B: Next.js / Application — All Phases
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | No | Yes | Yes | Canonical site URL — used for OG image generation, auth redirects, absolute URL construction | Set manually: `https://theblacqlist.com` in production | No — Client + Server |
-| `AUTH_SECRET` | Yes | Yes | Yes | Random secret for session/cookie encryption | Generate with: `openssl rand -base64 32` | Yes — Server only |
+| Variable               | Local | Staging | Production | Description                                                                                  | Where to get it                                        | Server only?         |
+| ---------------------- | ----- | ------- | ---------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------- |
+| `NEXT_PUBLIC_SITE_URL` | No    | Yes     | Yes        | Canonical site URL — used for OG image generation, auth redirects, absolute URL construction | Set manually: `https://theblacqlist.com` in production | No — Client + Server |
+| `AUTH_SECRET`          | Yes   | Yes     | Yes        | Random secret for session/cookie encryption                                                  | Generate with: `openssl rand -base64 32`               | Yes — Server only    |
 
 ### Group C: Email — Resend (MVP)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `RESEND_API_KEY` | Optional | Yes | Yes | Resend API key for transactional email. Use `re_test_...` in local/staging | Resend Dashboard → API Keys | Yes — Server only |
-| `RESEND_FROM_EMAIL` | Optional | Yes | Yes | Verified sender address (e.g., `noreply@theblacqlist.com`) | Resend Dashboard → Domains | Yes — Server only |
+| Variable            | Local    | Staging | Production | Description                                                                | Where to get it             | Server only?      |
+| ------------------- | -------- | ------- | ---------- | -------------------------------------------------------------------------- | --------------------------- | ----------------- |
+| `RESEND_API_KEY`    | Optional | Yes     | Yes        | Resend API key for transactional email. Use `re_test_...` in local/staging | Resend Dashboard → API Keys | Yes — Server only |
+| `RESEND_FROM_EMAIL` | Optional | Yes     | Yes        | Verified sender address (e.g., `noreply@theblacqlist.com`)                 | Resend Dashboard → Domains  | Yes — Server only |
 
 ### Group D: Error Tracking — Sentry (MVP)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SENTRY_DSN` | No | Yes | Yes | Sentry DSN for error capture. Not set locally — errors log to console | Sentry project settings | No — Client + Server |
-| `SENTRY_AUTH_TOKEN` | No | No | CI/CD only | Token for uploading source maps during build. Not a runtime variable | Sentry account → API keys | Build only |
-| `SENTRY_ORG` | No | No | CI/CD only | Sentry organization slug for source map upload | Sentry organization settings | Build only |
-| `SENTRY_PROJECT` | No | No | CI/CD only | Sentry project slug for source map upload | Sentry project settings | Build only |
+| Variable                 | Local | Staging | Production | Description                                                           | Where to get it              | Server only?         |
+| ------------------------ | ----- | ------- | ---------- | --------------------------------------------------------------------- | ---------------------------- | -------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN` | No    | Yes     | Yes        | Sentry DSN for error capture. Not set locally — errors log to console | Sentry project settings      | No — Client + Server |
+| `SENTRY_AUTH_TOKEN`      | No    | No      | CI/CD only | Token for uploading source maps during build. Not a runtime variable  | Sentry account → API keys    | Build only           |
+| `SENTRY_ORG`             | No    | No      | CI/CD only | Sentry organization slug for source map upload                        | Sentry organization settings | Build only           |
+| `SENTRY_PROJECT`         | No    | No      | CI/CD only | Sentry project slug for source map upload                             | Sentry project settings      | Build only           |
 
 ### Group E: Stripe — Subscriptions (V1)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Optional | Yes | Yes | Stripe publishable key for client-side Stripe.js initialization. Use `pk_test_...` in staging | Stripe Dashboard → Developers → API keys | No — Client + Server |
-| `STRIPE_SECRET_KEY` | Optional | Yes | Yes | Stripe secret key for server-side API calls. Use `sk_test_...` in staging, `sk_live_...` in production only | Stripe Dashboard → Developers → API keys | Yes — Server only |
-| `STRIPE_WEBHOOK_SECRET` | Optional | Yes | Yes | Webhook signing secret for verifying Stripe event payloads. Different value per environment | Stripe Dashboard → Webhooks → endpoint signing secret | Yes — Server only |
+| Variable                             | Local    | Staging | Production | Description                                                                                                 | Where to get it                                       | Server only?         |
+| ------------------------------------ | -------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------- |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Optional | Yes     | Yes        | Stripe publishable key for client-side Stripe.js initialization. Use `pk_test_...` in staging               | Stripe Dashboard → Developers → API keys              | No — Client + Server |
+| `STRIPE_SECRET_KEY`                  | Optional | Yes     | Yes        | Stripe secret key for server-side API calls. Use `sk_test_...` in staging, `sk_live_...` in production only | Stripe Dashboard → Developers → API keys              | Yes — Server only    |
+| `STRIPE_WEBHOOK_SECRET`              | Optional | Yes     | Yes        | Webhook signing secret for verifying Stripe event payloads. Different value per environment                 | Stripe Dashboard → Webhooks → endpoint signing secret | Yes — Server only    |
 
 ### Group F: Stripe Connect — Marketplace Payouts (V2)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `STRIPE_CONNECT_CLIENT_ID` | No | No | Yes | Stripe Connect application client ID for OAuth flows with connected accounts | Stripe Dashboard → Connect → Settings | Yes — Server only |
+| Variable                   | Local | Staging | Production | Description                                                                  | Where to get it                       | Server only?      |
+| -------------------------- | ----- | ------- | ---------- | ---------------------------------------------------------------------------- | ------------------------------------- | ----------------- |
+| `STRIPE_CONNECT_CLIENT_ID` | No    | No      | Yes        | Stripe Connect application client ID for OAuth flows with connected accounts | Stripe Dashboard → Connect → Settings | Yes — Server only |
 
 ### Group G: AI — Anthropic Claude (V2)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `ANTHROPIC_API_KEY` | No | No | Yes | Anthropic Claude API key. Production only — AI features ship in V2. Configure rate limits in Anthropic Console before enabling | Anthropic Console → API Keys | Yes — Server only |
+| Variable            | Local | Staging | Production | Description                                                                                                                    | Where to get it              | Server only?      |
+| ------------------- | ----- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- | ----------------- |
+| `ANTHROPIC_API_KEY` | No    | No      | Yes        | Anthropic Claude API key. Production only — AI features ship in V2. Configure rate limits in Anthropic Console before enabling | Anthropic Console → API Keys | Yes — Server only |
 
 ### Group H: Search — Algolia (V2)
 
-| Variable | Local | Staging | Production | Description | Where to get it | Server only? |
-|---|---|---|---|---|---|---|
-| `NEXT_PUBLIC_ALGOLIA_APP_ID` | No | No | Yes | Algolia application ID — client-safe, identifies the app | Algolia Dashboard → Settings | No — Client + Server |
-| `NEXT_PUBLIC_ALGOLIA_SEARCH_KEY` | No | No | Yes | Algolia search-only API key — client-safe, read-only access to search index | Algolia Dashboard → API Keys | No — Client + Server |
-| `ALGOLIA_ADMIN_API_KEY` | No | No | Yes | Algolia admin API key for indexing operations (create, update, delete records). Never expose to client | Algolia Dashboard → API Keys | Yes — Server only |
+| Variable                         | Local | Staging | Production | Description                                                                                            | Where to get it              | Server only?         |
+| -------------------------------- | ----- | ------- | ---------- | ------------------------------------------------------------------------------------------------------ | ---------------------------- | -------------------- |
+| `NEXT_PUBLIC_ALGOLIA_APP_ID`     | No    | No      | Yes        | Algolia application ID — client-safe, identifies the app                                               | Algolia Dashboard → Settings | No — Client + Server |
+| `NEXT_PUBLIC_ALGOLIA_SEARCH_KEY` | No    | No      | Yes        | Algolia search-only API key — client-safe, read-only access to search index                            | Algolia Dashboard → API Keys | No — Client + Server |
+| `ALGOLIA_ADMIN_API_KEY`          | No    | No      | Yes        | Algolia admin API key for indexing operations (create, update, delete records). Never expose to client | Algolia Dashboard → API Keys | Yes — Server only    |
 
 ---
 
@@ -309,16 +311,16 @@ Variables are organized by service group. Phase callouts indicate when each vari
 
 The following variables have elevated risk if exposed. Each one represents a distinct attack surface.
 
-| Secret | Risk if exposed |
-|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | Bypasses all Row Level Security — equivalent to unrestricted database root access. An attacker can read, modify, or delete any data in the database. |
-| `STRIPE_SECRET_KEY` | Allows arbitrary charge creation, refund processing, customer data access, and subscription manipulation. |
-| `STRIPE_WEBHOOK_SECRET` | Allows an attacker to forge Stripe webhook events, triggering subscription activations, payment confirmations, or refunds without real Stripe events. |
-| `RESEND_API_KEY` | Allows sending email as your verified domain. Enables phishing campaigns from `@theblacqlist.com`. |
-| `ANTHROPIC_API_KEY` | Paid API with usage-based billing. Leaked key can result in large unexpected charges and service rate limiting. |
-| `ALGOLIA_ADMIN_API_KEY` | Allows deleting or corrupting the search index, adding malicious data to search results, or exhausting the Algolia plan quota. |
-| `SENTRY_AUTH_TOKEN` | Allows modifying Sentry projects, deleting issues, and accessing source maps which may expose proprietary code. |
-| `AUTH_SECRET` | Allows forging session tokens — an attacker can authenticate as any user without credentials. |
+| Secret                      | Risk if exposed                                                                                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_SERVICE_ROLE_KEY` | Bypasses all Row Level Security — equivalent to unrestricted database root access. An attacker can read, modify, or delete any data in the database.  |
+| `STRIPE_SECRET_KEY`         | Allows arbitrary charge creation, refund processing, customer data access, and subscription manipulation.                                             |
+| `STRIPE_WEBHOOK_SECRET`     | Allows an attacker to forge Stripe webhook events, triggering subscription activations, payment confirmations, or refunds without real Stripe events. |
+| `RESEND_API_KEY`            | Allows sending email as your verified domain. Enables phishing campaigns from `@theblacqlist.com`.                                                    |
+| `ANTHROPIC_API_KEY`         | Paid API with usage-based billing. Leaked key can result in large unexpected charges and service rate limiting.                                       |
+| `ALGOLIA_ADMIN_API_KEY`     | Allows deleting or corrupting the search index, adding malicious data to search results, or exhausting the Algolia plan quota.                        |
+| `SENTRY_AUTH_TOKEN`         | Allows modifying Sentry projects, deleting issues, and accessing source maps which may expose proprietary code.                                       |
+| `AUTH_SECRET`               | Allows forging session tokens — an attacker can authenticate as any user without credentials.                                                         |
 
 ### Enforcement
 
@@ -401,34 +403,36 @@ Three storage buckets are required. Configure each in the Supabase Storage dashb
 
 ### `listing-media` — Public bucket
 
-| Setting | Value |
-|---|---|
-| Visibility | Public |
-| CDN | Enabled (Supabase CDN serves all files) |
-| File size limit | 10MB (bucket-level maximum) |
+| Setting            | Value                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| Visibility         | Public                                                                              |
+| CDN                | Enabled (Supabase CDN serves all files)                                             |
+| File size limit    | 10MB (bucket-level maximum)                                                         |
 | Allowed MIME types | Enforced in application layer: `image/jpeg`, `image/png`, `image/webp`, `image/gif` |
-| Public URL format | `[SUPABASE_URL]/storage/v1/object/public/listing-media/[path]` |
-| Path pattern | `[entity_type]/[listing_id]/[uuid].[ext]` |
-| Example path | `restaurant/abc-123/cover-f7e2c1.webp` |
+| Public URL format  | `[SUPABASE_URL]/storage/v1/object/public/listing-media/[path]`                      |
+| Path pattern       | `[entity_type]/[listing_id]/[uuid].[ext]`                                           |
+| Example path       | `restaurant/abc-123/cover-f7e2c1.webp`                                              |
 
 Notes:
+
 - All files in this bucket are publicly accessible by URL — do not store private content here
 - Per-type file size limits (logo: 2MB, cover photo: 5MB, gallery image: 5MB) are enforced in the application upload handler, not at the bucket level
 - CDN caching means deleted or replaced files may be served from cache briefly — use unique filenames (UUID-based) to avoid stale cache issues
 
 ### `verification-docs` — Private bucket
 
-| Setting | Value |
-|---|---|
-| Visibility | Private |
-| Public URLs | Never generated |
-| Signed URL expiry | 15 minutes |
+| Setting            | Value                                                                        |
+| ------------------ | ---------------------------------------------------------------------------- |
+| Visibility         | Private                                                                      |
+| Public URLs        | Never generated                                                              |
+| Signed URL expiry  | 15 minutes                                                                   |
 | Allowed MIME types | `image/jpeg`, `image/png`, `application/pdf` (enforced in application layer) |
-| Access pattern | Server-side admin review UI generates signed URLs on demand |
-| Path pattern | `claims/[claim_id]/[uuid].[ext]` |
-| Example path | `claims/claim-789/doc-a3f1b9.pdf` |
+| Access pattern     | Server-side admin review UI generates signed URLs on demand                  |
+| Path pattern       | `claims/[claim_id]/[uuid].[ext]`                                             |
+| Example path       | `claims/claim-789/doc-a3f1b9.pdf`                                            |
 
 Notes:
+
 - Only server-side admin functions may generate signed URLs for this bucket
 - Signed URLs expire in 15 minutes — do not cache or persist them
 - No RLS-based user access — access is controlled entirely at the application/service layer
@@ -436,17 +440,18 @@ Notes:
 
 ### `receipts` — Private bucket
 
-| Setting | Value |
-|---|---|
-| Visibility | Private |
-| Public URLs | Never generated |
-| Signed URL expiry | 15 minutes |
-| Allowed MIME types | `image/jpeg`, `image/png`, `image/heic` (enforced in application layer) |
-| Access pattern | Server-side owner receipt view generates signed URLs for the authenticated owner only |
-| Path pattern | `receipts/[user_id]/[uuid].[ext]` |
-| Example path | `receipts/user-456/receipt-2c8d3e.jpg` |
+| Setting            | Value                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| Visibility         | Private                                                                               |
+| Public URLs        | Never generated                                                                       |
+| Signed URL expiry  | 15 minutes                                                                            |
+| Allowed MIME types | `image/jpeg`, `image/png`, `image/heic` (enforced in application layer)               |
+| Access pattern     | Server-side owner receipt view generates signed URLs for the authenticated owner only |
+| Path pattern       | `receipts/[user_id]/[uuid].[ext]`                                                     |
+| Example path       | `receipts/user-456/receipt-2c8d3e.jpg`                                                |
 
 Notes:
+
 - A user may only access signed URLs for their own receipts — enforced in the server-side route handler
 - `image/heic` support is included because iOS devices default to HEIC format for camera photos
 - Receipts are tied to verified purchase or service records — the upload handler verifies ownership before allowing upload

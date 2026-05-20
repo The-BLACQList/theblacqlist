@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { Briefcase, Globe, MapPin, Plane } from "lucide-react"
-import { CTAButton } from "./CTAButton"
+import Link from 'next/link'
+import { Briefcase, Globe, MapPin, Plane } from 'lucide-react'
+import { CTAButton } from './CTAButton'
 
 interface ServiceCardProps {
   service: {
@@ -22,35 +22,36 @@ interface ServiceCardProps {
 }
 
 function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", {
-    style:                 "currency",
-    currency:              "USD",
+  return (cents / 100).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
     maximumFractionDigits: 0,
   })
 }
 
 const DELIVERY_ICONS: Record<string, React.ElementType> = {
-  virtual:   Globe,
+  virtual: Globe,
   in_person: MapPin,
-  travel:    Plane,
-  hybrid:    Globe,
+  travel: Plane,
+  hybrid: Globe,
 }
 
 const DELIVERY_LABELS: Record<string, string> = {
-  virtual:   "Virtual",
-  in_person: "In person",
-  travel:    "Provider travels",
-  hybrid:    "Virtual + in person",
+  virtual: 'Virtual',
+  in_person: 'In person',
+  travel: 'Provider travels',
+  hybrid: 'Virtual + in person',
 }
 
 export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
-  const priceLabel = service.price_display_text
-    ?? (service.starting_price_cents != null
+  const priceLabel =
+    service.price_display_text ??
+    (service.starting_price_cents != null
       ? `Starting at ${formatPrice(service.starting_price_cents)}`
-      : "Contact for pricing")
+      : 'Contact for pricing')
 
-  const ctaType = service.booking_url ? "book-now" : "request-quote"
-  const ctaLabel = service.booking_url ? "Book Now" : "Request Quote"
+  const ctaType = service.booking_url ? 'book-now' : 'request-quote'
+  const ctaLabel = service.booking_url ? 'Book Now' : 'Request Quote'
   const DeliveryIcon = DELIVERY_ICONS[service.delivery_mode] ?? Briefcase
 
   return (
@@ -79,20 +80,23 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
               <Link href={`/vendors/${service.vendor_slug}`} className="hover:text-charcoal">
                 {service.vendor_name}
               </Link>
-            ) : service.vendor_name}
+            ) : (
+              service.vendor_name
+            )}
           </p>
         )}
 
         <h3 className="font-headline text-base text-brand-black leading-snug">
-          <Link href={`/marketplace/services/${service.global_slug}`} className="hover:text-amber-gold transition-colors">
+          <Link
+            href={`/marketplace/services/${service.global_slug}`}
+            className="hover:text-amber-gold transition-colors"
+          >
             {service.name}
           </Link>
         </h3>
 
         {service.description && (
-          <p className="font-body text-xs text-charcoal/60 line-clamp-2">
-            {service.description}
-          </p>
+          <p className="font-body text-xs text-charcoal/60 line-clamp-2">{service.description}</p>
         )}
 
         {/* Price + duration */}

@@ -1,30 +1,28 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
-import { createClient } from "@/lib/supabase/server"
-import { GuideCard } from "@/components/editorial/GuideCard"
+import { createClient } from '@/lib/supabase/server'
+import { GuideCard } from '@/components/editorial/GuideCard'
 
 export const metadata: Metadata = {
-  title: "City Guides | The BLACQList",
+  title: 'City Guides | The BLACQList',
   description:
-    "Deep-dive guides to Black-owned businesses, neighborhoods, and culture in cities across the nation.",
+    'Deep-dive guides to Black-owned businesses, neighborhoods, and culture in cities across the nation.',
 }
 
 export default async function GuidesPage() {
   const supabase = await createClient()
 
   const { data: guides } = await supabase
-    .from("guides")
-    .select("id, title, slug, subtitle, city")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
+    .from('guides')
+    .select('id, title, slug, subtitle, city')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
 
   const items = guides ?? []
 
   // Get section counts per guide
-  const { data: sections } = await supabase
-    .from("guide_sections")
-    .select("guide_id")
+  const { data: sections } = await supabase.from('guide_sections').select('guide_id')
 
   const sectionMap: Record<string, number> = {}
   for (const row of sections ?? []) {
@@ -42,7 +40,8 @@ export default async function GuidesPage() {
           Your insider guide to Black-owned America
         </h1>
         <p className="font-body text-base text-charcoal max-w-xl leading-relaxed">
-          Deep-dive guides to Black-owned businesses, neighborhoods, and culture in cities across the nation.
+          Deep-dive guides to Black-owned businesses, neighborhoods, and culture in cities across
+          the nation.
         </p>
       </section>
 

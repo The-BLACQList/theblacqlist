@@ -1,40 +1,40 @@
-import type { Metadata } from "next"
-import { createClient } from "@/lib/supabase/server"
-import { requireOwner } from "@/lib/dashboard/guard"
-import { PLANS } from "@/lib/stripe/plans"
-import { cn } from "@/lib/utils"
-import { CheckoutButton } from "./CheckoutButton"
+import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
+import { requireOwner } from '@/lib/dashboard/guard'
+import { PLANS } from '@/lib/stripe/plans'
+import { cn } from '@/lib/utils'
+import { CheckoutButton } from './CheckoutButton'
 
-export const metadata: Metadata = { title: "Upgrade | BLACQList Dashboard" }
+export const metadata: Metadata = { title: 'Upgrade | BLACQList Dashboard' }
 
 export default async function UpgradePage() {
   await requireOwner()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Owner's listings (need listing_id for the checkout session)
   const { data: listings } = await supabase
-    .from("listings")
-    .select("id, name")
-    .eq("owner_user_id", user!.id)
-    .is("deleted_at", null)
-    .order("created_at")
+    .from('listings')
+    .select('id, name')
+    .eq('owner_user_id', user!.id)
+    .is('deleted_at', null)
+    .order('created_at')
 
   // Plans with Stripe price IDs from DB
   const { data: dbPlans } = await supabase
-    .from("plans")
-    .select("id, name, plan_key, stripe_price_id_monthly")
-    .eq("is_active", true)
-    .order("display_order")
+    .from('plans')
+    .select('id, name, plan_key, stripe_price_id_monthly')
+    .eq('is_active', true)
+    .order('display_order')
 
   const dbPlanMap = Object.fromEntries(
-    (dbPlans ?? [])
-      .filter((p) => p.plan_key)
-      .map((p) => [p.plan_key!, p])
+    (dbPlans ?? []).filter((p) => p.plan_key).map((p) => [p.plan_key!, p])
   )
 
   // Default to the first listing
-  const primaryListingId = listings?.[0]?.id ?? ""
+  const primaryListingId = listings?.[0]?.id ?? ''
 
   return (
     <div className="max-w-4xl">
@@ -49,16 +49,16 @@ export default async function UpgradePage() {
         {PLANS.map((plan) => {
           const dbPlan = dbPlanMap[plan.slug]
           const isPurchasable =
-            plan.slug !== "free" && !!dbPlan?.stripe_price_id_monthly && !!primaryListingId
+            plan.slug !== 'free' && !!dbPlan?.stripe_price_id_monthly && !!primaryListingId
 
           return (
             <div
               key={plan.slug}
               className={cn(
-                "relative rounded-xl border p-5 flex flex-col",
+                'relative rounded-xl border p-5 flex flex-col',
                 plan.highlighted
-                  ? "border-amber-gold/40 bg-amber-gold/5"
-                  : "border-charcoal/10 bg-white"
+                  ? 'border-amber-gold/40 bg-amber-gold/5'
+                  : 'border-charcoal/10 bg-white'
               )}
             >
               {plan.highlighted && (
@@ -74,21 +74,27 @@ export default async function UpgradePage() {
                     ${plan.price_monthly}
                   </span>
                   <span className="font-subhead text-xs text-charcoal/40">
-                    {plan.price_monthly === 0 ? "forever" : "/mo"}
+                    {plan.price_monthly === 0 ? 'forever' : '/mo'}
                   </span>
                 </div>
               </div>
 
               <ul className="space-y-1.5 mb-5 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-1.5 font-subhead text-xs text-charcoal/70">
-                    <span className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold" aria-hidden="true" />
+                  <li
+                    key={f}
+                    className="flex items-start gap-1.5 font-subhead text-xs text-charcoal/70"
+                  >
+                    <span
+                      className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
+                      aria-hidden="true"
+                    />
                     {f}
                   </li>
                 ))}
               </ul>
 
-              {plan.slug === "free" ? (
+              {plan.slug === 'free' ? (
                 <div className="h-10 flex items-center">
                   <span className="font-subhead text-xs text-charcoal/40">Your current plan</span>
                 </div>

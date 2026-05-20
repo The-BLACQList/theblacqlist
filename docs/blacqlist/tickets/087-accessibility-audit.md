@@ -1,15 +1,19 @@
 # Ticket 087: Accessibility audit and WCAG AA remediation — all MVP screens
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 17: Security, QA, Accessibility, Launch
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Accessibility
 
 ---
@@ -33,6 +37,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 ## Scope
 
 **In scope:**
+
 - Keyboard navigation audit on all 37 MVP screens: tab order logic, focus visibility, interactive element reachability via keyboard alone
 - Color contrast check: all text and interactive elements against WCAG AA thresholds (4.5:1 body text, 3:1 large text and UI components)
 - Screen reader testing (VoiceOver on macOS) for 5 critical flows listed above
@@ -46,6 +51,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 - Remediation PRs: one PR per group of related findings (forms remediation, modal focus traps, color contrast fixes, heading structure) — do not batch all fixes into one massive PR
 
 **Out of scope:**
+
 - WCAG AAA conformance
 - Cognitive accessibility guidelines (deferred)
 - Screen reader testing with NVDA on Windows (VoiceOver on macOS is required; NVDA is desirable but not blocking for launch)
@@ -55,13 +61,13 @@ As a user with a disability, I want to navigate, search, and interact with The B
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| All frontend tickets (015 through 083) | Must be implemented before auditing | In Progress |
-| Staging environment with all screens accessible | Infrastructure | Required |
-| VoiceOver on macOS (built-in) | Testing tool | Available |
-| Colour Contrast Analyser (free tool, paciellogroup.com) | Testing tool | Must download |
-| axe DevTools browser extension | Testing tool | Must install |
+| Dependency                                              | Type                                | Status        |
+| ------------------------------------------------------- | ----------------------------------- | ------------- |
+| All frontend tickets (015 through 083)                  | Must be implemented before auditing | In Progress   |
+| Staging environment with all screens accessible         | Infrastructure                      | Required      |
+| VoiceOver on macOS (built-in)                           | Testing tool                        | Available     |
+| Colour Contrast Analyser (free tool, paciellogroup.com) | Testing tool                        | Must download |
+| axe DevTools browser extension                          | Testing tool                        | Must install  |
 
 ---
 
@@ -70,6 +76,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 **37 MVP screens to audit (grouped by area):**
 
 **Public discovery:**
+
 - Homepage
 - Search results page (`/search`)
 - City landing page (`/[city-slug]`)
@@ -78,6 +85,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 - Discover / browse page (`/discover`)
 
 **Auth screens:**
+
 - Sign-up (`/sign-up`)
 - Sign-in (`/sign-in`)
 - Forgot password (`/forgot-password`)
@@ -86,15 +94,18 @@ As a user with a disability, I want to navigate, search, and interact with The B
 - Onboarding (`/onboarding`)
 
 **Submit and claim:**
+
 - Add Business form steps 1–7 (`/add-business`)
 - Claim entry page (`/claim`)
 - Claim form + doc upload (`/claim/[listing-id]`)
 - Claim status (`/account/claims`)
 
 **Account pages:**
+
 - Saved listings (`/account/saved`)
 
 **Owner dashboard:**
+
 - Dashboard home (`/dashboard`)
 - Page editor — hero/about (`/dashboard/page`)
 - Page editor — hours (assumed Ticket 054)
@@ -105,6 +116,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 - Analytics dashboard (`/dashboard/analytics`)
 
 **Admin screens:**
+
 - Admin listings table (`/admin/listings`)
 - Admin listing detail/edit (`/admin/listings/[id]`)
 - Admin claims queue (`/admin/claims`)
@@ -117,6 +129,7 @@ As a user with a disability, I want to navigate, search, and interact with The B
 - Admin search analytics (`/admin/analytics/search`)
 
 **Static/utility:**
+
 - 404 page
 - For Business page (`/for-business`)
 - About page (`/about`)
@@ -129,13 +142,13 @@ As a user with a disability, I want to navigate, search, and interact with The B
 
 **Color contrast pairs to verify (brand palette):**
 
-| Text color | Background | Required ratio | Check |
-|---|---|---|---|
-| `#000000` on `#FCFAF4` (Cream) | Body text on cream bg | 4.5:1 | Must pass |
-| `#000000` on `#E2A428` (Amber Gold) | Text on primary buttons | 4.5:1 | Must pass |
-| `#FCFAF4` on `#000000` (Brand Black) | White text on dark bg | 4.5:1 | Must pass |
-| `#595758` (Charcoal) on `#FCFAF4` | Body/secondary text | 4.5:1 | Must verify |
-| `#E2A428` on `#19191E` (Deep Background) | Gold on dark nav | 3:1 (large text) | Must verify |
+| Text color                               | Background              | Required ratio   | Check       |
+| ---------------------------------------- | ----------------------- | ---------------- | ----------- |
+| `#000000` on `#FCFAF4` (Cream)           | Body text on cream bg   | 4.5:1            | Must pass   |
+| `#000000` on `#E2A428` (Amber Gold)      | Text on primary buttons | 4.5:1            | Must pass   |
+| `#FCFAF4` on `#000000` (Brand Black)     | White text on dark bg   | 4.5:1            | Must pass   |
+| `#595758` (Charcoal) on `#FCFAF4`        | Body/secondary text     | 4.5:1            | Must verify |
+| `#E2A428` on `#19191E` (Deep Background) | Gold on dark nav        | 3:1 (large text) | Must verify |
 
 Any color pair that fails must be adjusted in the design tokens before the audit closes.
 
@@ -164,10 +177,12 @@ No API changes in this ticket.
 5. **Form audit:** For every form field on every form screen, verify: visible label, correct `for`/`id` association, error announced on invalid submission
 
 **Remediation approach:**
+
 - Create a separate PR for each category of fix to keep diffs reviewable
 - Naming convention: `a11y/forms-label-fixes`, `a11y/focus-management`, `a11y/color-contrast`, `a11y/aria-live-regions`
 
 **Files most likely to need changes:**
+
 - `components/ui/` shadcn/ui component overrides — focus ring restoration, ARIA labels
 - Form components across add-business, claim, page editor
 - Modal and drawer components (save-button sign-in prompt, confirmation dialogs)
@@ -175,6 +190,7 @@ No API changes in this ticket.
 - Toast/notification components (aria-live regions)
 
 **Common findings to proactively check:**
+
 - shadcn/ui removes the default browser `outline` on focused elements — a custom focus ring must be added in global CSS
 - `placeholder` text used as the only label on inputs (search bar, filter selects)
 - `<button>` elements with only icon children and no `aria-label`
@@ -203,13 +219,13 @@ No API changes in this ticket.
 
 ## Failure States
 
-| Failure | Resolution |
-|---|---|
-| Critical: form input missing label | Hotfix PR adding `<label>` with correct `htmlFor`; re-test with VoiceOver |
-| Critical: modal does not trap focus | Hotfix PR implementing focus trap utility (`focus-trap-react` or custom hook) |
-| Critical: keyboard navigation skips interactive element | Hotfix PR correcting `tabIndex` and/or DOM order |
-| High: color contrast failure | Design token adjustment; verify fix with Colour Contrast Analyser |
-| High: button without accessible name | Add `aria-label` attribute to the button component |
+| Failure                                                 | Resolution                                                                    |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Critical: form input missing label                      | Hotfix PR adding `<label>` with correct `htmlFor`; re-test with VoiceOver     |
+| Critical: modal does not trap focus                     | Hotfix PR implementing focus trap utility (`focus-trap-react` or custom hook) |
+| Critical: keyboard navigation skips interactive element | Hotfix PR correcting `tabIndex` and/or DOM order                              |
+| High: color contrast failure                            | Design token adjustment; verify fix with Colour Contrast Analyser             |
+| High: button without accessible name                    | Add `aria-label` attribute to the button component                            |
 
 ---
 
@@ -234,13 +250,13 @@ This ticket IS the accessibility audit. Accessibility notes apply to the screens
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Full keyboard navigation — BLACQList Page | Anonymous | Open a BLACQList Page; navigate using Tab only from top to bottom | All interactive elements reachable in logical order; focus ring visible on each; CTA button activatable with Enter |
-| QA-2 | VoiceOver — sign-up form | Anonymous | Enable VoiceOver; navigate to `/sign-up`; complete the form using VoiceOver and keyboard | Each field announced with its label; error messages announced on invalid submit; success state announced |
-| QA-3 | Modal focus trap — save button | Anonymous (on listing page) | Click Save (sign-in modal appears); navigate inside modal with Tab | Focus stays within the modal; Tab does not reach page content behind modal; Escape closes modal and returns focus to save button |
-| QA-4 | Color contrast — CTA buttons | Any | Measure `#000000` text on `#E2A428` background using Colour Contrast Analyser | Ratio ≥ 4.5:1 — PASS |
-| QA-5 | axe scan — search page | Any | Run axe DevTools on `/search`; review results | Zero Critical violations |
+| #    | Scenario                                  | Role                        | Steps                                                                                    | Expected result                                                                                                                  |
+| ---- | ----------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Full keyboard navigation — BLACQList Page | Anonymous                   | Open a BLACQList Page; navigate using Tab only from top to bottom                        | All interactive elements reachable in logical order; focus ring visible on each; CTA button activatable with Enter               |
+| QA-2 | VoiceOver — sign-up form                  | Anonymous                   | Enable VoiceOver; navigate to `/sign-up`; complete the form using VoiceOver and keyboard | Each field announced with its label; error messages announced on invalid submit; success state announced                         |
+| QA-3 | Modal focus trap — save button            | Anonymous (on listing page) | Click Save (sign-in modal appears); navigate inside modal with Tab                       | Focus stays within the modal; Tab does not reach page content behind modal; Escape closes modal and returns focus to save button |
+| QA-4 | Color contrast — CTA buttons              | Any                         | Measure `#000000` text on `#E2A428` background using Colour Contrast Analyser            | Ratio ≥ 4.5:1 — PASS                                                                                                             |
+| QA-5 | axe scan — search page                    | Any                         | Run axe DevTools on `/search`; review results                                            | Zero Critical violations                                                                                                         |
 
 ---
 

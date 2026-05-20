@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P0 — Critical
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Admin / Claims
 
 ---
@@ -40,6 +45,7 @@ As an admin, I want to review a claim submission in full detail and approve or r
 ## Scope
 
 **In scope:**
+
 - `app/admin/claims/[id]/page.tsx` — Server Component, admin-only
 - Left panel: claimant info (display_name, email, relationship_to_business, verification_notes, submitted_at)
 - Right panel: listing preview (name, city, category, current trust_tier badge, current owner if any, "View live page →" link)
@@ -53,6 +59,7 @@ As an admin, I want to review a claim submission in full detail and approve or r
 - Error state: if claim ID not found, render branded 404 via `notFound()`
 
 **Out of scope:**
+
 - Claims list table (Ticket 040)
 - Inline approve from the queue table (Ticket 040)
 - Verification tier upgrade after claim approval (V1 — `updateVerificationStatus`)
@@ -62,16 +69,16 @@ As an admin, I want to review a claim submission in full detail and approve or r
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 040 — Admin claims queue page | Blocking ticket | Not started |
-| Ticket 037 — Admin shell + auth middleware | Blocking ticket | Not started |
-| `approveClaim` SA — `lib/actions/admin/approveClaim.ts` | Server Action | Not started |
-| `rejectClaim` SA — `lib/actions/admin/rejectClaim.ts` | Server Action | Not started |
-| `getVerificationDocUrl` SA — `lib/actions/admin/getVerificationDocUrl.ts` | Server Action | Not started |
-| `admin_audit_log` table migration | Database | Must exist |
-| `verification-docs` Supabase Storage bucket | Infrastructure | Must be configured private |
-| Resend `claimApproved` and `claimRejected` email templates | Email | Must exist |
+| Dependency                                                                | Type            | Status                     |
+| ------------------------------------------------------------------------- | --------------- | -------------------------- |
+| Ticket 040 — Admin claims queue page                                      | Blocking ticket | Not started                |
+| Ticket 037 — Admin shell + auth middleware                                | Blocking ticket | Not started                |
+| `approveClaim` SA — `lib/actions/admin/approveClaim.ts`                   | Server Action   | Not started                |
+| `rejectClaim` SA — `lib/actions/admin/rejectClaim.ts`                     | Server Action   | Not started                |
+| `getVerificationDocUrl` SA — `lib/actions/admin/getVerificationDocUrl.ts` | Server Action   | Not started                |
+| `admin_audit_log` table migration                                         | Database        | Must exist                 |
+| `verification-docs` Supabase Storage bucket                               | Infrastructure  | Must be configured private |
+| Resend `claimApproved` and `claimRejected` email templates                | Email           | Must exist                 |
 
 ---
 
@@ -87,6 +94,7 @@ As an admin, I want to review a claim submission in full detail and approve or r
 - **Document viewing:** Clicking "View document" calls the SA, shows a brief spinner on the button, then opens the signed URL in a new tab. If the SA fails, show an inline error: "Couldn't load document. Try again." Do not expose the signed URL in the DOM before the user clicks.
 
 **States from `empty-loading-error-success-states.md` § 14.4:**
+
 - Loading: skeleton for claimant info, listing preview, document area
 - Approve loading: "Approve" disabled with spinner; "Reject" also disabled
 - Approve success: toast "Claim approved. [Claimant name] is now the owner of [Listing name]. A confirmation email has been sent." → redirect to `/admin/claims`
@@ -132,11 +140,11 @@ As an admin, I want to review a claim submission in full detail and approve or r
 
 **Server Actions involved:**
 
-| Action | File | What it does |
-|---|---|---|
-| `approveClaim` | `lib/actions/admin/approveClaim.ts` | 5-step atomic: set claim approved, set listing.owner_user_id, insert user_roles owner row, insert audit log entry (`claim_approved`), send `claimApproved` email via Resend |
-| `rejectClaim` | `lib/actions/admin/rejectClaim.ts` | Set claim rejected, store rejection_reason, insert audit log entry (`claim_rejected`), send `claimRejected` email with reason |
-| `getVerificationDocUrl` | `lib/actions/admin/getVerificationDocUrl.ts` | Generate 15-min signed URL via service_role; log `verification_doc_viewed` to audit log; return `{ url: string }` |
+| Action                  | File                                         | What it does                                                                                                                                                                |
+| ----------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `approveClaim`          | `lib/actions/admin/approveClaim.ts`          | 5-step atomic: set claim approved, set listing.owner_user_id, insert user_roles owner row, insert audit log entry (`claim_approved`), send `claimApproved` email via Resend |
+| `rejectClaim`           | `lib/actions/admin/rejectClaim.ts`           | Set claim rejected, store rejection_reason, insert audit log entry (`claim_rejected`), send `claimRejected` email with reason                                               |
+| `getVerificationDocUrl` | `lib/actions/admin/getVerificationDocUrl.ts` | Generate 15-min signed URL via service_role; log `verification_doc_viewed` to audit log; return `{ url: string }`                                                           |
 
 **Auth required:** Yes — Admin role only (verified server-side via `user_roles`)
 
@@ -146,19 +154,20 @@ As an admin, I want to review a claim submission in full detail and approve or r
 
 **Error codes to handle:**
 
-| Code | Condition | UI shows |
-|---|---|---|
-| `AUTH_REQUIRED` | Session expired | Redirect to `/sign-in?next=[current-url]` |
-| `FORBIDDEN` | Not an admin | Redirect to `/dashboard` |
-| `NOT_FOUND` | Claim ID invalid | Branded 404 via `notFound()` |
+| Code                        | Condition              | UI shows                                                                     |
+| --------------------------- | ---------------------- | ---------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`             | Session expired        | Redirect to `/sign-in?next=[current-url]`                                    |
+| `FORBIDDEN`                 | Not an admin           | Redirect to `/dashboard`                                                     |
+| `NOT_FOUND`                 | Claim ID invalid       | Branded 404 via `notFound()`                                                 |
 | `INVALID_STATUS_TRANSITION` | Claim already resolved | Toast: "This claim has already been resolved." — disable both action buttons |
-| `OPERATION_FAILED` | DB error | Persistent toast: "Action failed. Try again." — buttons re-enable |
+| `OPERATION_FAILED`          | DB error               | Persistent toast: "Action failed. Try again." — buttons re-enable            |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/claims/[id]/page.tsx` — Server Component; fetches claim + listing + claimant profile; passes to client components
 - `components/admin/claims/ClaimDetailPanel.tsx` — left panel: claimant info + documents + history
 - `components/admin/claims/LinkedListingPreview.tsx` — right panel: listing summary card
@@ -169,9 +178,11 @@ As an admin, I want to review a claim submission in full detail and approve or r
 - `lib/actions/admin/getVerificationDocUrl.ts` — Server Action (returns signed URL via service_role)
 
 **Files to modify:**
+
 - `app/admin/claims/page.tsx` — "Review" button links to `/admin/claims/[id]` (if not already)
 
 **Key patterns:**
+
 - Follow the 7-step Server Action pattern from `server-actions-plan.md` § 3 for all three SAs
 - `approveClaim` must be an atomic transaction: use a Supabase RPC function or execute all DB writes within a single service_role client block; roll back all writes if any step fails
 - `insertAuditLog` called in Step 5 (after confirmed DB write); uses `sanitizeState` to strip `doc_paths` before snapshot
@@ -181,6 +192,7 @@ As an admin, I want to review a claim submission in full detail and approve or r
 - Use `isActionError` type guard in `ClaimActionBar` to branch on result
 
 **Do not:**
+
 - Preload or cache signed URLs — generate them only on explicit user click
 - Log signed URLs to console or audit log
 - Allow approve/reject if the claim is already `approved` or `rejected` — guard in the SA and disable buttons in the UI for resolved claims
@@ -208,16 +220,16 @@ As an admin, I want to review a claim submission in full detail and approve or r
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Claim not found | Invalid or deleted claim ID | Branded 404 page via `notFound()` | Link to `/admin/claims` |
-| Approve SA DB error | Transaction fails partway | Persistent toast: "Action failed. Try again." Buttons re-enable. | Retry |
-| Approve SA: claim already resolved | Claim status is already approved or rejected | Toast: "This claim has already been resolved." Both buttons disabled. | No recovery needed — navigate back |
-| Reject SA: missing reason | "Confirm Rejection" clicked with empty textarea | "Confirm Rejection" button remains disabled; inline validation: "A reason is required." | Enter reason text |
-| Document URL SA fails | Storage service unavailable | Inline: "Couldn't load document. Try again." — button re-enables | Retry click |
-| Email send failure | Resend API down | SA still succeeds; email failure logged server-side only; user sees success toast | V1: dead-letter retry queue |
-| Session expired mid-action | 401 from SA | Redirect to `/sign-in?next=[current-url]` | Re-authenticate |
-| Non-admin accesses page | User without admin role | Middleware redirect to `/dashboard` | N/A |
+| Failure                            | Condition                                       | User sees                                                                               | Recovery                           |
+| ---------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------- |
+| Claim not found                    | Invalid or deleted claim ID                     | Branded 404 page via `notFound()`                                                       | Link to `/admin/claims`            |
+| Approve SA DB error                | Transaction fails partway                       | Persistent toast: "Action failed. Try again." Buttons re-enable.                        | Retry                              |
+| Approve SA: claim already resolved | Claim status is already approved or rejected    | Toast: "This claim has already been resolved." Both buttons disabled.                   | No recovery needed — navigate back |
+| Reject SA: missing reason          | "Confirm Rejection" clicked with empty textarea | "Confirm Rejection" button remains disabled; inline validation: "A reason is required." | Enter reason text                  |
+| Document URL SA fails              | Storage service unavailable                     | Inline: "Couldn't load document. Try again." — button re-enables                        | Retry click                        |
+| Email send failure                 | Resend API down                                 | SA still succeeds; email failure logged server-side only; user sees success toast       | V1: dead-letter retry queue        |
+| Session expired mid-action         | 401 from SA                                     | Redirect to `/sign-in?next=[current-url]`                                               | Re-authenticate                    |
+| Non-admin accesses page            | User without admin role                         | Middleware redirect to `/dashboard`                                                     | N/A                                |
 
 ---
 
@@ -257,15 +269,15 @@ As an admin, I want to review a claim submission in full detail and approve or r
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: approve claim | 1. Log in as admin. 2. Navigate to `/admin/claims`. 3. Click "Review" on a pending claim. 4. Verify claimant info, listing preview, and document list display correctly. 5. Click "Approve claim". 6. Confirm the dialog. | Claim set to approved. `user_roles` row inserted for claimant. `admin_audit_log` entry created. Approval email sent (check Resend logs). Public listing page trust_tier badge updated. Admin redirected to `/admin/claims` with success toast. |
-| QA-2 | Happy path: reject claim with reason | 1. Navigate to a pending claim review. 2. Click "Reject claim". 3. Verify rejection panel expands. 4. Leave textarea empty — verify "Confirm Rejection" is disabled. 5. Enter reason (20+ chars). 6. Click "Confirm Rejection". | Claim set to rejected with reason stored. `admin_audit_log` entry created. Rejection email sent with reason. Admin redirected to `/admin/claims` with success toast. |
-| QA-3 | Document viewing | 1. Navigate to a claim with uploaded documents. 2. Click "View document". | Brief spinner on button. Signed URL opens in a new tab. URL is not present in page DOM before click. |
-| QA-4 | Already-resolved claim | 1. Navigate to a claim with `status = 'approved'`. | Both action buttons are disabled. A status badge shows "Approved". No approve/reject actions are possible. |
-| QA-5 | Concurrent approval | 1. Open the same claim in two admin browser tabs. 2. Approve from tab 1. 3. Approve from tab 2. | Tab 2 receives `INVALID_STATUS_TRANSITION` error. Persistent toast: "This claim has already been resolved." |
-| QA-6 | Permission boundary | 1. Log in as an owner (non-admin). 2. Attempt to navigate to `/admin/claims/[id]`. | Middleware redirects to `/dashboard`. Page is not rendered. |
-| QA-7 | Mobile at 375px | 1. Open on a 375px viewport. 2. Scroll through the page. 3. Attempt approve and reject. | Two panels stack vertically. Action buttons are full-width. Rejection textarea is usable. No horizontal overflow. |
+| ID   | Test                                 | Steps                                                                                                                                                                                                                           | Expected                                                                                                                                                                                                                                       |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: approve claim            | 1. Log in as admin. 2. Navigate to `/admin/claims`. 3. Click "Review" on a pending claim. 4. Verify claimant info, listing preview, and document list display correctly. 5. Click "Approve claim". 6. Confirm the dialog.       | Claim set to approved. `user_roles` row inserted for claimant. `admin_audit_log` entry created. Approval email sent (check Resend logs). Public listing page trust_tier badge updated. Admin redirected to `/admin/claims` with success toast. |
+| QA-2 | Happy path: reject claim with reason | 1. Navigate to a pending claim review. 2. Click "Reject claim". 3. Verify rejection panel expands. 4. Leave textarea empty — verify "Confirm Rejection" is disabled. 5. Enter reason (20+ chars). 6. Click "Confirm Rejection". | Claim set to rejected with reason stored. `admin_audit_log` entry created. Rejection email sent with reason. Admin redirected to `/admin/claims` with success toast.                                                                           |
+| QA-3 | Document viewing                     | 1. Navigate to a claim with uploaded documents. 2. Click "View document".                                                                                                                                                       | Brief spinner on button. Signed URL opens in a new tab. URL is not present in page DOM before click.                                                                                                                                           |
+| QA-4 | Already-resolved claim               | 1. Navigate to a claim with `status = 'approved'`.                                                                                                                                                                              | Both action buttons are disabled. A status badge shows "Approved". No approve/reject actions are possible.                                                                                                                                     |
+| QA-5 | Concurrent approval                  | 1. Open the same claim in two admin browser tabs. 2. Approve from tab 1. 3. Approve from tab 2.                                                                                                                                 | Tab 2 receives `INVALID_STATUS_TRANSITION` error. Persistent toast: "This claim has already been resolved."                                                                                                                                    |
+| QA-6 | Permission boundary                  | 1. Log in as an owner (non-admin). 2. Attempt to navigate to `/admin/claims/[id]`.                                                                                                                                              | Middleware redirects to `/dashboard`. Page is not rendered.                                                                                                                                                                                    |
+| QA-7 | Mobile at 375px                      | 1. Open on a 375px viewport. 2. Scroll through the page. 3. Attempt approve and reject.                                                                                                                                         | Two panels stack vertically. Action buttons are full-width. Rejection textarea is usable. No horizontal overflow.                                                                                                                              |
 
 ---
 

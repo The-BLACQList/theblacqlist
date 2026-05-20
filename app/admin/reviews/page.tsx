@@ -1,18 +1,18 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { Star } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Star } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
-export const metadata: Metadata = { title: "Reviews" }
+export const metadata: Metadata = { title: 'Reviews' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -22,7 +22,7 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
-          className={`size-3 ${i < rating ? "fill-amber-400 text-amber-400" : "fill-none text-charcoal/20"}`}
+          className={`size-3 ${i < rating ? 'fill-amber-400 text-amber-400' : 'fill-none text-charcoal/20'}`}
           aria-hidden="true"
         />
       ))}
@@ -37,7 +37,7 @@ interface PageProps {
 
 export default async function AdminReviewsPage({ searchParams }: PageProps) {
   await requireAdmin()
-  const { status = "intake", page = "1" } = await searchParams
+  const { status = 'intake', page = '1' } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page))
   const limit = 25
@@ -46,13 +46,12 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
   const serviceClient = createServiceClient()
 
   const { data: reviews, count } = await serviceClient
-    .from("reviews")
-    .select(
-      "id, status, rating, title, body, created_at, reviewer_user_id, listings(name)",
-      { count: "exact" }
-    )
-    .eq("status", status)
-    .order("created_at", { ascending: true })
+    .from('reviews')
+    .select('id, status, rating, title, body, created_at, reviewer_user_id, listings(name)', {
+      count: 'exact',
+    })
+    .eq('status', status)
+    .order('created_at', { ascending: true })
     .range(offset, offset + limit - 1)
 
   const totalPages = Math.ceil((count ?? 0) / limit)
@@ -65,19 +64,19 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
   const profileMap: Record<string, string> = {}
   if (reviewerIds.length > 0) {
     const { data: profiles } = await serviceClient
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", reviewerIds)
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', reviewerIds)
     for (const p of profiles ?? []) {
       if (p.display_name) profileMap[p.id] = p.display_name
     }
   }
 
   const STATUS_TABS = [
-    { value: "intake", label: "Pending" },
-    { value: "published", label: "Published" },
-    { value: "rejected", label: "Rejected" },
-    { value: "removed", label: "Removed" },
+    { value: 'intake', label: 'Pending' },
+    { value: 'published', label: 'Published' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'removed', label: 'Removed' },
   ]
 
   return (
@@ -97,8 +96,8 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
             href={`/admin/reviews?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? "border-amber-gold text-amber-gold"
-                : "border-transparent text-charcoal/60 hover:text-brand-black"
+                ? 'border-amber-gold text-amber-gold'
+                : 'border-transparent text-charcoal/60 hover:text-brand-black'
             }`}
           >
             {label}
@@ -110,12 +109,15 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
       {!reviews || reviews.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal/60">
-            No {status === "intake" ? "pending" : status} reviews found.
+            No {status === 'intake' ? 'pending' : status} reviews found.
           </p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
-          <table className="w-full text-sm" aria-label={`${status === "intake" ? "pending" : status} reviews`}>
+          <table
+            className="w-full text-sm"
+            aria-label={`${status === 'intake' ? 'pending' : status} reviews`}
+          >
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
@@ -143,9 +145,9 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
               {reviews.map((review) => {
                 const listing = review.listings as { name: string } | null
                 const reviewerName = review.reviewer_user_id
-                  ? (profileMap[review.reviewer_user_id] ?? "Unknown user")
-                  : "Anonymous"
-                const excerpt = review.title ?? review.body ?? ""
+                  ? (profileMap[review.reviewer_user_id] ?? 'Unknown user')
+                  : 'Anonymous'
+                const excerpt = review.title ?? review.body ?? ''
                 return (
                   <tr key={review.id} className="hover:bg-[#f9f9fb] transition-colors">
                     <td className="px-4 py-3">
@@ -160,7 +162,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <p className="font-subhead text-sm font-semibold text-brand-black">
-                        {listing?.name ?? "—"}
+                        {listing?.name ?? '—'}
                       </p>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
@@ -168,7 +170,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
                       <p className="font-body text-xs text-charcoal/60 truncate">
-                        {excerpt.length > 80 ? `${excerpt.slice(0, 80)}…` : excerpt || "—"}
+                        {excerpt.length > 80 ? `${excerpt.slice(0, 80)}…` : excerpt || '—'}
                       </p>
                     </td>
                     <td className="px-4 py-3">
@@ -183,7 +185,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                       <Link
                         href={`/admin/reviews/${review.id}`}
                         className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
-                        aria-label={`Review submission by ${reviewerName}${listing?.name ? ` for ${listing.name}` : ""}`}
+                        aria-label={`Review submission by ${reviewerName}${listing?.name ? ` for ${listing.name}` : ''}`}
                       >
                         Review →
                       </Link>

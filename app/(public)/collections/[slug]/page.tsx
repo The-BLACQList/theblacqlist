@@ -1,10 +1,10 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { createClient } from '@/lib/supabase/server'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -14,17 +14,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const supabase = await createClient()
   const { data } = await supabase
-    .from("collections")
-    .select("title, description")
-    .eq("slug", slug)
-    .eq("is_active", true)
+    .from('collections')
+    .select('title, description')
+    .eq('slug', slug)
+    .eq('is_active', true)
     .single()
 
-  if (!data) return { title: "Collection | The BLACQList" }
+  if (!data) return { title: 'Collection | The BLACQList' }
 
   return {
     title: `${data.title} | The BLACQList`,
-    description: data.description ?? `A curated collection of Black-owned businesses on The BLACQList.`,
+    description:
+      data.description ?? `A curated collection of Black-owned businesses on The BLACQList.`,
   }
 }
 
@@ -33,40 +34,39 @@ export default async function CollectionDetailPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: collection } = await supabase
-    .from("collections")
-    .select("id, title, slug, description")
-    .eq("slug", slug)
-    .eq("is_active", true)
+    .from('collections')
+    .select('id, title, slug, description')
+    .eq('slug', slug)
+    .eq('is_active', true)
     .single()
 
   if (!collection) notFound()
 
   // Fetch listings in this collection via collection_items join
   const { data: items } = await supabase
-    .from("collection_items")
-    .select(`
+    .from('collection_items')
+    .select(
+      `
       display_order,
       listings (
         id, name, slug, tagline, entity_type, trust_tier, city_id,
         cities ( slug, name, state_abbr )
       )
-    `)
-    .eq("collection_id", collection.id)
-    .order("display_order", { ascending: true })
+    `
+    )
+    .eq('collection_id', collection.id)
+    .order('display_order', { ascending: true })
 
-  const listings =
-    (items ?? [])
-      .map((item) => item.listings)
-      .filter(Boolean) as Array<{
-        id: string
-        name: string
-        slug: string
-        tagline: string | null
-        entity_type: string
-        trust_tier: string
-        city_id: string | null
-        cities: { slug: string; name: string; state_abbr: string } | null
-      }>
+  const listings = (items ?? []).map((item) => item.listings).filter(Boolean) as Array<{
+    id: string
+    name: string
+    slug: string
+    tagline: string | null
+    entity_type: string
+    trust_tier: string
+    city_id: string | null
+    cities: { slug: string; name: string; state_abbr: string } | null
+  }>
 
   return (
     <main className="min-h-screen bg-pale-lavender">
@@ -91,7 +91,7 @@ export default async function CollectionDetailPage({ params }: Props) {
           </p>
         )}
         <p className="font-subhead text-xs text-charcoal/50 mt-3">
-          {listings.length} {listings.length === 1 ? "business" : "businesses"}
+          {listings.length} {listings.length === 1 ? 'business' : 'businesses'}
         </p>
       </section>
 
@@ -117,9 +117,7 @@ export default async function CollectionDetailPage({ params }: Props) {
             <div className="divide-y divide-charcoal/5">
               {listings.map((listing) => {
                 const city = listing.cities
-                const location = city
-                  ? `${city.name}, ${city.state_abbr}`
-                  : null
+                const location = city ? `${city.name}, ${city.state_abbr}` : null
                 const href = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
 
                 return (
@@ -127,12 +125,16 @@ export default async function CollectionDetailPage({ params }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-0.5">
                         <span className="font-subhead text-[11px] text-charcoal/50 capitalize">
-                          {listing.entity_type.replace(/_/g, " ")}
+                          {listing.entity_type.replace(/_/g, ' ')}
                         </span>
                         {location && (
                           <>
-                            <span className="text-charcoal/25" aria-hidden="true">·</span>
-                            <span className="font-subhead text-[11px] text-charcoal/50">{location}</span>
+                            <span className="text-charcoal/25" aria-hidden="true">
+                              ·
+                            </span>
+                            <span className="font-subhead text-[11px] text-charcoal/50">
+                              {location}
+                            </span>
                           </>
                         )}
                       </div>

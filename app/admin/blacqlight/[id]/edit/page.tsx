@@ -1,14 +1,14 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { updateArticleAction } from "@/lib/actions/editorial/articles"
-import { ArticleAdminForm } from "@/components/editorial/AdminEditorialForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { updateArticleAction } from '@/lib/actions/editorial/articles'
+import { ArticleAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "Edit Article" }
+export const metadata: Metadata = { title: 'Edit Article' }
 
 interface Props {
   params: Promise<{ id: string }>
@@ -20,9 +20,9 @@ export default async function EditArticlePage({ params }: Props) {
   const serviceClient = createServiceClient()
 
   const { data: article } = await serviceClient
-    .from("editorial_articles")
-    .select("id, title, slug, subtitle, body, author_name, meta_description, tags, status")
-    .eq("id", id)
+    .from('editorial_articles')
+    .select('id, title, slug, subtitle, body, author_name, meta_description, tags, status')
+    .eq('id', id)
     .single()
 
   if (!article) notFound()
@@ -30,7 +30,7 @@ export default async function EditArticlePage({ params }: Props) {
   const defaultValues = {
     ...article,
     tags: article.tags ?? undefined,
-    author_name: article.author_name ?? "The BLACQList Team",
+    author_name: article.author_name ?? 'The BLACQList Team',
   }
 
   return (
@@ -55,10 +55,10 @@ export default async function EditArticlePage({ params }: Props) {
         />
       </div>
 
-      {article.status === "published" && (
+      {article.status === 'published' && (
         <div className="rounded-lg bg-amber-gold/10 border border-amber-gold/20 px-4 py-3">
           <p className="font-subhead text-sm text-brand-black">
-            This article is live at{" "}
+            This article is live at{' '}
             <Link
               href={`/blacqlight/${article.slug}`}
               target="_blank"

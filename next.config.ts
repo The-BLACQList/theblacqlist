@@ -1,11 +1,11 @@
-import type { NextConfig } from "next"
-import { withSentryConfig } from "@sentry/nextjs"
+import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   // typedRoutes: true — re-enable when auth routes (/sign-in, /sign-up), city pages, and legal pages are built
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      bodySizeLimit: '10mb',
     },
   },
   images: {
@@ -13,9 +13,9 @@ const nextConfig: NextConfig = {
       {
         // Supabase Storage CDN — covers all hosted Supabase projects.
         // Required for next/image to serve listing-media bucket assets.
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
@@ -29,4 +29,6 @@ export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   sourcemaps: { deleteSourcemapsAfterUpload: true },
+  widenClientFileUpload: true,
+  disableLogger: true,
 })

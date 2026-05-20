@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useActionState } from "react"
-import { grantAdminRoleAction, revokeAdminRoleAction } from "@/lib/actions/admin/manageAdminRole"
+import { useActionState } from 'react'
+import { grantAdminRoleAction, revokeAdminRoleAction } from '@/lib/actions/admin/manageAdminRole'
 
 interface Props {
   userId: string
@@ -18,20 +18,16 @@ export function AdminRoleActions({ userId, adminRoles, isSelf }: Props) {
     (grantState as { error?: string } | null)?.error ??
     (revokeState as { error?: string } | null)?.error
 
-  const adminRole = adminRoles.find((r) => r.role === "admin")
+  const adminRole = adminRoles.find((r) => r.role === 'admin')
   const hasAdminRole = Boolean(adminRole)
 
   if (isSelf) {
-    return (
-      <span className="font-body text-xs text-charcoal/30 italic">you</span>
-    )
+    return <span className="font-body text-xs text-charcoal/30 italic">you</span>
   }
 
   return (
     <div className="flex items-center justify-end gap-2">
-      {error && (
-        <p className="font-body text-xs text-red-600 max-w-[140px] text-right">{error}</p>
-      )}
+      {error && <p className="font-body text-xs text-red-600 max-w-[140px] text-right">{error}</p>}
       {hasAdminRole && adminRole ? (
         <form action={revokeDispatch}>
           <input type="hidden" name="user_id" value={userId} />

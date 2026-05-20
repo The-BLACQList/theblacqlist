@@ -1,11 +1,11 @@
-import Image from "next/image"
-import Link from "next/link"
+import Image from 'next/image'
+import Link from 'next/link'
 
-import { cn } from "@/lib/utils"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { SaveIconButton } from "@/components/ui/save-icon-button"
+import { cn } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { SaveIconButton } from '@/components/ui/save-icon-button'
 
-type TrustTier = "unclaimed" | "claimed" | "verified" | "certified"
+type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 
 interface EntityCardProps {
   id: string
@@ -25,10 +25,10 @@ interface EntityCardProps {
 
 function getInitials(name: string): string {
   return name
-    .split(" ")
+    .split(' ')
     .slice(0, 2)
-    .map((word) => word[0] ?? "")
-    .join("")
+    .map((word) => word[0] ?? '')
+    .join('')
     .toUpperCase()
 }
 
@@ -37,7 +37,7 @@ export function EntityCard({
   name,
   slug,
   citySlug,
-  entityType = "business",
+  entityType = 'business',
   coverImageUrl,
   category,
   city,
@@ -56,7 +56,7 @@ export function EntityCard({
     // SaveIconButton stays at z-10 above the transparent overlay.
     <article
       className={cn(
-        "relative group rounded-lg border border-pale-lavender overflow-hidden bg-white transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-amber-gold focus-within:ring-offset-2",
+        'relative group rounded-lg border border-pale-lavender overflow-hidden bg-white transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-amber-gold focus-within:ring-offset-2',
         className
       )}
     >
@@ -73,21 +73,14 @@ export function EntityCard({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <span
-              className="font-headline text-2xl text-white select-none"
-              aria-hidden="true"
-            >
+            <span className="font-headline text-2xl text-white select-none" aria-hidden="true">
               {initials}
             </span>
           </div>
         )}
 
         {/* Trust tier badge — bottom-left */}
-        <StatusBadge
-          tier={trustTier}
-          size="small"
-          className="absolute bottom-2 left-2 z-10"
-        />
+        <StatusBadge tier={trustTier} size="small" className="absolute bottom-2 left-2 z-10" />
 
         {/* Featured badge — top-left */}
         {isFeatured && (
@@ -109,19 +102,12 @@ export function EntityCard({
       <div className="p-3">
         <p className="font-headline text-[15px] text-brand-black leading-tight line-clamp-2">
           {/* after:absolute after:inset-0 stretches the link hit area to cover the full card */}
-          <Link
-            href={href}
-            className="after:absolute after:inset-0 focus-visible:outline-none"
-          >
+          <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none">
             {name}
           </Link>
         </p>
-        <p className="font-subhead text-[13px] text-charcoal mt-1">
-          {category}
-        </p>
-        <p className="font-subhead text-[13px] text-charcoal">
-          {city}
-        </p>
+        <p className="font-subhead text-[13px] text-charcoal mt-1">{category}</p>
+        <p className="font-subhead text-[13px] text-charcoal">{city}</p>
       </div>
     </article>
   )

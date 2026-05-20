@@ -16,6 +16,7 @@
 The search results page is the primary destination for users who arrive with specific intent — they know what they are looking for. It must present results clearly, allow filtering without friction, and communicate zero-result states honestly. All filter and query state lives in the URL so back-button navigation and link sharing work correctly. This is a high-frequency page that must be fast and keyboard-accessible.
 
 Source artifacts:
+
 - `docs/blacqlist/ux/mvp-screen-map.md` — Search Results page detailed spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 2 (all search states)
 - `docs/blacqlist/architecture/api-contract.md` — Endpoint 1 (GET /api/search), Endpoint 17 (analytics)
@@ -33,6 +34,7 @@ This ticket depends on Ticket 025 (search API endpoint) and Ticket 015 (ListingC
 ## Scope
 
 **In scope:**
+
 - `app/search/page.tsx` — Server Component, reads `searchParams` (q, city, category, type, page), fetches first page server-side via `GET /api/search`
 - Search bar at top of content area: pre-filled with current `q` value; submitting a new query updates the URL; new search triggers navigation (`router.push` with new `q`)
 - Filter bar: City dropdown, Category dropdown, Entity Type radio/select group — all Client Components; changing any filter updates URL params immediately (no submit button required); current filter values shown in the controls
@@ -49,6 +51,7 @@ This ticket depends on Ticket 025 (search API endpoint) and Ticket 015 (ListingC
 - No ISR/caching — fully dynamic (`export const dynamic = 'force-dynamic'` or equivalent)
 
 **Out of scope:**
+
 - Autosuggest / typeahead dropdown (V1)
 - Sort by Newest or Rating (V1)
 - Saved searches (V1)
@@ -60,14 +63,14 @@ This ticket depends on Ticket 025 (search API endpoint) and Ticket 015 (ListingC
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-025: `GET /api/search` endpoint | Blocking API dependency | Not started |
-| BLACQ-015: `ListingCard` component (or define here) | UI component | Not started — if not yet built, define `ListingCard` and `ListingCardSkeleton` in this ticket |
-| `cities` and `categories` data available for filter dropdowns | Data | Must be seeded |
-| shadcn/ui `Select`, `Badge`, `Button` components | UI dependency | Must be installed |
-| URL routing with `useSearchParams` and `useRouter` (Next.js App Router) | Framework | Available |
-| `POST /api/analytics/event` (Endpoint 17) | API dependency | Fire-and-forget; stub if not implemented |
+| Dependency                                                              | Type                    | Status                                                                                        |
+| ----------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| BLACQ-025: `GET /api/search` endpoint                                   | Blocking API dependency | Not started                                                                                   |
+| BLACQ-015: `ListingCard` component (or define here)                     | UI component            | Not started — if not yet built, define `ListingCard` and `ListingCardSkeleton` in this ticket |
+| `cities` and `categories` data available for filter dropdowns           | Data                    | Must be seeded                                                                                |
+| shadcn/ui `Select`, `Badge`, `Button` components                        | UI dependency           | Must be installed                                                                             |
+| URL routing with `useSearchParams` and `useRouter` (Next.js App Router) | Framework               | Available                                                                                     |
+| `POST /api/analytics/event` (Endpoint 17)                               | API dependency          | Fire-and-forget; stub if not implemented                                                      |
 
 ---
 
@@ -130,6 +133,7 @@ This ticket depends on Ticket 025 (search API endpoint) and Ticket 015 (ListingC
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/search/page.tsx` — Server Component; reads `searchParams`; fetches first page + cities/categories; renders `<SearchResultsClient>` with props
 - `app/search/components/SearchResultsClient.tsx` — `"use client"`; manages Load More state, filter changes, URL updates; renders grid + filter bar + chips
 - `app/search/components/SearchFilterBar.tsx` — `"use client"`; City Select, Category Select, Type radio/select; updates URL params on change
@@ -140,9 +144,11 @@ This ticket depends on Ticket 025 (search API endpoint) and Ticket 015 (ListingC
 - `components/listing/ListingCardGrid.tsx` — Grid wrapper with responsive column classes
 
 **Files to modify:**
+
 - None at the page level if Ticket 015 ListingCard exists
 
 **Key patterns:**
+
 ```typescript
 // app/search/page.tsx (Server Component)
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
@@ -161,12 +167,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
 ```typescript
 // SearchResultsClient.tsx (Client Component)
-// Filter bar changes: 
+// Filter bar changes:
 function handleFilterChange(key: string, value: string) {
   const params = new URLSearchParams(searchParams.toString())
   if (value) params.set(key, value)
   else params.delete(key)
-  params.delete('page')  // Reset to page 1 on filter change
+  params.delete('page') // Reset to page 1 on filter change
   router.push(`/search?${params.toString()}`)
 }
 // Load More:
@@ -174,7 +180,7 @@ async function handleLoadMore() {
   const nextPage = currentPage + 1
   const res = await fetch(`/api/search?${buildQueryString({ ...currentParams, page: nextPage })}`)
   const more = await res.json()
-  setAllResults(prev => [...prev, ...more.data])
+  setAllResults((prev) => [...prev, ...more.data])
   setCurrentPage(nextPage)
 }
 ```
@@ -185,6 +191,7 @@ async function handleLoadMore() {
 - Never use `useEffect` for the initial data fetch — fetch server-side in `page.tsx` and pass as props.
 
 **Do not:**
+
 - Implement infinite scroll — Load More button only at MVP.
 - Fetch cities and categories inside the Client Component on mount — fetch server-side in `page.tsx` and pass as props to avoid client-side waterfall.
 - Put business logic (pagination offsets, filter logic) in the React component — put it in a `lib/utils/search.ts` helper.
@@ -211,13 +218,13 @@ async function handleLoadMore() {
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Search API returns 500 | Server error | "Search isn't working right now. We're looking into it. Try again in a moment." + "Try again" button | "Try again" retries the current query |
-| Search API returns 429 (rate limited) | Too many requests | Same "Search isn't working right now" message — do not expose the rate limit detail to users | Retry after cooldown |
-| Load More fails | API error on page 2+ | Toast: "Couldn't load more results. Try again." + Load More button re-enables | User retries Load More |
-| Cities/categories API fails | Dropdowns cannot populate | Filter dropdowns show a single "Loading…" option — search still works without filters | Filter dropdowns degraded; search functional |
-| Network offline | `navigator.onLine = false` | Offline banner from global state system; search input disabled | Restore connection |
+| Failure                               | Condition                  | User sees                                                                                            | Recovery                                     |
+| ------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Search API returns 500                | Server error               | "Search isn't working right now. We're looking into it. Try again in a moment." + "Try again" button | "Try again" retries the current query        |
+| Search API returns 429 (rate limited) | Too many requests          | Same "Search isn't working right now" message — do not expose the rate limit detail to users         | Retry after cooldown                         |
+| Load More fails                       | API error on page 2+       | Toast: "Couldn't load more results. Try again." + Load More button re-enables                        | User retries Load More                       |
+| Cities/categories API fails           | Dropdowns cannot populate  | Filter dropdowns show a single "Loading…" option — search still works without filters                | Filter dropdowns degraded; search functional |
+| Network offline                       | `navigator.onLine = false` | Offline banner from global state system; search input disabled                                       | Restore connection                           |
 
 ---
 
@@ -247,16 +254,16 @@ async function handleLoadMore() {
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-026-1 | Keyword search | Navigate to `/search?q=barbershop` | Search bar pre-filled "barbershop"; result cards rendered; result count shows correct number |
-| QA-026-2 | City filter change | On results page, change City dropdown to "Atlanta" | URL updates to `?city=atlanta`; results re-fetch filtered to Atlanta; City chip appears in active filters |
-| QA-026-3 | Remove active filter chip | With city filter active, click `×` on the city chip | URL loses `city` param; results re-fetch without city filter |
-| QA-026-4 | Load More | Search returning 48 results | 24 cards load, Load More button shows "Load 24 more (24 remaining)"; clicking appends 24 more cards |
-| QA-026-5 | Zero results | Search for `zzzznonexistent12345` | Empty state with "No results for 'zzzznonexistent12345'" heading and category suggestions |
-| QA-026-6 | API error | Mock search API to return 500 | Error state with "Search isn't working right now" and "Try again" button |
-| QA-026-7 | No-query state | Navigate to `/search` (no params) | Prominent search bar, category suggestion pills, no result grid or skeleton |
-| QA-026-8 | Back navigation | Run search A, apply filter, run search B, press Back | Browser returns to search B state (URL with filter). Press Back again → search A state. |
+| ID       | Test                      | Steps                                                | Expected                                                                                                  |
+| -------- | ------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| QA-026-1 | Keyword search            | Navigate to `/search?q=barbershop`                   | Search bar pre-filled "barbershop"; result cards rendered; result count shows correct number              |
+| QA-026-2 | City filter change        | On results page, change City dropdown to "Atlanta"   | URL updates to `?city=atlanta`; results re-fetch filtered to Atlanta; City chip appears in active filters |
+| QA-026-3 | Remove active filter chip | With city filter active, click `×` on the city chip  | URL loses `city` param; results re-fetch without city filter                                              |
+| QA-026-4 | Load More                 | Search returning 48 results                          | 24 cards load, Load More button shows "Load 24 more (24 remaining)"; clicking appends 24 more cards       |
+| QA-026-5 | Zero results              | Search for `zzzznonexistent12345`                    | Empty state with "No results for 'zzzznonexistent12345'" heading and category suggestions                 |
+| QA-026-6 | API error                 | Mock search API to return 500                        | Error state with "Search isn't working right now" and "Try again" button                                  |
+| QA-026-7 | No-query state            | Navigate to `/search` (no params)                    | Prominent search bar, category suggestion pills, no result grid or skeleton                               |
+| QA-026-8 | Back navigation           | Run search A, apply filter, run search B, press Back | Browser returns to search B state (URL with filter). Press Back again → search A state.                   |
 
 ---
 

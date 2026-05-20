@@ -7,6 +7,7 @@
 This document is the authoritative build guide from current shell/demo state to full production. It covers four phases and all major feature systems: core discovery, editorial CMS, Stripe monetization, the Circulation Map (community dollar-flow visualization), and all 17 AI agents.
 
 **Related docs:**
+
 - `production/current-state-audit.md` — full route/component inventory as of 2026-05-12
 - `production/mock-to-real-data-map.md` — every mock data location and replacement plan
 - `production/beta-build-task-index.md` — 20-task ordered Phase 0 index
@@ -15,13 +16,13 @@ This document is the authoritative build guide from current shell/demo state to 
 
 ## Quick Reference: Phase Timeline
 
-| Phase | Name | Goal | Weeks | Key Deliverable |
-|---|---|---|---|---|
-| **0** | Beta Foundation | Remove mocks, seed data, fix routing | 1–3 | Real data in the app; zero mock fallbacks |
-| **1** | MVP Beta Launch | Core workflows live with 250+ listings | 3–10 | Platform usable by real businesses + supporters |
-| **2** | V1: Trust & Revenue | Reviews + Stripe subscriptions live | 10–18 | Revenue on; badges earnable; editorial published |
-| **3** | V2: Commerce + AI | Circulation Map pipeline; all 17 AI agents | 18–32 | Spend tracking live; AI agents in production |
-| **4** | V3: Intelligence | Interactive Circulation Map; full AI concierge | 32–44 | Dollar flow visible; AI-powered discovery public |
+| Phase | Name                | Goal                                           | Weeks | Key Deliverable                                  |
+| ----- | ------------------- | ---------------------------------------------- | ----- | ------------------------------------------------ |
+| **0** | Beta Foundation     | Remove mocks, seed data, fix routing           | 1–3   | Real data in the app; zero mock fallbacks        |
+| **1** | MVP Beta Launch     | Core workflows live with 250+ listings         | 3–10  | Platform usable by real businesses + supporters  |
+| **2** | V1: Trust & Revenue | Reviews + Stripe subscriptions live            | 10–18 | Revenue on; badges earnable; editorial published |
+| **3** | V2: Commerce + AI   | Circulation Map pipeline; all 17 AI agents     | 18–32 | Spend tracking live; AI agents in production     |
+| **4** | V3: Intelligence    | Interactive Circulation Map; full AI concierge | 32–44 | Dollar flow visible; AI-powered discovery public |
 
 ---
 
@@ -43,28 +44,28 @@ This document is the authoritative build guide from current shell/demo state to 
 
 ### Build Tasks (in dependency order)
 
-| # | Task | Files | Risk |
-|---|---|---|---|
-| 0.1 | Set up local Supabase CLI — stop dev pointing at cloud project | `.env.local`, `supabase/config.toml` | HIGH |
-| 0.2 | Seed `states` + `cities` (13 launch cities with slug, state_abbr, lat/lng) | `supabase/seeds/002_reference_data.sql` (new) | LOW |
-| 0.3 | Seed `categories` (25-category taxonomy + subcategories with parent_id chain) | `supabase/seeds/003_categories.sql` (new) | LOW |
-| 0.4 | Seed `plans` (4 rows: Free / Starter / Growth / Premium with monthly + annual prices) | `supabase/seeds/004_plans.sql` (new) | LOW |
-| 0.5 | Verify and push `supabase/seeds/001_listings.sql` (99KB file exists) | `supabase/seeds/001_listings.sql` | MEDIUM |
-| 0.6 | Replace `STUB_CITIES` in onboarding with cities DB query | `app/onboarding/page.tsx` lines 12–23 | LOW |
-| 0.7 | Remove `MOCK_ENTITIES` fallback from `/discover`; show real empty state | `app/(public)/discover/page.tsx` lines 44–49, `lib/listings/query.ts` | MEDIUM |
-| 0.8 | Remove `MOCK_ENTITIES` fallback from `/search`; show real empty state | `app/(public)/search/page.tsx` lines 93–95, `lib/listings/query.ts` | MEDIUM |
-| 0.9 | Wire `SaveButton` → `POST /api/saves` (save) + `DELETE /api/saves` (unsave) | `components/entity-page/SaveButton.tsx` | LOW |
-| 0.10 | Wire `/account/saved` to fetch user's saved listings | `app/account/saved/page.tsx` | LOW |
-| 0.11 | Render `rich_text_content` column in `/blacqlight/[slug]` | `app/(public)/blacqlight/[slug]/page.tsx` | LOW |
-| 0.12 | Render `guide_sections` rows in `/guides/[slug]` | `app/(public)/guides/[slug]/page.tsx` | LOW |
-| 0.13 | Wire `ShareButton` → Web Share API + clipboard fallback | `components/entity-page/ShareButton.tsx` | LOW |
-| 0.14 | Build admin verification queue (replaces "coming soon") | `app/admin/verification/page.tsx`, `lib/actions/admin/` | MEDIUM |
-| 0.15 | Build admin reviews moderation queue (replaces "coming soon") | `app/admin/reviews/page.tsx`, `lib/actions/admin/moderateReviewAction.ts` | MEDIUM |
-| 0.16 | Build admin reports/corrections queue (replaces "coming soon") | `app/admin/reports/page.tsx`, new `lib/actions/admin/resolveReportAction.ts` | MEDIUM |
-| 0.17 | Entity type routing: restructure `app/[citySlug]/business/` → `app/[citySlug]/[entityType]/` | `app/[citySlug]/business/[listingSlug]/page.tsx` → `app/[citySlug]/[entityType]/[listingSlug]/page.tsx` | HIGH |
-| 0.18 | Migrate types from mock files to `types/index.ts` | `types/index.ts`, `data/mock-entities.ts`, `data/mock-entity-page.ts`, `lib/listings/query.ts`, `lib/listings/entityPage.ts` | LOW |
-| 0.19 | Delete `data/mock-entities.ts` + `data/mock-entity-page.ts` | Both files | LOW |
-| 0.20 | Replace legal placeholder copy (attorney-reviewed text for privacy, terms, cookies) | `app/(public)/privacy/page.tsx`, `app/(public)/terms/page.tsx`, `app/(public)/cookies/page.tsx` | HIGH |
+| #    | Task                                                                                         | Files                                                                                                                        | Risk   |
+| ---- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0.1  | Set up local Supabase CLI — stop dev pointing at cloud project                               | `.env.local`, `supabase/config.toml`                                                                                         | HIGH   |
+| 0.2  | Seed `states` + `cities` (13 launch cities with slug, state_abbr, lat/lng)                   | `supabase/seeds/002_reference_data.sql` (new)                                                                                | LOW    |
+| 0.3  | Seed `categories` (25-category taxonomy + subcategories with parent_id chain)                | `supabase/seeds/003_categories.sql` (new)                                                                                    | LOW    |
+| 0.4  | Seed `plans` (4 rows: Free / Starter / Growth / Premium with monthly + annual prices)        | `supabase/seeds/004_plans.sql` (new)                                                                                         | LOW    |
+| 0.5  | Verify and push `supabase/seeds/001_listings.sql` (99KB file exists)                         | `supabase/seeds/001_listings.sql`                                                                                            | MEDIUM |
+| 0.6  | Replace `STUB_CITIES` in onboarding with cities DB query                                     | `app/onboarding/page.tsx` lines 12–23                                                                                        | LOW    |
+| 0.7  | Remove `MOCK_ENTITIES` fallback from `/discover`; show real empty state                      | `app/(public)/discover/page.tsx` lines 44–49, `lib/listings/query.ts`                                                        | MEDIUM |
+| 0.8  | Remove `MOCK_ENTITIES` fallback from `/search`; show real empty state                        | `app/(public)/search/page.tsx` lines 93–95, `lib/listings/query.ts`                                                          | MEDIUM |
+| 0.9  | Wire `SaveButton` → `POST /api/saves` (save) + `DELETE /api/saves` (unsave)                  | `components/entity-page/SaveButton.tsx`                                                                                      | LOW    |
+| 0.10 | Wire `/account/saved` to fetch user's saved listings                                         | `app/account/saved/page.tsx`                                                                                                 | LOW    |
+| 0.11 | Render `rich_text_content` column in `/blacqlight/[slug]`                                    | `app/(public)/blacqlight/[slug]/page.tsx`                                                                                    | LOW    |
+| 0.12 | Render `guide_sections` rows in `/guides/[slug]`                                             | `app/(public)/guides/[slug]/page.tsx`                                                                                        | LOW    |
+| 0.13 | Wire `ShareButton` → Web Share API + clipboard fallback                                      | `components/entity-page/ShareButton.tsx`                                                                                     | LOW    |
+| 0.14 | Build admin verification queue (replaces "coming soon")                                      | `app/admin/verification/page.tsx`, `lib/actions/admin/`                                                                      | MEDIUM |
+| 0.15 | Build admin reviews moderation queue (replaces "coming soon")                                | `app/admin/reviews/page.tsx`, `lib/actions/admin/moderateReviewAction.ts`                                                    | MEDIUM |
+| 0.16 | Build admin reports/corrections queue (replaces "coming soon")                               | `app/admin/reports/page.tsx`, new `lib/actions/admin/resolveReportAction.ts`                                                 | MEDIUM |
+| 0.17 | Entity type routing: restructure `app/[citySlug]/business/` → `app/[citySlug]/[entityType]/` | `app/[citySlug]/business/[listingSlug]/page.tsx` → `app/[citySlug]/[entityType]/[listingSlug]/page.tsx`                      | HIGH   |
+| 0.18 | Migrate types from mock files to `types/index.ts`                                            | `types/index.ts`, `data/mock-entities.ts`, `data/mock-entity-page.ts`, `lib/listings/query.ts`, `lib/listings/entityPage.ts` | LOW    |
+| 0.19 | Delete `data/mock-entities.ts` + `data/mock-entity-page.ts`                                  | Both files                                                                                                                   | LOW    |
+| 0.20 | Replace legal placeholder copy (attorney-reviewed text for privacy, terms, cookies)          | `app/(public)/privacy/page.tsx`, `app/(public)/terms/page.tsx`, `app/(public)/cookies/page.tsx`                              | HIGH   |
 
 ### Phase 0 Go/No-Go Checklist
 
@@ -200,18 +201,21 @@ neighborhoods (
 ```
 
 **RLS for new tables:** Follow patterns from `20260510000001_mvp_rls_policies.sql`.
+
 - `listing_details_*`: public read for published listings; owner insert/update
 - `corrections`: authenticated insert; service_role for admin writes
 - `review_responses`: owner insert on own listings; public read of published
 - `tags`, `listing_tags`, `neighborhoods`: public read; service_role for writes
 
 **Page templates:**
+
 - Professional Page: same as Business template; shows credentials, specialty, license, availability
 - Creative Page: same as Business; shows medium, portfolio link, commission status, style tags
 - Event Page: same; shows date/time, venue, ticket link; page auto-archives after end_datetime
 - Job Page: same; shows job type, salary, remote status, apply link; archives after deadline_at
 
 Files:
+
 - `app/[citySlug]/[entityType]/[listingSlug]/page.tsx` — already handles `listing_type` from DB; add conditional rendering for new extension table fields
 - No new page files needed — entity type routing handles all variants
 
@@ -219,22 +223,22 @@ Files:
 
 All components exist. Wire them fully:
 
-| Feature | Component | Action |
-|---|---|---|
-| Review submission (intake only) | `components/entity-page/ReviewForm.tsx` | Form submits via `createReviewAction`; `status='intake'`; not displayed publicly |
-| Community corrections | `components/entity-page/ReportCorrectionForm.tsx` | Submits via `submitCorrectionAction`; lands in admin reports queue |
-| Flow-map widget | `components/flow-map/FlowSummaryCards.tsx` | Shows real data from `/api/flow-map/summary` (wire placeholders off) |
+| Feature                         | Component                                         | Action                                                                           |
+| ------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Review submission (intake only) | `components/entity-page/ReviewForm.tsx`           | Form submits via `createReviewAction`; `status='intake'`; not displayed publicly |
+| Community corrections           | `components/entity-page/ReportCorrectionForm.tsx` | Submits via `submitCorrectionAction`; lands in admin reports queue               |
+| Flow-map widget                 | `components/flow-map/FlowSummaryCards.tsx`        | Shows real data from `/api/flow-map/summary` (wire placeholders off)             |
 
 ### 1.3 — Full Claim Workflow
 
 Email notifications via Resend (templates already in `lib/email/templates/`):
 
-| Event | Template | Trigger |
-|---|---|---|
-| Claim submitted | `claim-submitted.tsx` | After `createClaimAction` succeeds |
-| Claim approved | `claim-approved.tsx` | After admin `approveClaimAction` |
-| Claim rejected | `claim-rejected.tsx` | After admin `rejectClaimAction` |
-| Welcome (new signup) | `welcome.tsx` | After `signUpAction` confirms email |
+| Event                | Template              | Trigger                             |
+| -------------------- | --------------------- | ----------------------------------- |
+| Claim submitted      | `claim-submitted.tsx` | After `createClaimAction` succeeds  |
+| Claim approved       | `claim-approved.tsx`  | After admin `approveClaimAction`    |
+| Claim rejected       | `claim-rejected.tsx`  | After admin `rejectClaimAction`     |
+| Welcome (new signup) | `welcome.tsx`         | After `signUpAction` confirms email |
 
 Files: `lib/actions/admin/approveClaim.ts`, `lib/actions/admin/rejectClaim.ts` — add Resend call after DB update
 
@@ -242,19 +246,20 @@ Files: `lib/actions/admin/approveClaim.ts`, `lib/actions/admin/rejectClaim.ts` �
 
 All section components exist in `components/dashboard/`. Wire remaining:
 
-| Section | Component | Status |
-|---|---|---|
-| Basic info | `BasicInfoSection.tsx` | Exists |
-| Contact | `ContactSection.tsx` | Exists |
-| Social links | `SocialSection.tsx` | Exists |
-| SEO metadata | `SeoSection.tsx` | Exists |
-| Primary CTA | `CtaSection.tsx` | Exists |
-| About / story | `AboutSection.tsx` | Exists |
-| Media gallery | `MediaGrid.tsx` | Exists — wire to `/api/upload/listing-media` |
-| Hours of operation | `listing_hours` table | Build `HoursSection.tsx` (new) |
-| Business links | `listing_links` table | Build `LinksSection.tsx` (new) |
+| Section            | Component              | Status                                       |
+| ------------------ | ---------------------- | -------------------------------------------- |
+| Basic info         | `BasicInfoSection.tsx` | Exists                                       |
+| Contact            | `ContactSection.tsx`   | Exists                                       |
+| Social links       | `SocialSection.tsx`    | Exists                                       |
+| SEO metadata       | `SeoSection.tsx`       | Exists                                       |
+| Primary CTA        | `CtaSection.tsx`       | Exists                                       |
+| About / story      | `AboutSection.tsx`     | Exists                                       |
+| Media gallery      | `MediaGrid.tsx`        | Exists — wire to `/api/upload/listing-media` |
+| Hours of operation | `listing_hours` table  | Build `HoursSection.tsx` (new)               |
+| Business links     | `listing_links` table  | Build `LinksSection.tsx` (new)               |
 
 Stat cards on `/dashboard` page:
+
 - Query `entity_analytics_daily` for 7/30-day page views, CTA clicks, save counts
 - Completeness checklist already exists on `/dashboard/page.tsx`
 
@@ -280,26 +285,27 @@ Files: `app/add-business/page.tsx`, `components/listings/SubmitListingForm.tsx`,
 
 ### 1.6 — Sitemap, SEO, and Structured Data
 
-| Feature | File | Notes |
-|---|---|---|
-| Auto-generated sitemap | `app/sitemap.ts` (new) | All published listings + static pages; revalidated every 24h |
-| robots.txt | `app/robots.ts` (new) | Allow crawl; disallow `/admin`, `/dashboard`, `/api` |
-| OG image per listing | `app/[citySlug]/[entityType]/[listingSlug]/opengraph-image.tsx` (new) | `ImageResponse` with listing name + category + cover image |
-| LocalBusiness JSON-LD | In entity page server component | Already partially present; complete with address, hours, geo, aggregateRating |
-| Canonical URL | In page metadata | `https://theblacqlist.com/[city]/[type]/[slug]` |
+| Feature                | File                                                                  | Notes                                                                         |
+| ---------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Auto-generated sitemap | `app/sitemap.ts` (new)                                                | All published listings + static pages; revalidated every 24h                  |
+| robots.txt             | `app/robots.ts` (new)                                                 | Allow crawl; disallow `/admin`, `/dashboard`, `/api`                          |
+| OG image per listing   | `app/[citySlug]/[entityType]/[listingSlug]/opengraph-image.tsx` (new) | `ImageResponse` with listing name + category + cover image                    |
+| LocalBusiness JSON-LD  | In entity page server component                                       | Already partially present; complete with address, hours, geo, aggregateRating |
+| Canonical URL          | In page metadata                                                      | `https://theblacqlist.com/[city]/[type]/[slug]`                               |
 
 ### 1.7 — Analytics Pipeline
 
 Wire `lib/analytics/client.ts` to fire events:
 
-| Event | Where fired | Data sent |
-|---|---|---|
-| `page_view` | Entity page server component | listing_id, city_id, referrer |
-| `cta_click` | SaveButton, CTA button onClick | listing_id, cta_type, destination_url |
-| `save` | SaveButton after success | listing_id |
-| `search_query` | Search page server component | query, result_count, city_filter, category_filter |
+| Event          | Where fired                    | Data sent                                         |
+| -------------- | ------------------------------ | ------------------------------------------------- |
+| `page_view`    | Entity page server component   | listing_id, city_id, referrer                     |
+| `cta_click`    | SaveButton, CTA button onClick | listing_id, cta_type, destination_url             |
+| `save`         | SaveButton after success       | listing_id                                        |
+| `search_query` | Search page server component   | query, result_count, city_filter, category_filter |
 
 **Nightly aggregation job** (Supabase Edge Function):
+
 - Runs at 00:00 UTC daily
 - Aggregates `analytics_events` from prior day → inserts row to `entity_analytics_daily` per listing
 - File: `supabase/functions/aggregate-analytics/index.ts` (new)
@@ -307,6 +313,7 @@ Wire `lib/analytics/client.ts` to fire events:
 ### 1.8 — Seed Production Data
 
 **Minimum before go/no-go:**
+
 - Atlanta: 150+ published listings (use existing `001_listings.sql` + supplement)
 - Houston: 50+ published listings
 - Chicago: 50+ published listings
@@ -341,6 +348,7 @@ Wire `lib/analytics/client.ts` to fire events:
 Admin moderation (built in Phase 0) approves reviews → `status='published'`.
 
 **Public display:**
+
 - `components/entity-page/EntityReviewsSection.tsx` (exists) — render only `status='published'` reviews
 - Average rating calculated from published reviews; shown on entity page hero
 - Star rating visible on discovery cards (if ≥1 published review)
@@ -368,23 +376,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ### 2.2 — Trust System
 
-| Badge | Condition | Visible on |
-|---|---|---|
-| Unclaimed | `trust_tier='unclaimed'` | Entity page, search card |
-| Claimed | `trust_tier='claimed'` | Entity page, search card |
-| Verified | `trust_tier='verified'` (admin-set) | Entity page hero, search card |
+| Badge               | Condition                             | Visible on                                       |
+| ------------------- | ------------------------------------- | ------------------------------------------------ |
+| Unclaimed           | `trust_tier='unclaimed'`              | Entity page, search card                         |
+| Claimed             | `trust_tier='claimed'`                | Entity page, search card                         |
+| Verified            | `trust_tier='verified'` (admin-set)   | Entity page hero, search card                    |
 | BLACQList Certified | `trust_tier='certified'` (auto-grant) | Entity page hero, search card, discovery filters |
 
 Files: `components/ui/status-badge.tsx` (exists), `components/entity-page/EntityTrustSection.tsx` (exists)
 
 ### 2.3 — Editorial CMS (Full Activation)
 
-| Content Type | Admin Route | Public Route | Status |
-|---|---|---|---|
-| BLACQLight articles | `/admin/blacqlight/` (exists) | `/blacqlight/[slug]` (fixed Phase 0) | ✅ Activate |
-| City guides | `/admin/guides/` (exists) | `/guides/[slug]` (fixed Phase 0) | ✅ Activate |
-| Collections | `/admin/collections/` (exists) | `/collections/[slug]` (exists) | ✅ Activate |
-| Featured editorial | Admin assigns to `featured_slots` | Homepage featured section | Build |
+| Content Type        | Admin Route                       | Public Route                         | Status      |
+| ------------------- | --------------------------------- | ------------------------------------ | ----------- |
+| BLACQLight articles | `/admin/blacqlight/` (exists)     | `/blacqlight/[slug]` (fixed Phase 0) | ✅ Activate |
+| City guides         | `/admin/guides/` (exists)         | `/guides/[slug]` (fixed Phase 0)     | ✅ Activate |
+| Collections         | `/admin/collections/` (exists)    | `/collections/[slug]` (exists)       | ✅ Activate |
+| Featured editorial  | Admin assigns to `featured_slots` | Homepage featured section            | Build       |
 
 **New migration table:** `featured_slots` — admin assigns a collection/article/guide to a named slot (e.g., `homepage_hero`, `homepage_editorial_1`, `homepage_editorial_2`). Homepage queries this table server-side.
 
@@ -410,6 +418,7 @@ POST /api/webhooks/stripe
 ```
 
 **Dashboard upgrade page** (`app/dashboard/upgrade/page.tsx`):
+
 - Replace "coming soon" with real plan comparison table (Free / Starter / Growth / Premium)
 - "Upgrade" button triggers `POST /api/checkout/subscription`
 - Current plan badge shows on dashboard header
@@ -421,10 +430,10 @@ POST /api/webhooks/stripe
 export async function getActiveSubscription(listingId: string) {
   const supabase = await createClient()
   const { data } = await supabase
-    .from("subscriptions")
-    .select("plan_id, status, current_period_end, plans(plan_key)")
-    .eq("listing_id", listingId)
-    .eq("status", "active")
+    .from('subscriptions')
+    .select('plan_id, status, current_period_end, plans(plan_key)')
+    .eq('listing_id', listingId)
+    .eq('status', 'active')
     .single()
   return data // null = Free tier
 }
@@ -435,11 +444,13 @@ Files: `app/api/webhooks/stripe/route.ts` (new), `app/api/checkout/subscription/
 ### 2.5 — Sponsored Placements
 
 **Admin workflow:**
+
 - Admin creates a `sponsored_placements` row for a listing (type, zone, dates)
 - Placement query in relevant pages: `SELECT listing_id FROM sponsored_placements WHERE status='active' AND placement_zone=$zone AND starts_at <= now() AND ends_at >= now() LIMIT 1`
 - "Sponsored" label displayed on placement cards (required)
 
 **Placement zones:**
+
 - `homepage` — featured business row above discovery grid
 - `city` — featured row on `/[citySlug]` city page
 - `category` — featured row on `/category/[categorySlug]` page
@@ -450,12 +461,14 @@ Files: `app/admin/sponsored-placements/page.tsx` (new), query modifications in h
 ### 2.6 — Business Analytics Dashboard
 
 `/dashboard/pages/[entityId]/analytics` (exists) — add:
+
 - 7/30/90-day trend charts using `entity_analytics_daily` (Recharts bar chart)
 - Search impressions count from `search_events`
 - Save trend line
 - Top search terms that led to this page
 
 Platform analytics at `/admin/analytics` (exists) — add:
+
 - Listings by city (bar chart)
 - Listings by category (horizontal bar)
 - Claim resolution time (average days pending → approved)
@@ -465,12 +478,13 @@ Platform analytics at `/admin/analytics` (exists) — add:
 
 **New routes:**
 
-| Route | File | Purpose |
-|---|---|---|
-| `/[citySlug]` | `app/(public)/[citySlug]/page.tsx` (new) | All published businesses in a city |
-| `/category/[categorySlug]` | `app/(public)/category/[categorySlug]/page.tsx` (new) | Cross-city category browse |
+| Route                      | File                                                  | Purpose                            |
+| -------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| `/[citySlug]`              | `app/(public)/[citySlug]/page.tsx` (new)              | All published businesses in a city |
+| `/category/[categorySlug]` | `app/(public)/category/[categorySlug]/page.tsx` (new) | Cross-city category browse         |
 
 **Search enhancements:**
+
 - Category filter chips on `/discover` and `/search` (currently "coming soon" text)
 - City filter dropdown
 - Sort: relevance / newest / most saves / highest rated (after reviews live)
@@ -569,6 +583,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ### 3.1 — Marketplace: Completion
 
 Current state: routes functional, products/services queryable, CTA tracking working. Complete:
+
 - Image upload for products/services (currently URL-only): add upload flow using `/api/upload/listing-media`
 - Marketplace search: full-text search within `marketplace_products.name + description`
 - Marketplace category filter: `marketplace_products.category_id` FK (add column + seed data)
@@ -579,6 +594,7 @@ Files: `app/dashboard/products/new/page.tsx`, `app/dashboard/services/new/page.t
 ### 3.2 — Receipt Tracking — Full Workflow
 
 **User flow (mobile-first):**
+
 1. `/account/receipts/new` — open camera or file picker (`accept="image/*" capture="environment"`)
 2. Upload to `receipts` storage bucket via `/api/upload/receipts`
 3. OCR suggestion: send image path to Anthropic Vision (Claude Haiku) → returns suggested business_name, amount, date
@@ -682,15 +698,16 @@ FOR EACH ROW EXECUTE FUNCTION trigger_receipt_approval();
 
 Wire existing component placeholders to real data:
 
-| Component | Current State | Action |
-|---|---|---|
-| `FlowSummaryCards` | Exists, wired | Verify real data flows in |
-| `FlowNodeTable` | Exists | Wire city/category filter query params |
-| `FlowMapNetwork` | Exists (decorative SVG) | Upgrade to force-directed graph |
-| City/category filters | Placeholder `{/* placeholder */}` | Wire to URL query params + API filters |
-| Entity impact panel | Placeholder | Wire to `/api/flow-map/personal-impact` |
+| Component             | Current State                     | Action                                  |
+| --------------------- | --------------------------------- | --------------------------------------- |
+| `FlowSummaryCards`    | Exists, wired                     | Verify real data flows in               |
+| `FlowNodeTable`       | Exists                            | Wire city/category filter query params  |
+| `FlowMapNetwork`      | Exists (decorative SVG)           | Upgrade to force-directed graph         |
+| City/category filters | Placeholder `{/* placeholder */}` | Wire to URL query params + API filters  |
+| Entity impact panel   | Placeholder                       | Wire to `/api/flow-map/personal-impact` |
 
 **FlowMapNetwork visualization** (install `react-force-graph-2d`):
+
 - Nodes: businesses (circles, amber gold) + cities (squares, charcoal)
 - Node size: proportional to `total_spend_cents`
 - Edges: `transaction_count >= 5` only (privacy floor)
@@ -705,7 +722,7 @@ Files: `components/flow-map/FlowMapNetwork.tsx`, `app/(public)/flow-map/page.tsx
 **Infrastructure: `lib/ai/client.ts`**
 
 ```typescript
-import Anthropic from "@anthropic-ai/sdk"
+import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -759,6 +776,7 @@ CREATE INDEX ai_agent_runs_created_idx ON ai_agent_runs (created_at DESC);
 #### All 22 AI Agents — Complete Specification
 
 **Privacy non-negotiables (all agents):**
+
 - No user_id, email, phone, or full name passed to Anthropic
 - No receipt image content passed to Anthropic (OCR only gets the image, not metadata)
 - All prompts assembled server-side
@@ -840,6 +858,7 @@ ALTER TABLE profiles
 ```
 
 **New pages:**
+
 - `/account/life-shift` — Life Shift hub with category cards (groceries, healthcare, beauty, auto, home services, finance, legal, childcare); clicking a category triggers Life Shift Advisor
 - `/account/basket` — Everyday Basket Builder: item entry + AI-mapped business list
 - `/account/recommendations` — Local Life Concierge daily card feed; personalized by saves + city
@@ -1033,6 +1052,7 @@ _Auto-drafts platform posts for new verified listings_
 ---
 
 **AI agent go/no-go for Phase 3:**
+
 - All agents store output in `ai_suggestions` with `status='pending'`; verified no auto-publish path exists
 - Prompt audit: grep all `lib/ai/agents/` files; confirm no user_id, email, phone, or PII in any prompt string
 - All agents have run log in `ai_generation_requests` + `ai_agent_runs`
@@ -1087,11 +1107,13 @@ CREATE INDEX flow_map_snapshots_date_idx ON flow_map_snapshots (snapshot_date DE
 ```
 
 **Nightly snapshot Edge Function** (`supabase/functions/snapshot-flow-map/index.ts`):
+
 - Runs at 03:00 UTC weekly (Sunday)
 - Queries `flow_nodes` + `flow_edges` WHERE `transaction_count >= 5`
 - Serializes to JSON → inserts `flow_map_snapshots` row
 
 **Interactive graph enhancements to `FlowMapNetwork.tsx`:**
+
 - Time range slider (driven by `flow_map_snapshots.snapshot_date` values)
 - On slider change: fetch `/api/flow-map/snapshot/[date]` → re-render graph
 - Category lens: filter edges to only show businesses in selected category
@@ -1114,7 +1136,8 @@ Expand Agent S1 (Find-It-For-Me) into a persistent chat interface:
 
 ### 4.3 — Sponsor Campaigns Self-Serve
 
-**New API route:** `POST /api/checkout/placement`  
+**New API route:** `POST /api/checkout/placement`
+
 - Auth + owner role required
 - Body: `{ listing_id, campaign_type, placement_zone, starts_at, ends_at }`
 - Checks inventory availability (no overlapping active placements for that zone)
@@ -1127,6 +1150,7 @@ Expand Agent S1 (Find-It-For-Me) into a persistent chat interface:
 ### 4.4 — Community Impact Page (`/impact`)
 
 New public page showing platform-wide stats:
+
 - Total businesses listed
 - Total dollars tracked through the community
 - Number of unique supporters who've uploaded receipts
@@ -1185,15 +1209,15 @@ CREATE INDEX sponsor_campaign_zone_idx ON sponsor_campaign_purchases (placement_
 
 ## Complete Migration Plan
 
-| File | Phase | New Tables / Columns | Notes |
-|---|---|---|---|
-| `20260512000000_additional_entity_types.sql` | 1 | `listing_details_professional`, `listing_details_creative`, `listing_details_event`, `listing_details_job`, `corrections`, `review_responses`, `tags`, `listing_tags`, `neighborhoods` | 9 new tables; RLS follows existing patterns |
-| `20260512000001_v1_features.sql` | 2 | `featured_slots`, `verification_submissions`, `platform_analytics_daily`; columns: `listings.search_rank_boost`, `listings.certified_at`; function: `check_and_grant_certified()` | 3 new tables + 2 columns + 1 DB function |
-| `20260512000002_flow_map_triggers.sql` | 3 | Column: `spend_events.city_id`; function: `process_receipt_approval()`; trigger: `receipt_approval_trigger` | No new tables; adds FK + function + trigger |
-| `20260512000003_ai_agent_runs.sql` | 3 | `ai_agent_runs`; column: `ai_suggestions.agent_run_id` | 1 new table + 1 FK column |
-| `20260512000003b_consumer_companion.sql` | 3 | Columns on `profiles`: `shift_categories`, `location_radius_miles`, `provider_needs`, `dietary_notes`, `companion_onboarded` | No new tables; 5 new columns on existing table |
-| `20260512000004_flow_map_snapshots.sql` | 4 | `flow_map_snapshots` | 1 new table; weekly nightly job |
-| `20260512000005_v3_intelligence.sql` | 4 | `community_impact_daily`, `sponsor_campaign_purchases` | 2 new tables |
+| File                                         | Phase | New Tables / Columns                                                                                                                                                                   | Notes                                          |
+| -------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `20260512000000_additional_entity_types.sql` | 1     | `listing_details_professional`, `listing_details_creative`, `listing_details_event`, `listing_details_job`, `corrections`, `review_responses`, `tags`, `listing_tags`, `neighborhoods` | 9 new tables; RLS follows existing patterns    |
+| `20260512000001_v1_features.sql`             | 2     | `featured_slots`, `verification_submissions`, `platform_analytics_daily`; columns: `listings.search_rank_boost`, `listings.certified_at`; function: `check_and_grant_certified()`      | 3 new tables + 2 columns + 1 DB function       |
+| `20260512000002_flow_map_triggers.sql`       | 3     | Column: `spend_events.city_id`; function: `process_receipt_approval()`; trigger: `receipt_approval_trigger`                                                                            | No new tables; adds FK + function + trigger    |
+| `20260512000003_ai_agent_runs.sql`           | 3     | `ai_agent_runs`; column: `ai_suggestions.agent_run_id`                                                                                                                                 | 1 new table + 1 FK column                      |
+| `20260512000003b_consumer_companion.sql`     | 3     | Columns on `profiles`: `shift_categories`, `location_radius_miles`, `provider_needs`, `dietary_notes`, `companion_onboarded`                                                           | No new tables; 5 new columns on existing table |
+| `20260512000004_flow_map_snapshots.sql`      | 4     | `flow_map_snapshots`                                                                                                                                                                   | 1 new table; weekly nightly job                |
+| `20260512000005_v3_intelligence.sql`         | 4     | `community_impact_daily`, `sponsor_campaign_purchases`                                                                                                                                 | 2 new tables                                   |
 
 **Total after all migrations:** 37 (existing) + 16 (new) = **53 tables** + 5 new columns on `profiles`
 
@@ -1201,22 +1225,22 @@ CREATE INDEX sponsor_campaign_zone_idx ON sponsor_campaign_purchases (placement_
 
 ## Environment Variables — Activation by Phase
 
-| Variable | P0 | P1 | P2 | P3 | P4 |
-|---|---|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `NEXT_PUBLIC_SITE_URL` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `AUTH_SECRET` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `RESEND_API_KEY` | — | ✅ | ✅ | ✅ | ✅ |
-| `RESEND_FROM_EMAIL` | — | ✅ | ✅ | ✅ | ✅ |
-| `NEXT_PUBLIC_SENTRY_DSN` | — | ✅ | ✅ | ✅ | ✅ |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | — | — | ✅ | ✅ | ✅ |
-| `STRIPE_SECRET_KEY` | — | — | ✅ | ✅ | ✅ |
-| `STRIPE_WEBHOOK_SECRET` | — | — | ✅ | ✅ | ✅ |
-| `ANTHROPIC_API_KEY` | — | — | — | ✅ | ✅ |
-| `NEXT_PUBLIC_AI_FEATURES_ENABLED` | `false` | `false` | `false` | `true` | `true` |
-| `STRIPE_CONNECT_CLIENT_ID` | — | — | — | — | If marketplace checkout scoped |
+| Variable                             | P0      | P1      | P2      | P3     | P4                             |
+| ------------------------------------ | ------- | ------- | ------- | ------ | ------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`           | ✅      | ✅      | ✅      | ✅     | ✅                             |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | ✅      | ✅      | ✅      | ✅     | ✅                             |
+| `SUPABASE_SERVICE_ROLE_KEY`          | ✅      | ✅      | ✅      | ✅     | ✅                             |
+| `NEXT_PUBLIC_SITE_URL`               | ✅      | ✅      | ✅      | ✅     | ✅                             |
+| `AUTH_SECRET`                        | ✅      | ✅      | ✅      | ✅     | ✅                             |
+| `RESEND_API_KEY`                     | —       | ✅      | ✅      | ✅     | ✅                             |
+| `RESEND_FROM_EMAIL`                  | —       | ✅      | ✅      | ✅     | ✅                             |
+| `NEXT_PUBLIC_SENTRY_DSN`             | —       | ✅      | ✅      | ✅     | ✅                             |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | —       | —       | ✅      | ✅     | ✅                             |
+| `STRIPE_SECRET_KEY`                  | —       | —       | ✅      | ✅     | ✅                             |
+| `STRIPE_WEBHOOK_SECRET`              | —       | —       | ✅      | ✅     | ✅                             |
+| `ANTHROPIC_API_KEY`                  | —       | —       | —       | ✅     | ✅                             |
+| `NEXT_PUBLIC_AI_FEATURES_ENABLED`    | `false` | `false` | `false` | `true` | `true`                         |
+| `STRIPE_CONNECT_CLIENT_ID`           | —       | —       | —       | —      | If marketplace checkout scoped |
 
 ---
 
@@ -1224,43 +1248,43 @@ CREATE INDEX sponsor_campaign_zone_idx ON sponsor_campaign_purchases (placement_
 
 Build agents in this order to minimize rework and test on stable data:
 
-| Order | Agent | Domain | Model | Phase |
-|---|---|---|---|---|
-| 1 | Listing Optimizer | Business | Haiku | 3 |
-| 2 | SEO Coach | Business | Haiku | 3 |
-| 3 | Social Caption | Business | Haiku | 3 |
-| 4 | Page Builder | Business | Haiku | 3 |
-| 5 | Verification Support | Admin | Haiku | 3 |
-| 6 | Directory Curator | Admin/cron | Haiku | 3 |
-| 7 | Collection Builder | Admin | Haiku | 3 |
-| 8 | Analytics Explainer | Business | Sonnet | 3 |
-| 9 | Review Response | Business | Haiku | 3 |
-| 10 | Marketplace Merchandising | Business | Haiku | 3 |
-| 11 | Guide Writer | Admin | Sonnet | 3 |
-| 12 | Social Media Agent | Admin | Haiku | 3 |
-| 13 | Support Local Tonight | Shopper | Haiku | 3 |
-| 14 | Gift Finder | Shopper | Haiku | 3 |
-| 15 | Community Spend Insights | Shopper | Sonnet | 3 (requires spend data) |
-| 16 | Find-It-For-Me (simple) | Shopper | Haiku | 3 |
-| 17 | Event Planner | Shopper | Haiku | 3 |
-| 18 | Find-It-For-Me (full concierge) | Shopper | Sonnet | 4 |
+| Order | Agent                           | Domain     | Model  | Phase                   |
+| ----- | ------------------------------- | ---------- | ------ | ----------------------- |
+| 1     | Listing Optimizer               | Business   | Haiku  | 3                       |
+| 2     | SEO Coach                       | Business   | Haiku  | 3                       |
+| 3     | Social Caption                  | Business   | Haiku  | 3                       |
+| 4     | Page Builder                    | Business   | Haiku  | 3                       |
+| 5     | Verification Support            | Admin      | Haiku  | 3                       |
+| 6     | Directory Curator               | Admin/cron | Haiku  | 3                       |
+| 7     | Collection Builder              | Admin      | Haiku  | 3                       |
+| 8     | Analytics Explainer             | Business   | Sonnet | 3                       |
+| 9     | Review Response                 | Business   | Haiku  | 3                       |
+| 10    | Marketplace Merchandising       | Business   | Haiku  | 3                       |
+| 11    | Guide Writer                    | Admin      | Sonnet | 3                       |
+| 12    | Social Media Agent              | Admin      | Haiku  | 3                       |
+| 13    | Support Local Tonight           | Shopper    | Haiku  | 3                       |
+| 14    | Gift Finder                     | Shopper    | Haiku  | 3                       |
+| 15    | Community Spend Insights        | Shopper    | Sonnet | 3 (requires spend data) |
+| 16    | Find-It-For-Me (simple)         | Shopper    | Haiku  | 3                       |
+| 17    | Event Planner                   | Shopper    | Haiku  | 3                       |
+| 18    | Find-It-For-Me (full concierge) | Shopper    | Sonnet | 4                       |
 
 ---
 
 ## Circulation Map Build Sequence
 
-| Step | Phase | What Changes |
-|---|---|---|
-| 1 | 0 | Wire `/flow-map` `FlowSummaryCards` + `FlowNodeTable` to real API data |
-| 2 | 3 | Add `spend_events.city_id`; write `process_receipt_approval()` trigger |
-| 3 | 3 | OCR receipt → listing match → spend event pipeline end-to-end in staging |
-| 4 | 3 | Upgrade `FlowMapNetwork.tsx` to force-directed graph (react-force-graph-2d) |
-| 5 | 3 | Wire city/category filters on flow-map page to query params |
-| 6 | 3 | Wire personal impact panel to `/api/flow-map/personal-impact` |
-| 7 | 4 | `flow_map_snapshots` table + nightly archiving Edge Function |
-| 8 | 4 | Time range slider in graph (requires ≥4 snapshots / 1 month of data) |
-| 9 | 4 | Category lens + city filter in graph |
-| 10 | 4 | Embed widget (`<iframe>`) with `?embed=true` query param |
+| Step | Phase | What Changes                                                                |
+| ---- | ----- | --------------------------------------------------------------------------- |
+| 1    | 0     | Wire `/flow-map` `FlowSummaryCards` + `FlowNodeTable` to real API data      |
+| 2    | 3     | Add `spend_events.city_id`; write `process_receipt_approval()` trigger      |
+| 3    | 3     | OCR receipt → listing match → spend event pipeline end-to-end in staging    |
+| 4    | 3     | Upgrade `FlowMapNetwork.tsx` to force-directed graph (react-force-graph-2d) |
+| 5    | 3     | Wire city/category filters on flow-map page to query params                 |
+| 6    | 3     | Wire personal impact panel to `/api/flow-map/personal-impact`               |
+| 7    | 4     | `flow_map_snapshots` table + nightly archiving Edge Function                |
+| 8    | 4     | Time range slider in graph (requires ≥4 snapshots / 1 month of data)        |
+| 9    | 4     | Category lens + city filter in graph                                        |
+| 10   | 4     | Embed widget (`<iframe>`) with `?embed=true` query param                    |
 
 ---
 

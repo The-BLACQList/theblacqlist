@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 13: Marketplace Foundation
 
 ## Priority
+
 P3 — Low
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Marketplace
 
 ---
@@ -38,6 +43,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 ## Scope
 
 **In scope:**
+
 - `app/[city-slug]/vendor/[listing-slug]/page.tsx` — Server Component; ISR 1h; `generateStaticParams` for all vendor listings
 - `generateMetadata` for vendor pages: title `[Business Name] — [City] | The BLACQList`, description from `listing_details_business.description`, OG image from `cover_image_path`
 - All base BLACQList Page sections (re-used from Tickets 021–024): hero (name, tagline, logo, cover image), about (description, founded year), hours, contact (phone, email, address), social links, gallery, services, sticky CTA bar, save button, share button
@@ -48,9 +54,10 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 - Loading state: skeleton grid (6 placeholder cards) shown while product data fetches
 - Error state: "Couldn't load products." with a "Try again" button that re-fetches
 - `generateStaticParams`: query `listings WHERE listing_type = 'vendor' AND status = 'published'`; return `[{ 'city-slug': city.slug, 'listing-slug': listing.slug }]`
-- ISR revalidation: `revalidateTag(\`vendor-${listingId}\`)` is called by Ticket 073 mutations — this page uses `export const revalidate = 3600` at the route level
+- ISR revalidation: `revalidateTag(\`vendor-${listingId}\`)`is called by Ticket 073 mutations — this page uses`export const revalidate = 3600` at the route level
 
 **Out of scope:**
+
 - Product detail sub-pages (`/vendor/[slug]/products/[product-slug]`) — V2 per ADR-010
 - Vendor cart / checkout — V2 (Stripe Connect not available at V1)
 - Product inventory management UI — Ticket 073
@@ -61,15 +68,15 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 071 — Products table and API endpoints | Blocking ticket | Not started |
-| Ticket 070 — Vendor listing extension table | Blocking ticket | Not started |
-| Ticket 020 — BLACQList Page data layer and route | Blocking ticket | Not started |
+| Dependency                                                | Type            | Status      |
+| --------------------------------------------------------- | --------------- | ----------- |
+| Ticket 071 — Products table and API endpoints             | Blocking ticket | Not started |
+| Ticket 070 — Vendor listing extension table               | Blocking ticket | Not started |
+| Ticket 020 — BLACQList Page data layer and route          | Blocking ticket | Not started |
 | Ticket 021 — Hero, about, hours, contact, social sections | Blocking ticket | Not started |
-| Ticket 022 — Gallery, services, CTA section | Blocking ticket | Not started |
-| Ticket 023 — SEO, OG image, JSON-LD | Blocking ticket | Not started |
-| Ticket 024 — Save, share, analytics, sticky CTA | Soft dependency | Not started |
+| Ticket 022 — Gallery, services, CTA section               | Blocking ticket | Not started |
+| Ticket 023 — SEO, OG image, JSON-LD                       | Blocking ticket | Not started |
+| Ticket 024 — Save, share, analytics, sticky CTA           | Soft dependency | Not started |
 
 ---
 
@@ -81,6 +88,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 - **Exit points:** Product CTA button → vendor's external site or contact form (per `listing_details_vendor.product_cta_url`); sticky CTA bar → vendor's primary CTA; social links
 
 **Page section order (top to bottom):**
+
 1. Hero (cover image + logo + name + tagline + trust badge)
 2. About + Fulfillment Info (side by side on desktop, stacked on mobile)
 3. Hours + Contact (same row as base page)
@@ -91,6 +99,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 8. Sticky CTA bar (fixed bottom on mobile, inline on desktop)
 
 **Product card layout (375px — 2 columns):**
+
 ```
 ┌──────────┐ ┌──────────┐
 │ [image]  │ │ [image]  │
@@ -105,6 +114,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 **Empty state:** Center-aligned in the product catalog section: "No products listed yet. Check back soon." — no icon or CTA needed.
 
 **Mobile behavior:**
+
 - Product grid: `grid-cols-2` at all mobile sizes; `grid-cols-3` at `lg:`
 - Product card image: `aspect-square`, `object-cover`
 - Fulfillment info: rendered as a simple tag/badge row (e.g., "Shipping", "Local pickup") — wraps to second line if needed
@@ -148,12 +158,14 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 - **API contract:** `docs/blacqlist/architecture/api-contract.md` § Marketplace (Part C)
 
 **Endpoints consumed:**
+
 - `GET /api/listings/[id]` (or equivalent data layer from Ticket 020) — base listing data including `listing_details_vendor` join
 - `GET /api/listings/[id]/products` — product catalog; fetched with `{ next: { tags: [\`vendor-${listingId}\`], revalidate: 3600 } }`
 
 **No auth required.** Both endpoints are public.
 
 **Error handling:**
+
 - If listing fetch fails or listing is not found: call Next.js `notFound()` — renders the branded 404 page (Ticket 019)
 - If products fetch fails: render the error state in the Product Catalog section only; do not fail the entire page
 - If products fetch returns empty array: render the empty state
@@ -163,6 +175,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/vendor/[listing-slug]/page.tsx` — vendor storefront page; Server Component; ISR; `generateStaticParams` + `generateMetadata`
 - `components/marketplace/ProductCatalogSection.tsx` — product grid section; receives `products: Product[]` prop; handles empty and error sub-states
 - `components/marketplace/ProductCard.tsx` — individual product card: image, name, price, CTA button
@@ -170,9 +183,11 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 - `components/marketplace/FulfillmentInfo.tsx` — renders fulfillment badges, "ships nationally" badge, minimum order text
 
 **Files to modify:**
+
 - `lib/data/listings.ts` (or equivalent data layer file from Ticket 020) — ensure `getListingBySlug()` JOINs `listing_details_vendor` when `listing_type = 'vendor'`
 
 **Key patterns:**
+
 - Wrap `ProductCatalogSection` in its own `<Suspense>` boundary with `<ProductCatalogSkeleton>` as fallback, so the rest of the page renders immediately while products load
 - Fetch the products inside `ProductCatalogSection` using a Server Component (not a Client Component) to keep the product data server-rendered
 - Generate public URLs for product images at render time: `supabase.storage.from('listing-media').getPublicUrl(image.path)` — never store URLs in the DB or pass them from the API
@@ -180,6 +195,7 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 - Re-use all existing base section components from Tickets 021–022 — do not rebuild them
 
 **Do not:**
+
 - Build a cart or checkout flow — this is display-only at V1
 - Fetch products client-side on mount — use Server Component data fetching
 - Persist CDN URLs — generate at render time from paths
@@ -206,13 +222,13 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Listing not found | Slug does not exist or listing is not published | Branded 404 page (Ticket 019) | Navigate back |
-| Products API fails | `GET /api/listings/[id]/products` returns error | Product Catalog section shows "Couldn't load products." + "Try again" button | Retry re-fetches the products section |
-| No products | Vendor has no active products | "No products listed yet. Check back soon." | No action needed |
-| Product image missing | Storage path exists but file deleted from bucket | Broken image; Pale Lavender placeholder background shows | No action (display-only) |
-| Vendor details missing | `listing_details_vendor` row not found (shouldn't happen post-Ticket 070) | Page renders without vendor section; no error thrown | N/A |
+| Failure                | Condition                                                                 | User sees                                                                    | Recovery                              |
+| ---------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------- |
+| Listing not found      | Slug does not exist or listing is not published                           | Branded 404 page (Ticket 019)                                                | Navigate back                         |
+| Products API fails     | `GET /api/listings/[id]/products` returns error                           | Product Catalog section shows "Couldn't load products." + "Try again" button | Retry re-fetches the products section |
+| No products            | Vendor has no active products                                             | "No products listed yet. Check back soon."                                   | No action needed                      |
+| Product image missing  | Storage path exists but file deleted from bucket                          | Broken image; Pale Lavender placeholder background shows                     | No action (display-only)              |
+| Vendor details missing | `listing_details_vendor` row not found (shouldn't happen post-Ticket 070) | Page renders without vendor section; no error thrown                         | N/A                                   |
 
 ---
 
@@ -243,14 +259,14 @@ As a visitor discovering a vendor on The BLACQList, I want to see the vendor's f
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Full vendor page | Anonymous | Navigate to `/[city-slug]/vendor/[published-vendor-slug]` with products | All base sections render; Fulfillment Info renders; Product grid renders with correct prices |
-| QA-2 | No products empty state | Anonymous | Navigate to vendor with no active products | Product Catalog section shows "No products listed yet. Check back soon." |
-| QA-3 | Products API error | Anonymous | Force API failure for product fetch | Error state renders in Product Catalog; rest of page (hero, about, etc.) renders normally |
-| QA-4 | Mobile product grid | Anonymous | Open vendor page at 375px | Product grid is 2 columns; fulfillment badges wrap; sticky CTA bar is visible |
-| QA-5 | 404 for unknown slug | Anonymous | Navigate to `/[city-slug]/vendor/does-not-exist` | Branded 404 page renders |
-| QA-6 | Ships nationally badge | Anonymous | Open vendor with `ships_nationally = true` | Amber Gold "Ships nationally" badge visible in Fulfillment Info section |
+| #    | Scenario                | Role      | Steps                                                                   | Expected result                                                                              |
+| ---- | ----------------------- | --------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| QA-1 | Full vendor page        | Anonymous | Navigate to `/[city-slug]/vendor/[published-vendor-slug]` with products | All base sections render; Fulfillment Info renders; Product grid renders with correct prices |
+| QA-2 | No products empty state | Anonymous | Navigate to vendor with no active products                              | Product Catalog section shows "No products listed yet. Check back soon."                     |
+| QA-3 | Products API error      | Anonymous | Force API failure for product fetch                                     | Error state renders in Product Catalog; rest of page (hero, about, etc.) renders normally    |
+| QA-4 | Mobile product grid     | Anonymous | Open vendor page at 375px                                               | Product grid is 2 columns; fulfillment badges wrap; sticky CTA bar is visible                |
+| QA-5 | 404 for unknown slug    | Anonymous | Navigate to `/[city-slug]/vendor/does-not-exist`                        | Branded 404 page renders                                                                     |
+| QA-6 | Ships nationally badge  | Anonymous | Open vendor with `ships_nationally = true`                              | Amber Gold "Ships nationally" badge visible in Fulfillment Info section                      |
 
 ---
 

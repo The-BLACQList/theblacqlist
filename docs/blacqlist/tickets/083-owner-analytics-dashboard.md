@@ -1,15 +1,19 @@
 # Ticket 083: Owner analytics dashboard — 7/30-day charts, per-metric breakdown (`/dashboard/analytics`)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 16: Analytics and Reporting
 
 ## Priority
+
 P2
 
 ## Feature Area
+
 Owner Dashboard
 
 ---
@@ -33,6 +37,7 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 ## Scope
 
 **In scope:**
+
 - `app/(dashboard)/dashboard/analytics/page.tsx` — Server Component; fetches the owner's listing ID from the session, queries `entity_analytics_daily` for the selected period (default 30 days), passes data to Client Components
 - `GET /api/dashboard/analytics` Route Handler — accepts `listing_id` and `period` (`7d` / `30d`) query params; validates ownership (`listings.owner_user_id = auth.uid()`); returns time-series data from `entity_analytics_daily` plus top search queries from `search_events`
 - `app/(dashboard)/dashboard/analytics/components/AnalyticsPeriodToggle.tsx` — `"use client"` component; 7d / 30d toggle using `useRouter` + `useSearchParams`; updates URL param `?period=7d|30d`
@@ -44,6 +49,7 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 - Empty state: if the listing has fewer than 2 days of aggregated data, show an informational empty state ("Analytics data starts accumulating after your listing is published. Check back in 24 hours.")
 
 **Out of scope:**
+
 - Referrer breakdown (deferred)
 - Comparison to prior period (V1)
 - Export to CSV (deferred)
@@ -53,12 +59,12 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 050: Owner dashboard home | Blocking ticket | In Progress |
-| Ticket 082: Daily analytics aggregation Edge Function | Blocking ticket — data source | Must produce rows before charts show data |
-| `recharts` npm package | Dependency | Must be installed (`npm install recharts`) |
-| `GET /api/dashboard/analytics` Route Handler | New Route Handler | Created within this ticket |
+| Dependency                                            | Type                          | Status                                     |
+| ----------------------------------------------------- | ----------------------------- | ------------------------------------------ |
+| Ticket 050: Owner dashboard home                      | Blocking ticket               | In Progress                                |
+| Ticket 082: Daily analytics aggregation Edge Function | Blocking ticket — data source | Must produce rows before charts show data  |
+| `recharts` npm package                                | Dependency                    | Must be installed (`npm install recharts`) |
+| `GET /api/dashboard/analytics` Route Handler          | New Route Handler             | Created within this ticket                 |
 
 ---
 
@@ -108,12 +114,23 @@ As a business owner, I want to see trend charts and a period breakdown for my li
   {
     "data": {
       "series": [
-        { "date": "2026-04-30", "page_views": 12, "cta_clicks": 3, "saves": 1, "shares": 0, "search_impressions": 5 }
+        {
+          "date": "2026-04-30",
+          "page_views": 12,
+          "cta_clicks": 3,
+          "saves": 1,
+          "shares": 0,
+          "search_impressions": 5
+        }
       ],
-      "totals": { "page_views": 145, "cta_clicks": 28, "saves": 9, "shares": 4, "search_impressions": 62 },
-      "top_queries": [
-        { "query": "natural hair atlanta", "impressions": 14 }
-      ]
+      "totals": {
+        "page_views": 145,
+        "cta_clicks": 28,
+        "saves": 9,
+        "shares": 4,
+        "search_impressions": 62
+      },
+      "top_queries": [{ "query": "natural hair atlanta", "impressions": 14 }]
     }
   }
   ```
@@ -128,6 +145,7 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/(dashboard)/dashboard/analytics/page.tsx`
 - `app/(dashboard)/dashboard/analytics/loading.tsx`
 - `app/(dashboard)/dashboard/analytics/components/AnalyticsPeriodToggle.tsx`
@@ -138,16 +156,19 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 - `supabase/migrations/[timestamp]_rls-entity-analytics-daily-owner-select.sql`
 
 **Files to modify:**
+
 - `app/(dashboard)/dashboard/page.tsx` — add "View Full Analytics" link pointing to `/dashboard/analytics`
 - `app/(dashboard)/dashboard/layout.tsx` — add "Analytics" item to the sidebar nav (if not already present)
 
 **Key patterns:**
+
 - Page component is a Server Component that reads `listing_id` from the authenticated session (`profiles JOIN user_roles` or `listings WHERE owner_user_id = auth.uid()`) — do not accept `listing_id` as a URL param (prevents IDOR)
 - Charts must include `aria-label` on `ResponsiveContainer` and a visually hidden data table fallback for screen readers
 - Period toggle uses `useSearchParams` + `router.push` to update URL; Server Component re-renders with new period on navigation
 - Do not install `@recharts/*` sub-packages — import from `recharts` directly
 
 **Do not:**
+
 - Accept `listing_id` as a user-controlled URL parameter — derive it server-side from `auth.uid()`
 - Render `recharts` in a Server Component — it requires the browser environment; wrap in `"use client"`
 - Show analytics data for a listing the authenticated user does not own
@@ -170,13 +191,13 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Route Handler returns 403 | "You do not have access to this listing's analytics." — no chart rendered |
-| Route Handler returns 500 | Error card with "Couldn't load analytics. Try refreshing." and a Retry button that re-fetches |
-| No aggregated data yet (new listing, < 1 day old) | Empty state with explanation; no chart rendered |
-| `recharts` bundle fails to load | Error boundary catches; shows empty state with retry |
-| Network timeout fetching analytics data | Same as 500 — error card with retry |
+| Failure                                           | User-visible behavior                                                                         |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Route Handler returns 403                         | "You do not have access to this listing's analytics." — no chart rendered                     |
+| Route Handler returns 500                         | Error card with "Couldn't load analytics. Try refreshing." and a Retry button that re-fetches |
+| No aggregated data yet (new listing, < 1 day old) | Empty state with explanation; no chart rendered                                               |
+| `recharts` bundle fails to load                   | Error boundary catches; shows empty state with retry                                          |
+| Network timeout fetching analytics data           | Same as 500 — error card with retry                                                           |
 
 ---
 
@@ -201,13 +222,13 @@ As a business owner, I want to see trend charts and a period breakdown for my li
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path — 30-day view | Owner | 1. Log in as owner with a published listing with 30 days of aggregated data. 2. Navigate to `/dashboard/analytics`. | Five charts rendered with data; summary stat totals correct; top queries table populated |
-| QA-2 | Period toggle to 7 days | Owner | 1. On `/dashboard/analytics`, click "7 days" toggle. | All charts re-render with 7-day data; URL updates to `?period=7d`; totals update |
-| QA-3 | Empty state — new listing | Owner | 1. Log in as owner with a listing published today (no aggregated data yet). 2. Navigate to `/dashboard/analytics`. | Empty state message shown; no charts rendered |
-| QA-4 | IDOR prevention | Owner | 1. Construct a URL with a `listing_id` belonging to a different owner. 2. Attempt to access via direct URL. | 403 response; "You do not have access" message shown |
-| QA-5 | Mobile at 375px | Owner | 1. Open `/dashboard/analytics` at 375px. 2. Check chart layout. | Charts stack single-column; no horizontal overflow; period toggle full-width |
+| #    | Scenario                  | Role  | Steps                                                                                                               | Expected result                                                                          |
+| ---- | ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| QA-1 | Happy path — 30-day view  | Owner | 1. Log in as owner with a published listing with 30 days of aggregated data. 2. Navigate to `/dashboard/analytics`. | Five charts rendered with data; summary stat totals correct; top queries table populated |
+| QA-2 | Period toggle to 7 days   | Owner | 1. On `/dashboard/analytics`, click "7 days" toggle.                                                                | All charts re-render with 7-day data; URL updates to `?period=7d`; totals update         |
+| QA-3 | Empty state — new listing | Owner | 1. Log in as owner with a listing published today (no aggregated data yet). 2. Navigate to `/dashboard/analytics`.  | Empty state message shown; no charts rendered                                            |
+| QA-4 | IDOR prevention           | Owner | 1. Construct a URL with a `listing_id` belonging to a different owner. 2. Attempt to access via direct URL.         | 403 response; "You do not have access" message shown                                     |
+| QA-5 | Mobile at 375px           | Owner | 1. Open `/dashboard/analytics` at 375px. 2. Check chart layout.                                                     | Charts stack single-column; no horizontal overflow; period toggle full-width             |
 
 ---
 

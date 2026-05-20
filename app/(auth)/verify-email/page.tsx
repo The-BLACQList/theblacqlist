@@ -1,13 +1,11 @@
-import Link from "next/link"
-import { Mail } from "lucide-react"
+import Link from 'next/link'
+import { Mail } from 'lucide-react'
 
 interface VerifyEmailPageProps {
   searchParams: Promise<{ email?: string }>
 }
 
-export default async function VerifyEmailPage({
-  searchParams,
-}: VerifyEmailPageProps) {
+export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
   const { email } = await searchParams
 
   return (
@@ -16,16 +14,14 @@ export default async function VerifyEmailPage({
         <Mail className="size-7 text-amber-gold" aria-hidden="true" />
       </div>
 
-      <h1 className="font-headline text-[22px] text-brand-black mb-2">
-        Check your inbox
-      </h1>
+      <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
 
       <p className="font-subhead text-sm text-charcoal leading-relaxed">
-        We sent a verification link to{" "}
+        We sent a verification link to{' '}
         {email ? (
           <span className="font-semibold text-brand-black">{email}</span>
         ) : (
-          "your email address"
+          'your email address'
         )}
         .
       </p>

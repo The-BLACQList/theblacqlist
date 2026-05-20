@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import Image from "next/image"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
-import type { EntityPageData, GalleryImage } from "@/types"
+import { useState } from 'react'
+import Image from 'next/image'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import type { EntityPageData, GalleryImage } from '@/types'
 
 interface Props {
   entity: EntityPageData
@@ -20,16 +20,12 @@ export function EntityMediaGallery({ entity, images }: Props) {
   const closeLightbox = () => setLightboxIndex(null)
   const prev = () =>
     setLightboxIndex((i) => (i !== null ? (i - 1 + images.length) % images.length : null))
-  const next = () =>
-    setLightboxIndex((i) => (i !== null ? (i + 1) % images.length : null))
+  const next = () => setLightboxIndex((i) => (i !== null ? (i + 1) % images.length : null))
 
   const currentImage = lightboxIndex !== null ? images[lightboxIndex] : null
 
   return (
-    <section
-      aria-labelledby="gallery-heading"
-      className="bg-deep-bg py-12 md:py-16"
-    >
+    <section aria-labelledby="gallery-heading" className="bg-deep-bg py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
         <h2
           id="gallery-heading"
@@ -45,16 +41,19 @@ export function EntityMediaGallery({ entity, images }: Props) {
               type="button"
               onClick={() => openLightbox(i)}
               className="relative aspect-square overflow-hidden rounded-lg group focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-gold"
-              aria-label={`View photo ${i + 1} of ${images.length}${img.alt ? `: ${img.alt}` : ""}`}
+              aria-label={`View photo ${i + 1} of ${images.length}${img.alt ? `: ${img.alt}` : ''}`}
             >
               <Image
                 src={img.src}
-                alt={img.alt || ""}
+                alt={img.alt || ''}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 sizes="(max-width: 640px) 50vw, 33vw"
               />
-              <div className="absolute inset-0 bg-brand-black/0 group-hover:bg-brand-black/20 transition-colors" aria-hidden="true" />
+              <div
+                className="absolute inset-0 bg-brand-black/0 group-hover:bg-brand-black/20 transition-colors"
+                aria-hidden="true"
+              />
             </button>
           ))}
         </div>
@@ -82,7 +81,10 @@ export function EntityMediaGallery({ entity, images }: Props) {
             <>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); prev() }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  prev()
+                }}
                 aria-label="Previous photo"
                 className="absolute left-4 text-white/70 hover:text-white transition-colors z-10 p-2"
               >
@@ -90,7 +92,10 @@ export function EntityMediaGallery({ entity, images }: Props) {
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); next() }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  next()
+                }}
                 aria-label="Next photo"
                 className="absolute right-14 md:right-4 text-white/70 hover:text-white transition-colors z-10 p-2"
               >
@@ -105,7 +110,7 @@ export function EntityMediaGallery({ entity, images }: Props) {
           >
             <Image
               src={currentImage.src}
-              alt={currentImage.alt || ""}
+              alt={currentImage.alt || ''}
               fill
               className="object-contain rounded-lg"
               sizes="90vw"

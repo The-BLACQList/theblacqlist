@@ -1,15 +1,15 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { Section } from "@/components/layout/section"
-import { SectionHeading } from "@/components/ui/section-heading"
-import { Button } from "@/components/ui/button"
-import { Container } from "@/components/layout/container"
+import { Section } from '@/components/layout/section'
+import { SectionHeading } from '@/components/ui/section-heading'
+import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
 
 export const metadata: Metadata = {
-  title: "For Vendors | The BLACQList",
+  title: 'For Vendors | The BLACQList',
   description:
-    "Sell on the BLACQList Marketplace. Reach a community that buys intentionally and put your products in front of the right audience.",
+    'Sell on the BLACQList Marketplace. Reach a community that buys intentionally and put your products in front of the right audience.',
 }
 
 export default function ForVendorsPage() {
@@ -27,8 +27,8 @@ export default function ForVendorsPage() {
             Sell to the community that buys intentionally.
           </h1>
           <p className="font-subhead text-pale-lavender text-lg leading-relaxed max-w-xl mb-8">
-            The BLACQList Marketplace connects Black-owned vendors with buyers
-            who are actively seeking to support businesses like yours.
+            The BLACQList Marketplace connects Black-owned vendors with buyers who are actively
+            seeking to support businesses like yours.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
@@ -55,10 +55,9 @@ export default function ForVendorsPage() {
           Marketplace Vendor Access Coming in V2
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
-          We&apos;re accepting early vendor applications now. When the Marketplace
-          launches, early applicants will be among the first to go live —
-          with full product listings, checkout, and analytics. Start by
-          getting your business listed in the directory today.
+          We&apos;re accepting early vendor applications now. When the Marketplace launches, early
+          applicants will be among the first to go live — with full product listings, checkout, and
+          analytics. Start by getting your business listed in the directory today.
         </p>
       </Section>
     </>

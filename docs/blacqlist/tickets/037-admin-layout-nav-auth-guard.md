@@ -1,26 +1,33 @@
 # Ticket 037: Admin Layout, Navigation, and Auth Guard
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Admin / Auth
 
 ## Context
+
 The admin panel is required before any admin workflow — listing review, claim processing, or user management — can be built. This ticket establishes the admin shell: the layout, sidebar navigation, auth guard, and the overview dashboard with platform stats. Without this foundation, Tickets 038–040 cannot be implemented. The admin panel must be completely inaccessible to non-admin users — a role check at the layout level is the first line of defense. Source: `docs/blacqlist/ux/mvp-screen-map.md` Admin Screens; `docs/blacqlist/data/database-schema-plan.md` `user_roles` table; `docs/blacqlist/architecture/server-actions-plan.md`; `docs/blacqlist/architecture/api-contract.md` Section 9.
 
 ## User Story
+
 As a platform admin, I want a protected admin panel with navigation and a stats overview, so that I can access moderation tools and understand platform health at a glance without needing to query the database directly.
 
 ## Scope
 
 **In scope:**
+
 - `app/admin/layout.tsx` — Server Component; performs server-side role check (`user_roles.role IN ('admin', 'super_admin')`); redirects to `/` if check fails; renders admin sidebar + `{children}`
 - `app/admin/page.tsx` — redirects to `/admin/overview` (empty route handler)
 - `app/admin/overview/page.tsx` — Admin Overview: platform stats + action queue + recent activity feed
@@ -42,6 +49,7 @@ As a platform admin, I want a protected admin panel with navigation and a stats 
 - Skeleton loading for all stat cards while data fetches (structure matches loaded card shape)
 
 **Out of scope:**
+
 - Admin Listings table (Ticket 038)
 - Admin Listing Detail (Ticket 039)
 - Admin Claims Queue (Ticket 040)
@@ -50,12 +58,12 @@ As a platform admin, I want a protected admin panel with navigation and a stats 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 014 (user_roles table and RLS) | Blocking ticket | Role check queries `user_roles` table |
-| Ticket 015 (auth middleware and session) | Blocking ticket | Session cookie required for `supabase.auth.getUser()` in layout |
-| Ticket 012 (analytics + audit tables migration — `admin_audit_log`) | Blocking ticket | Recent activity feed reads `admin_audit_log` |
-| Super Admin seed data | Data dependency | At least one `super_admin` role record must exist to access the panel during development |
+| Dependency                                                          | Type            | Status                                                                                   |
+| ------------------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Ticket 014 (user_roles table and RLS)                               | Blocking ticket | Role check queries `user_roles` table                                                    |
+| Ticket 015 (auth middleware and session)                            | Blocking ticket | Session cookie required for `supabase.auth.getUser()` in layout                          |
+| Ticket 012 (analytics + audit tables migration — `admin_audit_log`) | Blocking ticket | Recent activity feed reads `admin_audit_log`                                             |
+| Super Admin seed data                                               | Data dependency | At least one `super_admin` role record must exist to access the panel during development |
 
 ## UX Notes
 
@@ -105,6 +113,7 @@ As a platform admin, I want a protected admin panel with navigation and a stats 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/layout.tsx` — Server Component auth guard + sidebar layout wrapper
 - `app/admin/page.tsx` — redirect to `/admin/overview`
 - `app/admin/overview/page.tsx` — stats + queue + feed (Server Component with Suspense boundaries per section)
@@ -116,11 +125,13 @@ As a platform admin, I want a protected admin panel with navigation and a stats 
 - `lib/admin/serviceRoleClient.ts` — `createServiceRoleClient()` factory function (if not already created)
 
 **Files to modify:**
+
 - None — new route segment
 
 **Key patterns:**
 
 Admin layout auth guard (Server Component):
+
 ```typescript
 // app/admin/layout.tsx
 import { createServerClient } from '@supabase/ssr'
@@ -152,6 +163,7 @@ export default async function AdminLayout({ children }) {
 ```
 
 Stats fetching pattern (overview page):
+
 ```typescript
 // app/admin/overview/page.tsx
 const serviceClient = createServiceRoleClient()
@@ -167,6 +179,7 @@ const [totalListings, pendingClaims, ...] = await Promise.all([
 - Nav active state: use Next.js `usePathname()` in a Client Component to determine the active link
 
 **Do not:**
+
 - Use JWT claims for the admin check — always query `user_roles` table
 - Expose service_role key in any Route Handler — `createServiceRoleClient()` is used only in Server Components and Server Actions
 - Redirect to `/admin/login` — redirect to `/` (the public homepage); this prevents leaking the existence of the admin panel to non-admins
@@ -186,12 +199,12 @@ const [totalListings, pendingClaims, ...] = await Promise.all([
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Stats fetch failure | One of the `Promise.all` queries fails | The failed stat card shows "--" as the value with a subtle "Refresh" link | User refreshes the page |
-| Recent activity feed fails | `admin_audit_log` query fails | Feed section shows "Activity unavailable. Refresh to retry." — stats section unaffected (separate Suspense boundary) | User refreshes |
-| Role check DB error | `user_roles` query fails unexpectedly | Redirect to `/` — fail safe; do not expose admin panel on error | User navigates to sign-in and tries again |
-| Session expires during admin session | `supabase.auth.getUser()` returns no user on layout re-render | Redirect to `/` | User signs in again; `next` param not preserved for admin (intentional) |
+| Failure                              | Condition                                                     | User sees                                                                                                            | Recovery                                                                |
+| ------------------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Stats fetch failure                  | One of the `Promise.all` queries fails                        | The failed stat card shows "--" as the value with a subtle "Refresh" link                                            | User refreshes the page                                                 |
+| Recent activity feed fails           | `admin_audit_log` query fails                                 | Feed section shows "Activity unavailable. Refresh to retry." — stats section unaffected (separate Suspense boundary) | User refreshes                                                          |
+| Role check DB error                  | `user_roles` query fails unexpectedly                         | Redirect to `/` — fail safe; do not expose admin panel on error                                                      | User navigates to sign-in and tries again                               |
+| Session expires during admin session | `supabase.auth.getUser()` returns no user on layout re-render | Redirect to `/`                                                                                                      | User signs in again; `next` param not preserved for admin (intentional) |
 
 ## Edge Cases
 
@@ -210,19 +223,19 @@ const [totalListings, pendingClaims, ...] = await Promise.all([
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Admin access | Sign in as admin user → navigate to `/admin` | Redirected to `/admin/overview`; stats render; sidebar shows nav items |
-| QA-2 | Non-admin blocked | Sign in as Supporter → navigate to `/admin` | Redirected to `/` immediately |
-| QA-3 | Unauthenticated blocked | Open incognito → navigate to `/admin/claims` | Redirected to `/` |
-| QA-4 | Stats load | Admin navigates to `/admin/overview` | All 5 stat cards render with numbers; skeletons appear briefly before data loads |
-| QA-5 | Mobile sidebar | Admin on mobile at 375px → tap hamburger | Sidebar drawer slides in; nav items visible; tap outside closes drawer |
+| ID   | Test                    | Steps                                        | Expected                                                                         |
+| ---- | ----------------------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
+| QA-1 | Admin access            | Sign in as admin user → navigate to `/admin` | Redirected to `/admin/overview`; stats render; sidebar shows nav items           |
+| QA-2 | Non-admin blocked       | Sign in as Supporter → navigate to `/admin`  | Redirected to `/` immediately                                                    |
+| QA-3 | Unauthenticated blocked | Open incognito → navigate to `/admin/claims` | Redirected to `/`                                                                |
+| QA-4 | Stats load              | Admin navigates to `/admin/overview`         | All 5 stat cards render with numbers; skeletons appear briefly before data loads |
+| QA-5 | Mobile sidebar          | Admin on mobile at 375px → tap hamburger     | Sidebar drawer slides in; nav items visible; tap outside closes drawer           |
 
 ## Security Notes
 
 - The admin check in `layout.tsx` is the authoritative gate for all `/admin/*` routes — middleware is also applied but the Server Component check is the primary enforcement (middleware can be bypassed via direct fetch)
 - Service_role client is used ONLY server-side in Server Components and Server Actions — it is never imported in Client Components or Route Handlers accessible to the client
-- `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` must NOT exist — the service_role key must be a server-only env var (`SUPABASE_SERVICE_ROLE_KEY`) without the `NEXT_PUBLIC_` prefix
+- `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY` must NOT exist — the service*role key must be a server-only env var (`SUPABASE_SERVICE_ROLE_KEY`) without the `NEXT_PUBLIC*` prefix
 - The admin panel redirect goes to `/` not to a login page — this prevents an attacker from determining whether the admin panel exists by probing redirect behavior
 - `admin_audit_log` is readable only via the service_role client — no RLS policy grants read access to authenticated users
 

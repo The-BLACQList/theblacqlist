@@ -1,13 +1,13 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { ArrowLeft, History, ExternalLink } from "lucide-react"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { ArrowLeft, History, ExternalLink } from 'lucide-react'
+import type { Metadata } from 'next'
 
-import { createClient } from "@/lib/supabase/server"
-import { ANALYTICS_EVENTS } from "@/lib/analytics/constants"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { createClient } from '@/lib/supabase/server'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { buildEntityUrl } from '@/lib/listings/url'
 
-export const metadata: Metadata = { title: "Recently Viewed | Account" }
+export const metadata: Metadata = { title: 'Recently Viewed | Account' }
 
 export default async function RecentlyViewedPage() {
   const supabase = await createClient()
@@ -15,16 +15,16 @@ export default async function RecentlyViewedPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/account/activity")
+  if (!user) redirect('/sign-in?next=/account/activity')
 
   // Fetch the most recent page_view events for this user
   const { data: events } = await supabase
-    .from("analytics_events")
-    .select("entity_id, created_at")
-    .eq("user_id", user.id)
-    .eq("event_name", ANALYTICS_EVENTS.PAGE_VIEW)
-    .eq("entity_type", "listing")
-    .order("created_at", { ascending: false })
+    .from('analytics_events')
+    .select('entity_id, created_at')
+    .eq('user_id', user.id)
+    .eq('event_name', ANALYTICS_EVENTS.PAGE_VIEW)
+    .eq('entity_type', 'listing')
+    .order('created_at', { ascending: false })
     .limit(100)
 
   // Deduplicate: keep most-recent-first, max 20 unique listings
@@ -51,15 +51,17 @@ export default async function RecentlyViewedPage() {
   let listings: ListingRow[] = []
   if (recentIds.length > 0) {
     const { data } = await supabase
-      .from("listings")
-      .select(`
+      .from('listings')
+      .select(
+        `
         id, name, slug, tagline, entity_type, trust_tier,
         cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
         listing_details_business(website_url)
-      `)
-      .in("id", recentIds)
-      .eq("status", "published")
-      .is("deleted_at", null)
+      `
+      )
+      .in('id', recentIds)
+      .eq('status', 'published')
+      .is('deleted_at', null)
 
     // Re-sort to match recency order from events
     const byId = new Map((data ?? []).map((l) => [l.id, l as unknown as ListingRow]))
@@ -77,13 +79,11 @@ export default async function RecentlyViewedPage() {
           Back to account
         </Link>
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">
-          Recently viewed
-        </h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Recently viewed</h1>
         <p className="font-subhead text-sm text-charcoal/60 mb-8">
           {listings.length === 0
-            ? "Businesses you visit will appear here."
-            : `${listings.length} recently visited ${listings.length === 1 ? "business" : "businesses"}`}
+            ? 'Businesses you visit will appear here.'
+            : `${listings.length} recently visited ${listings.length === 1 ? 'business' : 'businesses'}`}
         </p>
 
         {listings.length === 0 ? (
@@ -91,9 +91,7 @@ export default async function RecentlyViewedPage() {
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
               <History className="size-7 text-charcoal/30" aria-hidden="true" />
             </div>
-            <h2 className="font-headline text-xl text-brand-black mb-2">
-              No visits yet
-            </h2>
+            <h2 className="font-headline text-xl text-brand-black mb-2">No visits yet</h2>
             <p className="font-subhead text-sm text-charcoal/60 max-w-xs leading-relaxed">
               Businesses you explore will show up here.
             </p>
@@ -125,7 +123,8 @@ export default async function RecentlyViewedPage() {
                   )}
                   {l.cities && (
                     <p className="font-subhead text-xs text-charcoal/40 mt-1">
-                      {l.cities.name}{l.cities.states?.code ? `, ${l.cities.states.code}` : ""}
+                      {l.cities.name}
+                      {l.cities.states?.code ? `, ${l.cities.states.code}` : ''}
                     </p>
                   )}
                 </div>

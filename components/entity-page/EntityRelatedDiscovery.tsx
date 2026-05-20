@@ -1,5 +1,5 @@
-import { EntityCard } from "@/components/entities/EntityCard"
-import type { EntityPageData } from "@/types"
+import { EntityCard } from '@/components/entities/EntityCard'
+import type { EntityPageData } from '@/types'
 
 interface Props {
   entity: EntityPageData
@@ -12,10 +12,7 @@ export function EntityRelatedDiscovery({ entity }: Props) {
   if (!related || related.length < 3) return null
 
   return (
-    <section
-      aria-labelledby="related-heading"
-      className="bg-pale-lavender py-12 md:py-16"
-    >
+    <section aria-labelledby="related-heading" className="bg-pale-lavender py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
         <h2
           id="related-heading"
@@ -37,11 +34,7 @@ export function EntityRelatedDiscovery({ entity }: Props) {
           aria-label="Related businesses"
         >
           {related.map((e) => (
-            <div
-              key={e.id}
-              role="listitem"
-              className="flex-shrink-0 w-[280px] snap-start"
-            >
+            <div key={e.id} role="listitem" className="flex-shrink-0 w-[280px] snap-start">
               <EntityCard entity={e} />
             </div>
           ))}

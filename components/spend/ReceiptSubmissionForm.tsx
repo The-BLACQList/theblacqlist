@@ -1,19 +1,23 @@
-"use client"
+'use client'
 
-import { useActionState, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Loader2, AlertCircle, Upload, Info } from "lucide-react"
+import { useActionState, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Loader2, AlertCircle, Upload, Info } from 'lucide-react'
 
-import { createReceiptSubmissionAction } from "@/lib/actions/spend/createReceiptSubmission"
-import type { ReceiptSubmissionState } from "@/lib/actions/spend/createReceiptSubmission"
+import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
+import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
 
 const inputCls =
-  "w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
+  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
 const textareaCls =
-  "w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y"
+  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
 
 function Field({
-  id, label, hint, error, children,
+  id,
+  label,
+  hint,
+  error,
+  children,
 }: {
   id: string
   label: string
@@ -29,14 +33,16 @@ function Field({
       {hint && <p className="font-body text-xs text-charcoal/50">{hint}</p>}
       {children}
       {error && (
-        <p role="alert" className="font-body text-xs text-red-600">{error}</p>
+        <p role="alert" className="font-body text-xs text-red-600">
+          {error}
+        </p>
       )}
     </div>
   )
 }
 
 function formatDollars(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+  return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
 export function ReceiptSubmissionForm() {
@@ -49,19 +55,22 @@ export function ReceiptSubmissionForm() {
   const [fileName, setFileName] = useState<string | null>(null)
 
   useEffect(() => {
-    if (state && "success" in state) {
-      router.push("/account/receipts?submitted=true")
+    if (state && 'success' in state) {
+      router.push('/account/receipts?submitted=true')
     }
   }, [state, router])
 
-  const fieldErrors = (state && "fieldErrors" in state && state.fieldErrors) ? state.fieldErrors : {}
+  const fieldErrors = state && 'fieldErrors' in state && state.fieldErrors ? state.fieldErrors : {}
 
   return (
     <form action={formAction} encType="multipart/form-data" className="space-y-6">
       <input type="hidden" name="client_idempotency_key" value={idempotencyKey} />
 
-      {state && "error" in state && (
-        <div role="alert" className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+      {state && 'error' in state && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3"
+        >
           <AlertCircle className="size-4 text-red-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
           <p className="font-body text-sm text-red-700">{state.error}</p>
         </div>
@@ -90,7 +99,9 @@ export function ReceiptSubmissionForm() {
         error={fieldErrors.amount_dollars}
       >
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-charcoal/50 pointer-events-none">$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-charcoal/50 pointer-events-none">
+            $
+          </span>
           <input
             id="amount_dollars"
             name="amount_dollars"
@@ -104,11 +115,7 @@ export function ReceiptSubmissionForm() {
         </div>
       </Field>
 
-      <Field
-        id="purchase_date"
-        label="Purchase date *"
-        error={fieldErrors.purchase_date}
-      >
+      <Field id="purchase_date" label="Purchase date *" error={fieldErrors.purchase_date}>
         <input
           id="purchase_date"
           name="purchase_date"
@@ -136,7 +143,10 @@ export function ReceiptSubmissionForm() {
 
       {/* Optional receipt image */}
       <div className="space-y-1">
-        <label htmlFor="receipt_file" className="block font-subhead text-sm font-semibold text-brand-black">
+        <label
+          htmlFor="receipt_file"
+          className="block font-subhead text-sm font-semibold text-brand-black"
+        >
           Receipt photo
         </label>
         <p className="font-body text-xs text-charcoal/50">
@@ -148,7 +158,7 @@ export function ReceiptSubmissionForm() {
         >
           <Upload className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
           <span className="font-body text-sm text-charcoal/50 truncate">
-            {fileName ?? "Choose a photo…"}
+            {fileName ?? 'Choose a photo…'}
           </span>
           <input
             id="receipt_file"
@@ -161,7 +171,9 @@ export function ReceiptSubmissionForm() {
           />
         </label>
         {fieldErrors.receipt_file && (
-          <p role="alert" className="font-body text-xs text-red-600">{fieldErrors.receipt_file}</p>
+          <p role="alert" className="font-body text-xs text-red-600">
+            {fieldErrors.receipt_file}
+          </p>
         )}
       </div>
 
@@ -170,7 +182,9 @@ export function ReceiptSubmissionForm() {
         <div className="flex items-start gap-2">
           <Info className="size-4 text-charcoal/40 shrink-0 mt-0.5" aria-hidden="true" />
           <p className="font-body text-xs text-charcoal/60 leading-relaxed">
-            Receipt details are private — only you and BLACQList admins can see your submission. We use anonymized totals to power the community spend map. Your name is never attached to public data.
+            Receipt details are private — only you and BLACQList admins can see your submission. We
+            use anonymized totals to power the community spend map. Your name is never attached to
+            public data.
           </p>
         </div>
         <label className="flex items-start gap-3 cursor-pointer">
@@ -192,7 +206,7 @@ export function ReceiptSubmissionForm() {
           className="inline-flex items-center gap-2 h-10 px-6 rounded-full bg-amber-gold hover:bg-light-gold disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isPending ? "Submitting…" : "Submit receipt"}
+          {isPending ? 'Submitting…' : 'Submit receipt'}
         </button>
       </div>
     </form>
@@ -218,12 +232,14 @@ export function ReceiptListRow({
   purchaseDate,
   status,
 }: ReceiptRowProps) {
-  const businessLabel = listingName ?? rawBusinessName ?? "Unknown business"
+  const businessLabel = listingName ?? rawBusinessName ?? 'Unknown business'
 
   return (
     <div className="py-4 flex items-center justify-between gap-4">
       <div className="flex-1 min-w-0">
-        <p className="font-subhead text-sm font-semibold text-brand-black truncate">{businessLabel}</p>
+        <p className="font-subhead text-sm font-semibold text-brand-black truncate">
+          {businessLabel}
+        </p>
         <p className="font-body text-xs text-charcoal/50 mt-0.5">{purchaseDate}</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
@@ -238,13 +254,15 @@ export function ReceiptListRow({
 
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    pending_review: { label: "Pending", cls: "bg-amber-50 text-amber-700" },
-    approved: { label: "Approved", cls: "bg-green-50 text-green-700" },
-    rejected: { label: "Rejected", cls: "bg-red-50 text-red-700" },
+    pending_review: { label: 'Pending', cls: 'bg-amber-50 text-amber-700' },
+    approved: { label: 'Approved', cls: 'bg-green-50 text-green-700' },
+    rejected: { label: 'Rejected', cls: 'bg-red-50 text-red-700' },
   }
-  const cfg = map[status] ?? { label: status, cls: "bg-charcoal/5 text-charcoal/60" }
+  const cfg = map[status] ?? { label: status, cls: 'bg-charcoal/5 text-charcoal/60' }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${cfg.cls}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${cfg.cls}`}
+    >
       {cfg.label}
     </span>
   )

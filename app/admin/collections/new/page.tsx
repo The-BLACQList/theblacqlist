@@ -1,12 +1,12 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ArrowLeft } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createCollectionAction } from "@/lib/actions/editorial/collections"
-import { CollectionAdminForm } from "@/components/editorial/AdminEditorialForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createCollectionAction } from '@/lib/actions/editorial/collections'
+import { CollectionAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "New Collection" }
+export const metadata: Metadata = { title: 'New Collection' }
 
 export default async function NewCollectionPage() {
   await requireAdmin()

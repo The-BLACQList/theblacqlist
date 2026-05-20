@@ -1,26 +1,33 @@
 # Ticket 039: Admin Listing Detail and Edit (/admin/listings/[id])
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Admin / Listings
 
 ## Context
+
 When a listing requires more than an inline approve or reject, admins need a full detail view to read all fields, edit any content, manage media, and take moderation actions with notes. This page is also where complex cases are handled — listings that need content corrections before approval, media that needs individual moderation, or listings that require a flag with a specific reason. It is the counterpart to the owner's Page Editor, but with admin-only controls (status override, flag reason, hard delete, moderation notes). Source: `docs/blacqlist/ux/mvp-screen-map.md` Admin Listing Detail row; `docs/blacqlist/architecture/api-contract.md` Section 9 endpoints 43–44 + 50; `docs/blacqlist/data/database-schema-plan.md` listings + listing_details_business tables; `docs/blacqlist/architecture/server-actions-plan.md`.
 
 ## User Story
+
 As a platform admin, I want to view and edit any listing's full content, change its status, moderate its media, and approve or reject it with notes, so that I can ensure listing quality before content goes live and handle complex moderation cases that require more than an inline action.
 
 ## Scope
 
 **In scope:**
+
 - `app/admin/listings/[id]/page.tsx` — Server Component; fetches full listing record (service_role); fetches listing_details_business; fetches media_attachments; passes all to Client Component
 - `app/admin/listings/[id]/_components/AdminListingEditForm.tsx` — Client Component; multi-section form matching BLACQList Page sections; all fields editable
 - Form sections (matching the owner's Page Editor layout but admin-extended):
@@ -45,6 +52,7 @@ As a platform admin, I want to view and edit any listing's full content, change 
 - Audit log section (read-only, bottom of page): last 10 `admin_audit_log` entries for this listing — action type, admin email, timestamp
 
 **Out of scope:**
+
 - Claims history panel (deferred — Ticket 040 focuses on claims; linking from listing detail to its claims is V1)
 - Verification status management (V1 per server-actions-plan.md)
 - Gallery drag-to-reorder (owner-facing feature; admins can approve/reject images but not reorder)
@@ -52,16 +60,16 @@ As a platform admin, I want to view and edit any listing's full content, change 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 038 (admin listings table) | Blocking ticket | Users arrive from the table via "Review" action |
-| Ticket 037 (admin layout + auth guard) | Blocking ticket | Admin shell required |
+| Dependency                                                                  | Type            | Status                                                                                                      |
+| --------------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------- |
+| Ticket 038 (admin listings table)                                           | Blocking ticket | Users arrive from the table via "Review" action                                                             |
+| Ticket 037 (admin layout + auth guard)                                      | Blocking ticket | Admin shell required                                                                                        |
 | `updateListingContent` SA (`lib/actions/dashboard/updateListingContent.ts`) | Code dependency | Used for content field saves; same SA as owner editor — admin uses same action, role check must allow admin |
-| `approveEntity` SA (`lib/actions/admin/approveEntity.ts`) | Code dependency | Used for Approve button |
-| `rejectEntity` SA (`lib/actions/admin/rejectEntity.ts`) | Code dependency | Used for Reject button |
-| `moderateMedia` SA (`lib/actions/admin/moderateMedia.ts`) | Code dependency | Used for per-image approve/reject toggles |
-| `lib/admin/serviceRoleClient.ts` | Code dependency | Fetches full listing data (bypasses RLS) |
-| `admin_audit_log` table (Ticket 012) | Blocking ticket | Audit entries must exist for the log section to render |
+| `approveEntity` SA (`lib/actions/admin/approveEntity.ts`)                   | Code dependency | Used for Approve button                                                                                     |
+| `rejectEntity` SA (`lib/actions/admin/rejectEntity.ts`)                     | Code dependency | Used for Reject button                                                                                      |
+| `moderateMedia` SA (`lib/actions/admin/moderateMedia.ts`)                   | Code dependency | Used for per-image approve/reject toggles                                                                   |
+| `lib/admin/serviceRoleClient.ts`                                            | Code dependency | Fetches full listing data (bypasses RLS)                                                                    |
+| `admin_audit_log` table (Ticket 012)                                        | Blocking ticket | Audit entries must exist for the log section to render                                                      |
 
 ## UX Notes
 
@@ -118,6 +126,7 @@ As a platform admin, I want to view and edit any listing's full content, change 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/listings/[id]/page.tsx` — Server Component; fetches all data; handles `notFound()` if `id` invalid
 - `app/admin/listings/[id]/_components/AdminListingEditForm.tsx` — Client Component; full form with SA calls
 - `app/admin/listings/[id]/_components/MediaModerationSection.tsx` — media grid with per-image approve/reject toggles
@@ -126,16 +135,19 @@ As a platform admin, I want to view and edit any listing's full content, change 
 - `lib/actions/admin/moderateMedia.ts` — Server Action (if not already created)
 
 **Files to modify:**
+
 - `lib/actions/dashboard/updateListingContent.ts` — confirm it allows admin role (not just owner) — if it currently checks `owner_user_id = auth.uid()`, add a secondary check for admin role via service_role; OR create a separate `lib/actions/admin/updateListingAdmin.ts` that uses service_role without the ownership check
 - `lib/actions/admin/approveEntity.ts` — confirm the `revalidatePath` call is correct for city-slug + listing-slug pattern
 
 **Key patterns:**
+
 - The admin edit form should reuse the same zod schemas from `lib/validations/listing.ts` for content fields, with an additional schema for admin-only fields (`moderation_notes`, `admin_notes`, `status`, `flag_status`)
 - Media moderation: each image toggle is a controlled `Switch` that fires the `moderateMedia` SA immediately on change (not batched with form Save). Use `useTransition` or a loading state per switch to prevent double-firing
 - Delete confirmation: require the admin to type the listing name exactly to enable the "Delete permanently" button — use `onInput` to compare the typed value to the listing name before enabling
 - Audit log: fetched server-side in the Server Component; rendered as a static table in the page — no client-side fetch needed
 
 **Do not:**
+
 - Allow `owner_user_id` to be changed from this form — ownership is managed through the claims workflow only
 - Expose `admin_notes` content to the owner via `moderation_notes` — they are separate fields; `moderation_notes` is shown to owners, `admin_notes` is not
 - Trigger ISR revalidation for content saves on unpublished listings — only revalidate when `status = 'published'`
@@ -155,13 +167,13 @@ As a platform admin, I want to view and edit any listing's full content, change 
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Listing not found | `listing_id` does not exist or deleted | `notFound()` — Next.js 404 page | Admin navigates back to `/admin/listings` |
-| Save fails | `updateListingContent` SA returns `SERVER_ERROR` | Toast: "Save failed. Please try again." — form data not lost | Admin retries Save |
-| Approve INVALID_STATUS_TRANSITION | Listing not in `pending` state | Toast: "This listing cannot be approved in its current state." | Admin reviews current status; no action needed |
-| Media moderation fails | `moderateMedia` SA returns error | Toggle reverts to previous state; toast: "Media moderation failed." | Admin re-toggles; retries |
-| Delete confirmation name mismatch | Admin typed name doesn't match listing name | Delete permanently button remains disabled | Admin types exact name |
+| Failure                           | Condition                                        | User sees                                                           | Recovery                                       |
+| --------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------- | ---------------------------------------------- |
+| Listing not found                 | `listing_id` does not exist or deleted           | `notFound()` — Next.js 404 page                                     | Admin navigates back to `/admin/listings`      |
+| Save fails                        | `updateListingContent` SA returns `SERVER_ERROR` | Toast: "Save failed. Please try again." — form data not lost        | Admin retries Save                             |
+| Approve INVALID_STATUS_TRANSITION | Listing not in `pending` state                   | Toast: "This listing cannot be approved in its current state."      | Admin reviews current status; no action needed |
+| Media moderation fails            | `moderateMedia` SA returns error                 | Toggle reverts to previous state; toast: "Media moderation failed." | Admin re-toggles; retries                      |
+| Delete confirmation name mismatch | Admin typed name doesn't match listing name      | Delete permanently button remains disabled                          | Admin types exact name                         |
 
 ## Edge Cases
 
@@ -182,13 +194,13 @@ As a platform admin, I want to view and edit any listing's full content, change 
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Load full record | Admin navigates to `/admin/listings/[id]` for a listing with all fields populated | All form sections pre-filled with correct values; audit log shows relevant entries |
-| QA-2 | Save content change | Edit description → Save | `updateListingContent` called; toast "Changes saved."; DB record updated |
-| QA-3 | Approve flow | Navigate to pending listing → click Approve → confirm | `approveEntity` SA called; status badge → Published; ISR revalidation triggered; approval email sent |
-| QA-4 | Media moderation | Toggle a media image to "Rejected" | `moderateMedia` SA fires immediately; toggle shows Rejected; audit log entry written |
-| QA-5 | Delete confirmation | Click Delete → type wrong name → attempt to click "Delete permanently" | Button remains disabled; after typing correct name, button enables; confirming deletes record |
+| ID   | Test                | Steps                                                                             | Expected                                                                                             |
+| ---- | ------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| QA-1 | Load full record    | Admin navigates to `/admin/listings/[id]` for a listing with all fields populated | All form sections pre-filled with correct values; audit log shows relevant entries                   |
+| QA-2 | Save content change | Edit description → Save                                                           | `updateListingContent` called; toast "Changes saved."; DB record updated                             |
+| QA-3 | Approve flow        | Navigate to pending listing → click Approve → confirm                             | `approveEntity` SA called; status badge → Published; ISR revalidation triggered; approval email sent |
+| QA-4 | Media moderation    | Toggle a media image to "Rejected"                                                | `moderateMedia` SA fires immediately; toggle shows Rejected; audit log entry written                 |
+| QA-5 | Delete confirmation | Click Delete → type wrong name → attempt to click "Delete permanently"            | Button remains disabled; after typing correct name, button enables; confirming deletes record        |
 
 ## Security Notes
 

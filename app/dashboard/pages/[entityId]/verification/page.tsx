@@ -1,17 +1,17 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { BadgeCheck, CheckCircle2, Clock } from "lucide-react"
-import type { Metadata } from "next"
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { BadgeCheck, CheckCircle2, Clock } from 'lucide-react'
+import type { Metadata } from 'next'
 
-import { requireOwner } from "@/lib/dashboard/guard"
-import { createClient } from "@/lib/supabase/server"
-import { VerificationUploadForm } from "@/components/dashboard/VerificationUploadForm"
+import { requireOwner } from '@/lib/dashboard/guard'
+import { createClient } from '@/lib/supabase/server'
+import { VerificationUploadForm } from '@/components/dashboard/VerificationUploadForm'
 
 interface Props {
   params: Promise<{ entityId: string }>
 }
 
-export const metadata: Metadata = { title: "Verification | Dashboard" }
+export const metadata: Metadata = { title: 'Verification | Dashboard' }
 
 export default async function OwnerVerificationPage({ params }: Props) {
   await requireOwner()
@@ -19,15 +19,19 @@ export default async function OwnerVerificationPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: listing } = await supabase
-    .from("listings")
-    .select("id, name, trust_tier, verification_status, verification_docs, verification_notes, verified_at, owner_user_id")
-    .eq("id", entityId)
-    .is("deleted_at", null)
+    .from('listings')
+    .select(
+      'id, name, trust_tier, verification_status, verification_docs, verification_notes, verified_at, owner_user_id'
+    )
+    .eq('id', entityId)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (listing.owner_user_id !== user?.id) notFound()
 
   const { trust_tier, verification_status } = listing
@@ -47,7 +51,7 @@ export default async function OwnerVerificationPage({ params }: Props) {
         </p>
       </div>
 
-      {trust_tier !== "claimed" && (
+      {trust_tier !== 'claimed' && (
         <div className="rounded-xl border border-charcoal/10 bg-[#f5f5f7] px-5 py-5">
           <p className="font-subhead text-sm font-semibold text-brand-black">
             Verification not available
@@ -64,30 +68,26 @@ export default async function OwnerVerificationPage({ params }: Props) {
         </div>
       )}
 
-      {trust_tier === "claimed" && verification_status === "verified" && (
+      {trust_tier === 'claimed' && verification_status === 'verified' && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-5 flex items-start gap-3">
           <CheckCircle2 className="size-5 shrink-0 text-green-600 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="font-subhead text-sm font-semibold text-green-800">
-              Listing verified
-            </p>
+            <p className="font-subhead text-sm font-semibold text-green-800">Listing verified</p>
             <p className="font-body text-sm text-green-700 mt-0.5">
               {listing.verified_at
-                ? `Verified on ${new Date(listing.verified_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.`
-                : "Your listing has been verified."}
+                ? `Verified on ${new Date(listing.verified_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`
+                : 'Your listing has been verified.'}
             </p>
           </div>
         </div>
       )}
 
-      {trust_tier === "claimed" &&
-        (verification_status === "pending" || verification_status === "under_review") && (
+      {trust_tier === 'claimed' &&
+        (verification_status === 'pending' || verification_status === 'under_review') && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-5 flex items-start gap-3">
             <Clock className="size-5 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="font-subhead text-sm font-semibold text-amber-800">
-                Under review
-              </p>
+              <p className="font-subhead text-sm font-semibold text-amber-800">Under review</p>
               <p className="font-body text-sm text-amber-700 mt-0.5">
                 Your verification documents have been received. Our team typically responds within
                 2–3 business days.
@@ -96,17 +96,15 @@ export default async function OwnerVerificationPage({ params }: Props) {
           </div>
         )}
 
-      {trust_tier === "claimed" &&
-        (verification_status === "none" ||
-          verification_status === "rejected" ||
+      {trust_tier === 'claimed' &&
+        (verification_status === 'none' ||
+          verification_status === 'rejected' ||
           !verification_status) && (
           <div className="space-y-4">
             <div className="flex items-start gap-3 rounded-xl border border-charcoal/10 bg-white px-5 py-4">
               <BadgeCheck className="size-5 shrink-0 text-amber-gold mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-subhead text-sm font-semibold text-brand-black">
-                  How it works
-                </p>
+                <p className="font-subhead text-sm font-semibold text-brand-black">How it works</p>
                 <ol className="mt-1.5 space-y-1 font-body text-sm text-charcoal/70 list-decimal list-inside">
                   <li>Upload one or more verification documents below</li>
                   <li>Our team reviews them within 2–3 business days</li>
@@ -118,9 +116,7 @@ export default async function OwnerVerificationPage({ params }: Props) {
             <VerificationUploadForm
               listingId={entityId}
               rejectionNotes={
-                verification_status === "rejected"
-                  ? (listing.verification_notes ?? null)
-                  : null
+                verification_status === 'rejected' ? (listing.verification_notes ?? null) : null
               }
             />
           </div>

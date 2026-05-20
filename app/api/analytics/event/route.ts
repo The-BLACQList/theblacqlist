@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient, createServiceClient } from "@/lib/supabase/server"
-import type { Json } from "@/lib/supabase/types"
-import { VALID_EVENT_NAMES } from "@/lib/analytics/constants"
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import type { Json } from '@/lib/supabase/types'
+import { VALID_EVENT_NAMES } from '@/lib/analytics/constants'
 
 const MAX_PROPERTIES_BYTES = 5 * 1024 // 5 KB
 
@@ -23,60 +23,44 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const forwarded = req.headers.get("x-forwarded-for") ?? ""
-  const ip =
-    (forwarded.split(",")[0] ?? "").trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
+  const forwarded = req.headers.get('x-forwarded-for') ?? ''
+  const ip = (forwarded.split(',')[0] ?? '').trim() || req.headers.get('x-real-ip') || 'unknown'
 
   if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { error: "Too many requests.", code: "RATE_LIMITED" },
-      { status: 429 }
-    )
+    return NextResponse.json({ error: 'Too many requests.', code: 'RATE_LIMITED' }, { status: 429 })
   }
 
   let body: unknown
   try {
     body = await req.json()
   } catch {
+    return NextResponse.json({ error: 'Invalid JSON.', code: 'VALIDATION_ERROR' }, { status: 400 })
+  }
+
+  if (!body || typeof body !== 'object') {
     return NextResponse.json(
-      { error: "Invalid JSON.", code: "VALIDATION_ERROR" },
+      { error: 'Request body required.', code: 'VALIDATION_ERROR' },
       { status: 400 }
     )
   }
 
-  if (!body || typeof body !== "object") {
-    return NextResponse.json(
-      { error: "Request body required.", code: "VALIDATION_ERROR" },
-      { status: 400 }
-    )
-  }
-
-  const {
-    event_name,
-    entity_type,
-    entity_id,
-    properties,
-    session_id,
-  } = body as Record<string, unknown>
+  const { event_name, entity_type, entity_id, properties, session_id } = body as Record<
+    string,
+    unknown
+  >
 
   // Validate event_name
-  if (
-    !event_name ||
-    typeof event_name !== "string" ||
-    !VALID_EVENT_NAMES.has(event_name)
-  ) {
+  if (!event_name || typeof event_name !== 'string' || !VALID_EVENT_NAMES.has(event_name)) {
     return NextResponse.json(
-      { error: "Invalid event_name.", code: "VALIDATION_ERROR" },
+      { error: 'Invalid event_name.', code: 'VALIDATION_ERROR' },
       { status: 400 }
     )
   }
 
   // Validate entity_id format if present
-  if (entity_id !== undefined && entity_id !== null && typeof entity_id !== "string") {
+  if (entity_id !== undefined && entity_id !== null && typeof entity_id !== 'string') {
     return NextResponse.json(
-      { error: "entity_id must be a string.", code: "VALIDATION_ERROR" },
+      { error: 'entity_id must be a string.', code: 'VALIDATION_ERROR' },
       { status: 400 }
     )
   }
@@ -86,7 +70,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const serialized = JSON.stringify(properties)
     if (serialized.length > MAX_PROPERTIES_BYTES) {
       return NextResponse.json(
-        { error: "properties exceeds 5 KB limit.", code: "VALIDATION_ERROR" },
+        { error: 'properties exceeds 5 KB limit.', code: 'VALIDATION_ERROR' },
         { status: 400 }
       )
     }
@@ -106,13 +90,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const serviceClient = createServiceClient()
 
-  void serviceClient.from("analytics_events").insert({
+  void serviceClient.from('analytics_events').insert({
     event_name,
-    entity_id:   (entity_id  as string | null | undefined) ?? null,
+    entity_id: (entity_id as string | null | undefined) ?? null,
     entity_type: (entity_type as string | null | undefined) ?? null,
-    user_id:     userId,
-    session_id:  (session_id as string | null | undefined) ?? null,
-    properties:  ((properties ?? {}) as Json),
+    user_id: userId,
+    session_id: (session_id as string | null | undefined) ?? null,
+    properties: (properties ?? {}) as Json,
   })
 
   return NextResponse.json({ data: { success: true } })

@@ -33,14 +33,14 @@ created
 
 ### Who Can Take Each Action
 
-| Action | Owner | Admin | System |
-|---|---|---|---|
-| Approve suggestion | ✓ (own listing only) | ✓ (any) | — |
-| Reject suggestion | ✓ (own listing only) | ✓ (any) | — |
-| Apply suggestion to listing | ✓ (own listing only) | — | — |
-| Expire suggestions (7 days) | — | — | ✓ (scheduled job) |
-| View suggestions | ✓ (own listing, pending/approved/applied) | ✓ (all) | — |
-| Delete suggestions | — | ✓ (super_admin only) | — |
+| Action                      | Owner                                     | Admin                | System            |
+| --------------------------- | ----------------------------------------- | -------------------- | ----------------- |
+| Approve suggestion          | ✓ (own listing only)                      | ✓ (any)              | —                 |
+| Reject suggestion           | ✓ (own listing only)                      | ✓ (any)              | —                 |
+| Apply suggestion to listing | ✓ (own listing only)                      | —                    | —                 |
+| Expire suggestions (7 days) | —                                         | —                    | ✓ (scheduled job) |
+| View suggestions            | ✓ (own listing, pending/approved/applied) | ✓ (all)              | —                 |
+| Delete suggestions          | —                                         | ✓ (super_admin only) | —                 |
 
 **Owners can never apply someone else's listing suggestion.** The apply action verifies `listing.owner_user_id = auth.uid()` at the service layer, not just in RLS.
 
@@ -53,6 +53,7 @@ created
 Prompt assembly functions in `lib/ai/` must follow these rules for every agent:
 
 **Allowed in prompts:**
+
 - `listings.name`
 - `listings.tagline`
 - `listings.status` (published/claimed/etc.)
@@ -67,6 +68,7 @@ Prompt assembly functions in `lib/ai/` must follow these rules for every agent:
 - `review_text` for Review Response Agent only — reviewer identity excluded
 
 **Never allowed in prompts:**
+
 - Any user_id or auth.users reference
 - `profiles.email`, `profiles.display_name` (owner identity)
 - `listing_details_business.phone`
@@ -82,6 +84,7 @@ Prompt assembly functions in `lib/ai/` must follow these rules for every agent:
 ### Server-Side-Only Prompt Construction
 
 Prompts are assembled in `lib/ai/provider.ts` (server module). This file:
+
 - Must not be imported in any `"use client"` component
 - Must not accept raw user input without sanitization
 - Must not log the assembled prompt text (PII risk)
@@ -89,20 +92,20 @@ Prompts are assembled in `lib/ai/provider.ts` (server module). This file:
 
 ### What IS Logged in `ai_generation_requests`
 
-| Field | Logged | Notes |
-|---|---|---|
-| `agent_type` | ✓ | Which agent ran |
-| `prompt_version` | ✓ | Template key used |
-| `model` | ✓ | Model identifier |
-| `provider` | ✓ | 'anthropic' or 'mock' |
-| `request_tokens` | ✓ | Token count (no prompt text) |
-| `response_tokens` | ✓ | Token count (no response text) |
-| `status` | ✓ | 'completed' or 'failed' |
-| `error_message` | ✓ | Error type only — never stack trace with data |
-| `listing_id` | ✓ | Which listing triggered the request |
-| `created_by` | ✓ | Which user triggered it |
-| Full prompt text | ✗ | Never logged — PII risk |
-| Full response text | ✗ | Not logged — stored as `ai_suggestions.suggestion_text` only |
+| Field              | Logged | Notes                                                        |
+| ------------------ | ------ | ------------------------------------------------------------ |
+| `agent_type`       | ✓      | Which agent ran                                              |
+| `prompt_version`   | ✓      | Template key used                                            |
+| `model`            | ✓      | Model identifier                                             |
+| `provider`         | ✓      | 'anthropic' or 'mock'                                        |
+| `request_tokens`   | ✓      | Token count (no prompt text)                                 |
+| `response_tokens`  | ✓      | Token count (no response text)                               |
+| `status`           | ✓      | 'completed' or 'failed'                                      |
+| `error_message`    | ✓      | Error type only — never stack trace with data                |
+| `listing_id`       | ✓      | Which listing triggered the request                          |
+| `created_by`       | ✓      | Which user triggered it                                      |
+| Full prompt text   | ✗      | Never logged — PII risk                                      |
+| Full response text | ✗      | Not logged — stored as `ai_suggestions.suggestion_text` only |
 
 ---
 
@@ -131,11 +134,11 @@ Server Action / Route Handler
 
 ### Model Selection
 
-| Use case | Model | Rationale |
-|---|---|---|
-| SEO copy, captions, short suggestions | `claude-haiku-4-5-20251001` | Lowest cost, adequate quality |
-| Descriptions, analytics summaries, guide sections | `claude-sonnet-4-6` | Better quality for longer copy |
-| Review responses | `claude-haiku-4-5-20251001` | Bounded output, simple task |
+| Use case                                          | Model                       | Rationale                      |
+| ------------------------------------------------- | --------------------------- | ------------------------------ |
+| SEO copy, captions, short suggestions             | `claude-haiku-4-5-20251001` | Lowest cost, adequate quality  |
+| Descriptions, analytics summaries, guide sections | `claude-sonnet-4-6`         | Better quality for longer copy |
+| Review responses                                  | `claude-haiku-4-5-20251001` | Bounded output, simple task    |
 
 ### Environment Variable
 
@@ -162,6 +165,7 @@ Before connecting the real provider, implement per-listing rate limiting:
 ### Input Sanitization
 
 Before assembling any prompt:
+
 1. Strip HTML tags from all text fields
 2. Truncate description to 500 chars maximum
 3. Truncate review text to 1000 chars maximum
@@ -171,6 +175,7 @@ Before assembling any prompt:
 ### Output Validation
 
 After receiving a suggestion from the provider:
+
 1. Reject responses with length > 2000 characters (model hallucination signal)
 2. Reject responses that appear to be error messages (start with "I cannot", "I'm unable")
 3. Reject responses containing detected email or phone patterns (PII leak from model)
@@ -179,6 +184,7 @@ After receiving a suggestion from the provider:
 ### Prohibited Output Types
 
 The system must never apply AI-generated content that:
+
 - Claims to represent a specific person (fabricated testimonials)
 - Makes unverifiable factual claims about the business (medical claims, legal claims, guarantees)
 - Contains competitor mentions
@@ -214,11 +220,11 @@ When approval UI is built in V2 Mock phase, the following UX rules apply:
 
 ## Open Risks
 
-| Risk | Severity | Mitigation |
-|---|---|---|
-| Owner applies AI copy without reading it | Medium | Approval step requires two-click confirm; copy shown in preview |
-| Model hallucinates false business claims | Medium | Output validation + human review required before apply |
-| PII leaks into prompts via free-text fields | High | Server-side sanitization + code audit gate before V2 Provider |
-| API cost overrun | Medium | Per-listing rate limit; token logging in audit table |
-| Reviewer identity leaks via review text | Medium | Review Response Agent strips reviewer identity before prompt assembly |
-| Prompt injection via listing name/description | Low | Prompt template structure limits injection surface; output length validation |
+| Risk                                          | Severity | Mitigation                                                                   |
+| --------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| Owner applies AI copy without reading it      | Medium   | Approval step requires two-click confirm; copy shown in preview              |
+| Model hallucinates false business claims      | Medium   | Output validation + human review required before apply                       |
+| PII leaks into prompts via free-text fields   | High     | Server-side sanitization + code audit gate before V2 Provider                |
+| API cost overrun                              | Medium   | Per-listing rate limit; token logging in audit table                         |
+| Reviewer identity leaks via review text       | Medium   | Review Response Agent strips reviewer identity before prompt assembly        |
+| Prompt injection via listing name/description | Low      | Prompt template structure limits injection surface; output length validation |

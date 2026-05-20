@@ -1,24 +1,31 @@
 # Ticket 092: Vercel Production Deployment Configuration
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 18: Production Deployment and Post-Launch Hardening
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Deployment
 
 ## Context
+
 Configures the Vercel project for production launch: custom domain, SSL, production environment variables, analytics, and speed insights. After deployment, runs the 10-item smoke test checklist from `deployment-plan.md` to confirm the platform is functional before announcing launch. Depends on Ticket 091 (production Supabase) for the environment variables to be available.
 
 ## User Story
+
 As the engineering lead, I want the production application deployed to the custom domain with correct configuration, so that the platform is publicly accessible and monitored from day one.
 
 ## Scope
+
 - Connect production Supabase env vars to Vercel production environment (not preview, not development)
 - Configure custom domain: `theblacqlist.com` and `www.theblacqlist.com` (www → apex redirect or vice versa)
 - Verify SSL certificate provisioned (automatic via Vercel)
@@ -30,27 +37,34 @@ As the engineering lead, I want the production application deployed to the custo
 - Confirm no `localhost` or staging references appear in production responses
 
 ## Out of Scope
+
 - DNS transfer or registrar changes (pre-requisite — handled outside this ticket)
 - Monitoring setup (Ticket 094)
 - Seed data (Ticket 093)
 
 ## Dependencies
+
 - Depends on: Ticket 003 (Vercel pipeline — project already exists)
 - Depends on: Ticket 091 (production Supabase project + env vars)
 
 ## UX Notes
+
 Not applicable — infrastructure configuration ticket.
 
 ## Design Notes
+
 Not applicable.
 
 ## Data Notes
+
 Not applicable.
 
 ## API Notes
+
 Not applicable — no new API routes.
 
 ## Implementation Notes
+
 - Vercel custom domain: Settings → Domains → Add domain
 - DNS: add CNAME pointing `www` to `cname.vercel-dns.com`; Vercel auto-provisions apex record
 - Environment variables: Vercel dashboard → Settings → Environment Variables → set for Production environment only
@@ -66,6 +80,7 @@ Not applicable — no new API routes.
 - Smoke tests: run from `deployment-plan.md` — document pass/fail for each
 
 ## Acceptance Criteria
+
 - [ ] `https://theblacqlist.com` loads the homepage with correct content
 - [ ] `https://www.theblacqlist.com` redirects to apex (or apex redirects to www — pick one, be consistent)
 - [ ] SSL certificate is valid (green lock in browser)
@@ -76,39 +91,45 @@ Not applicable — no new API routes.
 - [ ] All 10 smoke tests from `deployment-plan.md` pass — documented with timestamp
 
 ## Failure States
-| Failure | User-visible behavior |
-|---|---|
+
+| Failure            | User-visible behavior                                                  |
+| ------------------ | ---------------------------------------------------------------------- |
 | DNS not propagated | Site unreachable — wait for propagation (up to 48h), verify with `dig` |
-| Missing env var | Server error on affected routes — add missing var and redeploy |
-| Smoke test failure | Block announcement; diagnose and fix before launch |
+| Missing env var    | Server error on affected routes — add missing var and redeploy         |
+| Smoke test failure | Block announcement; diagnose and fix before launch                     |
 
 ## Edge Cases
+
 - `www` redirect: choose one canonical form and redirect the other via Vercel's redirect config
 - Preview deployments must use staging Supabase, not production — verify this is enforced by environment variable scoping
 
 ## Accessibility Notes
+
 Not applicable.
 
 ## QA Test Cases (Smoke Tests from deployment-plan.md)
-| # | Test | Steps | Expected result |
-|---|---|---|---|
-| 1 | Homepage loads | GET https://theblacqlist.com | 200, correct content |
-| 2 | Search works | GET /search?q=barbershop&city=atlanta | Results page renders |
-| 3 | Listing page loads | GET /atlanta/business/[slug] | BLACQList Page renders |
-| 4 | Auth — sign up | POST /api/auth/signup | User created, session cookie set |
-| 5 | Auth — sign in | POST /api/auth/signin | Session established |
-| 6 | Protected route redirect | GET /dashboard (no session) | Redirect to /sign-in |
-| 7 | Admin route blocked | GET /admin (non-admin session) | 403 or redirect |
-| 8 | Analytics event | POST /api/analytics/event | 200 response |
-| 9 | Media upload | POST /api/upload (authenticated) | 201, path returned |
-| 10 | OG tags | GET /atlanta/business/[slug] | og:title, og:image present in HTML |
+
+| #   | Test                     | Steps                                 | Expected result                    |
+| --- | ------------------------ | ------------------------------------- | ---------------------------------- |
+| 1   | Homepage loads           | GET https://theblacqlist.com          | 200, correct content               |
+| 2   | Search works             | GET /search?q=barbershop&city=atlanta | Results page renders               |
+| 3   | Listing page loads       | GET /atlanta/business/[slug]          | BLACQList Page renders             |
+| 4   | Auth — sign up           | POST /api/auth/signup                 | User created, session cookie set   |
+| 5   | Auth — sign in           | POST /api/auth/signin                 | Session established                |
+| 6   | Protected route redirect | GET /dashboard (no session)           | Redirect to /sign-in               |
+| 7   | Admin route blocked      | GET /admin (non-admin session)        | 403 or redirect                    |
+| 8   | Analytics event          | POST /api/analytics/event             | 200 response                       |
+| 9   | Media upload             | POST /api/upload (authenticated)      | 201, path returned                 |
+| 10  | OG tags                  | GET /atlanta/business/[slug]          | og:title, og:image present in HTML |
 
 ## Security Notes
+
 - `SUPABASE_SERVICE_ROLE_KEY` scoped to Production env only — never in preview/development
 - SSL must be valid before launch — no HTTP traffic to production
 - Verify Vercel's "Protect Preview Deployments" is enabled to prevent public access to preview URLs
 
 ## Completion Checklist
+
 - [ ] Custom domain configured and SSL active
 - [ ] All production env vars set and verified
 - [ ] `NEXT_PUBLIC_APP_URL` correct in production

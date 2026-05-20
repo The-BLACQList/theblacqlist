@@ -1,12 +1,12 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowLeft } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ArrowLeft } from 'lucide-react'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createArticleAction } from "@/lib/actions/editorial/articles"
-import { ArticleAdminForm } from "@/components/editorial/AdminEditorialForm"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createArticleAction } from '@/lib/actions/editorial/articles'
+import { ArticleAdminForm } from '@/components/editorial/AdminEditorialForm'
 
-export const metadata: Metadata = { title: "New Article" }
+export const metadata: Metadata = { title: 'New Article' }
 
 export default async function NewArticlePage() {
   await requireAdmin()
@@ -28,10 +28,7 @@ export default async function NewArticlePage() {
       </div>
 
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-        <ArticleAdminForm
-          action={createArticleAction}
-          redirectOnSuccess="/admin/blacqlight"
-        />
+        <ArticleAdminForm action={createArticleAction} redirectOnSuccess="/admin/blacqlight" />
       </div>
     </div>
   )

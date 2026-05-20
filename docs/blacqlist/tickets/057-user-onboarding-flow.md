@@ -1,26 +1,33 @@
 # Ticket 057: User onboarding flow — post-signup role selection and intent (`/onboarding`)
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 9: Supporter Account
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Onboarding
 
 ## Context
+
 After email verification, new users land on `/onboarding`. This 2–3 step flow collects role intent, optionally surfaces the business search/claim path for owners, and ends with an explore prompt. The route is auth-protected (Ticket 058 middleware) and skippable at every step. On completion or skip, the `completeOnboarding` SA writes the confirmed role to `user_roles` and marks `profiles.onboarding_completed_at`. This is the moment where the platform differentiates supporter experience from owner experience — getting the branching right is critical for downstream routing (supporters → `/discover`, owners → `/dashboard`).
 
 Source documents: `docs/blacqlist/ux/mvp-screen-map.md` (Onboarding `/onboarding`), `docs/blacqlist/architecture/server-actions-plan.md` (`setOnboardingRole`), `docs/blacqlist/data/database-schema-plan.md` (`user_roles`, `profiles`).
 
 ## User Story
+
 As a newly registered user, I want to confirm my intent (supporter or business owner) and be guided to the right starting point, so that the platform immediately serves my specific goals.
 
 ## Scope
+
 - `app/onboarding/page.tsx` — Server Component: fetches current user's profile + role from `user_roles`; redirects to `/discover` (supporter) or `/dashboard` (owner) if onboarding is already complete (`profiles.onboarding_completed_at IS NOT NULL`)
 - `app/onboarding/components/OnboardingShell.tsx` — Client Component: owns the step state (`useState` for step 1/2A/2B/3), renders the step progress indicator, renders the skip link, and composes the step sub-components below
 - `app/onboarding/components/steps/RoleConfirmStep.tsx` — Step 1: confirms or changes the role set at sign-up; two paths from this step depending on current role
@@ -32,12 +39,14 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - Business search in Step 2A calls the existing search API (`GET /api/search?q=...&city=...`); no new API endpoint required
 
 ## Out of Scope
+
 - Notification preferences (deferred to V1 — the brief referenced these for MVP but the SA plan and screen map do not include a notification preferences step)
 - Re-onboarding flow for existing users who change their role (V1)
 - Progress persistence to server between steps (client-only step state is sufficient for this short flow)
 - OAuth provider detection in the security section (V1)
 
 ## Dependencies
+
 - Depends on: Ticket 014 (auth flows — email verification redirects to `/onboarding`; session management)
 - Depends on: Ticket 015 (app shell — no full nav on onboarding, but footer and wordmark are from shell)
 - Depends on: Ticket 008 (`profiles`, `user_roles` tables)
@@ -46,6 +55,7 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - Soft dependency: Ticket 025 (`GET /api/search`) — Step 2A business search calls this endpoint; if not yet live, the step can render a loading state with a "Search not yet available" fallback
 
 ## UX Notes
+
 - **Screen:** Onboarding — `docs/blacqlist/ux/mvp-screen-map.md` → "Onboarding (`/onboarding`)"
 - **Route:** `/onboarding`
 - **Layout:** Minimal (no full nav, no footer); BLACQList wordmark centered at top; step progress indicator below wordmark ("Step 1 of 3")
@@ -74,6 +84,7 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - **Mobile (375px):** Full-width single-column; buttons are full-width; step indicator is centered; wordmark is centered; skip link is in the upper-right corner at `fixed` or `sticky` positioning so it stays accessible as the step content changes
 
 ## Design Notes
+
 - **Design brief:** `docs/blacqlist/design/blacqlist-page-design-system.md`
 - **Colors:** Amber Gold `#E2A428` for primary buttons and active step indicator; Pale Lavender `#E9E9F7` for the role option cards (selected state: Amber Gold border + Cream background); Cream `#FCFAF4` for page background
 - **Fonts:** Glacial Indifference Bold for step headings; Lato Regular for body copy; Quicksand Bold Italic for primary CTA button labels
@@ -82,6 +93,7 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - **States:** Step 1 default, Step 1 role-change mode, Step 2A loading (search), Step 2A results, Step 2A empty (no results), Step 2B, Step 3, Saving/redirecting after skip or complete
 
 ## Data Notes
+
 - **Data model:** `docs/blacqlist/data/database-schema-plan.md` → `user_roles`, `profiles`
 - **Fields involved:**
   - `user_roles`: `user_id`, `role` (text, enum: `'supporter'`, `'owner'`, `'admin'`), `listing_id` (nullable FK — linked on claim approval, not during onboarding), `created_at`
@@ -95,6 +107,7 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - **Migration required:** No — `user_roles` and `profiles` tables exist from Ticket 008; `onboarding_completed_at` column must be confirmed in Ticket 008's schema; if missing, add as a no-migration-needed column addition in this ticket's scope
 
 ## API Notes
+
 - **Server Actions plan:** `docs/blacqlist/architecture/server-actions-plan.md` → `setOnboardingRole` (`lib/actions/account/setOnboardingRole.ts`)
 - **`setOnboardingRole(input)`:** `{ role: 'supporter' | 'owner' }` → `ActionResult<{ role: string, redirectTo: string }>` where `redirectTo` is `/discover` for supporters and `/dashboard` for owners; SA sets `profiles.onboarding_completed_at = now()` and upserts `user_roles`
 - **Business search in Step 2A:** `GET /api/search?q=[query]&city=[city]&limit=5` — calls existing search Route Handler (Ticket 025); no new endpoint
@@ -102,7 +115,9 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - **Error codes:** `AUTH_REQUIRED` (session expired mid-flow), `VALIDATION_ERROR` (invalid role value), `OPERATION_FAILED` (DB upsert failure)
 
 ## Implementation Notes
+
 **Files to create:**
+
 - `app/onboarding/page.tsx`
 - `app/onboarding/components/OnboardingShell.tsx`
 - `app/onboarding/components/steps/RoleConfirmStep.tsx`
@@ -112,9 +127,11 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - `lib/actions/account/setOnboardingRole.ts`
 
 **Files to modify:**
+
 - `lib/validations/account.ts` — add `onboardingRoleSchema` (zod enum: `'supporter' | 'owner'`)
 
 **Key patterns:**
+
 - `OnboardingShell` is a Client Component (`"use client"`) that owns `const [step, setStep] = useState<OnboardingStep>('role-confirm')` — the step type is a union of the step names
 - The Server Component (`page.tsx`) checks `onboarding_completed_at` and redirects before rendering the shell — this prevents already-onboarded users from re-entering the flow
 - After `setOnboardingRole` SA returns successfully, the shell calls `router.push(result.data.redirectTo)` — do NOT use `redirect()` inside the SA since the caller needs to handle navigation based on step state
@@ -123,11 +140,13 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - Minimal layout: `app/onboarding/layout.tsx` — no global nav, no footer, wordmark only
 
 **Do not:**
+
 - Add notification preferences to this flow at MVP — the screen map and SA plan do not include this
 - Create a separate `app/onboarding/layout.tsx` that interferes with the root layout auth middleware — the route-level layout overrides inner layout only, it does not affect middleware
 - Call the search API on every keystroke — debounce at 300ms minimum
 
 ## Acceptance Criteria
+
 - [ ] Authenticated users who have not yet completed onboarding see Step 1 on arrival at `/onboarding`
 - [ ] Users who have already completed onboarding (`onboarding_completed_at IS NOT NULL`) are redirected away before the page renders: supporters → `/discover`, owners → `/dashboard`
 - [ ] Step 1 shows the role confirmed at sign-up; owner path shows "Find my business →" and "Add a new business →" buttons; supporter path shows "Start exploring →"
@@ -143,14 +162,16 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - [ ] `tsc --noEmit` and `npm run lint` pass with zero errors
 
 ## Failure States
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| `setOnboardingRole` returns `OPERATION_FAILED` | DB upsert fails | Toast: "Couldn't save your preferences. Try again." | Button re-enables; user retries |
-| Search API fails (Step 2A) | `GET /api/search` returns non-200 | Inline error below search bar: "Search is temporarily unavailable. Try again." | Retry button below the error |
-| Session expired mid-flow | `setOnboardingRole` returns `AUTH_REQUIRED` | Toast with sign-in link: "Your session expired. Sign in again." | Redirect to `/sign-in?next=/onboarding` |
-| No search results (Step 2A) | Search returns zero matches | Inline message: "No matching listings found." with "Add a new business" link prominent | Link routes to `/add-business` |
+
+| Failure                                        | Condition                                   | User sees                                                                              | Recovery                                |
+| ---------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
+| `setOnboardingRole` returns `OPERATION_FAILED` | DB upsert fails                             | Toast: "Couldn't save your preferences. Try again."                                    | Button re-enables; user retries         |
+| Search API fails (Step 2A)                     | `GET /api/search` returns non-200           | Inline error below search bar: "Search is temporarily unavailable. Try again."         | Retry button below the error            |
+| Session expired mid-flow                       | `setOnboardingRole` returns `AUTH_REQUIRED` | Toast with sign-in link: "Your session expired. Sign in again."                        | Redirect to `/sign-in?next=/onboarding` |
+| No search results (Step 2A)                    | Search returns zero matches                 | Inline message: "No matching listings found." with "Add a new business" link prominent | Link routes to `/add-business`          |
 
 ## Edge Cases
+
 - User signed up as a supporter but wants to change to owner during Step 1 — the "Change role" option allows this; `setOnboardingRole` saves the updated role; Step 2A/2B renders accordingly
 - User navigates back from Step 2A to Step 1 — step state in `OnboardingShell` allows this; no data is lost; the search query is cleared
 - User enters a search query in Step 2A with only whitespace — trim before calling the search API; do not call the API with a blank or whitespace-only query
@@ -158,6 +179,7 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - User completes Step 3 and closes the browser tab without clicking the explore/navigate link — `onboarding_completed_at` is set once Step 3 is reached (the SA fires on advancing to Step 3, not on clicking the final navigation link)
 
 ## Accessibility Notes
+
 - [ ] The BLACQList wordmark at the top has `alt="The BLACQList"` if rendered as an image, or uses the text wordmark
 - [ ] Step progress indicator uses `aria-label="Onboarding progress: Step 1 of 3"` and role-appropriate markup
 - [ ] Role option cards in the role-change mode are `role="radio"` within a `role="radiogroup"` with label "Select your role"
@@ -167,20 +189,23 @@ As a newly registered user, I want to confirm my intent (supporter or business o
 - [ ] Focus management: when advancing to the next step, focus moves to the step heading or the first interactive element
 
 ## QA Test Cases
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| 1 | Supporter happy path | Supporter (new) | 1. Arrive at `/onboarding`. 2. See "Start exploring →". 3. Click. 4. Step 3 shows. 5. Click explore link. | SA fires; `user_roles` upserted; `onboarding_completed_at` set; redirected to `/discover` |
-| 2 | Owner — find business | Owner (new) | 1. Step 1 shows owner path. 2. Click "Find my business →". 3. Search "Hair Salon" in Atlanta. 4. Click "Claim this listing". | SA fires on route to `/claim/[id]`; onboarding marked complete |
-| 3 | Skip onboarding | Supporter | 1. Click "Skip for now" on Step 1. | SA fires; `onboarding_completed_at` set; redirect to `/discover` |
-| 4 | Already onboarded redirect | Supporter (existing, completed onboarding) | 1. Navigate to `/onboarding` directly. | Server Component detects `onboarding_completed_at IS NOT NULL`; redirect to `/discover` before page renders |
-| 5 | Mobile 375px | Supporter | 1. Open on 375px. 2. Step 1 visible. | All buttons full-width; step indicator centered; skip link accessible |
+
+| #   | Scenario                   | Role                                       | Steps                                                                                                                        | Expected result                                                                                             |
+| --- | -------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1   | Supporter happy path       | Supporter (new)                            | 1. Arrive at `/onboarding`. 2. See "Start exploring →". 3. Click. 4. Step 3 shows. 5. Click explore link.                    | SA fires; `user_roles` upserted; `onboarding_completed_at` set; redirected to `/discover`                   |
+| 2   | Owner — find business      | Owner (new)                                | 1. Step 1 shows owner path. 2. Click "Find my business →". 3. Search "Hair Salon" in Atlanta. 4. Click "Claim this listing". | SA fires on route to `/claim/[id]`; onboarding marked complete                                              |
+| 3   | Skip onboarding            | Supporter                                  | 1. Click "Skip for now" on Step 1.                                                                                           | SA fires; `onboarding_completed_at` set; redirect to `/discover`                                            |
+| 4   | Already onboarded redirect | Supporter (existing, completed onboarding) | 1. Navigate to `/onboarding` directly.                                                                                       | Server Component detects `onboarding_completed_at IS NOT NULL`; redirect to `/discover` before page renders |
+| 5   | Mobile 375px               | Supporter                                  | 1. Open on 375px. 2. Step 1 visible.                                                                                         | All buttons full-width; step indicator centered; skip link accessible                                       |
 
 ## Security Notes
+
 - `setOnboardingRole` SA validates session via `supabase.auth.getUser()` — cannot set onboarding role for another user
 - Role value is validated against the allowed enum values server-side — cannot inject an arbitrary role string
 - `onboarding_completed_at` is set server-side in the SA — never client-supplied
 
 ## Completion Checklist
+
 - [ ] Implementation complete
 - [ ] TypeScript: zero errors (`tsc --noEmit`)
 - [ ] Lint: zero errors (`npm run lint`)

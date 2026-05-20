@@ -1,18 +1,23 @@
 # Ticket 062: Homepage featured section — featured listings and featured collection slot
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 10: Editorial
 
 ## Priority
+
 P1
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Discovery / Editorial
 
 ---
@@ -38,6 +43,7 @@ As a homepage visitor, I want to see a curated editorial collection and trending
 ## Scope
 
 **In scope:**
+
 - `components/homepage/FeaturedCollectionSlot.tsx` — Server Component; queries `collections WHERE homepage_featured = true AND is_published = true LIMIT 1`; if no result, renders `null` (no UI); if result exists, renders a wide card with cover image, title, item count, editorial excerpt, and an Amber Gold "Explore [Collection Name] →" CTA linking to `/collection/[slug]`
 - `components/homepage/TrendingInCitySection.tsx` — Server Component; queries `entity_analytics_daily` for top 4–6 listings by `page_views` in the last 7 days for the featured city (Atlanta at MVP); falls back to `listings ORDER BY published_at DESC LIMIT 6` if analytics data is sparse; renders a section heading "Trending in Atlanta" + `ListingCardGrid` (reuses existing `ListingCard` component from Ticket 016)
 - Both components are added to `app/page.tsx` (the homepage Server Component), positioned as defined in the UX notes below
@@ -47,6 +53,7 @@ As a homepage visitor, I want to see a curated editorial collection and trending
 - Correct null / empty behavior: FeaturedCollectionSlot returns null when no featured collection; TrendingInCitySection returns null when city has zero published listings
 
 **Out of scope:**
+
 - The `/collection/[slug]` public page itself (that is a separate, pre-existing scope from Phase 2)
 - Admin controls for which city to feature in the trending section (hardcoded to Atlanta at MVP; city configuration is V1)
 - Dollar-flow teaser band (separate static section already in Ticket 016 scope)
@@ -57,13 +64,13 @@ As a homepage visitor, I want to see a curated editorial collection and trending
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 016 — Homepage page component | Blocking ticket | Not started |
+| Dependency                                                               | Type                                                                       | Status      |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------- | ----------- |
+| Ticket 016 — Homepage page component                                     | Blocking ticket                                                            | Not started |
 | Ticket 061 — Admin collection editor (produces `homepage_featured` flag) | Soft dependency (feature works with flag; slot just hides if flag not set) | Not started |
-| Ticket 011 — `collections` and `collection_items` tables | Blocking ticket | Not started |
-| Ticket 012 — `entity_analytics_daily` table | Blocking ticket | Not started |
-| `ListingCard` component (from Ticket 016) | Component dependency | Not started |
+| Ticket 011 — `collections` and `collection_items` tables                 | Blocking ticket                                                            | Not started |
+| Ticket 012 — `entity_analytics_daily` table                              | Blocking ticket                                                            | Not started |
+| `ListingCard` component (from Ticket 016)                                | Component dependency                                                       | Not started |
 
 ---
 
@@ -147,15 +154,18 @@ Cache strategy: Homepage is already ISR with `revalidatePath('/')` called by `ma
 ## Implementation Notes
 
 **Files to create:**
+
 - `components/homepage/FeaturedCollectionSlot.tsx` — async Server Component; returns null when no featured collection
 - `components/homepage/TrendingInCitySection.tsx` — async Server Component; includes fallback logic
 - `components/homepage/FeaturedCollectionSlotSkeleton.tsx` — skeleton shown in Suspense fallback
 - `components/homepage/TrendingInCitySkeleton.tsx` — skeleton (4× `ListingCardSkeleton`)
 
 **Files to modify:**
+
 - `app/page.tsx` — import and render `FeaturedCollectionSlot` and `TrendingInCitySection` inside `<Suspense>` wrappers; insert at positions 4 and 5 in the section order
 
 **Key patterns:**
+
 - These are Server Components — do not add `"use client"` unless a client-only feature is needed (none at MVP)
 - Wrap in `<Suspense fallback={<SkeletonComponent />}>` in `app/page.tsx` — each section loads independently; a slow analytics query does not block the hero
 - TrendingInCitySection implements the fallback in TypeScript (not two separate SQL calls unless Supabase ORM makes a single query natural):
@@ -169,6 +179,7 @@ Cache strategy: Homepage is already ISR with `revalidatePath('/')` called by `ma
 - The Atlanta city slug is hardcoded as `'atlanta'` at MVP — use a named constant `FEATURED_CITY_SLUG = 'atlanta'` in `lib/config/homepage.ts` so it is easy to change
 
 **Do not:**
+
 - Make the featured collection slot show any UI when `homepage_featured = true` collection does not exist — return `null`
 - Block the homepage hero from rendering while these sections load — they must be in Suspense boundaries
 - Attempt to revalidate the homepage from within these components — that is handled by the `manageCollections` SA
@@ -189,12 +200,12 @@ Cache strategy: Homepage is already ISR with `revalidatePath('/')` called by `ma
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Supabase query for `collections` fails | Suspense error boundary catches; FeaturedCollectionSlot renders null (hidden) — no error banner on the homepage for this non-critical section |
-| Supabase query for `entity_analytics_daily` fails | TrendingInCitySection renders null; no error banner |
-| `cover_image_path` is null or storage URL generation fails | FeaturedCollectionSlot renders without an image (graceful degradation — text and CTA still visible) |
-| All trending and fallback queries return zero results | TrendingInCitySection renders null |
+| Failure                                                    | User-visible behavior                                                                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase query for `collections` fails                     | Suspense error boundary catches; FeaturedCollectionSlot renders null (hidden) — no error banner on the homepage for this non-critical section |
+| Supabase query for `entity_analytics_daily` fails          | TrendingInCitySection renders null; no error banner                                                                                           |
+| `cover_image_path` is null or storage URL generation fails | FeaturedCollectionSlot renders without an image (graceful degradation — text and CTA still visible)                                           |
+| All trending and fallback queries return zero results      | TrendingInCitySection renders null                                                                                                            |
 
 ---
 
@@ -219,13 +230,13 @@ Cache strategy: Homepage is already ISR with `revalidatePath('/')` called by `ma
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Featured collection slot visible | anonymous | Set a collection to `homepage_featured = true` in the admin; visit `/` | FeaturedCollectionSlot card renders with correct title, description, and CTA |
-| QA-2 | Featured collection slot hidden | anonymous | Ensure no collection has `homepage_featured = true`; visit `/` | No collection card visible; no empty card placeholder |
-| QA-3 | Trending section shows analytics data | anonymous | Ensure `entity_analytics_daily` has 4+ Atlanta rows for the last 7 days; visit `/` | TrendingInCitySection shows up to 6 listings ordered by page_views desc |
-| QA-4 | Trending fallback | anonymous | Empty `entity_analytics_daily` for Atlanta; visit `/` | TrendingInCitySection falls back to most recent 6 published Atlanta listings |
-| QA-5 | Mobile layout at 375px | anonymous | Open homepage on a 375px viewport | FeaturedCollectionSlot image stacks above text; trending grid is single-column; no horizontal overflow |
+| #    | Scenario                              | Role      | Steps                                                                              | Expected result                                                                                        |
+| ---- | ------------------------------------- | --------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| QA-1 | Featured collection slot visible      | anonymous | Set a collection to `homepage_featured = true` in the admin; visit `/`             | FeaturedCollectionSlot card renders with correct title, description, and CTA                           |
+| QA-2 | Featured collection slot hidden       | anonymous | Ensure no collection has `homepage_featured = true`; visit `/`                     | No collection card visible; no empty card placeholder                                                  |
+| QA-3 | Trending section shows analytics data | anonymous | Ensure `entity_analytics_daily` has 4+ Atlanta rows for the last 7 days; visit `/` | TrendingInCitySection shows up to 6 listings ordered by page_views desc                                |
+| QA-4 | Trending fallback                     | anonymous | Empty `entity_analytics_daily` for Atlanta; visit `/`                              | TrendingInCitySection falls back to most recent 6 published Atlanta listings                           |
+| QA-5 | Mobile layout at 375px                | anonymous | Open homepage on a 375px viewport                                                  | FeaturedCollectionSlot image stacks above text; trending grid is single-column; no horizontal overflow |
 
 ---
 

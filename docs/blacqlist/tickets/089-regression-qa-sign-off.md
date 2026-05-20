@@ -1,15 +1,19 @@
 # Ticket 089: Full regression QA test suite and sign-off
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 17: Security, QA, Accessibility, Launch
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 QA
 
 ---
@@ -33,6 +37,7 @@ As the engineering and product team, we want a documented sign-off confirming th
 ## Scope
 
 **In scope:**
+
 - Execution of all QA test cases from P0 tickets (approximately 40+ test cases across Tickets 013, 014, 020, 025, 030, 032–035, 037, 040–041, 086)
 - Execution of all QA test cases from P1 tickets (approximately 80+ test cases)
 - Five critical path regression tests (described in Implementation Notes)
@@ -43,6 +48,7 @@ As the engineering and product team, we want a documented sign-off confirming th
 - Final go/no-go recommendation in the QA sign-off report
 
 **Out of scope:**
+
 - Load testing / performance testing under concurrent users (deferred)
 - Automated end-to-end test suite (deferred to V1 — Playwright or Cypress)
 - iOS Safari testing (desired but not blocking)
@@ -51,15 +57,15 @@ As the engineering and product team, we want a documented sign-off confirming th
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| All P0 tickets (001–014, 020, 025, 032–035, 037, 040–041) | Must be implemented and merged | In Progress |
-| All P1 tickets | Must be implemented and merged | In Progress |
-| Ticket 086: Security audit complete | Must be complete — no Critical or High findings open | In Progress |
-| Ticket 087: Accessibility audit complete | Must be complete — no Critical findings open | In Progress |
-| Ticket 088: Performance optimization complete | Must be complete — Lighthouse scores documented | In Progress |
-| Staging environment with seed data applied | Infrastructure | Required |
-| Test accounts for all 5 roles (from seed data plan) | Infrastructure | Must exist in staging |
+| Dependency                                                | Type                                                 | Status                |
+| --------------------------------------------------------- | ---------------------------------------------------- | --------------------- |
+| All P0 tickets (001–014, 020, 025, 032–035, 037, 040–041) | Must be implemented and merged                       | In Progress           |
+| All P1 tickets                                            | Must be implemented and merged                       | In Progress           |
+| Ticket 086: Security audit complete                       | Must be complete — no Critical or High findings open | In Progress           |
+| Ticket 087: Accessibility audit complete                  | Must be complete — no Critical findings open         | In Progress           |
+| Ticket 088: Performance optimization complete             | Must be complete — Lighthouse scores documented      | In Progress           |
+| Staging environment with seed data applied                | Infrastructure                                       | Required              |
+| Test accounts for all 5 roles (from seed data plan)       | Infrastructure                                       | Must exist in staging |
 
 ---
 
@@ -90,10 +96,12 @@ No API changes.
 ## Implementation Notes
 
 **Test environments:**
+
 - Staging Vercel URL (not localhost) — must use the actual Vercel preview or staging deployment
 - All tests conducted with JavaScript enabled (except one test to verify baseline HTML rendering for SEO)
 
 **Required test accounts (staging):**
+
 - `supporter@test.blacqlist.dev` / `TestPassword123!` — Supporter role
 - `owner@test.blacqlist.dev` / `TestPassword123!` — Owner role (has one claimed, published listing)
 - `admin@test.blacqlist.dev` / `TestPassword123!` — Admin role
@@ -103,38 +111,44 @@ No API changes.
 **Five critical path regression tests (execute in order):**
 
 **Critical Path 1 — Discovery flow:**
+
 1. Anonymous: homepage → search "restaurant" with city "Atlanta" → listing card click → BLACQList Page loads → verify SEO title in `<head>` → verify CTA button visible → attempt to save (sign-in modal appears) → close modal → listing page intact
 2. Pass criteria: all steps complete without error; listing page server-rendered (view-source confirms `<title>` is not empty)
 
 **Critical Path 2 — Submit (add business) flow:**
+
 1. Sign in as Supporter → navigate to `/add-business` → complete all 7 steps → submit
 2. Pass criteria: submission creates a pending listing; confirmation shown; listing appears in admin queue at `/admin/listings` with `status = 'pending_review'`
 
 **Critical Path 3 — Claim flow:**
+
 1. Sign in as Supporter → navigate to `/claim` → search for an unclaimed seed listing → complete claim form → upload a test document → submit
 2. Sign in as Admin → navigate to `/admin/claims` → verify claim in queue → approve the claim
 3. Sign back in as the claiming user → navigate to `/dashboard` → verify owner dashboard access granted
 4. Pass criteria: full claim-to-approval cycle completes end-to-end; owner dashboard accessible after approval
 
 **Critical Path 4 — Owner dashboard and page editor:**
+
 1. Sign in as Owner → navigate to `/dashboard` → verify stat cards show data → navigate to `/dashboard/page` → edit the business name → save → wait 5 seconds → navigate to the public BLACQList Page → verify updated name is visible
 2. Pass criteria: edit saved; public page reflects the update (either immediately via `revalidatePath` or after manual cache bust)
 
 **Critical Path 5 — Admin operations:**
+
 1. Sign in as Admin → navigate to `/admin/claims` → verify pending claims visible → navigate to `/admin/listings` → filter by `status = 'published'` → verify 150+ Atlanta listings visible → navigate to `/admin/analytics` → verify stat cards populated
 2. Pass criteria: all admin pages load; data correct; no JavaScript errors in console
 
 **Role × Flow matrix (25 combinations):**
 
-| Flow | Anonymous | Supporter | Owner | Admin | Super Admin |
-|---|---|---|---|---|---|
-| View BLACQList Page | Pass | Pass | Pass | Pass | Pass |
-| Search with city filter | Pass | Pass | Pass | Pass | Pass |
-| Attempt to save (unauthenticated) | Sign-in modal | Pass | Pass | Pass | Pass |
-| Access `/dashboard` | Redirect | Redirect | Pass | Pass | Pass |
-| Access `/admin` | Redirect | Redirect | Redirect | Pass | Pass |
+| Flow                              | Anonymous     | Supporter | Owner    | Admin | Super Admin |
+| --------------------------------- | ------------- | --------- | -------- | ----- | ----------- |
+| View BLACQList Page               | Pass          | Pass      | Pass     | Pass  | Pass        |
+| Search with city filter           | Pass          | Pass      | Pass     | Pass  | Pass        |
+| Attempt to save (unauthenticated) | Sign-in modal | Pass      | Pass     | Pass  | Pass        |
+| Access `/dashboard`               | Redirect      | Redirect  | Pass     | Pass  | Pass        |
+| Access `/admin`                   | Redirect      | Redirect  | Redirect | Pass  | Pass        |
 
 **Deliverable:**
+
 - `docs/blacqlist/launch/qa-sign-off-report.md` containing:
   - Test execution date and environment
   - Tester name
@@ -164,12 +178,12 @@ No API changes.
 
 ## Failure States
 
-| Failure | Resolution |
-|---|---|
-| P0 bug found during QA | Open hotfix ticket; fix merged and re-tested; QA sign-off blocked until resolved |
-| P1 bug found with no fix timeline | Documented in QA report with "GO WITH CONDITIONS — P1 resolution by [date]"; tech lead approval required |
-| Critical Path 3 (claim flow) fails | P0 blocker; launch blocked until entire claim-to-approval flow works end-to-end |
-| Admin queue inaccessible | P0 blocker; critical admin infrastructure failure |
+| Failure                            | Resolution                                                                                               |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| P0 bug found during QA             | Open hotfix ticket; fix merged and re-tested; QA sign-off blocked until resolved                         |
+| P1 bug found with no fix timeline  | Documented in QA report with "GO WITH CONDITIONS — P1 resolution by [date]"; tech lead approval required |
+| Critical Path 3 (claim flow) fails | P0 blocker; launch blocked until entire claim-to-approval flow works end-to-end                          |
+| Admin queue inaccessible           | P0 blocker; critical admin infrastructure failure                                                        |
 
 ---
 
@@ -191,13 +205,13 @@ The QA sign-off includes verification that all Critical and High accessibility f
 
 The test cases for this ticket ARE the compilation of all test cases from all previous tickets. The per-flow critical path tests above are the additional regression tests specific to this ticket.
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Critical Path 1 — Discovery | Anonymous | See Critical Path 1 above | All steps pass on Chrome desktop, Safari desktop, Chrome mobile 375px |
-| QA-2 | Critical Path 2 — Submit | Supporter | See Critical Path 2 above | Submission creates pending listing visible in admin queue |
-| QA-3 | Critical Path 3 — Claim | Supporter + Admin | See Critical Path 3 above | End-to-end claim-to-approval cycle completes |
-| QA-4 | Critical Path 4 — Dashboard + editor | Owner | See Critical Path 4 above | Edit saved; public page updated |
-| QA-5 | Critical Path 5 — Admin | Admin | See Critical Path 5 above | Admin pages load; data correct |
+| #    | Scenario                             | Role              | Steps                     | Expected result                                                       |
+| ---- | ------------------------------------ | ----------------- | ------------------------- | --------------------------------------------------------------------- |
+| QA-1 | Critical Path 1 — Discovery          | Anonymous         | See Critical Path 1 above | All steps pass on Chrome desktop, Safari desktop, Chrome mobile 375px |
+| QA-2 | Critical Path 2 — Submit             | Supporter         | See Critical Path 2 above | Submission creates pending listing visible in admin queue             |
+| QA-3 | Critical Path 3 — Claim              | Supporter + Admin | See Critical Path 3 above | End-to-end claim-to-approval cycle completes                          |
+| QA-4 | Critical Path 4 — Dashboard + editor | Owner             | See Critical Path 4 above | Edit saved; public page updated                                       |
+| QA-5 | Critical Path 5 — Admin              | Admin             | See Critical Path 5 above | Admin pages load; data correct                                        |
 
 ---
 

@@ -1,26 +1,33 @@
 # Ticket 032: Add Business Multi-Step Form — Steps 1–4
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Core Workflow / Entity Submission
 
 ## Context
+
 The Add Business form is the primary path for new Black-owned businesses to join The BLACQList platform. This ticket covers steps 1–4 of the 7-step form: entity type selection, basic information, contact and location, and category + city selection. Steps 5–7 (media, CTA, preview/publish) are covered in Ticket 033. This form is the foundation of the platform's supply side — without it, owners cannot create listings. Source: `docs/blacqlist/ux/mvp-screen-map.md` Add Business screen; `docs/blacqlist/ux/core-user-flows.md` (Add Business flow); `docs/blacqlist/architecture/api-contract.md` Section 4 endpoints 18–19; `docs/blacqlist/data/database-schema-plan.md` listings and listing_details_business tables.
 
 ## User Story
+
 As a business owner, I want to complete the first four steps of the Add Business form — selecting my entity type, entering basic info, adding contact details, and choosing my category and city — so that I can establish the foundational record for my BLACQList Page.
 
 ## Scope
 
 **In scope:**
+
 - `app/add-business/page.tsx` — Client Component (`"use client"`) managing multi-step state in local component state (`useState`)
 - Step progress indicator: "Step N of 7" text counter with visual dots (current step = Amber Gold `#E2A428`, completed = filled, upcoming = empty)
 - **Step 1 — Entity Type:** Four option cards in a responsive grid. "Business" is selectable and advances the flow. "Professional", "Creative", "Event/Pop-up", and "Job/Vendor" show "Coming soon" badge (`text-sm bg-amber-100 text-amber-800`) and are visually disabled (reduced opacity, no hover state, `cursor-not-allowed`, `pointer-events-none`). Selecting "Business" updates state and enables the Continue button
@@ -36,6 +43,7 @@ As a business owner, I want to complete the first four steps of the Add Business
 - Page layout: Multi-step form layout — BLACQList wordmark top-left, step progress bar below, form panel centered, Back/Continue fixed at bottom
 
 **Out of scope:**
+
 - Steps 5–7: media upload, CTA selection, preview and publish (Ticket 033)
 - Actual submission to the database (handled in Ticket 033 `createListing` SA call)
 - Category and city data management (seeded; no admin UI in this ticket)
@@ -44,13 +52,13 @@ As a business owner, I want to complete the first four steps of the Add Business
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 015 (auth middleware and session) | Blocking ticket | Must be complete — route requires authenticated session |
-| Ticket 031 (duplicate-check API) | Blocking ticket | Required by Step 7 — not blocking Steps 1–4 specifically, but must exist before Ticket 033 can complete the flow |
-| `categories` table seeded | Data | Required for Step 4 category select options |
-| `cities` table seeded with 13 launch cities | Data | Required for Step 4 city select options |
-| shadcn/ui `Combobox` or equivalent searchable select | Component | Must be installed or implemented before Step 4 |
+| Dependency                                           | Type            | Status                                                                                                           |
+| ---------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Ticket 015 (auth middleware and session)             | Blocking ticket | Must be complete — route requires authenticated session                                                          |
+| Ticket 031 (duplicate-check API)                     | Blocking ticket | Required by Step 7 — not blocking Steps 1–4 specifically, but must exist before Ticket 033 can complete the flow |
+| `categories` table seeded                            | Data            | Required for Step 4 category select options                                                                      |
+| `cities` table seeded with 13 launch cities          | Data            | Required for Step 4 city select options                                                                          |
+| shadcn/ui `Combobox` or equivalent searchable select | Component       | Must be installed or implemented before Step 4                                                                   |
 
 ## UX Notes
 
@@ -105,6 +113,7 @@ As a business owner, I want to complete the first four steps of the Add Business
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/add-business/page.tsx` — Server Component wrapper: fetches `categories` and `cities` arrays; passes to `AddBusinessForm` client component; handles `redirect('/sign-in?next=/add-business')` if no session
 - `app/add-business/_components/AddBusinessForm.tsx` — Client Component (`"use client"`): manages multi-step state, localStorage draft, step rendering
 - `app/add-business/_components/steps/EntityTypeStep.tsx` — Step 1 component
@@ -115,16 +124,21 @@ As a business owner, I want to complete the first four steps of the Add Business
 - `lib/validations/listing.ts` — zod schemas for each step (also used in Ticket 033 for final submit)
 
 **Files to modify:**
+
 - `app/add-business/layout.tsx` — create minimal layout (wordmark, no full nav, no footer)
 
 **Key patterns:**
+
 - Each step is a separate component that receives `form` (from `useForm`) as a prop — do not pass the entire form to all steps simultaneously; render only the current step's component
 - localStorage draft pattern from `docs/blacqlist/architecture/frontend.md`:
   ```tsx
   const DRAFT_KEY = `blacqlist_add_business_draft_${user.id}`
   useEffect(() => {
     const saved = localStorage.getItem(DRAFT_KEY)
-    if (saved) { form.reset(JSON.parse(saved)); toast("Draft restored.") }
+    if (saved) {
+      form.reset(JSON.parse(saved))
+      toast('Draft restored.')
+    }
   }, [])
   useEffect(() => {
     const sub = form.watch((v) => localStorage.setItem(DRAFT_KEY, JSON.stringify(v)))
@@ -135,6 +149,7 @@ As a business owner, I want to complete the first four steps of the Add Business
 - City/category data: fetch server-side in the page Server Component, pass as props; do not fetch in the Client Component
 
 **Do not:**
+
 - Use `<select>` native elements for category and city — use the shadcn/ui Combobox pattern with search
 - Make any API calls in steps 1–4 — all data stays local until Step 7
 - Call `revalidatePath` — no server mutations happen in this ticket
@@ -155,13 +170,13 @@ As a business owner, I want to complete the first four steps of the Add Business
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Validation error | Required field empty on Continue | Inline error below the field, Continue button remains disabled | User fills the field and retries |
-| Invalid email format | Email field contains non-email string | "Please enter a valid email address" inline below field | User corrects and retries |
-| Invalid website URL | Website field does not start with `https://` | "Website must start with https://" inline error | User corrects to include `https://` |
-| Draft parse failure | localStorage draft is malformed JSON | `try/catch` around `JSON.parse`; silently skip draft restore; no toast | User starts fresh; no data loss since data was not yet submitted |
-| Category/city fetch failure | Server-side Supabase query fails on page load | Next.js `error.tsx` boundary: "Something went wrong loading this page." with retry button | User retries page load |
+| Failure                     | Condition                                     | User sees                                                                                 | Recovery                                                         |
+| --------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Validation error            | Required field empty on Continue              | Inline error below the field, Continue button remains disabled                            | User fills the field and retries                                 |
+| Invalid email format        | Email field contains non-email string         | "Please enter a valid email address" inline below field                                   | User corrects and retries                                        |
+| Invalid website URL         | Website field does not start with `https://`  | "Website must start with https://" inline error                                           | User corrects to include `https://`                              |
+| Draft parse failure         | localStorage draft is malformed JSON          | `try/catch` around `JSON.parse`; silently skip draft restore; no toast                    | User starts fresh; no data loss since data was not yet submitted |
+| Category/city fetch failure | Server-side Supabase query fails on page load | Next.js `error.tsx` boundary: "Something went wrong loading this page." with retry button | User retries page load                                           |
 
 ## Edge Cases
 
@@ -184,13 +199,13 @@ As a business owner, I want to complete the first four steps of the Add Business
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path steps 1–4 | Sign in → navigate to `/add-business` → select Business → fill name + description → fill phone → select category + city → click Continue | Each step validates and advances; Step 4 Continue is enabled after selecting category and city |
-| QA-2 | Draft recovery | Fill Steps 1–3 → navigate to `/discover` → return to `/add-business` | Toast appears "Draft restored"; form fields are pre-populated with previous entries |
-| QA-3 | Validation blocking | On Step 2, leave description blank → click Continue | Inline error "Description is required" appears; step does not advance |
-| QA-4 | Location type toggle | Step 3 → toggle "Service area" ON | Address fields disappear; `service_area_description` textarea appears |
-| QA-5 | Unauthenticated access | Log out → navigate to `/add-business` | Redirected to `/sign-in?next=/add-business` |
+| ID   | Test                   | Steps                                                                                                                                    | Expected                                                                                       |
+| ---- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path steps 1–4   | Sign in → navigate to `/add-business` → select Business → fill name + description → fill phone → select category + city → click Continue | Each step validates and advances; Step 4 Continue is enabled after selecting category and city |
+| QA-2 | Draft recovery         | Fill Steps 1–3 → navigate to `/discover` → return to `/add-business`                                                                     | Toast appears "Draft restored"; form fields are pre-populated with previous entries            |
+| QA-3 | Validation blocking    | On Step 2, leave description blank → click Continue                                                                                      | Inline error "Description is required" appears; step does not advance                          |
+| QA-4 | Location type toggle   | Step 3 → toggle "Service area" ON                                                                                                        | Address fields disappear; `service_area_description` textarea appears                          |
+| QA-5 | Unauthenticated access | Log out → navigate to `/add-business`                                                                                                    | Redirected to `/sign-in?next=/add-business`                                                    |
 
 ## Security Notes
 

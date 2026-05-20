@@ -1,17 +1,17 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminRoleActions } from "@/components/admin/AdminRoleActions"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminRoleActions } from '@/components/admin/AdminRoleActions'
 
-export const metadata: Metadata = { title: "Users" }
+export const metadata: Metadata = { title: 'Users' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -21,7 +21,7 @@ interface PageProps {
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
   const session = await requireAdmin()
-  const { page = "1" } = await searchParams
+  const { page = '1' } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page))
   const perPage = 50
@@ -44,9 +44,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const profileMap: Record<string, string | null> = {}
   if (userIds.length > 0) {
     const { data: profiles } = await serviceClient
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", userIds)
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', userIds)
     for (const p of profiles ?? []) {
       profileMap[p.id] = p.display_name
     }
@@ -56,17 +56,17 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const adminRoleMap: Record<string, { id: string; role: string }[]> = {}
   if (userIds.length > 0) {
     const { data: roleRows } = await serviceClient
-      .from("user_roles")
-      .select("id, user_id, role")
-      .in("user_id", userIds)
-      .in("role", ["admin", "super_admin"])
+      .from('user_roles')
+      .select('id, user_id, role')
+      .in('user_id', userIds)
+      .in('role', ['admin', 'super_admin'])
     for (const r of roleRows ?? []) {
       if (!adminRoleMap[r.user_id]) adminRoleMap[r.user_id] = []
       adminRoleMap[r.user_id]!.push({ id: r.id, role: r.role })
     }
   }
 
-  const isSuperAdmin = session.role === "super_admin"
+  const isSuperAdmin = session.role === 'super_admin'
 
   return (
     <div className="space-y-6">
@@ -74,9 +74,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <h1 className="font-headline text-2xl text-brand-black">Users</h1>
         <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
           All registered users and their platform roles.
-          {totalCount > 0 && (
-            <span className="ml-1 text-charcoal/40">({totalCount} total)</span>
-          )}
+          {totalCount > 0 && <span className="ml-1 text-charcoal/40">({totalCount} total)</span>}
         </p>
       </div>
 
@@ -114,12 +112,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                   <tr key={user.id} className="hover:bg-[#f9f9fb] transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-subhead text-sm font-semibold text-brand-black">
-                        {displayName ?? user.email ?? "—"}
+                        {displayName ?? user.email ?? '—'}
                       </p>
                       {displayName && (
-                        <p className="font-body text-xs text-charcoal/50 mt-0.5">
-                          {user.email}
-                        </p>
+                        <p className="font-body text-xs text-charcoal/50 mt-0.5">{user.email}</p>
                       )}
                       <p className="font-mono text-xs text-charcoal/30 mt-0.5">
                         {user.id.slice(0, 8)}…
@@ -133,7 +129,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                               key={r.id}
                               className="inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-semibold font-subhead bg-amber-gold/10 text-amber-800 border-amber-200"
                             >
-                              {r.role === "super_admin" ? "Super Admin" : "Admin"}
+                              {r.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                             </span>
                           ))}
                         </div>
@@ -143,12 +139,12 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <span className="font-body text-xs text-charcoal/60">
-                        {user.created_at ? formatDate(user.created_at) : "—"}
+                        {user.created_at ? formatDate(user.created_at) : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <span className="font-body text-xs text-charcoal/60">
-                        {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : "Never"}
+                        {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : 'Never'}
                       </span>
                     </td>
                     {isSuperAdmin && (

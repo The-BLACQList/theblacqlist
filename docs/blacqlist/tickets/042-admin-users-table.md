@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P1 — High
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Admin / Users
 
 ---
@@ -40,6 +45,7 @@ As an admin, I want to view all platform users in a searchable, filterable table
 ## Scope
 
 **In scope:**
+
 - `app/admin/users/page.tsx` — Server Component, admin-only, accepts `searchParams` for filter/search/page state
 - Table columns: display_name, email (from `auth.users` via service_role join), role badges (all roles for the user), status badge (Active / Suspended), created_at, listing count (for users with owner role)
 - Filter: role select chip group (All / Supporter / Owner / Admin), status select (All / Active / Suspended)
@@ -56,6 +62,7 @@ As an admin, I want to view all platform users in a searchable, filterable table
 - All three empty/error states per spec
 
 **Out of scope:**
+
 - Individual user detail/profile page (post-MVP)
 - Super Admin-only admin role assignment guard (flag in spec but implemented at service layer for this ticket)
 - Bulk user operations
@@ -65,15 +72,15 @@ As an admin, I want to view all platform users in a searchable, filterable table
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 — Admin shell + auth middleware | Blocking ticket | Not started |
-| Ticket 008 — `profiles` and `user_roles` tables migration | Blocking ticket | Not started |
-| `updateUserRole` SA — `lib/actions/admin/updateUserRole.ts` | Server Action | Not started (to be created in this ticket) |
-| `suspendUser` SA — `lib/actions/admin/suspendUser.ts` | Server Action | Not started (to be created in this ticket) |
-| `unsuspendUser` SA — `lib/actions/admin/unsuspendUser.ts` | Server Action | Not started (to be created in this ticket) |
-| `admin_audit_log` table migration | Database | Must exist |
-| Service_role client for `auth.users` join | Infrastructure | Must be configured |
+| Dependency                                                  | Type            | Status                                     |
+| ----------------------------------------------------------- | --------------- | ------------------------------------------ |
+| Ticket 037 — Admin shell + auth middleware                  | Blocking ticket | Not started                                |
+| Ticket 008 — `profiles` and `user_roles` tables migration   | Blocking ticket | Not started                                |
+| `updateUserRole` SA — `lib/actions/admin/updateUserRole.ts` | Server Action   | Not started (to be created in this ticket) |
+| `suspendUser` SA — `lib/actions/admin/suspendUser.ts`       | Server Action   | Not started (to be created in this ticket) |
+| `unsuspendUser` SA — `lib/actions/admin/unsuspendUser.ts`   | Server Action   | Not started (to be created in this ticket) |
+| `admin_audit_log` table migration                           | Database        | Must exist                                 |
+| Service_role client for `auth.users` join                   | Infrastructure  | Must be configured                         |
 
 ---
 
@@ -88,6 +95,7 @@ As an admin, I want to view all platform users in a searchable, filterable table
 - **Mobile behavior:** Table scrolls horizontally on mobile; filter bar collapses to an expandable drawer at 375px; dialogs are full-screen bottom sheets on mobile
 
 **States from `empty-loading-error-success-states.md` § 14.7:**
+
 - Loading: skeleton for 10 table row stubs; filter bar + search render immediately
 - Empty: "No users found" — if filters are active, show "Clear filters" button
 - Error: "Users couldn't load" + "Try refreshing." + Retry button
@@ -135,29 +143,30 @@ As an admin, I want to view all platform users in a searchable, filterable table
 
 **Server Actions to create in this ticket:**
 
-| Action | File | What it does |
-|---|---|---|
+| Action           | File                                  | What it does                                                                                    |
+| ---------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `updateUserRole` | `lib/actions/admin/updateUserRole.ts` | Updates `user_roles` for target user; inserts `role_assigned` or `role_revoked` audit log entry |
-| `suspendUser` | `lib/actions/admin/suspendUser.ts` | Sets `profiles.suspended_at = now()`; inserts audit log entry |
-| `unsuspendUser` | `lib/actions/admin/unsuspendUser.ts` | Clears `profiles.suspended_at`; inserts audit log entry |
+| `suspendUser`    | `lib/actions/admin/suspendUser.ts`    | Sets `profiles.suspended_at = now()`; inserts audit log entry                                   |
+| `unsuspendUser`  | `lib/actions/admin/unsuspendUser.ts`  | Clears `profiles.suspended_at`; inserts audit log entry                                         |
 
 **Auth required:** Yes — Admin role (verified server-side)
 
 **Error codes to handle:**
 
-| Code | Condition | UI shows |
-|---|---|---|
-| `AUTH_REQUIRED` | Session expired | Redirect to `/sign-in?next=[current-url]` |
-| `FORBIDDEN` | Not admin, or admin targeting self | Toast: "You cannot modify your own account." |
-| `NOT_FOUND` | Target user does not exist | Toast: "User not found." — row stays in table |
-| `VALIDATION_ERROR` | Invalid role value | Inline error in dialog |
-| `OPERATION_FAILED` | Unexpected DB error | Persistent toast: "[Action] failed. Try again." |
+| Code               | Condition                          | UI shows                                        |
+| ------------------ | ---------------------------------- | ----------------------------------------------- |
+| `AUTH_REQUIRED`    | Session expired                    | Redirect to `/sign-in?next=[current-url]`       |
+| `FORBIDDEN`        | Not admin, or admin targeting self | Toast: "You cannot modify your own account."    |
+| `NOT_FOUND`        | Target user does not exist         | Toast: "User not found." — row stays in table   |
+| `VALIDATION_ERROR` | Invalid role value                 | Inline error in dialog                          |
+| `OPERATION_FAILED` | Unexpected DB error                | Persistent toast: "[Action] failed. Try again." |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/users/page.tsx` — Server Component; reads `searchParams`; fetches users via service_role
 - `components/admin/users/UsersTable.tsx` — table with columns, sorting, pagination
 - `components/admin/users/UserFiltersBar.tsx` — "use client"; role/status chips + search input; writes to URL params
@@ -169,9 +178,11 @@ As an admin, I want to view all platform users in a searchable, filterable table
 - `lib/actions/admin/unsuspendUser.ts` — Server Action
 
 **Files to modify:**
+
 - `app/admin/layout.tsx` (or sidebar component) — ensure "Users" nav item links to `/admin/users`
 
 **Key patterns:**
+
 - Use service_role client to join `auth.users` for email — never use anon or session-scoped client for this join; email must not be returned by any public-facing endpoint
 - All three SAs follow the 7-step pattern from `server-actions-plan.md` § 3
 - `insertAuditLog` called in Step 5 for all three SAs; for `updateUserRole`, snapshot `{ role, listing_id }` in `before_state` (current role) and `after_state` (new role)
@@ -180,6 +191,7 @@ As an admin, I want to view all platform users in a searchable, filterable table
 - Suspension check in middleware: `middleware.ts` should check `profiles.suspended_at IS NOT NULL` for authenticated routes — this must be implemented alongside this ticket
 
 **Do not:**
+
 - Expose `auth.users` email in any Route Handler or client-accessible API
 - Allow an admin to change their own role or suspend themselves — enforce at both the service layer AND by hiding the action in the UI row for the current admin's own row
 - Use client-side role checks to guard the page — rely solely on middleware + server-side checks
@@ -207,15 +219,15 @@ As an admin, I want to view all platform users in a searchable, filterable table
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Table fetch fails | DB query error | "Users couldn't load. Try refreshing." + Retry button | Retry re-runs the query |
-| Role change SA fails | DB error | Persistent toast: "Role change failed. Try again." Dialog remains open | Retry the dialog action |
-| Suspend SA fails | DB error | Persistent toast: "Suspension failed. Try again." Dialog remains open | Retry the dialog action |
-| Admin targets self | `target_user_id = auth.uid()` | Toast: "You cannot modify your own account." | No action taken |
-| User not found | Target user deleted between table load and action | Toast: "User not found." — row stays in table until next refresh | Refresh the page |
-| Session expired | 401 from any SA | Redirect to `/sign-in?next=[current-url]` | Re-authenticate |
-| Non-admin access | User without admin role navigates to `/admin/users` | Middleware redirect to `/dashboard` | N/A |
+| Failure              | Condition                                           | User sees                                                              | Recovery                |
+| -------------------- | --------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------- |
+| Table fetch fails    | DB query error                                      | "Users couldn't load. Try refreshing." + Retry button                  | Retry re-runs the query |
+| Role change SA fails | DB error                                            | Persistent toast: "Role change failed. Try again." Dialog remains open | Retry the dialog action |
+| Suspend SA fails     | DB error                                            | Persistent toast: "Suspension failed. Try again." Dialog remains open  | Retry the dialog action |
+| Admin targets self   | `target_user_id = auth.uid()`                       | Toast: "You cannot modify your own account."                           | No action taken         |
+| User not found       | Target user deleted between table load and action   | Toast: "User not found." — row stays in table until next refresh       | Refresh the page        |
+| Session expired      | 401 from any SA                                     | Redirect to `/sign-in?next=[current-url]`                              | Re-authenticate         |
+| Non-admin access     | User without admin role navigates to `/admin/users` | Middleware redirect to `/dashboard`                                    | N/A                     |
 
 ---
 
@@ -245,14 +257,14 @@ As an admin, I want to view all platform users in a searchable, filterable table
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path: change role | 1. Log in as admin. 2. Navigate to `/admin/users`. 3. Open kebab menu on a supporter user. 4. Click "Change role". 5. Select "Owner" from the select. 6. Click "Confirm". | `updateUserRole` called. Role badge updates from "Supporter" to "Owner" inline. Toast: "Role updated." `admin_audit_log` entry created. |
-| QA-2 | Happy path: suspend user | 1. Click "Suspend" on an active user. 2. Enter a reason. 3. Click "Confirm Suspension". | `suspendUser` called. Status badge updates to "Suspended". Toast: "[User name] suspended." `admin_audit_log` entry. "Suspend" row action replaced by "Unsuspend". |
-| QA-3 | Self-modification guard | 1. Locate the current admin's own row. | "Change role" and "Suspend" actions are hidden or disabled. If attempted via SA directly, returns FORBIDDEN. |
-| QA-4 | Filter and search | 1. Set role filter to "Owner". 2. Type "atlanta" in the search field. | Table re-fetches immediately showing only owners with "atlanta" in name or email. URL reflects `?role=owner&q=atlanta`. |
-| QA-5 | Mobile at 375px | 1. Open `/admin/users` on a 375px viewport. 2. Interact with filters and rows. | Table scrolls horizontally. Filter bar is accessible. Dialogs render as full-screen bottom sheets. |
-| QA-6 | Permission boundary | 1. Log in as an owner. 2. Navigate directly to `/admin/users`. | Middleware redirects to `/dashboard`. Page is not rendered. |
+| ID   | Test                     | Steps                                                                                                                                                                     | Expected                                                                                                                                                          |
+| ---- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path: change role  | 1. Log in as admin. 2. Navigate to `/admin/users`. 3. Open kebab menu on a supporter user. 4. Click "Change role". 5. Select "Owner" from the select. 6. Click "Confirm". | `updateUserRole` called. Role badge updates from "Supporter" to "Owner" inline. Toast: "Role updated." `admin_audit_log` entry created.                           |
+| QA-2 | Happy path: suspend user | 1. Click "Suspend" on an active user. 2. Enter a reason. 3. Click "Confirm Suspension".                                                                                   | `suspendUser` called. Status badge updates to "Suspended". Toast: "[User name] suspended." `admin_audit_log` entry. "Suspend" row action replaced by "Unsuspend". |
+| QA-3 | Self-modification guard  | 1. Locate the current admin's own row.                                                                                                                                    | "Change role" and "Suspend" actions are hidden or disabled. If attempted via SA directly, returns FORBIDDEN.                                                      |
+| QA-4 | Filter and search        | 1. Set role filter to "Owner". 2. Type "atlanta" in the search field.                                                                                                     | Table re-fetches immediately showing only owners with "atlanta" in name or email. URL reflects `?role=owner&q=atlanta`.                                           |
+| QA-5 | Mobile at 375px          | 1. Open `/admin/users` on a 375px viewport. 2. Interact with filters and rows.                                                                                            | Table scrolls horizontally. Filter bar is accessible. Dialogs render as full-screen bottom sheets.                                                                |
+| QA-6 | Permission boundary      | 1. Log in as an owner. 2. Navigate directly to `/admin/users`.                                                                                                            | Middleware redirects to `/dashboard`. Page is not rendered.                                                                                                       |
 
 ---
 

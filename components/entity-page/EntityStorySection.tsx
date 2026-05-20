@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import type { EntityPageData } from "@/types"
+import { useState } from 'react'
+import type { EntityPageData } from '@/types'
 
 interface Props {
   entity: EntityPageData
@@ -13,7 +13,7 @@ export function EntityStorySection({ entity }: Props) {
 
   if (!description?.trim()) return null
 
-  const paragraphs = description.split("\n\n").filter(Boolean)
+  const paragraphs = description.split('\n\n').filter(Boolean)
   const isLong = description.length > 400
 
   // Split: first paragraph always visible; rest behind "Read more"
@@ -21,10 +21,7 @@ export function EntityStorySection({ entity }: Props) {
   const hasMore = isLong && paragraphs.length > 1
 
   return (
-    <section
-      aria-labelledby="story-heading"
-      className="bg-cream py-12 md:py-16"
-    >
+    <section aria-labelledby="story-heading" className="bg-cream py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
         <div className="md:max-w-2xl">
           <h2
@@ -60,7 +57,7 @@ export function EntityStorySection({ entity }: Props) {
               className="mt-4 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2 transition-colors"
               aria-expanded={expanded}
             >
-              {expanded ? "Read less" : "Read more"}
+              {expanded ? 'Read less' : 'Read more'}
             </button>
           )}
         </div>

@@ -1,18 +1,18 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
 
-import { requireAdmin } from "@/lib/admin/guard"
-import { createServiceClient } from "@/lib/supabase/server"
-import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge"
-import { QueueItemActions } from "@/components/admin/QueueItemActions"
+import { requireAdmin } from '@/lib/admin/guard'
+import { createServiceClient } from '@/lib/supabase/server'
+import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
+import { QueueItemActions } from '@/components/admin/QueueItemActions'
 
-export const metadata: Metadata = { title: "Reports & Corrections" }
+export const metadata: Metadata = { title: 'Reports & Corrections' }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -22,7 +22,7 @@ interface PageProps {
 
 export default async function AdminReportsPage({ searchParams }: PageProps) {
   await requireAdmin()
-  const { status = "pending", type = "all", page = "1" } = await searchParams
+  const { status = 'pending', type = 'all', page = '1' } = await searchParams
 
   const pageNum = Math.max(1, parseInt(page))
   const limit = 25
@@ -31,16 +31,18 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   const serviceClient = createServiceClient()
 
   let query = serviceClient
-    .from("moderation_queue")
-    .select("id, queue_type, status, entity_id, entity_type, priority, created_at", { count: "exact" })
-    .in("queue_type", ["correction", "flagged_listing"])
-    .eq("status", status)
-    .order("priority", { ascending: false })
-    .order("created_at", { ascending: true })
+    .from('moderation_queue')
+    .select('id, queue_type, status, entity_id, entity_type, priority, created_at', {
+      count: 'exact',
+    })
+    .in('queue_type', ['correction', 'flagged_listing'])
+    .eq('status', status)
+    .order('priority', { ascending: false })
+    .order('created_at', { ascending: true })
     .range(offset, offset + limit - 1)
 
-  if (type !== "all") {
-    query = query.eq("queue_type", type)
+  if (type !== 'all') {
+    query = query.eq('queue_type', type)
   }
 
   const { data: items, count } = await query
@@ -51,25 +53,25 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   const listingMap: Record<string, { name: string; slug: string }> = {}
   if (entityIds.length > 0) {
     const { data: listings } = await serviceClient
-      .from("listings")
-      .select("id, name, slug")
-      .in("id", entityIds)
+      .from('listings')
+      .select('id, name, slug')
+      .in('id', entityIds)
     for (const l of listings ?? []) {
       listingMap[l.id] = { name: l.name, slug: l.slug }
     }
   }
 
   const STATUS_TABS = [
-    { value: "pending", label: "Pending" },
-    { value: "assigned", label: "Assigned" },
-    { value: "resolved", label: "Resolved" },
-    { value: "dismissed", label: "Dismissed" },
+    { value: 'pending', label: 'Pending' },
+    { value: 'assigned', label: 'Assigned' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'dismissed', label: 'Dismissed' },
   ]
 
   const TYPE_TABS = [
-    { value: "all", label: "All types" },
-    { value: "correction", label: "Corrections" },
-    { value: "flagged_listing", label: "Flagged listings" },
+    { value: 'all', label: 'All types' },
+    { value: 'correction', label: 'Corrections' },
+    { value: 'flagged_listing', label: 'Flagged listings' },
   ]
 
   return (
@@ -89,8 +91,8 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             href={`/admin/reports?status=${value}&type=${type}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? "border-amber-gold text-amber-gold"
-                : "border-transparent text-charcoal/60 hover:text-brand-black"
+                ? 'border-amber-gold text-amber-gold'
+                : 'border-transparent text-charcoal/60 hover:text-brand-black'
             }`}
           >
             {label}
@@ -106,8 +108,8 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             href={`/admin/reports?status=${status}&type=${value}`}
             className={`px-3 py-1 rounded-full border font-subhead text-xs font-semibold transition-colors ${
               type === value
-                ? "bg-brand-black text-white border-brand-black"
-                : "border-charcoal/15 text-charcoal/60 hover:border-charcoal/30 hover:text-brand-black"
+                ? 'bg-brand-black text-white border-brand-black'
+                : 'border-charcoal/15 text-charcoal/60 hover:border-charcoal/30 hover:text-brand-black'
             }`}
           >
             {label}
@@ -119,7 +121,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
       {!items || items.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal/60">
-            No {status} {type !== "all" ? type.replace("_", " ") : ""} reports found.
+            No {status} {type !== 'all' ? type.replace('_', ' ') : ''} reports found.
           </p>
         </div>
       ) : (
@@ -149,7 +151,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                   <tr key={item.id} className="hover:bg-[#f9f9fb] transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-subhead text-sm font-semibold text-brand-black">
-                        {listing?.name ?? "Unknown listing"}
+                        {listing?.name ?? 'Unknown listing'}
                       </p>
                       <p className="font-mono text-xs text-charcoal/40 mt-0.5">
                         {item.entity_id.slice(0, 8)}…
@@ -157,7 +159,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="font-subhead text-xs text-charcoal/60">
-                        {item.queue_type === "flagged_listing" ? "Flagged listing" : "Correction"}
+                        {item.queue_type === 'flagged_listing' ? 'Flagged listing' : 'Correction'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -178,7 +180,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                             View listing
                           </Link>
                         )}
-                        {status === "pending" || status === "assigned" ? (
+                        {status === 'pending' || status === 'assigned' ? (
                           <QueueItemActions queueId={item.id} revalidatePath="/admin/reports" />
                         ) : null}
                       </div>

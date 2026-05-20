@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { CardGrid } from "@/components/ui/card-grid"
-import { Skeleton } from "@/components/ui/skeleton"
-import { EntityCard } from "@/components/entities/EntityCard"
-import type { DiscoveryEntity } from "@/types"
+import Link from 'next/link'
+import { CardGrid } from '@/components/ui/card-grid'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EntityCard } from '@/components/entities/EntityCard'
+import type { DiscoveryEntity } from '@/types'
 
 interface DiscoveryGridProps {
   entities: DiscoveryEntity[]
@@ -44,12 +44,12 @@ function EmptyState({ query }: { query?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center px-4">
       <p className="font-headline text-xl text-brand-black mb-2">
-        {query ? `No results for "${query}"` : "No businesses found"}
+        {query ? `No results for "${query}"` : 'No businesses found'}
       </p>
       <p className="font-subhead text-sm text-charcoal max-w-sm">
         {query
-          ? "Try a different search term, or clear some filters to see more results."
-          : "Try adjusting your filters or browse all categories."}
+          ? 'Try a different search term, or clear some filters to see more results.'
+          : 'Try adjusting your filters or browse all categories.'}
       </p>
     </div>
   )
@@ -57,13 +57,8 @@ function EmptyState({ query }: { query?: string }) {
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <div
-      role="alert"
-      className="flex flex-col items-center justify-center py-20 text-center px-4"
-    >
-      <p className="font-headline text-xl text-brand-black mb-2">
-        Something went wrong
-      </p>
+    <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">Something went wrong</p>
       <p className="font-subhead text-sm text-charcoal max-w-sm">{message}</p>
     </div>
   )
@@ -89,7 +84,7 @@ export function DiscoveryGrid({
       {/* Result count */}
       <p className="font-subhead text-sm text-charcoal mb-4">
         {total === 1
-          ? "1 result"
+          ? '1 result'
           : `Showing ${showing.toLocaleString()} of ${total.toLocaleString()} results`}
       </p>
 

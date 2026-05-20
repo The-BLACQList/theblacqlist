@@ -1,10 +1,10 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { Bookmark, ArrowLeft, ExternalLink } from "lucide-react"
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { Bookmark, ArrowLeft, ExternalLink } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { SaveButton } from "@/components/entity-page/SaveButton"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { createClient } from '@/lib/supabase/server'
+import { SaveButton } from '@/components/entity-page/SaveButton'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 export default async function SavedListingsPage() {
   const supabase = await createClient()
@@ -12,11 +12,12 @@ export default async function SavedListingsPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/account/saved")
+  if (!user) redirect('/sign-in?next=/account/saved')
 
   const { data: saves } = await supabase
-    .from("saves")
-    .select(`
+    .from('saves')
+    .select(
+      `
       id,
       listing_id,
       created_at,
@@ -25,11 +26,12 @@ export default async function SavedListingsPage() {
         cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
         listing_details_business(phone, website_url)
       )
-    `)
-    .eq("user_id", user.id)
-    .is("listings.deleted_at", null)
-    .eq("listings.status", "published")
-    .order("created_at", { ascending: false })
+    `
+    )
+    .eq('user_id', user.id)
+    .is('listings.deleted_at', null)
+    .eq('listings.status', 'published')
+    .order('created_at', { ascending: false })
 
   const listings = (saves ?? []).map((s) => {
     const l = s.listings as {
@@ -50,7 +52,7 @@ export default async function SavedListingsPage() {
       tagline: l.tagline,
       entity_type: l.entity_type,
       trust_tier: l.trust_tier,
-      city: l.cities ? `${l.cities.name}, ${l.cities.states?.code ?? ""}` : null,
+      city: l.cities ? `${l.cities.name}, ${l.cities.states?.code ?? ''}` : null,
       citySlug: l.cities?.slug ?? null,
       website_url: l.listing_details_business?.website_url ?? null,
     }
@@ -68,13 +70,11 @@ export default async function SavedListingsPage() {
           Back to account
         </Link>
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">
-          Saved businesses
-        </h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Saved businesses</h1>
         <p className="font-subhead text-sm text-charcoal/60 mb-8">
           {listings.length === 0
-            ? "Businesses you save will appear here."
-            : `${listings.length} saved ${listings.length === 1 ? "business" : "businesses"}`}
+            ? 'Businesses you save will appear here.'
+            : `${listings.length} saved ${listings.length === 1 ? 'business' : 'businesses'}`}
         </p>
 
         {listings.length === 0 ? (
@@ -82,9 +82,7 @@ export default async function SavedListingsPage() {
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
               <Bookmark className="size-7 text-charcoal/30" aria-hidden="true" />
             </div>
-            <h2 className="font-headline text-xl text-brand-black mb-2">
-              No saved businesses yet
-            </h2>
+            <h2 className="font-headline text-xl text-brand-black mb-2">No saved businesses yet</h2>
             <p className="font-subhead text-sm text-charcoal/60 max-w-xs leading-relaxed">
               Tap the heart icon on any listing to save it here for later.
             </p>
@@ -114,9 +112,7 @@ export default async function SavedListingsPage() {
                       {l.tagline}
                     </p>
                   )}
-                  {l.city && (
-                    <p className="font-subhead text-xs text-charcoal/40 mt-1">{l.city}</p>
-                  )}
+                  {l.city && <p className="font-subhead text-xs text-charcoal/40 mt-1">{l.city}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {l.website_url && (

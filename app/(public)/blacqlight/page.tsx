@@ -1,23 +1,23 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import Link from 'next/link'
 
-import { createClient } from "@/lib/supabase/server"
-import { BlogPostCard } from "@/components/editorial/BlogPostCard"
+import { createClient } from '@/lib/supabase/server'
+import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 
 export const metadata: Metadata = {
-  title: "BLACQLight | The BLACQList",
+  title: 'BLACQLight | The BLACQList',
   description:
-    "A spotlight on the businesses, people, and movements shaping Black economic power. Stories that inspire. Profiles that matter.",
+    'A spotlight on the businesses, people, and movements shaping Black economic power. Stories that inspire. Profiles that matter.',
 }
 
 export default async function BLACQLightPage() {
   const supabase = await createClient()
 
   const { data: articles } = await supabase
-    .from("editorial_articles")
-    .select("id, title, slug, subtitle, author_name, published_at, tags")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
+    .from('editorial_articles')
+    .select('id, title, slug, subtitle, author_name, published_at, tags')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
 
   const items = articles ?? []
 
@@ -29,7 +29,9 @@ export default async function BLACQLightPage() {
           The BLACQLight
         </p>
         <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight mb-4">
-          Stories that inspire.<br />Profiles that matter.
+          Stories that inspire.
+          <br />
+          Profiles that matter.
         </h1>
         <p className="font-body text-base text-charcoal max-w-xl leading-relaxed">
           A spotlight on the businesses, people, and movements shaping Black economic power.

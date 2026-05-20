@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Share2, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import { Share2, Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Props {
   listingName: string
@@ -19,18 +19,18 @@ export function ShareButton({ listingName, listingId, className, tabIndex }: Pro
     const title = `${listingName} | The BLACQList`
 
     // Fire analytics event (fire-and-forget)
-    void fetch("/api/analytics/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    void fetch('/api/analytics/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        event_name: "listing_shared",
-        entity_type: "listing",
+        event_name: 'listing_shared',
+        entity_type: 'listing',
         entity_id: listingId,
-        properties: { source: "entity_page" },
+        properties: { source: 'entity_page' },
       }),
     }).catch(() => {})
 
-    if (typeof navigator !== "undefined" && "share" in navigator) {
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share({ title, url })
         return
@@ -54,15 +54,17 @@ export function ShareButton({ listingName, listingId, className, tabIndex }: Pro
       type="button"
       onClick={handleShare}
       tabIndex={tabIndex}
-      aria-label={copied ? "Link copied" : "Share this business"}
+      aria-label={copied ? 'Link copied' : 'Share this business'}
       className={cn(
-        "inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors",
+        'inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors',
         className
       )}
     >
-      {copied
-        ? <Check className="size-4" aria-hidden="true" />
-        : <Share2 className="size-4" aria-hidden="true" />}
+      {copied ? (
+        <Check className="size-4" aria-hidden="true" />
+      ) : (
+        <Share2 className="size-4" aria-hidden="true" />
+      )}
     </button>
   )
 }

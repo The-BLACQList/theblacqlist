@@ -16,6 +16,7 @@
 City landing pages are both discovery surfaces and SEO assets. Each page is built to capture "Black-owned businesses in [City]" search intent from Google, while providing in-platform visitors a locally-scoped entry point to browse featured listings and explore by category. At launch, Atlanta, Houston, and Chicago are the primary cities — each needs a well-formed, fast-loading city page. These pages are statically generated with ISR for performance.
 
 Source artifacts:
+
 - `docs/blacqlist/ux/mvp-screen-map.md` — City Landing page detailed spec
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 4 (city page states)
 - `docs/blacqlist/architecture/api-contract.md` — Endpoint 3: Get City Page Data
@@ -33,6 +34,7 @@ This ticket depends on Ticket 025 (search API) and Ticket 015 (ListingCard compo
 ## Scope
 
 **In scope:**
+
 - `app/[city-slug]/page.tsx` — Server Component, ISR `revalidate: 86400` (24 hours)
 - `generateStaticParams()` — generates routes for all active cities from the `cities` table at build time. At launch: Atlanta, Houston, Chicago. `dynamicParams = true` for cities added after build.
 - Data fetch: `GET /api/cities/[slug]` (Endpoint 3) — returns `city`, `categories` (with `listing_count`), `featured_listings` (up to 6), `total_listings`
@@ -47,6 +49,7 @@ This ticket depends on Ticket 025 (search API) and Ticket 015 (ListingCard compo
 - Loading state: Suspense boundaries on the featured listings section (skeleton grid of 6 cards)
 
 **Out of scope:**
+
 - City + Category page (Ticket 028)
 - City edit/admin (admin panel ticket)
 - User-generated city collections (V1)
@@ -56,13 +59,13 @@ This ticket depends on Ticket 025 (search API) and Ticket 015 (ListingCard compo
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| BLACQ-025: Search API (for "View all" link destination) | Soft dependency | Not started — the page links to `/search?city=...` not the search API directly |
-| BLACQ-015: `ListingCard` component | Blocking UI dependency | Not started |
-| `GET /api/cities/[slug]` (Endpoint 3) must be implemented | Blocking API dependency | Not started — this Route Handler may need to be built as part of this ticket |
-| `cities` table seeded with Atlanta, Houston, Chicago and `is_active = true` | Data | Must be seeded |
-| ISR revalidation: `revalidateTag('city-[slug]')` called from listing publish/unpublish actions | Integration | Must be wired after this ticket |
+| Dependency                                                                                     | Type                    | Status                                                                         |
+| ---------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------ |
+| BLACQ-025: Search API (for "View all" link destination)                                        | Soft dependency         | Not started — the page links to `/search?city=...` not the search API directly |
+| BLACQ-015: `ListingCard` component                                                             | Blocking UI dependency  | Not started                                                                    |
+| `GET /api/cities/[slug]` (Endpoint 3) must be implemented                                      | Blocking API dependency | Not started — this Route Handler may need to be built as part of this ticket   |
+| `cities` table seeded with Atlanta, Houston, Chicago and `is_active = true`                    | Data                    | Must be seeded                                                                 |
+| ISR revalidation: `revalidateTag('city-[slug]')` called from listing publish/unpublish actions | Integration             | Must be wired after this ticket                                                |
 
 **Assumption:** If `GET /api/cities/[slug]` is not yet implemented as a Route Handler, the city page can fetch directly from Supabase in `page.tsx` using a Server Component database call. Flag this if the Route Handler approach is preferred for separation of concerns.
 
@@ -122,6 +125,7 @@ This ticket depends on Ticket 025 (search API) and Ticket 015 (ListingCard compo
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/[city-slug]/page.tsx` — Server Component with `generateStaticParams`, `generateMetadata`, `revalidate = 86400`. Fetches `CityPageData`, renders hero + listings grid + category grid + stats line.
 - `app/[city-slug]/components/CityHero.tsx` — Hero section with city name, count, category pill row. Server Component.
 - `app/[city-slug]/components/CategoryShortcutsGrid.tsx` — Category cards grid. Server Component.
@@ -129,9 +133,11 @@ This ticket depends on Ticket 025 (search API) and Ticket 015 (ListingCard compo
 - `app/[city-slug]/components/LowListingBand.tsx` — Claim prompt for cities with <10 listings. Server Component.
 
 **Files to modify:**
+
 - `app/[city-slug]/business/[listing-slug]/page.tsx` — already exists from Ticket 020. No changes needed for this ticket. (Note: the `[city-slug]` dynamic segment is shared — ensure route conflict resolution between `/[city-slug]/page.tsx` and `/[city-slug]/business/[listing-slug]/page.tsx` works correctly. Next.js handles this by matching more specific routes first.)
 
 **Key patterns:**
+
 ```typescript
 // app/[city-slug]/page.tsx
 export const revalidate = 86400
@@ -152,7 +158,7 @@ export default async function CityPage({ params }: { params: { 'city-slug': stri
   const data = await getCityPageData(params['city-slug'])
   if (!data) redirect('/discover')  // Unknown city slug
   if (!data.city.is_active) notFound()  // Known but inactive
-  
+
   return (
     <>
       <CityHero city={data.city} totalListings={data.total_listings} categories={data.categories} />
@@ -170,6 +176,7 @@ export default async function CityPage({ params }: { params: { 'city-slug': stri
 - Category pill row in `CityHero`: top 5–6 categories sorted by `listing_count DESC`. If a category has 0 listings in this city, do not show the pill.
 
 **Do not:**
+
 - Hardcode city names or slugs — all data driven from the `cities` table.
 - Show the city page with an incomplete data fetch — if the API returns 404 for the city slug, redirect or show 404 immediately.
 - Use `useEffect` for data fetching — all data fetched server-side.
@@ -194,13 +201,13 @@ export default async function CityPage({ params }: { params: { 'city-slug': stri
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| City API returns 404 | Unknown city slug | Redirect to `/discover` | N/A |
-| City API returns 404 (inactive city) | Known city with `is_active = false` | Branded 404 page via `notFound()` | N/A |
-| Featured listings API fails | Network or server error | Low-listing message shown instead of skeleton failure (graceful degradation) — or inline "Listings couldn't load. Try again." within the section | Retry link within the section |
-| 0 featured listings returned (city active, listings exist but none flagged featured) | Admin configuration gap | Listings grid shows top recent listings by `published_at DESC` (the API falls back to this when no `is_featured` listings exist) | Admin sets `is_featured` for listings |
-| All category counts are 0 | New city, no published listings | Category shortcuts grid shows 0 count badges; low-listing message shows above it | N/A |
+| Failure                                                                              | Condition                           | User sees                                                                                                                                        | Recovery                              |
+| ------------------------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| City API returns 404                                                                 | Unknown city slug                   | Redirect to `/discover`                                                                                                                          | N/A                                   |
+| City API returns 404 (inactive city)                                                 | Known city with `is_active = false` | Branded 404 page via `notFound()`                                                                                                                | N/A                                   |
+| Featured listings API fails                                                          | Network or server error             | Low-listing message shown instead of skeleton failure (graceful degradation) — or inline "Listings couldn't load. Try again." within the section | Retry link within the section         |
+| 0 featured listings returned (city active, listings exist but none flagged featured) | Admin configuration gap             | Listings grid shows top recent listings by `published_at DESC` (the API falls back to this when no `is_featured` listings exist)                 | Admin sets `is_featured` for listings |
+| All category counts are 0                                                            | New city, no published listings     | Category shortcuts grid shows 0 count badges; low-listing message shows above it                                                                 | N/A                                   |
 
 ---
 
@@ -227,16 +234,16 @@ export default async function CityPage({ params }: { params: { 'city-slug': stri
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-027-1 | City page renders | Navigate to `/city/atlanta` | Hero with "Atlanta" h1, listing count, category pills, featured listing grid, category shortcuts |
-| QA-027-2 | Category pill navigation | Click a category pill in the hero | Navigates to `/city/atlanta/[category-slug]` |
-| QA-027-3 | "View all" link | Click "View all in Atlanta →" | Navigates to `/search?city=atlanta` |
-| QA-027-4 | Low-listing message | Navigate to a seeded city with < 10 listings | Featured listings grid replaced by "We're building out [City]" message with "Claim Your Page" CTA |
-| QA-027-5 | Unknown city slug | Navigate to `/city/fakecity999` | Redirect to `/discover` (no 404 page) |
-| QA-027-6 | ISR cache | Load city page twice; check response headers | Second load has `x-nextjs-cache: HIT` header |
-| QA-027-7 | Mobile layout | View `/city/atlanta` at 375px | Category pills scroll horizontally; listings single column; categories 2-column grid |
-| QA-027-8 | SEO title | Check `<title>` element | "Black-Owned Businesses in Atlanta | The BLACQList" |
+| ID       | Test                     | Steps                                        | Expected                                                                                          |
+| -------- | ------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------- |
+| QA-027-1 | City page renders        | Navigate to `/city/atlanta`                  | Hero with "Atlanta" h1, listing count, category pills, featured listing grid, category shortcuts  |
+| QA-027-2 | Category pill navigation | Click a category pill in the hero            | Navigates to `/city/atlanta/[category-slug]`                                                      |
+| QA-027-3 | "View all" link          | Click "View all in Atlanta →"                | Navigates to `/search?city=atlanta`                                                               |
+| QA-027-4 | Low-listing message      | Navigate to a seeded city with < 10 listings | Featured listings grid replaced by "We're building out [City]" message with "Claim Your Page" CTA |
+| QA-027-5 | Unknown city slug        | Navigate to `/city/fakecity999`              | Redirect to `/discover` (no 404 page)                                                             |
+| QA-027-6 | ISR cache                | Load city page twice; check response headers | Second load has `x-nextjs-cache: HIT` header                                                      |
+| QA-027-7 | Mobile layout            | View `/city/atlanta` at 375px                | Category pills scroll horizontally; listings single column; categories 2-column grid              |
+| QA-027-8 | SEO title                | Check `<title>` element                      | "Black-Owned Businesses in Atlanta                                                                | The BLACQList" |
 
 ---
 

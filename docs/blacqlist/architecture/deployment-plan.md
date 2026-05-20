@@ -14,15 +14,15 @@ The BLACQList deploys on Vercel. This is decided (see ADR-011) and does not requ
 
 **Why Vercel:**
 
-| Capability | Why it matters for The BLACQList |
-|---|---|
-| Native Next.js support | Built by the same team; zero-config App Router, ISR, and Server Components |
-| Automatic ISR cache management | BLACQList Pages regenerate on a `revalidate` schedule without manual cache busting |
-| Preview deployments per PR | QA and design review happen before code reaches production — no staging guesswork |
-| Instant rollback | Any previous deployment can be promoted back to production in ~30 seconds |
-| Edge middleware | Auth session validation and geolocation-based city detection run at the edge, before the page renders |
-| Vercel Analytics | Core Web Vitals and traffic patterns visible without adding a third-party analytics library at MVP |
-| Serverless scale-to-zero | Cost-efficient at MVP traffic levels; no idle server charges |
+| Capability                     | Why it matters for The BLACQList                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Native Next.js support         | Built by the same team; zero-config App Router, ISR, and Server Components                            |
+| Automatic ISR cache management | BLACQList Pages regenerate on a `revalidate` schedule without manual cache busting                    |
+| Preview deployments per PR     | QA and design review happen before code reaches production — no staging guesswork                     |
+| Instant rollback               | Any previous deployment can be promoted back to production in ~30 seconds                             |
+| Edge middleware                | Auth session validation and geolocation-based city detection run at the edge, before the page renders |
+| Vercel Analytics               | Core Web Vitals and traffic patterns visible without adding a third-party analytics library at MVP    |
+| Serverless scale-to-zero       | Cost-efficient at MVP traffic levels; no idle server charges                                          |
 
 ---
 
@@ -30,15 +30,16 @@ The BLACQList deploys on Vercel. This is decided (see ADR-011) and does not requ
 
 ### Branch Model
 
-| Branch | Purpose | Who pushes | Deploy target |
-|---|---|---|---|
-| `main` | Production. Protected. Source of truth. | PR merge only | Vercel production |
-| `develop` | Staging integration. All feature branches merge here first. | PR merge only | Vercel staging |
-| `feat/[ticket-id]-[short-description]` | Feature development. | Engineer | Vercel preview |
-| `hotfix/[short-description]` | Emergency production fixes. | Engineer | Vercel preview, then `main` |
-| `chore/[description]` | Dependency updates, tooling, non-feature changes. | Engineer | Vercel preview |
+| Branch                                 | Purpose                                                     | Who pushes    | Deploy target               |
+| -------------------------------------- | ----------------------------------------------------------- | ------------- | --------------------------- |
+| `main`                                 | Production. Protected. Source of truth.                     | PR merge only | Vercel production           |
+| `develop`                              | Staging integration. All feature branches merge here first. | PR merge only | Vercel staging              |
+| `feat/[ticket-id]-[short-description]` | Feature development.                                        | Engineer      | Vercel preview              |
+| `hotfix/[short-description]`           | Emergency production fixes.                                 | Engineer      | Vercel preview, then `main` |
+| `chore/[description]`                  | Dependency updates, tooling, non-feature changes.           | Engineer      | Vercel preview              |
 
 **Naming examples:**
+
 - `feat/BQ-014-claim-flow`
 - `feat/BQ-031-search-city-filter`
 - `hotfix/broken-search-filter`
@@ -71,6 +72,7 @@ Same as `main` except 1 approval is recommended but not required at MVP. Status 
 Every pull request opened against `main` or `develop` automatically receives a Vercel preview deployment.
 
 **Preview URL pattern:** Vercel assigns a URL in the format:
+
 ```
 theblacqlist-[branch-slug]-[vercel-team-name].vercel.app
 ```
@@ -78,12 +80,14 @@ theblacqlist-[branch-slug]-[vercel-team-name].vercel.app
 The exact URL is posted as a comment on the PR by the Vercel GitHub bot after the build completes.
 
 **What preview deployments use:**
+
 - Staging Supabase project (separate from production — different `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`)
 - Stripe test mode keys
 - Resend test mode / sandbox
 - All other environment variables from the Vercel staging environment configuration
 
 **What preview deployments are used for:**
+
 - QA sign-off before merging
 - Design review — share the preview URL with stakeholders instead of screen recordings
 - Manual testing of new features in isolation from `main`
@@ -91,6 +95,7 @@ The exact URL is posted as a comment on the PR by the Vercel GitHub bot after th
 **Shared staging data:** All open PRs share the same staging Supabase database. Avoid running destructive operations (deleting all seed data, truncating tables) from a preview deployment unless specifically testing that flow, as it affects all other open PRs.
 
 **Build triggers:** Preview deployments build automatically on:
+
 - PR opened
 - New commits pushed to the PR branch
 - PR reopened after closing
@@ -117,10 +122,12 @@ Standard process for any deployment that does not include a database migration. 
 10. On failure: do not merge additional code. Investigate the Vercel build log (Vercel Dashboard → Deployments → failed deployment → Build Logs). Fix the issue in a new commit to the same branch and re-run from step 4.
 
 **What triggers a production deploy:**
+
 - A PR merge to `main` (automatic)
 - A manual "Redeploy" triggered from the Vercel Dashboard (does not rebuild — re-runs the last successful build)
 
 **What does NOT trigger a production deploy:**
+
 - Pushing commits to any branch other than `main`
 - Merging to `develop` (triggers staging deploy only)
 
@@ -183,25 +190,25 @@ Migrations are the highest-risk part of any deployment. A bad application deploy
 
 The following operations are safe to run against a live production database without a maintenance window:
 
-| Operation | Safe | Notes |
-|---|---|---|
-| `ADD COLUMN` (nullable or with default) | Yes | Does not lock existing rows |
-| `CREATE TABLE` | Yes | No impact on existing tables |
-| `CREATE INDEX CONCURRENTLY` | Yes | Non-blocking index build |
-| `ALTER TYPE ADD VALUE` (enum) | Yes | Additive only |
-| `CREATE POLICY` | Yes | Additive |
-| `DROP POLICY` | Yes | Additive (less restrictive = safe to audit first) |
+| Operation                               | Safe | Notes                                             |
+| --------------------------------------- | ---- | ------------------------------------------------- |
+| `ADD COLUMN` (nullable or with default) | Yes  | Does not lock existing rows                       |
+| `CREATE TABLE`                          | Yes  | No impact on existing tables                      |
+| `CREATE INDEX CONCURRENTLY`             | Yes  | Non-blocking index build                          |
+| `ALTER TYPE ADD VALUE` (enum)           | Yes  | Additive only                                     |
+| `CREATE POLICY`                         | Yes  | Additive                                          |
+| `DROP POLICY`                           | Yes  | Additive (less restrictive = safe to audit first) |
 
 The following operations require a maintenance window or a multi-step migration sequence. Never run these directly against a live table:
 
-| Operation | Risk | Required approach |
-|---|---|---|
-| `DROP COLUMN` | Data loss, breakage | Deprecation period: stop writing to column → deploy code that no longer reads it → then drop |
-| `NOT NULL` constraint on existing column without DEFAULT | Immediate table scan, potential lock | Add DEFAULT first → backfill nulls → then add NOT NULL |
-| Column rename | Breaks application code mid-deploy | Multi-step: add new column → backfill → update application code → drop old column |
-| Type change on existing column | May fail or corrupt data | Add new column of new type → backfill with CAST → swap application → drop old column |
-| `DROP TABLE` | Irreversible data loss | See destructive migration requirements below |
-| `TRUNCATE` | Irreversible data loss | See destructive migration requirements below |
+| Operation                                                | Risk                                 | Required approach                                                                            |
+| -------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `DROP COLUMN`                                            | Data loss, breakage                  | Deprecation period: stop writing to column → deploy code that no longer reads it → then drop |
+| `NOT NULL` constraint on existing column without DEFAULT | Immediate table scan, potential lock | Add DEFAULT first → backfill nulls → then add NOT NULL                                       |
+| Column rename                                            | Breaks application code mid-deploy   | Multi-step: add new column → backfill → update application code → drop old column            |
+| Type change on existing column                           | May fail or corrupt data             | Add new column of new type → backfill with CAST → swap application → drop old column         |
+| `DROP TABLE`                                             | Irreversible data loss               | See destructive migration requirements below                                                 |
+| `TRUNCATE`                                               | Irreversible data loss               | See destructive migration requirements below                                                 |
 
 ### Destructive Migration Requirements
 
@@ -226,6 +233,7 @@ Use this when: the deployment introduced visual bugs, broken routes, API errors,
 **Fastest path: Vercel instant rollback**
 
 Via Vercel Dashboard:
+
 1. Go to Vercel Dashboard → The BLACQList project → Deployments
 2. Locate the last known-good deployment (immediately before the bad one)
 3. Click the three-dot menu on that deployment → "Promote to Production"
@@ -233,9 +241,11 @@ Via Vercel Dashboard:
 5. No rebuild occurs — Vercel serves the previously built output
 
 Via Vercel CLI:
+
 ```
 vercel rollback [deployment-url]
 ```
+
 Where `[deployment-url]` is the URL of the last known-good deployment (visible in the Deployments list).
 
 After rollback: run the Section 9 smoke tests to confirm production is restored. File a ticket for the root cause investigation. Do not re-deploy the bad code until the issue is diagnosed and fixed.
@@ -390,20 +400,20 @@ The launch checklist in Section 7 feeds into a formal go/no-go gate. This gate r
 
 **Required sign-off:**
 
-| Role | Scope of confirmation | Sign-off method |
-|---|---|---|
-| Tech Lead | Code quality, security, performance, and monitoring checks complete | PR comment or Slack message with "Tech: GO" |
-| Product Lead | Seed data quality acceptable, admin flows operational, user-facing flows tested | Slack message with "Product: GO" |
-| Legal / Ops | Privacy Policy and Terms of Service reviewed and approved | Email confirmation to team |
+| Role         | Scope of confirmation                                                           | Sign-off method                             |
+| ------------ | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| Tech Lead    | Code quality, security, performance, and monitoring checks complete             | PR comment or Slack message with "Tech: GO" |
+| Product Lead | Seed data quality acceptable, admin flows operational, user-facing flows tested | Slack message with "Product: GO"            |
+| Legal / Ops  | Privacy Policy and Terms of Service reviewed and approved                       | Email confirmation to team                  |
 
 **Severity tiers for blocking issues:**
 
-| Tier | Description | Launch impact |
-|---|---|---|
-| P0 — Critical | Single P0 issue open | Hard block — launch does not proceed |
-| P1 — High | Open P1 without documented resolution timeline | Conditional block — document resolution plan and get tech lead approval to proceed with conditions |
-| P2 — Medium | Open P2 | Does not block — log as known issue, ship |
-| P3 — Low / Cosmetic | Open P3 | Does not block — log as known issue, ship |
+| Tier                | Description                                    | Launch impact                                                                                      |
+| ------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| P0 — Critical       | Single P0 issue open                           | Hard block — launch does not proceed                                                               |
+| P1 — High           | Open P1 without documented resolution timeline | Conditional block — document resolution plan and get tech lead approval to proceed with conditions |
+| P2 — Medium         | Open P2                                        | Does not block — log as known issue, ship                                                          |
+| P3 — Low / Cosmetic | Open P3                                        | Does not block — log as known issue, ship                                                          |
 
 A launch that proceeds with open P1 issues must have: a documented description of each open issue, an owner, and a resolution target date — written in the release notes before launch.
 
@@ -547,24 +557,24 @@ Expected result: A branded 404 page renders — with The BLACQList header and fo
 
 ### Severity Definitions
 
-| Severity | Description | Response SLA | Rollback trigger |
-|---|---|---|---|
-| P0 — Critical | Site completely down, data loss confirmed, auth broken for all users, payment processing down | Immediate — acknowledge within 30 minutes, resolve or rollback within 2 hours | Yes — initiate rollback immediately on P0 confirmation |
-| P1 — High | Core user flow broken (search returns 0 results, claim submission fails, admin queue inaccessible, sign-up broken) | Acknowledge within 1 hour, resolve within 24 hours | Evaluate — rollback if hotfix is not faster |
-| P2 — Medium | Secondary feature broken (gallery upload failing, email not delivering, save count incorrect) | Acknowledge within 4 hours, resolve within 72 hours | No |
-| P3 — Low / Cosmetic | Visual bug, copy typo, footer link broken, minor UX inconsistency | Log and schedule for next sprint | No |
+| Severity            | Description                                                                                                        | Response SLA                                                                  | Rollback trigger                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| P0 — Critical       | Site completely down, data loss confirmed, auth broken for all users, payment processing down                      | Immediate — acknowledge within 30 minutes, resolve or rollback within 2 hours | Yes — initiate rollback immediately on P0 confirmation |
+| P1 — High           | Core user flow broken (search returns 0 results, claim submission fails, admin queue inaccessible, sign-up broken) | Acknowledge within 1 hour, resolve within 24 hours                            | Evaluate — rollback if hotfix is not faster            |
+| P2 — Medium         | Secondary feature broken (gallery upload failing, email not delivering, save count incorrect)                      | Acknowledge within 4 hours, resolve within 72 hours                           | No                                                     |
+| P3 — Low / Cosmetic | Visual bug, copy typo, footer link broken, minor UX inconsistency                                                  | Log and schedule for next sprint                                              | No                                                     |
 
 ### Incident Response Contacts
 
 Document the following before launch and post in the team Slack channel:
 
-| Role | Responsibility | Contact |
-|---|---|---|
-| On-call Engineer | First responder for all P0/P1 incidents | [Name + Slack handle + phone] |
-| Tech Lead | Escalation for P0 incidents, approves rollbacks | [Name + Slack handle + phone] |
-| Supabase Support | Database outages, PITR restore assistance | support.supabase.com (Pro plan includes priority support) |
-| Vercel Support | Build failures, edge network issues | vercel.com/support |
-| Domain Registrar | DNS issues (if domain does not route to Vercel) | [Registrar support link] |
+| Role             | Responsibility                                  | Contact                                                   |
+| ---------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| On-call Engineer | First responder for all P0/P1 incidents         | [Name + Slack handle + phone]                             |
+| Tech Lead        | Escalation for P0 incidents, approves rollbacks | [Name + Slack handle + phone]                             |
+| Supabase Support | Database outages, PITR restore assistance       | support.supabase.com (Pro plan includes priority support) |
+| Vercel Support   | Build failures, edge network issues             | vercel.com/support                                        |
+| Domain Registrar | DNS issues (if domain does not route to Vercel) | [Registrar support link]                                  |
 
 ### Incident Communication
 

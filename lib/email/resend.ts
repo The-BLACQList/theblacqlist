@@ -1,10 +1,9 @@
-import { Resend } from "resend"
-import type { ReactElement } from "react"
+import { Resend } from 'resend'
+import type { ReactElement } from 'react'
 
 const client = new Resend(process.env.RESEND_API_KEY)
 
-const FROM =
-  process.env.RESEND_FROM_EMAIL ?? "The BLACQList <noreply@theblacqlist.com>"
+const FROM = process.env.RESEND_FROM_EMAIL ?? 'The BLACQList <noreply@theblacqlist.com>'
 
 export async function sendEmail({
   to,
@@ -22,6 +21,6 @@ export async function sendEmail({
   try {
     await client.emails.send({ from: FROM, to, subject, react })
   } catch (err) {
-    console.error("[email] Failed to send:", subject, "→", to, err)
+    console.error('[email] Failed to send:', subject, '→', to, err)
   }
 }

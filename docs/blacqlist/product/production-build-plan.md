@@ -1,4 +1,5 @@
 # Production Build Plan — The BLACQList
+
 **Last updated:** 2026-05-12
 **Status:** Active execution reference
 **Starting point:** App shell, mock data, Business entity template, email notifications wired, 7 migrations written
@@ -8,6 +9,7 @@
 ## Current State (as of 2026-05-12)
 
 ### What exists and works
+
 - All major public routes (homepage, discover, search, city/entity pages, claim, add-business, collections, for-business, legal)
 - All admin routes (claims queue, entities CRUD, collections, analytics, reviews, verification, receipts)
 - All owner dashboard routes (page editor, services, products, analytics, upgrade, settings)
@@ -19,6 +21,7 @@
 - Homepage hero photography
 
 ### What is not yet functional
+
 - Search and discover use JavaScript filtering — not connected to Supabase search
 - No seed data in Supabase — pages fall back to mock entities
 - Only Business entity page template — 4 others (Professional, Creative, Event, Job) are missing
@@ -37,6 +40,7 @@
 Goal: Make the app work with real data. Every core discovery flow should work end-to-end.
 
 ### 2.1 — Full-text search via Supabase ← CURRENT
+
 - Replace JavaScript `filterEntities()` with server-side Supabase `.textSearch()` on `search_vector`
 - Category/city filter: slug → ID lookup then `.eq('category_id', ...)` / `.eq('city_id', ...)`
 - Entity type filter: `.eq('entity_type', ...)`
@@ -46,6 +50,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - Enable city filter in DiscoveryFilters
 
 ### 2.2 — Migrations applied + seed data
+
 - Apply all 7 migrations to Supabase project (via Supabase CLI: `supabase db push`)
 - Seed 150+ Atlanta listings with full data (name, tagline, description, category, city, cover image URL, services, hours, CTA)
 - Seed 50+ Houston listings, 50+ Chicago listings
@@ -53,6 +58,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - Verify discover page shows real data without mock fallback
 
 ### 2.3 — City and category landing pages
+
 - `app/[citySlug]/page.tsx` — city index page (all listings in a city, sorted by featured → saves)
 - `app/[citySlug]/[entityType]/page.tsx` — entity type within city
 - Auto-generated from Supabase city data (`generateStaticParams` for ISR)
@@ -61,6 +67,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - Add city filter to DiscoveryFilters (was a stub)
 
 ### 2.4 — Professional entity page template
+
 - Route: `app/[citySlug]/professional/[listingSlug]/page.tsx`
 - Reuse hero, contact, social, CTA components from business template
 - Professional-specific: credential badges, portfolio section, booking CTA
@@ -68,23 +75,27 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - Mirror the data-fetching pattern from business template
 
 ### 2.5 — Creative entity page template
+
 - Route: `app/[citySlug]/creative/[listingSlug]/page.tsx`
 - Creative-specific: portfolio/gallery-first layout, commission CTA, medium/style tags
 - `listing_details_creative` table join in query
 
 ### 2.6 — Event entity page template
+
 - Route: `app/[citySlug]/event/[listingSlug]/page.tsx`
 - Event-specific: date/time, venue, RSVP/get-tickets CTA, description
 - Auto-archive when event date passes (`status = 'archived'`)
 - `listing_details_event` table join in query
 
 ### 2.7 — Job listing template
+
 - Route: `app/[citySlug]/job/[listingSlug]/page.tsx`
 - Job-specific: role, company, location (remote/hybrid/onsite), salary range, apply CTA
 - Auto-expiry after 30 days
 - `listing_details_job` table join in query
 
 ### 2.8 — SEO foundation
+
 - `sitemap.xml` — dynamically generated from all published listings + city/category pages
 - `robots.txt` — allow all crawlers, point to sitemap
 - JSON-LD structured data (LocalBusiness schema) on every entity page
@@ -92,6 +103,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - Verify all entity pages are server-rendered and indexable
 
 ### 2.9 — Save/unsave end-to-end
+
 - Verify `/api/saves` route handles POST (save) and DELETE (unsave) correctly
 - Wire `SaveButton` component on entity cards and entity pages
 - Require auth — prompt sign-in modal if unauthenticated
@@ -99,6 +111,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 - `/account/saved` page: show saved listings grid
 
 ### 2.10 — Analytics events
+
 - Verify `/api/analytics/event` POST handler is correct
 - Fire `page_view` event on every BLACQList Page load (server-side)
 - Fire `cta_click` event on every primary CTA click (client-side)
@@ -113,6 +126,7 @@ Goal: Make the app work with real data. Every core discovery flow should work en
 Goal: The platform feels alive with real content and visible trust signals.
 
 ### 3.1 — Review display (post-moderation)
+
 - `EntityReviewsSection.tsx` already renders mock reviews — wire to real Supabase data
 - Query: `reviews WHERE listing_id = X AND status = 'approved' ORDER BY created_at DESC LIMIT 10`
 - Show star average + count in entity page hero
@@ -120,6 +134,7 @@ Goal: The platform feels alive with real content and visible trust signals.
 - Intake form on entity pages (logged-in users only, claimed listings only)
 
 ### 3.2 — Collections fully working
+
 - Admin collection editor (`/admin/collections`) — create, edit, assign listings
 - Public collections index (`/collections`) — grid of active collections
 - Collection detail page (`/collections/[slug]`) — title, editorial intro, listing grid
@@ -127,24 +142,28 @@ Goal: The platform feels alive with real content and visible trust signals.
 - Analytics: `collection_view` event
 
 ### 3.3 — BLACQLight articles
+
 - Admin article editor (`/admin/blacqlight`) — rich text (markdown), linked listings, cover image
 - Public BLACQLight index (`/blacqlight`) — article feed
 - Article detail page with linked BLACQList Pages sidebar
 - `blacqlight_article` table in editorial migration (already exists)
 
 ### 3.4 — Verified badge intake
+
 - Verification request form on owner dashboard: business name confirmation, EIN (optional), owner attestation, document upload
 - Admin verification queue: review document, approve/reject
 - Verified badge renders on entity page hero and search cards when `trust_tier = 'verified'`
 - Email: verification submitted, verification approved, verification rejected
 
 ### 3.5 — Owner dashboard analytics (real data)
+
 - Wire dashboard analytics page to real Supabase data
 - 7-day and 30-day page views (from `analytics_events` WHERE `event_type = 'page_view'`)
 - CTA clicks, save count, share count
 - Simple sparkline chart (recharts or plain SVG)
 
 ### 3.6 — Mobile filters
+
 - Replace "coming soon" stubs in discover with functional mobile filter sheet
 - Bottom sheet drawer (shadcn/ui Sheet) triggered by filter button on mobile
 - Contains entity type, category, city filters — same logic as desktop sidebar
@@ -152,6 +171,7 @@ Goal: The platform feels alive with real content and visible trust signals.
 - City filter wired (after 2.3 is done)
 
 ### 3.7 — Community corrections
+
 - "Report incorrect info" button on entity pages
 - Simple form: what's wrong (radio: closed/moved/wrong info/other) + details text
 - Writes to `corrections` table, admin sees in queue
@@ -164,12 +184,14 @@ Goal: The platform feels alive with real content and visible trust signals.
 Goal: The platform can earn revenue from business owners.
 
 ### 4.1 — Stripe setup
+
 - Create Stripe account, get live + test keys
 - Add `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` to `.env.local`
 - Create products + prices in Stripe dashboard: Standard ($29/mo), Premium ($79/mo)
 - Add price IDs to env: `STRIPE_STANDARD_PRICE_ID`, `STRIPE_PREMIUM_PRICE_ID`
 
 ### 4.2 — Subscription tier upgrade flow
+
 - Upgrade page (`/dashboard/upgrade`) — show tier comparison table
 - Create Stripe Checkout Session server action
 - Redirect to Stripe hosted checkout
@@ -178,18 +200,21 @@ Goal: The platform can earn revenue from business owners.
 - Success/cancel return pages
 
 ### 4.3 — Tier-gated features
+
 - Premium only: sponsored search placement label, extended gallery (12 images vs 6), featured badge
 - Standard only: verified badge intake access, extended analytics (90-day)
 - Free: basic page, 6 gallery images, 30-day analytics
 - Enforce tier limits in page editor (show upgrade prompt when limit hit)
 
 ### 4.4 — Sponsored placements (admin-assigned)
+
 - Admin can mark any listing as `is_sponsored = true`
 - Sponsored listings show "Sponsored" label on search cards
 - Sponsored slots appear at top of category/city pages (after featured)
 - No self-serve yet — manual sales only (V1.5)
 
 ### 4.5 — Stripe Customer Portal
+
 - After subscription active: link to Stripe Customer Portal from dashboard
 - User can update payment method, view invoices, cancel subscription
 - Webhook handles cancellation → downgrade tier in DB
@@ -201,6 +226,7 @@ Goal: The platform can earn revenue from business owners.
 Goal: Safe, fast, accessible, and indexed.
 
 ### 5.1 — Security audit
+
 - Verify all RLS policies are enforced (test each table as anon, authenticated, admin)
 - Confirm no route handler returns data it shouldn't
 - Review file upload validation (type, size) on upload route
@@ -208,6 +234,7 @@ Goal: Safe, fast, accessible, and indexed.
 - Enable Supabase audit logging
 
 ### 5.2 — Accessibility audit
+
 - Tab through every form, modal, and interactive element
 - Screen reader test on: entity page, search results, auth flows
 - Verify all images have alt text
@@ -216,6 +243,7 @@ Goal: Safe, fast, accessible, and indexed.
 - Fix any `div` acting as interactive element
 
 ### 5.3 — Performance optimization
+
 - `next/image` with correct `sizes` on all images
 - Lazy load below-the-fold images
 - Implement ISR (`revalidate: 3600`) on entity pages and category/city pages
@@ -224,6 +252,7 @@ Goal: Safe, fast, accessible, and indexed.
 - Bundle analysis: remove unused dependencies
 
 ### 5.4 — SEO audit
+
 - Submit sitemap to Google Search Console
 - Verify JSON-LD validates in Rich Results Test
 - Ensure all entity pages return 200, not redirect chains
@@ -231,6 +260,7 @@ Goal: Safe, fast, accessible, and indexed.
 - Verify OG images render in social media debuggers (Twitter, Facebook)
 
 ### 5.5 — Regression QA
+
 - Happy path: anonymous user discovers → views entity page → signs up → saves listing
 - Happy path: business owner signs up → claims listing → editor → publishes
 - Happy path: admin approves claim → verified badge appears
@@ -238,6 +268,7 @@ Goal: Safe, fast, accessible, and indexed.
 - Mobile QA: 375px viewport for all critical flows
 
 ### 5.6 — Production infrastructure
+
 - Create Supabase production project (separate from dev)
 - Apply all migrations to production Supabase
 - Create Vercel production deployment connected to `main` branch
@@ -246,12 +277,14 @@ Goal: Safe, fast, accessible, and indexed.
 - Enable Supabase connection pooling (PgBouncer) for production
 
 ### 5.7 — Monitoring
+
 - Sentry error tracking wired (frontend + server actions)
 - Vercel Analytics enabled
 - Supabase alerts: DB size, connection count, error rate
 - Uptime monitoring (BetterUptime or similar) on `/api/health/supabase`
 
 ### 5.8 — Seed production data
+
 - Import 150+ Atlanta listings via Supabase seed script
 - Import 50+ Houston, 50+ Chicago
 - Verify all listings have cover images (Supabase Storage or confirmed CDN URLs)

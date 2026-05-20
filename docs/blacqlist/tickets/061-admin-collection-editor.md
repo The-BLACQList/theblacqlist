@@ -1,18 +1,23 @@
 # Ticket 061: Admin collection editor — create, add/remove/reorder listings, publish
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 10: Editorial
 
 ## Priority
+
 P2
 
 ## Estimate
+
 L (4–8h)
 
 ## Feature Area
+
 Editorial / Admin
 
 ---
@@ -36,6 +41,7 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 ## Scope
 
 **In scope:**
+
 - `app/admin/collections/new/page.tsx` — new collection form (blank editor)
 - `app/admin/collections/[id]/page.tsx` — editor for an existing collection; fetches collection data + current member listings server-side
 - `components/admin/collections/CollectionEditorForm.tsx` — shared form component used by both new and edit routes
@@ -50,6 +56,7 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 - All four states (loading skeleton, empty for new collection, error banner, success toast)
 
 **Out of scope:**
+
 - Public-facing collection page UI (separate ticket, Phase 2 scope)
 - Collection analytics / view counts
 - Multi-image cover gallery (single cover image only at MVP)
@@ -60,16 +67,16 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 — Admin layout, nav, auth guard | Blocking ticket | Not started |
-| Ticket 043 — Admin collections table (`/admin/collections`) | Blocking ticket (provides navigation entry point) | Not started |
-| Ticket 011 — `collections` and `collection_items` tables | Blocking ticket | Not started |
-| `manageCollections` SA (`lib/actions/admin/manageCollections.ts`) | Server Action | Not started |
-| `manageCollectionItems` SA (`lib/actions/admin/manageCollectionItems.ts`) | Server Action | Not started |
-| `POST /api/upload` Route Handler — Ticket 030 | Blocking ticket (cover image upload) | Not started |
-| `admin_audit_log` table (Ticket 012) | Database | Must exist |
-| Search endpoint or internal listing search helper | API | Must exist |
+| Dependency                                                                | Type                                              | Status      |
+| ------------------------------------------------------------------------- | ------------------------------------------------- | ----------- |
+| Ticket 037 — Admin layout, nav, auth guard                                | Blocking ticket                                   | Not started |
+| Ticket 043 — Admin collections table (`/admin/collections`)               | Blocking ticket (provides navigation entry point) | Not started |
+| Ticket 011 — `collections` and `collection_items` tables                  | Blocking ticket                                   | Not started |
+| `manageCollections` SA (`lib/actions/admin/manageCollections.ts`)         | Server Action                                     | Not started |
+| `manageCollectionItems` SA (`lib/actions/admin/manageCollectionItems.ts`) | Server Action                                     | Not started |
+| `POST /api/upload` Route Handler — Ticket 030                             | Blocking ticket (cover image upload)              | Not started |
+| `admin_audit_log` table (Ticket 012)                                      | Database                                          | Must exist  |
+| Search endpoint or internal listing search helper                         | API                                               | Must exist  |
 
 ---
 
@@ -150,6 +157,7 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/collections/new/page.tsx` — new collection page (renders `CollectionEditorForm` with no initial data)
 - `app/admin/collections/[id]/page.tsx` — edit page (fetches collection + items server-side, passes as props to `CollectionEditorForm`)
 - `components/admin/collections/CollectionEditorForm.tsx` — Client Component (`"use client"`); handles all form state, drag-to-reorder, SA calls
@@ -157,9 +165,11 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 - `components/admin/collections/ListingSearchPanel.tsx` — typeahead search panel for adding listings
 
 **Files to modify:**
+
 - `app/admin/collections/page.tsx` — add "Edit" link per row pointing to `/admin/collections/[id]` (if not already present from Ticket 043)
 
 **Key patterns:**
+
 - Follow the seven-step Server Action pattern from `docs/blacqlist/architecture/server-actions-plan.md` § 3 in both SAs
 - Return `ActionResult<T>` — never throw; use `'error' in result` to branch in the form component
 - Use `react-hook-form` + `zod` for all form validation in `CollectionEditorForm`
@@ -169,6 +179,7 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 - `slug` auto-generation: `title.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')`; debounce 300ms; stop auto-generating after first manual edit
 
 **Do not:**
+
 - Call `revalidatePath` from the Client Component — it is handled inside the SAs
 - Store CDN URLs for the cover image — store `file_path` from the upload response
 - Use `getSession()` — use `getUser()` in the SAs
@@ -194,15 +205,15 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| `manageCollections` SA returns `DUPLICATE` code for slug | Inline field error: "This slug is already in use. Try a different one." |
-| `manageCollections` SA returns `VALIDATION_ERROR` | Inline errors under each invalid field; form not cleared |
-| `POST /api/upload` fails for cover image | Error toast: "Image upload failed. Please try again." Image preview remains blank |
-| `manageCollectionItems` SA fails on add | Error toast: "Could not add listing. Please try again." Member list unchanged |
-| `manageCollectionItems` SA fails on reorder | Error toast: "Could not save new order. Please try again." List reverts to previous order |
-| Server error (500) on page load | Full-page error boundary: "Something went wrong loading this collection." with retry button |
-| Network timeout during SA call | Error banner: "Save failed — check your connection and try again." |
+| Failure                                                  | User-visible behavior                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `manageCollections` SA returns `DUPLICATE` code for slug | Inline field error: "This slug is already in use. Try a different one."                     |
+| `manageCollections` SA returns `VALIDATION_ERROR`        | Inline errors under each invalid field; form not cleared                                    |
+| `POST /api/upload` fails for cover image                 | Error toast: "Image upload failed. Please try again." Image preview remains blank           |
+| `manageCollectionItems` SA fails on add                  | Error toast: "Could not add listing. Please try again." Member list unchanged               |
+| `manageCollectionItems` SA fails on reorder              | Error toast: "Could not save new order. Please try again." List reverts to previous order   |
+| Server error (500) on page load                          | Full-page error boundary: "Something went wrong loading this collection." with retry button |
+| Network timeout during SA call                           | Error banner: "Save failed — check your connection and try again."                          |
 
 ---
 
@@ -230,13 +241,13 @@ As an admin, I want to create a collection, add and reorder listings within it, 
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
+| #    | Scenario                        | Role  | Steps                                                                                                                      | Expected result                                                                                                                 |
+| ---- | ------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | QA-1 | Create and publish a collection | admin | Navigate to `/admin/collections/new`; fill in title, slug, description; click Save; click Publish toggle; click Save again | Collection created with `is_published = true`; success toast shown; `/collection/[slug]` route resolves with collection content |
-| QA-2 | Add a listing to a collection | admin | Open an existing collection; type listing name in search panel; click Add | Listing appears at bottom of member list; `collection_items` row exists in DB |
-| QA-3 | Reorder members | admin | Open a collection with 3+ members; drag second item to first position | `display_order` updated in DB: previously second item now has `display_order = 1` |
-| QA-4 | Duplicate slug validation | admin | On `/admin/collections/new`, enter a slug already used by another collection; click Save | Inline error under slug field: "This slug is already in use." No new collection created |
-| QA-5 | homepage_featured enforcement | admin | Set `homepage_featured = true` on Collection A; then open Collection B and set `homepage_featured = true`; save | Collection A now has `homepage_featured = false`; Collection B has `homepage_featured = true`; only one is featured |
+| QA-2 | Add a listing to a collection   | admin | Open an existing collection; type listing name in search panel; click Add                                                  | Listing appears at bottom of member list; `collection_items` row exists in DB                                                   |
+| QA-3 | Reorder members                 | admin | Open a collection with 3+ members; drag second item to first position                                                      | `display_order` updated in DB: previously second item now has `display_order = 1`                                               |
+| QA-4 | Duplicate slug validation       | admin | On `/admin/collections/new`, enter a slug already used by another collection; click Save                                   | Inline error under slug field: "This slug is already in use." No new collection created                                         |
+| QA-5 | homepage_featured enforcement   | admin | Set `homepage_featured = true` on Collection A; then open Collection B and set `homepage_featured = true`; save            | Collection A now has `homepage_featured = false`; Collection B has `homepage_featured = true`; only one is featured             |
 
 ---
 

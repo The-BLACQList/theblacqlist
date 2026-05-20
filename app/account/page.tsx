@@ -1,8 +1,17 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { Settings, Bookmark, ChevronRight, FileCheck, Receipt, TrendingUp, History, Sparkles } from "lucide-react"
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import {
+  Settings,
+  Bookmark,
+  ChevronRight,
+  FileCheck,
+  Receipt,
+  TrendingUp,
+  History,
+  Sparkles,
+} from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server'
 
 export default async function AccountPage() {
   const supabase = await createClient()
@@ -10,24 +19,18 @@ export default async function AccountPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect("/sign-in?next=/account")
+  if (!user) redirect('/sign-in?next=/account')
 
   const displayName =
-    (user.user_metadata?.display_name as string | undefined) ??
-    user.email?.split("@")[0] ??
-    "there"
+    (user.user_metadata?.display_name as string | undefined) ?? user.email?.split('@')[0] ?? 'there'
 
   return (
     <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
       <div className="max-w-[640px] mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-headline text-3xl text-brand-black">
-            Welcome, {displayName}
-          </h1>
-          <p className="font-subhead text-sm text-charcoal mt-1">
-            {user.email}
-          </p>
+          <h1 className="font-headline text-3xl text-brand-black">Welcome, {displayName}</h1>
+          <p className="font-subhead text-sm text-charcoal mt-1">{user.email}</p>
         </div>
 
         {/* Quick links */}
@@ -40,9 +43,7 @@ export default async function AccountPage() {
               <History className="size-5 text-amber-gold" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-subhead text-sm font-semibold text-brand-black">
-                Recently viewed
-              </p>
+              <p className="font-subhead text-sm font-semibold text-brand-black">Recently viewed</p>
               <p className="font-subhead text-xs text-charcoal/60">
                 Businesses you&apos;ve visited
               </p>
@@ -79,9 +80,7 @@ export default async function AccountPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black">
                 Saved businesses
               </p>
-              <p className="font-subhead text-xs text-charcoal/60">
-                Businesses you&apos;ve saved
-              </p>
+              <p className="font-subhead text-xs text-charcoal/60">Businesses you&apos;ve saved</p>
             </div>
             <ChevronRight className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
           </Link>
@@ -94,9 +93,7 @@ export default async function AccountPage() {
               <FileCheck className="size-5 text-amber-gold" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-subhead text-sm font-semibold text-brand-black">
-                My claims
-              </p>
+              <p className="font-subhead text-sm font-semibold text-brand-black">My claims</p>
               <p className="font-subhead text-xs text-charcoal/60">
                 Listing claims you&apos;ve submitted
               </p>
@@ -112,9 +109,7 @@ export default async function AccountPage() {
               <Receipt className="size-5 text-amber-gold" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-subhead text-sm font-semibold text-brand-black">
-                My receipts
-              </p>
+              <p className="font-subhead text-sm font-semibold text-brand-black">My receipts</p>
               <p className="font-subhead text-xs text-charcoal/60">
                 Track your spending at Black-owned businesses
               </p>
@@ -130,9 +125,7 @@ export default async function AccountPage() {
               <TrendingUp className="size-5 text-amber-gold" aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-subhead text-sm font-semibold text-brand-black">
-                Community spend
-              </p>
+              <p className="font-subhead text-sm font-semibold text-brand-black">Community spend</p>
               <p className="font-subhead text-xs text-charcoal/60">
                 See the community&apos;s collective impact
               </p>

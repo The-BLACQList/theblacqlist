@@ -11,6 +11,7 @@
 The BLACQList AI Agent Layer is a set of specialized agents that help shoppers discover, help business owners grow, and help platform admins curate. All agents operate under a **human-in-the-loop** model: AI produces suggestions, humans approve or reject them before any content is published or action is taken.
 
 **Non-negotiables:**
+
 - No AI-generated content auto-published
 - No PII passed to any AI provider
 - No external AI API calls until provider integration is explicitly approved and configured
@@ -25,6 +26,7 @@ The BLACQList AI Agent Layer is a set of specialized agents that help shoppers d
 These agents assist community members in discovering, supporting, and spending with Black-owned businesses.
 
 #### 1.1 Find-It-For-Me Agent
+
 **Phase:** V3  
 **Purpose:** Natural language discovery — user describes what they need in plain English; agent returns a ranked set of matching listings with a brief explanation of why each is a good match.  
 **Trigger:** User types a conversational query into a dedicated search interface (not the standard keyword search)  
@@ -36,6 +38,7 @@ These agents assist community members in discovering, supporting, and spending w
 ---
 
 #### 1.2 Support Local Tonight Agent
+
 **Phase:** V2  
 **Purpose:** Same-day, occasion-aware discovery. User says "I want to support a local restaurant tonight" or "find something open now in Atlanta" and gets a short, curated list.  
 **Trigger:** Dedicated CTA on city landing pages and homepage ("Support Local Tonight")  
@@ -47,6 +50,7 @@ These agents assist community members in discovering, supporting, and spending w
 ---
 
 #### 1.3 Gift Finder Agent
+
 **Phase:** V2  
 **Purpose:** Gift recommendation by recipient type, occasion, and budget. Returns a curated mix of business listings and marketplace products.  
 **Trigger:** "Find a gift" CTA on homepage or collections page  
@@ -58,6 +62,7 @@ These agents assist community members in discovering, supporting, and spending w
 ---
 
 #### 1.4 Event Planner Agent
+
 **Phase:** V3  
 **Purpose:** Multi-vendor event planning. User describes an event (birthday party, wedding, corporate event) and the agent assembles a multi-category vendor shortlist covering all needed categories.  
 **Trigger:** "Plan an Event" CTA on event-type category pages  
@@ -69,6 +74,7 @@ These agents assist community members in discovering, supporting, and spending w
 ---
 
 #### 1.5 Community Spend Agent
+
 **Phase:** V3  
 **Purpose:** Personal spending analytics + next-dollar nudges. Reviews the user's own spend history (receipt uploads) and surfaces insights like "You've spent $340 at Black-owned restaurants this year — here's what's trending nearby."  
 **Trigger:** Spend dashboard section  
@@ -84,6 +90,7 @@ These agents assist community members in discovering, supporting, and spending w
 These agents help business owners improve their BLACQList Pages and grow their presence. All output goes to `ai_suggestions` with `status = 'pending'` — owners must approve before anything is applied.
 
 #### 2.1 Page Builder Agent (BLACQList Page Builder)
+
 **Phase:** V2  
 **Purpose:** Guided listing creation. When a business owner creates a new listing, the agent suggests a draft description, tagline, and meta content based on the business category, city, and any initial details the owner provides.  
 **Trigger:** "Get AI help" button in the listing creation flow (after category and city are selected)  
@@ -95,6 +102,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.2 Listing Optimizer Agent
+
 **Phase:** V2 (rule-based checklist at MVP foundation)  
 **Purpose:** Identifies specific weaknesses in a listing's page completeness and quality, then generates targeted improvement copy suggestions.  
 **MVP implementation:** Rule-based checklist only — no AI API call. Scores 12 listing attributes (see `lib/ai/checklist.ts`).  
@@ -107,6 +115,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.3 SEO & Visibility Coach Agent
+
 **Phase:** V2  
 **Purpose:** Generates SEO-optimized `meta_title` and `meta_description` tailored to the listing's category, city, and business name.  
 **Trigger:** "Generate SEO copy" button on the SEO section of the edit page (or via AI Suggestions page)  
@@ -118,6 +127,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.4 Social Caption Agent
+
 **Phase:** V2  
 **Purpose:** Generates platform-specific captions the owner can copy to share their BLACQList Page on social media.  
 **Trigger:** "Generate captions" button on the owner dashboard sharing section  
@@ -129,6 +139,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.5 Marketplace Merchandising Agent
+
 **Phase:** V2  
 **Purpose:** Improves marketplace product listing copy. Generates product titles, descriptions, and pricing positioning notes for vendor product listings.  
 **Trigger:** "Improve listing" button on product edit page  
@@ -139,6 +150,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.6 Review Response Agent
+
 **Phase:** V2  
 **Purpose:** Drafts a professional, warm response to a customer review. Output is a starting point — the owner personalizes and approves before it is posted.  
 **Trigger:** "Draft response" button beside each approved review in the owner dashboard  
@@ -150,6 +162,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 ---
 
 #### 2.7 Analytics Explainer Agent
+
 **Phase:** V2  
 **Purpose:** Translates the owner's analytics data into a plain-language weekly performance summary.  
 **Trigger:** "Explain my analytics" button on the owner analytics page  
@@ -164,6 +177,7 @@ These agents help business owners improve their BLACQList Pages and grow their p
 These agents assist the admin team in curating the directory, managing content quality, and creating editorial content.
 
 #### 3.1 Directory Curator Agent
+
 **Phase:** V2  
 **Purpose:** Automatically scores listing quality and flags low-completeness or potentially problematic listings for admin review. Prioritizes the moderation queue.  
 **Trigger:** Nightly background job (V2); manual "Analyze directory" button in admin (foundation placeholder)  
@@ -174,6 +188,7 @@ These agents assist the admin team in curating the directory, managing content q
 ---
 
 #### 3.2 Verification Support Agent
+
 **Phase:** V2  
 **Purpose:** Pre-screens claim and verification submissions to give admins a head-start recommendation before manual review.  
 **Trigger:** When a new claim or verification submission enters the review queue  
@@ -185,6 +200,7 @@ These agents assist the admin team in curating the directory, managing content q
 ---
 
 #### 3.3 Collection Builder Agent
+
 **Phase:** V2  
 **Purpose:** Suggests listings that should be added to an existing curated collection based on thematic fit.  
 **Trigger:** "Get AI suggestions" button on collection edit page  
@@ -196,6 +212,7 @@ These agents assist the admin team in curating the directory, managing content q
 ---
 
 #### 3.4 Guide Writer Agent
+
 **Phase:** V2  
 **Purpose:** Drafts a new section of a city guide based on the featured listings in that city and category.  
 **Trigger:** "Draft section" button in guide editor  
@@ -207,6 +224,7 @@ These agents assist the admin team in curating the directory, managing content q
 ---
 
 #### 3.5 Social Media Agent
+
 **Phase:** V2  
 **Purpose:** Generates platform posts announcing new verified listings, new collections, or editorial highlights for the BLACQList social accounts.  
 **Trigger:** "Generate social post" button in admin on verified listing pages or collection pages  
@@ -219,16 +237,16 @@ These agents assist the admin team in curating the directory, managing content q
 
 ## Privacy Rules (All Agents)
 
-| Rule | Detail |
-|---|---|
-| No PII in prompts | No email, phone, full address, user_id, reviewer identity, or owner personal information |
-| user_id never passed | Session user is never included in any prompt context |
-| Prompts assembled server-side | No prompt construction in client components — always via server-side utility |
-| Review text privacy | Passed only for Review Response Agent; reviewer display_name and user_id excluded |
-| Spend data anonymized | Only aggregate totals passed for Community Spend Agent; no individual transactions |
-| Verification docs excluded | Verification Support Agent uses only metadata — never the document content |
-| Audit trail required | Every AI API call logged in `ai_generation_requests` before provider is connected |
-| No auto-apply | All suggestions require explicit human action to apply |
+| Rule                          | Detail                                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| No PII in prompts             | No email, phone, full address, user_id, reviewer identity, or owner personal information |
+| user_id never passed          | Session user is never included in any prompt context                                     |
+| Prompts assembled server-side | No prompt construction in client components — always via server-side utility             |
+| Review text privacy           | Passed only for Review Response Agent; reviewer display_name and user_id excluded        |
+| Spend data anonymized         | Only aggregate totals passed for Community Spend Agent; no individual transactions       |
+| Verification docs excluded    | Verification Support Agent uses only metadata — never the document content               |
+| Audit trail required          | Every AI API call logged in `ai_generation_requests` before provider is connected        |
+| No auto-apply                 | All suggestions require explicit human action to apply                                   |
 
 ---
 
@@ -248,9 +266,9 @@ Rejected and expired suggestions are retained for audit purposes — never delet
 
 ## Implementation Phases Summary
 
-| Phase | What ships |
-|---|---|
+| Phase            | What ships                                                                     |
+| ---------------- | ------------------------------------------------------------------------------ |
 | Foundation (now) | Data model, checklist, placeholder UI, prompt templates in code — no API calls |
-| V2 Mock | Hardcoded mock suggestions visible in UI; approval workflow active |
-| V2 Provider | Anthropic API connected server-side; real generation; audit log populated |
-| V3 Autonomous | Background agent jobs; `ai_agent_runs` table; continuous curation loop |
+| V2 Mock          | Hardcoded mock suggestions visible in UI; approval workflow active             |
+| V2 Provider      | Anthropic API connected server-side; real generation; audit log populated      |
+| V3 Autonomous    | Background agent jobs; `ai_agent_runs` table; continuous curation loop         |

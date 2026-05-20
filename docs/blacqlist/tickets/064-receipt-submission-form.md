@@ -1,18 +1,23 @@
 # Ticket 064: Receipt submission form — manual entry, camera capture, OCR stub
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 11: Receipt Upload and Community Spend Beta
 
 ## Priority
+
 P2
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Spend / Receipts
 
 ---
@@ -38,6 +43,7 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 ## Scope
 
 **In scope:**
+
 - `app/account/receipts/new/page.tsx` — Page component (Server Component shell; renders the form Client Component)
 - `components/spend/ReceiptSubmissionForm.tsx` — Client Component (`"use client"`) handling the full form flow
 - Form fields:
@@ -56,6 +62,7 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 - `app/account/receipts/page.tsx` — route exists (Ticket 066); this ticket adds the "Upload Receipt" link to that page pointing to `/account/receipts/new`
 
 **Out of scope:**
+
 - Real OCR processing of the receipt image (V2 — this ticket implements the stub only)
 - Receipts list view (`/account/receipts`) — built in Ticket 066
 - Admin review of uploaded receipts — Ticket 065
@@ -66,13 +73,13 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 014 — Auth flows (user must be authenticated) | Blocking ticket | Not started |
-| Ticket 063 — Receipt upload API (`POST /api/receipts/upload`) | Blocking ticket | Not started |
-| `receipt_uploads` table with `client_idempotency_key` column | Database | Must exist |
-| `/api/search` endpoint (Ticket 025) — for business typeahead | Soft dependency (form still works with manual text if unavailable) | Not started |
-| Ticket 015 — App shell and account layout | Blocking ticket | Not started |
+| Dependency                                                    | Type                                                               | Status      |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ | ----------- |
+| Ticket 014 — Auth flows (user must be authenticated)          | Blocking ticket                                                    | Not started |
+| Ticket 063 — Receipt upload API (`POST /api/receipts/upload`) | Blocking ticket                                                    | Not started |
+| `receipt_uploads` table with `client_idempotency_key` column  | Database                                                           | Must exist  |
+| `/api/search` endpoint (Ticket 025) — for business typeahead  | Soft dependency (form still works with manual text if unavailable) | Not started |
+| Ticket 015 — App shell and account layout                     | Blocking ticket                                                    | Not started |
 
 ---
 
@@ -141,14 +148,17 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/account/receipts/new/page.tsx` — Server Component shell; auth guard (redirect to `/sign-in?next=/account/receipts/new` if unauthenticated); renders `ReceiptSubmissionForm`
 - `components/spend/ReceiptSubmissionForm.tsx` — Client Component with full form logic
 - `components/spend/BusinessTypeahead.tsx` — reusable typeahead wrapper around shadcn/ui `Command` or custom dropdown; takes `onSelect(listing: { id: string; name: string })` prop
 
 **Files to modify:**
+
 - `app/account/receipts/page.tsx` — add "Upload Receipt" `<Link>` button pointing to `/account/receipts/new` (if the page exists from Ticket 066; otherwise this is a forward reference — add the link when both tickets are merged)
 
 **Key patterns:**
+
 - `client_idempotency_key` generation: `const idempotencyKey = useRef(crypto.randomUUID())` — generate once on mount, do not regenerate on re-render
 - Amount field: user types a dollar amount string ("12.50"); convert to integer cents before submission: `Math.round(parseFloat(value) * 100)`
 - OCR stub: `await new Promise(resolve => setTimeout(resolve, 1500))` after the file is selected; then check `api_response.data.ocr_raw_data`; if null (as it will be at MVP), leave fields as-is; if populated (V2 future), set field values
@@ -158,6 +168,7 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 - Error retry: the `client_idempotency_key` is retained in `useRef` — if the upload fails and the user retries, the same key is sent. The server handles this safely with `ON CONFLICT DO NOTHING`.
 
 **Do not:**
+
 - Use `type="number"` for the amount input — use `type="text" inputMode="decimal"` to avoid stepper UI on desktop
 - Redirect before the API response is confirmed successful
 - Clear the form on a failed submission — preserve all entered values
@@ -181,15 +192,15 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| File too large (> 10MB) | Client-side error before upload fires: "Image must be under 10MB. Please choose a smaller file." |
-| Invalid file type | Client-side error: "Please upload a JPG, PNG, WebP, or HEIC image." |
-| API returns `OPERATION_FAILED` | Error banner: "Upload failed. Please check your connection and try again." |
-| No photo selected on submit | Inline error below the photo upload zone: "Please add a photo of your receipt." |
-| Amount field empty on submit | Inline field error: "Please enter the amount spent." |
-| Purchase date in the future | Inline field error: "Purchase date cannot be in the future." |
-| Network timeout during upload | Error banner: "Connection timed out. Your receipt was not saved. Please try again." |
+| Failure                        | User-visible behavior                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| File too large (> 10MB)        | Client-side error before upload fires: "Image must be under 10MB. Please choose a smaller file." |
+| Invalid file type              | Client-side error: "Please upload a JPG, PNG, WebP, or HEIC image."                              |
+| API returns `OPERATION_FAILED` | Error banner: "Upload failed. Please check your connection and try again."                       |
+| No photo selected on submit    | Inline error below the photo upload zone: "Please add a photo of your receipt."                  |
+| Amount field empty on submit   | Inline field error: "Please enter the amount spent."                                             |
+| Purchase date in the future    | Inline field error: "Purchase date cannot be in the future."                                     |
+| Network timeout during upload  | Error banner: "Connection timed out. Your receipt was not saved. Please try again."              |
 
 ---
 
@@ -217,14 +228,14 @@ As an authenticated supporter, I want to upload a receipt photo and confirm the 
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Happy path — full submission | supporter | Open form; upload photo; search and select a business; enter amount and date; submit | Redirected to `/account/receipts?uploaded=true`; new row in `receipt_uploads` with correct fields |
-| QA-2 | Camera capture on mobile | supporter (mobile) | Open form on a 375px device; tap photo upload area | Device rear camera opens |
-| QA-3 | Business typeahead | supporter | Type "Sou" in business search | Dropdown appears with matching listing names within 300ms debounce |
-| QA-4 | Submit without photo | supporter | Fill in all fields but skip photo; tap Submit | Inline error: "Please add a photo of your receipt." — form not submitted |
-| QA-5 | Duplicate prevention | supporter | Submit form; intercept before redirect; submit again with same session | Second submission deduped by `client_idempotency_key`; one row in DB |
-| QA-6 | Mobile layout 375px | supporter | Open form on 375px viewport | Single-column layout; sticky submit button at bottom; no horizontal overflow |
+| #    | Scenario                     | Role               | Steps                                                                                | Expected result                                                                                   |
+| ---- | ---------------------------- | ------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path — full submission | supporter          | Open form; upload photo; search and select a business; enter amount and date; submit | Redirected to `/account/receipts?uploaded=true`; new row in `receipt_uploads` with correct fields |
+| QA-2 | Camera capture on mobile     | supporter (mobile) | Open form on a 375px device; tap photo upload area                                   | Device rear camera opens                                                                          |
+| QA-3 | Business typeahead           | supporter          | Type "Sou" in business search                                                        | Dropdown appears with matching listing names within 300ms debounce                                |
+| QA-4 | Submit without photo         | supporter          | Fill in all fields but skip photo; tap Submit                                        | Inline error: "Please add a photo of your receipt." — form not submitted                          |
+| QA-5 | Duplicate prevention         | supporter          | Submit form; intercept before redirect; submit again with same session               | Second submission deduped by `client_idempotency_key`; one row in DB                              |
+| QA-6 | Mobile layout 375px          | supporter          | Open form on 375px viewport                                                          | Single-column layout; sticky submit button at bottom; no horizontal overflow                      |
 
 ---
 

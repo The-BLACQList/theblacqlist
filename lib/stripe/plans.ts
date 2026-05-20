@@ -1,4 +1,4 @@
-export type PlanSlug = "free" | "standard" | "premium"
+export type PlanSlug = 'free' | 'standard' | 'premium'
 
 export interface PlanMeta {
   slug: PlanSlug
@@ -12,50 +12,45 @@ export interface PlanMeta {
 
 export const PLANS: PlanMeta[] = [
   {
-    slug: "free",
-    name: "Free",
+    slug: 'free',
+    name: 'Free',
     price_monthly: 0,
     price_yearly: 0,
-    features: [
-      "Basic listing page",
-      "Contact info & hours",
-      "1 photo",
-      "Category & city listing",
-    ],
-    cta: "Get started",
+    features: ['Basic listing page', 'Contact info & hours', '1 photo', 'Category & city listing'],
+    cta: 'Get started',
     highlighted: false,
   },
   {
-    slug: "standard",
-    name: "Standard",
+    slug: 'standard',
+    name: 'Standard',
     price_monthly: 29,
     price_yearly: 290,
     features: [
-      "Everything in Free",
-      "Up to 10 photos",
-      "Owner analytics dashboard",
-      "Claimed badge",
-      "Services list",
-      "Priority search placement",
+      'Everything in Free',
+      'Up to 10 photos',
+      'Owner analytics dashboard',
+      'Claimed badge',
+      'Services list',
+      'Priority search placement',
     ],
-    cta: "Upgrade to Standard",
+    cta: 'Upgrade to Standard',
     highlighted: true,
   },
   {
-    slug: "premium",
-    name: "Premium",
+    slug: 'premium',
+    name: 'Premium',
     price_monthly: 79,
     price_yearly: 790,
     features: [
-      "Everything in Standard",
-      "Unlimited photos",
-      "Featured placement",
-      "Homepage spotlight eligibility",
-      "Priority support",
-      "Custom CTA label",
-      "Advanced analytics",
+      'Everything in Standard',
+      'Unlimited photos',
+      'Featured placement',
+      'Homepage spotlight eligibility',
+      'Priority support',
+      'Custom CTA label',
+      'Advanced analytics',
     ],
-    cta: "Upgrade to Premium",
+    cta: 'Upgrade to Premium',
     highlighted: false,
   },
 ]

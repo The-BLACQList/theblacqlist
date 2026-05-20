@@ -1,26 +1,33 @@
 # Ticket 033: Add Business Multi-Step Form — Steps 5–7
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Core Workflow / Entity Submission
 
 ## Context
+
 Steps 5–7 complete the Add Business multi-step form: media uploads, primary CTA selection, and the final preview + publish flow. This ticket includes the duplicate-check modal, the `createListing` Server Action call, and the `submitListingForReview` Server Action call. Together with Ticket 032 (steps 1–4), this constitutes the complete listing creation experience. These steps are the most technically complex because they involve file uploads, a live read-only preview of the BLACQList Page layout, and a two-step server-side mutation. Source: `docs/blacqlist/ux/mvp-screen-map.md` Add Business section; `docs/blacqlist/architecture/api-contract.md` Section 4 endpoints 18–22; `docs/blacqlist/architecture/server-actions-plan.md`; `docs/blacqlist/data/database-schema-plan.md`.
 
 ## User Story
+
 As a business owner who has completed the first four steps of the Add Business form, I want to upload media, set my primary CTA, preview my page, and publish it for review, so that my BLACQList Page appears in the admin moderation queue and goes live after approval.
 
 ## Scope
 
 **In scope:**
+
 - **Step 5 — Media:** Logo upload (single image, square crop recommendation hint text, max 2MB, `accept="image/jpeg,image/png,image/webp"`), Cover image upload (landscape, 16:9 recommendation hint, max 5MB), Gallery images (up to 12, multi-file select, max 3MB each). Each upload: calls `POST /api/upload` with `bucket=listing-media` and appropriate `subtype` (`logo`, `cover`, `gallery`). Each upload renders a preview image with a remove button (×). Upload progress bar (`<progress>` element or indeterminate spinner). "Skip for now" helper text under each upload zone — none of the media fields blocks Continue
 - **Step 6 — Primary CTA:** Five option cards in a single-column list: "Book an appointment" (book icon), "Order online" (cart icon), "Call us" (phone icon), "Visit us" (location pin icon), "Message us" (envelope icon). Selecting a card reveals an associated input field: Book/Order/Visit → URL text input (placeholder `https://`); Call → tel input pre-filled from Step 3 phone; Message → email input pre-filled from Step 3 email. CTA selection is required — Continue is blocked until a card is selected
 - **Step 7 — Preview + Publish:** Read-only rendering of the BLACQList Page using the `ListingHero`, `AboutSection`, `ContactBlock`, `CTASection` components from Tickets 021–022 in read-only/preview mode. A yellow preview banner at the top of the preview panel: "Preview — this is how your page will look." Publish button (Amber Gold, full-width): on click, trigger duplicate check via `POST /api/listings/duplicate-check`. If duplicates found, show `DuplicateWarningDialog`. If no duplicates (or user continues anyway), call `createListing` SA then `submitListingForReview` SA. Success state: full-step replacement with success message. "Save as draft" ghost button: calls `createListing` SA only (status stays `'draft'`)
@@ -29,6 +36,7 @@ As a business owner who has completed the first four steps of the Add Business f
 - Success screen (replaces form): heading "Submitted for review!", body "We'll review your BLACQList Page and notify you at [user email]. This usually takes 1–3 business days.", two links: "View your draft page →" (`/[city-slug]/business/[slug]`) and "Claim your page" (only shown if user has not already initiated a claim) → `/claim/[listing-id]`
 
 **Out of scope:**
+
 - Steps 1–4 (Ticket 032)
 - Admin review and approval workflow (Ticket 039)
 - Gallery image reordering drag-and-drop (covered in Dashboard page editor ticket)
@@ -36,14 +44,14 @@ As a business owner who has completed the first four steps of the Add Business f
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 032 (steps 1–4) | Blocking ticket | Must be complete — this ticket extends the same form |
-| Ticket 031 (duplicate-check API) | Blocking ticket | Required for Step 7 duplicate check before publish |
-| Ticket 030 (media upload Route Handler `POST /api/upload`) | Blocking ticket | Required for Step 5 media uploads |
-| `createListing` SA (`lib/actions/listings/createListing.ts`) | Code dependency | Must exist before Step 7 can call it |
-| `submitListingForReview` SA (`lib/actions/listings/submitListingForReview.ts`) | Code dependency | Must exist before Step 7 can call it |
-| BLACQList Page preview components (Tickets 021–022) | Component dependency | Read-only preview in Step 7 uses these components |
+| Dependency                                                                     | Type                 | Status                                               |
+| ------------------------------------------------------------------------------ | -------------------- | ---------------------------------------------------- |
+| Ticket 032 (steps 1–4)                                                         | Blocking ticket      | Must be complete — this ticket extends the same form |
+| Ticket 031 (duplicate-check API)                                               | Blocking ticket      | Required for Step 7 duplicate check before publish   |
+| Ticket 030 (media upload Route Handler `POST /api/upload`)                     | Blocking ticket      | Required for Step 5 media uploads                    |
+| `createListing` SA (`lib/actions/listings/createListing.ts`)                   | Code dependency      | Must exist before Step 7 can call it                 |
+| `submitListingForReview` SA (`lib/actions/listings/submitListingForReview.ts`) | Code dependency      | Must exist before Step 7 can call it                 |
+| BLACQList Page preview components (Tickets 021–022)                            | Component dependency | Read-only preview in Step 7 uses these components    |
 
 ## UX Notes
 
@@ -95,6 +103,7 @@ As a business owner who has completed the first four steps of the Add Business f
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/add-business/_components/steps/MediaStep.tsx` — Step 5
 - `app/add-business/_components/steps/CtaStep.tsx` — Step 6
 - `app/add-business/_components/steps/PreviewPublishStep.tsx` — Step 7
@@ -104,10 +113,12 @@ As a business owner who has completed the first four steps of the Add Business f
 - `lib/actions/listings/submitListingForReview.ts` — Server Action
 
 **Files to modify:**
+
 - `app/add-business/_components/AddBusinessForm.tsx` — add steps 5–7 to the step renderer; add submit handlers
 - `lib/validations/listing.ts` — add Step 5 and Step 6 zod schemas; add final submission schema
 
 **Key patterns:**
+
 - Upload flow: call `POST /api/upload` immediately on file select (not on form submit); store the returned `path` in form state; if user removes an uploaded image, call `DELETE /api/upload` or simply mark path as null in state (file is orphaned in storage until listing is created — acceptable at MVP)
 - Two-step publish: `createListing` SA first (creates the DB record with `status: 'draft'`), then `submitListingForReview` SA immediately after success. If `createListing` succeeds but `submitListingForReview` fails: the draft exists; show error with "Your draft was saved. Try submitting for review from your dashboard."
 - Duplicate check: call before `createListing` — do not create a record if the user decides to claim an existing listing instead
@@ -115,6 +126,7 @@ As a business owner who has completed the first four steps of the Add Business f
 - Draft clear on success: `localStorage.removeItem(DRAFT_KEY)` after `submitListingForReview` returns successfully
 
 **Do not:**
+
 - Upload files to storage before the user reaches Step 5 — uploads only happen in Step 5
 - Block form progress on upload errors — media is optional; show the error but allow Continue
 - Call `createListing` more than once per session — use a `submitting` flag to prevent double-submit
@@ -135,15 +147,15 @@ As a business owner who has completed the first four steps of the Add Business f
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Upload file too large | File exceeds size limit | Inline error below upload zone: "File must be under [N]MB" | User selects a smaller file |
-| Upload network error | `POST /api/upload` returns 5xx | Inline error: "Upload failed. Try again." with retry button | User re-selects and uploads; form data is not lost |
-| CTA URL missing | User selects Book/Order/Visit but leaves URL empty | Continue disabled; inline error below URL input when Submit attempted | User enters URL and retries |
-| `createListing` fails | SA returns `VALIDATION_ERROR` | Fields object displayed; step navigates back to the step with the error field | User corrects field and re-submits |
-| `createListing` fails | SA returns `SERVER_ERROR` | Banner in Step 7: "Submission failed. Your draft is preserved. Please try again." | Retry publish button |
-| `submitListingForReview` fails | SA returns error after `createListing` succeeded | "Your draft was saved. You can submit it from your dashboard." + "Go to dashboard" link | User goes to dashboard and submits from there |
-| Duplicate found | Duplicate check returns matches | `DuplicateWarningDialog` shown | User claims existing listing or proceeds anyway |
+| Failure                        | Condition                                          | User sees                                                                               | Recovery                                           |
+| ------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Upload file too large          | File exceeds size limit                            | Inline error below upload zone: "File must be under [N]MB"                              | User selects a smaller file                        |
+| Upload network error           | `POST /api/upload` returns 5xx                     | Inline error: "Upload failed. Try again." with retry button                             | User re-selects and uploads; form data is not lost |
+| CTA URL missing                | User selects Book/Order/Visit but leaves URL empty | Continue disabled; inline error below URL input when Submit attempted                   | User enters URL and retries                        |
+| `createListing` fails          | SA returns `VALIDATION_ERROR`                      | Fields object displayed; step navigates back to the step with the error field           | User corrects field and re-submits                 |
+| `createListing` fails          | SA returns `SERVER_ERROR`                          | Banner in Step 7: "Submission failed. Your draft is preserved. Please try again."       | Retry publish button                               |
+| `submitListingForReview` fails | SA returns error after `createListing` succeeded   | "Your draft was saved. You can submit it from your dashboard." + "Go to dashboard" link | User goes to dashboard and submits from there      |
+| Duplicate found                | Duplicate check returns matches                    | `DuplicateWarningDialog` shown                                                          | User claims existing listing or proceeds anyway    |
 
 ## Edge Cases
 
@@ -165,13 +177,13 @@ As a business owner who has completed the first four steps of the Add Business f
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path — full submit | Complete all 7 steps with valid data including a cover image → click Publish → no duplicates | `createListing` + `submitListingForReview` called; success screen shows; localStorage draft cleared |
-| QA-2 | Duplicate warning | Step 7 → click Publish where a near-match listing exists in the same city | `DuplicateWarningDialog` appears with the matching listing card and "Claim instead →" link |
-| QA-3 | File size error | Step 5 → try to upload a 6MB cover image | Error "File must be under 5MB" shown; upload does not proceed; Continue still enabled (media optional) |
-| QA-4 | Save as draft | Step 7 → click "Save as draft" | Only `createListing` SA called; redirected to `/dashboard`; listing visible in admin with `status: 'draft'` |
-| QA-5 | Server error recovery | Stub `createListing` to return `SERVER_ERROR` → click Publish | Error banner shown in Step 7; form data preserved; Publish button re-enabled for retry |
+| ID   | Test                     | Steps                                                                                        | Expected                                                                                                    |
+| ---- | ------------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| QA-1 | Happy path — full submit | Complete all 7 steps with valid data including a cover image → click Publish → no duplicates | `createListing` + `submitListingForReview` called; success screen shows; localStorage draft cleared         |
+| QA-2 | Duplicate warning        | Step 7 → click Publish where a near-match listing exists in the same city                    | `DuplicateWarningDialog` appears with the matching listing card and "Claim instead →" link                  |
+| QA-3 | File size error          | Step 5 → try to upload a 6MB cover image                                                     | Error "File must be under 5MB" shown; upload does not proceed; Continue still enabled (media optional)      |
+| QA-4 | Save as draft            | Step 7 → click "Save as draft"                                                               | Only `createListing` SA called; redirected to `/dashboard`; listing visible in admin with `status: 'draft'` |
+| QA-5 | Server error recovery    | Stub `createListing` to return `SERVER_ERROR` → click Publish                                | Error banner shown in Step 7; form data preserved; Publish button re-enabled for retry                      |
 
 ## Security Notes
 

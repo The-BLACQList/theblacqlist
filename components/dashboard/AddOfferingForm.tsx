@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useActionState, useRef, useEffect } from "react"
-import { Loader2, Plus, AlertCircle } from "lucide-react"
-import { addServiceAction } from "@/lib/actions/dashboard/addService"
+import { useActionState, useRef, useEffect } from 'react'
+import { Loader2, Plus, AlertCircle } from 'lucide-react'
+import { addServiceAction } from '@/lib/actions/dashboard/addService'
 
 interface Props {
   listingId: string
@@ -13,7 +13,7 @@ export function AddOfferingForm({ listingId }: Props) {
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
-    if (state && "success" in state) {
+    if (state && 'success' in state) {
       formRef.current?.reset()
     }
   }, [state])
@@ -27,7 +27,10 @@ export function AddOfferingForm({ listingId }: Props) {
         <input type="hidden" name="listing_id" value={listingId} />
 
         <div>
-          <label htmlFor="svc-name" className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1">
+          <label
+            htmlFor="svc-name"
+            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+          >
             Name <span aria-hidden="true">*</span>
           </label>
           <input
@@ -42,7 +45,10 @@ export function AddOfferingForm({ listingId }: Props) {
         </div>
 
         <div>
-          <label htmlFor="svc-desc" className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1">
+          <label
+            htmlFor="svc-desc"
+            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+          >
             Description <span className="font-normal text-charcoal/40">(optional)</span>
           </label>
           <textarea
@@ -55,7 +61,10 @@ export function AddOfferingForm({ listingId }: Props) {
         </div>
 
         <div>
-          <label htmlFor="svc-price" className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1">
+          <label
+            htmlFor="svc-price"
+            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+          >
             Price <span className="font-normal text-charcoal/40">(optional)</span>
           </label>
           <input
@@ -67,20 +76,28 @@ export function AddOfferingForm({ listingId }: Props) {
           />
         </div>
 
-        {state && "error" in state && (
-          <div role="alert" className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+        {state && 'error' in state && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
+          >
             <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
 
         <div className="flex justify-end pt-1">
-          <button type="submit" disabled={isPending}
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-            {isPending
-              ? <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              : <Plus className="size-4" aria-hidden="true" />}
-            {isPending ? "Adding…" : "Add service"}
+          <button
+            type="submit"
+            disabled={isPending}
+            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isPending ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Plus className="size-4" aria-hidden="true" />
+            )}
+            {isPending ? 'Adding…' : 'Add service'}
           </button>
         </div>
       </form>

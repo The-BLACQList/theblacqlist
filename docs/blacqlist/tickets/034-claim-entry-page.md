@@ -1,26 +1,33 @@
 # Ticket 034: Claim Entry Page (/claim)
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 5: Submit / Claim / Manage Foundation
 
 ## Priority
+
 P1
 
 ## Feature Area
+
 Core Workflow / Claim
 
 ## Context
+
 The claim flow is the primary mechanism by which Black business owners establish ownership of their BLACQList Page. The claim entry page is the starting point: authenticated users search for their listing, see its current status, and choose to claim it. Without this page, business owners cannot take ownership of their listing records. This is the first of two claim-flow screens; the claim form is Ticket 035. Source: `docs/blacqlist/ux/mvp-screen-map.md` Claim Entry screen; `docs/blacqlist/ux/core-user-flows.md` Flow 9 (Claim a Listing); `docs/blacqlist/architecture/api-contract.md` Section 1 endpoint 1 (search); `docs/blacqlist/data/database-schema-plan.md` listings and claims tables.
 
 ## User Story
+
 As a business owner, I want to search for my business on The BLACQList so that I can find my existing listing and initiate a claim, or learn that my business is not yet listed and add it instead.
 
 ## Scope
 
 **In scope:**
+
 - `app/claim/page.tsx` — Server Component for initial render; reads `searchParams` for pre-filled query
 - `app/claim/_components/ClaimSearch.tsx` — Client Component (`"use client"`): name input + optional city `Select` filter, submit triggers `GET /api/search` with `q` + `city` params
 - Results list: each result is a listing card showing name, city, category, cover image thumbnail (or placeholder), trust_tier badge (`Unclaimed` = gray, `Claimed` = Amber Gold, `Pending` = yellow). Per result: "Claim this page" button navigating to `/claim/[listing-id]`
@@ -35,19 +42,20 @@ As a business owner, I want to search for my business on The BLACQList so that I
 - Error state: "Search failed. Please try again." with retry
 
 **Out of scope:**
+
 - The claim verification form (`/claim/[listing-id]`) — Ticket 035
 - Admin claim management — Ticket 040
 - Claiming a listing that has been deleted or archived (404 on claim form — handled in Ticket 035)
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 015 (auth middleware) | Blocking ticket | Required for auth guard redirect |
-| Ticket 025 (listings tables) | Blocking ticket | Search endpoint queries `listings` table |
-| `GET /api/search` Route Handler (Ticket from Search phase) | Blocking ticket | Used to fetch listing results |
-| `GET /api/claims/status` Route Handler | Blocking ticket | Used to check if current user has an open claim per listing |
-| `cities` table seeded | Data | Required for city filter select options |
+| Dependency                                                 | Type            | Status                                                      |
+| ---------------------------------------------------------- | --------------- | ----------------------------------------------------------- |
+| Ticket 015 (auth middleware)                               | Blocking ticket | Required for auth guard redirect                            |
+| Ticket 025 (listings tables)                               | Blocking ticket | Search endpoint queries `listings` table                    |
+| `GET /api/search` Route Handler (Ticket from Search phase) | Blocking ticket | Used to fetch listing results                               |
+| `GET /api/claims/status` Route Handler                     | Blocking ticket | Used to check if current user has an open claim per listing |
+| `cities` table seeded                                      | Data            | Required for city filter select options                     |
 
 ## UX Notes
 
@@ -105,21 +113,25 @@ As a business owner, I want to search for my business on The BLACQList so that I
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/claim/page.tsx` — Server Component; reads session; reads `cities` for city filter options; renders `ClaimSearch` client component
 - `app/claim/_components/ClaimSearch.tsx` — Client Component; manages search state, results, loading, error; fetches search API on submit
 - `app/claim/_components/ClaimResultsList.tsx` — renders the list of listing cards with claim status per item
 - `app/claim/_components/ClaimResultCard.tsx` — individual listing card with claim button and trust tier badge
 
 **Files to modify:**
+
 - None — standalone route
 
 **Key patterns:**
+
 - Use URL `searchParams` to allow pre-filling the search input: `?q=business+name` — set `defaultValue` on the input from `searchParams.q`
 - Fetch claim status for visible listings using `GET /api/claims/status?listing_id=` after search results render — do NOT block search results rendering on claim status; render results first, then load claim status asynchronously and update button states
 - Use `useTransition` for the search fetch to show a loading state without blocking the UI
 - The city filter select options are fetched server-side in `page.tsx` and passed to `ClaimSearch` as props
 
 **Do not:**
+
 - Render the claim form on this page — the form is a separate route (Ticket 035)
 - Allow unauthenticated users to see search results — the auth guard in middleware handles this, but confirm with `supabase.auth.getUser()` in the server component as a second layer
 - Show archived or draft listings in results — `GET /api/search` already filters to `status = 'published'`
@@ -138,12 +150,12 @@ As a business owner, I want to search for my business on The BLACQList so that I
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Search API failure | `GET /api/search` returns 5xx | "Search failed. Please try again." with a Retry button | User clicks Retry — re-fires the same query |
-| Rate limited | 60+ requests/min from this user | "Too many searches. Please wait a moment and try again." | User waits and retries |
+| Failure                  | Condition                                      | User sees                                                                                                                   | Recovery                                                 |
+| ------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Search API failure       | `GET /api/search` returns 5xx                  | "Search failed. Please try again." with a Retry button                                                                      | User clicks Retry — re-fires the same query              |
+| Rate limited             | 60+ requests/min from this user                | "Too many searches. Please wait a moment and try again."                                                                    | User waits and retries                                   |
 | Claim status check fails | `GET /api/claims/status` fails for one listing | Button defaults to "Claim this page" (enabled) — no error shown; the claim form (Ticket 035) will handle the conflict check | User proceeds to claim form which catches the open claim |
-| City data unavailable | `cities` fetch fails on page load | Next.js `error.tsx` boundary with retry | User retries page load |
+| City data unavailable    | `cities` fetch fails on page load              | Next.js `error.tsx` boundary with retry                                                                                     | User retries page load                                   |
 
 ## Edge Cases
 
@@ -165,13 +177,13 @@ As a business owner, I want to search for my business on The BLACQList so that I
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Happy path | Sign in as authenticated user → navigate to `/claim` → search "Atlanta Hair Studio" | Results list renders with matching listings, trust tier badges, and "Claim this page" button on unclaimed listings |
-| QA-2 | Already claimed listing | Search for a listing with `trust_tier = 'claimed'` | "Already claimed" badge shown; button is disabled |
-| QA-3 | Unauthenticated access | Open incognito → navigate to `/claim` | Redirect to `/sign-in?next=/claim` |
-| QA-4 | No results | Search for an unusual name with no matches | "Can't find your business?" section visible; "Add your business instead →" link present |
-| QA-5 | Pre-filled query | Navigate to `/claim?q=Cozy+Coffee` | Name input pre-filled with "Cozy Coffee"; search auto-triggers if `searchParams.q` is present on page load |
+| ID   | Test                    | Steps                                                                               | Expected                                                                                                           |
+| ---- | ----------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| QA-1 | Happy path              | Sign in as authenticated user → navigate to `/claim` → search "Atlanta Hair Studio" | Results list renders with matching listings, trust tier badges, and "Claim this page" button on unclaimed listings |
+| QA-2 | Already claimed listing | Search for a listing with `trust_tier = 'claimed'`                                  | "Already claimed" badge shown; button is disabled                                                                  |
+| QA-3 | Unauthenticated access  | Open incognito → navigate to `/claim`                                               | Redirect to `/sign-in?next=/claim`                                                                                 |
+| QA-4 | No results              | Search for an unusual name with no matches                                          | "Can't find your business?" section visible; "Add your business instead →" link present                            |
+| QA-5 | Pre-filled query        | Navigate to `/claim?q=Cozy+Coffee`                                                  | Name input pre-filled with "Cozy Coffee"; search auto-triggers if `searchParams.q` is present on page load         |
 
 ## Security Notes
 

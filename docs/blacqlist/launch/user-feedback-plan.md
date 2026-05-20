@@ -11,13 +11,13 @@ This document covers how feedback is collected, categorized, triaged, and routed
 
 ## Section 1 — Feedback Channels
 
-| Channel | Purpose | Monitored by | Frequency |
-|---|---|---|---|
-| `feedback@theblacqlist.com` | Primary public feedback email | Product Lead | Daily |
-| Slack `#user-feedback` | Internal routing for all feedback the team encounters | All team members | As it arrives |
-| Soft launch tester channel | Direct channel with soft launch testers | Product Lead | Active during first 2 weeks |
-| Social mentions (`@theblacqlist`) | Twitter/X, Instagram, Facebook mentions | Product Lead | Manual, daily for first 30 days |
-| In-app feedback form | Dedicated `/feedback` form if built | Product Lead | Daily (same as email) |
+| Channel                           | Purpose                                               | Monitored by     | Frequency                       |
+| --------------------------------- | ----------------------------------------------------- | ---------------- | ------------------------------- |
+| `feedback@theblacqlist.com`       | Primary public feedback email                         | Product Lead     | Daily                           |
+| Slack `#user-feedback`            | Internal routing for all feedback the team encounters | All team members | As it arrives                   |
+| Soft launch tester channel        | Direct channel with soft launch testers               | Product Lead     | Active during first 2 weeks     |
+| Social mentions (`@theblacqlist`) | Twitter/X, Instagram, Facebook mentions               | Product Lead     | Manual, daily for first 30 days |
+| In-app feedback form              | Dedicated `/feedback` form if built                   | Product Lead     | Daily (same as email)           |
 
 **If the in-app feedback form is not yet built:** All in-app feedback CTAs should link to `mailto:feedback@theblacqlist.com` until the form exists.
 
@@ -29,16 +29,16 @@ This document covers how feedback is collected, categorized, triaged, and routed
 
 Every piece of feedback must be assigned exactly one category before it enters the triage queue.
 
-| Category | Definition | Owner | Default route |
-|---|---|---|---|
-| **Bug** | Something is broken, wrong, or not working as designed | Tech Lead | → Bug triage (Section 3) |
-| **UX issue** | Flow confusion, missing label, unclear state, confusing behavior (not broken) | Product Lead | → Backlog ticket or next sprint |
-| **Data quality** | Incorrect info on a listing: wrong hours, wrong address, wrong phone, wrong name | Admin | → Admin correction queue + business outreach |
-| **Feature request** | A capability the user wants that does not currently exist | Product Lead | → Slack `#feature-requests` → monthly review |
-| **Claim issue** | Problem with submitting a claim, claim status, or claim result | Admin | → Claim queue manual review at `/admin/claims` |
-| **Accessibility** | Screen reader, keyboard navigation, contrast, or label issue | Tech Lead | → Accessibility ticket (link to ticket 087 group) |
-| **Praise / positive** | Positive feedback about the product | Product Lead | → Log in monthly summary; share with team |
-| **Unclear** | Cannot determine category from the submission | Product Lead | → Reply to gather more detail before categorizing |
+| Category              | Definition                                                                       | Owner        | Default route                                     |
+| --------------------- | -------------------------------------------------------------------------------- | ------------ | ------------------------------------------------- |
+| **Bug**               | Something is broken, wrong, or not working as designed                           | Tech Lead    | → Bug triage (Section 3)                          |
+| **UX issue**          | Flow confusion, missing label, unclear state, confusing behavior (not broken)    | Product Lead | → Backlog ticket or next sprint                   |
+| **Data quality**      | Incorrect info on a listing: wrong hours, wrong address, wrong phone, wrong name | Admin        | → Admin correction queue + business outreach      |
+| **Feature request**   | A capability the user wants that does not currently exist                        | Product Lead | → Slack `#feature-requests` → monthly review      |
+| **Claim issue**       | Problem with submitting a claim, claim status, or claim result                   | Admin        | → Claim queue manual review at `/admin/claims`    |
+| **Accessibility**     | Screen reader, keyboard navigation, contrast, or label issue                     | Tech Lead    | → Accessibility ticket (link to ticket 087 group) |
+| **Praise / positive** | Positive feedback about the product                                              | Product Lead | → Log in monthly summary; share with team         |
+| **Unclear**           | Cannot determine category from the submission                                    | Product Lead | → Reply to gather more detail before categorizing |
 
 ---
 
@@ -46,16 +46,16 @@ Every piece of feedback must be assigned exactly one category before it enters t
 
 These SLAs apply from the moment feedback enters any monitored channel.
 
-| Category | Response SLA | Resolution SLA |
-|---|---|---|
-| P0 bug (site down, auth broken, data breach) | Same day → escalate to `rollback-plan.md` | Same day |
-| P1 bug (critical flow broken) | 24 hours | 48 hours |
-| P2 bug (non-critical feature broken) | 72 hours | Next deploy |
-| P3 bug / UX issue | 1 week acknowledgement | Next sprint |
-| Data quality issue | 24 hours (admin action) | N/A — correction made immediately |
-| Feature request | 7 days acknowledgement | Monthly product review |
-| Claim issue | 24 hours | 48 hours |
-| Accessibility issue | 48 hours | Next sprint (or sooner if severe) |
+| Category                                     | Response SLA                              | Resolution SLA                    |
+| -------------------------------------------- | ----------------------------------------- | --------------------------------- |
+| P0 bug (site down, auth broken, data breach) | Same day → escalate to `rollback-plan.md` | Same day                          |
+| P1 bug (critical flow broken)                | 24 hours                                  | 48 hours                          |
+| P2 bug (non-critical feature broken)         | 72 hours                                  | Next deploy                       |
+| P3 bug / UX issue                            | 1 week acknowledgement                    | Next sprint                       |
+| Data quality issue                           | 24 hours (admin action)                   | N/A — correction made immediately |
+| Feature request                              | 7 days acknowledgement                    | Monthly product review            |
+| Claim issue                                  | 24 hours                                  | 48 hours                          |
+| Accessibility issue                          | 48 hours                                  | Next sprint (or sooner if severe) |
 
 **Escalation rule:** If any P1 bug goes unresolved for 36 hours, Tech Lead notifies Product Lead and both agree on next action (hotfix, rollback, or accept and timeline).
 
@@ -116,6 +116,7 @@ Use these templates for all first responses. Personalize where indicated by `[br
 > Hi [Name or "there"],
 >
 > Thank you for reaching out. To help us look into this, could you share:
+>
 > - What you were trying to do
 > - What page or step you were on
 > - What you saw (an error message, a blank screen, something unexpected)
@@ -149,12 +150,12 @@ Not every piece of feedback becomes a ticket. This pipeline determines what does
 
 ### Step 2 — Bug Conversion
 
-| If | Then |
-|---|---|
+| If     | Then                                                                                                         |
+| ------ | ------------------------------------------------------------------------------------------------------------ |
 | P0 bug | Create a ticket immediately with: symptom, reproduction steps, affected users, assigned engineer. Begin fix. |
-| P1 bug | Create a ticket within 4 hours. Add to top of current sprint. |
-| P2 bug | Create a ticket. Add to backlog. Include in next deploy planning. |
-| P3 bug | Add to backlog. Does not require a dedicated ticket — can be grouped as "minor fixes" in a sprint. |
+| P1 bug | Create a ticket within 4 hours. Add to top of current sprint.                                                |
+| P2 bug | Create a ticket. Add to backlog. Include in next deploy planning.                                            |
+| P3 bug | Add to backlog. Does not require a dedicated ticket — can be grouped as "minor fixes" in a sprint.           |
 
 **Ticket format:** Title: `[Bug] [P0/P1/P2] [short description]`. Use the existing ticket template from the `docs/blacqlist/tickets/` format.
 

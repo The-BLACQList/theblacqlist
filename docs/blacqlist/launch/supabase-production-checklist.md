@@ -66,15 +66,15 @@ No other extensions are required at MVP.
 
 Apply in this exact order. After each migration completes, verify the expected tables exist before proceeding.
 
-| # | Migration file | Expected tables/objects after | Verified |
-|---|---|---|---|
-| 1 | `20260510000000_initial_blacqlist_mvp_schema.sql` | `users`, `listings`, `categories`, `cities`, `states`, `saves`, `claims`, `user_roles`, `listing_hours` | [ ] |
-| 2 | `20260510000001_mvp_rls_policies.sql` | RLS enabled on all tables from migration 1 | [ ] |
-| 3 | `20260511000000_editorial_foundation.sql` | `collections`, `collection_listings`, `guides`, `blacqlight_features` | [ ] |
-| 4 | `20260511000001_receipt_community_spend.sql` | `receipt_uploads`, `spend_events`, `community_spend_snapshots` | [ ] |
-| 5 | `20260511000002_marketplace_foundation.sql` | `products`, `services`, `vendor_storefronts`, `orders`, `order_items` | [ ] |
-| 6 | `20260511000003_monetization_foundation.sql` | `subscriptions`, `sponsored_placements`, `sponsor_campaigns`, `set_updated_at()` function | [ ] |
-| 7 | `20260511000004_ai_foundation.sql` | `ai_suggestions`, `ai_generation_requests` | [ ] |
+| #   | Migration file                                    | Expected tables/objects after                                                                           | Verified |
+| --- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------- |
+| 1   | `20260510000000_initial_blacqlist_mvp_schema.sql` | `users`, `listings`, `categories`, `cities`, `states`, `saves`, `claims`, `user_roles`, `listing_hours` | [ ]      |
+| 2   | `20260510000001_mvp_rls_policies.sql`             | RLS enabled on all tables from migration 1                                                              | [ ]      |
+| 3   | `20260511000000_editorial_foundation.sql`         | `collections`, `collection_listings`, `guides`, `blacqlight_features`                                   | [ ]      |
+| 4   | `20260511000001_receipt_community_spend.sql`      | `receipt_uploads`, `spend_events`, `community_spend_snapshots`                                          | [ ]      |
+| 5   | `20260511000002_marketplace_foundation.sql`       | `products`, `services`, `vendor_storefronts`, `orders`, `order_items`                                   | [ ]      |
+| 6   | `20260511000003_monetization_foundation.sql`      | `subscriptions`, `sponsored_placements`, `sponsor_campaigns`, `set_updated_at()` function               | [ ]      |
+| 7   | `20260511000004_ai_foundation.sql`                | `ai_suggestions`, `ai_generation_requests`                                                              | [ ]      |
 
 **Verification SQL (run in Supabase SQL Editor after all migrations):**
 
@@ -111,12 +111,12 @@ SELECT 'plans'      AS tbl, count(*) FROM plans;
 
 Expected counts:
 
-| Table | Expected count |
-|---|---|
-| `states` | 51 (50 states + DC) |
-| `cities` | 13 |
-| `categories` | 25+ (top-level + subcategories) |
-| `plans` | 3 (free, starter, growth — or as defined in seed) |
+| Table        | Expected count                                    |
+| ------------ | ------------------------------------------------- |
+| `states`     | 51 (50 states + DC)                               |
+| `cities`     | 13                                                |
+| `categories` | 25+ (top-level + subcategories)                   |
+| `plans`      | 3 (free, starter, growth — or as defined in seed) |
 
 - [ ] All four counts match expected values
 - [ ] No test users, test listings, or dev fixtures are present in the production database
@@ -192,6 +192,7 @@ SELECT count(*) FROM spend_events;
 - [ ] Signed URLs expire in 15 minutes (enforced in the signed URL route handler)
 
 **Manual test:**
+
 1. Sign in as User A, upload a receipt
 2. Sign in as User B (different account), attempt to access User A's receipt signed URL
 3. Expected: 401 Unauthorized or 403 Forbidden
@@ -211,10 +212,10 @@ Create three buckets in Supabase Dashboard → Storage. Apply the following sett
 
 ### 6.1 `listing-media` — Public bucket
 
-| Setting | Value |
-|---|---|
-| Bucket name | `listing-media` |
-| Visibility | **Public** |
+| Setting         | Value                                                       |
+| --------------- | ----------------------------------------------------------- |
+| Bucket name     | `listing-media`                                             |
+| Visibility      | **Public**                                                  |
 | File size limit | Leave at default (application layer enforces 5 MB per file) |
 
 ```sql
@@ -229,10 +230,10 @@ SELECT name, public FROM storage.buckets WHERE name = 'listing-media';
 
 ### 6.2 `verification-docs` — Private bucket
 
-| Setting | Value |
-|---|---|
+| Setting     | Value               |
+| ----------- | ------------------- |
 | Bucket name | `verification-docs` |
-| Visibility | **Private** |
+| Visibility  | **Private**         |
 
 ```sql
 -- Verify bucket exists and is private
@@ -246,10 +247,10 @@ SELECT name, public FROM storage.buckets WHERE name = 'verification-docs';
 
 ### 6.3 `receipts` — Private bucket
 
-| Setting | Value |
-|---|---|
-| Bucket name | `receipts` |
-| Visibility | **Private** |
+| Setting     | Value       |
+| ----------- | ----------- |
+| Bucket name | `receipts`  |
+| Visibility  | **Private** |
 
 ```sql
 -- Verify bucket exists and is private

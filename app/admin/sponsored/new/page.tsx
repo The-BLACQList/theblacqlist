@@ -1,19 +1,19 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowLeft } from "lucide-react"
-import { requireAdmin } from "@/lib/admin/guard"
-import { createClient } from "@/lib/supabase/server"
-import { SponsoredPlacementForm } from "./SponsoredPlacementForm"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { ArrowLeft } from 'lucide-react'
+import { requireAdmin } from '@/lib/admin/guard'
+import { createClient } from '@/lib/supabase/server'
+import { SponsoredPlacementForm } from './SponsoredPlacementForm'
 
-export const metadata: Metadata = { title: "New Sponsored Placement | Admin" }
+export const metadata: Metadata = { title: 'New Sponsored Placement | Admin' }
 
 export default async function NewSponsoredPlacementPage() {
   await requireAdmin()
   const supabase = await createClient()
 
   const [{ data: cities }, { data: categories }] = await Promise.all([
-    supabase.from("cities").select("id, name").order("name"),
-    supabase.from("categories").select("id, name").order("name"),
+    supabase.from('cities').select('id, name').order('name'),
+    supabase.from('categories').select('id, name').order('name'),
   ])
 
   return (
@@ -40,10 +40,16 @@ export default async function NewSponsoredPlacementPage() {
       </div>
 
       <div className="rounded-xl border border-amber-gold/20 bg-amber-gold/5 px-5 py-4">
-        <p className="font-subhead text-xs font-semibold text-charcoal/60 mb-1">How placements work</p>
+        <p className="font-subhead text-xs font-semibold text-charcoal/60 mb-1">
+          How placements work
+        </p>
         <ul className="font-body text-xs text-charcoal/50 space-y-1 list-disc list-inside">
-          <li>Positions 1–3 reserve the first, second, and third card slots in discover results.</li>
-          <li>If city and category are both set, the placement only shows when both filters match.</li>
+          <li>
+            Positions 1–3 reserve the first, second, and third card slots in discover results.
+          </li>
+          <li>
+            If city and category are both set, the placement only shows when both filters match.
+          </li>
           <li>If left blank, the placement shows across all cities/categories respectively.</li>
           <li>The &ldquo;Sponsored&rdquo; badge is always visible — it cannot be hidden.</li>
         </ul>

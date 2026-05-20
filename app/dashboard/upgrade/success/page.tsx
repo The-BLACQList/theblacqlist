@@ -1,9 +1,9 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { CheckCircle } from "lucide-react"
-import { requireOwner } from "@/lib/dashboard/guard"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { CheckCircle } from 'lucide-react'
+import { requireOwner } from '@/lib/dashboard/guard'
 
-export const metadata: Metadata = { title: "Upgrade Successful | BLACQList Dashboard" }
+export const metadata: Metadata = { title: 'Upgrade Successful | BLACQList Dashboard' }
 
 export default async function UpgradeSuccessPage() {
   await requireOwner()

@@ -1,5 +1,5 @@
-import { Star } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Star } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Review {
   id: string
@@ -24,8 +24,8 @@ function StarDisplay({ rating }: { rating: number }) {
         <Star
           key={s}
           className={cn(
-            "size-3.5",
-            s <= rating ? "fill-amber-gold text-amber-gold" : "fill-none text-charcoal/20"
+            'size-3.5',
+            s <= rating ? 'fill-amber-gold text-amber-gold' : 'fill-none text-charcoal/20'
           )}
           aria-hidden="true"
         />
@@ -38,7 +38,9 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-6">
-        <p className="font-body text-sm text-charcoal/60">No reviews yet. Be the first to share your experience.</p>
+        <p className="font-body text-sm text-charcoal/60">
+          No reviews yet. Be the first to share your experience.
+        </p>
       </div>
     )
   }
@@ -51,7 +53,9 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
           <span className="font-headline text-3xl text-brand-black">{avgRating.toFixed(1)}</span>
           <div>
             <StarDisplay rating={Math.round(avgRating)} />
-            <p className="font-body text-xs text-charcoal/50 mt-0.5">{reviewCount.toLocaleString()} reviews</p>
+            <p className="font-body text-xs text-charcoal/50 mt-0.5">
+              {reviewCount.toLocaleString()} reviews
+            </p>
           </div>
         </div>
       )}
@@ -62,14 +66,14 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
           <div className="flex items-start justify-between gap-3 mb-2">
             <div>
               <p className="font-subhead text-sm font-semibold text-brand-black">
-                {review.reviewer_display_name ?? "BLACQList Community Member"}
+                {review.reviewer_display_name ?? 'BLACQList Community Member'}
               </p>
               {review.published_at && (
                 <p className="font-body text-xs text-charcoal/40 mt-0.5">
-                  {new Date(review.published_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
+                  {new Date(review.published_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
                   })}
                 </p>
               )}
@@ -77,7 +81,9 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
             <StarDisplay rating={review.rating} />
           </div>
           {review.title && (
-            <p className="font-subhead text-sm font-semibold text-brand-black mb-1">{review.title}</p>
+            <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
+              {review.title}
+            </p>
           )}
           {review.body && (
             <p className="font-body text-sm text-charcoal/80 leading-relaxed">{review.body}</p>

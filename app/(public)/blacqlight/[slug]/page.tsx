@@ -1,10 +1,10 @@
-import type { Metadata } from "next"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
-import { createClient } from "@/lib/supabase/server"
-import { EditorialRichTextDisplay } from "@/components/editorial/EditorialRichTextDisplay"
+import { createClient } from '@/lib/supabase/server'
+import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -14,13 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const supabase = await createClient()
   const { data } = await supabase
-    .from("editorial_articles")
-    .select("title, meta_description, subtitle")
-    .eq("slug", slug)
-    .eq("status", "published")
+    .from('editorial_articles')
+    .select('title, meta_description, subtitle')
+    .eq('slug', slug)
+    .eq('status', 'published')
     .single()
 
-  if (!data) return { title: "Article | The BLACQLight" }
+  if (!data) return { title: 'Article | The BLACQLight' }
 
   return {
     title: `${data.title} | The BLACQLight`,
@@ -32,10 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
@@ -44,10 +44,10 @@ export default async function ArticleDetailPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: article } = await supabase
-    .from("editorial_articles")
-    .select("id, title, slug, subtitle, body, author_name, published_at, tags")
-    .eq("slug", slug)
-    .eq("status", "published")
+    .from('editorial_articles')
+    .select('id, title, slug, subtitle, body, author_name, published_at, tags')
+    .eq('slug', slug)
+    .eq('status', 'published')
     .single()
 
   if (!article) notFound()
@@ -93,13 +93,12 @@ export default async function ArticleDetailPage({ params }: Props) {
             </span>
           )}
           {article.author_name && article.published_at && (
-            <span className="text-charcoal/30" aria-hidden="true">·</span>
+            <span className="text-charcoal/30" aria-hidden="true">
+              ·
+            </span>
           )}
           {article.published_at && (
-            <time
-              dateTime={article.published_at}
-              className="font-subhead text-xs text-charcoal/50"
-            >
+            <time dateTime={article.published_at} className="font-subhead text-xs text-charcoal/50">
               {formatDate(article.published_at)}
             </time>
           )}

@@ -7,6 +7,7 @@
 This document defines the complete per-table schema for all tables across all phases. Tables are grouped by domain. Use this document before writing any Supabase migration.
 
 **Document structure:**
+
 - Part A (this file): Sections 1–5 — Identity, Entities, Entity Sub-tables, Discovery, Community Engagement (30 tables)
 - Part B (database-schema-plan-b.md): Sections 6–16 — Commerce, Editorial, Receipts & Spend, Flow Map, Events & Jobs, Analytics, AI, Admin, Sponsorships, MVP summary, Later tables summary (35 tables)
 
@@ -54,16 +55,16 @@ Two tables govern user identity on the platform. Supabase Auth owns the canonica
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | — | PK and FK → `auth.users(id)` ON DELETE CASCADE. Same UUID as the Supabase Auth user. |
-| `display_name` | `text` | YES | — | Public display name. Shown on reviews, saves, and comments. Null until user sets it. |
-| `avatar_url` | `text` | YES | — | Supabase Storage path in `avatars` bucket — not a URL. Generate signed/public URL at read time. |
-| `bio` | `text` | YES | — | Short user bio. Shown on profile pages (V1+). Optional. |
-| `city_id` | `uuid` | YES | — | FK → `cities(id)` ON DELETE SET NULL. Optional self-reported location. |
-| `website_url` | `text` | YES | — | Personal or professional website. Optional. |
-| `created_at` | `timestamptz` | NO | `now()` | Set by trigger on `auth.users` INSERT that also creates this row. |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger on every UPDATE. |
+| Field          | Type          | Nullable | Default | Notes                                                                                           |
+| -------------- | ------------- | -------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `id`           | `uuid`        | NO       | —       | PK and FK → `auth.users(id)` ON DELETE CASCADE. Same UUID as the Supabase Auth user.            |
+| `display_name` | `text`        | YES      | —       | Public display name. Shown on reviews, saves, and comments. Null until user sets it.            |
+| `avatar_url`   | `text`        | YES      | —       | Supabase Storage path in `avatars` bucket — not a URL. Generate signed/public URL at read time. |
+| `bio`          | `text`        | YES      | —       | Short user bio. Shown on profile pages (V1+). Optional.                                         |
+| `city_id`      | `uuid`        | YES      | —       | FK → `cities(id)` ON DELETE SET NULL. Optional self-reported location.                          |
+| `website_url`  | `text`        | YES      | —       | Personal or professional website. Optional.                                                     |
+| `created_at`   | `timestamptz` | NO       | `now()` | Set by trigger on `auth.users` INSERT that also creates this row.                               |
+| `updated_at`   | `timestamptz` | NO       | `now()` | Auto-updated via trigger on every UPDATE.                                                       |
 
 ### Indexes
 
@@ -97,14 +98,14 @@ None — profiles are created via a trigger on `auth.users` INSERT.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `user_id` | `uuid` | NO | — | FK → `auth.users(id)` ON DELETE CASCADE. The user this role is assigned to. |
-| `role` | `text` | NO | — | CHECK IN (`'supporter'`, `'owner'`, `'editor'`, `'admin'`, `'super_admin'`). The role being assigned. `'owner'` is scoped to a specific listing via `listing_id`. |
-| `listing_id` | `uuid` | YES | — | FK → `listings(id)` ON DELETE CASCADE. Null for all roles except `'owner'`. For `'owner'`, scopes the ownership to a single listing. |
-| `granted_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. The admin who granted this role. Null for auto-granted `'supporter'` role at sign-up. |
-| `created_at` | `timestamptz` | NO | `now()` | Timestamp the role was granted. |
+| Field        | Type          | Nullable | Default             | Notes                                                                                                                                                             |
+| ------------ | ------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                                                |
+| `user_id`    | `uuid`        | NO       | —                   | FK → `auth.users(id)` ON DELETE CASCADE. The user this role is assigned to.                                                                                       |
+| `role`       | `text`        | NO       | —                   | CHECK IN (`'supporter'`, `'owner'`, `'editor'`, `'admin'`, `'super_admin'`). The role being assigned. `'owner'` is scoped to a specific listing via `listing_id`. |
+| `listing_id` | `uuid`        | YES      | —                   | FK → `listings(id)` ON DELETE CASCADE. Null for all roles except `'owner'`. For `'owner'`, scopes the ownership to a single listing.                              |
+| `granted_by` | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. The admin who granted this role. Null for auto-granted `'supporter'` role at sign-up.                                   |
+| `created_at` | `timestamptz` | NO       | `now()`             | Timestamp the role was granted.                                                                                                                                   |
 
 ### Indexes
 
@@ -146,64 +147,64 @@ The `listings` table is the base record for every entity type on the platform. E
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK. FK target for all extension and supporting tables. |
-| `name` | `text` | NO | — | Public entity name. Required on all types. |
-| `slug` | `text` | NO | — | URL-safe unique identifier. Auto-generated on create. Immutable after first publish per ADR-010. |
-| `entity_type` | `text` | NO | — | CHECK IN (`'business'`, `'professional'`, `'creative'`, `'event'`, `'job'`, `'vendor'`). Set on create; never changed. |
-| `tagline` | `text` | YES | — | Short descriptor ≤140 chars for hero section. |
-| `category_id` | `uuid` | NO | — | FK → `categories(id)` ON DELETE RESTRICT. Primary category. Required. |
-| `subcategory_ids` | `uuid[]` | YES | — | Array of subcategory UUIDs. No FK constraint — validated at application layer. V1 active. |
-| `city_id` | `uuid` | YES | — | FK → `cities(id)` ON DELETE SET NULL. Null for online-only entities. |
-| `location_type` | `text` | NO | `'physical'` | CHECK IN (`'physical'`, `'online'`, `'hybrid'`, `'virtual-services'`, `'ships-nationwide'`). |
-| `service_area_description` | `text` | YES | — | Free-text service area. Indexed in `search_vector`. |
-| `ships_nationwide` | `boolean` | NO | `false` | Search/filter signal for nationwide-shipping entities. |
-| `status` | `text` | NO | `'draft'` | CHECK IN (`'draft'`, `'pending'`, `'published'`, `'unpublished'`, `'flagged'`, `'archived'`). Controls Page visibility. |
-| `tier` | `text` | NO | `'free'` | CHECK IN (`'free'`, `'standard'`, `'premium'`). Determines feature availability. `standard` and `premium` active at V1. |
-| `source` | `text` | NO | `'owner'` | CHECK IN (`'owner'`, `'community'`, `'admin'`, `'import'`). How the listing was created. |
-| `published_at` | `timestamptz` | YES | — | Set to `now()` on first transition to `'published'`. |
-| `trust_tier` | `text` | NO | `'unclaimed'` | CHECK IN (`'unclaimed'`, `'claimed'`, `'verified'`, `'certified'`). Publicly visible trust badge. |
-| `claim_id` | `uuid` | YES | — | FK → `claims(id)` ON DELETE SET NULL. The claim that elevated this listing to `'claimed'`. |
-| `verified_at` | `timestamptz` | YES | — | Timestamp of admin verification approval. V1 active. |
-| `verified_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Admin who approved verification. V1 active. |
-| `certification_auto_granted_at` | `timestamptz` | YES | — | Set by DB trigger when all BLACQList Certified criteria are met simultaneously. Never set manually. V1 trigger built. |
-| `flag_status` | `text` | NO | `'none'` | CHECK IN (`'none'`, `'inactive'`, `'duplicate'`, `'incorrect'`, `'spam'`). Non-`'none'` hides listing from public search and sets `noindex = true`. |
-| `admin_notes` | `text` | YES | — | Internal admin notes. Never exposed to owners or public. |
-| `moderation_notes` | `text` | YES | — | Notes shown to listing owner when listing is rejected, flagged, or requires correction. |
-| `is_featured` | `boolean` | NO | `false` | Admin-controlled editorial feature slot. At most one per placement context (enforced at application layer). |
-| `is_sponsored` | `boolean` | NO | `false` | Has an active paid sponsored placement. Auto-set false after `sponsored_expires_at` passes. V1 active. |
-| `sponsored_expires_at` | `timestamptz` | YES | — | Expiry timestamp for sponsored placement. Null when `is_sponsored = false`. V1 active. |
-| `sponsored_placement_type` | `text` | YES | — | One of `'homepage'`, `'search'`, `'category'`, `'city'`. Null when not sponsored. V1 active. |
-| `verification_status` | `text` | NO | `'none'` | CHECK IN (`'none'`, `'pending'`, `'verified'`, `'rejected'`). Workflow state — distinct from `trust_tier`. Columns built at MVP; workflow active at V1. |
-| `verification_docs` | `text[]` | YES | — | Array of Supabase Storage paths in the private `verification-docs` bucket. Admin-only access via 15-min signed URLs. V1 active. |
-| `verification_notes` | `text` | YES | — | Admin notes on verification decision shown to owner on rejection. V1 active. |
-| `meta_title` | `text` | YES | — | HTML `<title>`. Falls back to generated `"{name} — {category} in {city} — The BLACQList"`. |
-| `meta_description` | `text` | YES | — | HTML meta description. Falls back to first 160 chars of description field. |
-| `og_image_path` | `text` | YES | — | Storage path for OG image. Falls back to `cover_image_path` → `logo_path` → platform default. |
-| `canonical_url` | `text` | YES | — | System-managed canonical URL per ADR-010. Owners cannot override. |
-| `json_ld_type` | `text` | YES | — | Schema.org JSON-LD type. Inferred from `entity_type` if null. |
-| `sitemap_include` | `boolean` | NO | `true` | Auto-set false when `status != 'published'`, `noindex = true`, or `deleted_at IS NOT NULL`. |
-| `noindex` | `boolean` | NO | `false` | Auto-set true when `status = 'archived'` or `flag_status != 'none'`. |
-| `logo_path` | `text` | YES | — | Storage path in `listing-media` bucket for logo. 400×400px, max 2MB, WebP. |
-| `cover_image_path` | `text` | YES | — | Storage path for hero/cover image. 1200×675px, max 5MB, WebP. |
-| `last_edited_by_owner_at` | `timestamptz` | YES | — | Updated whenever the owner saves any field change. Used for stale listings queue. |
-| `last_admin_updated_at` | `timestamptz` | YES | — | Updated whenever an admin edits any field. Separate from `updated_at`. |
-| `auto_archive_at` | `timestamptz` | YES | — | For events: set to event end date + 1 day. Processed by daily scheduled function. Null for non-event entities. |
-| `auto_expire_at` | `timestamptz` | YES | — | For jobs: set to application deadline + 1 day. Processed by daily scheduled function. Null for non-job entities. |
-| `stale_flagged_at` | `timestamptz` | YES | — | Set by scheduled job when owner has not edited in 180+ days. Cleared on next owner save. V1 active. |
-| `is_vendor` | `boolean` | NO | `false` | Convenience flag. True when `entity_type = 'vendor'`. Kept in sync with `entity_type` by application layer. |
-| `review_count` | `integer` | NO | `0` | Denormalized count of published reviews. Updated by trigger on `reviews` INSERT/UPDATE. |
-| `avg_rating` | `numeric(3,2)` | YES | — | Denormalized average rating from published reviews. Updated by same trigger. Null until first published review. |
-| `save_count` | `integer` | NO | `0` | Denormalized count of saves. Updated by trigger on `saves` INSERT/DELETE. |
-| `view_count` | `integer` | NO | `0` | Denormalized total page view count. Updated by analytics event processing. |
-| `owner_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Set by claims approval workflow — not directly editable. Drives RLS ownership policies. |
-| `submitted_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. User who created or submitted the listing. |
-| `updated_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. User who last updated the listing. |
-| `created_at` | `timestamptz` | NO | `now()` | Creation timestamp. |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger on every UPDATE. |
-| `deleted_at` | `timestamptz` | YES | — | Soft delete. All default queries filter `WHERE deleted_at IS NULL`. |
-| `search_vector` | `tsvector` | YES | — | Full-text search vector. A-weight: `name`; B-weight: category name + city name; C-weight: `description` + `tagline`; D-weight: `service_area_description`. Updated via trigger. |
+| Field                           | Type           | Nullable | Default             | Notes                                                                                                                                                                           |
+| ------------------------------- | -------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                            | `uuid`         | NO       | `gen_random_uuid()` | PK. FK target for all extension and supporting tables.                                                                                                                          |
+| `name`                          | `text`         | NO       | —                   | Public entity name. Required on all types.                                                                                                                                      |
+| `slug`                          | `text`         | NO       | —                   | URL-safe unique identifier. Auto-generated on create. Immutable after first publish per ADR-010.                                                                                |
+| `entity_type`                   | `text`         | NO       | —                   | CHECK IN (`'business'`, `'professional'`, `'creative'`, `'event'`, `'job'`, `'vendor'`). Set on create; never changed.                                                          |
+| `tagline`                       | `text`         | YES      | —                   | Short descriptor ≤140 chars for hero section.                                                                                                                                   |
+| `category_id`                   | `uuid`         | NO       | —                   | FK → `categories(id)` ON DELETE RESTRICT. Primary category. Required.                                                                                                           |
+| `subcategory_ids`               | `uuid[]`       | YES      | —                   | Array of subcategory UUIDs. No FK constraint — validated at application layer. V1 active.                                                                                       |
+| `city_id`                       | `uuid`         | YES      | —                   | FK → `cities(id)` ON DELETE SET NULL. Null for online-only entities.                                                                                                            |
+| `location_type`                 | `text`         | NO       | `'physical'`        | CHECK IN (`'physical'`, `'online'`, `'hybrid'`, `'virtual-services'`, `'ships-nationwide'`).                                                                                    |
+| `service_area_description`      | `text`         | YES      | —                   | Free-text service area. Indexed in `search_vector`.                                                                                                                             |
+| `ships_nationwide`              | `boolean`      | NO       | `false`             | Search/filter signal for nationwide-shipping entities.                                                                                                                          |
+| `status`                        | `text`         | NO       | `'draft'`           | CHECK IN (`'draft'`, `'pending'`, `'published'`, `'unpublished'`, `'flagged'`, `'archived'`). Controls Page visibility.                                                         |
+| `tier`                          | `text`         | NO       | `'free'`            | CHECK IN (`'free'`, `'standard'`, `'premium'`). Determines feature availability. `standard` and `premium` active at V1.                                                         |
+| `source`                        | `text`         | NO       | `'owner'`           | CHECK IN (`'owner'`, `'community'`, `'admin'`, `'import'`). How the listing was created.                                                                                        |
+| `published_at`                  | `timestamptz`  | YES      | —                   | Set to `now()` on first transition to `'published'`.                                                                                                                            |
+| `trust_tier`                    | `text`         | NO       | `'unclaimed'`       | CHECK IN (`'unclaimed'`, `'claimed'`, `'verified'`, `'certified'`). Publicly visible trust badge.                                                                               |
+| `claim_id`                      | `uuid`         | YES      | —                   | FK → `claims(id)` ON DELETE SET NULL. The claim that elevated this listing to `'claimed'`.                                                                                      |
+| `verified_at`                   | `timestamptz`  | YES      | —                   | Timestamp of admin verification approval. V1 active.                                                                                                                            |
+| `verified_by`                   | `uuid`         | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Admin who approved verification. V1 active.                                                                                           |
+| `certification_auto_granted_at` | `timestamptz`  | YES      | —                   | Set by DB trigger when all BLACQList Certified criteria are met simultaneously. Never set manually. V1 trigger built.                                                           |
+| `flag_status`                   | `text`         | NO       | `'none'`            | CHECK IN (`'none'`, `'inactive'`, `'duplicate'`, `'incorrect'`, `'spam'`). Non-`'none'` hides listing from public search and sets `noindex = true`.                             |
+| `admin_notes`                   | `text`         | YES      | —                   | Internal admin notes. Never exposed to owners or public.                                                                                                                        |
+| `moderation_notes`              | `text`         | YES      | —                   | Notes shown to listing owner when listing is rejected, flagged, or requires correction.                                                                                         |
+| `is_featured`                   | `boolean`      | NO       | `false`             | Admin-controlled editorial feature slot. At most one per placement context (enforced at application layer).                                                                     |
+| `is_sponsored`                  | `boolean`      | NO       | `false`             | Has an active paid sponsored placement. Auto-set false after `sponsored_expires_at` passes. V1 active.                                                                          |
+| `sponsored_expires_at`          | `timestamptz`  | YES      | —                   | Expiry timestamp for sponsored placement. Null when `is_sponsored = false`. V1 active.                                                                                          |
+| `sponsored_placement_type`      | `text`         | YES      | —                   | One of `'homepage'`, `'search'`, `'category'`, `'city'`. Null when not sponsored. V1 active.                                                                                    |
+| `verification_status`           | `text`         | NO       | `'none'`            | CHECK IN (`'none'`, `'pending'`, `'verified'`, `'rejected'`). Workflow state — distinct from `trust_tier`. Columns built at MVP; workflow active at V1.                         |
+| `verification_docs`             | `text[]`       | YES      | —                   | Array of Supabase Storage paths in the private `verification-docs` bucket. Admin-only access via 15-min signed URLs. V1 active.                                                 |
+| `verification_notes`            | `text`         | YES      | —                   | Admin notes on verification decision shown to owner on rejection. V1 active.                                                                                                    |
+| `meta_title`                    | `text`         | YES      | —                   | HTML `<title>`. Falls back to generated `"{name} — {category} in {city} — The BLACQList"`.                                                                                      |
+| `meta_description`              | `text`         | YES      | —                   | HTML meta description. Falls back to first 160 chars of description field.                                                                                                      |
+| `og_image_path`                 | `text`         | YES      | —                   | Storage path for OG image. Falls back to `cover_image_path` → `logo_path` → platform default.                                                                                   |
+| `canonical_url`                 | `text`         | YES      | —                   | System-managed canonical URL per ADR-010. Owners cannot override.                                                                                                               |
+| `json_ld_type`                  | `text`         | YES      | —                   | Schema.org JSON-LD type. Inferred from `entity_type` if null.                                                                                                                   |
+| `sitemap_include`               | `boolean`      | NO       | `true`              | Auto-set false when `status != 'published'`, `noindex = true`, or `deleted_at IS NOT NULL`.                                                                                     |
+| `noindex`                       | `boolean`      | NO       | `false`             | Auto-set true when `status = 'archived'` or `flag_status != 'none'`.                                                                                                            |
+| `logo_path`                     | `text`         | YES      | —                   | Storage path in `listing-media` bucket for logo. 400×400px, max 2MB, WebP.                                                                                                      |
+| `cover_image_path`              | `text`         | YES      | —                   | Storage path for hero/cover image. 1200×675px, max 5MB, WebP.                                                                                                                   |
+| `last_edited_by_owner_at`       | `timestamptz`  | YES      | —                   | Updated whenever the owner saves any field change. Used for stale listings queue.                                                                                               |
+| `last_admin_updated_at`         | `timestamptz`  | YES      | —                   | Updated whenever an admin edits any field. Separate from `updated_at`.                                                                                                          |
+| `auto_archive_at`               | `timestamptz`  | YES      | —                   | For events: set to event end date + 1 day. Processed by daily scheduled function. Null for non-event entities.                                                                  |
+| `auto_expire_at`                | `timestamptz`  | YES      | —                   | For jobs: set to application deadline + 1 day. Processed by daily scheduled function. Null for non-job entities.                                                                |
+| `stale_flagged_at`              | `timestamptz`  | YES      | —                   | Set by scheduled job when owner has not edited in 180+ days. Cleared on next owner save. V1 active.                                                                             |
+| `is_vendor`                     | `boolean`      | NO       | `false`             | Convenience flag. True when `entity_type = 'vendor'`. Kept in sync with `entity_type` by application layer.                                                                     |
+| `review_count`                  | `integer`      | NO       | `0`                 | Denormalized count of published reviews. Updated by trigger on `reviews` INSERT/UPDATE.                                                                                         |
+| `avg_rating`                    | `numeric(3,2)` | YES      | —                   | Denormalized average rating from published reviews. Updated by same trigger. Null until first published review.                                                                 |
+| `save_count`                    | `integer`      | NO       | `0`                 | Denormalized count of saves. Updated by trigger on `saves` INSERT/DELETE.                                                                                                       |
+| `view_count`                    | `integer`      | NO       | `0`                 | Denormalized total page view count. Updated by analytics event processing.                                                                                                      |
+| `owner_user_id`                 | `uuid`         | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Set by claims approval workflow — not directly editable. Drives RLS ownership policies.                                               |
+| `submitted_by`                  | `uuid`         | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. User who created or submitted the listing.                                                                                            |
+| `updated_by`                    | `uuid`         | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. User who last updated the listing.                                                                                                    |
+| `created_at`                    | `timestamptz`  | NO       | `now()`             | Creation timestamp.                                                                                                                                                             |
+| `updated_at`                    | `timestamptz`  | NO       | `now()`             | Auto-updated via trigger on every UPDATE.                                                                                                                                       |
+| `deleted_at`                    | `timestamptz`  | YES      | —                   | Soft delete. All default queries filter `WHERE deleted_at IS NULL`.                                                                                                             |
+| `search_vector`                 | `tsvector`     | YES      | —                   | Full-text search vector. A-weight: `name`; B-weight: category name + city name; C-weight: `description` + `tagline`; D-weight: `service_area_description`. Updated via trigger. |
 
 ### Indexes
 
@@ -254,37 +255,37 @@ Required — admin and import-sourced listing seeds for launch cities. See `seed
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. One-to-one enforced by PK. |
-| `description` | `text` | YES | — | Full "About" section text. Used in `search_vector`. |
-| `hours` | `jsonb` | YES | — | Structured hours. Shape: `{monday: {open: "09:00", close: "17:00", closed: false}, ...}`. Null if unknown. Document shape in migration comment. |
-| `hours_notes` | `text` | YES | — | Supplement to structured hours for irregular situations. |
-| `address_line_1` | `text` | YES | — | Street address. Null for online-only businesses. PII-adjacent. |
-| `address_line_2` | `text` | YES | — | Suite, unit, floor. Optional. |
-| `city_text` | `text` | YES | — | Denormalized city name for display. Must be kept in sync with `listings.city_id` in same transaction. |
-| `state` | `text` | YES | — | Two-letter US state code. |
-| `zip` | `text` | YES | — | ZIP code. Format validated at application layer, not DB. |
-| `lat` | `numeric` | YES | — | Latitude. Null until V2 geocoding is active. |
-| `lng` | `numeric` | YES | — | Longitude. Null until V2 geocoding is active. |
-| `phone` | `text` | YES | — | Business phone. PII. Used for `cta_type = 'call'` (`tel:` link). |
-| `email` | `text` | YES | — | Business contact email. PII. Distinct from auth email. |
-| `website_url` | `text` | YES | — | External website. Must start with `https://` — validated at application layer. |
-| `social_instagram` | `text` | YES | — | Full Instagram profile URL. |
-| `social_facebook` | `text` | YES | — | Full Facebook page URL. |
-| `social_linkedin` | `text` | YES | — | Full LinkedIn company or profile URL. |
-| `social_tiktok` | `text` | YES | — | Full TikTok profile URL. |
-| `social_youtube` | `text` | YES | — | YouTube channel URL. |
-| `social_twitter` | `text` | YES | — | X (formerly Twitter) profile URL. |
-| `cta_type` | `text` | NO | `'visit'` | CHECK IN (`'book'`, `'order'`, `'call'`, `'message'`, `'visit'`, `'get-quote'`, `'shop'`, `'subscribe'`, `'contact'`). Controls CTA button on Page hero. |
-| `cta_url` | `text` | YES | — | URL for CTA. Null for `'call'` type (uses `phone` field). |
-| `cta_label_override` | `text` | YES | — | Custom CTA label. Takes precedence over default catalog label when non-null. |
-| `ships_nationwide` | `boolean` | NO | `false` | Rendering convenience — synced with `listings.location_type`. Application layer keeps in sync. |
-| `accepts_reservations` | `boolean` | YES | — | Whether business accepts reservations. V1 filter signal. |
-| `price_range` | `text` | YES | — | CHECK IN (`'$'`, `'$$'`, `'$$$'`, `'$$$$'`). V1 filter signal. |
-| `founded_year` | `integer` | YES | — | Year founded. Validated: 1800 ≤ value ≤ current year. V1. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                  | Type          | Nullable | Default   | Notes                                                                                                                                                    |
+| ---------------------- | ------------- | -------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listing_id`           | `uuid`        | NO       | —         | PK and FK → `listings(id)` ON DELETE CASCADE. One-to-one enforced by PK.                                                                                 |
+| `description`          | `text`        | YES      | —         | Full "About" section text. Used in `search_vector`.                                                                                                      |
+| `hours`                | `jsonb`       | YES      | —         | Structured hours. Shape: `{monday: {open: "09:00", close: "17:00", closed: false}, ...}`. Null if unknown. Document shape in migration comment.          |
+| `hours_notes`          | `text`        | YES      | —         | Supplement to structured hours for irregular situations.                                                                                                 |
+| `address_line_1`       | `text`        | YES      | —         | Street address. Null for online-only businesses. PII-adjacent.                                                                                           |
+| `address_line_2`       | `text`        | YES      | —         | Suite, unit, floor. Optional.                                                                                                                            |
+| `city_text`            | `text`        | YES      | —         | Denormalized city name for display. Must be kept in sync with `listings.city_id` in same transaction.                                                    |
+| `state`                | `text`        | YES      | —         | Two-letter US state code.                                                                                                                                |
+| `zip`                  | `text`        | YES      | —         | ZIP code. Format validated at application layer, not DB.                                                                                                 |
+| `lat`                  | `numeric`     | YES      | —         | Latitude. Null until V2 geocoding is active.                                                                                                             |
+| `lng`                  | `numeric`     | YES      | —         | Longitude. Null until V2 geocoding is active.                                                                                                            |
+| `phone`                | `text`        | YES      | —         | Business phone. PII. Used for `cta_type = 'call'` (`tel:` link).                                                                                         |
+| `email`                | `text`        | YES      | —         | Business contact email. PII. Distinct from auth email.                                                                                                   |
+| `website_url`          | `text`        | YES      | —         | External website. Must start with `https://` — validated at application layer.                                                                           |
+| `social_instagram`     | `text`        | YES      | —         | Full Instagram profile URL.                                                                                                                              |
+| `social_facebook`      | `text`        | YES      | —         | Full Facebook page URL.                                                                                                                                  |
+| `social_linkedin`      | `text`        | YES      | —         | Full LinkedIn company or profile URL.                                                                                                                    |
+| `social_tiktok`        | `text`        | YES      | —         | Full TikTok profile URL.                                                                                                                                 |
+| `social_youtube`       | `text`        | YES      | —         | YouTube channel URL.                                                                                                                                     |
+| `social_twitter`       | `text`        | YES      | —         | X (formerly Twitter) profile URL.                                                                                                                        |
+| `cta_type`             | `text`        | NO       | `'visit'` | CHECK IN (`'book'`, `'order'`, `'call'`, `'message'`, `'visit'`, `'get-quote'`, `'shop'`, `'subscribe'`, `'contact'`). Controls CTA button on Page hero. |
+| `cta_url`              | `text`        | YES      | —         | URL for CTA. Null for `'call'` type (uses `phone` field).                                                                                                |
+| `cta_label_override`   | `text`        | YES      | —         | Custom CTA label. Takes precedence over default catalog label when non-null.                                                                             |
+| `ships_nationwide`     | `boolean`     | NO       | `false`   | Rendering convenience — synced with `listings.location_type`. Application layer keeps in sync.                                                           |
+| `accepts_reservations` | `boolean`     | YES      | —         | Whether business accepts reservations. V1 filter signal.                                                                                                 |
+| `price_range`          | `text`        | YES      | —         | CHECK IN (`'$'`, `'$$'`, `'$$$'`, `'$$$$'`). V1 filter signal.                                                                                           |
+| `founded_year`         | `integer`     | YES      | —         | Year founded. Validated: 1800 ≤ value ≤ current year. V1.                                                                                                |
+| `created_at`           | `timestamptz` | NO       | `now()`   |                                                                                                                                                          |
+| `updated_at`           | `timestamptz` | NO       | `now()`   | Auto-updated via trigger.                                                                                                                                |
 
 ### Indexes
 
@@ -316,29 +317,29 @@ Required — business detail rows for all seeded listing records.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. |
-| `headline` | `text` | YES | — | One-line professional identity shown below name in hero. |
-| `bio` | `text` | YES | — | Full professional biography. Used in full-text search. |
-| `credentials` | `text[]` | YES | — | Array of credential strings. Displayed as credential badge row. |
-| `specialties` | `text[]` | YES | — | Array of specialty strings. Displayed as tags; search signals in V1. |
-| `consultation_type` | `text` | YES | — | CHECK IN (`'in-person'`, `'virtual'`, `'both'`). Search filter in V1. |
-| `availability_note` | `text` | YES | — | Free-text availability message shown near CTA. |
-| `cta_type` | `text` | NO | `'book'` | CHECK IN (`'book'`, `'schedule'`, `'inquire'`, `'call'`, `'message'`, `'contact'`). |
-| `cta_url` | `text` | YES | — | URL for CTA. Null for `'call'` type. |
-| `phone` | `text` | YES | — | Professional contact phone. PII. |
-| `email` | `text` | YES | — | Professional contact email. PII. Distinct from auth email. |
-| `website_url` | `text` | YES | — | Portfolio or personal site URL. |
-| `social_instagram` | `text` | YES | — | Instagram profile URL. |
-| `social_linkedin` | `text` | YES | — | LinkedIn profile URL. |
-| `social_twitter` | `text` | YES | — | X (Twitter) profile URL. |
-| `city_text` | `text` | YES | — | Practice city for display. Denormalized from `listings.city_id`. |
-| `state` | `text` | YES | — | Two-letter state code. |
-| `virtual_only` | `boolean` | NO | `false` | True if no in-person presence. When true, `listings.location_type` should be `'virtual-services'`. |
-| `video_embed_url` | `text` | YES | — | YouTube or Vimeo embed URL for intro/portfolio video. V1. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field               | Type          | Nullable | Default  | Notes                                                                                              |
+| ------------------- | ------------- | -------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `listing_id`        | `uuid`        | NO       | —        | PK and FK → `listings(id)` ON DELETE CASCADE.                                                      |
+| `headline`          | `text`        | YES      | —        | One-line professional identity shown below name in hero.                                           |
+| `bio`               | `text`        | YES      | —        | Full professional biography. Used in full-text search.                                             |
+| `credentials`       | `text[]`      | YES      | —        | Array of credential strings. Displayed as credential badge row.                                    |
+| `specialties`       | `text[]`      | YES      | —        | Array of specialty strings. Displayed as tags; search signals in V1.                               |
+| `consultation_type` | `text`        | YES      | —        | CHECK IN (`'in-person'`, `'virtual'`, `'both'`). Search filter in V1.                              |
+| `availability_note` | `text`        | YES      | —        | Free-text availability message shown near CTA.                                                     |
+| `cta_type`          | `text`        | NO       | `'book'` | CHECK IN (`'book'`, `'schedule'`, `'inquire'`, `'call'`, `'message'`, `'contact'`).                |
+| `cta_url`           | `text`        | YES      | —        | URL for CTA. Null for `'call'` type.                                                               |
+| `phone`             | `text`        | YES      | —        | Professional contact phone. PII.                                                                   |
+| `email`             | `text`        | YES      | —        | Professional contact email. PII. Distinct from auth email.                                         |
+| `website_url`       | `text`        | YES      | —        | Portfolio or personal site URL.                                                                    |
+| `social_instagram`  | `text`        | YES      | —        | Instagram profile URL.                                                                             |
+| `social_linkedin`   | `text`        | YES      | —        | LinkedIn profile URL.                                                                              |
+| `social_twitter`    | `text`        | YES      | —        | X (Twitter) profile URL.                                                                           |
+| `city_text`         | `text`        | YES      | —        | Practice city for display. Denormalized from `listings.city_id`.                                   |
+| `state`             | `text`        | YES      | —        | Two-letter state code.                                                                             |
+| `virtual_only`      | `boolean`     | NO       | `false`  | True if no in-person presence. When true, `listings.location_type` should be `'virtual-services'`. |
+| `video_embed_url`   | `text`        | YES      | —        | YouTube or Vimeo embed URL for intro/portfolio video. V1.                                          |
+| `created_at`        | `timestamptz` | NO       | `now()`  |                                                                                                    |
+| `updated_at`        | `timestamptz` | NO       | `now()`  | Auto-updated via trigger.                                                                          |
 
 ### Indexes
 
@@ -370,26 +371,26 @@ None — professional listings are owner-created at Beta launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. |
-| `bio` | `text` | YES | — | Artist/creative biography. Used in full-text search. |
-| `medium_genre` | `text[]` | YES | — | Array of mediums or genres. Displayed as tags; search signals in V1. |
-| `portfolio_statement` | `text` | YES | — | Brief statement about the body of work. Shown above portfolio gallery. |
-| `commission_status` | `text` | YES | — | CHECK IN (`'open'`, `'closed'`, `'by-request'`). Status chip near CTA. |
-| `cta_type` | `text` | NO | `'contact'` | CHECK IN (`'book'`, `'commission'`, `'inquire'`, `'contact'`, `'shop'`). |
-| `cta_url` | `text` | YES | — | URL for CTA. |
-| `phone` | `text` | YES | — | Contact phone. PII. |
-| `email` | `text` | YES | — | Contact email. PII. |
-| `website_url` | `text` | YES | — | Portfolio or personal site URL. |
-| `social_instagram` | `text` | YES | — | Instagram profile URL. Displayed prominently. |
-| `social_tiktok` | `text` | YES | — | TikTok profile URL. |
-| `social_youtube` | `text` | YES | — | YouTube channel URL. |
-| `social_twitter` | `text` | YES | — | X (Twitter) profile URL. |
-| `social_behance` | `text` | YES | — | Behance portfolio URL. Relevant for designers. |
-| `video_embed_url` | `text` | YES | — | YouTube or Vimeo embed URL for featured video. V1. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                 | Type          | Nullable | Default     | Notes                                                                    |
+| --------------------- | ------------- | -------- | ----------- | ------------------------------------------------------------------------ |
+| `listing_id`          | `uuid`        | NO       | —           | PK and FK → `listings(id)` ON DELETE CASCADE.                            |
+| `bio`                 | `text`        | YES      | —           | Artist/creative biography. Used in full-text search.                     |
+| `medium_genre`        | `text[]`      | YES      | —           | Array of mediums or genres. Displayed as tags; search signals in V1.     |
+| `portfolio_statement` | `text`        | YES      | —           | Brief statement about the body of work. Shown above portfolio gallery.   |
+| `commission_status`   | `text`        | YES      | —           | CHECK IN (`'open'`, `'closed'`, `'by-request'`). Status chip near CTA.   |
+| `cta_type`            | `text`        | NO       | `'contact'` | CHECK IN (`'book'`, `'commission'`, `'inquire'`, `'contact'`, `'shop'`). |
+| `cta_url`             | `text`        | YES      | —           | URL for CTA.                                                             |
+| `phone`               | `text`        | YES      | —           | Contact phone. PII.                                                      |
+| `email`               | `text`        | YES      | —           | Contact email. PII.                                                      |
+| `website_url`         | `text`        | YES      | —           | Portfolio or personal site URL.                                          |
+| `social_instagram`    | `text`        | YES      | —           | Instagram profile URL. Displayed prominently.                            |
+| `social_tiktok`       | `text`        | YES      | —           | TikTok profile URL.                                                      |
+| `social_youtube`      | `text`        | YES      | —           | YouTube channel URL.                                                     |
+| `social_twitter`      | `text`        | YES      | —           | X (Twitter) profile URL.                                                 |
+| `social_behance`      | `text`        | YES      | —           | Behance portfolio URL. Relevant for designers.                           |
+| `video_embed_url`     | `text`        | YES      | —           | YouTube or Vimeo embed URL for featured video. V1.                       |
+| `created_at`          | `timestamptz` | NO       | `now()`     |                                                                          |
+| `updated_at`          | `timestamptz` | NO       | `now()`     | Auto-updated via trigger.                                                |
 
 ### Indexes
 
@@ -421,31 +422,31 @@ None — creative listings are owner-created at Beta launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. |
-| `event_date` | `date` | NO | — | Primary event date (start date for multi-day). Required. |
-| `event_end_date` | `date` | YES | — | End date for multi-day events. Null for single-day. `listings.auto_archive_at` set to `event_end_date + 1 day` (or `event_date + 1 day` if null). |
-| `event_time` | `time` | YES | — | Start time. Null for all-day or TBD events. |
-| `event_end_time` | `time` | YES | — | End time. Null for open-ended or all-day events. |
-| `timezone` | `text` | NO | `'America/New_York'` | IANA timezone identifier. Required even when `event_time` is null. |
-| `location_type` | `text` | NO | `'in-person'` | CHECK IN (`'in-person'`, `'virtual'`, `'hybrid'`). Event-scoped — distinct from `listings.location_type`. |
-| `location_address` | `text` | YES | — | Full address string for in-person events. Null for virtual events. |
-| `location_city_text` | `text` | YES | — | Denormalized city name for display without JOIN. |
-| `venue_name` | `text` | YES | — | Venue name displayed above address. |
-| `description` | `text` | YES | — | Full event description. Used in full-text search. |
-| `ticket_url` | `text` | YES | — | External ticket purchase URL. Null for free or RSVP-only events. |
-| `rsvp_url` | `text` | YES | — | RSVP URL for free events. Null for ticketed events. |
-| `is_free` | `boolean` | NO | `false` | Whether event is free to attend. "Free" badge trigger; search filter in V1. |
-| `ticket_price_min` | `numeric(10,2)` | YES | — | Minimum ticket price in USD. Null if unknown or free. |
-| `ticket_price_max` | `numeric(10,2)` | YES | — | Maximum ticket price. Null for single-price or free events. |
-| `ticket_price_note` | `text` | YES | — | Free-text price note. Displayed when non-null; takes precedence over rendered range. |
-| `cta_type` | `text` | NO | `'get-tickets'` | CHECK IN (`'get-tickets'`, `'rsvp'`, `'register'`, `'learn-more'`). |
-| `cta_url` | `text` | YES | — | URL for CTA. Should match `ticket_url` or `rsvp_url` depending on `cta_type`. |
-| `organizer_listing_id` | `uuid` | YES | — | FK → `listings(id)` ON DELETE SET NULL. Optional "Presented by" attribution. |
-| `is_recurring` | `boolean` | NO | `false` | Placeholder field — recurring event management is V2. At Beta, recurring events are separate records. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                  | Type            | Nullable | Default              | Notes                                                                                                                                             |
+| ---------------------- | --------------- | -------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listing_id`           | `uuid`          | NO       | —                    | PK and FK → `listings(id)` ON DELETE CASCADE.                                                                                                     |
+| `event_date`           | `date`          | NO       | —                    | Primary event date (start date for multi-day). Required.                                                                                          |
+| `event_end_date`       | `date`          | YES      | —                    | End date for multi-day events. Null for single-day. `listings.auto_archive_at` set to `event_end_date + 1 day` (or `event_date + 1 day` if null). |
+| `event_time`           | `time`          | YES      | —                    | Start time. Null for all-day or TBD events.                                                                                                       |
+| `event_end_time`       | `time`          | YES      | —                    | End time. Null for open-ended or all-day events.                                                                                                  |
+| `timezone`             | `text`          | NO       | `'America/New_York'` | IANA timezone identifier. Required even when `event_time` is null.                                                                                |
+| `location_type`        | `text`          | NO       | `'in-person'`        | CHECK IN (`'in-person'`, `'virtual'`, `'hybrid'`). Event-scoped — distinct from `listings.location_type`.                                         |
+| `location_address`     | `text`          | YES      | —                    | Full address string for in-person events. Null for virtual events.                                                                                |
+| `location_city_text`   | `text`          | YES      | —                    | Denormalized city name for display without JOIN.                                                                                                  |
+| `venue_name`           | `text`          | YES      | —                    | Venue name displayed above address.                                                                                                               |
+| `description`          | `text`          | YES      | —                    | Full event description. Used in full-text search.                                                                                                 |
+| `ticket_url`           | `text`          | YES      | —                    | External ticket purchase URL. Null for free or RSVP-only events.                                                                                  |
+| `rsvp_url`             | `text`          | YES      | —                    | RSVP URL for free events. Null for ticketed events.                                                                                               |
+| `is_free`              | `boolean`       | NO       | `false`              | Whether event is free to attend. "Free" badge trigger; search filter in V1.                                                                       |
+| `ticket_price_min`     | `numeric(10,2)` | YES      | —                    | Minimum ticket price in USD. Null if unknown or free.                                                                                             |
+| `ticket_price_max`     | `numeric(10,2)` | YES      | —                    | Maximum ticket price. Null for single-price or free events.                                                                                       |
+| `ticket_price_note`    | `text`          | YES      | —                    | Free-text price note. Displayed when non-null; takes precedence over rendered range.                                                              |
+| `cta_type`             | `text`          | NO       | `'get-tickets'`      | CHECK IN (`'get-tickets'`, `'rsvp'`, `'register'`, `'learn-more'`).                                                                               |
+| `cta_url`              | `text`          | YES      | —                    | URL for CTA. Should match `ticket_url` or `rsvp_url` depending on `cta_type`.                                                                     |
+| `organizer_listing_id` | `uuid`          | YES      | —                    | FK → `listings(id)` ON DELETE SET NULL. Optional "Presented by" attribution.                                                                      |
+| `is_recurring`         | `boolean`       | NO       | `false`              | Placeholder field — recurring event management is V2. At Beta, recurring events are separate records.                                             |
+| `created_at`           | `timestamptz`   | NO       | `now()`              |                                                                                                                                                   |
+| `updated_at`           | `timestamptz`   | NO       | `now()`              | Auto-updated via trigger.                                                                                                                         |
 
 ### Indexes
 
@@ -480,28 +481,28 @@ None — event listings are owner-created at Beta launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. |
-| `role_title` | `text` | NO | — | Job title. Required. Displayed as Page headline. |
-| `employment_type` | `text` | YES | — | CHECK IN (`'full-time'`, `'part-time'`, `'contract'`, `'freelance'`, `'internship'`, `'volunteer'`). V1 filter. |
-| `location_type` | `text` | NO | `'in-person'` | CHECK IN (`'in-person'`, `'remote'`, `'hybrid'`). Prominent display on Page and search cards. |
-| `location_address` | `text` | YES | — | Work location address. Null for remote roles. |
-| `location_city_text` | `text` | YES | — | Denormalized city name. Null for fully remote. |
-| `location_state` | `text` | YES | — | State for display. Null for fully remote. |
-| `description` | `text` | YES | — | Full job description. Used in full-text search. |
-| `requirements` | `text` | YES | — | Requirements/qualifications section. May contain Markdown. |
-| `salary_range_min` | `numeric(10,2)` | YES | — | Minimum salary in USD. Null if undisclosed. |
-| `salary_range_max` | `numeric(10,2)` | YES | — | Maximum salary in USD. Null for single-rate or undisclosed. |
-| `salary_type` | `text` | YES | — | CHECK IN (`'annual'`, `'hourly'`, `'project'`). Labels salary range display. Null if undisclosed. |
-| `salary_visible` | `boolean` | NO | `true` | Whether to display salary on public Page. Salary fields may be set with `salary_visible = false` for internal record-keeping. |
-| `apply_url` | `text` | YES | — | External apply URL — ATS, email, or form. Null if no apply mechanism exists yet. |
-| `cta_type` | `text` | NO | `'apply'` | CHECK IN (`'apply'`, `'learn-more'`, `'contact'`). |
-| `cta_url` | `text` | YES | — | CTA URL. May differ from `apply_url` (e.g., landing page vs. ATS link). |
-| `deadline` | `date` | YES | — | Application deadline. When set, `listings.auto_expire_at` is set to `deadline + 1 day at midnight UTC`. |
-| `employer_listing_id` | `uuid` | YES | — | FK → `listings(id)` ON DELETE SET NULL. "Posted by [Business]" attribution. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                 | Type            | Nullable | Default       | Notes                                                                                                                         |
+| --------------------- | --------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `listing_id`          | `uuid`          | NO       | —             | PK and FK → `listings(id)` ON DELETE CASCADE.                                                                                 |
+| `role_title`          | `text`          | NO       | —             | Job title. Required. Displayed as Page headline.                                                                              |
+| `employment_type`     | `text`          | YES      | —             | CHECK IN (`'full-time'`, `'part-time'`, `'contract'`, `'freelance'`, `'internship'`, `'volunteer'`). V1 filter.               |
+| `location_type`       | `text`          | NO       | `'in-person'` | CHECK IN (`'in-person'`, `'remote'`, `'hybrid'`). Prominent display on Page and search cards.                                 |
+| `location_address`    | `text`          | YES      | —             | Work location address. Null for remote roles.                                                                                 |
+| `location_city_text`  | `text`          | YES      | —             | Denormalized city name. Null for fully remote.                                                                                |
+| `location_state`      | `text`          | YES      | —             | State for display. Null for fully remote.                                                                                     |
+| `description`         | `text`          | YES      | —             | Full job description. Used in full-text search.                                                                               |
+| `requirements`        | `text`          | YES      | —             | Requirements/qualifications section. May contain Markdown.                                                                    |
+| `salary_range_min`    | `numeric(10,2)` | YES      | —             | Minimum salary in USD. Null if undisclosed.                                                                                   |
+| `salary_range_max`    | `numeric(10,2)` | YES      | —             | Maximum salary in USD. Null for single-rate or undisclosed.                                                                   |
+| `salary_type`         | `text`          | YES      | —             | CHECK IN (`'annual'`, `'hourly'`, `'project'`). Labels salary range display. Null if undisclosed.                             |
+| `salary_visible`      | `boolean`       | NO       | `true`        | Whether to display salary on public Page. Salary fields may be set with `salary_visible = false` for internal record-keeping. |
+| `apply_url`           | `text`          | YES      | —             | External apply URL — ATS, email, or form. Null if no apply mechanism exists yet.                                              |
+| `cta_type`            | `text`          | NO       | `'apply'`     | CHECK IN (`'apply'`, `'learn-more'`, `'contact'`).                                                                            |
+| `cta_url`             | `text`          | YES      | —             | CTA URL. May differ from `apply_url` (e.g., landing page vs. ATS link).                                                       |
+| `deadline`            | `date`          | YES      | —             | Application deadline. When set, `listings.auto_expire_at` is set to `deadline + 1 day at midnight UTC`.                       |
+| `employer_listing_id` | `uuid`          | YES      | —             | FK → `listings(id)` ON DELETE SET NULL. "Posted by [Business]" attribution.                                                   |
+| `created_at`          | `timestamptz`   | NO       | `now()`       |                                                                                                                               |
+| `updated_at`          | `timestamptz`   | NO       | `now()`       | Auto-updated via trigger.                                                                                                     |
 
 ### Indexes
 
@@ -536,18 +537,18 @@ None — job listings are owner-created at Beta launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `listing_id` | `uuid` | NO | — | PK and FK → `listings(id)` ON DELETE CASCADE. |
-| `storefront_description` | `text` | YES | — | "What we sell" summary shown above the product grid. |
-| `shipping_info` | `text` | YES | — | Free-text shipping policy. Shown in storefront footer section. |
-| `return_policy` | `text` | YES | — | Free-text return and exchange policy. |
-| `stripe_connect_id` | `text` | YES | — | Stripe Connect account ID (e.g., `acct_1Ab...`). Server-side only. Never returned in client-facing responses. |
-| `stripe_connect_status` | `text` | NO | `'not-started'` | CHECK IN (`'not-started'`, `'pending'`, `'active'`, `'restricted'`). Synced via Stripe Connect webhooks. Controls whether storefront is "open". |
-| `cta_type` | `text` | NO | `'shop'` | CHECK IN (`'shop'`, `'browse'`, `'order'`, `'visit-store'`). |
-| `cta_url` | `text` | YES | — | CTA URL. May be null for in-platform storefronts (scrolls to section on same page). |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                    | Type          | Nullable | Default         | Notes                                                                                                                                           |
+| ------------------------ | ------------- | -------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listing_id`             | `uuid`        | NO       | —               | PK and FK → `listings(id)` ON DELETE CASCADE.                                                                                                   |
+| `storefront_description` | `text`        | YES      | —               | "What we sell" summary shown above the product grid.                                                                                            |
+| `shipping_info`          | `text`        | YES      | —               | Free-text shipping policy. Shown in storefront footer section.                                                                                  |
+| `return_policy`          | `text`        | YES      | —               | Free-text return and exchange policy.                                                                                                           |
+| `stripe_connect_id`      | `text`        | YES      | —               | Stripe Connect account ID (e.g., `acct_1Ab...`). Server-side only. Never returned in client-facing responses.                                   |
+| `stripe_connect_status`  | `text`        | NO       | `'not-started'` | CHECK IN (`'not-started'`, `'pending'`, `'active'`, `'restricted'`). Synced via Stripe Connect webhooks. Controls whether storefront is "open". |
+| `cta_type`               | `text`        | NO       | `'shop'`        | CHECK IN (`'shop'`, `'browse'`, `'order'`, `'visit-store'`).                                                                                    |
+| `cta_url`                | `text`        | YES      | —               | CTA URL. May be null for in-platform storefronts (scrolls to section on same page).                                                             |
+| `created_at`             | `timestamptz` | NO       | `now()`         |                                                                                                                                                 |
+| `updated_at`             | `timestamptz` | NO       | `now()`         | Auto-updated via trigger.                                                                                                                       |
 
 ### Indexes
 
@@ -585,22 +586,22 @@ Sub-tables store child records that belong to a parent listing but are not thems
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. Parent business or professional listing. |
-| `name` | `text` | NO | — | Service name. Displayed as item heading. |
-| `description` | `text` | YES | — | Short description of what the service includes. |
-| `price` | `numeric(10,2)` | YES | — | Price in USD. Null if owner uses `price_note` instead. V1 active. |
-| `price_type` | `text` | YES | — | CHECK IN (`'fixed'`, `'starting-at'`, `'hourly'`, `'custom'`, `'free'`). Labels price display. V1 active. |
-| `price_note` | `text` | YES | — | Free-text price note. Shown when `price_type = 'custom'` or for additional context. V1 active. |
-| `duration_minutes` | `integer` | YES | — | Estimated service duration in minutes. Shown as "~60 min". V1 active. |
-| `cta_type` | `text` | YES | — | CHECK IN (`'book'`, `'inquire'`, `'call'`, `'contact'`). Per-service CTA. Overrides parent listing CTA when set. V1 active. |
-| `cta_url` | `text` | YES | — | Per-service CTA URL. Null when `cta_type` is null. V1 active. |
-| `display_order` | `integer` | NO | `0` | Sort order for the services list. Owner can reorder via drag-and-drop. |
-| `is_visible` | `boolean` | NO | `true` | Whether service is shown on public Page. Allows temporary hiding without deletion. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field              | Type            | Nullable | Default             | Notes                                                                                                                       |
+| ------------------ | --------------- | -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | `uuid`          | NO       | `gen_random_uuid()` | PK                                                                                                                          |
+| `listing_id`       | `uuid`          | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE. Parent business or professional listing.                                             |
+| `name`             | `text`          | NO       | —                   | Service name. Displayed as item heading.                                                                                    |
+| `description`      | `text`          | YES      | —                   | Short description of what the service includes.                                                                             |
+| `price`            | `numeric(10,2)` | YES      | —                   | Price in USD. Null if owner uses `price_note` instead. V1 active.                                                           |
+| `price_type`       | `text`          | YES      | —                   | CHECK IN (`'fixed'`, `'starting-at'`, `'hourly'`, `'custom'`, `'free'`). Labels price display. V1 active.                   |
+| `price_note`       | `text`          | YES      | —                   | Free-text price note. Shown when `price_type = 'custom'` or for additional context. V1 active.                              |
+| `duration_minutes` | `integer`       | YES      | —                   | Estimated service duration in minutes. Shown as "~60 min". V1 active.                                                       |
+| `cta_type`         | `text`          | YES      | —                   | CHECK IN (`'book'`, `'inquire'`, `'call'`, `'contact'`). Per-service CTA. Overrides parent listing CTA when set. V1 active. |
+| `cta_url`          | `text`          | YES      | —                   | Per-service CTA URL. Null when `cta_type` is null. V1 active.                                                               |
+| `display_order`    | `integer`       | NO       | `0`                 | Sort order for the services list. Owner can reorder via drag-and-drop.                                                      |
+| `is_visible`       | `boolean`       | NO       | `true`              | Whether service is shown on public Page. Allows temporary hiding without deletion.                                          |
+| `created_at`       | `timestamptz`   | NO       | `now()`             |                                                                                                                             |
+| `updated_at`       | `timestamptz`   | NO       | `now()`             | Auto-updated via trigger.                                                                                                   |
 
 ### Indexes
 
@@ -634,31 +635,31 @@ None — services are owner-created.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `vendor_listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. Vendor parent. |
-| `name` | `text` | NO | — | Product name. Displayed on product cards and detail page. |
-| `slug` | `text` | NO | — | URL-safe identifier. Auto-generated from vendor slug + product name. UNIQUE. |
-| `description` | `text` | YES | — | Full product description. |
-| `price` | `numeric(10,2)` | NO | — | Current sale price in USD. Required. |
-| `compare_at_price` | `numeric(10,2)` | YES | — | Original/strikethrough price. Must be greater than `price` when set. |
-| `currency` | `text` | NO | `'USD'` | ISO 4217 currency code. USD only at V2. |
-| `sku` | `text` | YES | — | Vendor-assigned SKU. Not unique at platform level. |
-| `inventory_count` | `integer` | YES | — | Current inventory. Null = unlimited. Zero = out of stock. Must be ≥ 0 when non-null. |
-| `track_inventory` | `boolean` | NO | `false` | Whether `inventory_count` is being tracked. When false, product is always shown as available. |
-| `is_digital` | `boolean` | NO | `false` | Whether product is digital (ebook, download). No shipping when true. |
-| `status` | `text` | NO | `'draft'` | CHECK IN (`'active'`, `'draft'`, `'archived'`). `draft` = not visible on storefront. |
-| `weight_oz` | `numeric` | YES | — | Product weight in ounces for shipping calculation. Null for digital products. |
-| `categories` | `text[]` | YES | — | Product category tags. Free text array for storefront filtering. |
-| `tags` | `text[]` | YES | — | Discovery tags. Free text array. |
-| `cover_image_path` | `text` | YES | — | Primary product image. Storage path in `listing-media` bucket. |
-| `variants` | `jsonb` | YES | — | Variant configuration. Shape: `[{name: "Size", options: ["S","M","L"]}, ...]`. Null for simple products. |
-| `stripe_product_id` | `text` | YES | — | Stripe Product ID. Set when product goes active. Server-side only. |
-| `stripe_price_id` | `text` | YES | — | Stripe Price ID. Must be recreated when `price` or `currency` changes. Server-side only. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
-| `deleted_at` | `timestamptz` | YES | — | Soft delete. Preserved for order history reference. |
+| Field               | Type            | Nullable | Default             | Notes                                                                                                    |
+| ------------------- | --------------- | -------- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `id`                | `uuid`          | NO       | `gen_random_uuid()` | PK                                                                                                       |
+| `vendor_listing_id` | `uuid`          | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE. Vendor parent.                                                    |
+| `name`              | `text`          | NO       | —                   | Product name. Displayed on product cards and detail page.                                                |
+| `slug`              | `text`          | NO       | —                   | URL-safe identifier. Auto-generated from vendor slug + product name. UNIQUE.                             |
+| `description`       | `text`          | YES      | —                   | Full product description.                                                                                |
+| `price`             | `numeric(10,2)` | NO       | —                   | Current sale price in USD. Required.                                                                     |
+| `compare_at_price`  | `numeric(10,2)` | YES      | —                   | Original/strikethrough price. Must be greater than `price` when set.                                     |
+| `currency`          | `text`          | NO       | `'USD'`             | ISO 4217 currency code. USD only at V2.                                                                  |
+| `sku`               | `text`          | YES      | —                   | Vendor-assigned SKU. Not unique at platform level.                                                       |
+| `inventory_count`   | `integer`       | YES      | —                   | Current inventory. Null = unlimited. Zero = out of stock. Must be ≥ 0 when non-null.                     |
+| `track_inventory`   | `boolean`       | NO       | `false`             | Whether `inventory_count` is being tracked. When false, product is always shown as available.            |
+| `is_digital`        | `boolean`       | NO       | `false`             | Whether product is digital (ebook, download). No shipping when true.                                     |
+| `status`            | `text`          | NO       | `'draft'`           | CHECK IN (`'active'`, `'draft'`, `'archived'`). `draft` = not visible on storefront.                     |
+| `weight_oz`         | `numeric`       | YES      | —                   | Product weight in ounces for shipping calculation. Null for digital products.                            |
+| `categories`        | `text[]`        | YES      | —                   | Product category tags. Free text array for storefront filtering.                                         |
+| `tags`              | `text[]`        | YES      | —                   | Discovery tags. Free text array.                                                                         |
+| `cover_image_path`  | `text`          | YES      | —                   | Primary product image. Storage path in `listing-media` bucket.                                           |
+| `variants`          | `jsonb`         | YES      | —                   | Variant configuration. Shape: `[{name: "Size", options: ["S","M","L"]}, ...]`. Null for simple products. |
+| `stripe_product_id` | `text`          | YES      | —                   | Stripe Product ID. Set when product goes active. Server-side only.                                       |
+| `stripe_price_id`   | `text`          | YES      | —                   | Stripe Price ID. Must be recreated when `price` or `currency` changes. Server-side only.                 |
+| `created_at`        | `timestamptz`   | NO       | `now()`             |                                                                                                          |
+| `updated_at`        | `timestamptz`   | NO       | `now()`             | Auto-updated via trigger.                                                                                |
+| `deleted_at`        | `timestamptz`   | YES      | —                   | Soft delete. Preserved for order history reference.                                                      |
 
 ### Indexes
 
@@ -694,18 +695,18 @@ None — products are owner-created at V2 launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `product_id` | `uuid` | NO | — | FK → `products(id)` ON DELETE CASCADE. |
-| `name` | `text` | NO | — | Variant display name ("Small / Black", "M / Red"). |
-| `options` | `jsonb` | NO | — | Key-value pairs for this variant. Shape: `{"color": "red", "size": "M"}`. |
-| `price_delta` | `numeric(10,2)` | NO | `0` | Price adjustment relative to parent product price. Negative values allowed for discounted variants. |
-| `inventory_count` | `integer` | YES | — | Variant-level inventory. Null = inherits parent tracking. Zero = out of stock for this variant. |
-| `sku` | `text` | YES | — | Variant-level SKU. |
-| `is_active` | `boolean` | NO | `true` | Whether this variant is purchasable. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field             | Type            | Nullable | Default             | Notes                                                                                               |
+| ----------------- | --------------- | -------- | ------------------- | --------------------------------------------------------------------------------------------------- |
+| `id`              | `uuid`          | NO       | `gen_random_uuid()` | PK                                                                                                  |
+| `product_id`      | `uuid`          | NO       | —                   | FK → `products(id)` ON DELETE CASCADE.                                                              |
+| `name`            | `text`          | NO       | —                   | Variant display name ("Small / Black", "M / Red").                                                  |
+| `options`         | `jsonb`         | NO       | —                   | Key-value pairs for this variant. Shape: `{"color": "red", "size": "M"}`.                           |
+| `price_delta`     | `numeric(10,2)` | NO       | `0`                 | Price adjustment relative to parent product price. Negative values allowed for discounted variants. |
+| `inventory_count` | `integer`       | YES      | —                   | Variant-level inventory. Null = inherits parent tracking. Zero = out of stock for this variant.     |
+| `sku`             | `text`          | YES      | —                   | Variant-level SKU.                                                                                  |
+| `is_active`       | `boolean`       | NO       | `true`              | Whether this variant is purchasable.                                                                |
+| `created_at`      | `timestamptz`   | NO       | `now()`             |                                                                                                     |
+| `updated_at`      | `timestamptz`   | NO       | `now()`             | Auto-updated via trigger.                                                                           |
 
 ### Indexes
 
@@ -738,17 +739,17 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `day_of_week` | `integer` | NO | — | CHECK (day_of_week BETWEEN 0 AND 6). 0 = Sunday, 6 = Saturday. |
-| `open_time` | `time` | YES | — | Opening time. Null when `is_closed = true`. |
-| `close_time` | `time` | YES | — | Closing time. Null when `is_closed = true`. |
-| `is_closed` | `boolean` | NO | `false` | True when business is closed on this day. When true, `open_time` and `close_time` should be null. |
-| `notes` | `text` | YES | — | Supplemental note for this specific day ("Closes early on holidays"). |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field         | Type          | Nullable | Default             | Notes                                                                                             |
+| ------------- | ------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------- |
+| `id`          | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                |
+| `listing_id`  | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                            |
+| `day_of_week` | `integer`     | NO       | —                   | CHECK (day_of_week BETWEEN 0 AND 6). 0 = Sunday, 6 = Saturday.                                    |
+| `open_time`   | `time`        | YES      | —                   | Opening time. Null when `is_closed = true`.                                                       |
+| `close_time`  | `time`        | YES      | —                   | Closing time. Null when `is_closed = true`.                                                       |
+| `is_closed`   | `boolean`     | NO       | `false`             | True when business is closed on this day. When true, `open_time` and `close_time` should be null. |
+| `notes`       | `text`        | YES      | —                   | Supplemental note for this specific day ("Closes early on holidays").                             |
+| `created_at`  | `timestamptz` | NO       | `now()`             |                                                                                                   |
+| `updated_at`  | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                         |
 
 ### Indexes
 
@@ -781,15 +782,15 @@ None — owner-populated.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `platform` | `text` | NO | — | CHECK IN (`'instagram'`, `'facebook'`, `'twitter'`, `'tiktok'`, `'youtube'`, `'linkedin'`, `'pinterest'`, `'website'`, `'booking'`, `'shop'`, `'other'`). |
-| `url` | `text` | NO | — | Full URL for this link. Must start with `https://` — validated at application layer. |
-| `display_order` | `integer` | NO | `0` | Sort order within this listing's link set. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field           | Type          | Nullable | Default             | Notes                                                                                                                                                     |
+| --------------- | ------------- | -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                                        |
+| `listing_id`    | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                                                                                    |
+| `platform`      | `text`        | NO       | —                   | CHECK IN (`'instagram'`, `'facebook'`, `'twitter'`, `'tiktok'`, `'youtube'`, `'linkedin'`, `'pinterest'`, `'website'`, `'booking'`, `'shop'`, `'other'`). |
+| `url`           | `text`        | NO       | —                   | Full URL for this link. Must start with `https://` — validated at application layer.                                                                      |
+| `display_order` | `integer`     | NO       | `0`                 | Sort order within this listing's link set.                                                                                                                |
+| `created_at`    | `timestamptz` | NO       | `now()`             |                                                                                                                                                           |
+| `updated_at`    | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                                                                 |
 
 ### Indexes
 
@@ -822,18 +823,18 @@ None — owner-populated.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `cta_type` | `text` | NO | — | CHECK IN (`'book'`, `'order'`, `'call'`, `'message'`, `'visit'`, `'get-quote'`, `'shop'`, `'subscribe'`, `'contact'`, `'commission'`, `'inquire'`, `'get-tickets'`, `'rsvp'`, `'register'`, `'learn-more'`, `'apply'`, `'buy-now'`, `'book-service'`). Full catalog from Section 5 of entity-content-model.md. |
-| `cta_url` | `text` | YES | — | URL for this CTA. Null for `'call'` type. |
-| `cta_label` | `text` | NO | — | Display label. Overrides default catalog label. |
-| `display_order` | `integer` | NO | `0` | Sort order among this listing's CTAs. |
-| `section_context` | `text` | YES | — | Which section of the Page this CTA appears in. Null = global. |
-| `is_active` | `boolean` | NO | `true` | Whether CTA is currently shown. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field             | Type          | Nullable | Default             | Notes                                                                                                                                                                                                                                                                                                          |
+| ----------------- | ------------- | -------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`              | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                                                                                                                                                                                             |
+| `listing_id`      | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                                                                                                                                                                                                                                         |
+| `cta_type`        | `text`        | NO       | —                   | CHECK IN (`'book'`, `'order'`, `'call'`, `'message'`, `'visit'`, `'get-quote'`, `'shop'`, `'subscribe'`, `'contact'`, `'commission'`, `'inquire'`, `'get-tickets'`, `'rsvp'`, `'register'`, `'learn-more'`, `'apply'`, `'buy-now'`, `'book-service'`). Full catalog from Section 5 of entity-content-model.md. |
+| `cta_url`         | `text`        | YES      | —                   | URL for this CTA. Null for `'call'` type.                                                                                                                                                                                                                                                                      |
+| `cta_label`       | `text`        | NO       | —                   | Display label. Overrides default catalog label.                                                                                                                                                                                                                                                                |
+| `display_order`   | `integer`     | NO       | `0`                 | Sort order among this listing's CTAs.                                                                                                                                                                                                                                                                          |
+| `section_context` | `text`        | YES      | —                   | Which section of the Page this CTA appears in. Null = global.                                                                                                                                                                                                                                                  |
+| `is_active`       | `boolean`     | NO       | `true`              | Whether CTA is currently shown.                                                                                                                                                                                                                                                                                |
+| `created_at`      | `timestamptz` | NO       | `now()`             |                                                                                                                                                                                                                                                                                                                |
+| `updated_at`      | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                                                                                                                                                                                                                      |
 
 ### Indexes
 
@@ -866,12 +867,12 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `tag_id` | `uuid` | NO | — | FK → `tags(id)` ON DELETE CASCADE. |
-| `created_at` | `timestamptz` | NO | `now()` | When the tag was applied to this listing. |
+| Field        | Type          | Nullable | Default             | Notes                                     |
+| ------------ | ------------- | -------- | ------------------- | ----------------------------------------- |
+| `id`         | `uuid`        | NO       | `gen_random_uuid()` | PK                                        |
+| `listing_id` | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.    |
+| `tag_id`     | `uuid`        | NO       | —                   | FK → `tags(id)` ON DELETE CASCADE.        |
+| `created_at` | `timestamptz` | NO       | `now()`             | When the tag was applied to this listing. |
 
 ### Indexes
 
@@ -906,14 +907,14 @@ None — owner-applied or admin-curated at Beta.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `area_type` | `text` | NO | — | CHECK IN (`'city'`, `'state'`, `'metro'`, `'radius'`, `'national'`, `'international'`). |
-| `area_value` | `text` | NO | — | Human-readable area identifier: city slug, state code ("GA"), metro name ("Atlanta Metro"), or country code. |
-| `radius_miles` | `integer` | YES | — | Radius in miles from listing location. Only applicable when `area_type = 'radius'`. |
-| `created_at` | `timestamptz` | NO | `now()` | |
+| Field          | Type          | Nullable | Default             | Notes                                                                                                        |
+| -------------- | ------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `id`           | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                           |
+| `listing_id`   | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                                       |
+| `area_type`    | `text`        | NO       | —                   | CHECK IN (`'city'`, `'state'`, `'metro'`, `'radius'`, `'national'`, `'international'`).                      |
+| `area_value`   | `text`        | NO       | —                   | Human-readable area identifier: city slug, state code ("GA"), metro name ("Atlanta Metro"), or country code. |
+| `radius_miles` | `integer`     | YES      | —                   | Radius in miles from listing location. Only applicable when `area_type = 'radius'`.                          |
+| `created_at`   | `timestamptz` | NO       | `now()`             |                                                                                                              |
 
 ### Indexes
 
@@ -947,22 +948,22 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `entity_type` | `text` | NO | — | CHECK IN (`'listing'`, `'product'`, `'review'`, `'user'`). `'product'` added at V2 migration. |
-| `entity_id` | `uuid` | NO | — | ID of the parent entity. Not a formal FK (polymorphic) — enforced at application layer. |
-| `file_path` | `text` | NO | — | Supabase Storage path in the `listing-media` bucket. Never store a CDN URL — generate at read time. |
-| `file_type` | `text` | NO | — | MIME type: `image/jpeg`, `image/png`, `image/webp`. Validated server-side before upload. |
-| `file_size_bytes` | `integer` | NO | — | File size in bytes. Used for tier-based storage tracking. |
-| `width` | `integer` | YES | — | Image width in pixels. Set by upload handler after processing. |
-| `height` | `integer` | YES | — | Image height in pixels. Set by upload handler after processing. |
-| `alt_text` | `text` | YES | — | Owner-supplied alt text. Falls back to generated alt from listing name and position if null. |
-| `display_order` | `integer` | NO | `0` | Sort order within the gallery for this entity. Owner can reorder. |
-| `is_portfolio_primary` | `boolean` | NO | `false` | For Creative entities: marks which image is featured at top of portfolio gallery. At most one per listing. |
-| `is_approved` | `boolean` | NO | `true` | Admin can set false to hide a media item flagged as inappropriate. True by default. |
-| `uploaded_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Who uploaded this file. |
-| `created_at` | `timestamptz` | NO | `now()` | Upload timestamp. |
+| Field                  | Type          | Nullable | Default             | Notes                                                                                                      |
+| ---------------------- | ------------- | -------- | ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `id`                   | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                         |
+| `entity_type`          | `text`        | NO       | —                   | CHECK IN (`'listing'`, `'product'`, `'review'`, `'user'`). `'product'` added at V2 migration.              |
+| `entity_id`            | `uuid`        | NO       | —                   | ID of the parent entity. Not a formal FK (polymorphic) — enforced at application layer.                    |
+| `file_path`            | `text`        | NO       | —                   | Supabase Storage path in the `listing-media` bucket. Never store a CDN URL — generate at read time.        |
+| `file_type`            | `text`        | NO       | —                   | MIME type: `image/jpeg`, `image/png`, `image/webp`. Validated server-side before upload.                   |
+| `file_size_bytes`      | `integer`     | NO       | —                   | File size in bytes. Used for tier-based storage tracking.                                                  |
+| `width`                | `integer`     | YES      | —                   | Image width in pixels. Set by upload handler after processing.                                             |
+| `height`               | `integer`     | YES      | —                   | Image height in pixels. Set by upload handler after processing.                                            |
+| `alt_text`             | `text`        | YES      | —                   | Owner-supplied alt text. Falls back to generated alt from listing name and position if null.               |
+| `display_order`        | `integer`     | NO       | `0`                 | Sort order within the gallery for this entity. Owner can reorder.                                          |
+| `is_portfolio_primary` | `boolean`     | NO       | `false`             | For Creative entities: marks which image is featured at top of portfolio gallery. At most one per listing. |
+| `is_approved`          | `boolean`     | NO       | `true`              | Admin can set false to hide a media item flagged as inappropriate. True by default.                        |
+| `uploaded_by`          | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Who uploaded this file.                                          |
+| `created_at`           | `timestamptz` | NO       | `now()`             | Upload timestamp.                                                                                          |
 
 ### Indexes
 
@@ -1003,18 +1004,18 @@ Discovery tables form the taxonomy and geographic scaffolding for the platform. 
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `name` | `text` | NO | — | Display name ("Food & Beverage", "Health & Wellness"). |
-| `slug` | `text` | NO | — | URL-safe identifier ("food-beverage", "health-wellness"). UNIQUE. Used in category landing page URLs. |
-| `parent_id` | `uuid` | YES | — | FK → `categories(id)` ON DELETE SET NULL. Null for top-level categories. |
-| `description` | `text` | YES | — | Optional description shown on category landing pages. |
-| `icon` | `text` | YES | — | Icon identifier or SVG path. Used in category filter UI. |
-| `display_order` | `integer` | NO | `0` | Sort order within the category level (top-level or within a parent). |
-| `is_active` | `boolean` | NO | `true` | Whether this category is displayed to users and available for selection. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field           | Type          | Nullable | Default             | Notes                                                                                                 |
+| --------------- | ------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`            | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                    |
+| `name`          | `text`        | NO       | —                   | Display name ("Food & Beverage", "Health & Wellness").                                                |
+| `slug`          | `text`        | NO       | —                   | URL-safe identifier ("food-beverage", "health-wellness"). UNIQUE. Used in category landing page URLs. |
+| `parent_id`     | `uuid`        | YES      | —                   | FK → `categories(id)` ON DELETE SET NULL. Null for top-level categories.                              |
+| `description`   | `text`        | YES      | —                   | Optional description shown on category landing pages.                                                 |
+| `icon`          | `text`        | YES      | —                   | Icon identifier or SVG path. Used in category filter UI.                                              |
+| `display_order` | `integer`     | NO       | `0`                 | Sort order within the category level (top-level or within a parent).                                  |
+| `is_active`     | `boolean`     | NO       | `true`              | Whether this category is displayed to users and available for selection.                              |
+| `created_at`    | `timestamptz` | NO       | `now()`             |                                                                                                       |
+| `updated_at`    | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                             |
 
 ### Indexes
 
@@ -1049,20 +1050,20 @@ Required — the full category taxonomy must be seeded before any listings can b
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `name` | `text` | NO | — | City display name ("Atlanta", "Houston"). |
-| `slug` | `text` | NO | — | URL-safe identifier ("atlanta", "houston"). UNIQUE. Used in city landing page URLs. |
-| `state_id` | `uuid` | NO | — | FK → `states(id)` ON DELETE RESTRICT. |
-| `metro_area` | `text` | YES | — | Metro area name for grouping ("Atlanta Metro", "Greater Houston"). Optional. |
-| `latitude` | `numeric(10,6)` | NO | — | City center latitude. Used for geo proximity queries at V2. |
-| `longitude` | `numeric(10,6)` | NO | — | City center longitude. |
-| `population` | `integer` | YES | — | City population (approximate). Used for internal prioritization, not displayed. |
-| `is_active` | `boolean` | NO | `false` | Whether the city is live on the platform. False until manually activated for launch. |
-| `launch_phase` | `text` | NO | `'later'` | CHECK IN (`'launch'`, `'v1'`, `'v2'`, `'later'`). Planned rollout phase for this city. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field          | Type            | Nullable | Default             | Notes                                                                                  |
+| -------------- | --------------- | -------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `id`           | `uuid`          | NO       | `gen_random_uuid()` | PK                                                                                     |
+| `name`         | `text`          | NO       | —                   | City display name ("Atlanta", "Houston").                                              |
+| `slug`         | `text`          | NO       | —                   | URL-safe identifier ("atlanta", "houston"). UNIQUE. Used in city landing page URLs.    |
+| `state_id`     | `uuid`          | NO       | —                   | FK → `states(id)` ON DELETE RESTRICT.                                                  |
+| `metro_area`   | `text`          | YES      | —                   | Metro area name for grouping ("Atlanta Metro", "Greater Houston"). Optional.           |
+| `latitude`     | `numeric(10,6)` | NO       | —                   | City center latitude. Used for geo proximity queries at V2.                            |
+| `longitude`    | `numeric(10,6)` | NO       | —                   | City center longitude.                                                                 |
+| `population`   | `integer`       | YES      | —                   | City population (approximate). Used for internal prioritization, not displayed.        |
+| `is_active`    | `boolean`       | NO       | `false`             | Whether the city is live on the platform. False until manually activated for launch.   |
+| `launch_phase` | `text`          | NO       | `'later'`           | CHECK IN (`'launch'`, `'v1'`, `'v2'`, `'later'`). Planned rollout phase for this city. |
+| `created_at`   | `timestamptz`   | NO       | `now()`             |                                                                                        |
+| `updated_at`   | `timestamptz`   | NO       | `now()`             | Auto-updated via trigger.                                                              |
 
 ### Indexes
 
@@ -1097,13 +1098,13 @@ Required — all planned launch cities and future markets must be seeded. Listin
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `name` | `text` | NO | — | Full state name ("Georgia", "Texas"). |
-| `code` | `text` | NO | — | Two-character state code ("GA", "TX"). UNIQUE. |
-| `country` | `text` | NO | `'US'` | Country code. US-only at MVP. |
-| `created_at` | `timestamptz` | NO | `now()` | |
+| Field        | Type          | Nullable | Default             | Notes                                          |
+| ------------ | ------------- | -------- | ------------------- | ---------------------------------------------- |
+| `id`         | `uuid`        | NO       | `gen_random_uuid()` | PK                                             |
+| `name`       | `text`        | NO       | —                   | Full state name ("Georgia", "Texas").          |
+| `code`       | `text`        | NO       | —                   | Two-character state code ("GA", "TX"). UNIQUE. |
+| `country`    | `text`        | NO       | `'US'`              | Country code. US-only at MVP.                  |
+| `created_at` | `timestamptz` | NO       | `now()`             |                                                |
 
 ### Indexes
 
@@ -1136,14 +1137,14 @@ Required — all 50 US states seeded before cities can be seeded.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `name` | `text` | NO | — | Neighborhood display name ("Old Fourth Ward", "Midtown"). |
-| `slug` | `text` | NO | — | URL-safe identifier. UNIQUE within a city but not platform-wide. |
-| `city_id` | `uuid` | NO | — | FK → `cities(id)` ON DELETE CASCADE. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field        | Type          | Nullable | Default             | Notes                                                            |
+| ------------ | ------------- | -------- | ------------------- | ---------------------------------------------------------------- |
+| `id`         | `uuid`        | NO       | `gen_random_uuid()` | PK                                                               |
+| `name`       | `text`        | NO       | —                   | Neighborhood display name ("Old Fourth Ward", "Midtown").        |
+| `slug`       | `text`        | NO       | —                   | URL-safe identifier. UNIQUE within a city but not platform-wide. |
+| `city_id`    | `uuid`        | NO       | —                   | FK → `cities(id)` ON DELETE CASCADE.                             |
+| `created_at` | `timestamptz` | NO       | `now()`             |                                                                  |
+| `updated_at` | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                        |
 
 ### Indexes
 
@@ -1177,16 +1178,16 @@ Optional — neighborhood data seeded for launch cities at Beta. Can be added in
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `name` | `text` | NO | — | Tag display name ("Black-Owned", "Vegan", "LGBTQ+ Friendly"). |
-| `slug` | `text` | NO | — | URL-safe identifier. UNIQUE. |
-| `category_id` | `uuid` | YES | — | FK → `categories(id)` ON DELETE SET NULL. Optional category association for organization. |
-| `usage_count` | `integer` | NO | `0` | Denormalized count of active listing associations. Updated by trigger on `listing_tags` INSERT/DELETE. |
-| `is_active` | `boolean` | NO | `true` | Whether tag is available for use. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field         | Type          | Nullable | Default             | Notes                                                                                                  |
+| ------------- | ------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
+| `id`          | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                     |
+| `name`        | `text`        | NO       | —                   | Tag display name ("Black-Owned", "Vegan", "LGBTQ+ Friendly").                                          |
+| `slug`        | `text`        | NO       | —                   | URL-safe identifier. UNIQUE.                                                                           |
+| `category_id` | `uuid`        | YES      | —                   | FK → `categories(id)` ON DELETE SET NULL. Optional category association for organization.              |
+| `usage_count` | `integer`     | NO       | `0`                 | Denormalized count of active listing associations. Updated by trigger on `listing_tags` INSERT/DELETE. |
+| `is_active`   | `boolean`     | NO       | `true`              | Whether tag is available for use.                                                                      |
+| `created_at`  | `timestamptz` | NO       | `now()`             |                                                                                                        |
+| `updated_at`  | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                              |
 
 ### Indexes
 
@@ -1221,12 +1222,12 @@ Optional — a curated set of initial tags should be seeded at Beta launch.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `user_id` | `uuid` | NO | — | FK → `auth.users(id)` ON DELETE CASCADE. The user who saved the listing. |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. The saved listing. |
-| `created_at` | `timestamptz` | NO | `now()` | When the save was created. |
+| Field        | Type          | Nullable | Default             | Notes                                                                    |
+| ------------ | ------------- | -------- | ------------------- | ------------------------------------------------------------------------ |
+| `id`         | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                       |
+| `user_id`    | `uuid`        | NO       | —                   | FK → `auth.users(id)` ON DELETE CASCADE. The user who saved the listing. |
+| `listing_id` | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE. The saved listing.                |
+| `created_at` | `timestamptz` | NO       | `now()`             | When the save was created.                                               |
 
 ### Indexes
 
@@ -1268,20 +1269,20 @@ Community engagement tables manage user-contributed trust signals: ownership cla
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. The listing being claimed. |
-| `claimant_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. The user submitting the claim. SET NULL on user delete preserves the claim record for audit. |
-| `status` | `text` | NO | `'pending'` | CHECK IN (`'pending'`, `'under_review'`, `'approved'`, `'rejected'`, `'withdrawn'`). Transitions enforced at service layer. |
-| `submitted_at` | `timestamptz` | NO | `now()` | When the claim was submitted. |
-| `reviewed_at` | `timestamptz` | YES | — | When an admin made a decision. Null until decision. |
-| `reviewed_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed the claim. |
-| `rejection_reason` | `text` | YES | — | Admin-written reason for rejection. Shown to claimant. |
-| `verification_doc_paths` | `text[]` | YES | — | Array of Storage paths for supporting documents. Stored in `verification-docs` bucket. |
-| `notes` | `text` | YES | — | Internal admin notes on this claim. Not shown to claimant. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                    | Type          | Nullable | Default             | Notes                                                                                                                                  |
+| ------------------------ | ------------- | -------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                     |
+| `listing_id`             | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE. The listing being claimed.                                                                      |
+| `claimant_user_id`       | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. The user submitting the claim. SET NULL on user delete preserves the claim record for audit. |
+| `status`                 | `text`        | NO       | `'pending'`         | CHECK IN (`'pending'`, `'under_review'`, `'approved'`, `'rejected'`, `'withdrawn'`). Transitions enforced at service layer.            |
+| `submitted_at`           | `timestamptz` | NO       | `now()`             | When the claim was submitted.                                                                                                          |
+| `reviewed_at`            | `timestamptz` | YES      | —                   | When an admin made a decision. Null until decision.                                                                                    |
+| `reviewed_by`            | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed the claim.                                                                |
+| `rejection_reason`       | `text`        | YES      | —                   | Admin-written reason for rejection. Shown to claimant.                                                                                 |
+| `verification_doc_paths` | `text[]`      | YES      | —                   | Array of Storage paths for supporting documents. Stored in `verification-docs` bucket.                                                 |
+| `notes`                  | `text`        | YES      | —                   | Internal admin notes on this claim. Not shown to claimant.                                                                             |
+| `created_at`             | `timestamptz` | NO       | `now()`             |                                                                                                                                        |
+| `updated_at`             | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                                              |
 
 ### Indexes
 
@@ -1318,20 +1319,20 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `submitter_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. User who submitted the correction. |
-| `field_name` | `text` | NO | — | The field being corrected ("phone", "address_line_1", "website_url"). |
-| `current_value` | `text` | YES | — | The current (incorrect) value as the submitter sees it. Null if the field is empty but should have a value. |
-| `suggested_value` | `text` | NO | — | The correct value the submitter is suggesting. |
-| `reason` | `text` | YES | — | Optional explanation of why the current value is wrong. |
-| `status` | `text` | NO | `'pending'` | CHECK IN (`'pending'`, `'approved'`, `'rejected'`). Transitions managed at service layer. |
-| `reviewed_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed. |
-| `reviewed_at` | `timestamptz` | YES | — | When the admin made a decision. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field               | Type          | Nullable | Default             | Notes                                                                                                       |
+| ------------------- | ------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`                | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                          |
+| `listing_id`        | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                                      |
+| `submitter_user_id` | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. User who submitted the correction.                                |
+| `field_name`        | `text`        | NO       | —                   | The field being corrected ("phone", "address_line_1", "website_url").                                       |
+| `current_value`     | `text`        | YES      | —                   | The current (incorrect) value as the submitter sees it. Null if the field is empty but should have a value. |
+| `suggested_value`   | `text`        | NO       | —                   | The correct value the submitter is suggesting.                                                              |
+| `reason`            | `text`        | YES      | —                   | Optional explanation of why the current value is wrong.                                                     |
+| `status`            | `text`        | NO       | `'pending'`         | CHECK IN (`'pending'`, `'approved'`, `'rejected'`). Transitions managed at service layer.                   |
+| `reviewed_by`       | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed.                                               |
+| `reviewed_at`       | `timestamptz` | YES      | —                   | When the admin made a decision.                                                                             |
+| `created_at`        | `timestamptz` | NO       | `now()`             |                                                                                                             |
+| `updated_at`        | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                   |
 
 ### Indexes
 
@@ -1368,23 +1369,23 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. |
-| `reviewer_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. SET NULL on user delete; review remains if published. |
-| `rating` | `integer` | NO | — | CHECK (rating BETWEEN 1 AND 5). Star rating. |
-| `title` | `text` | YES | — | Optional review headline. |
-| `body` | `text` | YES | — | Review text. Optional but strongly encouraged. |
-| `status` | `text` | NO | `'intake'` | CHECK IN (`'intake'`, `'pending_approval'`, `'published'`, `'rejected'`, `'removed'`). `'intake'` = stored but not yet in review queue; `'pending_approval'` = in admin review queue (V1); `'published'` = live; `'rejected'` = not approved; `'removed'` = admin removed post-approval. |
-| `visit_date` | `date` | YES | — | Date the reviewer visited or interacted with the business. Optional. |
-| `is_verified_purchase` | `boolean` | NO | `false` | True for reviews associated with a marketplace transaction (V2). |
-| `reviewed_by` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Admin who moderated this review. |
-| `reviewed_at` | `timestamptz` | YES | — | When moderation decision was made. |
-| `published_at` | `timestamptz` | YES | — | When status transitioned to `'published'`. |
-| `rejection_reason` | `text` | YES | — | Reason for rejection shown to reviewer. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
+| Field                  | Type          | Nullable | Default             | Notes                                                                                                                                                                                                                                                                                    |
+| ---------------------- | ------------- | -------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                                                                                                                                                                       |
+| `listing_id`           | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE.                                                                                                                                                                                                                                                   |
+| `reviewer_user_id`     | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. SET NULL on user delete; review remains if published.                                                                                                                                                                                          |
+| `rating`               | `integer`     | NO       | —                   | CHECK (rating BETWEEN 1 AND 5). Star rating.                                                                                                                                                                                                                                             |
+| `title`                | `text`        | YES      | —                   | Optional review headline.                                                                                                                                                                                                                                                                |
+| `body`                 | `text`        | YES      | —                   | Review text. Optional but strongly encouraged.                                                                                                                                                                                                                                           |
+| `status`               | `text`        | NO       | `'intake'`          | CHECK IN (`'intake'`, `'pending_approval'`, `'published'`, `'rejected'`, `'removed'`). `'intake'` = stored but not yet in review queue; `'pending_approval'` = in admin review queue (V1); `'published'` = live; `'rejected'` = not approved; `'removed'` = admin removed post-approval. |
+| `visit_date`           | `date`        | YES      | —                   | Date the reviewer visited or interacted with the business. Optional.                                                                                                                                                                                                                     |
+| `is_verified_purchase` | `boolean`     | NO       | `false`             | True for reviews associated with a marketplace transaction (V2).                                                                                                                                                                                                                         |
+| `reviewed_by`          | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Admin who moderated this review.                                                                                                                                                                                                               |
+| `reviewed_at`          | `timestamptz` | YES      | —                   | When moderation decision was made.                                                                                                                                                                                                                                                       |
+| `published_at`         | `timestamptz` | YES      | —                   | When status transitioned to `'published'`.                                                                                                                                                                                                                                               |
+| `rejection_reason`     | `text`        | YES      | —                   | Reason for rejection shown to reviewer.                                                                                                                                                                                                                                                  |
+| `created_at`           | `timestamptz` | NO       | `now()`             |                                                                                                                                                                                                                                                                                          |
+| `updated_at`           | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                                                                                                                                                                                                |
 
 ### Indexes
 
@@ -1422,15 +1423,15 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `review_id` | `uuid` | NO | — | FK → `reviews(id)` ON DELETE CASCADE. |
-| `responder_listing_id` | `uuid` | NO | — | FK → `listings(id)` ON DELETE CASCADE. Must match the `listing_id` on the referenced review — enforced at service layer. |
-| `response_text` | `text` | NO | — | The owner's response text. |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Auto-updated via trigger. |
-| `deleted_at` | `timestamptz` | YES | — | Soft delete. Null = active response. |
+| Field                  | Type          | Nullable | Default             | Notes                                                                                                                    |
+| ---------------------- | ------------- | -------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `id`                   | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                       |
+| `review_id`            | `uuid`        | NO       | —                   | FK → `reviews(id)` ON DELETE CASCADE.                                                                                    |
+| `responder_listing_id` | `uuid`        | NO       | —                   | FK → `listings(id)` ON DELETE CASCADE. Must match the `listing_id` on the referenced review — enforced at service layer. |
+| `response_text`        | `text`        | NO       | —                   | The owner's response text.                                                                                               |
+| `created_at`           | `timestamptz` | NO       | `now()`             |                                                                                                                          |
+| `updated_at`           | `timestamptz` | NO       | `now()`             | Auto-updated via trigger.                                                                                                |
+| `deleted_at`           | `timestamptz` | YES      | —                   | Soft delete. Null = active response.                                                                                     |
 
 ### Indexes
 
@@ -1465,15 +1466,15 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `review_id` | `uuid` | NO | — | FK → `reviews(id)` ON DELETE CASCADE. |
-| `reporter_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. User who filed the report. |
-| `reason` | `text` | NO | — | CHECK IN (`'spam'`, `'inappropriate'`, `'fake'`, `'off_topic'`, `'other'`). |
-| `notes` | `text` | YES | — | Optional additional context from the reporter. |
-| `status` | `text` | NO | `'pending'` | CHECK IN (`'pending'`, `'reviewed'`, `'dismissed'`). |
-| `created_at` | `timestamptz` | NO | `now()` | |
+| Field              | Type          | Nullable | Default             | Notes                                                                       |
+| ------------------ | ------------- | -------- | ------------------- | --------------------------------------------------------------------------- |
+| `id`               | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                          |
+| `review_id`        | `uuid`        | NO       | —                   | FK → `reviews(id)` ON DELETE CASCADE.                                       |
+| `reporter_user_id` | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. User who filed the report.        |
+| `reason`           | `text`        | NO       | —                   | CHECK IN (`'spam'`, `'inappropriate'`, `'fake'`, `'off_topic'`, `'other'`). |
+| `notes`            | `text`        | YES      | —                   | Optional additional context from the reporter.                              |
+| `status`           | `text`        | NO       | `'pending'`         | CHECK IN (`'pending'`, `'reviewed'`, `'dismissed'`).                        |
+| `created_at`       | `timestamptz` | NO       | `now()`             |                                                                             |
 
 ### Indexes
 
@@ -1508,18 +1509,18 @@ None.
 
 ### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `claim_id` | `uuid` | NO | — | FK → `claims(id)` ON DELETE CASCADE. The approved claim this verification is tied to. |
-| `doc_paths` | `text[]` | NO | — | Array of Supabase Storage paths in the `verification-docs` bucket. Minimum one path required. |
-| `submitted_at` | `timestamptz` | NO | `now()` | When documents were submitted. |
-| `decision_at` | `timestamptz` | YES | — | When the admin made a decision. Null until decision. |
-| `reviewer_user_id` | `uuid` | YES | — | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed. |
-| `decision` | `text` | YES | — | CHECK IN (`'approved'`, `'rejected'`, `'needs_more_info'`). Null until decision. |
-| `notes` | `text` | YES | — | Admin notes on the decision. Shown to owner on rejection or `needs_more_info`. |
-| `purge_at` | `timestamptz` | YES | — | Scheduled document purge date. Set to `decision_at + 90 days` when a decision is made. A nightly job deletes files from Storage and sets `doc_paths = '{}'` for rows where `purge_at <= now()`. |
-| `created_at` | `timestamptz` | NO | `now()` | |
+| Field              | Type          | Nullable | Default             | Notes                                                                                                                                                                                           |
+| ------------------ | ------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                                                                                                              |
+| `claim_id`         | `uuid`        | NO       | —                   | FK → `claims(id)` ON DELETE CASCADE. The approved claim this verification is tied to.                                                                                                           |
+| `doc_paths`        | `text[]`      | NO       | —                   | Array of Supabase Storage paths in the `verification-docs` bucket. Minimum one path required.                                                                                                   |
+| `submitted_at`     | `timestamptz` | NO       | `now()`             | When documents were submitted.                                                                                                                                                                  |
+| `decision_at`      | `timestamptz` | YES      | —                   | When the admin made a decision. Null until decision.                                                                                                                                            |
+| `reviewer_user_id` | `uuid`        | YES      | —                   | FK → `auth.users(id)` ON DELETE SET NULL. Admin who reviewed.                                                                                                                                   |
+| `decision`         | `text`        | YES      | —                   | CHECK IN (`'approved'`, `'rejected'`, `'needs_more_info'`). Null until decision.                                                                                                                |
+| `notes`            | `text`        | YES      | —                   | Admin notes on the decision. Shown to owner on rejection or `needs_more_info`.                                                                                                                  |
+| `purge_at`         | `timestamptz` | YES      | —                   | Scheduled document purge date. Set to `decision_at + 90 days` when a decision is made. A nightly job deletes files from Storage and sets `doc_paths = '{}'` for rows where `purge_at <= now()`. |
+| `created_at`       | `timestamptz` | NO       | `now()`             |                                                                                                                                                                                                 |
 
 ### Indexes
 
@@ -1543,8 +1544,7 @@ None.
 
 ### Seed Data
 
-None.
----
+## None.
 
 ## Section 6: Commerce
 
@@ -1560,19 +1560,19 @@ Commerce tables power paid tiers, subscriptions, marketplace orders, and service
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| name | text | NO | — | CHECK IN ('free','standard','premium') |
-| price_monthly | numeric(10,2) | NO | 0 | USD; 0 for free tier |
-| price_yearly | numeric(10,2) | NO | 0 | USD; 0 for free tier |
-| features | jsonb | NO | '[]' | Array of feature key strings; document shape in migration comment |
-| stripe_price_id_monthly | text | YES | — | Stripe Price ID for monthly billing; null for free tier |
-| stripe_price_id_yearly | text | YES | — | Stripe Price ID for annual billing; null for free tier |
-| is_active | boolean | NO | true | false = hidden from plan selection UI |
-| display_order | integer | NO | 0 | Controls sort order on pricing page |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                   | Type          | Nullable | Default           | Notes                                                             |
+| ----------------------- | ------------- | -------- | ----------------- | ----------------------------------------------------------------- |
+| id                      | uuid          | NO       | gen_random_uuid() | PK                                                                |
+| name                    | text          | NO       | —                 | CHECK IN ('free','standard','premium')                            |
+| price_monthly           | numeric(10,2) | NO       | 0                 | USD; 0 for free tier                                              |
+| price_yearly            | numeric(10,2) | NO       | 0                 | USD; 0 for free tier                                              |
+| features                | jsonb         | NO       | '[]'              | Array of feature key strings; document shape in migration comment |
+| stripe_price_id_monthly | text          | YES      | —                 | Stripe Price ID for monthly billing; null for free tier           |
+| stripe_price_id_yearly  | text          | YES      | —                 | Stripe Price ID for annual billing; null for free tier            |
+| is_active               | boolean       | NO       | true              | false = hidden from plan selection UI                             |
+| display_order           | integer       | NO       | 0                 | Controls sort order on pricing page                               |
+| created_at              | timestamptz   | NO       | now()             | —                                                                 |
+| updated_at              | timestamptz   | NO       | now()             | Trigger-updated                                                   |
 
 #### Indexes
 
@@ -1605,20 +1605,20 @@ Required — seed three rows at migration time: `free` (price 0), `standard`, `p
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| plan_id | uuid | NO | — | FK → plans ON DELETE RESTRICT |
-| stripe_subscription_id | text | YES | — | Stripe Subscription ID; null until Stripe checkout completes |
-| stripe_customer_id | text | YES | — | Stripe Customer ID; null until first checkout |
-| status | text | NO | 'active' | CHECK IN ('trialing','active','past_due','canceled','unpaid','paused') |
-| current_period_start | timestamptz | YES | — | Synced from Stripe webhook |
-| current_period_end | timestamptz | YES | — | Synced from Stripe webhook |
-| cancel_at_period_end | boolean | NO | false | True when owner cancels but billing period hasn't expired |
-| canceled_at | timestamptz | YES | — | Set when status transitions to 'canceled' |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                  | Type        | Nullable | Default           | Notes                                                                  |
+| ---------------------- | ----------- | -------- | ----------------- | ---------------------------------------------------------------------- |
+| id                     | uuid        | NO       | gen_random_uuid() | PK                                                                     |
+| listing_id             | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE                                        |
+| plan_id                | uuid        | NO       | —                 | FK → plans ON DELETE RESTRICT                                          |
+| stripe_subscription_id | text        | YES      | —                 | Stripe Subscription ID; null until Stripe checkout completes           |
+| stripe_customer_id     | text        | YES      | —                 | Stripe Customer ID; null until first checkout                          |
+| status                 | text        | NO       | 'active'          | CHECK IN ('trialing','active','past_due','canceled','unpaid','paused') |
+| current_period_start   | timestamptz | YES      | —                 | Synced from Stripe webhook                                             |
+| current_period_end     | timestamptz | YES      | —                 | Synced from Stripe webhook                                             |
+| cancel_at_period_end   | boolean     | NO       | false             | True when owner cancels but billing period hasn't expired              |
+| canceled_at            | timestamptz | YES      | —                 | Set when status transitions to 'canceled'                              |
+| created_at             | timestamptz | NO       | now()             | —                                                                      |
+| updated_at             | timestamptz | NO       | now()             | Trigger-updated                                                        |
 
 #### Indexes
 
@@ -1654,20 +1654,20 @@ None — subscriptions are created by the Stripe checkout flow at runtime.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| buyer_user_id | uuid | YES | — | FK → auth.users ON DELETE SET NULL; SET NULL preserves order history on account deletion |
-| vendor_listing_id | uuid | NO | — | FK → listings ON DELETE RESTRICT; cannot delete a vendor with orders |
-| status | text | NO | 'pending' | CHECK IN ('pending','confirmed','processing','shipped','delivered','canceled','refunded') |
-| subtotal | numeric(10,2) | NO | — | Sum of order_items.total_price before platform fee |
-| platform_fee | numeric(10,2) | NO | — | BLACQList platform fee withheld from payout |
-| stripe_payment_intent_id | text | YES | — | Stripe PaymentIntent ID; null until payment initiated |
-| shipping_address | jsonb | YES | — | Shape: {name, line1, line2, city, state, zip, country}; null for digital-only orders |
-| notes | text | YES | — | Buyer notes to vendor at checkout |
-| fulfilled_at | timestamptz | YES | — | Set when status transitions to 'delivered' |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                    | Type          | Nullable | Default           | Notes                                                                                     |
+| ------------------------ | ------------- | -------- | ----------------- | ----------------------------------------------------------------------------------------- |
+| id                       | uuid          | NO       | gen_random_uuid() | PK                                                                                        |
+| buyer_user_id            | uuid          | YES      | —                 | FK → auth.users ON DELETE SET NULL; SET NULL preserves order history on account deletion  |
+| vendor_listing_id        | uuid          | NO       | —                 | FK → listings ON DELETE RESTRICT; cannot delete a vendor with orders                      |
+| status                   | text          | NO       | 'pending'         | CHECK IN ('pending','confirmed','processing','shipped','delivered','canceled','refunded') |
+| subtotal                 | numeric(10,2) | NO       | —                 | Sum of order_items.total_price before platform fee                                        |
+| platform_fee             | numeric(10,2) | NO       | —                 | BLACQList platform fee withheld from payout                                               |
+| stripe_payment_intent_id | text          | YES      | —                 | Stripe PaymentIntent ID; null until payment initiated                                     |
+| shipping_address         | jsonb         | YES      | —                 | Shape: {name, line1, line2, city, state, zip, country}; null for digital-only orders      |
+| notes                    | text          | YES      | —                 | Buyer notes to vendor at checkout                                                         |
+| fulfilled_at             | timestamptz   | YES      | —                 | Set when status transitions to 'delivered'                                                |
+| created_at               | timestamptz   | NO       | now()             | —                                                                                         |
+| updated_at               | timestamptz   | NO       | now()             | Trigger-updated                                                                           |
 
 #### Indexes
 
@@ -1704,16 +1704,16 @@ None — created at runtime by the checkout flow.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| order_id | uuid | NO | — | FK → orders ON DELETE CASCADE |
-| product_id | uuid | NO | — | FK → products ON DELETE RESTRICT; preserve product reference for order history |
-| variant_id | uuid | YES | — | FK → product_variants ON DELETE RESTRICT; null for simple (no-variant) products |
-| quantity | integer | NO | — | CHECK (quantity > 0) |
-| unit_price | numeric(10,2) | NO | — | Price at time of purchase; snapshot prevents price-change retroactive impact |
-| total_price | numeric(10,2) | NO | — | unit_price * quantity; stored for query convenience |
-| created_at | timestamptz | NO | now() | — |
+| Field       | Type          | Nullable | Default           | Notes                                                                           |
+| ----------- | ------------- | -------- | ----------------- | ------------------------------------------------------------------------------- |
+| id          | uuid          | NO       | gen_random_uuid() | PK                                                                              |
+| order_id    | uuid          | NO       | —                 | FK → orders ON DELETE CASCADE                                                   |
+| product_id  | uuid          | NO       | —                 | FK → products ON DELETE RESTRICT; preserve product reference for order history  |
+| variant_id  | uuid          | YES      | —                 | FK → product_variants ON DELETE RESTRICT; null for simple (no-variant) products |
+| quantity    | integer       | NO       | —                 | CHECK (quantity > 0)                                                            |
+| unit_price  | numeric(10,2) | NO       | —                 | Price at time of purchase; snapshot prevents price-change retroactive impact    |
+| total_price | numeric(10,2) | NO       | —                 | unit_price \* quantity; stored for query convenience                            |
+| created_at  | timestamptz   | NO       | now()             | —                                                                               |
 
 #### Indexes
 
@@ -1748,19 +1748,19 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| code | text | NO | — | UNIQUE; uppercase enforced at application layer |
-| discount_type | text | NO | — | CHECK IN ('percentage','fixed_amount') |
-| discount_value | numeric(10,2) | NO | — | Percentage (0–100) or fixed USD amount |
-| minimum_order_amount | numeric(10,2) | YES | — | Minimum subtotal required to apply coupon; null = no minimum |
-| usage_limit | integer | YES | — | Maximum total redemptions; null = unlimited |
-| usage_count | integer | NO | 0 | Incremented atomically at checkout; CHECK (usage_count >= 0) |
-| expires_at | timestamptz | YES | — | null = no expiry |
-| is_active | boolean | NO | true | Admin can deactivate without deleting |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                | Type          | Nullable | Default           | Notes                                                        |
+| -------------------- | ------------- | -------- | ----------------- | ------------------------------------------------------------ |
+| id                   | uuid          | NO       | gen_random_uuid() | PK                                                           |
+| code                 | text          | NO       | —                 | UNIQUE; uppercase enforced at application layer              |
+| discount_type        | text          | NO       | —                 | CHECK IN ('percentage','fixed_amount')                       |
+| discount_value       | numeric(10,2) | NO       | —                 | Percentage (0–100) or fixed USD amount                       |
+| minimum_order_amount | numeric(10,2) | YES      | —                 | Minimum subtotal required to apply coupon; null = no minimum |
+| usage_limit          | integer       | YES      | —                 | Maximum total redemptions; null = unlimited                  |
+| usage_count          | integer       | NO       | 0                 | Incremented atomically at checkout; CHECK (usage_count >= 0) |
+| expires_at           | timestamptz   | YES      | —                 | null = no expiry                                             |
+| is_active            | boolean       | NO       | true              | Admin can deactivate without deleting                        |
+| created_at           | timestamptz   | NO       | now()             | —                                                            |
+| updated_at           | timestamptz   | NO       | now()             | Trigger-updated                                              |
 
 #### Indexes
 
@@ -1794,18 +1794,18 @@ None — created by admin or automated campaign tooling at runtime.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| amount | numeric(10,2) | NO | — | Invoice amount in USD |
-| currency | text | NO | 'USD' | ISO 4217 currency code |
-| stripe_invoice_id | text | YES | — | Stripe Invoice ID; null for manually created records |
-| status | text | NO | 'open' | CHECK IN ('draft','open','paid','uncollectible','void') |
-| due_at | timestamptz | YES | — | null for invoices with no net terms |
-| paid_at | timestamptz | YES | — | Set when status transitions to 'paid' |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type          | Nullable | Default           | Notes                                                   |
+| ----------------- | ------------- | -------- | ----------------- | ------------------------------------------------------- |
+| id                | uuid          | NO       | gen_random_uuid() | PK                                                      |
+| listing_id        | uuid          | NO       | —                 | FK → listings ON DELETE CASCADE                         |
+| amount            | numeric(10,2) | NO       | —                 | Invoice amount in USD                                   |
+| currency          | text          | NO       | 'USD'             | ISO 4217 currency code                                  |
+| stripe_invoice_id | text          | YES      | —                 | Stripe Invoice ID; null for manually created records    |
+| status            | text          | NO       | 'open'            | CHECK IN ('draft','open','paid','uncollectible','void') |
+| due_at            | timestamptz   | YES      | —                 | null for invoices with no net terms                     |
+| paid_at           | timestamptz   | YES      | —                 | Set when status transitions to 'paid'                   |
+| created_at        | timestamptz   | NO       | now()             | —                                                       |
+| updated_at        | timestamptz   | NO       | now()             | Trigger-updated                                         |
 
 #### Indexes
 
@@ -1840,20 +1840,20 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| name | text | NO | — | Package display name |
-| description | text | YES | — | What is included in the package |
-| price | numeric(10,2) | NO | — | Package price in USD |
-| billing_type | text | NO | — | CHECK IN ('one_time','monthly','per_project') |
-| included_services | text[] | YES | — | Array of service description strings for display |
-| stripe_price_id | text | YES | — | Stripe Price ID; null until synced to Stripe |
-| is_active | boolean | NO | true | false = hidden from storefront |
-| display_order | integer | NO | 0 | Controls sort order on the listing page |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type          | Nullable | Default           | Notes                                            |
+| ----------------- | ------------- | -------- | ----------------- | ------------------------------------------------ |
+| id                | uuid          | NO       | gen_random_uuid() | PK                                               |
+| listing_id        | uuid          | NO       | —                 | FK → listings ON DELETE CASCADE                  |
+| name              | text          | NO       | —                 | Package display name                             |
+| description       | text          | YES      | —                 | What is included in the package                  |
+| price             | numeric(10,2) | NO       | —                 | Package price in USD                             |
+| billing_type      | text          | NO       | —                 | CHECK IN ('one_time','monthly','per_project')    |
+| included_services | text[]        | YES      | —                 | Array of service description strings for display |
+| stripe_price_id   | text          | YES      | —                 | Stripe Price ID; null until synced to Stripe     |
+| is_active         | boolean       | NO       | true              | false = hidden from storefront                   |
+| display_order     | integer       | NO       | 0                 | Controls sort order on the listing page          |
+| created_at        | timestamptz   | NO       | now()             | —                                                |
+| updated_at        | timestamptz   | NO       | now()             | Trigger-updated                                  |
 
 #### Indexes
 
@@ -1892,18 +1892,18 @@ Editorial tables support admin-curated content — collections of listings, long
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| title | text | NO | — | Collection display title |
-| slug | text | NO | — | UNIQUE; URL-safe identifier for the collection page |
-| description | text | YES | — | Shown at the top of the collection page |
-| cover_image_path | text | YES | — | Supabase Storage path in listing-media bucket |
-| is_active | boolean | NO | true | false = not publicly visible |
-| display_order | integer | NO | 0 | Sort order on the collections index page |
-| created_by | uuid | YES | — | FK → auth.users ON DELETE SET NULL |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field            | Type        | Nullable | Default           | Notes                                               |
+| ---------------- | ----------- | -------- | ----------------- | --------------------------------------------------- |
+| id               | uuid        | NO       | gen_random_uuid() | PK                                                  |
+| title            | text        | NO       | —                 | Collection display title                            |
+| slug             | text        | NO       | —                 | UNIQUE; URL-safe identifier for the collection page |
+| description      | text        | YES      | —                 | Shown at the top of the collection page             |
+| cover_image_path | text        | YES      | —                 | Supabase Storage path in listing-media bucket       |
+| is_active        | boolean     | NO       | true              | false = not publicly visible                        |
+| display_order    | integer     | NO       | 0                 | Sort order on the collections index page            |
+| created_by       | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL                  |
+| created_at       | timestamptz | NO       | now()             | —                                                   |
+| updated_at       | timestamptz | NO       | now()             | Trigger-updated                                     |
 
 #### Indexes
 
@@ -1937,13 +1937,13 @@ Optional — seed a small number of launch collections as editorial examples.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| collection_id | uuid | NO | — | FK → collections ON DELETE CASCADE |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| display_order | integer | NO | 0 | Sort position within the collection |
-| created_at | timestamptz | NO | now() | — |
+| Field         | Type        | Nullable | Default           | Notes                               |
+| ------------- | ----------- | -------- | ----------------- | ----------------------------------- |
+| id            | uuid        | NO       | gen_random_uuid() | PK                                  |
+| collection_id | uuid        | NO       | —                 | FK → collections ON DELETE CASCADE  |
+| listing_id    | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE     |
+| display_order | integer     | NO       | 0                 | Sort position within the collection |
+| created_at    | timestamptz | NO       | now()             | —                                   |
 
 #### Indexes
 
@@ -1979,20 +1979,20 @@ None — populated by admin when creating collections.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| title | text | NO | — | Article headline |
-| slug | text | NO | — | UNIQUE; URL-safe identifier; immutable after first publish |
-| author_user_id | uuid | YES | — | FK → auth.users ON DELETE SET NULL |
-| body_md | text | NO | — | Full article body in Markdown |
-| excerpt | text | YES | — | Short teaser text (≤280 chars) for card display; null = auto-generated from body |
-| cover_image_path | text | YES | — | Supabase Storage path |
-| status | text | NO | 'draft' | CHECK IN ('draft','review','published','archived') |
-| published_at | timestamptz | YES | — | Set when status first transitions to 'published' |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
-| deleted_at | timestamptz | YES | — | Soft delete; default queries filter WHERE deleted_at IS NULL |
+| Field            | Type        | Nullable | Default           | Notes                                                                            |
+| ---------------- | ----------- | -------- | ----------------- | -------------------------------------------------------------------------------- |
+| id               | uuid        | NO       | gen_random_uuid() | PK                                                                               |
+| title            | text        | NO       | —                 | Article headline                                                                 |
+| slug             | text        | NO       | —                 | UNIQUE; URL-safe identifier; immutable after first publish                       |
+| author_user_id   | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL                                               |
+| body_md          | text        | NO       | —                 | Full article body in Markdown                                                    |
+| excerpt          | text        | YES      | —                 | Short teaser text (≤280 chars) for card display; null = auto-generated from body |
+| cover_image_path | text        | YES      | —                 | Supabase Storage path                                                            |
+| status           | text        | NO       | 'draft'           | CHECK IN ('draft','review','published','archived')                               |
+| published_at     | timestamptz | YES      | —                 | Set when status first transitions to 'published'                                 |
+| created_at       | timestamptz | NO       | now()             | —                                                                                |
+| updated_at       | timestamptz | NO       | now()             | Trigger-updated                                                                  |
+| deleted_at       | timestamptz | YES      | —                 | Soft delete; default queries filter WHERE deleted_at IS NULL                     |
 
 #### Indexes
 
@@ -2027,19 +2027,19 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| city_id | uuid | NO | — | FK → cities ON DELETE CASCADE; one guide per city at V1 |
-| title | text | NO | — | Guide headline (e.g., "The BLACQList Guide to Atlanta") |
-| slug | text | NO | — | UNIQUE; URL-safe guide identifier |
-| intro | text | YES | — | Introductory paragraph displayed above guide sections |
-| cover_image_path | text | YES | — | Supabase Storage path |
-| status | text | NO | 'draft' | CHECK IN ('draft','published','archived') |
-| published_at | timestamptz | YES | — | Set when status first transitions to 'published' |
-| created_by | uuid | YES | — | FK → auth.users ON DELETE SET NULL |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field            | Type        | Nullable | Default           | Notes                                                   |
+| ---------------- | ----------- | -------- | ----------------- | ------------------------------------------------------- |
+| id               | uuid        | NO       | gen_random_uuid() | PK                                                      |
+| city_id          | uuid        | NO       | —                 | FK → cities ON DELETE CASCADE; one guide per city at V1 |
+| title            | text        | NO       | —                 | Guide headline (e.g., "The BLACQList Guide to Atlanta") |
+| slug             | text        | NO       | —                 | UNIQUE; URL-safe guide identifier                       |
+| intro            | text        | YES      | —                 | Introductory paragraph displayed above guide sections   |
+| cover_image_path | text        | YES      | —                 | Supabase Storage path                                   |
+| status           | text        | NO       | 'draft'           | CHECK IN ('draft','published','archived')               |
+| published_at     | timestamptz | YES      | —                 | Set when status first transitions to 'published'        |
+| created_by       | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL                      |
+| created_at       | timestamptz | NO       | now()             | —                                                       |
+| updated_at       | timestamptz | NO       | now()             | Trigger-updated                                         |
 
 #### Indexes
 
@@ -2075,15 +2075,15 @@ None — created by editorial team per city at V1 launch.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| guide_id | uuid | NO | — | FK → guides ON DELETE CASCADE |
-| heading | text | NO | — | Section heading displayed on the guide page |
-| body_md | text | NO | — | Section content in Markdown |
-| display_order | integer | NO | 0 | Sort order within the parent guide |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field         | Type        | Nullable | Default           | Notes                                       |
+| ------------- | ----------- | -------- | ----------------- | ------------------------------------------- |
+| id            | uuid        | NO       | gen_random_uuid() | PK                                          |
+| guide_id      | uuid        | NO       | —                 | FK → guides ON DELETE CASCADE               |
+| heading       | text        | NO       | —                 | Section heading displayed on the guide page |
+| body_md       | text        | NO       | —                 | Section content in Markdown                 |
+| display_order | integer     | NO       | 0                 | Sort order within the parent guide          |
+| created_at    | timestamptz | NO       | now()             | —                                           |
+| updated_at    | timestamptz | NO       | now()             | Trigger-updated                             |
 
 #### Indexes
 
@@ -2116,18 +2116,18 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| placement_context | text | NO | — | CHECK IN ('homepage','city_page','category_page','search_results') |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| display_order | integer | NO | 0 | Sort position within the placement context |
-| starts_at | timestamptz | NO | — | When this featured slot becomes active |
-| ends_at | timestamptz | YES | — | null = no expiry (permanent editorial feature) |
-| is_active | boolean | NO | true | Admin toggle to deactivate without deleting |
-| created_by | uuid | YES | — | FK → auth.users ON DELETE SET NULL |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type        | Nullable | Default           | Notes                                                              |
+| ----------------- | ----------- | -------- | ----------------- | ------------------------------------------------------------------ |
+| id                | uuid        | NO       | gen_random_uuid() | PK                                                                 |
+| placement_context | text        | NO       | —                 | CHECK IN ('homepage','city_page','category_page','search_results') |
+| listing_id        | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE                                    |
+| display_order     | integer     | NO       | 0                 | Sort position within the placement context                         |
+| starts_at         | timestamptz | NO       | —                 | When this featured slot becomes active                             |
+| ends_at           | timestamptz | YES      | —                 | null = no expiry (permanent editorial feature)                     |
+| is_active         | boolean     | NO       | true              | Admin toggle to deactivate without deleting                        |
+| created_by        | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL                                 |
+| created_at        | timestamptz | NO       | now()             | —                                                                  |
+| updated_at        | timestamptz | NO       | now()             | Trigger-updated                                                    |
 
 #### Indexes
 
@@ -2162,18 +2162,18 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| placement_type | text | NO | — | CHECK IN ('featured_top','category_spotlight','city_spotlight','search_banner') |
-| starts_at | timestamptz | NO | — | Placement active start |
-| expires_at | timestamptz | YES | — | null = no expiry; scheduled job checks this daily |
-| is_active | boolean | NO | true | Auto-set to false when expires_at passes |
-| price_paid | numeric(10,2) | YES | — | Amount paid at purchase; null for admin-granted placements |
-| stripe_payment_intent_id | text | YES | — | Stripe PaymentIntent ID; null for comp placements |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                    | Type          | Nullable | Default           | Notes                                                                           |
+| ------------------------ | ------------- | -------- | ----------------- | ------------------------------------------------------------------------------- |
+| id                       | uuid          | NO       | gen_random_uuid() | PK                                                                              |
+| listing_id               | uuid          | NO       | —                 | FK → listings ON DELETE CASCADE                                                 |
+| placement_type           | text          | NO       | —                 | CHECK IN ('featured_top','category_spotlight','city_spotlight','search_banner') |
+| starts_at                | timestamptz   | NO       | —                 | Placement active start                                                          |
+| expires_at               | timestamptz   | YES      | —                 | null = no expiry; scheduled job checks this daily                               |
+| is_active                | boolean       | NO       | true              | Auto-set to false when expires_at passes                                        |
+| price_paid               | numeric(10,2) | YES      | —                 | Amount paid at purchase; null for admin-granted placements                      |
+| stripe_payment_intent_id | text          | YES      | —                 | Stripe PaymentIntent ID; null for comp placements                               |
+| created_at               | timestamptz   | NO       | now()             | —                                                                               |
+| updated_at               | timestamptz   | NO       | now()             | Trigger-updated                                                                 |
 
 #### Indexes
 
@@ -2213,19 +2213,19 @@ Receipt and spend tables capture the data powering the dollar-flow visualization
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| user_id | uuid | NO | — | FK → auth.users ON DELETE CASCADE |
-| image_path | text | NO | — | Storage path in private `receipts` bucket; never store signed URL |
-| ocr_raw | jsonb | YES | — | Raw OCR API response; null until processing completes |
-| parsed_amount | numeric(10,2) | YES | — | OCR-extracted transaction amount |
-| parsed_merchant_name | text | YES | — | OCR-extracted merchant name |
-| parsed_date | date | YES | — | OCR-extracted transaction date |
-| status | text | NO | 'uploaded' | CHECK IN ('uploaded','processing','parsed','confirmed','rejected') |
-| spend_event_id | uuid | YES | — | FK → spend_events; set after a confirmed spend_event is created from this receipt |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field                | Type          | Nullable | Default           | Notes                                                                             |
+| -------------------- | ------------- | -------- | ----------------- | --------------------------------------------------------------------------------- |
+| id                   | uuid          | NO       | gen_random_uuid() | PK                                                                                |
+| user_id              | uuid          | NO       | —                 | FK → auth.users ON DELETE CASCADE                                                 |
+| image_path           | text          | NO       | —                 | Storage path in private `receipts` bucket; never store signed URL                 |
+| ocr_raw              | jsonb         | YES      | —                 | Raw OCR API response; null until processing completes                             |
+| parsed_amount        | numeric(10,2) | YES      | —                 | OCR-extracted transaction amount                                                  |
+| parsed_merchant_name | text          | YES      | —                 | OCR-extracted merchant name                                                       |
+| parsed_date          | date          | YES      | —                 | OCR-extracted transaction date                                                    |
+| status               | text          | NO       | 'uploaded'        | CHECK IN ('uploaded','processing','parsed','confirmed','rejected')                |
+| spend_event_id       | uuid          | YES      | —                 | FK → spend_events; set after a confirmed spend_event is created from this receipt |
+| created_at           | timestamptz   | NO       | now()             | —                                                                                 |
+| updated_at           | timestamptz   | NO       | now()             | Trigger-updated                                                                   |
 
 #### Indexes
 
@@ -2260,20 +2260,20 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| user_id | uuid | NO | — | FK → auth.users ON DELETE CASCADE |
-| listing_id | uuid | YES | — | FK → listings ON DELETE SET NULL; null for unattributed manual entries |
-| amount | numeric(10,2) | NO | — | Transaction amount in USD; CHECK (amount > 0) |
-| currency | text | NO | 'USD' | ISO 4217 |
-| spend_date | date | NO | — | Date of the actual transaction |
-| category_id | uuid | YES | — | FK → categories; inferred by OCR or product category |
-| source | text | NO | 'manual' | CHECK IN ('receipt','manual','order','import') |
-| aggregate_opt_out | boolean | NO | false | true = exclude this event from all community aggregate computations |
-| receipt_upload_id | uuid | YES | — | FK → receipt_uploads ON DELETE SET NULL; null for order-sourced and manual entries |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type          | Nullable | Default           | Notes                                                                              |
+| ----------------- | ------------- | -------- | ----------------- | ---------------------------------------------------------------------------------- |
+| id                | uuid          | NO       | gen_random_uuid() | PK                                                                                 |
+| user_id           | uuid          | NO       | —                 | FK → auth.users ON DELETE CASCADE                                                  |
+| listing_id        | uuid          | YES      | —                 | FK → listings ON DELETE SET NULL; null for unattributed manual entries             |
+| amount            | numeric(10,2) | NO       | —                 | Transaction amount in USD; CHECK (amount > 0)                                      |
+| currency          | text          | NO       | 'USD'             | ISO 4217                                                                           |
+| spend_date        | date          | NO       | —                 | Date of the actual transaction                                                     |
+| category_id       | uuid          | YES      | —                 | FK → categories; inferred by OCR or product category                               |
+| source            | text          | NO       | 'manual'          | CHECK IN ('receipt','manual','order','import')                                     |
+| aggregate_opt_out | boolean       | NO       | false             | true = exclude this event from all community aggregate computations                |
+| receipt_upload_id | uuid          | YES      | —                 | FK → receipt_uploads ON DELETE SET NULL; null for order-sourced and manual entries |
+| created_at        | timestamptz   | NO       | now()             | —                                                                                  |
+| updated_at        | timestamptz   | NO       | now()             | Trigger-updated                                                                    |
 
 #### Indexes
 
@@ -2312,16 +2312,16 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| snapshot_date | date | NO | — | The date this aggregate covers |
-| city_id | uuid | YES | — | FK → cities ON DELETE CASCADE; null = nationwide aggregate |
-| category_id | uuid | YES | — | FK → categories ON DELETE SET NULL; null = all-category aggregate |
-| total_spend | numeric(14,2) | NO | 0 | Sum of qualifying spend_events.amount for this period/city/category |
-| transaction_count | integer | NO | 0 | Count of qualifying spend_events rows |
-| unique_businesses | integer | NO | 0 | Count of distinct listing_id values in the aggregate |
-| created_at | timestamptz | NO | now() | — |
+| Field             | Type          | Nullable | Default           | Notes                                                               |
+| ----------------- | ------------- | -------- | ----------------- | ------------------------------------------------------------------- |
+| id                | uuid          | NO       | gen_random_uuid() | PK                                                                  |
+| snapshot_date     | date          | NO       | —                 | The date this aggregate covers                                      |
+| city_id           | uuid          | YES      | —                 | FK → cities ON DELETE CASCADE; null = nationwide aggregate          |
+| category_id       | uuid          | YES      | —                 | FK → categories ON DELETE SET NULL; null = all-category aggregate   |
+| total_spend       | numeric(14,2) | NO       | 0                 | Sum of qualifying spend_events.amount for this period/city/category |
+| transaction_count | integer       | NO       | 0                 | Count of qualifying spend_events rows                               |
+| unique_businesses | integer       | NO       | 0                 | Count of distinct listing_id values in the aggregate                |
+| created_at        | timestamptz   | NO       | now()             | —                                                                   |
 
 #### Indexes
 
@@ -2362,19 +2362,19 @@ Flow map tables support the V3 dollar-flow visualization, which shows how money 
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | YES | — | FK → listings ON DELETE CASCADE; null for category and city nodes |
-| city_id | uuid | YES | — | FK → cities ON DELETE CASCADE; set for city-type nodes |
-| category_id | uuid | YES | — | FK → categories ON DELETE SET NULL; set for category-type nodes |
-| node_type | text | NO | — | CHECK IN ('business','category','city') |
-| total_inflow | numeric(14,2) | NO | 0 | Total spend dollars flowing into this node |
-| total_outflow | numeric(14,2) | NO | 0 | Total spend dollars flowing out of this node |
-| node_weight | numeric(10,6) | NO | 0 | Normalized weight for visualization sizing (0–1) |
-| last_computed_at | timestamptz | YES | — | Timestamp of last computation; null = never computed |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field            | Type          | Nullable | Default           | Notes                                                             |
+| ---------------- | ------------- | -------- | ----------------- | ----------------------------------------------------------------- |
+| id               | uuid          | NO       | gen_random_uuid() | PK                                                                |
+| listing_id       | uuid          | YES      | —                 | FK → listings ON DELETE CASCADE; null for category and city nodes |
+| city_id          | uuid          | YES      | —                 | FK → cities ON DELETE CASCADE; set for city-type nodes            |
+| category_id      | uuid          | YES      | —                 | FK → categories ON DELETE SET NULL; set for category-type nodes   |
+| node_type        | text          | NO       | —                 | CHECK IN ('business','category','city')                           |
+| total_inflow     | numeric(14,2) | NO       | 0                 | Total spend dollars flowing into this node                        |
+| total_outflow    | numeric(14,2) | NO       | 0                 | Total spend dollars flowing out of this node                      |
+| node_weight      | numeric(10,6) | NO       | 0                 | Normalized weight for visualization sizing (0–1)                  |
+| last_computed_at | timestamptz   | YES      | —                 | Timestamp of last computation; null = never computed              |
+| created_at       | timestamptz   | NO       | now()             | —                                                                 |
+| updated_at       | timestamptz   | NO       | now()             | Trigger-updated                                                   |
 
 #### Indexes
 
@@ -2411,18 +2411,18 @@ None — populated by the V3 flow computation job.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| source_node_id | uuid | NO | — | FK → flow_nodes ON DELETE CASCADE |
-| target_node_id | uuid | NO | — | FK → flow_nodes ON DELETE CASCADE |
-| total_amount | numeric(14,2) | NO | 0 | Aggregate spend flowing along this edge for the period |
-| transaction_count | integer | NO | 0 | Count of transactions represented; must be ≥ 5 to exist |
-| edge_weight | numeric(10,6) | NO | 0 | Normalized weight for edge thickness (0–1) |
-| period_start | date | NO | — | Start of the period this edge covers |
-| period_end | date | NO | — | End of the period this edge covers |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type          | Nullable | Default           | Notes                                                   |
+| ----------------- | ------------- | -------- | ----------------- | ------------------------------------------------------- |
+| id                | uuid          | NO       | gen_random_uuid() | PK                                                      |
+| source_node_id    | uuid          | NO       | —                 | FK → flow_nodes ON DELETE CASCADE                       |
+| target_node_id    | uuid          | NO       | —                 | FK → flow_nodes ON DELETE CASCADE                       |
+| total_amount      | numeric(14,2) | NO       | 0                 | Aggregate spend flowing along this edge for the period  |
+| transaction_count | integer       | NO       | 0                 | Count of transactions represented; must be ≥ 5 to exist |
+| edge_weight       | numeric(10,6) | NO       | 0                 | Normalized weight for edge thickness (0–1)              |
+| period_start      | date          | NO       | —                 | Start of the period this edge covers                    |
+| period_end        | date          | NO       | —                 | End of the period this edge covers                      |
+| created_at        | timestamptz   | NO       | now()             | —                                                       |
+| updated_at        | timestamptz   | NO       | now()             | Trigger-updated                                         |
 
 #### Indexes
 
@@ -2458,16 +2458,16 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| snapshot_date | date | NO | — | The date this snapshot covers |
-| city_id | uuid | YES | — | FK → cities ON DELETE CASCADE; null = national snapshot |
-| graph_json | jsonb | NO | — | Precomputed graph payload; shape: {nodes: [...], edges: [...]} |
-| node_count | integer | NO | — | Number of nodes in the snapshot |
-| edge_count | integer | NO | — | Number of edges in the snapshot |
-| computation_duration_ms | integer | YES | — | Milliseconds taken to compute; null if not measured |
-| created_at | timestamptz | NO | now() | — |
+| Field                   | Type        | Nullable | Default           | Notes                                                          |
+| ----------------------- | ----------- | -------- | ----------------- | -------------------------------------------------------------- |
+| id                      | uuid        | NO       | gen_random_uuid() | PK                                                             |
+| snapshot_date           | date        | NO       | —                 | The date this snapshot covers                                  |
+| city_id                 | uuid        | YES      | —                 | FK → cities ON DELETE CASCADE; null = national snapshot        |
+| graph_json              | jsonb       | NO       | —                 | Precomputed graph payload; shape: {nodes: [...], edges: [...]} |
+| node_count              | integer     | NO       | —                 | Number of nodes in the snapshot                                |
+| edge_count              | integer     | NO       | —                 | Number of edges in the snapshot                                |
+| computation_duration_ms | integer     | YES      | —                 | Milliseconds taken to compute; null if not measured            |
+| created_at              | timestamptz | NO       | now()             | —                                                              |
 
 #### Indexes
 
@@ -2500,17 +2500,17 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| city_id | uuid | NO | — | FK → cities ON DELETE CASCADE |
-| category_id | uuid | YES | — | FK → categories ON DELETE SET NULL; null = all-category city node |
-| total_spend | numeric(14,2) | NO | — | Aggregate spend for this city/category/period |
-| transaction_count | integer | NO | — | Count of transactions; must be ≥ 5 to be written |
-| contributing_user_count | integer | NO | — | Distinct user count; minimum 5 enforced at service layer before insert |
-| period_start | date | NO | — | Period start date |
-| period_end | date | NO | — | Period end date |
-| created_at | timestamptz | NO | now() | — |
+| Field                   | Type          | Nullable | Default           | Notes                                                                  |
+| ----------------------- | ------------- | -------- | ----------------- | ---------------------------------------------------------------------- |
+| id                      | uuid          | NO       | gen_random_uuid() | PK                                                                     |
+| city_id                 | uuid          | NO       | —                 | FK → cities ON DELETE CASCADE                                          |
+| category_id             | uuid          | YES      | —                 | FK → categories ON DELETE SET NULL; null = all-category city node      |
+| total_spend             | numeric(14,2) | NO       | —                 | Aggregate spend for this city/category/period                          |
+| transaction_count       | integer       | NO       | —                 | Count of transactions; must be ≥ 5 to be written                       |
+| contributing_user_count | integer       | NO       | —                 | Distinct user count; minimum 5 enforced at service layer before insert |
+| period_start            | date          | NO       | —                 | Period start date                                                      |
+| period_end              | date          | NO       | —                 | Period end date                                                        |
+| created_at              | timestamptz   | NO       | now()             | —                                                                      |
 
 #### Indexes
 
@@ -2544,18 +2544,18 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| vendor_a_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| vendor_b_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| relationship_type | text | NO | — | CHECK IN ('co_shopped','supplier_inferred','event_coparticipant') |
-| strength_score | numeric(5,4) | NO | 0 | Computed relationship strength (0–1); higher = stronger signal |
-| inferred_from | text | NO | — | Describes the signal source (e.g., 'spend_events overlap Q1 2026') |
-| period_start | date | NO | — | Start of the analysis period |
-| period_end | date | NO | — | End of the analysis period |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field             | Type         | Nullable | Default           | Notes                                                              |
+| ----------------- | ------------ | -------- | ----------------- | ------------------------------------------------------------------ |
+| id                | uuid         | NO       | gen_random_uuid() | PK                                                                 |
+| vendor_a_id       | uuid         | NO       | —                 | FK → listings ON DELETE CASCADE                                    |
+| vendor_b_id       | uuid         | NO       | —                 | FK → listings ON DELETE CASCADE                                    |
+| relationship_type | text         | NO       | —                 | CHECK IN ('co_shopped','supplier_inferred','event_coparticipant')  |
+| strength_score    | numeric(5,4) | NO       | 0                 | Computed relationship strength (0–1); higher = stronger signal     |
+| inferred_from     | text         | NO       | —                 | Describes the signal source (e.g., 'spend_events overlap Q1 2026') |
+| period_start      | date         | NO       | —                 | Start of the analysis period                                       |
+| period_end        | date         | NO       | —                 | End of the analysis period                                         |
+| created_at        | timestamptz  | NO       | now()             | —                                                                  |
+| updated_at        | timestamptz  | NO       | now()             | Trigger-updated                                                    |
 
 #### Indexes
 
@@ -2596,14 +2596,14 @@ These two tables extend event and job listings with many-to-many relationships t
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| event_listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE; must be entity_type = 'event' |
-| vendor_listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE; the participating vendor |
-| role | text | YES | — | Vendor's role at the event (e.g., 'vendor','food','art','music'); free text |
-| display_order | integer | NO | 0 | Sort order in the vendor grid on the event page |
-| created_at | timestamptz | NO | now() | — |
+| Field             | Type        | Nullable | Default           | Notes                                                                       |
+| ----------------- | ----------- | -------- | ----------------- | --------------------------------------------------------------------------- |
+| id                | uuid        | NO       | gen_random_uuid() | PK                                                                          |
+| event_listing_id  | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE; must be entity_type = 'event'              |
+| vendor_listing_id | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE; the participating vendor                   |
+| role              | text        | YES      | —                 | Vendor's role at the event (e.g., 'vendor','food','art','music'); free text |
+| display_order     | integer     | NO       | 0                 | Sort order in the vendor grid on the event page                             |
+| created_at        | timestamptz | NO       | now()             | —                                                                           |
 
 #### Indexes
 
@@ -2639,17 +2639,17 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| event_listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| sponsor_name | text | NO | — | Display name of the sponsor |
-| sponsor_url | text | YES | — | Sponsor website URL; null if no website |
-| logo_path | text | YES | — | Supabase Storage path for sponsor logo; null if no logo provided |
-| tier | text | YES | — | CHECK IN ('title','gold','silver','community'); null = untiered |
-| display_order | integer | NO | 0 | Sort order within each tier |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field            | Type        | Nullable | Default           | Notes                                                            |
+| ---------------- | ----------- | -------- | ----------------- | ---------------------------------------------------------------- |
+| id               | uuid        | NO       | gen_random_uuid() | PK                                                               |
+| event_listing_id | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE                                  |
+| sponsor_name     | text        | NO       | —                 | Display name of the sponsor                                      |
+| sponsor_url      | text        | YES      | —                 | Sponsor website URL; null if no website                          |
+| logo_path        | text        | YES      | —                 | Supabase Storage path for sponsor logo; null if no logo provided |
+| tier             | text        | YES      | —                 | CHECK IN ('title','gold','silver','community'); null = untiered  |
+| display_order    | integer     | NO       | 0                 | Sort order within each tier                                      |
+| created_at       | timestamptz | NO       | now()             | —                                                                |
+| updated_at       | timestamptz | NO       | now()             | Trigger-updated                                                  |
 
 #### Indexes
 
@@ -2688,19 +2688,19 @@ Analytics tables are append-only event stores and daily rollup tables. Applicati
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| event_name | text | NO | — | One of the 45 defined platform event names (e.g., 'listing_view', 'cta_click', 'save_added', 'search_performed'); validated at service layer |
-| entity_type | text | YES | — | Type of entity the event is about (e.g., 'listing', 'collection', 'article') |
-| entity_id | uuid | YES | — | ID of the entity; combined with entity_type for lookups |
-| user_id | uuid | YES | — | FK → auth.users; null for anonymous events; SET NULL on user delete |
-| session_id | text | YES | — | Pseudonymous session identifier; not a Supabase session token |
-| properties | jsonb | NO | '{}' | Event-specific properties (e.g., {cta_type: 'book', referrer: 'search'}) |
-| ip_address | text | YES | — | Hashed IP address (SHA-256 one-way hash); never store raw IP |
-| user_agent | text | YES | — | Raw user agent string for bot detection |
-| referrer | text | YES | — | HTTP Referer header value |
-| created_at | timestamptz | NO | now() | Insertion timestamp; this table is ordered by created_at |
+| Field       | Type        | Nullable | Default           | Notes                                                                                                                                        |
+| ----------- | ----------- | -------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| id          | uuid        | NO       | gen_random_uuid() | PK                                                                                                                                           |
+| event_name  | text        | NO       | —                 | One of the 45 defined platform event names (e.g., 'listing_view', 'cta_click', 'save_added', 'search_performed'); validated at service layer |
+| entity_type | text        | YES      | —                 | Type of entity the event is about (e.g., 'listing', 'collection', 'article')                                                                 |
+| entity_id   | uuid        | YES      | —                 | ID of the entity; combined with entity_type for lookups                                                                                      |
+| user_id     | uuid        | YES      | —                 | FK → auth.users; null for anonymous events; SET NULL on user delete                                                                          |
+| session_id  | text        | YES      | —                 | Pseudonymous session identifier; not a Supabase session token                                                                                |
+| properties  | jsonb       | NO       | '{}'              | Event-specific properties (e.g., {cta_type: 'book', referrer: 'search'})                                                                     |
+| ip_address  | text        | YES      | —                 | Hashed IP address (SHA-256 one-way hash); never store raw IP                                                                                 |
+| user_agent  | text        | YES      | —                 | Raw user agent string for bot detection                                                                                                      |
+| referrer    | text        | YES      | —                 | HTTP Referer header value                                                                                                                    |
+| created_at  | timestamptz | NO       | now()             | Insertion timestamp; this table is ordered by created_at                                                                                     |
 
 #### Indexes
 
@@ -2736,17 +2736,17 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| query | text | NO | — | The search string entered by the user |
-| filters | jsonb | NO | '{}' | Active filter state at time of search (e.g., {city: 'atlanta', category: 'food'}) |
-| result_count | integer | NO | — | Number of results returned |
-| clicked_result_position | integer | YES | — | 1-based position of the result the user clicked; null if no click |
-| clicked_listing_id | uuid | YES | — | The listing that was clicked; null if no click |
-| user_id | uuid | YES | — | FK → auth.users; null for anonymous searches |
-| city_id | uuid | YES | — | FK → cities; the city context in which the search was performed |
-| created_at | timestamptz | NO | now() | — |
+| Field                   | Type        | Nullable | Default           | Notes                                                                             |
+| ----------------------- | ----------- | -------- | ----------------- | --------------------------------------------------------------------------------- |
+| id                      | uuid        | NO       | gen_random_uuid() | PK                                                                                |
+| query                   | text        | NO       | —                 | The search string entered by the user                                             |
+| filters                 | jsonb       | NO       | '{}'              | Active filter state at time of search (e.g., {city: 'atlanta', category: 'food'}) |
+| result_count            | integer     | NO       | —                 | Number of results returned                                                        |
+| clicked_result_position | integer     | YES      | —                 | 1-based position of the result the user clicked; null if no click                 |
+| clicked_listing_id      | uuid        | YES      | —                 | The listing that was clicked; null if no click                                    |
+| user_id                 | uuid        | YES      | —                 | FK → auth.users; null for anonymous searches                                      |
+| city_id                 | uuid        | YES      | —                 | FK → cities; the city context in which the search was performed                   |
+| created_at              | timestamptz | NO       | now()             | —                                                                                 |
 
 #### Indexes
 
@@ -2783,18 +2783,18 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| snapshot_date | date | NO | — | The date this rollup covers |
-| page_views | integer | NO | 0 | Total page views for this listing on this date |
-| cta_clicks | integer | NO | 0 | Total CTA button clicks |
-| saves | integer | NO | 0 | Net saves added (new saves minus unsaves for the day) |
-| shares | integer | NO | 0 | Total share events |
-| search_impressions | integer | NO | 0 | Times this listing appeared in search results |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated when rollup is recomputed |
+| Field              | Type        | Nullable | Default           | Notes                                                 |
+| ------------------ | ----------- | -------- | ----------------- | ----------------------------------------------------- |
+| id                 | uuid        | NO       | gen_random_uuid() | PK                                                    |
+| listing_id         | uuid        | NO       | —                 | FK → listings ON DELETE CASCADE                       |
+| snapshot_date      | date        | NO       | —                 | The date this rollup covers                           |
+| page_views         | integer     | NO       | 0                 | Total page views for this listing on this date        |
+| cta_clicks         | integer     | NO       | 0                 | Total CTA button clicks                               |
+| saves              | integer     | NO       | 0                 | Net saves added (new saves minus unsaves for the day) |
+| shares             | integer     | NO       | 0                 | Total share events                                    |
+| search_impressions | integer     | NO       | 0                 | Times this listing appeared in search results         |
+| created_at         | timestamptz | NO       | now()             | —                                                     |
+| updated_at         | timestamptz | NO       | now()             | Trigger-updated when rollup is recomputed             |
 
 #### Indexes
 
@@ -2829,19 +2829,19 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| snapshot_date | date | NO | — | UNIQUE; the date this snapshot covers |
-| total_listings | integer | NO | 0 | Total listings in the platform (all statuses, not deleted) |
-| total_published_listings | integer | NO | 0 | Listings with status = 'published' |
-| total_searches | integer | NO | 0 | Total search_events records for this date |
-| total_saves | integer | NO | 0 | Total saves records created on this date |
-| total_page_views | integer | NO | 0 | Total listing page_view analytics_events for this date |
-| total_claimed_listings | integer | NO | 0 | Listings with trust_tier = 'claimed' or higher |
-| new_listings | integer | NO | 0 | Listings created on this date |
-| new_users | integer | NO | 0 | auth.users records created on this date |
-| created_at | timestamptz | NO | now() | — |
+| Field                    | Type        | Nullable | Default           | Notes                                                      |
+| ------------------------ | ----------- | -------- | ----------------- | ---------------------------------------------------------- |
+| id                       | uuid        | NO       | gen_random_uuid() | PK                                                         |
+| snapshot_date            | date        | NO       | —                 | UNIQUE; the date this snapshot covers                      |
+| total_listings           | integer     | NO       | 0                 | Total listings in the platform (all statuses, not deleted) |
+| total_published_listings | integer     | NO       | 0                 | Listings with status = 'published'                         |
+| total_searches           | integer     | NO       | 0                 | Total search_events records for this date                  |
+| total_saves              | integer     | NO       | 0                 | Total saves records created on this date                   |
+| total_page_views         | integer     | NO       | 0                 | Total listing page_view analytics_events for this date     |
+| total_claimed_listings   | integer     | NO       | 0                 | Listings with trust_tier = 'claimed' or higher             |
+| new_listings             | integer     | NO       | 0                 | Listings created on this date                              |
+| new_users                | integer     | NO       | 0                 | auth.users records created on this date                    |
+| created_at               | timestamptz | NO       | now()             | —                                                          |
 
 #### Indexes
 
@@ -2880,18 +2880,18 @@ AI tables support the V2 suggestion engine, generation request logging, content 
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| listing_id | uuid | NO | — | FK → listings ON DELETE CASCADE |
-| suggestion_type | text | NO | — | CHECK IN ('description_quality','category_accuracy','cta_completeness','image_missing','hours_missing') |
-| content | text | NO | — | The suggestion text shown to the owner |
-| confidence_score | numeric(5,4) | YES | — | Model confidence (0–1); null if not provided by the model |
-| status | text | NO | 'pending' | CHECK IN ('pending','shown','accepted','dismissed','expired') |
-| shown_at | timestamptz | YES | — | When the suggestion was first surfaced to the owner |
-| responded_at | timestamptz | YES | — | When the owner accepted or dismissed |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field            | Type         | Nullable | Default           | Notes                                                                                                   |
+| ---------------- | ------------ | -------- | ----------------- | ------------------------------------------------------------------------------------------------------- |
+| id               | uuid         | NO       | gen_random_uuid() | PK                                                                                                      |
+| listing_id       | uuid         | NO       | —                 | FK → listings ON DELETE CASCADE                                                                         |
+| suggestion_type  | text         | NO       | —                 | CHECK IN ('description_quality','category_accuracy','cta_completeness','image_missing','hours_missing') |
+| content          | text         | NO       | —                 | The suggestion text shown to the owner                                                                  |
+| confidence_score | numeric(5,4) | YES      | —                 | Model confidence (0–1); null if not provided by the model                                               |
+| status           | text         | NO       | 'pending'         | CHECK IN ('pending','shown','accepted','dismissed','expired')                                           |
+| shown_at         | timestamptz  | YES      | —                 | When the suggestion was first surfaced to the owner                                                     |
+| responded_at     | timestamptz  | YES      | —                 | When the owner accepted or dismissed                                                                    |
+| created_at       | timestamptz  | NO       | now()             | —                                                                                                       |
+| updated_at       | timestamptz  | NO       | now()             | Trigger-updated                                                                                         |
 
 #### Indexes
 
@@ -2925,19 +2925,19 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| user_id | uuid | YES | — | FK → auth.users ON DELETE SET NULL; null for system-triggered requests |
-| listing_id | uuid | YES | — | FK → listings ON DELETE SET NULL; null for non-listing requests |
-| model | text | NO | — | Model identifier (e.g., 'claude-sonnet-4-6') |
-| prompt_type | text | NO | — | Category of request (e.g., 'description_generation', 'category_suggestion') |
-| input_tokens | integer | NO | — | Input token count for cost tracking |
-| output_tokens | integer | NO | — | Output token count |
-| latency_ms | integer | YES | — | Round-trip latency in milliseconds; null if not measured |
-| status | text | NO | 'success' | CHECK IN ('success','error','timeout') |
-| error_message | text | YES | — | Error details on failure; null on success |
-| created_at | timestamptz | NO | now() | — |
+| Field         | Type        | Nullable | Default           | Notes                                                                       |
+| ------------- | ----------- | -------- | ----------------- | --------------------------------------------------------------------------- |
+| id            | uuid        | NO       | gen_random_uuid() | PK                                                                          |
+| user_id       | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL; null for system-triggered requests      |
+| listing_id    | uuid        | YES      | —                 | FK → listings ON DELETE SET NULL; null for non-listing requests             |
+| model         | text        | NO       | —                 | Model identifier (e.g., 'claude-sonnet-4-6')                                |
+| prompt_type   | text        | NO       | —                 | Category of request (e.g., 'description_generation', 'category_suggestion') |
+| input_tokens  | integer     | NO       | —                 | Input token count for cost tracking                                         |
+| output_tokens | integer     | NO       | —                 | Output token count                                                          |
+| latency_ms    | integer     | YES      | —                 | Round-trip latency in milliseconds; null if not measured                    |
+| status        | text        | NO       | 'success'         | CHECK IN ('success','error','timeout')                                      |
+| error_message | text        | YES      | —                 | Error details on failure; null on success                                   |
+| created_at    | timestamptz | NO       | now()             | —                                                                           |
 
 #### Indexes
 
@@ -2973,17 +2973,17 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| entity_type | text | NO | — | CHECK IN ('listing','review','profile','correction') |
-| entity_id | uuid | NO | — | ID of the flagged entity; not a formal FK (polymorphic) |
-| flag_reason | text | NO | — | Description of the potential policy violation |
-| confidence_score | numeric(5,4) | YES | — | Model confidence (0–1); null if model does not provide it |
-| status | text | NO | 'pending' | CHECK IN ('pending','reviewed','dismissed','actioned') |
-| reviewed_by | uuid | YES | — | FK → auth.users ON DELETE SET NULL; the admin who reviewed this flag |
-| reviewed_at | timestamptz | YES | — | When the admin completed review |
-| created_at | timestamptz | NO | now() | — |
+| Field            | Type         | Nullable | Default           | Notes                                                                |
+| ---------------- | ------------ | -------- | ----------------- | -------------------------------------------------------------------- |
+| id               | uuid         | NO       | gen_random_uuid() | PK                                                                   |
+| entity_type      | text         | NO       | —                 | CHECK IN ('listing','review','profile','correction')                 |
+| entity_id        | uuid         | NO       | —                 | ID of the flagged entity; not a formal FK (polymorphic)              |
+| flag_reason      | text         | NO       | —                 | Description of the potential policy violation                        |
+| confidence_score | numeric(5,4) | YES      | —                 | Model confidence (0–1); null if model does not provide it            |
+| status           | text         | NO       | 'pending'         | CHECK IN ('pending','reviewed','dismissed','actioned')               |
+| reviewed_by      | uuid         | YES      | —                 | FK → auth.users ON DELETE SET NULL; the admin who reviewed this flag |
+| reviewed_at      | timestamptz  | YES      | —                 | When the admin completed review                                      |
+| created_at       | timestamptz  | NO       | now()             | —                                                                    |
 
 #### Indexes
 
@@ -3017,19 +3017,19 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| agent_type | text | NO | — | CHECK IN ('curation','optimization','moderation') |
-| triggered_by | text | NO | — | CHECK IN ('schedule','event','manual') |
-| input_context | jsonb | YES | — | Parameters passed to the agent run; null for parameterless runs |
-| output_summary | text | YES | — | Human-readable summary of what the agent did; null until completed |
-| listings_affected | integer | NO | 0 | Count of listings modified or acted on |
-| status | text | NO | 'running' | CHECK IN ('running','completed','failed') |
-| started_at | timestamptz | NO | now() | — |
-| completed_at | timestamptz | YES | — | null until run completes or fails |
-| error_message | text | YES | — | Error details on failure; null on success |
-| created_at | timestamptz | NO | now() | — |
+| Field             | Type        | Nullable | Default           | Notes                                                              |
+| ----------------- | ----------- | -------- | ----------------- | ------------------------------------------------------------------ |
+| id                | uuid        | NO       | gen_random_uuid() | PK                                                                 |
+| agent_type        | text        | NO       | —                 | CHECK IN ('curation','optimization','moderation')                  |
+| triggered_by      | text        | NO       | —                 | CHECK IN ('schedule','event','manual')                             |
+| input_context     | jsonb       | YES      | —                 | Parameters passed to the agent run; null for parameterless runs    |
+| output_summary    | text        | YES      | —                 | Human-readable summary of what the agent did; null until completed |
+| listings_affected | integer     | NO       | 0                 | Count of listings modified or acted on                             |
+| status            | text        | NO       | 'running'         | CHECK IN ('running','completed','failed')                          |
+| started_at        | timestamptz | NO       | now()             | —                                                                  |
+| completed_at      | timestamptz | YES      | —                 | null until run completes or fails                                  |
+| error_message     | text        | YES      | —                 | Error details on failure; null on success                          |
+| created_at        | timestamptz | NO       | now()             | —                                                                  |
 
 #### Indexes
 
@@ -3069,18 +3069,18 @@ Admin tables are operational infrastructure. They are not exposed to any non-adm
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| admin_user_id | uuid | YES | — | FK → auth.users ON DELETE SET NULL; SET NULL preserves log on admin account deletion |
-| action | text | NO | — | One of the defined action enum values (see security plan Section 9) |
-| target_table | text | NO | — | The table affected by the action |
-| target_id | uuid | YES | — | PK of the affected record; null for platform-level actions |
-| before_state | jsonb | YES | — | Sanitized snapshot of the record before the change; null for INSERT operations |
-| after_state | jsonb | YES | — | Sanitized snapshot of the record after the change; null for DELETE operations |
-| ip_address | text | YES | — | IP address of the admin request extracted server-side |
-| user_agent | text | YES | — | Browser user agent of the admin session |
-| created_at | timestamptz | NO | now() | — |
+| Field         | Type        | Nullable | Default           | Notes                                                                                |
+| ------------- | ----------- | -------- | ----------------- | ------------------------------------------------------------------------------------ |
+| id            | uuid        | NO       | gen_random_uuid() | PK                                                                                   |
+| admin_user_id | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL; SET NULL preserves log on admin account deletion |
+| action        | text        | NO       | —                 | One of the defined action enum values (see security plan Section 9)                  |
+| target_table  | text        | NO       | —                 | The table affected by the action                                                     |
+| target_id     | uuid        | YES      | —                 | PK of the affected record; null for platform-level actions                           |
+| before_state  | jsonb       | YES      | —                 | Sanitized snapshot of the record before the change; null for INSERT operations       |
+| after_state   | jsonb       | YES      | —                 | Sanitized snapshot of the record after the change; null for DELETE operations        |
+| ip_address    | text        | YES      | —                 | IP address of the admin request extracted server-side                                |
+| user_agent    | text        | YES      | —                 | Browser user agent of the admin session                                              |
+| created_at    | timestamptz | NO       | now()             | —                                                                                    |
 
 #### Indexes
 
@@ -3116,18 +3116,18 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| queue_type | text | NO | — | CHECK IN ('claim','correction','review','flagged_listing','verification') |
-| entity_id | uuid | NO | — | ID of the entity requiring review |
-| entity_type | text | NO | — | The table containing the entity (e.g., 'listings', 'reviews', 'claims') |
-| status | text | NO | 'pending' | CHECK IN ('pending','assigned','resolved','dismissed') |
-| assigned_to | uuid | YES | — | FK → auth.users ON DELETE SET NULL; the admin this item is assigned to |
-| priority | integer | NO | 0 | Higher value = higher priority; used for queue sort ordering |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
-| resolved_at | timestamptz | YES | — | Set when status transitions to 'resolved' or 'dismissed' |
+| Field       | Type        | Nullable | Default           | Notes                                                                     |
+| ----------- | ----------- | -------- | ----------------- | ------------------------------------------------------------------------- |
+| id          | uuid        | NO       | gen_random_uuid() | PK                                                                        |
+| queue_type  | text        | NO       | —                 | CHECK IN ('claim','correction','review','flagged_listing','verification') |
+| entity_id   | uuid        | NO       | —                 | ID of the entity requiring review                                         |
+| entity_type | text        | NO       | —                 | The table containing the entity (e.g., 'listings', 'reviews', 'claims')   |
+| status      | text        | NO       | 'pending'         | CHECK IN ('pending','assigned','resolved','dismissed')                    |
+| assigned_to | uuid        | YES      | —                 | FK → auth.users ON DELETE SET NULL; the admin this item is assigned to    |
+| priority    | integer     | NO       | 0                 | Higher value = higher priority; used for queue sort ordering              |
+| created_at  | timestamptz | NO       | now()             | —                                                                         |
+| updated_at  | timestamptz | NO       | now()             | Trigger-updated                                                           |
+| resolved_at | timestamptz | YES      | —                 | Set when status transitions to 'resolved' or 'dismissed'                  |
 
 #### Indexes
 
@@ -3166,21 +3166,21 @@ None.
 
 #### Fields
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| id | uuid | NO | gen_random_uuid() | PK |
-| sponsor_name | text | NO | — | Public name of the sponsoring organization |
-| sponsor_url | text | YES | — | Sponsor website URL for attribution links |
-| logo_path | text | YES | — | Supabase Storage path for sponsor logo |
-| target_city_ids | uuid[] | YES | — | Array of city UUIDs to target; null = nationwide |
-| target_category_ids | uuid[] | YES | — | Array of category UUIDs to target; null = all categories |
-| budget | numeric(10,2) | YES | — | Total campaign budget in USD; null for flat-rate campaigns |
-| starts_at | timestamptz | NO | — | Campaign activation timestamp |
-| ends_at | timestamptz | YES | — | Campaign expiry; null = no end date |
-| status | text | NO | 'draft' | CHECK IN ('draft','active','paused','completed') |
-| created_by | uuid | YES | — | FK → auth.users ON DELETE SET NULL; the admin who created the campaign |
-| created_at | timestamptz | NO | now() | — |
-| updated_at | timestamptz | NO | now() | Trigger-updated |
+| Field               | Type          | Nullable | Default           | Notes                                                                  |
+| ------------------- | ------------- | -------- | ----------------- | ---------------------------------------------------------------------- |
+| id                  | uuid          | NO       | gen_random_uuid() | PK                                                                     |
+| sponsor_name        | text          | NO       | —                 | Public name of the sponsoring organization                             |
+| sponsor_url         | text          | YES      | —                 | Sponsor website URL for attribution links                              |
+| logo_path           | text          | YES      | —                 | Supabase Storage path for sponsor logo                                 |
+| target_city_ids     | uuid[]        | YES      | —                 | Array of city UUIDs to target; null = nationwide                       |
+| target_category_ids | uuid[]        | YES      | —                 | Array of category UUIDs to target; null = all categories               |
+| budget              | numeric(10,2) | YES      | —                 | Total campaign budget in USD; null for flat-rate campaigns             |
+| starts_at           | timestamptz   | NO       | —                 | Campaign activation timestamp                                          |
+| ends_at             | timestamptz   | YES      | —                 | Campaign expiry; null = no end date                                    |
+| status              | text          | NO       | 'draft'           | CHECK IN ('draft','active','paused','completed')                       |
+| created_by          | uuid          | YES      | —                 | FK → auth.users ON DELETE SET NULL; the admin who created the campaign |
+| created_at          | timestamptz   | NO       | now()             | —                                                                      |
+| updated_at          | timestamptz   | NO       | now()             | Trigger-updated                                                        |
 
 #### Indexes
 
@@ -3211,29 +3211,29 @@ This section is the first-ticket priority list for engineers starting the MVP mi
 
 The 21 MVP tables cover every capability required to: seed the platform with business listings, allow supporters to create accounts and save listings, allow owners to claim and manage listings, support admin moderation, and record analytics events.
 
-| Priority | Table | Domain Section | Purpose |
-|---|---|---|---|
-| 1 | `states` | Section 3 (Part A) | Reference table for US states; no dependencies |
-| 2 | `cities` | Section 3 (Part A) | City/metro reference with slugs; depends on states |
-| 3 | `categories` | Section 3 (Part A) | Hierarchical category tree; self-referencing FK |
-| 4 | `listings` | Section 4 (Part A) | Base entity table; depends on cities, categories |
-| 5 | `listing_details_business` | Section 5 (Part A) | Business-specific fields; one-to-one with listings |
-| 6 | `services` | Section 5 (Part A) | Service offerings; child of listings |
-| 7 | `media_attachments` | Section 6 (Part A) | Polymorphic media store; child of listings and products |
-| 8 | `listing_hours` | Section 6 (Part A) | Structured hours rows; child of listings |
-| 9 | `listing_links` | Section 6 (Part A) | Social and URL links; child of listings |
-| 10 | `profiles` | Section 1 (Part A) | User display names and preferences; mirrors auth.users |
-| 11 | `user_roles` | Section 1 (Part A) | Role assignments; depends on auth.users |
-| 12 | `claims` | Section 7 (Part A) | Ownership claim requests; depends on listings and auth.users |
-| 13 | `saves` | Section 8 (Part A) | User-listing save associations; depends on listings and auth.users |
-| 14 | `reviews` | Section 9 (Part A) | Star ratings and text reviews (data model built; workflow inactive until V1) |
-| 15 | `collections` | Section 7 (this doc) | Admin-curated listing groups; depends on auth.users |
-| 16 | `collection_items` | Section 7 (this doc) | Collection ↔ listing junction; depends on collections and listings |
-| 17 | `analytics_events` | Section 11 (this doc) | Append-only platform event log; depends on auth.users |
-| 18 | `search_events` | Section 11 (this doc) | Search query log; depends on cities, listings, auth.users |
-| 19 | `entity_analytics_daily` | Section 11 (this doc) | Daily listing metric rollups; depends on listings |
-| 20 | `admin_audit_log` | Section 13 (this doc) | Immutable admin action log; depends on auth.users |
-| 21 | `moderation_queue` | Section 13 (this doc) | Admin review queue; depends on auth.users |
+| Priority | Table                      | Domain Section        | Purpose                                                                      |
+| -------- | -------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| 1        | `states`                   | Section 3 (Part A)    | Reference table for US states; no dependencies                               |
+| 2        | `cities`                   | Section 3 (Part A)    | City/metro reference with slugs; depends on states                           |
+| 3        | `categories`               | Section 3 (Part A)    | Hierarchical category tree; self-referencing FK                              |
+| 4        | `listings`                 | Section 4 (Part A)    | Base entity table; depends on cities, categories                             |
+| 5        | `listing_details_business` | Section 5 (Part A)    | Business-specific fields; one-to-one with listings                           |
+| 6        | `services`                 | Section 5 (Part A)    | Service offerings; child of listings                                         |
+| 7        | `media_attachments`        | Section 6 (Part A)    | Polymorphic media store; child of listings and products                      |
+| 8        | `listing_hours`            | Section 6 (Part A)    | Structured hours rows; child of listings                                     |
+| 9        | `listing_links`            | Section 6 (Part A)    | Social and URL links; child of listings                                      |
+| 10       | `profiles`                 | Section 1 (Part A)    | User display names and preferences; mirrors auth.users                       |
+| 11       | `user_roles`               | Section 1 (Part A)    | Role assignments; depends on auth.users                                      |
+| 12       | `claims`                   | Section 7 (Part A)    | Ownership claim requests; depends on listings and auth.users                 |
+| 13       | `saves`                    | Section 8 (Part A)    | User-listing save associations; depends on listings and auth.users           |
+| 14       | `reviews`                  | Section 9 (Part A)    | Star ratings and text reviews (data model built; workflow inactive until V1) |
+| 15       | `collections`              | Section 7 (this doc)  | Admin-curated listing groups; depends on auth.users                          |
+| 16       | `collection_items`         | Section 7 (this doc)  | Collection ↔ listing junction; depends on collections and listings           |
+| 17       | `analytics_events`         | Section 11 (this doc) | Append-only platform event log; depends on auth.users                        |
+| 18       | `search_events`            | Section 11 (this doc) | Search query log; depends on cities, listings, auth.users                    |
+| 19       | `entity_analytics_daily`   | Section 11 (this doc) | Daily listing metric rollups; depends on listings                            |
+| 20       | `admin_audit_log`          | Section 13 (this doc) | Immutable admin action log; depends on auth.users                            |
+| 21       | `moderation_queue`         | Section 13 (this doc) | Admin review queue; depends on auth.users                                    |
 
 ---
 
@@ -3247,18 +3247,18 @@ All tables deferred beyond MVP, grouped by release phase. Each deferral includes
 
 Beta tables are built when the platform expands beyond Business listings to support Professional, Creative, Event, and Job entity types, plus community-contributed corrections, review responses, and the tag system.
 
-| Table | Domain Section | Purpose | Why Deferred |
-|---|---|---|---|
-| `listing_details_professional` | Section 5 (Part A) | Professional-specific fields (credentials, consultation type, bio) | Entity type not in MVP scope; business listings only at launch |
-| `listing_details_creative` | Section 5 (Part A) | Creative-specific fields (portfolio statement, commission status, medium/genre) | Entity type not in MVP scope |
-| `listing_details_event` | Section 5 (Part A) | Event-specific fields (date, time, ticket URL, ticket price) | Entity type not in MVP scope |
-| `listing_details_job` | Section 5 (Part A) | Job-specific fields (role title, employment type, salary range, apply URL) | Entity type not in MVP scope |
-| `corrections` | Section 9 (Part A) | Community-submitted corrections to listing information | Moderation workflow complexity; admin team capacity at MVP is focused on claims |
-| `review_responses` | Section 9 (Part A) | Business owner responses to published reviews | Reviews themselves are V1; responses are a V1+ feature |
-| `review_reports` | Section 9 (Part A) | User-submitted flags on published reviews | Review moderation workflow is V1; flag sub-system is Beta |
-| `tags` | Section 10 (Part A) | Platform-managed tag reference table | Tags are a discovery enhancement; core search works without them at MVP |
-| `listing_tags` | Section 10 (Part A) | Many-to-many junction between listings and tags | Depends on tags table |
-| `neighborhoods` | Section 3 (Part A) | Sub-city neighborhood reference for location refinement | City-level granularity is sufficient at MVP; neighborhood refinement is a search enhancement |
+| Table                          | Domain Section      | Purpose                                                                         | Why Deferred                                                                                 |
+| ------------------------------ | ------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `listing_details_professional` | Section 5 (Part A)  | Professional-specific fields (credentials, consultation type, bio)              | Entity type not in MVP scope; business listings only at launch                               |
+| `listing_details_creative`     | Section 5 (Part A)  | Creative-specific fields (portfolio statement, commission status, medium/genre) | Entity type not in MVP scope                                                                 |
+| `listing_details_event`        | Section 5 (Part A)  | Event-specific fields (date, time, ticket URL, ticket price)                    | Entity type not in MVP scope                                                                 |
+| `listing_details_job`          | Section 5 (Part A)  | Job-specific fields (role title, employment type, salary range, apply URL)      | Entity type not in MVP scope                                                                 |
+| `corrections`                  | Section 9 (Part A)  | Community-submitted corrections to listing information                          | Moderation workflow complexity; admin team capacity at MVP is focused on claims              |
+| `review_responses`             | Section 9 (Part A)  | Business owner responses to published reviews                                   | Reviews themselves are V1; responses are a V1+ feature                                       |
+| `review_reports`               | Section 9 (Part A)  | User-submitted flags on published reviews                                       | Review moderation workflow is V1; flag sub-system is Beta                                    |
+| `tags`                         | Section 10 (Part A) | Platform-managed tag reference table                                            | Tags are a discovery enhancement; core search works without them at MVP                      |
+| `listing_tags`                 | Section 10 (Part A) | Many-to-many junction between listings and tags                                 | Depends on tags table                                                                        |
+| `neighborhoods`                | Section 3 (Part A)  | Sub-city neighborhood reference for location refinement                         | City-level granularity is sufficient at MVP; neighborhood refinement is a search enhancement |
 
 ---
 
@@ -3266,17 +3266,17 @@ Beta tables are built when the platform expands beyond Business listings to supp
 
 V1 tables activate paid subscriptions, sponsored placements, editorial content, city guides, the verification workflow, and platform-level analytics.
 
-| Table | Domain Section | Purpose | Why Deferred |
-|---|---|---|---|
-| `plans` | Section 6 (this doc) | Subscription tier definitions (Free, Standard, Premium) | Monetization is not in MVP scope; all listings start on free tier |
-| `subscriptions` | Section 6 (this doc) | Listing-to-plan subscription state with Stripe sync | Depends on plans; requires Stripe Connect onboarding for owners |
-| `sponsored_placements` | Section 7 (this doc) | Paid placement purchases with active period tracking | Requires a self-serve purchase flow; editorial featured slots are the MVP equivalent |
-| `featured_slots` | Section 7 (this doc) | Admin-controlled editorial featured positions across pages | MVP uses a simpler `is_featured` boolean on listings; full slot management is V1 |
-| `editorial_articles` | Section 7 (this doc) | Long-form editorial content published by the BLACQList team | Content team capacity; MVP focuses on directory, not editorial |
-| `guides` | Section 7 (this doc) | Curated city guide pages | Requires editorial content investment; deferred until city coverage is sufficient |
-| `guide_sections` | Section 7 (this doc) | Ordered content sections within city guides | Depends on guides |
-| `verification_submissions` | Section 8 (Part A) | Document uploads and admin workflow for listing verification | Verification workflow has admin tooling complexity; data model columns exist on listings at MVP |
-| `platform_analytics_daily` | Section 11 (this doc) | Daily platform-wide aggregate metrics for admin dashboards | Admin dashboard is not a launch requirement; basic Supabase Studio queries are sufficient at MVP |
+| Table                      | Domain Section        | Purpose                                                      | Why Deferred                                                                                     |
+| -------------------------- | --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `plans`                    | Section 6 (this doc)  | Subscription tier definitions (Free, Standard, Premium)      | Monetization is not in MVP scope; all listings start on free tier                                |
+| `subscriptions`            | Section 6 (this doc)  | Listing-to-plan subscription state with Stripe sync          | Depends on plans; requires Stripe Connect onboarding for owners                                  |
+| `sponsored_placements`     | Section 7 (this doc)  | Paid placement purchases with active period tracking         | Requires a self-serve purchase flow; editorial featured slots are the MVP equivalent             |
+| `featured_slots`           | Section 7 (this doc)  | Admin-controlled editorial featured positions across pages   | MVP uses a simpler `is_featured` boolean on listings; full slot management is V1                 |
+| `editorial_articles`       | Section 7 (this doc)  | Long-form editorial content published by the BLACQList team  | Content team capacity; MVP focuses on directory, not editorial                                   |
+| `guides`                   | Section 7 (this doc)  | Curated city guide pages                                     | Requires editorial content investment; deferred until city coverage is sufficient                |
+| `guide_sections`           | Section 7 (this doc)  | Ordered content sections within city guides                  | Depends on guides                                                                                |
+| `verification_submissions` | Section 8 (Part A)    | Document uploads and admin workflow for listing verification | Verification workflow has admin tooling complexity; data model columns exist on listings at MVP  |
+| `platform_analytics_daily` | Section 11 (this doc) | Daily platform-wide aggregate metrics for admin dashboards   | Admin dashboard is not a launch requirement; basic Supabase Studio queries are sufficient at MVP |
 
 ---
 
@@ -3284,23 +3284,23 @@ V1 tables activate paid subscriptions, sponsored placements, editorial content, 
 
 V2 tables power the marketplace (orders, products, variants, coupons), receipt capture and spend tracking, service area management, AI optimization, and event-listing relationships.
 
-| Table | Domain Section | Purpose | Why Deferred |
-|---|---|---|---|
-| `listing_details_vendor` | Section 5 (Part A) | Vendor-specific fields (Stripe Connect, storefront description, return policy) | Marketplace requires Stripe Connect; deferred until V2 payments infrastructure is built |
-| `products` | Section 5 (Part A) | Product catalog for vendor storefronts | Marketplace feature; depends on listing_details_vendor |
-| `product_variants` | Section 5 (Part A) | Size/color/option variants for products | Depends on products |
-| `orders` | Section 6 (this doc) | Marketplace order records with payment and fulfillment state | Requires Stripe Connect and full checkout flow |
-| `order_items` | Section 6 (this doc) | Line items within an order | Depends on orders and products |
-| `coupons` | Section 6 (this doc) | Discount code management for marketplace checkout | Requires order checkout to be built first |
-| `receipt_uploads` | Section 8 (this doc) | Receipt photo uploads with OCR processing | Requires OCR pipeline, private storage bucket, and spend tracking flow |
-| `spend_events` | Section 8 (this doc) | Individual spend records linked to listings | Depends on receipt_uploads; requires spend tracking product design |
-| `listing_service_areas` | Section 7 (Part A) | Defined geographic service area polygons or radius records | Map view and geographic filtering are V2 features |
-| `ai_suggestions` | Section 12 (this doc) | AI-generated optimization suggestions for listing owners | Requires AI integration and owner-facing suggestion UI |
-| `ai_generation_requests` | Section 12 (this doc) | Log of AI model API calls for cost and latency tracking | Depends on AI integration being built |
-| `ai_moderation_flags` | Section 12 (this doc) | AI-generated content moderation flags routed to admin queue | Depends on AI integration; human review queue must be operational first |
-| `event_vendors` | Section 10 (this doc) | Many-to-many between events and participating vendor listings | Event entity type is Beta; vendor type is V2; junction is V2 |
-| `event_sponsors` | Section 10 (this doc) | Sponsor records for event pages | Same dependency chain as event_vendors |
-| `community_impact_daily` | Section 8 (this doc) | Anonymized daily spend aggregates by city and category | Depends on spend_events being populated with sufficient data |
+| Table                    | Domain Section        | Purpose                                                                        | Why Deferred                                                                            |
+| ------------------------ | --------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `listing_details_vendor` | Section 5 (Part A)    | Vendor-specific fields (Stripe Connect, storefront description, return policy) | Marketplace requires Stripe Connect; deferred until V2 payments infrastructure is built |
+| `products`               | Section 5 (Part A)    | Product catalog for vendor storefronts                                         | Marketplace feature; depends on listing_details_vendor                                  |
+| `product_variants`       | Section 5 (Part A)    | Size/color/option variants for products                                        | Depends on products                                                                     |
+| `orders`                 | Section 6 (this doc)  | Marketplace order records with payment and fulfillment state                   | Requires Stripe Connect and full checkout flow                                          |
+| `order_items`            | Section 6 (this doc)  | Line items within an order                                                     | Depends on orders and products                                                          |
+| `coupons`                | Section 6 (this doc)  | Discount code management for marketplace checkout                              | Requires order checkout to be built first                                               |
+| `receipt_uploads`        | Section 8 (this doc)  | Receipt photo uploads with OCR processing                                      | Requires OCR pipeline, private storage bucket, and spend tracking flow                  |
+| `spend_events`           | Section 8 (this doc)  | Individual spend records linked to listings                                    | Depends on receipt_uploads; requires spend tracking product design                      |
+| `listing_service_areas`  | Section 7 (Part A)    | Defined geographic service area polygons or radius records                     | Map view and geographic filtering are V2 features                                       |
+| `ai_suggestions`         | Section 12 (this doc) | AI-generated optimization suggestions for listing owners                       | Requires AI integration and owner-facing suggestion UI                                  |
+| `ai_generation_requests` | Section 12 (this doc) | Log of AI model API calls for cost and latency tracking                        | Depends on AI integration being built                                                   |
+| `ai_moderation_flags`    | Section 12 (this doc) | AI-generated content moderation flags routed to admin queue                    | Depends on AI integration; human review queue must be operational first                 |
+| `event_vendors`          | Section 10 (this doc) | Many-to-many between events and participating vendor listings                  | Event entity type is Beta; vendor type is V2; junction is V2                            |
+| `event_sponsors`         | Section 10 (this doc) | Sponsor records for event pages                                                | Same dependency chain as event_vendors                                                  |
+| `community_impact_daily` | Section 8 (this doc)  | Anonymized daily spend aggregates by city and category                         | Depends on spend_events being populated with sufficient data                            |
 
 ---
 
@@ -3308,15 +3308,15 @@ V2 tables power the marketplace (orders, products, variants, coupons), receipt c
 
 V3+ tables power the dollar-flow map visualization, autonomous AI agents, vendor relationship inference, platform-level sponsor campaigns, service package purchasing, and invoicing.
 
-| Table | Domain Section | Purpose | Why Deferred |
-|---|---|---|---|
-| `flow_nodes` | Section 9 (this doc) | Graph nodes for the dollar-flow visualization | Requires substantial spend_events data (V2) before visualization is meaningful |
-| `flow_edges` | Section 9 (this doc) | Directed edges between flow nodes with volume and weight | Depends on flow_nodes and aggregated spend data |
-| `flow_map_snapshots` | Section 9 (this doc) | Pre-computed serialized graph payloads for visualization rendering | Depends on flow_nodes and flow_edges being populated |
-| `anonymized_community_nodes` | Section 9 (this doc) | City/category aggregate nodes for public flow map layer | Depends on community_impact_daily reaching minimum 5-contributor thresholds |
-| `vendor_relationships` | Section 9 (this doc) | Inferred business-to-business relationships from spend and event data | Requires V2 spend data and event co-participation data to generate meaningful signals |
-| `sponsor_campaigns` | Section 14 (this doc) | Brand-level sponsorship campaigns with city and category targeting | Platform-level sponsorships require significant traffic before value proposition is proven |
-| `invoices` | Section 6 (this doc) | Stripe-synced invoice records for subscription and marketplace billing | Billing complexity is deferred to post-marketplace launch when invoice history is needed |
-| `service_packages` | Section 6 (this doc) | Structured service bundles with Stripe pricing for vendor storefronts | Requires marketplace checkout and Stripe Connect; a V2+ add-on beyond the core order flow |
-| `ai_agent_runs` | Section 12 (this doc) | Autonomous AI agent execution logs for curation, optimization, and moderation | Autonomous agents require validated AI suggestion and moderation pipelines from V2 |
-| `listing_ctas` | Section 6 (Part A) | Structured CTA records for listings that require multiple CTAs | CTA data on listing_details tables is sufficient through V2; multi-CTA is a V3 enhancement |
+| Table                        | Domain Section        | Purpose                                                                       | Why Deferred                                                                               |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `flow_nodes`                 | Section 9 (this doc)  | Graph nodes for the dollar-flow visualization                                 | Requires substantial spend_events data (V2) before visualization is meaningful             |
+| `flow_edges`                 | Section 9 (this doc)  | Directed edges between flow nodes with volume and weight                      | Depends on flow_nodes and aggregated spend data                                            |
+| `flow_map_snapshots`         | Section 9 (this doc)  | Pre-computed serialized graph payloads for visualization rendering            | Depends on flow_nodes and flow_edges being populated                                       |
+| `anonymized_community_nodes` | Section 9 (this doc)  | City/category aggregate nodes for public flow map layer                       | Depends on community_impact_daily reaching minimum 5-contributor thresholds                |
+| `vendor_relationships`       | Section 9 (this doc)  | Inferred business-to-business relationships from spend and event data         | Requires V2 spend data and event co-participation data to generate meaningful signals      |
+| `sponsor_campaigns`          | Section 14 (this doc) | Brand-level sponsorship campaigns with city and category targeting            | Platform-level sponsorships require significant traffic before value proposition is proven |
+| `invoices`                   | Section 6 (this doc)  | Stripe-synced invoice records for subscription and marketplace billing        | Billing complexity is deferred to post-marketplace launch when invoice history is needed   |
+| `service_packages`           | Section 6 (this doc)  | Structured service bundles with Stripe pricing for vendor storefronts         | Requires marketplace checkout and Stripe Connect; a V2+ add-on beyond the core order flow  |
+| `ai_agent_runs`              | Section 12 (this doc) | Autonomous AI agent execution logs for curation, optimization, and moderation | Autonomous agents require validated AI suggestion and moderation pipelines from V2         |
+| `listing_ctas`               | Section 6 (Part A)    | Structured CTA records for listings that require multiple CTAs                | CTA data on listing_details tables is sufficient through V2; multi-CTA is a V3 enhancement |

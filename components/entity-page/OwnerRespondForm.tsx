@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useActionState, useState } from "react"
-import { submitReviewResponse } from "@/lib/actions/owner/submitReviewResponse"
-import type { ReviewResponseState } from "@/lib/actions/owner/submitReviewResponse"
+import { useActionState, useState } from 'react'
+import { submitReviewResponse } from '@/lib/actions/owner/submitReviewResponse'
+import type { ReviewResponseState } from '@/lib/actions/owner/submitReviewResponse'
 
 interface Props {
   reviewId: string
@@ -37,7 +37,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
 
   return (
     <form action={action} className="mt-3 space-y-2">
-      <input type="hidden" name="review_id"  value={reviewId} />
+      <input type="hidden" name="review_id" value={reviewId} />
       <input type="hidden" name="listing_id" value={listingId} />
       <textarea
         name="response"
@@ -49,7 +49,9 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
         className="w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
       />
       {state.error && (
-        <p role="alert" className="font-body text-xs text-red-600">{state.error}</p>
+        <p role="alert" className="font-body text-xs text-red-600">
+          {state.error}
+        </p>
       )}
       <div className="flex gap-2">
         <button
@@ -57,7 +59,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
           disabled={pending}
           className="h-8 px-4 rounded-full bg-brand-black text-white font-body font-bold text-xs hover:bg-charcoal transition-colors disabled:opacity-50"
         >
-          {pending ? "Saving…" : "Post response"}
+          {pending ? 'Saving…' : 'Post response'}
         </button>
         <button
           type="button"

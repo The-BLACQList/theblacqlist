@@ -1,16 +1,16 @@
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { ExternalLink } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
-import { requireOwner } from "@/lib/dashboard/guard"
-import { buildEntityUrl } from "@/lib/listings/url"
-import { BasicInfoSection } from "@/components/dashboard/BasicInfoSection"
-import { AboutSection } from "@/components/dashboard/AboutSection"
-import { ContactSection } from "@/components/dashboard/ContactSection"
-import { SocialSection } from "@/components/dashboard/SocialSection"
-import { CtaSection } from "@/components/dashboard/CtaSection"
-import { SeoSection } from "@/components/dashboard/SeoSection"
-import { HoursSection } from "@/components/dashboard/HoursSection"
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { requireOwner } from '@/lib/dashboard/guard'
+import { buildEntityUrl } from '@/lib/listings/url'
+import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
+import { AboutSection } from '@/components/dashboard/AboutSection'
+import { ContactSection } from '@/components/dashboard/ContactSection'
+import { SocialSection } from '@/components/dashboard/SocialSection'
+import { CtaSection } from '@/components/dashboard/CtaSection'
+import { SeoSection } from '@/components/dashboard/SeoSection'
+import { HoursSection } from '@/components/dashboard/HoursSection'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -22,8 +22,9 @@ export default async function EditPage({ params }: Props) {
   const supabase = await createClient()
 
   const { data: listing } = await supabase
-    .from("listings")
-    .select(`
+    .from('listings')
+    .select(
+      `
       id, name, slug, status, entity_type, tagline, meta_title, meta_description,
       cities(slug, name),
       listing_details_business(
@@ -34,10 +35,11 @@ export default async function EditPage({ params }: Props) {
         cta_type, cta_url, cta_label_override,
         hours
       )
-    `)
-    .eq("id", entityId)
-    .eq("owner_user_id", owner.user.id)
-    .is("deleted_at", null)
+    `
+    )
+    .eq('id', entityId)
+    .eq('owner_user_id', owner.user.id)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) notFound()
@@ -73,13 +75,15 @@ export default async function EditPage({ params }: Props) {
         <div>
           <h1 className="font-headline text-2xl text-brand-black">{listing.name}</h1>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
-              listing.status === "published"
-                ? "bg-green-100 text-green-700"
-                : listing.status === "pending"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-charcoal/10 text-charcoal/60"
-            }`}>
+            <span
+              className={`px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
+                listing.status === 'published'
+                  ? 'bg-green-100 text-green-700'
+                  : listing.status === 'pending'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-charcoal/10 text-charcoal/60'
+              }`}
+            >
               {listing.status}
             </span>
             {city && <p className="font-body text-xs text-charcoal/50">{city.name}</p>}
@@ -97,16 +101,9 @@ export default async function EditPage({ params }: Props) {
         )}
       </div>
 
-      <BasicInfoSection
-        listingId={listing.id}
-        name={listing.name}
-        tagline={listing.tagline}
-      />
+      <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
 
-      <AboutSection
-        listingId={listing.id}
-        description={details?.description ?? null}
-      />
+      <AboutSection listingId={listing.id} description={details?.description ?? null} />
 
       <ContactSection
         listingId={listing.id}
@@ -119,10 +116,7 @@ export default async function EditPage({ params }: Props) {
         zip={details?.zip ?? null}
       />
 
-      <HoursSection
-        listingId={listing.id}
-        hours={details?.hours ?? null}
-      />
+      <HoursSection listingId={listing.id} hours={details?.hours ?? null} />
 
       <SocialSection
         listingId={listing.id}

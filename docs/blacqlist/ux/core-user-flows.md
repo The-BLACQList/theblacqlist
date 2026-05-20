@@ -25,21 +25,25 @@ Flows are written from the user's perspective. System responses are documented a
 ### Happy Path
 
 **Step 1: User arrives at homepage**
+
 - User action: Opens `theblacqlist.com` or `/search` directly.
 - System response: Homepage renders with a prominent search bar in the hero. The search bar `placeholder` text reads "Search Black-owned businesses, restaurants, salons…". Below the hero, the city spotlight section shows Atlanta as the featured city. No city pre-filter is active.
 - Next: Step 2
 
 **Step 2: User types a search query**
+
 - User action: Clicks into the search bar and types a keyword (e.g., "bookstore", "natural hair", "tax preparation").
 - System response: As the user types, the search bar remains active. At MVP there is no autocomplete. The input field uses `type="search"` and triggers `inputMode="text"` on mobile. The search bar is full-width on mobile and centered on desktop.
 - Next: Step 3
 
 **Step 3: User submits the search**
+
 - User action: Taps the search icon button or presses Enter / Return.
 - System response: Browser navigates to `/search?q=[encoded-query]`. No city filter parameter is appended. The search results page begins loading. A skeleton layout renders immediately: three placeholder listing cards in the grid, the filter bar area showing gray pill placeholders.
 - Next: Step 4
 
 **Step 4: Search results load**
+
 - User action: User waits while results load (target: under 2 seconds).
 - System response: Results populate. The results count appears: "142 results for 'bookstore'". Listing cards render with: primary image (or a branded placeholder if no image), business name, category pill, city label, claimed/verified badge where applicable, and a Save button (heart icon). The filter bar above the grid shows: a "City" filter (currently showing "All cities"), a "Category" filter, and a "Clear filters" link (inactive since no filters are applied). No sort control at MVP.
 - Decision: Did the query return results?
@@ -48,11 +52,13 @@ Flows are written from the user's perspective. System responses are documented a
 - Next: Step 5
 
 **Step 5: User scans results**
+
 - User action: User scrolls the results grid, reading names, categories, and cities. If they see a listing from an unexpected city that looks relevant, they may note the city. Mobile: single-column card stack. Desktop: 2–3 column grid.
 - System response: As the user scrolls toward the bottom, the next page of results loads (pagination controls or infinite scroll — to be confirmed in implementation). Page controls appear at the bottom on desktop.
 - Next: Step 6
 
 **Step 6: User clicks a listing card**
+
 - User action: Taps or clicks anywhere on a listing card (the entire card surface is clickable, not just the title).
 - System response: Browser navigates to `/[city-slug]/business/[listing-slug]`. The BLACQList Page begins loading. (See Flow 4 for what happens on the listing page.)
 - Next: End state — user is on a BLACQList Page.
@@ -76,14 +82,14 @@ No authentication required to search or view results. The Save button on each li
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Results page initial load | Skeleton layout: 3–6 placeholder cards with gray image area, gray text bars, no content. Filter bar shows gray pill shapes. Results count area shows a single gray bar. Skeleton appears immediately on navigation; no blank white screen. |
-| Empty — no results | After search returns 0 matches | Full-width message: "No results for '[query]'" in large type. Below: "Try a different keyword, or browse by category." Two rows of category pills below as shortcuts. No other call to action. The search bar remains visible and pre-filled with the query so the user can edit without re-typing. |
-| Empty — partial (low density) | Query returns 1–3 results | Normal results layout renders with the results that exist. No special state — do not artificially inflate or hide low-count results. |
-| Error — search API fails | `/api/search` returns 5xx or times out | Full-width error banner below the filter bar: "Something went wrong. We couldn't complete your search." Retry button that re-fires the same query. The search bar remains visible. User input is preserved. |
-| Error — network offline | User has no connection when submitting | Browser-level behavior; additionally: if the fetch fails with a network error, same error banner as above with retry. |
-| Success | Results loaded with at least 1 result | Results grid renders. Count label is visible. Cards are interactive. |
+| State type                    | Screen / moment                        | What the user sees                                                                                                                                                                                                                                                                                  |
+| ----------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                       | Results page initial load              | Skeleton layout: 3–6 placeholder cards with gray image area, gray text bars, no content. Filter bar shows gray pill shapes. Results count area shows a single gray bar. Skeleton appears immediately on navigation; no blank white screen.                                                          |
+| Empty — no results            | After search returns 0 matches         | Full-width message: "No results for '[query]'" in large type. Below: "Try a different keyword, or browse by category." Two rows of category pills below as shortcuts. No other call to action. The search bar remains visible and pre-filled with the query so the user can edit without re-typing. |
+| Empty — partial (low density) | Query returns 1–3 results              | Normal results layout renders with the results that exist. No special state — do not artificially inflate or hide low-count results.                                                                                                                                                                |
+| Error — search API fails      | `/api/search` returns 5xx or times out | Full-width error banner below the filter bar: "Something went wrong. We couldn't complete your search." Retry button that re-fires the same query. The search bar remains visible. User input is preserved.                                                                                         |
+| Error — network offline       | User has no connection when submitting | Browser-level behavior; additionally: if the fetch fails with a network error, same error banner as above with retry.                                                                                                                                                                               |
+| Success                       | Results loaded with at least 1 result  | Results grid renders. Count label is visible. Cards are interactive.                                                                                                                                                                                                                                |
 
 ### Permission Issues
 
@@ -108,19 +114,19 @@ No permission checks required for national search. The search API is public and 
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Search scraping (bulk programmatic queries to harvest all listing data) | Rate-limit `/api/search` by IP: 60 requests per minute. Return `429` with `Retry-After` header. |
-| XSS via search query rendered in the page | All query values must be HTML-escaped before rendering in the results count label. Use Next.js default escaping — never dangerously set innerHTML with user input. |
-| SEO keyword stuffing via manipulated listing data surfacing in search | Search results rank by relevance score from PostgreSQL FTS, not by keyword frequency in description alone. Admin can flag and unpublish manipulated listings. |
+| Risk                                                                    | Mitigation                                                                                                                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Search scraping (bulk programmatic queries to harvest all listing data) | Rate-limit `/api/search` by IP: 60 requests per minute. Return `429` with `Retry-After` header.                                                                    |
+| XSS via search query rendered in the page                               | All query values must be HTML-escaped before rendering in the results count label. Use Next.js default escaping — never dangerously set innerHTML with user input. |
+| SEO keyword stuffing via manipulated listing data surfacing in search   | Search results rank by relevance score from PostgreSQL FTS, not by keyword frequency in description alone. Admin can flag and unpublish manipulated listings.      |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `search_query` | On search submit | `{ query: string, city_filter: string \| null, category_filter: string \| null, result_count: number, source: 'homepage' \| 'search_page' }` |
-| `search_result_click` | On listing card click from results | `{ listing_id: string, listing_slug: string, position: number, query: string }` |
-| `search_empty_state_shown` | When results = 0 | `{ query: string, city_filter: string \| null }` |
+| Event name                 | When fired                         | Properties                                                                                                                                   |
+| -------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search_query`             | On search submit                   | `{ query: string, city_filter: string \| null, category_filter: string \| null, result_count: number, source: 'homepage' \| 'search_page' }` |
+| `search_result_click`      | On listing card click from results | `{ listing_id: string, listing_slug: string, position: number, query: string }`                                                              |
+| `search_empty_state_shown` | When results = 0                   | `{ query: string, city_filter: string \| null }`                                                                                             |
 
 ---
 
@@ -136,28 +142,33 @@ No permission checks required for national search. The search API is public and 
 ### Happy Path
 
 **Step 1: User selects a city from the homepage**
+
 - User action: On the homepage, user clicks a city in the city spotlight section or a featured city pill (e.g., "Atlanta", "Houston", "Chicago").
 - System response: Browser navigates to `/city/[city-slug]` (e.g., `/city/atlanta`). The city landing page begins loading.
 - Alternative entry: User types a city name into the search bar on the homepage and submits → `/search?city=atlanta`. Or user arrives at `/city/atlanta` directly via a link.
 - Next: Step 2
 
 **Step 2: City landing page loads**
+
 - User action: User waits for page load (city page is statically generated with ISR — target load: under 1 second from CDN).
 - System response: City page renders with: city name in the hero ("Black-owned businesses in Atlanta"), a category grid showing top categories for that city with listing counts, a "Browse all" link to `/search?city=atlanta`, and a featured listings grid (6–8 admin-curated listings for that city). A breadcrumb at the top shows: `The BLACQList > Atlanta`.
 - Next: Step 3
 
 **Step 3: User browses the city page**
+
 - User action: User scans the category grid and/or the featured listings grid. They may click a category pill (e.g., "Restaurants") or a listing card.
 - System response for category click: Navigates to `/city/atlanta/restaurants`. Category + city page loads (Flow 3 handles this).
 - System response for listing card click: Navigates to `/[city-slug]/business/[listing-slug]` (Flow 4 handles this).
 - Next: Step 4 (if they use the search bar on the city page)
 
 **Step 4: User searches within the city context**
+
 - User action: User types a keyword into the search bar on the city page.
 - System response: Search bar on the city page pre-populates the city filter. Submitting the search navigates to `/search?q=[query]&city=atlanta`. Results are scoped to Atlanta. The filter bar shows "Atlanta" as an active city chip with a remove (×) button.
 - Next: Step 5
 
 **Step 5: City-scoped results load**
+
 - User action: User scans results scoped to the selected city.
 - System response: Results grid renders. Count label reads: "38 results for 'salon' in Atlanta". City chip is visible in the filter bar as an active filter. User can remove the city filter by clicking (×) to expand results nationally.
 - Next: User clicks a listing card → Flow 4, or Flow ends.
@@ -180,13 +191,13 @@ No authentication required. City pages are fully public and server-rendered.
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | City page first load | ISR-cached page loads from CDN — no loading state visible in normal conditions. If the page is being regenerated (cache miss), Next.js streaming shows a skeleton for the listings grid section only, while the static hero and category grid render immediately. |
-| Empty — city page with no listings | City slug has no published listings | Redirect to `/discover` with a banner: "We haven't launched in [City] yet — but we're growing. Explore all cities." No 404 error page. |
-| Empty — city search returns 0 | City-scoped search for query returns 0 results | "No results for '[query]' in Atlanta. Try removing the city filter or searching nationally." Link to the same query without city filter: `/search?q=[query]`. |
-| Error — city page fails to load | ISR failure or data fetch error | Next.js `error.tsx` boundary renders: "Something went wrong loading this page." Retry button. |
-| Success | City page loaded with listings | Hero renders with city name, category grid populates with counts, featured listings grid renders. |
+| State type                         | Screen / moment                                | What the user sees                                                                                                                                                                                                                                                |
+| ---------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                            | City page first load                           | ISR-cached page loads from CDN — no loading state visible in normal conditions. If the page is being regenerated (cache miss), Next.js streaming shows a skeleton for the listings grid section only, while the static hero and category grid render immediately. |
+| Empty — city page with no listings | City slug has no published listings            | Redirect to `/discover` with a banner: "We haven't launched in [City] yet — but we're growing. Explore all cities." No 404 error page.                                                                                                                            |
+| Empty — city search returns 0      | City-scoped search for query returns 0 results | "No results for '[query]' in Atlanta. Try removing the city filter or searching nationally." Link to the same query without city filter: `/search?q=[query]`.                                                                                                     |
+| Error — city page fails to load    | ISR failure or data fetch error                | Next.js `error.tsx` boundary renders: "Something went wrong loading this page." Retry button.                                                                                                                                                                     |
+| Success                            | City page loaded with listings                 | Hero renders with city name, category grid populates with counts, featured listings grid renders.                                                                                                                                                                 |
 
 ### Permission Issues
 
@@ -207,17 +218,17 @@ None. City pages are public. No role checks.
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                | Mitigation                                                                                                                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Crawlers generating thousands of city page requests | `robots.txt` allows city pages; CDN caching absorbs load; `generateStaticParams` limits pages to known cities only; unknown city slugs return 404 (not dynamic DB lookup). |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `city_page_view` | On city landing page load | `{ city_slug: string, city_name: string, listing_count: number }` |
-| `city_category_click` | On category pill click from city page | `{ city_slug: string, category_slug: string }` |
-| `city_search_submit` | On search submit from city page context | `{ query: string, city_slug: string }` |
+| Event name            | When fired                              | Properties                                                        |
+| --------------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| `city_page_view`      | On city landing page load               | `{ city_slug: string, city_name: string, listing_count: number }` |
+| `city_category_click` | On category pill click from city page   | `{ city_slug: string, category_slug: string }`                    |
+| `city_search_submit`  | On search submit from city page context | `{ query: string, city_slug: string }`                            |
 
 ---
 
@@ -233,21 +244,25 @@ None. City pages are public. No role checks.
 ### Happy Path
 
 **Step 1: User arrives at search results with no active filters**
+
 - User action: User is on `/search?q=hair` or `/search` (no query) — the discover/browse state.
 - System response: Results grid shows all matching listings. Filter bar is visible above the grid: "City" chip (inactive), "Category" chip (inactive). A "Clear all filters" link is not shown when no filters are active.
 - Next: Step 2
 
 **Step 2: User taps a filter chip**
+
 - User action: User taps the "Category" chip in the filter bar.
 - System response: A dropdown or bottom sheet (mobile) opens listing all available top-level categories with listing counts. Categories with 0 results for the current query are shown but dimmed. Desktop: dropdown panel opens below the chip. Mobile: a bottom sheet slides up from the screen bottom.
 - Next: Step 3
 
 **Step 3: User selects a category**
+
 - User action: User taps "Restaurants" in the category list.
 - System response: The bottom sheet or dropdown closes. The filter bar updates: "Restaurants" chip is now active (filled, with Amber Gold background). URL updates immediately to `/search?q=hair&category=restaurants` (or `?category=restaurants` if no text query). Results grid reloads with skeleton loading for a moment, then new results render. Results count updates: "12 results for 'hair' in Restaurants".
 - Next: Step 4
 
 **Step 4: User adds a city filter on top of the category filter**
+
 - User action: User taps the "City" chip.
 - System response: City dropdown or bottom sheet opens. Shows cities with listing counts for the current filtered query.
 - User action: User selects "Atlanta".
@@ -255,6 +270,7 @@ None. City pages are public. No role checks.
 - Next: Step 5
 
 **Step 5: User removes one filter**
+
 - User action: User taps the (×) on the "Restaurants" chip to remove just the category filter.
 - System response: URL updates to `/search?q=hair&city=atlanta`. Only the "Atlanta" city chip remains active. Results reload to show all categories in Atlanta matching the query. Count updates.
 - Next: Flow ends (user clicks a listing → Flow 4) or continues filtering.
@@ -278,12 +294,12 @@ No authentication required. Filters are applied entirely client-side via URL par
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | After a filter is applied | Skeleton rows/cards in the results area. The filter bar does not change during loading — the newly selected chip appears immediately (optimistic UI for the chip state), but results are loading. |
-| Empty — filter combination | Active filters return 0 results | "No results for these filters." + "Remove all filters" link + individual filter remove links. The filter chips remain visible so the user understands why results are empty. |
-| Error — filter API fails | `/api/search` fails after filter change | Results area shows error banner: "Couldn't load results. Try again." The previously selected filters remain in the URL. Retry button. |
-| Success | Filtered results load | Results count updates, cards populate, active filter chips are visible in the bar. |
+| State type                 | Screen / moment                         | What the user sees                                                                                                                                                                                |
+| -------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                    | After a filter is applied               | Skeleton rows/cards in the results area. The filter bar does not change during loading — the newly selected chip appears immediately (optimistic UI for the chip state), but results are loading. |
+| Empty — filter combination | Active filters return 0 results         | "No results for these filters." + "Remove all filters" link + individual filter remove links. The filter chips remain visible so the user understands why results are empty.                      |
+| Error — filter API fails   | `/api/search` fails after filter change | Results area shows error banner: "Couldn't load results. Try again." The previously selected filters remain in the URL. Retry button.                                                             |
+| Success                    | Filtered results load                   | Results count updates, cards populate, active filter chips are visible in the bar.                                                                                                                |
 
 ### Permission Issues
 
@@ -306,18 +322,18 @@ None. Filtering is public.
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                                  | Mitigation                                                                                                                                          |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Programmatic filter enumeration to map all category+city combinations | Rate limiting on `/api/search`. Static generation of city+category pages means the common combinations are served from CDN without hitting the API. |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `filter_applied` | On each filter selection | `{ filter_type: 'category' \| 'city' \| 'entity_type', filter_value: string, existing_filters: object }` |
-| `filter_removed` | On filter chip (×) click | `{ filter_type: string, filter_value: string }` |
-| `filter_all_cleared` | On "Clear all filters" | `{ prior_filters: object }` |
-| `filter_empty_state_shown` | When filtered results = 0 | `{ active_filters: object }` |
+| Event name                 | When fired                | Properties                                                                                               |
+| -------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `filter_applied`           | On each filter selection  | `{ filter_type: 'category' \| 'city' \| 'entity_type', filter_value: string, existing_filters: object }` |
+| `filter_removed`           | On filter chip (×) click  | `{ filter_type: string, filter_value: string }`                                                          |
+| `filter_all_cleared`       | On "Clear all filters"    | `{ prior_filters: object }`                                                                              |
+| `filter_empty_state_shown` | When filtered results = 0 | `{ active_filters: object }`                                                                             |
 
 ---
 
@@ -333,11 +349,13 @@ None. Filtering is public.
 ### Happy Path
 
 **Step 1: User clicks a listing card**
+
 - User action: User taps a listing card on the search results page, city page, or a collection.
 - System response: Browser navigates to `/[city-slug]/business/[listing-slug]`. Page begins loading. Because BLACQList Pages are statically generated with ISR, the page typically loads from CDN in under 1 second. During loading, the `loading.tsx` skeleton renders.
 - Next: Step 2
 
 **Step 2: BLACQList Page renders**
+
 - User action: User begins scanning the page.
 - System response: Page renders with the following sections in order:
   1. **Navigation bar** — The BLACQList wordmark, back arrow or breadcrumb back to prior page (if navigated from search), city context.
@@ -353,6 +371,7 @@ None. Filtering is public.
 - Next: Step 3
 
 **Step 3: User takes an action**
+
 - User action option A: Taps the primary CTA button ("Visit Website").
   - System response: Opens the business's website URL in a new tab (`target="_blank"`, `rel="noopener noreferrer"`). Fires `cta_click` analytics event.
 - User action option B: Taps the phone icon in the quick-actions bar.
@@ -388,16 +407,16 @@ No authentication required to view any part of the BLACQList Page. The Save butt
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Page initial load (cache miss) | Skeleton: a gray rectangle where the hero image will be, gray bars for the business name, gray block for the about section, gray placeholders for the quick-actions bar icons. The skeleton matches the page structure exactly so the transition from skeleton to content is smooth. |
-| Empty — no description | Listing has no business description | The "About" section is omitted entirely. No "No description available" placeholder shown to visitors. |
-| Empty — no services | No services added | Services section is omitted entirely. |
-| Empty — no gallery | No gallery images | Gallery section is omitted entirely. |
-| Error — listing not found | Listing slug does not match any record | `not-found.tsx` renders: "This page doesn't exist." + "Search The BLACQList" button leading to `/search`. |
-| Error — listing unpublished | Listing exists but `status != 'published'` | Same `not-found.tsx` behavior. Do not reveal that the listing exists in an unpublished state. |
-| Error — page fetch failure | Server error during ISR regeneration | Next.js `error.tsx` boundary: "Something went wrong loading this page." + Retry button. |
-| Success | Page loads with complete listing data | Hero, CTA, quick-actions, and at minimum one of: description, phone, or website are all visible. |
+| State type                  | Screen / moment                            | What the user sees                                                                                                                                                                                                                                                                   |
+| --------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Loading                     | Page initial load (cache miss)             | Skeleton: a gray rectangle where the hero image will be, gray bars for the business name, gray block for the about section, gray placeholders for the quick-actions bar icons. The skeleton matches the page structure exactly so the transition from skeleton to content is smooth. |
+| Empty — no description      | Listing has no business description        | The "About" section is omitted entirely. No "No description available" placeholder shown to visitors.                                                                                                                                                                                |
+| Empty — no services         | No services added                          | Services section is omitted entirely.                                                                                                                                                                                                                                                |
+| Empty — no gallery          | No gallery images                          | Gallery section is omitted entirely.                                                                                                                                                                                                                                                 |
+| Error — listing not found   | Listing slug does not match any record     | `not-found.tsx` renders: "This page doesn't exist." + "Search The BLACQList" button leading to `/search`.                                                                                                                                                                            |
+| Error — listing unpublished | Listing exists but `status != 'published'` | Same `not-found.tsx` behavior. Do not reveal that the listing exists in an unpublished state.                                                                                                                                                                                        |
+| Error — page fetch failure  | Server error during ISR regeneration       | Next.js `error.tsx` boundary: "Something went wrong loading this page." + Retry button.                                                                                                                                                                                              |
+| Success                     | Page loads with complete listing data      | Hero, CTA, quick-actions, and at minimum one of: description, phone, or website are all visible.                                                                                                                                                                                     |
 
 ### Permission Issues
 
@@ -423,22 +442,22 @@ No permission required to view. If the user is authenticated as the owner of thi
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Inflating CTA click counts | Analytics event is server-side (fired via `/api/analytics/event`) — not purely client-side. Rate limiting on the endpoint. IP deduplication for the same listing+event within a session window. |
+| Risk                                         | Mitigation                                                                                                                                                                                                                                                                               |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Inflating CTA click counts                   | Analytics event is server-side (fired via `/api/analytics/event`) — not purely client-side. Rate limiting on the endpoint. IP deduplication for the same listing+event within a session window.                                                                                          |
 | Scrapers harvesting all listing contact data | Contact info is rendered server-side. Phone numbers are displayed as text. At V1: consider rendering phone numbers with CSS content obfuscation or click-to-reveal for non-authenticated users. At MVP: accept the risk — accessibility of contact info to visitors is the product goal. |
-| Competitor submitting false listing data | Admin review + claim workflow (Flows 14, 15). Community correction flag (Flow 13). |
+| Competitor submitting false listing data     | Admin review + claim workflow (Flows 14, 15). Community correction flag (Flow 13).                                                                                                                                                                                                       |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `listing_page_view` | On page load | `{ listing_id: string, listing_slug: string, city_slug: string, category_slug: string, has_cover_image: boolean, claim_status: string }` |
-| `cta_click` | On primary CTA button click | `{ listing_id: string, cta_type: string, cta_url: string }` |
-| `phone_click` | On phone icon tap | `{ listing_id: string }` |
-| `directions_click` | On directions icon tap | `{ listing_id: string }` |
-| `website_click` | On website link click | `{ listing_id: string }` |
-| `gallery_open` | On first gallery image tap | `{ listing_id: string, image_count: number }` |
+| Event name          | When fired                  | Properties                                                                                                                               |
+| ------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `listing_page_view` | On page load                | `{ listing_id: string, listing_slug: string, city_slug: string, category_slug: string, has_cover_image: boolean, claim_status: string }` |
+| `cta_click`         | On primary CTA button click | `{ listing_id: string, cta_type: string, cta_url: string }`                                                                              |
+| `phone_click`       | On phone icon tap           | `{ listing_id: string }`                                                                                                                 |
+| `directions_click`  | On directions icon tap      | `{ listing_id: string }`                                                                                                                 |
+| `website_click`     | On website link click       | `{ listing_id: string }`                                                                                                                 |
+| `gallery_open`      | On first gallery image tap  | `{ listing_id: string, image_count: number }`                                                                                            |
 
 ---
 
@@ -454,6 +473,7 @@ No permission required to view. If the user is authenticated as the owner of thi
 ### Happy Path
 
 **Step 1: Anonymous user taps Save on a listing card or BLACQList Page**
+
 - User action: Taps the heart icon (Save button) on a listing card in search results, or on the quick-actions bar of a BLACQList Page.
 - System response: Because the user is anonymous, the save action does not fire immediately. Instead, a modal appears over the current page (not a redirect). The modal content:
   - Heading: "Save this to your list"
@@ -466,11 +486,13 @@ No permission required to view. If the user is authenticated as the owner of thi
 - Next: Step 2
 
 **Step 2: User taps "Sign up — it's free"**
+
 - User action: Taps the primary button in the modal.
 - System response: Modal closes. User is redirected to `/sign-up?next=[current-page-url]&action=save&listing_id=[listing-id]`. The `next` parameter encodes the full current URL (e.g., `/atlanta/business/sweet-auburn-bbq-atlanta`). The `action=save` and `listing_id` parameters ensure the save is re-triggered after auth.
 - Next: Step 3 (sign-up) or Step 3b (sign-in)
 
 **Step 3: User completes sign-up**
+
 - User action: User fills in email, password, display name on `/sign-up`. Submits. (Full sign-up flow is Flow 7.)
 - System response: Account is created. Email verification is triggered (user receives a verification email). The session is established. The system reads the `next`, `action`, and `listing_id` URL parameters.
 - Decision: Is email verification required before saving?
@@ -479,6 +501,7 @@ No permission required to view. If the user is authenticated as the owner of thi
 - Next: Step 4
 
 **Step 3b: Existing user taps "Sign in" instead**
+
 - User action: Taps "Already have an account? Sign in" in the modal.
 - System response: User is redirected to `/sign-in?next=[current-page-url]&action=save&listing_id=[listing-id]`.
 - User action: Completes sign-in form. Submits.
@@ -486,12 +509,14 @@ No permission required to view. If the user is authenticated as the owner of thi
 - Next: Step 4
 
 **Step 4: Post-auth redirect fires the save**
+
 - User action: (Automatic — no user action required.)
 - System response: After auth completes, middleware reads the `action=save` and `listing_id` parameters. Before redirecting to the `next` URL, the server fires the save: `POST /api/saves` with `{ listing_id: [id] }` using the new session. The save record is created in the `saves` table.
 - System response: User is redirected to the `next` URL (the original BLACQList Page or search results page they came from).
 - Next: Step 5
 
 **Step 5: User lands back on the original listing page, save is reflected**
+
 - User action: User is back on the BLACQList Page (e.g., `/atlanta/business/sweet-auburn-bbq-atlanta`).
 - System response: The heart icon in the quick-actions bar is now filled/active (indicating the listing is saved). A toast notification appears at the bottom of the screen: "Saved to your list. View saved →" with a link to `/account/saved`. The toast auto-dismisses after 4 seconds. The user can tap the toast link to go to their saved list.
 - Next: End state — listing is saved, user is informed, user remains on the Page.
@@ -515,13 +540,13 @@ This flow is specifically the auth-gate flow. It is triggered by an unauthentica
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Post-auth redirect and save API call | The listing page loads normally (from ISR cache). The save API call is fast (< 200ms). The user sees the listing page, and the heart icon updates from unfilled to filled within a few hundred milliseconds. No visible loading state needed for this step. |
-| Empty | n/a — not applicable to this flow | — |
-| Error — save fails post-auth | `/api/saves` returns 5xx | Toast: "Couldn't save. Tap the heart to try again." Heart icon remains unfilled. |
-| Error — sign-up fails | Email already in use, or validation error | Inline error on the sign-up form. `next` and `listing_id` params preserved in the URL. User corrects and retries. |
-| Success | Save completed + user on listing page | Heart icon is filled (Amber Gold). Toast at bottom: "Saved to your list. View saved →". Toast auto-dismisses after 4 seconds. |
+| State type                   | Screen / moment                           | What the user sees                                                                                                                                                                                                                                          |
+| ---------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                      | Post-auth redirect and save API call      | The listing page loads normally (from ISR cache). The save API call is fast (< 200ms). The user sees the listing page, and the heart icon updates from unfilled to filled within a few hundred milliseconds. No visible loading state needed for this step. |
+| Empty                        | n/a — not applicable to this flow         | —                                                                                                                                                                                                                                                           |
+| Error — save fails post-auth | `/api/saves` returns 5xx                  | Toast: "Couldn't save. Tap the heart to try again." Heart icon remains unfilled.                                                                                                                                                                            |
+| Error — sign-up fails        | Email already in use, or validation error | Inline error on the sign-up form. `next` and `listing_id` params preserved in the URL. User corrects and retries.                                                                                                                                           |
+| Success                      | Save completed + user on listing page     | Heart icon is filled (Amber Gold). Toast at bottom: "Saved to your list. View saved →". Toast auto-dismisses after 4 seconds.                                                                                                                               |
 
 ### Permission Issues
 
@@ -544,20 +569,20 @@ Only authenticated users can save. The save API (`POST /api/saves`) validates th
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Creating throwaway accounts to test saves | Rate limiting on `/sign-up` (5 accounts per IP per day). Email verification required before a session is fully active. |
+| Risk                                      | Mitigation                                                                                                                                                                               |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Creating throwaway accounts to test saves | Rate limiting on `/sign-up` (5 accounts per IP per day). Email verification required before a session is fully active.                                                                   |
 | Injecting malicious `next` URL parameters | The `next` parameter must be validated server-side to ensure it is a same-origin relative URL (starts with `/`). Reject any `next` value that is an absolute URL or contains a protocol. |
-| Padding save counts artificially | Each user can save a listing once (unique constraint on `(user_id, listing_id)`). Save count displayed on the listing page reflects unique saves only. |
+| Padding save counts artificially          | Each user can save a listing once (unique constraint on `(user_id, listing_id)`). Save count displayed on the listing page reflects unique saves only.                                   |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `save_auth_gate_shown` | When auth modal opens after anonymous save tap | `{ listing_id: string, source: 'listing_page' \| 'search_card' }` |
-| `save_auth_gate_dismissed` | When modal is closed without action | `{ listing_id: string }` |
-| `listing_saved` | When save is successfully created | `{ listing_id: string, user_id: string, source: 'post_auth' \| 'direct' }` |
-| `listing_unsaved` | When save is removed | `{ listing_id: string, user_id: string }` |
+| Event name                 | When fired                                     | Properties                                                                 |
+| -------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------- |
+| `save_auth_gate_shown`     | When auth modal opens after anonymous save tap | `{ listing_id: string, source: 'listing_page' \| 'search_card' }`          |
+| `save_auth_gate_dismissed` | When modal is closed without action            | `{ listing_id: string }`                                                   |
+| `listing_saved`            | When save is successfully created              | `{ listing_id: string, user_id: string, source: 'post_auth' \| 'direct' }` |
+| `listing_unsaved`          | When save is removed                           | `{ listing_id: string, user_id: string }`                                  |
 
 ---
 
@@ -573,6 +598,7 @@ Only authenticated users can save. The save API (`POST /api/saves`) validates th
 ### Happy Path
 
 **Step 1: User taps the Share icon on the quick-actions bar**
+
 - User action: Taps the share icon (outward-pointing arrow or box-with-arrow icon) in the quick-actions bar.
 - System response:
   - On mobile (where `navigator.share` is available): The OS native share sheet opens immediately. It shows: the URL of the listing page, the page title ("Sweet Auburn BBQ — The BLACQList"), and the OG description (pulled from the `<meta>` tag). The user can share to any installed app: iMessage, WhatsApp, Instagram DMs, copy to clipboard, etc.
@@ -580,14 +606,16 @@ Only authenticated users can save. The save API (`POST /api/saves`) validates th
 - Next: Step 2
 
 **Step 2: User selects a share destination (mobile) or copies the link (desktop)**
+
 - User action (mobile): Selects a target app in the OS share sheet (e.g., WhatsApp). Sends the message.
-- User action (desktop): Clicks "Copy link". 
+- User action (desktop): Clicks "Copy link".
 - System response (mobile): OS handles the share. The sheet closes. No confirmation toast needed — the OS share sheet provides its own confirmation.
 - System response (desktop after copy): The popover shows a brief in-place confirmation: the copy button label changes to "Copied!" for 2 seconds, then reverts to "Copy link". No separate toast.
 - Fires `listing_shared` analytics event.
 - Next: End state — share complete.
 
 **Step 3: Recipient receives and opens the link**
+
 - (This step is outside the platform but is documented for completeness.)
 - The recipient opens the link in their browser. Because the BLACQList Page has correct OG meta tags (`og:title`, `og:description`, `og:image`, `og:url`), messaging apps and social platforms render a preview card with: the business cover photo (served via the `/og/[...params]` dynamic image generation route), the business name, the tagline or first 120 characters of the description, and the The BLACQList domain.
 - Next: Recipient arrives on the BLACQList Page (Flow 4 begins for them).
@@ -611,14 +639,14 @@ No authentication required to share. Share functionality is available to all use
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Between tapping Share and the OS sheet or popover appearing | Native share sheet appears instantly (OS handles it). Desktop popover appears instantly (no async operation). No loading state required. |
-| Empty | n/a | — |
-| Error — clipboard write fails | `navigator.clipboard.writeText()` rejects | The URL input remains visible. A small error note: "Couldn't copy automatically — select the link above and copy manually." |
-| Error — `navigator.share` rejects | User cancels the OS share sheet | OS sheet closes. No error state — user cancellation is not an error. |
-| Success — mobile | OS share sheet opened | Sheet opens. Native confirmation when user completes the share in the target app. |
-| Success — desktop | Link copied | Copy button label changes to "Copied!" for 2 seconds. |
+| State type                        | Screen / moment                                             | What the user sees                                                                                                                       |
+| --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                           | Between tapping Share and the OS sheet or popover appearing | Native share sheet appears instantly (OS handles it). Desktop popover appears instantly (no async operation). No loading state required. |
+| Empty                             | n/a                                                         | —                                                                                                                                        |
+| Error — clipboard write fails     | `navigator.clipboard.writeText()` rejects                   | The URL input remains visible. A small error note: "Couldn't copy automatically — select the link above and copy manually."              |
+| Error — `navigator.share` rejects | User cancels the OS share sheet                             | OS sheet closes. No error state — user cancellation is not an error.                                                                     |
+| Success — mobile                  | OS share sheet opened                                       | Sheet opens. Native confirmation when user completes the share in the target app.                                                        |
+| Success — desktop                 | Link copied                                                 | Copy button label changes to "Copied!" for 2 seconds.                                                                                    |
 
 ### Permission Issues
 
@@ -638,14 +666,14 @@ No permission required. Share is available to all users on any page.
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                    | Mitigation                                                                                                                                                                                                                   |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Share count inflation via automated share button clicks | `listing_shared` event is debounced client-side: the same user cannot fire more than one share event for the same listing within a 30-second window. Server-side analytics deduplication is applied for the owner dashboard. |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
+| Event name       | When fired                                          | Properties                                                                                                     |
+| ---------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `listing_shared` | On share button tap (before OS sheet or after copy) | `{ listing_id: string, share_method: 'native_share' \| 'copy_link', source: 'listing_page' \| 'search_card' }` |
 
 ---
@@ -662,17 +690,20 @@ No permission required. Share is available to all users on any page.
 ### Happy Path
 
 **Step 1: User arrives at `/sign-up`**
+
 - User action: Arrives from the nav "Sign up" button, the auth-gate modal, or a direct link.
 - System response: Sign-up form renders with three fields: Email address (`type="email"`, `autocomplete="email"`), Password (`type="password"`, `autocomplete="new-password"`, show/hide toggle), Display name (`type="text"`, `autocomplete="name"`). Below the fields: a role selector — two radio-card style buttons: "I'm here to discover" (Supporter) and "I have a business" (Business Owner). Default: "I'm here to discover" is selected. Primary CTA button: "Create account". Below: "Already have an account? Sign in" link. Terms acceptance: "By creating an account you agree to our Terms of Service and Privacy Policy." (links to `/terms` and `/privacy`).
 - URL params present: `next=[return-url]` and (if applicable) `action=save&listing_id=[id]`.
 - Next: Step 2
 
 **Step 2: User fills in the form and selects a role**
+
 - User action: Fills in email, password (minimum 8 characters), display name. Selects "I have a business" if they are a Business Owner.
 - System response: Inline validation on blur: email format check, password minimum length indicator, display name non-empty check. No server-side validation fires until submit.
 - Next: Step 3
 
 **Step 3: User submits the form**
+
 - User action: Taps "Create account".
 - System response: The button shows a spinner and is disabled. A server action (or API route) calls Supabase Auth `signUp` with the email and password. The display name and role selection are stored to the `users` table upon successful auth creation.
 - Decision: Did the signup succeed?
@@ -683,12 +714,14 @@ No permission required. Share is available to all users on any page.
 - Next: Step 4
 
 **Step 4: Email verification email is sent**
+
 - User action: (Automatic — triggered by Supabase.)
 - System response: Supabase sends a verification email to the address the user provided. The page transitions to a verification pending state: the form is replaced with a message: "Check your inbox — we sent a verification link to [email]." A "Resend email" link is present. A note: "Didn't receive it? Check your spam folder."
 - The `next`, `action`, and `listing_id` URL parameters are stored in the Supabase auth session metadata so they survive the email verification redirect.
 - Next: Step 5
 
 **Step 5: User opens the verification email and clicks the link**
+
 - User action: Switches to their email client and clicks the verification link.
 - System response: Browser opens `/verify-email?token=[token]&next=[next-url]&action=[action]&listing_id=[id]`. Supabase validates the token. Session is established.
 - Decision: Token valid?
@@ -697,6 +730,7 @@ No permission required. Share is available to all users on any page.
 - Next: Step 6
 
 **Step 6: User completes onboarding**
+
 - User action: On `/onboarding`, user sees a 2-step mini-flow.
   - Step 1: Confirmation of their city (or "I'm everywhere / national"). City selector dropdown. Skip link: "Skip for now."
   - Step 2 (if Business Owner): "Ready to claim or create your BLACQList Page?" with two buttons: "Search for my listing" (→ `/claim`) and "Add my business" (→ `/add-business`). Skip link: "I'll do this later."
@@ -705,6 +739,7 @@ No permission required. Share is available to all users on any page.
 - Next: Step 7
 
 **Step 7: Onboarding completes, user lands at destination**
+
 - User action: Completes or skips onboarding steps.
 - System response:
   - If `action=save` and `listing_id` params are present: The save fires (see Flow 5, Step 4), and user is redirected to the `next` URL (the listing page) with the listing saved.
@@ -731,16 +766,16 @@ No permission required. Share is available to all users on any page.
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | On form submit | The submit button shows a spinner and is disabled. The form fields are not disabled — only the button. |
-| Empty | n/a | — |
-| Error — email in use | After submit | Inline error below email field: "That email is already registered." Sign-in link. Button re-enables. Input preserved. |
-| Error — validation | Field blur or submit | Inline errors below each failing field. Button does not submit again until errors are corrected. |
-| Error — server error | Supabase or network failure | Banner at top of form: "Something went wrong. Please try again." Input preserved. |
-| Success — account created | After submit, before verification | Form replaced by: "Check your inbox — we sent a verification link to [email]." Resend link. |
-| Success — verified | After email verification link is clicked | Session active. Redirect chain to onboarding begins. |
-| Success — onboarding complete | After onboarding steps | Redirect to role-appropriate destination. |
+| State type                    | Screen / moment                          | What the user sees                                                                                                    |
+| ----------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Loading                       | On form submit                           | The submit button shows a spinner and is disabled. The form fields are not disabled — only the button.                |
+| Empty                         | n/a                                      | —                                                                                                                     |
+| Error — email in use          | After submit                             | Inline error below email field: "That email is already registered." Sign-in link. Button re-enables. Input preserved. |
+| Error — validation            | Field blur or submit                     | Inline errors below each failing field. Button does not submit again until errors are corrected.                      |
+| Error — server error          | Supabase or network failure              | Banner at top of form: "Something went wrong. Please try again." Input preserved.                                     |
+| Success — account created     | After submit, before verification        | Form replaced by: "Check your inbox — we sent a verification link to [email]." Resend link.                           |
+| Success — verified            | After email verification link is clicked | Session active. Redirect chain to onboarding begins.                                                                  |
+| Success — onboarding complete | After onboarding steps                   | Redirect to role-appropriate destination.                                                                             |
 
 ### Permission Issues
 
@@ -765,21 +800,21 @@ No role required to create an account. If a user attempts to access `/dashboard`
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                | Mitigation                                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Throwaway account creation for spam | Email verification required before session is active. Rate limit: 5 sign-up attempts per IP per hour. Supabase Auth handles bot detection. |
-| Automated account creation | CAPTCHA consideration at MVP (not required if Supabase's built-in rate limiting is sufficient). Flag for V1 review if abuse is observed. |
-| `next` URL parameter injection | Validate `next` server-side — must be a same-origin relative URL. Reject absolute or external URLs. |
+| Automated account creation          | CAPTCHA consideration at MVP (not required if Supabase's built-in rate limiting is sufficient). Flag for V1 review if abuse is observed.   |
+| `next` URL parameter injection      | Validate `next` server-side — must be a same-origin relative URL. Reject absolute or external URLs.                                        |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `sign_up_started` | On `/sign-up` page load | `{ source: string, has_next_param: boolean, has_action_param: boolean }` |
-| `sign_up_submitted` | On form submit | `{ role_selected: 'supporter' \| 'owner' }` |
-| `sign_up_completed` | On successful account creation | `{ role: string, source: string }` |
-| `email_verified` | On verification link click | `{ user_id: string }` |
-| `onboarding_completed` | On onboarding final step | `{ role: string, steps_completed: number, steps_skipped: number }` |
+| Event name             | When fired                     | Properties                                                               |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| `sign_up_started`      | On `/sign-up` page load        | `{ source: string, has_next_param: boolean, has_action_param: boolean }` |
+| `sign_up_submitted`    | On form submit                 | `{ role_selected: 'supporter' \| 'owner' }`                              |
+| `sign_up_completed`    | On successful account creation | `{ role: string, source: string }`                                       |
+| `email_verified`       | On verification link click     | `{ user_id: string }`                                                    |
+| `onboarding_completed` | On onboarding final step       | `{ role: string, steps_completed: number, steps_skipped: number }`       |
 
 ---
 
@@ -795,36 +830,43 @@ No role required to create an account. If a user attempts to access `/dashboard`
 ### Happy Path
 
 **Step 1: User arrives at `/add-business`**
+
 - User action: Arrives from the onboarding flow, the `/for-business` marketing page, or the dashboard nav.
 - System response: Multi-step form renders. Step indicator: "Step 1 of 7". The first step shows entity type selection: "What kind of entity are you adding?" Options (at MVP): Business only. (Professional, Creative, Event, Job are V1+.) At MVP, this step is either pre-selected as "Business" and skipped, or shown with Business as the only selectable option. At MVP, this step skips to Step 2 automatically.
 - Next: Step 2
 
 **Step 2: Basic information**
+
 - User action: Fills in — Business name (required), Tagline / short description (optional, max 120 chars), Business description (required, min 50 chars, max 2000 chars).
 - System response: Character count shown below the description field. Fields save to draft in `sessionStorage` on blur (autosave behavior to protect against accidental navigation).
 - Step indicator: "Step 2 of 7"
 - Next: Step 3
 
 **Step 3: Contact information**
+
 - User action: Fills in — Phone number (optional, `type="tel"`), Email (optional, `type="email"`), Website URL (optional, `type="url"`), Address (optional — structured: street, city, state, zip; OR toggle "This business operates online / by service area" which hides the address fields). At least one contact method (phone, email, or website) is required.
 - System response: The address fields accept freeform text at MVP (structured parsing is V1). Service area toggle hides address fields and sets `location_type = 'service_area'` in the data model.
 - Next: Step 4
 
 **Step 4: Category and city**
+
 - User action: Selects a primary category from a dropdown list (required). Selects a city from a dropdown (required, or toggles "Online only / no city" for online-only businesses). Optionally selects subcategory (if subcategories exist for the chosen category — at MVP, top-level only).
 - System response: Category dropdown is searchable (type-ahead filtering in the dropdown). City dropdown is also searchable. Selecting "Online only" sets `location_type = 'online'` and populates a special "Online" city record.
 - Next: Step 5
 
 **Step 5: Media upload**
+
 - User action: Uploads a logo (optional) and/or a cover image (optional). The upload UI shows two dropzone areas: "Logo" and "Cover image". Each accepts JPG, PNG, WebP. Max size: 5MB per image. On mobile, the camera icon is present in the dropzone to trigger the device camera directly (`capture="environment"` for cover, `capture="user"` for logo if applicable — or just file picker; both open camera on mobile).
 - System response: On file selection, the image is uploaded to Supabase Storage via `/api/upload`. A preview thumbnail renders in the dropzone after upload. A "Remove" button appears on the preview. Upload progress: a progress bar appears while the upload is in progress. If the upload fails: "Upload failed. Try again." The step does not block on upload failure — images are optional.
 - Next: Step 6
 
 **Step 6: Primary CTA configuration**
+
 - User action: Selects the CTA type from a button group: "Book Now", "Order Online", "Visit Website", "Contact Us". Enters the CTA URL (required if CTA type is Book Now, Order Online, or Visit Website; optional for Contact Us — if blank, Contact Us CTA triggers a mailto link or shows the contact info on the page). Hours of operation: user fills in open/closed status and hours for each day of the week (optional at MVP — hours can be added later from the dashboard).
 - Next: Step 7
 
 **Step 7: Preview and submit**
+
 - User action: A read-only preview of the BLACQList Page renders showing all the information the user has entered. The layout matches the actual BLACQList Page template. An "Edit" link beside each section navigates back to the relevant step.
 - System response: Before the user can submit, a server-side duplicate check runs: `POST /api/listings/duplicate-check` with the business name and city. If a potential duplicate is found, Step 7 shows a warning panel above the submit button (see Decision Points).
 - User action: Reviews the preview, taps "Publish my Page".
@@ -832,6 +874,7 @@ No role required to create an account. If a user attempts to access `/dashboard`
 - Next: Step 8
 
 **Step 8: Success state**
+
 - User action: (Automatic — no action needed.)
 - System response: A dedicated success screen renders (not just a toast): heading: "Your BLACQList Page is live!" Sub-text: "Here's your page:" with the full BLACQList Page URL as a clickable link. Two buttons: "View my Page" (links to `/[city-slug]/business/[listing-slug]`) and "Go to my dashboard" (links to `/dashboard`). A share prompt: "Share your new page:" with copy-link and social share options.
 - Next: End state. User's BLACQList Page is live.
@@ -855,16 +898,16 @@ Authentication required. If the user is anonymous when they arrive, they are red
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading — image upload | During image upload in Step 5 | Progress bar appears below the dropzone. The dropzone label changes to "Uploading…". The Next button is not disabled during upload (the upload is non-blocking). |
-| Loading — duplicate check | Between Step 7 preview render and submit button appearing | A brief spinner in the duplicate check area: "Checking for duplicates…" (< 500ms target). |
-| Loading — final submit | After tapping "Publish my Page" | Full-page overlay with spinner: "Publishing your Page…". The button is disabled. |
-| Empty — preview with missing optional fields | User skips logo, gallery, hours | Preview renders with placeholder for missing images. Missing sections are shown with a grey "Not added" label and an "Add" link. |
-| Error — duplicate found | Duplicate check returns a match | Warning panel on Step 7: "A similar listing exists." Two options shown. Submission is not blocked — user can override. |
-| Error — required field missing | Submit attempt with empty required field | Inline validation error on the relevant step. The step indicator highlights the incomplete step. Submission does not proceed until required fields are completed. |
-| Error — server error on submit | 5xx on listing creation API | "Something went wrong publishing your page. Your progress has been saved. Try again." Retry button. |
-| Success | Listing created and published | Dedicated success screen with "Your BLACQList Page is live!" heading, live URL, and two action buttons. |
+| State type                                   | Screen / moment                                           | What the user sees                                                                                                                                                |
+| -------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading — image upload                       | During image upload in Step 5                             | Progress bar appears below the dropzone. The dropzone label changes to "Uploading…". The Next button is not disabled during upload (the upload is non-blocking).  |
+| Loading — duplicate check                    | Between Step 7 preview render and submit button appearing | A brief spinner in the duplicate check area: "Checking for duplicates…" (< 500ms target).                                                                         |
+| Loading — final submit                       | After tapping "Publish my Page"                           | Full-page overlay with spinner: "Publishing your Page…". The button is disabled.                                                                                  |
+| Empty — preview with missing optional fields | User skips logo, gallery, hours                           | Preview renders with placeholder for missing images. Missing sections are shown with a grey "Not added" label and an "Add" link.                                  |
+| Error — duplicate found                      | Duplicate check returns a match                           | Warning panel on Step 7: "A similar listing exists." Two options shown. Submission is not blocked — user can override.                                            |
+| Error — required field missing               | Submit attempt with empty required field                  | Inline validation error on the relevant step. The step indicator highlights the incomplete step. Submission does not proceed until required fields are completed. |
+| Error — server error on submit               | 5xx on listing creation API                               | "Something went wrong publishing your page. Your progress has been saved. Try again." Retry button.                                                               |
+| Success                                      | Listing created and published                             | Dedicated success screen with "Your BLACQList Page is live!" heading, live URL, and two action buttons.                                                           |
 
 ### Permission Issues
 
@@ -887,22 +930,22 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                            | Mitigation                                                                                                                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Spam listings (fake or low-quality submissions) | At MVP: listings are published immediately but can be flagged and unpublished by admins. Future: spam score based on profile completeness + contact info validity. |
-| Duplicate listings | Server-side duplicate check before final submit. User must explicitly choose to override. Admin can dedup via the admin listings view. |
-| Malicious URLs in CTA or website fields | Server-side URL validation: must be a valid `https://` URL. No `javascript:` or `data:` URIs. Phishing detection is V1. |
+| Duplicate listings                              | Server-side duplicate check before final submit. User must explicitly choose to override. Admin can dedup via the admin listings view.                             |
+| Malicious URLs in CTA or website fields         | Server-side URL validation: must be a valid `https://` URL. No `javascript:` or `data:` URIs. Phishing detection is V1.                                            |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `add_business_started` | On Step 1 load | `{ source: 'onboarding' \| 'nav' \| 'for_business_page' \| 'direct' }` |
-| `add_business_step_completed` | On each step advance | `{ step_number: number, step_name: string }` |
-| `add_business_step_abandoned` | When user navigates away mid-form | `{ last_step: number }` |
-| `add_business_duplicate_warning_shown` | When duplicate is found | `{ existing_listing_id: string }` |
-| `add_business_duplicate_override` | When user proceeds despite duplicate | `{ existing_listing_id: string }` |
-| `listing_created` | On successful listing creation | `{ listing_id: string, city_slug: string, category_slug: string, has_cover_image: boolean, has_logo: boolean }` |
+| Event name                             | When fired                           | Properties                                                                                                      |
+| -------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `add_business_started`                 | On Step 1 load                       | `{ source: 'onboarding' \| 'nav' \| 'for_business_page' \| 'direct' }`                                          |
+| `add_business_step_completed`          | On each step advance                 | `{ step_number: number, step_name: string }`                                                                    |
+| `add_business_step_abandoned`          | When user navigates away mid-form    | `{ last_step: number }`                                                                                         |
+| `add_business_duplicate_warning_shown` | When duplicate is found              | `{ existing_listing_id: string }`                                                                               |
+| `add_business_duplicate_override`      | When user proceeds despite duplicate | `{ existing_listing_id: string }`                                                                               |
+| `listing_created`                      | On successful listing creation       | `{ listing_id: string, city_slug: string, category_slug: string, has_cover_image: boolean, has_logo: boolean }` |
 
 ---
 
@@ -918,6 +961,7 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 ### Happy Path
 
 **Step 1: User arrives at `/claim`**
+
 - User action: Arrives from a "Claim this Page" banner on a BLACQList Page (in which case the listing is pre-identified), or navigates to `/claim` from the nav or onboarding.
 - System response — arrived from BLACQList Page banner: The URL is `/claim/[listing-id]`. Skip Steps 2–3 and go directly to Step 4.
 - System response — arrived from `/claim` without a pre-identified listing: A search form renders. Heading: "Claim your BLACQList Page". Instructions: "Search for your business name to get started." Search input + Search button.
@@ -925,6 +969,7 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 - Next: Step 2
 
 **Step 2: User searches for their listing**
+
 - User action: Types the business name into the search input. Optionally types the city. Submits.
 - System response: A results list renders below the search bar showing matching listings. Each result shows: business name, category, city, current claimed/unclaimed status. Results are ordered by name relevance. Maximum 10 results shown.
 - Decision: Does their business appear in the results?
@@ -933,11 +978,13 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 - Next: Step 3
 
 **Step 2a: Auth gate (if not authenticated when searching)**
+
 - User action: Submits the search form while anonymous.
 - System response: Browser redirects to `/sign-in?next=/claim&q=[encoded-business-name]`. After sign-in or sign-up (Flow 7), user is returned to `/claim?q=[query]` and the search results are pre-populated.
 - Next: Step 2 (results visible post-auth)
 
 **Step 3: User identifies their listing and clicks "Claim this Page"**
+
 - User action: Scans the results, identifies their business, clicks "Claim this Page" next to it.
 - System response: Browser navigates to `/claim/[listing-id]`. The listing's name and city are shown at the top as a confirmation header: "Claiming: Sweet Auburn BBQ — Atlanta". Auth is checked: if not authenticated (they skipped Step 2a somehow), redirect to `/sign-in?next=/claim/[listing-id]`.
 - Decision: Does the user already have a pending or approved claim on this listing?
@@ -947,6 +994,7 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 - Next: Step 4
 
 **Step 4: User fills in verification information**
+
 - User action: Completes the verification form:
   - Business email (required — must match a recognized business contact method, or the user explains below)
   - Business phone (optional)
@@ -956,6 +1004,7 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 - Next: Step 5
 
 **Step 5: User submits the claim**
+
 - User action: Reviews the form and taps "Submit claim".
 - System response: The claim record is created in the `claims` table with `status: pending`, `listing_id`, `user_id`, `submitted_email`, `submitted_phone`, `role_at_business`, `document_path` (if uploaded), `notes`. A confirmation email is sent to the user's account email via Resend: "Your claim for [Business Name] has been submitted. We'll review it within 2–3 business days."
 - The page transitions to a confirmation state: heading: "Claim submitted!" Sub-text: "We're reviewing your claim for [Business Name]. We'll email you at [account email] once it's approved." Two links: "Return to [Business Name]'s page" and "Go to my dashboard" (which shows the claim status).
@@ -980,14 +1029,14 @@ Authentication is required before submitting a claim. An anonymous user can reac
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Search results loading | Skeleton list below the search input: 3–5 placeholder rows. |
-| Loading — claim submit | On submit | Button spinner, disabled. "Submitting your claim…" |
-| Empty — no search results | Business name not found in listings | "No listings found for '[query]'." Below: "Don't see your business? Add it instead." Link to `/add-business`. |
-| Error — listing already claimed | Navigating to `/claim/[id]` for a claimed listing | "This listing has already been claimed. Contact us if you believe this is incorrect." No claim form. |
-| Error — server error | Claim submission fails | "Something went wrong. Your information wasn't lost — please try again." Retry. Form preserved. |
-| Success | Claim submitted | "Claim submitted!" screen with next steps and dashboard link. Confirmation email sent. |
+| State type                      | Screen / moment                                   | What the user sees                                                                                            |
+| ------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Loading                         | Search results loading                            | Skeleton list below the search input: 3–5 placeholder rows.                                                   |
+| Loading — claim submit          | On submit                                         | Button spinner, disabled. "Submitting your claim…"                                                            |
+| Empty — no search results       | Business name not found in listings               | "No listings found for '[query]'." Below: "Don't see your business? Add it instead." Link to `/add-business`. |
+| Error — listing already claimed | Navigating to `/claim/[id]` for a claimed listing | "This listing has already been claimed. Contact us if you believe this is incorrect." No claim form.          |
+| Error — server error            | Claim submission fails                            | "Something went wrong. Your information wasn't lost — please try again." Retry. Form preserved.               |
+| Success                         | Claim submitted                                   | "Claim submitted!" screen with next steps and dashboard link. Confirmation email sent.                        |
 
 ### Permission Issues
 
@@ -1010,20 +1059,20 @@ Authentication is required before submitting a claim. An anonymous user can reac
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                      | Mitigation                                                                                                                                                                             |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fraudulent claims (competitor claiming a rival's listing) | Admin reviews all claims before approval. Document upload (optional but encouraged). Email match against the listing's known contact email is a signal (not enforced as a hard block). |
-| Claim flooding (submitting claims on many listings) | Rate limit: 3 pending claims per user at MVP. If a user has 3 pending claims, they must wait for one to be resolved before submitting another. |
-| Fake document uploads | Documents are stored privately and only viewed by admins. Admin is responsible for assessing authenticity. Automated document verification is V1+. |
+| Claim flooding (submitting claims on many listings)       | Rate limit: 3 pending claims per user at MVP. If a user has 3 pending claims, they must wait for one to be resolved before submitting another.                                         |
+| Fake document uploads                                     | Documents are stored privately and only viewed by admins. Admin is responsible for assessing authenticity. Automated document verification is V1+.                                     |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `claim_search_submitted` | On search form submit | `{ query: string }` |
-| `claim_search_result_selected` | On "Claim" button click in results | `{ listing_id: string }` |
-| `claim_submitted` | On claim form submit | `{ listing_id: string, has_document: boolean, role_at_business: string }` |
-| `claim_no_results_add_business_click` | On "Add it instead" link click | `{ query: string }` |
+| Event name                            | When fired                         | Properties                                                                |
+| ------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| `claim_search_submitted`              | On search form submit              | `{ query: string }`                                                       |
+| `claim_search_result_selected`        | On "Claim" button click in results | `{ listing_id: string }`                                                  |
+| `claim_submitted`                     | On claim form submit               | `{ listing_id: string, has_document: boolean, role_at_business: string }` |
+| `claim_no_results_add_business_click` | On "Add it instead" link click     | `{ query: string }`                                                       |
 
 ---
 
@@ -1039,17 +1088,20 @@ Authentication is required before submitting a claim. An anonymous user can reac
 ### Happy Path
 
 **Step 1: Owner navigates to the page editor**
+
 - User action: Signs in (if not already). Navigates to `/dashboard`. Sees a "Edit my Page" quick-action button on the dashboard home. Clicks it.
 - System response: Browser navigates to `/dashboard/page/edit`. The full page editor loads. The editor is organized into collapsible sections mirroring the BLACQList Page layout: Hero (cover image, logo), Basic Info (name, tagline, description), Contact & Hours, Social Links, Services, Gallery, CTA, Publish Settings.
 - Next: Step 2
 
 **Step 2: Owner edits a section**
+
 - User action: Owner scrolls to a section (e.g., "About"). The section is pre-populated with current field values. They update the description text.
 - System response: The form uses `react-hook-form`. Field changes are tracked. An autosave indicator appears in the section header: "Unsaved changes" when the field is dirty. On field blur: the form autosaves the section to `draft` status locally (via `sessionStorage`) and queues a server save after 2 seconds of inactivity.
 - On successful server save: the indicator updates to "Saved" with a timestamp.
 - Next: Step 3
 
 **Step 3: Owner uploads a new cover image**
+
 - User action: In the Hero section, clicks "Replace cover image". An upload dialog opens. Selects a file from their device or camera.
 - System response: Upload begins via `/api/upload`. Progress bar renders in the upload area. After upload completes, a preview of the new image renders in the Hero section of the editor. The old image is visually replaced. The new image path is stored but the listing record is not yet updated on the live page until the owner publishes.
 - Decision: Upload fails (file too large, wrong type)?
@@ -1057,11 +1109,13 @@ Authentication is required before submitting a claim. An anonymous user can reac
 - Next: Step 4
 
 **Step 4: Owner previews the page**
+
 - User action: Clicks "Preview" button (top-right of the editor, visible without scrolling).
 - System response: A new browser tab opens (or a split-panel if design supports it) showing the BLACQList Page with the saved draft data applied. A banner at the top of the preview: "Preview mode — this is not your live page." Close preview tab to return to editor.
 - Next: Step 5
 
 **Step 5: Owner publishes changes**
+
 - User action: Returns to the editor tab. Clicks the "Publish changes" button (Amber Gold, pinned to the top-right of the editor or in a sticky bottom bar on mobile).
 - System response: All pending draft changes are written to the `listings` and `business_pages` tables. `status` is set or remains `published`. The live BLACQList Page at `/[city-slug]/business/[listing-slug]` is updated via ISR revalidation triggered server-side (`revalidatePath`). A toast at the bottom of the screen: "Changes published. View live page →". The toast links to the live BLACQList Page.
 - Next: End state — changes are live.
@@ -1085,16 +1139,16 @@ Authentication required. Business Owner role required. If a Supporter (not an ow
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading — editor initial load | Page load | Skeleton: gray blocks for each section header, gray input outlines. The editor structure appears immediately; data populates within 1–2 seconds. |
-| Loading — autosave | After field blur | Section header shows "Saving…" spinner for < 500ms, then "Saved" with timestamp. |
-| Loading — image upload | During upload | Progress bar in the upload area. Upload percentage visible. |
-| Loading — publish | After "Publish changes" tap | Button spinner. Disabled. "Publishing…" label. Full page overlay not shown — in-button spinner is sufficient since publish is fast (< 2 seconds). |
-| Empty — new owner, blank fields | Owner claims listing with minimal seed data | Form fields are blank (not pre-filled). Each section shows helper text: e.g., "Add your business description to help customers find you." |
-| Error — autosave fails | Server returns error during background save | "Unsaved changes — couldn't save automatically. Try manually saving." A "Save now" link appears. The form data is not lost. |
-| Error — publish fails | 5xx on publish action | Toast: "Couldn't publish. Your draft is saved. Try again." |
-| Success | Publish completes | Toast: "Changes published. View live page →". The "Unsaved changes" badge clears. |
+| State type                      | Screen / moment                             | What the user sees                                                                                                                                |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading — editor initial load   | Page load                                   | Skeleton: gray blocks for each section header, gray input outlines. The editor structure appears immediately; data populates within 1–2 seconds.  |
+| Loading — autosave              | After field blur                            | Section header shows "Saving…" spinner for < 500ms, then "Saved" with timestamp.                                                                  |
+| Loading — image upload          | During upload                               | Progress bar in the upload area. Upload percentage visible.                                                                                       |
+| Loading — publish               | After "Publish changes" tap                 | Button spinner. Disabled. "Publishing…" label. Full page overlay not shown — in-button spinner is sufficient since publish is fast (< 2 seconds). |
+| Empty — new owner, blank fields | Owner claims listing with minimal seed data | Form fields are blank (not pre-filled). Each section shows helper text: e.g., "Add your business description to help customers find you."         |
+| Error — autosave fails          | Server returns error during background save | "Unsaved changes — couldn't save automatically. Try manually saving." A "Save now" link appears. The form data is not lost.                       |
+| Error — publish fails           | 5xx on publish action                       | Toast: "Couldn't publish. Your draft is saved. Try again."                                                                                        |
+| Success                         | Publish completes                           | Toast: "Changes published. View live page →". The "Unsaved changes" badge clears.                                                                 |
 
 ### Permission Issues
 
@@ -1117,21 +1171,21 @@ Only the owner of the specific listing can edit it. Admin can also edit any list
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                                 | Mitigation                                                                                                                                                      |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Owner replacing a legitimate listing with spam or competitor content | All field updates are written to the listing with `updated_by` audit trail. Admins can review recent changes and roll back. In V1: change history is preserved. |
-| Injecting malicious URLs in CTA or website fields | Server-side URL validation on save. Only `https://` URLs accepted. |
-| Large image uploads (DoS via storage) | Max 5MB per image enforced server-side. Max 12 gallery images. Total storage per listing: 100MB cap (enforced at the API level). |
+| Injecting malicious URLs in CTA or website fields                    | Server-side URL validation on save. Only `https://` URLs accepted.                                                                                              |
+| Large image uploads (DoS via storage)                                | Max 5MB per image enforced server-side. Max 12 gallery images. Total storage per listing: 100MB cap (enforced at the API level).                                |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `page_editor_opened` | On editor page load | `{ listing_id: string }` |
-| `page_section_edited` | On any field change | `{ listing_id: string, section: string }` |
+| Event name            | When fired                 | Properties                                                           |
+| --------------------- | -------------------------- | -------------------------------------------------------------------- |
+| `page_editor_opened`  | On editor page load        | `{ listing_id: string }`                                             |
+| `page_section_edited` | On any field change        | `{ listing_id: string, section: string }`                            |
 | `page_image_uploaded` | On successful image upload | `{ listing_id: string, image_type: 'cover' \| 'logo' \| 'gallery' }` |
-| `page_previewed` | On "Preview" button click | `{ listing_id: string }` |
-| `page_published` | On successful publish | `{ listing_id: string, sections_changed: string[] }` |
+| `page_previewed`      | On "Preview" button click  | `{ listing_id: string }`                                             |
+| `page_published`      | On successful publish      | `{ listing_id: string, sections_changed: string[] }`                 |
 
 ---
 
@@ -1147,11 +1201,13 @@ Only the owner of the specific listing can edit it. Admin can also edit any list
 ### Happy Path
 
 **Step 1: Owner signs in and lands at `/dashboard`**
+
 - User action: Signs in at `/sign-in`. Session established. Middleware reads role: `business_owner`. Redirects to `/dashboard`.
 - System response: Dashboard renders. The top of the page shows a status banner (see below). Below: the page preview card, analytics strip, and quick-action buttons.
 - Next: Step 2
 
 **Step 2: Owner reads the status banner**
+
 - System response:
   - Claim status = `pending`: Banner (amber/warning style): "Your claim for [Business Name] is under review. We'll notify you by email when it's approved. Estimated: 2–3 business days." No editing buttons are enabled.
   - Claim status = `approved` / listing `status = published`: Banner (green/success style): "Your BLACQList Page is live!" with a "View live page" link. If the page has low completeness (no cover image, no description), the banner adds: "Add a photo to get noticed."
@@ -1160,11 +1216,13 @@ Only the owner of the specific listing can edit it. Admin can also edit any list
 - Next: Step 3
 
 **Step 3: Owner views the page preview card**
+
 - System response: A card shows a thumbnail of the BLACQList Page (cover image if set, or the branded placeholder), the business name, the live URL (e.g., `theblacqlist.com/atlanta/business/sweet-auburn-bbq-atlanta`), and two buttons: "View live page" (external link) and "Edit my Page" (link to `/dashboard/page/edit`).
 - User action: Clicks "View live page" or "Edit my Page".
 - Next: Flow 10 (if editing) or Flow 4 (viewing the live page). Flow continues for the analytics steps below.
 
 **Step 4: Owner views analytics summary strip**
+
 - System response: A row of 4 stat cards renders below the page preview card:
   - Page views (last 7 days)
   - CTA clicks (last 7 days)
@@ -1175,6 +1233,7 @@ Only the owner of the specific listing can edit it. Admin can also edit any list
 - Next: Step 5
 
 **Step 5: Owner views the completion checklist and quick actions**
+
 - System response: Below the analytics strip, a completion checklist shows Page completeness:
   - [ ] Add a cover image
   - [ ] Write a business description
@@ -1204,13 +1263,13 @@ Authentication required. Business Owner role required. If a Supporter navigates 
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Dashboard initial load | Skeleton: gray rectangle for the status banner area, gray placeholders for the 4 stat cards, gray block for the page preview card. Skeleton renders immediately. |
-| Empty — newly approved owner | All analytics = 0, page has minimal content | 0 values in stat cards (not an error). Completion checklist shows most items unchecked. No special illustration — functional empty state with clear call to action. |
-| Error — analytics fetch fails | `analytics_events` aggregate query fails | Stat cards show "—" instead of numbers. Small error note below the strip: "Couldn't load stats. Try refreshing." Retry link. The rest of the dashboard renders normally. |
-| Error — listing data fails to load | Listing record fetch fails | Error boundary renders for the page preview card section: "Couldn't load your page info. Try refreshing." The status banner and checklist still render if their data is independent. |
-| Success | Dashboard loaded with live page | Status banner shows "Your page is live!" Analytics strip shows numbers (even if all 0). Page preview card shows thumbnail and URL. Checklist shows current completion state. |
+| State type                         | Screen / moment                             | What the user sees                                                                                                                                                                   |
+| ---------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Loading                            | Dashboard initial load                      | Skeleton: gray rectangle for the status banner area, gray placeholders for the 4 stat cards, gray block for the page preview card. Skeleton renders immediately.                     |
+| Empty — newly approved owner       | All analytics = 0, page has minimal content | 0 values in stat cards (not an error). Completion checklist shows most items unchecked. No special illustration — functional empty state with clear call to action.                  |
+| Error — analytics fetch fails      | `analytics_events` aggregate query fails    | Stat cards show "—" instead of numbers. Small error note below the strip: "Couldn't load stats. Try refreshing." Retry link. The rest of the dashboard renders normally.             |
+| Error — listing data fails to load | Listing record fetch fails                  | Error boundary renders for the page preview card section: "Couldn't load your page info. Try refreshing." The status banner and checklist still render if their data is independent. |
+| Success                            | Dashboard loaded with live page             | Status banner shows "Your page is live!" Analytics strip shows numbers (even if all 0). Page preview card shows thumbnail and URL. Checklist shows current completion state.         |
 
 ### Permission Issues
 
@@ -1236,12 +1295,12 @@ No direct abuse vectors on the dashboard itself. Analytics data is read-only for
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `dashboard_viewed` | On dashboard page load | `{ listing_id: string, claim_status: string, page_completeness_score: number }` |
-| `dashboard_view_live_page` | On "View live page" click | `{ listing_id: string }` |
-| `dashboard_edit_page_click` | On "Edit my Page" click | `{ listing_id: string }` |
-| `dashboard_checklist_item_click` | On checklist item click | `{ listing_id: string, item: string }` |
+| Event name                       | When fired                | Properties                                                                      |
+| -------------------------------- | ------------------------- | ------------------------------------------------------------------------------- |
+| `dashboard_viewed`               | On dashboard page load    | `{ listing_id: string, claim_status: string, page_completeness_score: number }` |
+| `dashboard_view_live_page`       | On "View live page" click | `{ listing_id: string }`                                                        |
+| `dashboard_edit_page_click`      | On "Edit my Page" click   | `{ listing_id: string }`                                                        |
+| `dashboard_checklist_item_click` | On checklist item click   | `{ listing_id: string, item: string }`                                          |
 
 ---
 
@@ -1257,22 +1316,26 @@ No direct abuse vectors on the dashboard itself. Analytics data is read-only for
 ### Happy Path
 
 **Step 1: User taps "Write a Review" on a BLACQList Page**
+
 - User action: User is on a claimed BLACQList Page (reviews are only available on claimed listings at MVP — unclaimed listings do not show the "Write a Review" button). The "Reviews" section of the page shows a placeholder: "No reviews yet. Be the first." and a "Write a review" button.
 - Auth check: If not logged in, the auth-gate modal appears (Flow 5 pattern, adapted for reviews). URL preserves `action=review&listing_id=[id]`.
 - System response: A review form expands inline (or a bottom sheet on mobile). The form contains: a 5-star rating selector (required), a text area for the review body (required, minimum 20 chars, maximum 1000 chars), and a Submit button.
 - Next: Step 2
 
 **Step 2: User fills in the review**
+
 - User action: Taps a star rating (1–5 stars). Taps each star in the star selector to select it. Types their review in the text area.
 - System response: Stars become highlighted as the user taps (all stars up to the selected rating fill with Amber Gold). Character count shown below the text area: "350 / 1000 characters". No inline validation while typing — validation fires on submit.
 - Next: Step 3
 
 **Step 3: User submits the review**
+
 - User action: Taps "Submit review".
 - System response: Submit button shows a spinner and is disabled. Server-side validation: rating is between 1 and 5, text is non-empty and meets minimum length. If validation passes: review record is created with `status: pending`, `listing_id`, `user_id`, `rating`, `body`, `created_at`. Submit button state resolves.
 - Next: Step 4
 
 **Step 4: Confirmation message**
+
 - System response: The review form is replaced by a confirmation message (inline, where the form was): "Thanks for your review of [Business Name]. We'll publish it after a quick check — usually within 48 hours." A "Write another review" link is not shown — one review per user per listing is enforced. The "Write a review" button is now hidden for this user on this listing (replaced by "You reviewed this business").
 - Next: End state.
 
@@ -1296,14 +1359,14 @@ Authentication required to submit a review. The "Write a review" button is visib
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | On review submit | Button spinner. Disabled. |
-| Empty — no reviews on page | First review for this listing | "No reviews yet. Be the first." + "Write a review" button. |
-| Error — validation failure | Short text or no rating | Inline errors below the relevant fields. Form preserved. |
-| Error — server error | 5xx on review submit | "Something went wrong. Your review wasn't submitted. Try again." Input preserved. |
-| Error — already reviewed | User tries to submit a second review | "You've already reviewed this business." Their existing review status shown. |
-| Success | Review submitted | Inline confirmation: "Thanks for your review. We'll publish it after a quick check — usually within 48 hours." |
+| State type                 | Screen / moment                      | What the user sees                                                                                             |
+| -------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Loading                    | On review submit                     | Button spinner. Disabled.                                                                                      |
+| Empty — no reviews on page | First review for this listing        | "No reviews yet. Be the first." + "Write a review" button.                                                     |
+| Error — validation failure | Short text or no rating              | Inline errors below the relevant fields. Form preserved.                                                       |
+| Error — server error       | 5xx on review submit                 | "Something went wrong. Your review wasn't submitted. Try again." Input preserved.                              |
+| Error — already reviewed   | User tries to submit a second review | "You've already reviewed this business." Their existing review status shown.                                   |
+| Success                    | Review submitted                     | Inline confirmation: "Thanks for your review. We'll publish it after a quick check — usually within 48 hours." |
 
 ### Permission Issues
 
@@ -1326,18 +1389,18 @@ Authentication required to submit a review. The "Write a review" button is visib
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Fake reviews (competitors, bots) | All reviews go to `status: pending` — no public display until admin moderation (V1). At MVP, reviews are collected but never shown. |
-| Review flooding (one user posting many reviews on different listings) | Rate limit: 5 review submissions per user per day. Enforced server-side. |
-| Review text injection (script tags, malicious content) | All text content is HTML-escaped before storage and rendering. Server-side sanitization on the review body field. |
+| Risk                                                                  | Mitigation                                                                                                                          |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Fake reviews (competitors, bots)                                      | All reviews go to `status: pending` — no public display until admin moderation (V1). At MVP, reviews are collected but never shown. |
+| Review flooding (one user posting many reviews on different listings) | Rate limit: 5 review submissions per user per day. Enforced server-side.                                                            |
+| Review text injection (script tags, malicious content)                | All text content is HTML-escaped before storage and rendering. Server-side sanitization on the review body field.                   |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `review_form_opened` | On "Write a review" tap | `{ listing_id: string, auth_status: 'authenticated' \| 'anonymous' }` |
-| `review_submitted` | On successful submission | `{ listing_id: string, rating: number, body_length: number }` |
+| Event name           | When fired               | Properties                                                            |
+| -------------------- | ------------------------ | --------------------------------------------------------------------- |
+| `review_form_opened` | On "Write a review" tap  | `{ listing_id: string, auth_status: 'authenticated' \| 'anonymous' }` |
+| `review_submitted`   | On successful submission | `{ listing_id: string, rating: number, body_length: number }`         |
 
 ---
 
@@ -1353,12 +1416,14 @@ Authentication required to submit a review. The "Write a review" button is visib
 ### Happy Path
 
 **Step 1: User taps "Is this info incorrect?" on the BLACQList Page**
+
 - User action: Scrolls to the bottom of the BLACQList Page. Sees a small link: "Report incorrect information" (or "Is this info incorrect?"). Taps it.
 - System response: A bottom sheet (mobile) or modal (desktop) opens. Heading: "Report a problem with this listing." Instructions: "Help us keep The BLACQList accurate."
 - No auth required to view or submit the report.
 - Next: Step 2
 
 **Step 2: User selects what is incorrect**
+
 - User action: Selects one or more checkboxes from a list:
   - Business name is wrong
   - Address / location is wrong
@@ -1373,6 +1438,7 @@ Authentication required to submit a review. The "Write a review" button is visib
 - Next: Step 3
 
 **Step 3: User submits the report**
+
 - User action: Taps "Submit report".
 - System response: A `corrections` record is created (even at MVP, the table can exist and intake can work; moderation queue is V1 UI work). Record contains: `listing_id`, `reporter_user_id` (if authenticated, else null), `reporter_ip_hash` (hashed for privacy), `issue_types` (array of selected issues), `notes` (optional free text), `status: pending`, `created_at`.
 - The bottom sheet / modal transitions to a confirmation message: "Thanks — we're on it." Sub-text: "Our team reviews all reports. We'll update the listing if the information is incorrect." Close button.
@@ -1397,12 +1463,12 @@ No authentication required. Anonymous reports are accepted. The reporter's IP ha
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | On submit | Button spinner, disabled. |
-| Empty | n/a | — |
-| Error — server error | 5xx on submit | "Something went wrong. Please try again." Retry. |
-| Success | Report submitted | "Thanks — we're on it." Confirmation in the modal/sheet. Close button. |
+| State type           | Screen / moment  | What the user sees                                                     |
+| -------------------- | ---------------- | ---------------------------------------------------------------------- |
+| Loading              | On submit        | Button spinner, disabled.                                              |
+| Empty                | n/a              | —                                                                      |
+| Error — server error | 5xx on submit    | "Something went wrong. Please try again." Retry.                       |
+| Success              | Report submitted | "Thanks — we're on it." Confirmation in the modal/sheet. Close button. |
 
 ### Permission Issues
 
@@ -1423,16 +1489,16 @@ Any user (anonymous or authenticated) can submit a correction report. Business o
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                 | Mitigation                                                                                                                                                           |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Competitor mass-flagging a rival's listing as closed | IP hash rate limiting (3 reports per listing per IP per 24 hours). Admin reviews all "closed" flags before acting. No automated unpublishing based on reports alone. |
-| Spam notes in the free text field | Free text is stripped of HTML and limited to 500 characters. Not rendered publicly. |
+| Spam notes in the free text field                    | Free text is stripped of HTML and limited to 500 characters. Not rendered publicly.                                                                                  |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `correction_report_opened` | On report link tap | `{ listing_id: string }` |
+| Event name                    | When fired           | Properties                                                          |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------- |
+| `correction_report_opened`    | On report link tap   | `{ listing_id: string }`                                            |
 | `correction_report_submitted` | On successful submit | `{ listing_id: string, issue_types: string[], has_notes: boolean }` |
 
 ---
@@ -1449,16 +1515,19 @@ Any user (anonymous or authenticated) can submit a correction report. Business o
 ### Happy Path
 
 **Step 1: Admin navigates to the listings queue**
+
 - User action: Signs in at `/sign-in`. Role: admin. Redirected to `/admin/overview`. Clicks "Listings" in the admin sidebar nav.
 - System response: `/admin/listings` loads. A filterable table renders with all listings. Admin applies the status filter: "Pending". The table updates to show only `status: pending` listings. Columns: listing name, category, city, submitted by (user display name), submitted date, actions (Review button).
 - Next: Step 2
 
 **Step 2: Admin selects a listing to review**
+
 - User action: Clicks "Review" on a pending listing row. Or clicks anywhere on the row.
 - System response: Navigates to `/admin/listings/[id]`. The full listing detail view renders: all fields (name, description, contact info, category, city, hours, social links, media, CTA), submission metadata (submitted by user, submitted at timestamp, source: 'web' | 'mobile'), and any media uploaded (logo, cover image displayed inline). Two action buttons are visible: "Approve" (green/Amber Gold) and "Reject" (outlined red).
 - Next: Step 3
 
 **Step 3: Admin reviews the listing**
+
 - User action: Reads through all submitted fields. Checks for: completeness, legitimacy (is this a real business?), appropriateness (no spam, offensive content), category accuracy, duplicate risk.
 - System response: A duplicate check indicator is shown: "Possible duplicates: none found" or "Possible duplicate: [Listing Name] in [City]" with a link to the potential duplicate.
 - The admin can also make direct edits to any field before approving: the field edit is inline — clicking a field in the detail view makes it editable. Any edit is auto-saved.
@@ -1467,6 +1536,7 @@ Any user (anonymous or authenticated) can submit a correction report. Business o
 **Step 4: Admin approves or rejects**
 
 **Approve path:**
+
 - User action: Clicks "Approve".
 - System response: A confirmation dialog: "Approve this listing? It will be published immediately and indexed by search engines." Confirm button: "Yes, publish it". Cancel button.
 - User action: Clicks "Confirm".
@@ -1474,6 +1544,7 @@ Any user (anonymous or authenticated) can submit a correction report. Business o
 - Admin is returned to the `/admin/listings` queue, with a success toast: "[Business Name] published."
 
 **Reject path:**
+
 - User action: Clicks "Reject".
 - System response: A rejection reason modal opens. A dropdown: "Select a reason" — options: "Incomplete information", "Not a real business", "Duplicate listing", "Inappropriate content", "Category mismatch", "Other". A text area: "Additional notes (shown to the submitter)". Confirm: "Reject and notify" button.
 - User action: Selects reason, optionally adds notes, confirms.
@@ -1498,14 +1569,14 @@ Authentication required. Admin or Super Admin role required. All page loads and 
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Listings table load | Skeleton rows in the table. |
-| Empty — no pending listings | Filter returns 0 results | "No pending listings. All caught up." No empty state illustration needed — this is a success state for the admin. |
-| Error — listing detail fails | 5xx on detail page load | Error boundary: "Couldn't load this listing. Try refreshing." |
-| Error — approve/reject action fails | 5xx on status update | Toast: "Action failed. Try again." Listing status is not changed. |
-| Success — approved | After approve confirm | Toast: "[Business Name] published." Admin returned to the queue. |
-| Success — rejected | After reject confirm | Toast: "[Business Name] rejected." Admin returned to the queue. |
+| State type                          | Screen / moment          | What the user sees                                                                                                |
+| ----------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Loading                             | Listings table load      | Skeleton rows in the table.                                                                                       |
+| Empty — no pending listings         | Filter returns 0 results | "No pending listings. All caught up." No empty state illustration needed — this is a success state for the admin. |
+| Error — listing detail fails        | 5xx on detail page load  | Error boundary: "Couldn't load this listing. Try refreshing."                                                     |
+| Error — approve/reject action fails | 5xx on status update     | Toast: "Action failed. Try again." Listing status is not changed.                                                 |
+| Success — approved                  | After approve confirm    | Toast: "[Business Name] published." Admin returned to the queue.                                                  |
+| Success — rejected                  | After reject confirm     | Toast: "[Business Name] rejected." Admin returned to the queue.                                                   |
 
 ### Permission Issues
 
@@ -1524,16 +1595,16 @@ The admin interface is primarily desktop-optimized. On mobile (375px), the listi
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                    | Mitigation                                                                                                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Admin approving without adequate review | UX friction: confirmation dialog on approve. Inline duplicate check shown. At V1: admin action audit log records every approve/reject with timestamp and admin user_id. |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
+| Event name               | When fired         | Properties                                                                 |
+| ------------------------ | ------------------ | -------------------------------------------------------------------------- |
 | `admin_listing_approved` | On approve confirm | `{ listing_id: string, admin_user_id: string, time_in_review_ms: number }` |
-| `admin_listing_rejected` | On reject confirm | `{ listing_id: string, admin_user_id: string, rejection_reason: string }` |
+| `admin_listing_rejected` | On reject confirm  | `{ listing_id: string, admin_user_id: string, rejection_reason: string }`  |
 
 ---
 
@@ -1549,11 +1620,13 @@ The admin interface is primarily desktop-optimized. On mobile (375px), the listi
 ### Happy Path
 
 **Step 1: Admin navigates to the claims queue**
+
 - User action: In the admin sidebar, clicks "Claims".
 - System response: `/admin/claims` loads. A table of all claims, filtered to `status: pending` by default. Columns: listing name, city, claimant display name, submitted date, verification email, status. Each row has a "Review" button.
 - Next: Step 2
 
 **Step 2: Admin selects a claim**
+
 - User action: Clicks "Review" on a pending claim row.
 - System response: `/admin/claims/[id]` loads. Two panels:
   - Left/top panel: The listing being claimed — listing name, city, category, current contact info (phone, email, website), current claimed status, listing thumbnail.
@@ -1563,11 +1636,13 @@ The admin interface is primarily desktop-optimized. On mobile (375px), the listi
 - Next: Step 3
 
 **Step 3: Admin evaluates the claim**
+
 - User action: Reviews both panels. Opens the document if one was uploaded (full-screen document viewer or download link). Checks whether the submitted email matches the listing's email. Notes whether the listing's phone or email is a real business contact.
 - System response: No automated approval — the admin makes a judgment call.
 - Next: Step 4
 
 **Step 4a: Admin approves the claim**
+
 - User action: Clicks "Approve claim".
 - System response: Confirmation dialog: "Approve this claim? [Claimant name] will become the owner of [Business Name]. This grants them full editing access to the BLACQList Page." Confirm button.
 - User action: Confirms.
@@ -1581,6 +1656,7 @@ The admin interface is primarily desktop-optimized. On mobile (375px), the listi
 - Next: End state.
 
 **Step 4b: Admin rejects the claim**
+
 - User action: Clicks "Reject claim".
 - System response: Rejection modal opens. Reason dropdown — "Insufficient verification information", "Claimant does not appear to be associated with this business", "Document does not match the listing", "Duplicate claim from a different user", "Other". Text area for additional notes. Confirm: "Reject and notify".
 - User action: Selects reason, optionally adds notes, confirms.
@@ -1608,14 +1684,14 @@ Admin or Super Admin role required. All actions (approve, reject) validated serv
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Claim detail page load | Skeleton for both panels. |
-| Empty — no pending claims | Queue is empty | "No pending claims. All caught up." |
-| Error — document fails to load | Private document URL cannot be resolved | "Document couldn't be loaded. Download it instead." Download link fallback. |
-| Error — approve/reject action fails | 5xx on status update | "Action failed. The claim status was not changed. Try again." |
-| Success — approved | After confirm | Toast + return to queue. Email sent to claimant. |
-| Success — rejected | After confirm | Toast + return to queue. Email sent to claimant. |
+| State type                          | Screen / moment                         | What the user sees                                                          |
+| ----------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| Loading                             | Claim detail page load                  | Skeleton for both panels.                                                   |
+| Empty — no pending claims           | Queue is empty                          | "No pending claims. All caught up."                                         |
+| Error — document fails to load      | Private document URL cannot be resolved | "Document couldn't be loaded. Download it instead." Download link fallback. |
+| Error — approve/reject action fails | 5xx on status update                    | "Action failed. The claim status was not changed. Try again."               |
+| Success — approved                  | After confirm                           | Toast + return to queue. Email sent to claimant.                            |
+| Success — rejected                  | After confirm                           | Toast + return to queue. Email sent to claimant.                            |
 
 ### Permission Issues
 
@@ -1633,17 +1709,17 @@ The two-panel layout on desktop becomes a tabbed view on mobile: "Listing info" 
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Fraudulent claims with fake documents | Admin judgment is the primary defense at MVP. Document upload is encouraged but not required. In V1: automated document verification services. |
-| Admin account compromise granting fraudulent ownership | Admin accounts require strong passwords. Super Admin reviews Admin actions in the audit log. |
+| Risk                                                   | Mitigation                                                                                                                                     |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fraudulent claims with fake documents                  | Admin judgment is the primary defense at MVP. Document upload is encouraged but not required. In V1: automated document verification services. |
+| Admin account compromise granting fraudulent ownership | Admin accounts require strong passwords. Super Admin reviews Admin actions in the audit log.                                                   |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `admin_claim_approved` | On approve confirm | `{ claim_id: string, listing_id: string, admin_user_id: string }` |
-| `admin_claim_rejected` | On reject confirm | `{ claim_id: string, listing_id: string, admin_user_id: string, rejection_reason: string }` |
+| Event name             | When fired         | Properties                                                                                  |
+| ---------------------- | ------------------ | ------------------------------------------------------------------------------------------- |
+| `admin_claim_approved` | On approve confirm | `{ claim_id: string, listing_id: string, admin_user_id: string }`                           |
+| `admin_claim_rejected` | On reject confirm  | `{ claim_id: string, listing_id: string, admin_user_id: string, rejection_reason: string }` |
 
 ---
 
@@ -1659,11 +1735,13 @@ The two-panel layout on desktop becomes a tabbed view on mobile: "Listing info" 
 ### Happy Path
 
 **Step 1: Admin navigates to the verification queue**
+
 - User action: In the admin sidebar, clicks "Verification".
 - System response: `/admin/verification` loads. Table of all verification submissions filtered to `status: pending`. Columns: listing name, city, owner display name, submission date, documents uploaded (count), verification type. Each row has a "Review" button.
 - Next: Step 2
 
 **Step 2: Admin selects a verification submission**
+
 - User action: Clicks "Review" on a pending row.
 - System response: `/admin/verification/[id]` loads. Panels:
   - Listing panel: listing name, category, city, current badge status, owner name, owner account email.
@@ -1673,10 +1751,12 @@ The two-panel layout on desktop becomes a tabbed view on mobile: "Listing info" 
 - Next: Step 3
 
 **Step 3: Admin reviews documents**
+
 - User action: Opens each document. Confirms it references the same business and address as the listing.
 - Next: Step 4
 
 **Step 4a: Admin grants Verified status**
+
 - User action: Clicks "Grant Verified badge".
 - System response: Confirmation dialog: "Grant the Verified badge to [Business Name]? This indicates the business has been verified as a real, operating Black-owned business." Confirm button.
 - User action: Confirms.
@@ -1687,6 +1767,7 @@ The two-panel layout on desktop becomes a tabbed view on mobile: "Listing info" 
 - Toast: "[Business Name] is now Verified."
 
 **Step 4b: Admin declines verification**
+
 - User action: Clicks "Decline verification".
 - System response: Decline modal: reason dropdown + optional notes. "Decline and notify" confirm.
 - System response: `verification_submissions` record status updated to `declined`. Email to owner: "We couldn't verify [Business Name] at this time. Reason: [reason]. [Notes]. You may resubmit with additional documentation." Resubmit link in email.
@@ -1709,13 +1790,13 @@ Admin or Super Admin only.
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Detail page load | Skeleton panels. |
-| Empty — no pending verifications | Queue is empty | "No pending verifications." |
-| Error — document load fails | Storage URL fails | "Document couldn't be loaded. Download it instead." |
-| Success — verified | After grant confirm | Toast + return to queue. Email sent to owner. Verified badge live on listing page. |
-| Success — declined | After decline confirm | Toast + return to queue. Email sent to owner. |
+| State type                       | Screen / moment       | What the user sees                                                                 |
+| -------------------------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| Loading                          | Detail page load      | Skeleton panels.                                                                   |
+| Empty — no pending verifications | Queue is empty        | "No pending verifications."                                                        |
+| Error — document load fails      | Storage URL fails     | "Document couldn't be loaded. Download it instead."                                |
+| Success — verified               | After grant confirm   | Toast + return to queue. Email sent to owner. Verified badge live on listing page. |
+| Success — declined               | After decline confirm | Toast + return to queue. Email sent to owner.                                      |
 
 ### Permission Issues
 
@@ -1731,15 +1812,15 @@ Same requirements as Flow 15. Document previews must have descriptive alt text o
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                               | Mitigation                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
 | Doctored or edited document images | Admin judgment. At V1: third-party document verification API integration is on the roadmap. |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `admin_verification_granted` | On grant confirm | `{ listing_id: string, admin_user_id: string }` |
+| Event name                    | When fired         | Properties                                                      |
+| ----------------------------- | ------------------ | --------------------------------------------------------------- |
+| `admin_verification_granted`  | On grant confirm   | `{ listing_id: string, admin_user_id: string }`                 |
 | `admin_verification_declined` | On decline confirm | `{ listing_id: string, admin_user_id: string, reason: string }` |
 
 ---
@@ -1756,23 +1837,27 @@ Same requirements as Flow 15. Document previews must have descriptive alt text o
 ### Happy Path
 
 **Step 1: User navigates to `/account/receipts`**
+
 - User action: Navigates to their account. Clicks "Receipts" in the account nav.
 - System response: The receipts page loads. If no receipts have been uploaded: empty state (see States below). If receipts exist: a list of previous uploads with date, amount, business name, and status badge (Pending Review / Reviewed).
 - Primary action: An "Upload a receipt" button. On desktop: positioned as a full-width button above the list. On mobile: a FAB (floating action button) in the Amber Gold brand color, bottom-right of the screen.
 - Next: Step 2
 
 **Step 2: User taps "Upload a receipt"**
+
 - User action: Taps the button or FAB.
 - System response: An upload panel opens (bottom sheet on mobile, modal on desktop). Two options: "Take a photo" (triggers `capture="environment"` on mobile, opening the device rear camera) and "Choose from library" (triggers the OS file picker). On desktop: only "Choose from library" (no camera capture prompt since desktop webcams are not useful for receipts).
 - Next: Step 3
 
 **Step 3: User selects or captures a receipt photo**
+
 - User action: Takes a photo of the receipt or selects one from their camera roll. File types accepted: JPG, PNG, WebP, HEIC. Max 10MB.
 - System response: The image is uploaded to Supabase Storage via `/api/receipts`. A progress indicator shows "Uploading…" with a progress bar. After upload: the receipt image is displayed as a thumbnail in the panel.
 - At MVP: OCR is a stub — no automated extraction. The user sees a note: "We'll extract the details automatically in a future update. For now, please enter them below."
 - Next: Step 4
 
 **Step 4: User enters receipt details**
+
 - User action: The panel below the receipt thumbnail shows a manual entry form:
   - Business name (required, `type="text"`) — with a note: "Start typing to search for a BLACQList business" (type-ahead search against published listings — if the business is found, auto-fills the `listing_id`; if not found, stores the raw name as text)
   - Amount spent ($) (required, `inputMode="decimal"`, `type="number"`)
@@ -1782,6 +1867,7 @@ Same requirements as Flow 15. Document previews must have descriptive alt text o
 - Next: Step 5
 
 **Step 5: User submits**
+
 - User action: Taps "Submit".
 - System response: A `spend_event` record is created with: `user_id`, `listing_id` (if matched) or `raw_business_name`, `amount`, `purchase_date`, `image_path`, `status: pending_review`, `source: 'receipt_upload'`, `submitted_by`, `created_at`. The receipt image path in Supabase Storage is stored (not the URL — the URL is generated at read time).
 - The panel transitions to a confirmation: "Receipt saved." Below: the receipt thumbnail, the entered amount, business name, and date. A "View all receipts" link.
@@ -1807,15 +1893,15 @@ Authentication required. `/account/receipts` is behind session middleware. The r
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading — image upload | During file upload | Progress bar in the upload panel. "Uploading…" label. |
-| Loading — form submit | On submit | Button spinner, disabled. |
+| State type              | Screen / moment      | What the user sees                                                                                                                                     |
+| ----------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Loading — image upload  | During file upload   | Progress bar in the upload panel. "Uploading…" label.                                                                                                  |
+| Loading — form submit   | On submit            | Button spinner, disabled.                                                                                                                              |
 | Empty — no receipts yet | No receipts uploaded | "No receipts uploaded yet." Description: "Upload receipts from Black-owned businesses to contribute to our community spend data." Upload button below. |
-| Error — file too large | On upload | "This file is too large. Maximum 10MB." |
-| Error — wrong file type | On upload | "Only image files are accepted." |
-| Error — server error | On submit | "Couldn't save your receipt. Try again." Form preserved. |
-| Success | Receipt submitted | "Receipt saved." Confirmation in panel with thumbnail, amount, business, date. |
+| Error — file too large  | On upload            | "This file is too large. Maximum 10MB."                                                                                                                |
+| Error — wrong file type | On upload            | "Only image files are accepted."                                                                                                                       |
+| Error — server error    | On submit            | "Couldn't save your receipt. Try again." Form preserved.                                                                                               |
+| Success                 | Receipt submitted    | "Receipt saved." Confirmation in panel with thumbnail, amount, business, date.                                                                         |
 
 ### Permission Issues
 
@@ -1839,17 +1925,17 @@ Only the authenticated user can see their own receipts. The `/account/receipts` 
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                    | Mitigation                                                                                                                                                                              |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fake receipt uploads to inflate community spend figures | All receipts enter `status: pending_review`. Admin spot-checks. Amounts are not aggregated into public stats until `status: reviewed`. Rate limit: 20 receipt uploads per user per day. |
-| Uploading receipts for non-Black-owned businesses | No automated verification at MVP. Admin spot-checks a percentage of submissions. The data is private to the user at MVP — no public aggregation yet. |
+| Uploading receipts for non-Black-owned businesses       | No automated verification at MVP. Admin spot-checks a percentage of submissions. The data is private to the user at MVP — no public aggregation yet.                                    |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `receipt_upload_started` | On upload panel open | `{ source: 'fab' \| 'button' }` |
-| `receipt_submitted` | On successful submit | `{ has_listing_match: boolean, amount_entered: number }` |
+| Event name               | When fired           | Properties                                               |
+| ------------------------ | -------------------- | -------------------------------------------------------- |
+| `receipt_upload_started` | On upload panel open | `{ source: 'fab' \| 'button' }`                          |
+| `receipt_submitted`      | On successful submit | `{ has_listing_match: boolean, amount_entered: number }` |
 
 ---
 
@@ -1865,11 +1951,13 @@ Only the authenticated user can see their own receipts. The `/account/receipts` 
 ### Happy Path
 
 **Step 1: Admin navigates to `/admin/receipts`**
+
 - User action: Clicks "Receipts" in the admin sidebar.
 - System response: A table of `spend_events` with `status: pending_review`. Columns: user display name, business name (entered), amount, purchase date, upload date, receipt thumbnail (small). Each row has "Review" and "Flag" actions.
 - Next: Step 2
 
 **Step 2: Admin reviews a receipt row**
+
 - User action: Clicks "Review" on a row.
 - System response: A side panel or modal opens (no full-page navigation needed for this lightweight task). Shows:
   - Receipt image (full size, with zoom support).
@@ -1880,11 +1968,13 @@ Only the authenticated user can see their own receipts. The `/account/receipts` 
 - Next: Step 3
 
 **Step 3: Admin marks the receipt reviewed**
+
 - User action: Receipt data looks accurate. Clicks "Mark reviewed".
 - System response: `spend_event.status` updated to `reviewed`. Row disappears from the pending queue. Toast: "Receipt marked as reviewed."
 - Next: End state (admin moves to next item in queue).
 
 **Step 3b: Admin flags a receipt for correction**
+
 - User action: Receipt data looks inaccurate (e.g., amount entered as $200 but receipt shows $20.00). Clicks "Flag for correction".
 - System response: A small note field: "Describe the issue (optional)". Confirm: "Flag".
 - System response: `spend_event.status` updated to `flagged`. The user can see the flagged status on their receipts list (their entry shows "Flagged" badge with no explanation — at MVP, no in-app messaging to the user about flags; this is a data quality mechanism, not a user notification).
@@ -1907,13 +1997,13 @@ Admin or Super Admin only.
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Table load | Skeleton rows. |
-| Empty — no pending receipts | Queue is empty | "No receipts pending review. All caught up." |
-| Error — image load fails | Storage URL error | "Receipt image couldn't be loaded." |
-| Success — reviewed | After mark reviewed | Toast. Row removed from queue. |
-| Success — flagged | After flag | Toast. Row removed from pending queue (goes to flagged view). |
+| State type                  | Screen / moment     | What the user sees                                            |
+| --------------------------- | ------------------- | ------------------------------------------------------------- |
+| Loading                     | Table load          | Skeleton rows.                                                |
+| Empty — no pending receipts | Queue is empty      | "No receipts pending review. All caught up."                  |
+| Error — image load fails    | Storage URL error   | "Receipt image couldn't be loaded."                           |
+| Success — reviewed          | After mark reviewed | Toast. Row removed from queue.                                |
+| Success — flagged           | After flag          | Toast. Row removed from pending queue (goes to flagged view). |
 
 ### Permission Issues
 
@@ -1934,10 +2024,10 @@ No significant abuse risks for this admin-only flow. The admin is a trusted inte
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
+| Event name               | When fired       | Properties                                          |
+| ------------------------ | ---------------- | --------------------------------------------------- |
 | `admin_receipt_reviewed` | On mark reviewed | `{ spend_event_id: string, admin_user_id: string }` |
-| `admin_receipt_flagged` | On flag | `{ spend_event_id: string, admin_user_id: string }` |
+| `admin_receipt_flagged`  | On flag          | `{ spend_event_id: string, admin_user_id: string }` |
 
 ---
 
@@ -1953,17 +2043,20 @@ No significant abuse risks for this admin-only flow. The admin is a trusted inte
 ### Happy Path
 
 **Step 1: User navigates to `/account/saved`**
+
 - User action: Clicks "Saved" in the account navigation.
 - System response: The saved listings page loads. A list renders of all listings the user has saved. Each row/card shows: business primary image (thumbnail, 60×60px), business name, category, city, claimed/verified status badge, and a "Remove" button (trash or filled-heart toggle icon).
 - On desktop: a list layout (each row is the full width of the content area). On mobile: a card stack (each saved listing is a card).
 - Next: Step 2
 
 **Step 2: User scans the list and clicks a saved listing**
+
 - User action: Taps on a listing card/row.
 - System response: Navigates to the BLACQList Page for that listing (`/[city-slug]/business/[listing-slug]`). The flow continues as Flow 4.
 - Next: End state (user is on the BLACQList Page).
 
 **Step 3: User removes a saved listing**
+
 - User action: Taps the "Remove" button (or filled heart icon — toggling the save off) on a listing in the list.
 - System response: An optimistic UI update removes the listing from the visible list immediately. A `DELETE /api/saves` request fires in the background with the `listing_id`. A brief toast at the bottom of the screen: "[Business Name] removed from your list." The toast has an "Undo" action for 5 seconds. If the user taps "Undo": a `POST /api/saves` fires to re-save the listing, and it reappears in the list.
 - Decision: If the DELETE API call fails (network error): the listing is re-added to the list (UI rolls back). A toast: "Couldn't remove [Business Name]. Try again."
@@ -1986,14 +2079,14 @@ Authentication required. Middleware protects `/account/saved`. If not authentica
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Page initial load | Skeleton: 3–5 placeholder card rows. |
-| Empty — no saved listings | User has never saved a listing, or removed all saves | Centered message: "You haven't saved anything yet." Sub-text: "Find Black-owned businesses, restaurants, services, and more." Primary button: "Discover businesses" (→ `/discover`). |
-| Empty — after removing last listing | User removes their final saved listing | Same empty state as above, appearing after the last card disappears from the list. |
-| Error — listing no longer available | A saved listing is unpublished | Entry renders with a gray placeholder thumbnail, "Listing no longer available" text, and a Remove button. Does not prevent the rest of the list from rendering. |
-| Error — saves list fetch fails | API error loading saves | Error message: "Couldn't load your saved listings. Try refreshing." Retry button. |
-| Success — listing removed | After DELETE | Optimistic UI removes the card. Toast with Undo option. |
+| State type                          | Screen / moment                                      | What the user sees                                                                                                                                                                   |
+| ----------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Loading                             | Page initial load                                    | Skeleton: 3–5 placeholder card rows.                                                                                                                                                 |
+| Empty — no saved listings           | User has never saved a listing, or removed all saves | Centered message: "You haven't saved anything yet." Sub-text: "Find Black-owned businesses, restaurants, services, and more." Primary button: "Discover businesses" (→ `/discover`). |
+| Empty — after removing last listing | User removes their final saved listing               | Same empty state as above, appearing after the last card disappears from the list.                                                                                                   |
+| Error — listing no longer available | A saved listing is unpublished                       | Entry renders with a gray placeholder thumbnail, "Listing no longer available" text, and a Remove button. Does not prevent the rest of the list from rendering.                      |
+| Error — saves list fetch fails      | API error loading saves                              | Error message: "Couldn't load your saved listings. Try refreshing." Retry button.                                                                                                    |
+| Success — listing removed           | After DELETE                                         | Optimistic UI removes the card. Toast with Undo option.                                                                                                                              |
 
 ### Permission Issues
 
@@ -2014,18 +2107,18 @@ Users can only see and manage their own saved listings. The saves API is scoped 
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                        | Mitigation                                                                                                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Bulk-saving thousands of listings to stress the saves table | Rate limit: 200 save operations per user per day. Enforced server-side. The `/api/saves` endpoint validates the session and enforces the limit. |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `saved_list_viewed` | On page load | `{ saved_count: number }` |
-| `saved_listing_clicked` | On listing card click | `{ listing_id: string, position: number }` |
-| `saved_listing_removed` | On remove action | `{ listing_id: string }` |
-| `saved_listing_undo_remove` | On undo tap | `{ listing_id: string }` |
+| Event name                  | When fired            | Properties                                 |
+| --------------------------- | --------------------- | ------------------------------------------ |
+| `saved_list_viewed`         | On page load          | `{ saved_count: number }`                  |
+| `saved_listing_clicked`     | On listing card click | `{ listing_id: string, position: number }` |
+| `saved_listing_removed`     | On remove action      | `{ listing_id: string }`                   |
+| `saved_listing_undo_remove` | On undo tap           | `{ listing_id: string }`                   |
 
 ---
 
@@ -2041,12 +2134,14 @@ Users can only see and manage their own saved listings. The saves API is scoped 
 ### Happy Path
 
 **Step 1: User sees a collection link and clicks it**
+
 - User action: On the homepage, the user sees an editorial teaser section (at MVP, this may be a single "Featured Collection" card with a title, cover image, and listing count). They click it.
 - Alternative entry: User arrives at `/collection/[slug]` directly from a shared link on social media. The collection URL was shared with a full OG preview: collection title, cover image, editorial description.
 - System response: Browser navigates to `/collection/[slug]`. The collection page begins loading (ISR-generated).
 - Next: Step 2
 
 **Step 2: Collection page renders**
+
 - User action: User begins reading and scanning.
 - System response: Collection page renders with:
   1. **Collection header:** Full-width cover image, collection title (H1) (e.g., "10 Black-owned bookstores worth visiting"), short editorial intro paragraph (50–200 words written by the admin/editor).
@@ -2056,11 +2151,13 @@ Users can only see and manage their own saved listings. The saves API is scoped 
 - Next: Step 3
 
 **Step 3: User scans the listing grid**
+
 - User action: Scrolls through the listing cards. The collection at MVP has 6–20 listings. No pagination needed at MVP.
 - System response: The grid is static (no filtering or sorting on collection pages at MVP). On desktop: 3-column grid. On mobile: single-column stack.
 - Next: Step 4
 
 **Step 4: User clicks a listing card**
+
 - User action: Taps a listing card.
 - System response: Browser navigates to `/[city-slug]/business/[listing-slug]` — the full BLACQList Page for that listing. The page loads as in Flow 4.
 - From the BLACQList Page, the user can navigate back to the collection using the browser back button. The collection page is in the navigation history. There is no in-page "Back to collection" breadcrumb on the listing page at MVP (this is a V1 refinement — a "Featured in [Collection Name]" attribution on the listing page).
@@ -2085,13 +2182,13 @@ No authentication required to view a collection or click listings within it. The
 
 ### States
 
-| State type | Screen / moment | What the user sees |
-|---|---|---|
-| Loading | Collection page initial load | Skeleton: gray rectangle for the header/cover image, gray text bars for the title and intro, 3–4 placeholder listing card outlines in the grid. ISR means this is typically < 1 second from CDN. |
-| Empty — collection has no published listings | All members have been unpublished | "This collection doesn't have any listings right now." Link to `/collections` for other collections. (This state should not occur if admins maintain collections; it is a fallback for edge cases.) |
-| Error — collection not found | Slug doesn't match any published collection | `not-found.tsx`: "This collection is no longer available." Link to `/collections`. |
-| Error — page load failure | ISR fetch or server error | `error.tsx`: "Something went wrong loading this page." Retry button. |
-| Success | Page loads with listings | Header, intro, and listing grid all render. Cards are interactive. |
+| State type                                   | Screen / moment                             | What the user sees                                                                                                                                                                                  |
+| -------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Loading                                      | Collection page initial load                | Skeleton: gray rectangle for the header/cover image, gray text bars for the title and intro, 3–4 placeholder listing card outlines in the grid. ISR means this is typically < 1 second from CDN.    |
+| Empty — collection has no published listings | All members have been unpublished           | "This collection doesn't have any listings right now." Link to `/collections` for other collections. (This state should not occur if admins maintain collections; it is a fallback for edge cases.) |
+| Error — collection not found                 | Slug doesn't match any published collection | `not-found.tsx`: "This collection is no longer available." Link to `/collections`.                                                                                                                  |
+| Error — page load failure                    | ISR fetch or server error                   | `error.tsx`: "Something went wrong loading this page." Retry button.                                                                                                                                |
+| Success                                      | Page loads with listings                    | Header, intro, and listing grid all render. Cards are interactive.                                                                                                                                  |
 
 ### Permission Issues
 
@@ -2114,15 +2211,15 @@ No permission required. Collections are public. Admins create and manage collect
 
 ### Abuse / Spam Risks
 
-| Risk | Mitigation |
-|---|---|
-| Scraping all collection member URLs to harvest listing data | Collection pages are server-rendered and rate-limited like all public pages. No unique data is exposed that cannot be found via search or direct listing URLs. |
-| Fake community-created collections (if user-created collections are added in V1+) | At MVP and V1, collections are admin-only. No user-created collections. This risk is evaluated when user-generated collections are scoped. |
+| Risk                                                                              | Mitigation                                                                                                                                                     |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scraping all collection member URLs to harvest listing data                       | Collection pages are server-rendered and rate-limited like all public pages. No unique data is exposed that cannot be found via search or direct listing URLs. |
+| Fake community-created collections (if user-created collections are added in V1+) | At MVP and V1, collections are admin-only. No user-created collections. This risk is evaluated when user-generated collections are scoped.                     |
 
 ### Analytics Events to Track
 
-| Event name | When fired | Properties |
-|---|---|---|
-| `collection_page_view` | On collection page load | `{ collection_slug: string, listing_count: number, source: 'homepage' \| 'collections_index' \| 'direct' \| 'social_share' }` |
-| `collection_listing_click` | On listing card click | `{ collection_slug: string, listing_id: string, position: number }` |
-| `collection_shared` | On share action | `{ collection_slug: string, share_method: 'native_share' \| 'copy_link' }` |
+| Event name                 | When fired              | Properties                                                                                                                    |
+| -------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `collection_page_view`     | On collection page load | `{ collection_slug: string, listing_count: number, source: 'homepage' \| 'collections_index' \| 'direct' \| 'social_share' }` |
+| `collection_listing_click` | On listing card click   | `{ collection_slug: string, listing_id: string, position: number }`                                                           |
+| `collection_shared`        | On share action         | `{ collection_slug: string, share_method: 'native_share' \| 'copy_link' }`                                                    |

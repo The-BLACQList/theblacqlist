@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
-import { Briefcase } from "lucide-react"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import { Briefcase } from 'lucide-react'
+import Link from 'next/link'
 
-import { createServiceClient } from "@/lib/supabase/server"
-import { ServiceCard } from "@/components/marketplace/ServiceCard"
+import { createServiceClient } from '@/lib/supabase/server'
+import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
 export const metadata: Metadata = {
-  title: "Services | BLACQList Marketplace",
-  description: "Book and hire services from Black-owned businesses. Virtual, in-person, and more.",
+  title: 'Services | BLACQList Marketplace',
+  description: 'Book and hire services from Black-owned businesses. Virtual, in-person, and more.',
 }
 
 export const revalidate = 3600
@@ -16,10 +16,12 @@ export default async function MarketplaceServicesPage() {
   const serviceClient = createServiceClient()
 
   const { data: rows } = await serviceClient
-    .from("marketplace_services")
-    .select("id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings(name, slug)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .from('marketplace_services')
+    .select(
+      'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings(name, slug)'
+    )
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
     .limit(48)
 
   type ListingRef = { name: string; slug: string } | null
@@ -39,16 +41,22 @@ export default async function MarketplaceServicesPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <nav aria-label="Breadcrumb" className="mb-3">
             <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
-              <li><Link href="/marketplace" className="hover:text-charcoal">Marketplace</Link></li>
+              <li>
+                <Link href="/marketplace" className="hover:text-charcoal">
+                  Marketplace
+                </Link>
+              </li>
               <li aria-hidden="true">/</li>
-              <li className="text-charcoal" aria-current="page">Services</li>
+              <li className="text-charcoal" aria-current="page">
+                Services
+              </li>
             </ol>
           </nav>
           <h1 className="font-headline text-3xl text-brand-black">Services</h1>
           <p className="font-body text-sm text-charcoal/50 mt-1">
             {services.length > 0
-              ? `${services.length} service${services.length === 1 ? "" : "s"} from Black-owned businesses`
-              : "Services from Black-owned businesses"}
+              ? `${services.length} service${services.length === 1 ? '' : 's'} from Black-owned businesses`
+              : 'Services from Black-owned businesses'}
           </p>
         </div>
       </div>

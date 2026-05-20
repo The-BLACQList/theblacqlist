@@ -1,14 +1,14 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Search } from "lucide-react"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search } from 'lucide-react'
 
 interface Props {
   defaultValue?: string
 }
 
-export function ClaimSearchForm({ defaultValue = "" }: Props) {
+export function ClaimSearchForm({ defaultValue = '' }: Props) {
   const [value, setValue] = useState(defaultValue)
   const router = useRouter()
 

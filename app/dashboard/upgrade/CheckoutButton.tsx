@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { cn } from "@/lib/utils"
+import { useState, useTransition } from 'react'
+import { cn } from '@/lib/utils'
 
 interface Props {
   planSlug: string
@@ -18,21 +18,21 @@ export function CheckoutButton({ planSlug, listingId, label, highlighted }: Prop
     setError(null)
     startTransition(async () => {
       try {
-        const res = await fetch("/api/stripe/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/stripe/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ planSlug, listingId }),
         })
         const json = await res.json()
         if (!res.ok) {
-          setError(json.error ?? "Something went wrong. Please try again.")
+          setError(json.error ?? 'Something went wrong. Please try again.')
           return
         }
         if (json.url) {
           window.location.href = json.url
         }
       } catch {
-        setError("Network error. Please try again.")
+        setError('Network error. Please try again.')
       }
     })
   }
@@ -43,14 +43,14 @@ export function CheckoutButton({ planSlug, listingId, label, highlighted }: Prop
         onClick={handleClick}
         disabled={isPending}
         className={cn(
-          "w-full h-10 rounded-full font-body font-bold text-sm transition-colors",
+          'w-full h-10 rounded-full font-body font-bold text-sm transition-colors',
           highlighted
-            ? "bg-amber-gold text-brand-black hover:bg-light-gold"
-            : "bg-brand-black text-white hover:bg-charcoal",
-          isPending && "opacity-60 cursor-not-allowed"
+            ? 'bg-amber-gold text-brand-black hover:bg-light-gold'
+            : 'bg-brand-black text-white hover:bg-charcoal',
+          isPending && 'opacity-60 cursor-not-allowed'
         )}
       >
-        {isPending ? "Redirecting…" : label}
+        {isPending ? 'Redirecting…' : label}
       </button>
       {error && (
         <p role="alert" className="mt-2 font-body text-xs text-red-600">

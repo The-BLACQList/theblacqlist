@@ -39,67 +39,73 @@ The MVP is validated when:
 ## MVP Feature List
 
 ### Core Discovery
-| Feature | Priority | Notes |
-|---|---|---|
-| Keyword search (name, type, description) | Must-have | Full-text search across all listing fields |
-| Category filter | Must-have | Top-level categories defined at launch |
-| City filter | Must-have | Filter results by city/metro |
-| Search results page with listing cards | Must-have | Cards show: name, category, city, primary image, save button |
-| Empty search state with suggestions | Must-have | Suggest popular categories or nearby results |
+
+| Feature                                  | Priority  | Notes                                                        |
+| ---------------------------------------- | --------- | ------------------------------------------------------------ |
+| Keyword search (name, type, description) | Must-have | Full-text search across all listing fields                   |
+| Category filter                          | Must-have | Top-level categories defined at launch                       |
+| City filter                              | Must-have | Filter results by city/metro                                 |
+| Search results page with listing cards   | Must-have | Cards show: name, category, city, primary image, save button |
+| Empty search state with suggestions      | Must-have | Suggest popular categories or nearby results                 |
 
 ### BLACQList Pages — Business Template
-| Feature | Priority | Notes |
-|---|---|---|
-| Hero section (cover image, name, tagline) | Must-have | |
-| About section (business description) | Must-have | |
-| Category + subcategory tags | Must-have | |
-| Location (address or city-only) | Must-have | Address optional for service-area businesses |
-| Hours | Must-have | |
-| Contact info (phone, email, website) | Must-have | |
-| Social links | Should-have | Instagram, Facebook, LinkedIn, TikTok |
-| Gallery (up to 12 images) | Should-have | |
-| Offerings/services section | Should-have | Simple list of services with optional description |
-| Primary CTA (configurable: book, order, contact, visit) | Must-have | |
-| Share button | Must-have | Copy link + social share |
-| Claimed/verified badge | Must-have | Status indicator |
-| Page SEO metadata (title, description, OG tags) | Must-have | Pages must be indexable |
+
+| Feature                                                 | Priority    | Notes                                             |
+| ------------------------------------------------------- | ----------- | ------------------------------------------------- |
+| Hero section (cover image, name, tagline)               | Must-have   |                                                   |
+| About section (business description)                    | Must-have   |                                                   |
+| Category + subcategory tags                             | Must-have   |                                                   |
+| Location (address or city-only)                         | Must-have   | Address optional for service-area businesses      |
+| Hours                                                   | Must-have   |                                                   |
+| Contact info (phone, email, website)                    | Must-have   |                                                   |
+| Social links                                            | Should-have | Instagram, Facebook, LinkedIn, TikTok             |
+| Gallery (up to 12 images)                               | Should-have |                                                   |
+| Offerings/services section                              | Should-have | Simple list of services with optional description |
+| Primary CTA (configurable: book, order, contact, visit) | Must-have   |                                                   |
+| Share button                                            | Must-have   | Copy link + social share                          |
+| Claimed/verified badge                                  | Must-have   | Status indicator                                  |
+| Page SEO metadata (title, description, OG tags)         | Must-have   | Pages must be indexable                           |
 
 ### Claim + Create + Manage
-| Feature | Priority | Notes |
-|---|---|---|
-| Search for existing listing to claim | Must-have | |
-| Submit claim request with verification info | Must-have | |
-| Create new listing flow | Must-have | |
-| Business owner dashboard | Must-have | View/edit Page, see basic stats, manage claim status |
-| Email notification on claim approval/rejection | Must-have | |
-| Owner can edit all Page fields | Must-have | |
-| Owner can upload logo and cover image | Must-have | |
+
+| Feature                                        | Priority  | Notes                                                |
+| ---------------------------------------------- | --------- | ---------------------------------------------------- |
+| Search for existing listing to claim           | Must-have |                                                      |
+| Submit claim request with verification info    | Must-have |                                                      |
+| Create new listing flow                        | Must-have |                                                      |
+| Business owner dashboard                       | Must-have | View/edit Page, see basic stats, manage claim status |
+| Email notification on claim approval/rejection | Must-have |                                                      |
+| Owner can edit all Page fields                 | Must-have |                                                      |
+| Owner can upload logo and cover image          | Must-have |                                                      |
 
 ### Saves + Shares
-| Feature | Priority | Notes |
-|---|---|---|
-| Save any listing (for logged-in users) | Must-have | |
-| Saved list view in user account | Must-have | |
-| Share listing via link | Must-have | |
-| Share listing to social (Open Graph preview) | Must-have | |
+
+| Feature                                      | Priority  | Notes |
+| -------------------------------------------- | --------- | ----- |
+| Save any listing (for logged-in users)       | Must-have |       |
+| Saved list view in user account              | Must-have |       |
+| Share listing via link                       | Must-have |       |
+| Share listing to social (Open Graph preview) | Must-have |       |
 
 ### User Accounts
-| Feature | Priority | Notes |
-|---|---|---|
-| Sign up (email + password) | Must-have | |
-| Sign in / sign out | Must-have | |
-| Password reset | Must-have | |
-| Basic user profile (display name, email) | Must-have | |
-| Role assignment (supporter vs. business owner) | Must-have | |
+
+| Feature                                        | Priority  | Notes |
+| ---------------------------------------------- | --------- | ----- |
+| Sign up (email + password)                     | Must-have |       |
+| Sign in / sign out                             | Must-have |       |
+| Password reset                                 | Must-have |       |
+| Basic user profile (display name, email)       | Must-have |       |
+| Role assignment (supporter vs. business owner) | Must-have |       |
 
 ### Admin Dashboard
-| Feature | Priority | Notes |
-|---|---|---|
-| View all listings | Must-have | |
-| Approve or reject claim requests | Must-have | |
-| Edit any listing | Must-have | |
-| Flag listing as inactive or incorrect | Must-have | |
-| View basic platform stats (total listings, new listings, claims) | Must-have | |
+
+| Feature                                                          | Priority  | Notes |
+| ---------------------------------------------------------------- | --------- | ----- |
+| View all listings                                                | Must-have |       |
+| Approve or reject claim requests                                 | Must-have |       |
+| Edit any listing                                                 | Must-have |       |
+| Flag listing as inactive or incorrect                            | Must-have |       |
+| View basic platform stats (total listings, new listings, claims) | Must-have |       |
 
 ---
 
@@ -107,28 +113,29 @@ The MVP is validated when:
 
 These are V1 or later. Do not build them until MVP is shipped and validated.
 
-| Feature | Phase | Why Deferred |
-|---|---|---|
-| Reviews + ratings | V1 | Requires moderation workflow; add after listing quality is established |
-| Trust certification (beyond claimed badge) | V1 | Manual review bottleneck — build queue tooling in V1 |
-| Community corrections | V1 | Requires moderation queue; add after launch |
-| Professional, creative, event, job Page templates | V1 | Build business template first, validate, then extend |
-| Supporter dashboard | V1 | Basic saved list is sufficient for MVP |
-| Editorial (BLACQLight, collections, guides) | V1 | Requires editorial team — not a launch-day dependency |
-| Listing tiers / monetization | V1 | Validate usage before charging |
-| Sponsored placements | V1 | Needs baseline traffic before value is demonstrable |
-| Marketplace (vendors, products, checkout) | V2 | Commerce layer depends on healthy directory |
-| Receipt upload | V2 | Requires spend tracking data model |
-| Dollar-flow map | V3 | Requires months of transaction data |
-| AI concierge | V2 | Requires listing data quality to be high before AI adds value |
-| Analytics dashboards | V1 | Basic stats in MVP; rich analytics in V1 |
-| Mobile app | Post-V2 | Web-first; responsive mobile web is sufficient at MVP |
+| Feature                                           | Phase   | Why Deferred                                                           |
+| ------------------------------------------------- | ------- | ---------------------------------------------------------------------- |
+| Reviews + ratings                                 | V1      | Requires moderation workflow; add after listing quality is established |
+| Trust certification (beyond claimed badge)        | V1      | Manual review bottleneck — build queue tooling in V1                   |
+| Community corrections                             | V1      | Requires moderation queue; add after launch                            |
+| Professional, creative, event, job Page templates | V1      | Build business template first, validate, then extend                   |
+| Supporter dashboard                               | V1      | Basic saved list is sufficient for MVP                                 |
+| Editorial (BLACQLight, collections, guides)       | V1      | Requires editorial team — not a launch-day dependency                  |
+| Listing tiers / monetization                      | V1      | Validate usage before charging                                         |
+| Sponsored placements                              | V1      | Needs baseline traffic before value is demonstrable                    |
+| Marketplace (vendors, products, checkout)         | V2      | Commerce layer depends on healthy directory                            |
+| Receipt upload                                    | V2      | Requires spend tracking data model                                     |
+| Dollar-flow map                                   | V3      | Requires months of transaction data                                    |
+| AI concierge                                      | V2      | Requires listing data quality to be high before AI adds value          |
+| Analytics dashboards                              | V1      | Basic stats in MVP; rich analytics in V1                               |
+| Mobile app                                        | Post-V2 | Web-first; responsive mobile web is sufficient at MVP                  |
 
 ---
 
 ## MVP Acceptance Criteria
 
 ### For users (searchers/supporters):
+
 - [ ] Can search by keyword and return relevant results in under 2 seconds
 - [ ] Can filter by category and city independently or together
 - [ ] Can view a BLACQList Page that includes all must-have fields
@@ -138,6 +145,7 @@ These are V1 or later. Do not build them until MVP is shipped and validated.
 - [ ] Can view their saved listings list
 
 ### For business owners:
+
 - [ ] Can search for and claim an existing listing
 - [ ] Can create a new listing
 - [ ] Can upload a logo and cover image
@@ -146,12 +154,14 @@ These are V1 or later. Do not build them until MVP is shipped and validated.
 - [ ] Receives email confirmation when claim is approved or rejected
 
 ### For admins:
+
 - [ ] Can view all listings and filter by status (claimed, unclaimed, flagged)
 - [ ] Can approve or reject a claim request
 - [ ] Can edit any listing directly
 - [ ] Can see total listing count, new listings this week, and pending claims
 
 ### Technical:
+
 - [ ] All BLACQList Pages are server-rendered and indexable by Google
 - [ ] Search returns results for at least 3 major cities at launch (Atlanta + 2)
 - [ ] Image uploads are served via CDN
@@ -164,11 +174,11 @@ These are V1 or later. Do not build them until MVP is shipped and validated.
 
 The MVP must have minimum seed data to be usable on day one:
 
-| City | Minimum listings at launch |
-|---|---|
-| Atlanta | 150+ |
-| Houston | 50+ |
-| Chicago | 50+ |
+| City    | Minimum listings at launch |
+| ------- | -------------------------- |
+| Atlanta | 150+                       |
+| Houston | 50+                        |
+| Chicago | 50+                        |
 
 All seed listings must have: name, category, city, description, and at least one contact method. Target: 40% have a logo or photo.
 

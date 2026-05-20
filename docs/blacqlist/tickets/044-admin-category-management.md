@@ -3,18 +3,23 @@
 ---
 
 ## Status
+
 Backlog
 
 ## Phase
+
 Phase 6: Admin Review and Verification
 
 ## Priority
+
 P2 — Medium
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Admin / Categories
 
 ---
@@ -40,6 +45,7 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 ## Scope
 
 **In scope:**
+
 - `app/admin/categories/page.tsx` — Server Component, admin-only
 - List of all categories (active and inactive) with columns: name, slug, listing count, active status toggle, display_order
 - Drag-to-reorder rows by `display_order`; order is persisted on drop via SA
@@ -51,6 +57,7 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 - Loading, empty, and error states
 
 **Out of scope:**
+
 - Category icon image uploads (icon_name is a text identifier referencing a bundled icon set)
 - Category hierarchy / subcategories (deferred to V1)
 - Public-facing category pages (existing tickets)
@@ -60,12 +67,12 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 037 — Admin shell + auth middleware | Blocking ticket | Not started |
-| Ticket 007 — `categories` table migration and seed data | Blocking ticket | Must exist |
-| `manageCategories` SA — `lib/actions/admin/manageCategories.ts` | Server Action | Not started |
-| `admin_audit_log` table migration | Database | Must exist |
+| Dependency                                                      | Type            | Status      |
+| --------------------------------------------------------------- | --------------- | ----------- |
+| Ticket 037 — Admin shell + auth middleware                      | Blocking ticket | Not started |
+| Ticket 007 — `categories` table migration and seed data         | Blocking ticket | Must exist  |
+| `manageCategories` SA — `lib/actions/admin/manageCategories.ts` | Server Action   | Not started |
+| `admin_audit_log` table migration                               | Database        | Must exist  |
 
 ---
 
@@ -123,43 +130,47 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 
 **Server Action:**
 
-| Action | File | What it does |
-|---|---|---|
+| Action             | File                                    | What it does                                                                                                     |
+| ------------------ | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `manageCategories` | `lib/actions/admin/manageCategories.ts` | Create or update a category; validate slug uniqueness; `revalidateTag('categories')` after any change; audit log |
 
 **Cache invalidation:** `revalidateTag('categories')` after every successful create or update. This tag must be applied to all data fetches that read from the `categories` table (nav menu, discover filter bar, add-business category select, city+category pages).
 
 **Error codes to handle:**
 
-| Code | Condition | UI shows |
-|---|---|---|
-| `AUTH_REQUIRED` | Session expired | Redirect to `/sign-in?next=/admin/categories` |
-| `FORBIDDEN` | Not admin | Redirect to `/dashboard` |
-| `VALIDATION_ERROR` | Name missing or slug conflict | Inline field error in the edit form |
-| `CONFLICT` | Slug already in use | Inline: "This slug is already in use." |
-| `OPERATION_FAILED` | Unexpected DB error | Toast: "Couldn't save. Try again." |
+| Code               | Condition                     | UI shows                                      |
+| ------------------ | ----------------------------- | --------------------------------------------- |
+| `AUTH_REQUIRED`    | Session expired               | Redirect to `/sign-in?next=/admin/categories` |
+| `FORBIDDEN`        | Not admin                     | Redirect to `/dashboard`                      |
+| `VALIDATION_ERROR` | Name missing or slug conflict | Inline field error in the edit form           |
+| `CONFLICT`         | Slug already in use           | Inline: "This slug is already in use."        |
+| `OPERATION_FAILED` | Unexpected DB error           | Toast: "Couldn't save. Try again."            |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/admin/categories/page.tsx` — Server Component; fetches all categories + listing counts
 - `components/admin/categories/CategoriesList.tsx` — "use client"; draggable + sortable list; inline edit form
 - `components/admin/categories/CategoryEditForm.tsx` — "use client"; create/edit fields; calls `manageCategories` SA
 - `lib/actions/admin/manageCategories.ts` — Server Action (create + update; slug uniqueness check; `revalidateTag`)
 
 **Files to modify:**
+
 - `app/admin/layout.tsx` (or sidebar) — ensure "Categories" nav item links to `/admin/categories`
 - Any component using the categories list (nav, filter bar) — ensure it applies the `categories` cache tag via `unstable_cache` or `fetch` with `{ next: { tags: ['categories'] } }` so `revalidateTag` takes effect
 
 **Key patterns:**
+
 - Follow the 7-step Server Action pattern from `server-actions-plan.md` § 3
 - `insertAuditLog` called in Step 5; `action = 'category_created'` for new entries, `action = 'category_updated'` for edits; snapshot changed fields only in `after_state`
 - Slug auto-generation: same pattern as collections editor (title → lowercase hyphen-separated slug; stops auto-generating once admin manually edits the slug field)
 - Reorder: same optimistic UI + rollback pattern as collections
 
 **Do not:**
+
 - Provide a hard-delete action — categories are deactivated only
 - Allow deactivation of a category that is the only category for a large set of published listings without showing a warning (count displayed in the row is sufficient for this)
 - Emit `revalidatePath('/')` for category changes — only `revalidateTag('categories')` is permitted
@@ -185,13 +196,13 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 
 ## Failure States
 
-| Failure | Condition | User sees | Recovery |
-|---|---|---|---|
-| Save fails | DB error | Toast: "Couldn't save. Try again." Form values preserved | Retry |
-| Slug conflict | Slug already in use | Inline error below slug field | Change slug |
-| Reorder fails | SA fails on drop | Original order restored (rollback); toast: "Reorder failed. Try again." | Re-drag |
-| Active toggle fails | SA fails on switch change | Toggle snaps back to previous state; toast: "Couldn't update. Try again." | Retry |
-| Session expired | 401 | Redirect to `/sign-in?next=/admin/categories` | Re-authenticate |
+| Failure             | Condition                 | User sees                                                                 | Recovery        |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------- | --------------- |
+| Save fails          | DB error                  | Toast: "Couldn't save. Try again." Form values preserved                  | Retry           |
+| Slug conflict       | Slug already in use       | Inline error below slug field                                             | Change slug     |
+| Reorder fails       | SA fails on drop          | Original order restored (rollback); toast: "Reorder failed. Try again."   | Re-drag         |
+| Active toggle fails | SA fails on switch change | Toggle snaps back to previous state; toast: "Couldn't update. Try again." | Retry           |
+| Session expired     | 401                       | Redirect to `/sign-in?next=/admin/categories`                             | Re-authenticate |
 
 ---
 
@@ -217,14 +228,14 @@ As an admin, I want to manage the list of categories — edit their names, slugs
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-1 | Edit category | 1. Log in as admin. 2. Navigate to `/admin/categories`. 3. Click "Edit" on a category. 4. Change the name. 5. Save. | Row updates with new name. `revalidateTag('categories')` fires. Navigation and filter bar reflect new name on next page load. Audit log entry created. |
-| QA-2 | Add category | 1. Click "Add category". 2. Fill in name, description. 3. Save. | New category appears in list. `revalidateTag('categories')` fires. Category appears in discover filter bar. |
-| QA-3 | Deactivate category | 1. Toggle active switch OFF on a category with listings. | Category `is_active = false`. Category disappears from nav and filter dropdowns after cache invalidation. Listings remain in the directory but the category filter no longer shows as an option. |
-| QA-4 | Slug uniqueness | 1. Edit a category and set its slug to match an existing category's slug. 2. Save. | Inline error: "This slug is already in use." Save blocked. |
-| QA-5 | Reorder | 1. Drag a category from position 3 to position 1. | Display order updates optimistically. SA persists new order. On page refresh, order is preserved. |
-| QA-6 | Permission boundary | 1. Log in as owner. 2. Navigate to `/admin/categories`. | Middleware redirects to `/dashboard`. |
+| ID   | Test                | Steps                                                                                                               | Expected                                                                                                                                                                                         |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| QA-1 | Edit category       | 1. Log in as admin. 2. Navigate to `/admin/categories`. 3. Click "Edit" on a category. 4. Change the name. 5. Save. | Row updates with new name. `revalidateTag('categories')` fires. Navigation and filter bar reflect new name on next page load. Audit log entry created.                                           |
+| QA-2 | Add category        | 1. Click "Add category". 2. Fill in name, description. 3. Save.                                                     | New category appears in list. `revalidateTag('categories')` fires. Category appears in discover filter bar.                                                                                      |
+| QA-3 | Deactivate category | 1. Toggle active switch OFF on a category with listings.                                                            | Category `is_active = false`. Category disappears from nav and filter dropdowns after cache invalidation. Listings remain in the directory but the category filter no longer shows as an option. |
+| QA-4 | Slug uniqueness     | 1. Edit a category and set its slug to match an existing category's slug. 2. Save.                                  | Inline error: "This slug is already in use." Save blocked.                                                                                                                                       |
+| QA-5 | Reorder             | 1. Drag a category from position 3 to position 1.                                                                   | Display order updates optimistically. SA persists new order. On page refresh, order is preserved.                                                                                                |
+| QA-6 | Permission boundary | 1. Log in as owner. 2. Navigate to `/admin/categories`.                                                             | Middleware redirects to `/dashboard`.                                                                                                                                                            |
 
 ---
 

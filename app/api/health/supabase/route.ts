@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server'
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from '@/lib/supabase/server'
 
 // Safe read-only health check for the Supabase connection.
 // Only checks env var presence (never values) and calls auth.getSession()
@@ -21,7 +21,7 @@ export async function GET() {
 
   if (missingVars.length > 0) {
     return NextResponse.json(
-      { status: "error", message: "Server configuration error" },
+      { status: 'error', message: 'Server configuration error' },
       { status: 500 }
     )
   }
@@ -33,18 +33,18 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json(
-        { status: "error", message: "Supabase project unreachable" },
+        { status: 'error', message: 'Supabase project unreachable' },
         { status: 503 }
       )
     }
 
     return NextResponse.json({
-      status: "ok",
-      message: "Supabase connection healthy",
+      status: 'ok',
+      message: 'Supabase connection healthy',
     })
   } catch {
     return NextResponse.json(
-      { status: "error", message: "Failed to initialize Supabase client" },
+      { status: 'error', message: 'Failed to initialize Supabase client' },
       { status: 500 }
     )
   }

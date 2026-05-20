@@ -1,15 +1,15 @@
-import Link from "next/link"
-import type { Metadata } from "next"
-import { Package, Briefcase, ArrowRight } from "lucide-react"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { Package, Briefcase, ArrowRight } from 'lucide-react'
 
-import { createServiceClient } from "@/lib/supabase/server"
-import { ProductCard } from "@/components/marketplace/ProductCard"
-import { ServiceCard } from "@/components/marketplace/ServiceCard"
+import { createServiceClient } from '@/lib/supabase/server'
+import { ProductCard } from '@/components/marketplace/ProductCard'
+import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
 export const metadata: Metadata = {
-  title: "Marketplace | The BLACQList",
+  title: 'Marketplace | The BLACQList',
   description:
-    "Shop products and book services from Black-owned businesses. Visit their storefronts and keep the dollar circulating.",
+    'Shop products and book services from Black-owned businesses. Visit their storefronts and keep the dollar circulating.',
 }
 
 export const revalidate = 3600
@@ -19,18 +19,22 @@ export default async function MarketplacePage() {
 
   // Latest active products
   const { data: productRows } = await serviceClient
-    .from("marketplace_products")
-    .select("id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings(name, slug)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .from('marketplace_products')
+    .select(
+      'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings(name, slug)'
+    )
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
     .limit(8)
 
   // Latest active services
   const { data: serviceRows } = await serviceClient
-    .from("marketplace_services")
-    .select("id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings(name, slug)")
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .from('marketplace_services')
+    .select(
+      'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings(name, slug)'
+    )
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
     .limit(8)
 
   type ListingRef = { name: string; slug: string } | null
@@ -65,11 +69,11 @@ export default async function MarketplacePage() {
             BLACQList Marketplace
           </p>
           <h1 className="font-headline text-4xl md:text-5xl text-white leading-tight max-w-2xl">
-            Shop Black. Book Black.{" "}
-            <span className="text-amber-gold">Keep the dollar moving.</span>
+            Shop Black. Book Black. <span className="text-amber-gold">Keep the dollar moving.</span>
           </h1>
           <p className="font-body text-base text-white/60 mt-4 max-w-xl">
-            Products and services from verified Black-owned businesses. Every purchase is a vote for the community.
+            Products and services from verified Black-owned businesses. Every purchase is a vote for
+            the community.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-8">
             <Link
@@ -91,7 +95,6 @@ export default async function MarketplacePage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12 space-y-16">
-
         {/* Products section */}
         <section aria-labelledby="products-heading">
           <div className="flex items-center justify-between mb-6">
@@ -193,7 +196,6 @@ export default async function MarketplacePage() {
             </Link>
           </div>
         </section>
-
       </div>
     </div>
   )

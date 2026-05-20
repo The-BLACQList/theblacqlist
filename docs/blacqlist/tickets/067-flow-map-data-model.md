@@ -1,18 +1,23 @@
 # Ticket 067: Flow map data model — spend_events, flow_nodes, flow_edges migrations
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 12: Flow Map Data and MVP Visualization
 
 ## Priority
+
 P3
 
 ## Estimate
+
 M (2–4h)
 
 ## Feature Area
+
 Flow Map
 
 ---
@@ -38,6 +43,7 @@ As a platform engineer, I want the spend data model in place, so that community 
 ## Scope
 
 **In scope:**
+
 - Migration file: `migrations/[timestamp]_create_flow_map_tables.sql`
 - `spend_events` table creation (see Data Notes for full schema)
 - `flow_nodes` table creation
@@ -55,6 +61,7 @@ As a platform engineer, I want the spend data model in place, so that community 
 - RLS for `flow_nodes` and `flow_edges`: public SELECT; service role only for mutations
 
 **Out of scope:**
+
 - Dollar Flow Map visualization UI (V3)
 - `GET /api/community-spend` aggregate endpoint (Ticket 068)
 - `GET /api/flow/personal-impact` endpoint (Ticket 069)
@@ -66,12 +73,12 @@ As a platform engineer, I want the spend data model in place, so that community 
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 002 — Supabase project setup (migration tooling) | Blocking ticket | Not started |
-| `receipt_uploads` table and `status` column (from schema migration in Phase 11 scope) | Database | Must exist |
-| `listings` table (Ticket 009) — for `listing_id` FK and `city_id` join in trigger | Blocking ticket | Not started |
-| `cities` table (Ticket 006) — for `city_id` FK in `flow_nodes` | Blocking ticket | Not started |
+| Dependency                                                                            | Type            | Status      |
+| ------------------------------------------------------------------------------------- | --------------- | ----------- |
+| Ticket 002 — Supabase project setup (migration tooling)                               | Blocking ticket | Not started |
+| `receipt_uploads` table and `status` column (from schema migration in Phase 11 scope) | Database        | Must exist  |
+| `listings` table (Ticket 009) — for `listing_id` FK and `city_id` join in trigger     | Blocking ticket | Not started |
+| `cities` table (Ticket 006) — for `city_id` FK in `flow_nodes`                        | Blocking ticket | Not started |
 
 ---
 
@@ -93,20 +100,21 @@ No frontend design in this ticket.
 
 **Purpose:** One row per approved receipt (or per marketplace purchase in V2). The atomic spend record.
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `receipt_upload_id` | `uuid` | YES | — | FK → `receipt_uploads(id)` ON DELETE SET NULL; null for marketplace source |
-| `listing_id` | `uuid` | YES | — | FK → `listings(id)` ON DELETE SET NULL; the business where money was spent |
-| `city_id` | `uuid` | YES | — | FK → `cities(id)` ON DELETE SET NULL; denormalized from `listings.city_id` at event creation |
-| `amount_cents` | `integer` | NO | — | Amount spent in cents; copied from `receipt_uploads.amount_cents` |
-| `purchase_date` | `date` | YES | — | Date of purchase; copied from `receipt_uploads.purchase_date` |
-| `source` | `text` | NO | — | CHECK IN (`'marketplace-purchase'`, `'receipt-upload'`) |
-| `created_at` | `timestamptz` | NO | `now()` | |
+| Field               | Type          | Nullable | Default             | Notes                                                                                        |
+| ------------------- | ------------- | -------- | ------------------- | -------------------------------------------------------------------------------------------- |
+| `id`                | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                           |
+| `receipt_upload_id` | `uuid`        | YES      | —                   | FK → `receipt_uploads(id)` ON DELETE SET NULL; null for marketplace source                   |
+| `listing_id`        | `uuid`        | YES      | —                   | FK → `listings(id)` ON DELETE SET NULL; the business where money was spent                   |
+| `city_id`           | `uuid`        | YES      | —                   | FK → `cities(id)` ON DELETE SET NULL; denormalized from `listings.city_id` at event creation |
+| `amount_cents`      | `integer`     | NO       | —                   | Amount spent in cents; copied from `receipt_uploads.amount_cents`                            |
+| `purchase_date`     | `date`        | YES      | —                   | Date of purchase; copied from `receipt_uploads.purchase_date`                                |
+| `source`            | `text`        | NO       | —                   | CHECK IN (`'marketplace-purchase'`, `'receipt-upload'`)                                      |
+| `created_at`        | `timestamptz` | NO       | `now()`             |                                                                                              |
 
 **Anonymization rule:** `user_id` of the submitting supporter is NOT stored on `spend_events`. The platform tracks aggregate spend, not individual spend history linked to a user record. Use `receipt_uploads.user_id` for personal impact queries (Ticket 069) — do NOT copy it onto `spend_events`.
 
 **Indexes:**
+
 - `PRIMARY KEY (id)`
 - `spend_events_listing_id_idx` on `(listing_id)` — B-tree
 - `spend_events_city_id_idx` on `(city_id)` — B-tree
@@ -114,6 +122,7 @@ No frontend design in this ticket.
 - `spend_events_source_idx` on `(source)` — B-tree
 
 **RLS:**
+
 - `anon` and `authenticated` SELECT: allowed (no `user_id` exposed — public aggregate data)
 - INSERT/UPDATE/DELETE: service role only (via trigger — no direct client mutations)
 
@@ -121,20 +130,21 @@ No frontend design in this ticket.
 
 **Purpose:** Aggregate node records for graph rendering. One row per business, one row per city. Updated (upserted) on each spend event.
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `node_type` | `text` | NO | — | CHECK IN (`'business'`, `'city'`) |
-| `entity_id` | `uuid` | NO | — | FK to `listings.id` (for business) or `cities.id` (for city); no formal FK constraint (polymorphic) |
-| `total_amount_cents` | `bigint` | NO | `0` | Running total of all spend through this node |
-| `transaction_count` | `integer` | NO | `0` | Running count of spend events touching this node |
-| `last_transaction_at` | `timestamptz` | YES | — | Timestamp of the most recent spend event |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | Trigger-updated |
+| Field                 | Type          | Nullable | Default             | Notes                                                                                               |
+| --------------------- | ------------- | -------- | ------------------- | --------------------------------------------------------------------------------------------------- |
+| `id`                  | `uuid`        | NO       | `gen_random_uuid()` | PK                                                                                                  |
+| `node_type`           | `text`        | NO       | —                   | CHECK IN (`'business'`, `'city'`)                                                                   |
+| `entity_id`           | `uuid`        | NO       | —                   | FK to `listings.id` (for business) or `cities.id` (for city); no formal FK constraint (polymorphic) |
+| `total_amount_cents`  | `bigint`      | NO       | `0`                 | Running total of all spend through this node                                                        |
+| `transaction_count`   | `integer`     | NO       | `0`                 | Running count of spend events touching this node                                                    |
+| `last_transaction_at` | `timestamptz` | YES      | —                   | Timestamp of the most recent spend event                                                            |
+| `created_at`          | `timestamptz` | NO       | `now()`             |                                                                                                     |
+| `updated_at`          | `timestamptz` | NO       | `now()`             | Trigger-updated                                                                                     |
 
 **Unique constraint:** `UNIQUE (node_type, entity_id)` — one node per business, one node per city.
 
 **Indexes:**
+
 - `PRIMARY KEY (id)`
 - `UNIQUE (node_type, entity_id)`
 - `flow_nodes_entity_idx` on `(node_type, entity_id)` — covered by unique index
@@ -145,20 +155,21 @@ No frontend design in this ticket.
 
 **Purpose:** Directed spend flow between two nodes. One row per unique source → target node pair. Totals are updated (upserted) on each event.
 
-| Field | Type | Nullable | Default | Notes |
-|---|---|---|---|---|
-| `id` | `uuid` | NO | `gen_random_uuid()` | PK |
-| `source_node_id` | `uuid` | NO | — | FK → `flow_nodes(id)` ON DELETE CASCADE |
-| `target_node_id` | `uuid` | NO | — | FK → `flow_nodes(id)` ON DELETE CASCADE |
-| `total_amount_cents` | `bigint` | NO | `0` | Running total of spend on this edge |
-| `transaction_count` | `integer` | NO | `0` | Running count |
-| `last_transaction_at` | `timestamptz` | YES | — | |
-| `created_at` | `timestamptz` | NO | `now()` | |
-| `updated_at` | `timestamptz` | NO | `now()` | |
+| Field                 | Type          | Nullable | Default             | Notes                                   |
+| --------------------- | ------------- | -------- | ------------------- | --------------------------------------- |
+| `id`                  | `uuid`        | NO       | `gen_random_uuid()` | PK                                      |
+| `source_node_id`      | `uuid`        | NO       | —                   | FK → `flow_nodes(id)` ON DELETE CASCADE |
+| `target_node_id`      | `uuid`        | NO       | —                   | FK → `flow_nodes(id)` ON DELETE CASCADE |
+| `total_amount_cents`  | `bigint`      | NO       | `0`                 | Running total of spend on this edge     |
+| `transaction_count`   | `integer`     | NO       | `0`                 | Running count                           |
+| `last_transaction_at` | `timestamptz` | YES      | —                   |                                         |
+| `created_at`          | `timestamptz` | NO       | `now()`             |                                         |
+| `updated_at`          | `timestamptz` | NO       | `now()`             |                                         |
 
 **Unique constraint:** `UNIQUE (source_node_id, target_node_id)`.
 
 **Indexes:**
+
 - `PRIMARY KEY (id)`
 - `UNIQUE (source_node_id, target_node_id)`
 - `flow_edges_source_idx` on `(source_node_id)` — B-tree
@@ -252,12 +263,15 @@ No API endpoints in this ticket. The tables created here are used by Ticket 068 
 ## Implementation Notes
 
 **Files to create:**
+
 - `migrations/[timestamp]_create_flow_map_tables.sql` — full migration SQL: CREATE TABLE for all three tables, indexes, unique constraints, RLS policies, trigger function, and trigger
 
 **Files to modify:**
+
 - None
 
 **Key patterns:**
+
 - The trigger function uses `SECURITY DEFINER` so it runs with the definer's privileges (superuser at migration time), bypassing RLS on the tables it writes to — this is necessary because the trigger is called in the context of the `authenticated` user doing the receipt approval, not the service role
 - The `ON CONFLICT ... DO UPDATE` upsert pattern avoids race conditions on concurrent approvals — PostgreSQL row-level locking ensures correctness
 - `flow_nodes.total_amount_cents` and `flow_edges.total_amount_cents` use `bigint` (not `integer`) — community-scale spend could eventually exceed `integer` maximum (~$21M in cents); `bigint` is safe to petabytes
@@ -265,6 +279,7 @@ No API endpoints in this ticket. The tables created here are used by Ticket 068 
 - The trigger does NOT write to `admin_audit_log` — receipt approval itself is logged by the `approveReceipt` SA (Ticket 065); the trigger is a data-pipeline side effect, not an auditable admin action
 
 **Do not:**
+
 - Store `user_id` on `spend_events` — see anonymization rule above
 - Create the flow map visualization in this ticket
 - Add Marketplace purchase trigger logic (V2 scope)
@@ -285,11 +300,11 @@ No API endpoints in this ticket. The tables created here are used by Ticket 068 
 
 ## Failure States
 
-| Failure | User-visible behavior |
-|---|---|
-| Trigger function raises an exception | The `receipt_uploads` UPDATE rolls back (the approval fails) — admin sees SA error in Ticket 065's UI; receipt remains in previous status |
-| `listings` row not found for `listing_id` (orphaned FK) | `city_id` is NULL; spend event recorded with `listing_id` and `city_id = NULL`; no flow_nodes upsert for city |
-| Migration fails on staging | Migration must not run on production until it passes on staging — follow migration testing procedure from deployment plan |
+| Failure                                                 | User-visible behavior                                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Trigger function raises an exception                    | The `receipt_uploads` UPDATE rolls back (the approval fails) — admin sees SA error in Ticket 065's UI; receipt remains in previous status |
+| `listings` row not found for `listing_id` (orphaned FK) | `city_id` is NULL; spend event recorded with `listing_id` and `city_id = NULL`; no flow_nodes upsert for city                             |
+| Migration fails on staging                              | Migration must not run on production until it passes on staging — follow migration testing procedure from deployment plan                 |
 
 ---
 
@@ -310,14 +325,14 @@ Not applicable — this is a database migration ticket with no UI.
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Tables exist after migration | DBA | Run migration; query `information_schema.tables` | All three tables exist with correct columns |
-| QA-2 | Trigger fires on approval | admin | Approve a receipt via Ticket 065 admin SA | `spend_events` row inserted; `flow_nodes` upserted for business and city; `flow_edges` upserted |
-| QA-3 | Deduplication on multiple approvals | admin | Approve two receipts for the same business | One `flow_nodes` row with `transaction_count = 2`; one `flow_edges` row with summed amounts |
-| QA-4 | NULL listing_id receipt | admin | Approve a receipt with no `listing_id` | `spend_events` row inserted with `listing_id = NULL`; no `flow_nodes` or `flow_edges` created |
-| QA-5 | RLS — public read | anonymous (psql) | SELECT from `spend_events` without auth | Rows returned; no `user_id` column visible |
-| QA-6 | RLS — INSERT blocked | authenticated (psql) | INSERT directly into `spend_events` | Permission denied |
+| #    | Scenario                            | Role                 | Steps                                            | Expected result                                                                                 |
+| ---- | ----------------------------------- | -------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| QA-1 | Tables exist after migration        | DBA                  | Run migration; query `information_schema.tables` | All three tables exist with correct columns                                                     |
+| QA-2 | Trigger fires on approval           | admin                | Approve a receipt via Ticket 065 admin SA        | `spend_events` row inserted; `flow_nodes` upserted for business and city; `flow_edges` upserted |
+| QA-3 | Deduplication on multiple approvals | admin                | Approve two receipts for the same business       | One `flow_nodes` row with `transaction_count = 2`; one `flow_edges` row with summed amounts     |
+| QA-4 | NULL listing_id receipt             | admin                | Approve a receipt with no `listing_id`           | `spend_events` row inserted with `listing_id = NULL`; no `flow_nodes` or `flow_edges` created   |
+| QA-5 | RLS — public read                   | anonymous (psql)     | SELECT from `spend_events` without auth          | Rows returned; no `user_id` column visible                                                      |
+| QA-6 | RLS — INSERT blocked                | authenticated (psql) | INSERT directly into `spend_events`              | Permission denied                                                                               |
 
 ---
 

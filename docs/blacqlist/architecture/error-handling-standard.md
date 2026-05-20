@@ -31,9 +31,9 @@ interface ListResponse<T> {
 
 // Error
 interface ErrorResponse {
-  error: string                          // Human-readable; safe to display in UI
-  code: string                           // Machine-readable constant; matches ERROR_CODES
-  fields?: Record<string, string>        // Field-level messages; only present for VALIDATION_ERROR
+  error: string // Human-readable; safe to display in UI
+  code: string // Machine-readable constant; matches ERROR_CODES
+  fields?: Record<string, string> // Field-level messages; only present for VALIDATION_ERROR
 }
 ```
 
@@ -70,6 +70,7 @@ interface ErrorResponse {
 ```
 
 **Envelope rules:**
+
 - `data` is always present on success; never present on error.
 - `error` and `code` are always present on error; never present on success.
 - `fields` is only included on `VALIDATION_ERROR` responses. It is not included on any other error type.
@@ -89,9 +90,9 @@ export type ActionSuccess<T> = {
 }
 
 export type ActionError = {
-  error: string                          // Human-readable; safe to show in toast or inline message
-  code: string                           // Machine-readable; matches ERROR_CODES
-  fields?: Record<string, string>        // Field-level messages for form validation display
+  error: string // Human-readable; safe to show in toast or inline message
+  code: string // Machine-readable; matches ERROR_CODES
+  fields?: Record<string, string> // Field-level messages for form validation display
 }
 
 export type ActionResult<T> = ActionSuccess<T> | ActionError
@@ -124,6 +125,7 @@ router.push(`/account/claims/${result.data.claim_id}`)
 ```
 
 **Server Action rules:**
+
 - Never `throw` from a Server Action. All error paths return `{ error, code }`.
 - Throwing causes Next.js to render the nearest error boundary, which strips field-level errors and prevents graceful recovery.
 - Never return different `data` shapes on success. Define a concrete return type per action.
@@ -132,25 +134,26 @@ router.push(`/account/claims/${result.data.claim_id}`)
 
 ## 2. HTTP Status Code Reference
 
-| Code | Name | When to use |
-|---|---|---|
-| `200` | OK | Successful GET, PUT, or PATCH |
-| `201` | Created | Successful POST that creates a new resource |
-| `204` | No Content | Successful DELETE — no response body |
-| `400` | Bad Request | Invalid input, malformed request body, unsupported filter or sort parameter, property exceeds size limit |
-| `401` | Unauthorized | Missing or expired session token — the request carries no valid identity |
-| `403` | Forbidden | Authenticated but not authorized — valid session, wrong role or ownership |
-| `404` | Not Found | Resource does not exist, was soft-deleted, or the requester must not know it exists |
-| `409` | Conflict | State conflict — duplicate resource creation, invalid status transition attempted from the wrong current state |
-| `422` | Unprocessable Entity | Valid format but failed business rule — e.g., attempting to submit a listing that lacks required fields, submitting a claim for a listing already owned |
-| `429` | Too Many Requests | Rate limit exceeded |
-| `500` | Internal Server Error | Unexpected failure in the service layer or database — never return for validation failures |
+| Code  | Name                  | When to use                                                                                                                                             |
+| ----- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `200` | OK                    | Successful GET, PUT, or PATCH                                                                                                                           |
+| `201` | Created               | Successful POST that creates a new resource                                                                                                             |
+| `204` | No Content            | Successful DELETE — no response body                                                                                                                    |
+| `400` | Bad Request           | Invalid input, malformed request body, unsupported filter or sort parameter, property exceeds size limit                                                |
+| `401` | Unauthorized          | Missing or expired session token — the request carries no valid identity                                                                                |
+| `403` | Forbidden             | Authenticated but not authorized — valid session, wrong role or ownership                                                                               |
+| `404` | Not Found             | Resource does not exist, was soft-deleted, or the requester must not know it exists                                                                     |
+| `409` | Conflict              | State conflict — duplicate resource creation, invalid status transition attempted from the wrong current state                                          |
+| `422` | Unprocessable Entity  | Valid format but failed business rule — e.g., attempting to submit a listing that lacks required fields, submitting a claim for a listing already owned |
+| `429` | Too Many Requests     | Rate limit exceeded                                                                                                                                     |
+| `500` | Internal Server Error | Unexpected failure in the service layer or database — never return for validation failures                                                              |
 
 **404 vs. 403 decision rule:**
 
 Return `404` (not `403`) when confirming that a resource exists would itself leak information the requester should not have. The test: if the requester should not be able to distinguish "this resource exists and you can't access it" from "this resource doesn't exist," use `404`.
 
 Examples:
+
 - An unauthenticated user requests a draft listing by ID → `404`
 - A supporter requests another user's private claim record by ID → `404`
 - An owner requests an admin moderation record → `404`
@@ -168,122 +171,121 @@ All error codes are defined in `lib/errors/codes.ts`. Every error response must 
 
 export const ERROR_CODES = {
   // Auth
-  UNAUTHORIZED:               'UNAUTHORIZED',
-  FORBIDDEN:                  'FORBIDDEN',
-  SESSION_EXPIRED:            'SESSION_EXPIRED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  SESSION_EXPIRED: 'SESSION_EXPIRED',
 
   // Validation
-  VALIDATION_ERROR:           'VALIDATION_ERROR',
-  INVALID_INPUT:              'INVALID_INPUT',
-  UNSUPPORTED_FILTER:         'UNSUPPORTED_FILTER',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  INVALID_INPUT: 'INVALID_INPUT',
+  UNSUPPORTED_FILTER: 'UNSUPPORTED_FILTER',
 
   // Resources
-  NOT_FOUND:                  'NOT_FOUND',
-  ALREADY_EXISTS:             'ALREADY_EXISTS',
-  CONFLICT:                   'CONFLICT',
-  INVALID_STATUS_TRANSITION:  'INVALID_STATUS_TRANSITION',
+  NOT_FOUND: 'NOT_FOUND',
+  ALREADY_EXISTS: 'ALREADY_EXISTS',
+  CONFLICT: 'CONFLICT',
+  INVALID_STATUS_TRANSITION: 'INVALID_STATUS_TRANSITION',
 
   // Business rules — Claims
-  CLAIM_ALREADY_OPEN:         'CLAIM_ALREADY_OPEN',
-  LISTING_ALREADY_CLAIMED:    'LISTING_ALREADY_CLAIMED',
+  CLAIM_ALREADY_OPEN: 'CLAIM_ALREADY_OPEN',
+  LISTING_ALREADY_CLAIMED: 'LISTING_ALREADY_CLAIMED',
 
   // Business rules — Reviews
-  REVIEW_ALREADY_EXISTS:      'REVIEW_ALREADY_EXISTS',
-  RESPONSE_ALREADY_EXISTS:    'RESPONSE_ALREADY_EXISTS',
-  LISTING_NOT_PUBLISHED:      'LISTING_NOT_PUBLISHED',
-  OWNER_REQUIRED:             'OWNER_REQUIRED',
+  REVIEW_ALREADY_EXISTS: 'REVIEW_ALREADY_EXISTS',
+  RESPONSE_ALREADY_EXISTS: 'RESPONSE_ALREADY_EXISTS',
+  LISTING_NOT_PUBLISHED: 'LISTING_NOT_PUBLISHED',
+  OWNER_REQUIRED: 'OWNER_REQUIRED',
 
   // Business rules — Account
-  ROLE_ALREADY_SET:           'ROLE_ALREADY_SET',
+  ROLE_ALREADY_SET: 'ROLE_ALREADY_SET',
 
   // Rate limiting
-  RATE_LIMIT_EXCEEDED:        'RATE_LIMIT_EXCEEDED',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
 
   // File uploads
-  FILE_TOO_LARGE:             'FILE_TOO_LARGE',
-  INVALID_FILE_TYPE:          'INVALID_FILE_TYPE',
-  UPLOAD_FAILED:              'UPLOAD_FAILED',
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
+  UPLOAD_FAILED: 'UPLOAD_FAILED',
 
   // Idempotency
-  IDEMPOTENCY_KEY_REQUIRED:   'IDEMPOTENCY_KEY_REQUIRED',
-  DUPLICATE_SUBMISSION:       'DUPLICATE_SUBMISSION',
+  IDEMPOTENCY_KEY_REQUIRED: 'IDEMPOTENCY_KEY_REQUIRED',
+  DUPLICATE_SUBMISSION: 'DUPLICATE_SUBMISSION',
 
   // Marketplace / Payments
-  STRIPE_CONNECT_REQUIRED:    'STRIPE_CONNECT_REQUIRED',
+  STRIPE_CONNECT_REQUIRED: 'STRIPE_CONNECT_REQUIRED',
 
   // Server
-  INTERNAL_ERROR:             'INTERNAL_ERROR',
-
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const
 
-export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES]
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
 ```
 
 ### Full Error Code Reference
 
 **Auth errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `UNAUTHORIZED` | 401 | No valid session present | `supabase.auth.getUser()` returns no user or returns an error |
-| `FORBIDDEN` | 403 | Authenticated but not authorized | Valid session; role or ownership check failed; resource existence is not sensitive |
-| `SESSION_EXPIRED` | 401 | Session token has expired | Auth server returns an expired token error; client should redirect to `/login` |
+| Code              | HTTP status | Description                      | When to return                                                                     |
+| ----------------- | ----------- | -------------------------------- | ---------------------------------------------------------------------------------- |
+| `UNAUTHORIZED`    | 401         | No valid session present         | `supabase.auth.getUser()` returns no user or returns an error                      |
+| `FORBIDDEN`       | 403         | Authenticated but not authorized | Valid session; role or ownership check failed; resource existence is not sensitive |
+| `SESSION_EXPIRED` | 401         | Session token has expired        | Auth server returns an expired token error; client should redirect to `/login`     |
 
 **Validation errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `VALIDATION_ERROR` | 400 | One or more fields failed validation | Zod `safeParse` returns `success: false`; always includes `fields` object |
-| `INVALID_INPUT` | 400 | Malformed request body or missing required structure | Request body is not valid JSON, `Content-Type` is wrong, or required top-level field is absent with no field-level context to return |
-| `UNSUPPORTED_FILTER` | 400 | Query parameter filter or sort field not supported | A query param key is not in the documented allowed set for a list endpoint |
+| Code                 | HTTP status | Description                                          | When to return                                                                                                                       |
+| -------------------- | ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `VALIDATION_ERROR`   | 400         | One or more fields failed validation                 | Zod `safeParse` returns `success: false`; always includes `fields` object                                                            |
+| `INVALID_INPUT`      | 400         | Malformed request body or missing required structure | Request body is not valid JSON, `Content-Type` is wrong, or required top-level field is absent with no field-level context to return |
+| `UNSUPPORTED_FILTER` | 400         | Query parameter filter or sort field not supported   | A query param key is not in the documented allowed set for a list endpoint                                                           |
 
 **Resource errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `NOT_FOUND` | 404 | Resource does not exist or requester must not know it exists | Row not found; soft-deleted row; ownership failure where existence must not be disclosed |
-| `ALREADY_EXISTS` | 409 | Unique constraint violation | Duplicate listing name + city combination; duplicate category slug |
-| `CONFLICT` | 409 | General state conflict not covered by a domain-specific code | Concurrent edit conflict; ambiguous state collision |
-| `INVALID_STATUS_TRANSITION` | 422 | Attempted status change is not allowed from the current state | Submitting a listing not in `'draft'`; approving a claim not in `'pending'`; publishing a listing in `'rejected'` |
+| Code                        | HTTP status | Description                                                   | When to return                                                                                                    |
+| --------------------------- | ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `NOT_FOUND`                 | 404         | Resource does not exist or requester must not know it exists  | Row not found; soft-deleted row; ownership failure where existence must not be disclosed                          |
+| `ALREADY_EXISTS`            | 409         | Unique constraint violation                                   | Duplicate listing name + city combination; duplicate category slug                                                |
+| `CONFLICT`                  | 409         | General state conflict not covered by a domain-specific code  | Concurrent edit conflict; ambiguous state collision                                                               |
+| `INVALID_STATUS_TRANSITION` | 422         | Attempted status change is not allowed from the current state | Submitting a listing not in `'draft'`; approving a claim not in `'pending'`; publishing a listing in `'rejected'` |
 
 **Business rule errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `CLAIM_ALREADY_OPEN` | 409 | User already has a `'pending'` or `'under_review'` claim for this listing | `createClaim` called when an open claim already exists; response body includes the existing `claim_id` |
-| `LISTING_ALREADY_CLAIMED` | 409 | Listing already has an approved owner | `createClaim` called on a listing with `trust_tier` of `'claimed'`, `'verified'`, or `'certified'` |
-| `REVIEW_ALREADY_EXISTS` | 409 | User has already submitted a review for this listing | `createReview` blocked by `UNIQUE (reviewer_user_id, listing_id)` |
-| `RESPONSE_ALREADY_EXISTS` | 409 | Owner has already responded to this review | `respondToReview` called on a review that already has an owner response |
-| `LISTING_NOT_PUBLISHED` | 422 | Attempted action requires a published listing | Creating a review for a listing that is not `'published'` |
-| `OWNER_REQUIRED` | 403 | Action requires ownership of the specific listing | Dashboard action called by an authenticated user who does not have `role = 'owner'` for the given `listing_id` |
-| `ROLE_ALREADY_SET` | 409 | Onboarding role has already been assigned | `setOnboardingRole` called when the user already has a `'supporter'` or `'owner'` role in `user_roles` |
+| Code                      | HTTP status | Description                                                               | When to return                                                                                                 |
+| ------------------------- | ----------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `CLAIM_ALREADY_OPEN`      | 409         | User already has a `'pending'` or `'under_review'` claim for this listing | `createClaim` called when an open claim already exists; response body includes the existing `claim_id`         |
+| `LISTING_ALREADY_CLAIMED` | 409         | Listing already has an approved owner                                     | `createClaim` called on a listing with `trust_tier` of `'claimed'`, `'verified'`, or `'certified'`             |
+| `REVIEW_ALREADY_EXISTS`   | 409         | User has already submitted a review for this listing                      | `createReview` blocked by `UNIQUE (reviewer_user_id, listing_id)`                                              |
+| `RESPONSE_ALREADY_EXISTS` | 409         | Owner has already responded to this review                                | `respondToReview` called on a review that already has an owner response                                        |
+| `LISTING_NOT_PUBLISHED`   | 422         | Attempted action requires a published listing                             | Creating a review for a listing that is not `'published'`                                                      |
+| `OWNER_REQUIRED`          | 403         | Action requires ownership of the specific listing                         | Dashboard action called by an authenticated user who does not have `role = 'owner'` for the given `listing_id` |
+| `ROLE_ALREADY_SET`        | 409         | Onboarding role has already been assigned                                 | `setOnboardingRole` called when the user already has a `'supporter'` or `'owner'` role in `user_roles`         |
 
 **Rate limiting:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests in the configured window | Any endpoint whose per-window limit has been reached; see Section 7 |
+| Code                  | HTTP status | Description                                | When to return                                                      |
+| --------------------- | ----------- | ------------------------------------------ | ------------------------------------------------------------------- |
+| `RATE_LIMIT_EXCEEDED` | 429         | Too many requests in the configured window | Any endpoint whose per-window limit has been reached; see Section 7 |
 
 **File upload errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `FILE_TOO_LARGE` | 400 | File exceeds the size limit for the target bucket | Checked before the Supabase Storage write; see Section 8 |
-| `INVALID_FILE_TYPE` | 400 | MIME type is not in the allowed set for the target bucket | Checked from actual file bytes, not the `Content-Type` header; see Section 8 |
-| `UPLOAD_FAILED` | 500 | Supabase Storage write failed unexpectedly | Storage client returns an error after passing all validation checks |
+| Code                | HTTP status | Description                                               | When to return                                                               |
+| ------------------- | ----------- | --------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `FILE_TOO_LARGE`    | 400         | File exceeds the size limit for the target bucket         | Checked before the Supabase Storage write; see Section 8                     |
+| `INVALID_FILE_TYPE` | 400         | MIME type is not in the allowed set for the target bucket | Checked from actual file bytes, not the `Content-Type` header; see Section 8 |
+| `UPLOAD_FAILED`     | 500         | Supabase Storage write failed unexpectedly                | Storage client returns an error after passing all validation checks          |
 
 **Idempotency:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `IDEMPOTENCY_KEY_REQUIRED` | 400 | `client_idempotency_key` field is missing | `createReceiptSubmission` or `createSpendLog` called without a client-provided idempotency key |
-| `DUPLICATE_SUBMISSION` | 200 | Idempotency key already processed | Key found in existing row; original result returned — not an error from the client's perspective |
+| Code                       | HTTP status | Description                               | When to return                                                                                   |
+| -------------------------- | ----------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `IDEMPOTENCY_KEY_REQUIRED` | 400         | `client_idempotency_key` field is missing | `createReceiptSubmission` or `createSpendLog` called without a client-provided idempotency key   |
+| `DUPLICATE_SUBMISSION`     | 200         | Idempotency key already processed         | Key found in existing row; original result returned — not an error from the client's perspective |
 
 **Server errors:**
 
-| Code | HTTP status | Description | When to return |
-|---|---|---|---|
-| `INTERNAL_ERROR` | 500 | Unexpected failure in service layer or database | Catch-all for unhandled errors; safe generic message returned to client; full error logged server-side |
+| Code             | HTTP status | Description                                     | When to return                                                                                         |
+| ---------------- | ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `INTERNAL_ERROR` | 500         | Unexpected failure in service layer or database | Catch-all for unhandled errors; safe generic message returned to client; full error logged server-side |
 
 ---
 
@@ -304,6 +306,7 @@ Validation errors always include a `fields` object keyed by the exact field name
 ```
 
 **Field naming rules:**
+
 - Keys in `fields` match the exact request body field name — the same name the client sent, matching the database column convention (snake_case).
 - Nested fields use dot notation: `"hours.monday.open": "Open time is required."`
 - Only include fields that have errors. Do not include valid fields.
@@ -382,16 +385,24 @@ Returned when `supabase.auth.getUser()` returns no user or an auth error. The se
 ```
 
 **Server Action:**
+
 ```typescript
-const { data: { user }, error: authError } = await supabase.auth.getUser()
+const {
+  data: { user },
+  error: authError,
+} = await supabase.auth.getUser()
 if (authError || !user) {
   return { error: 'You must be signed in to do that.', code: ERROR_CODES.UNAUTHORIZED }
 }
 ```
 
 **Route Handler:**
+
 ```typescript
-const { data: { user }, error: authError } = await supabase.auth.getUser()
+const {
+  data: { user },
+  error: authError,
+} = await supabase.auth.getUser()
 if (authError || !user) {
   return Response.json(
     { error: 'You must be signed in to do that.', code: ERROR_CODES.UNAUTHORIZED },
@@ -435,6 +446,7 @@ if (!listing) {
 ```
 
 **Permission error rules:**
+
 - Always check session (`UNAUTHORIZED`) before checking role or ownership (`FORBIDDEN` / `NOT_FOUND`). Never reverse this order.
 - Never expose role names, permission logic, or ownership structure in error messages. "You are not an admin" is unacceptable — use "You don't have permission to do that."
 - Never surface whether a resource exists to a requester who has no right to know.
@@ -450,14 +462,14 @@ if (!listing) {
 
 **Decision matrix:**
 
-| Condition | Response |
-|---|---|
-| Resource never existed | `404 NOT_FOUND` |
-| Resource existed but was soft-deleted (`deleted_at IS NOT NULL`) | `404 NOT_FOUND` — treat as not found from the client's perspective |
-| Resource exists but requester is not authorized and existence is sensitive | `404 NOT_FOUND` — do not confirm existence |
-| Resource exists but requester is not authorized and existence is not sensitive | `403 FORBIDDEN` |
-| Resource exists but the HTTP method used is not supported | `405 Method Not Allowed` — Next.js route handlers return this automatically for unimplemented methods |
-| Resource exists but is in the wrong state for the action | `422 INVALID_STATUS_TRANSITION` or `409 CONFLICT` as appropriate |
+| Condition                                                                      | Response                                                                                              |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Resource never existed                                                         | `404 NOT_FOUND`                                                                                       |
+| Resource existed but was soft-deleted (`deleted_at IS NOT NULL`)               | `404 NOT_FOUND` — treat as not found from the client's perspective                                    |
+| Resource exists but requester is not authorized and existence is sensitive     | `404 NOT_FOUND` — do not confirm existence                                                            |
+| Resource exists but requester is not authorized and existence is not sensitive | `403 FORBIDDEN`                                                                                       |
+| Resource exists but the HTTP method used is not supported                      | `405 Method Not Allowed` — Next.js route handlers return this automatically for unimplemented methods |
+| Resource exists but is in the wrong state for the action                       | `422 INVALID_STATUS_TRANSITION` or `409 CONFLICT` as appropriate                                      |
 
 **Soft-delete rule:** Every query that returns a listing, claim, review, or correction to a non-admin user must include `AND deleted_at IS NULL` as an unconditional filter. Never return a soft-deleted row as if it exists.
 
@@ -467,15 +479,15 @@ if (!listing) {
 
 ### Per-Endpoint Rate Limit Table
 
-| Endpoint | Anonymous limit | Authenticated limit | Window | Enforcement |
-|---|---|---|---|---|
-| `GET /api/search` | 60 req/min | 120 req/min | 1 min rolling | IP hash in middleware (MVP); Upstash Redis (V1) |
-| `POST /api/analytics/event` | 300 events/min | 300 events/min | 1 min per `session_id` | Service layer check on `session_id` header |
-| `createClaim` (Server Action) | n/a | 3 claims/day | 24 hr rolling | Service layer query: `SELECT COUNT(*) FROM claims WHERE user_id = $1 AND created_at > now() - interval '24 hours'` |
-| `createReview` (Server Action) | n/a | 1 per listing per user | Lifetime | `UNIQUE (reviewer_user_id, listing_id)` constraint on `reviews` table → `409` |
-| `POST /api/upload` | n/a | 10 uploads/hr (free tier); 50 uploads/hr (standard+) | 1 hr rolling | Service layer + listing tier check |
-| `POST /api/listings/duplicate-check` | n/a | 60 req/min | 1 min rolling | IP hash in middleware (MVP) |
-| Auth endpoints (Supabase-managed) | Supabase built-in limits | Supabase built-in limits | — | Enforced by Supabase Auth; not configurable |
+| Endpoint                             | Anonymous limit          | Authenticated limit                                  | Window                 | Enforcement                                                                                                        |
+| ------------------------------------ | ------------------------ | ---------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/search`                    | 60 req/min               | 120 req/min                                          | 1 min rolling          | IP hash in middleware (MVP); Upstash Redis (V1)                                                                    |
+| `POST /api/analytics/event`          | 300 events/min           | 300 events/min                                       | 1 min per `session_id` | Service layer check on `session_id` header                                                                         |
+| `createClaim` (Server Action)        | n/a                      | 3 claims/day                                         | 24 hr rolling          | Service layer query: `SELECT COUNT(*) FROM claims WHERE user_id = $1 AND created_at > now() - interval '24 hours'` |
+| `createReview` (Server Action)       | n/a                      | 1 per listing per user                               | Lifetime               | `UNIQUE (reviewer_user_id, listing_id)` constraint on `reviews` table → `409`                                      |
+| `POST /api/upload`                   | n/a                      | 10 uploads/hr (free tier); 50 uploads/hr (standard+) | 1 hr rolling           | Service layer + listing tier check                                                                                 |
+| `POST /api/listings/duplicate-check` | n/a                      | 60 req/min                                           | 1 min rolling          | IP hash in middleware (MVP)                                                                                        |
+| Auth endpoints (Supabase-managed)    | Supabase built-in limits | Supabase built-in limits                             | —                      | Enforced by Supabase Auth; not configurable                                                                        |
 
 ### Rate Limit Response
 
@@ -515,13 +527,13 @@ All validation in this section runs server-side at `POST /api/upload` before any
 
 ### Per-Bucket Rules
 
-| Bucket | Allowed MIME types | Max file size | Max dimensions | Storage path pattern | Access |
-|---|---|---|---|---|---|
-| `listing-media` (logo) | `image/jpeg`, `image/png`, `image/webp` | 2 MB | 400×400 px | `listings/[listing_id]/logo/[uuid].[ext]` | Public |
-| `listing-media` (cover) | `image/jpeg`, `image/png`, `image/webp` | 5 MB | 1200×675 px | `listings/[listing_id]/cover/[uuid].[ext]` | Public |
-| `listing-media` (gallery) | `image/jpeg`, `image/png`, `image/webp` | 3 MB | Free (long edge max 2400 px) | `listings/[listing_id]/gallery/[uuid].[ext]` | Public |
-| `verification-docs` | `image/jpeg`, `image/png`, `application/pdf` | 10 MB | — | `claims/[claim_id]/[uuid].[ext]` | Private — admin signed URL only |
-| `receipts` | `image/jpeg`, `image/png`, `image/webp` | 10 MB | — | `receipts/[user_id]/[uuid].[ext]` | Private — owner signed URL only |
+| Bucket                    | Allowed MIME types                           | Max file size | Max dimensions               | Storage path pattern                         | Access                          |
+| ------------------------- | -------------------------------------------- | ------------- | ---------------------------- | -------------------------------------------- | ------------------------------- |
+| `listing-media` (logo)    | `image/jpeg`, `image/png`, `image/webp`      | 2 MB          | 400×400 px                   | `listings/[listing_id]/logo/[uuid].[ext]`    | Public                          |
+| `listing-media` (cover)   | `image/jpeg`, `image/png`, `image/webp`      | 5 MB          | 1200×675 px                  | `listings/[listing_id]/cover/[uuid].[ext]`   | Public                          |
+| `listing-media` (gallery) | `image/jpeg`, `image/png`, `image/webp`      | 3 MB          | Free (long edge max 2400 px) | `listings/[listing_id]/gallery/[uuid].[ext]` | Public                          |
+| `verification-docs`       | `image/jpeg`, `image/png`, `application/pdf` | 10 MB         | —                            | `claims/[claim_id]/[uuid].[ext]`             | Private — admin signed URL only |
+| `receipts`                | `image/jpeg`, `image/png`, `image/webp`      | 10 MB         | —                            | `receipts/[user_id]/[uuid].[ext]`            | Private — owner signed URL only |
 
 ### Validation Sequence
 
@@ -538,11 +550,11 @@ Run these checks in order before writing to storage. Return on the first failure
 
 ### Ownership Rules per Bucket
 
-| Bucket | Permission check |
-|---|---|
-| `listing-media` | `listings.owner_user_id = auth.uid()` where `listings.id = entity_id`; return `403` if check fails |
+| Bucket              | Permission check                                                                                                                                          |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listing-media`     | `listings.owner_user_id = auth.uid()` where `listings.id = entity_id`; return `403` if check fails                                                        |
 | `verification-docs` | Only writable from other server-side actions via the service role client; this endpoint returns `403` for any direct authenticated request to this bucket |
-| `receipts` | `entity_id` (the `user_id` segment) must equal `auth.uid()`; return `403` if check fails |
+| `receipts`          | `entity_id` (the `user_id` segment) must equal `auth.uid()`; return `403` if check fails                                                                  |
 
 ### Storage URL Generation
 
@@ -550,25 +562,18 @@ Never persist CDN URLs in the database. Store the storage path and generate URLs
 
 ```typescript
 // Public bucket (listing-media)
-const { data } = supabase
-  .storage
-  .from('listing-media')
-  .getPublicUrl(path)
+const { data } = supabase.storage.from('listing-media').getPublicUrl(path)
 // data.publicUrl is the CDN URL — use only at read time; never store
 
 // Private bucket — owner access (receipts)
 // Verify user_id prefix matches auth.uid() before generating
-const { data, error } = await supabaseAdmin
-  .storage
-  .from('receipts')
-  .createSignedUrl(path, 900)   // 15-minute expiry
+const { data, error } = await supabaseAdmin.storage.from('receipts').createSignedUrl(path, 900) // 15-minute expiry
 // data.signedUrl is returned to the authenticated owner; never stored
 
 // Private bucket — admin access (verification-docs)
-const { data, error } = await supabaseAdmin
-  .storage
+const { data, error } = await supabaseAdmin.storage
   .from('verification-docs')
-  .createSignedUrl(path, 3600)  // 1-hour expiry for admin review
+  .createSignedUrl(path, 3600) // 1-hour expiry for admin review
 // Called only from getVerificationDocUrl Server Action; supabaseAdmin is the service role client
 ```
 
@@ -617,6 +622,7 @@ Response: HTTP `204 No Content` unconditionally. Never return `404` on a delete 
 For V2 operations where the client may retry on network failure and the server must not process the same request twice.
 
 **Client responsibility:**
+
 1. Generate a UUID before the first attempt: `const key = crypto.randomUUID()`
 2. Store the key for the duration of the request lifecycle (component state or localStorage)
 3. Send the same key on every retry attempt
@@ -735,13 +741,13 @@ Never add `ON CONFLICT` handling to analytics event writes. Over-deduplication a
 
 ```typescript
 interface AnalyticsEventBase {
-  event_name: string          // From the defined event enum — see api-contract-a.md Section 3
-  session_id: string          // Client-generated UUID; persisted in sessionStorage for the browser session
-  listing_id?: string         // UUID; required when the event is scoped to a specific listing
-  city_slug?: string          // Required when the event is scoped to a city
-  category_slug?: string      // Required when the event is scoped to a category
-  referrer?: string           // `document.referrer` — the URL the user navigated from
-  user_agent?: string         // `navigator.userAgent` truncated to 256 characters
+  event_name: string // From the defined event enum — see api-contract-a.md Section 3
+  session_id: string // Client-generated UUID; persisted in sessionStorage for the browser session
+  listing_id?: string // UUID; required when the event is scoped to a specific listing
+  city_slug?: string // Required when the event is scoped to a city
+  category_slug?: string // Required when the event is scoped to a category
+  referrer?: string // `document.referrer` — the URL the user navigated from
+  user_agent?: string // `navigator.userAgent` truncated to 256 characters
   // user_id is set server-side from auth.uid() — never sent from the client
   // ip_address is hashed SHA-256 server-side — never sent from the client; never stored raw
 }
@@ -749,22 +755,22 @@ interface AnalyticsEventBase {
 
 ### Client vs. Server Emission
 
-| Event | Where emitted | Rationale |
-|---|---|---|
-| `listing_viewed` | Server (RSC page load) | Most reliable — fires on every server render, including bot and direct URL visits |
-| `search_performed` | Client (after search results render) | Captures query string and result count from the rendered response |
-| `cta_clicked` | Client (`onClick` handler) | User-initiated click action; cannot be server-triggered |
-| `save_added` | Client (after SA completes) | User action; emit only on confirmed success, not on optimistic update |
-| `save_removed` | Client (after Route Handler completes) | User action |
-| `listing_shared` | Client (after share API or copy action) | User action |
-| `claim_submitted` | Server (inside SA after successful DB write) | Transactional — must not be skipped or duplicated |
-| `review_submitted` | Server (inside SA after successful DB write) | Transactional |
-| `listing_created` | Server (inside SA after successful DB write) | Transactional |
-| `listing_submitted_for_review` | Server (inside SA after successful DB write) | Transactional |
-| `listing_approved` | Server (inside SA after successful DB write) | Admin action |
-| `listing_rejected` | Server (inside SA after successful DB write) | Admin action |
-| `claim_approved` | Server (inside SA after successful DB write) | Admin action |
-| `claim_rejected` | Server (inside SA after successful DB write) | Admin action |
+| Event                          | Where emitted                                | Rationale                                                                         |
+| ------------------------------ | -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `listing_viewed`               | Server (RSC page load)                       | Most reliable — fires on every server render, including bot and direct URL visits |
+| `search_performed`             | Client (after search results render)         | Captures query string and result count from the rendered response                 |
+| `cta_clicked`                  | Client (`onClick` handler)                   | User-initiated click action; cannot be server-triggered                           |
+| `save_added`                   | Client (after SA completes)                  | User action; emit only on confirmed success, not on optimistic update             |
+| `save_removed`                 | Client (after Route Handler completes)       | User action                                                                       |
+| `listing_shared`               | Client (after share API or copy action)      | User action                                                                       |
+| `claim_submitted`              | Server (inside SA after successful DB write) | Transactional — must not be skipped or duplicated                                 |
+| `review_submitted`             | Server (inside SA after successful DB write) | Transactional                                                                     |
+| `listing_created`              | Server (inside SA after successful DB write) | Transactional                                                                     |
+| `listing_submitted_for_review` | Server (inside SA after successful DB write) | Transactional                                                                     |
+| `listing_approved`             | Server (inside SA after successful DB write) | Admin action                                                                      |
+| `listing_rejected`             | Server (inside SA after successful DB write) | Admin action                                                                      |
+| `claim_approved`               | Server (inside SA after successful DB write) | Admin action                                                                      |
+| `claim_rejected`               | Server (inside SA after successful DB write) | Admin action                                                                      |
 
 ### Client Emission Pattern
 
@@ -774,12 +780,9 @@ Never await analytics on the client. Fire and forget. Swallow all errors silentl
 // hooks/useAnalytics.ts
 
 export function useAnalytics() {
-  const sessionId = useSessionId()   // from sessionStorage; generated once per browser session
+  const sessionId = useSessionId() // from sessionStorage; generated once per browser session
 
-  function track(
-    eventName: string,
-    properties?: Record<string, unknown>
-  ) {
+  function track(eventName: string, properties?: Record<string, unknown>) {
     // Fire-and-forget — do not await
     fetch('/api/analytics/event', {
       method: 'POST',
@@ -828,23 +831,23 @@ Promise.resolve().then(() => {
 
 The following 15 events are required at MVP. All other events are deferred.
 
-| Event name | Emitted from | Required properties |
-|---|---|---|
-| `listing_viewed` | Server (RSC) | `listing_id`, `entity_type`, `trust_tier` |
-| `search_performed` | Client | `query`, `filters`, `result_count` |
-| `cta_clicked` | Client | `listing_id`, `cta_type` |
-| `save_added` | Client | `listing_id`, `entity_type` |
-| `save_removed` | Client | `listing_id` |
-| `listing_shared` | Client | `listing_id`, `share_method` |
-| `claim_submitted` | Server | `listing_id` |
-| `review_submitted` | Server | `listing_id` |
-| `correction_submitted` | Server | `listing_id` |
-| `listing_created` | Server | `listing_id`, `entity_type`, `city_id` |
-| `listing_submitted_for_review` | Server | `listing_id`, `entity_type` |
-| `listing_approved` | Server | `listing_id` |
-| `listing_rejected` | Server | `listing_id` |
-| `claim_approved` | Server | `listing_id`, `claim_id` |
-| `claim_rejected` | Server | `listing_id`, `claim_id` |
+| Event name                     | Emitted from | Required properties                       |
+| ------------------------------ | ------------ | ----------------------------------------- |
+| `listing_viewed`               | Server (RSC) | `listing_id`, `entity_type`, `trust_tier` |
+| `search_performed`             | Client       | `query`, `filters`, `result_count`        |
+| `cta_clicked`                  | Client       | `listing_id`, `cta_type`                  |
+| `save_added`                   | Client       | `listing_id`, `entity_type`               |
+| `save_removed`                 | Client       | `listing_id`                              |
+| `listing_shared`               | Client       | `listing_id`, `share_method`              |
+| `claim_submitted`              | Server       | `listing_id`                              |
+| `review_submitted`             | Server       | `listing_id`                              |
+| `correction_submitted`         | Server       | `listing_id`                              |
+| `listing_created`              | Server       | `listing_id`, `entity_type`, `city_id`    |
+| `listing_submitted_for_review` | Server       | `listing_id`, `entity_type`               |
+| `listing_approved`             | Server       | `listing_id`                              |
+| `listing_rejected`             | Server       | `listing_id`                              |
+| `claim_approved`               | Server       | `listing_id`, `claim_id`                  |
+| `claim_rejected`               | Server       | `listing_id`, `claim_id`                  |
 
 V1 will add editorial and collection interaction events. V2 will add `receipt_submitted`, `spend_logged`, `product_viewed`, and `storefront_viewed`.
 
@@ -865,15 +868,15 @@ Email sends are non-blocking side effects. They run after the primary DB write a
 ```typescript
 // Step 5 — Email notification (non-blocking)
 // Do not await directly in the critical path
-await sendNotificationEmail(
-  ClaimReceivedTemplate,
-  process.env.ADMIN_NOTIFICATION_EMAIL!,
-  { claimId: data.id, listingName: listing.name }
-)
+await sendNotificationEmail(ClaimReceivedTemplate, process.env.ADMIN_NOTIFICATION_EMAIL!, {
+  claimId: data.id,
+  listingName: listing.name,
+})
 // sendNotificationEmail internally catches and logs all Resend errors — it never throws
 ```
 
 The `sendNotificationEmail` helper (`lib/email/resend.ts`) wraps all Resend calls in a `try/catch`. On failure:
+
 - Log to server console with prefix `[EMAIL_ERROR]`, operation name, and recipient role
 - Never log the recipient's email address in console output
 - At MVP: log and continue — no retry
@@ -895,11 +898,11 @@ The hook point for V1 retry is the single `catch` block in `sendNotificationEmai
 
 **Common causes and resolutions:**
 
-| Symptom | Likely cause | Resolution |
-|---|---|---|
-| Page not updated after mutation | `NEXT_PRIVATE_REVALIDATE_TOKEN` env var missing in production | Confirm the variable is set in the deployment environment |
-| Revalidation fires but page still stale | Deployment rollback left stale ISR cache | Expected — cache expires at TTL; no action required |
-| `revalidatePath` called but nothing happens in development | ISR not active in development mode | Expected — ISR is production-only; test with `next build && next start` |
+| Symptom                                                    | Likely cause                                                  | Resolution                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Page not updated after mutation                            | `NEXT_PRIVATE_REVALIDATE_TOKEN` env var missing in production | Confirm the variable is set in the deployment environment               |
+| Revalidation fires but page still stale                    | Deployment rollback left stale ISR cache                      | Expected — cache expires at TTL; no action required                     |
+| `revalidatePath` called but nothing happens in development | ISR not active in development mode                            | Expected — ISR is production-only; test with `next build && next start` |
 
 **Do not wrap `revalidatePath` in `try/catch`** — it does not throw and wrapping it obscures the call stack for no benefit.
 
@@ -1013,11 +1016,7 @@ if (dbError || !data) {
 
 ```typescript
 try {
-  const { data, error } = await supabase
-    .from('listings')
-    .select('...')
-    .eq('id', listingId)
-    .single()
+  const { data, error } = await supabase.from('listings').select('...').eq('id', listingId).single()
 
   if (error || !data) {
     console.error('[GET /api/listings/[id]] DB error:', { listingId, code: error?.code })

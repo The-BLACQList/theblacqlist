@@ -1,15 +1,19 @@
 # Ticket 086: Security audit — RLS verification, auth boundary testing, OWASP review
 
 ## Status
+
 Draft
 
 ## Phase
+
 Phase 17: Security, QA, Accessibility, Launch
 
 ## Priority
+
 P0
 
 ## Feature Area
+
 Security
 
 ---
@@ -35,6 +39,7 @@ As the engineering team, we want to verify that every security boundary is corre
 ## Scope
 
 **In scope:**
+
 - RLS verification for every MVP table (21 tables): test each table with (a) unauthenticated request, (b) authenticated non-owner request, (c) authenticated owner request, (d) admin request — confirm each behaves per `rls-policy-plan.md`
 - Auth boundary testing: every route pattern listed in the middleware spec (`/dashboard/*`, `/account/*`, `/claim/*`, `/admin/*`) tested while (a) unauthenticated, (b) with expired session, (c) with a suspended account
 - API endpoint testing: every Route Handler and Server Action tested directly (curl/Postman/Bruno — not through the UI) for: auth bypass (call without session), IDOR (substitute another user's resource ID), parameter tampering (inject unexpected values into validated fields)
@@ -43,6 +48,7 @@ As the engineering team, we want to verify that every security boundary is corre
 - Sentry PII audit: trigger a test error from each major flow and inspect the Sentry event payload for PII fields (email, phone, name, address)
 
 **Out of scope:**
+
 - Penetration testing by an external security firm (deferred to V1)
 - Stripe webhook security (separate audit when V1 payments are implemented)
 - V2 marketplace security review
@@ -51,13 +57,13 @@ As the engineering team, we want to verify that every security boundary is corre
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
-| Ticket 013: RLS policies for all 21 MVP tables | Blocking ticket — must exist to test | In Progress |
-| Ticket 014: Auth flows | Blocking ticket | In Progress |
-| All Route Handler and Server Action tickets (025, 030, 031, 041, 045, 049) | Must be implemented to test | In Progress |
-| Staging environment with all migrations applied | Infrastructure | Must be ready |
-| Test accounts: supporter, owner, admin, super_admin | Infrastructure | Must exist in staging per seed data plan |
+| Dependency                                                                 | Type                                 | Status                                   |
+| -------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------- |
+| Ticket 013: RLS policies for all 21 MVP tables                             | Blocking ticket — must exist to test | In Progress                              |
+| Ticket 014: Auth flows                                                     | Blocking ticket                      | In Progress                              |
+| All Route Handler and Server Action tickets (025, 030, 031, 041, 045, 049) | Must be implemented to test          | In Progress                              |
+| Staging environment with all migrations applied                            | Infrastructure                       | Must be ready                            |
+| Test accounts: supporter, owner, admin, super_admin                        | Infrastructure                       | Must exist in staging per seed data plan |
 
 ---
 
@@ -77,29 +83,29 @@ No design work in this ticket.
 
 **Tables to test (all 21 MVP tables):**
 
-| Table | Anonymous can SELECT? | Owner can SELECT own? | Owner can UPDATE own? | Admin (service role) full access? |
-|---|---|---|---|---|
-| `listings` (published, non-deleted) | Yes | Yes (any status) | Yes | Yes |
-| `listings` (draft/pending) | No | Yes (own only) | Yes | Yes |
-| `listings` (soft-deleted) | No | No | No | Yes |
-| `listing_details_business` | Via JOIN to published listing only | Own listing only | Own listing only | Yes |
-| `listing_hours` | Via JOIN to published listing only | Own listing only | Own listing only | Yes |
-| `listing_links` | Via JOIN to published listing only | Own listing only | Own listing only | Yes |
-| `services` | Via JOIN to published listing only | Own listing only | Own listing only | Yes |
-| `media_attachments` (listing-media) | Via JOIN to published listing only | Own listing only | Own listing only | Yes |
-| `saves` | No (own saves only) | Own saves only | N/A | Yes |
-| `claims` | No | Own claims only | No (insert only) | Yes |
-| `reviews` | Published reviews only (V1) | Own reviews only | Own pending reviews only | Yes |
-| `collections` | Published only | N/A | N/A | Yes |
-| `collection_items` | Via JOIN to published collection | N/A | N/A | Yes |
-| `analytics_events` | No | Own listing events only | No | Yes |
-| `entity_analytics_daily` | No | Own listing rows only | No | Yes |
-| `search_events` | No | No | No | Yes |
-| `admin_audit_log` | No | No | No | Admin: own entries; Super Admin: all entries |
-| `users` / `profiles` | No | Own profile only | Own profile only | Yes |
-| `user_roles` | No | Own roles only | No | Yes |
-| `categories` | Yes (all active) | N/A | N/A | Yes |
-| `cities` | Yes (all) | N/A | N/A | Yes |
+| Table                               | Anonymous can SELECT?              | Owner can SELECT own?   | Owner can UPDATE own?    | Admin (service role) full access?            |
+| ----------------------------------- | ---------------------------------- | ----------------------- | ------------------------ | -------------------------------------------- |
+| `listings` (published, non-deleted) | Yes                                | Yes (any status)        | Yes                      | Yes                                          |
+| `listings` (draft/pending)          | No                                 | Yes (own only)          | Yes                      | Yes                                          |
+| `listings` (soft-deleted)           | No                                 | No                      | No                       | Yes                                          |
+| `listing_details_business`          | Via JOIN to published listing only | Own listing only        | Own listing only         | Yes                                          |
+| `listing_hours`                     | Via JOIN to published listing only | Own listing only        | Own listing only         | Yes                                          |
+| `listing_links`                     | Via JOIN to published listing only | Own listing only        | Own listing only         | Yes                                          |
+| `services`                          | Via JOIN to published listing only | Own listing only        | Own listing only         | Yes                                          |
+| `media_attachments` (listing-media) | Via JOIN to published listing only | Own listing only        | Own listing only         | Yes                                          |
+| `saves`                             | No (own saves only)                | Own saves only          | N/A                      | Yes                                          |
+| `claims`                            | No                                 | Own claims only         | No (insert only)         | Yes                                          |
+| `reviews`                           | Published reviews only (V1)        | Own reviews only        | Own pending reviews only | Yes                                          |
+| `collections`                       | Published only                     | N/A                     | N/A                      | Yes                                          |
+| `collection_items`                  | Via JOIN to published collection   | N/A                     | N/A                      | Yes                                          |
+| `analytics_events`                  | No                                 | Own listing events only | No                       | Yes                                          |
+| `entity_analytics_daily`            | No                                 | Own listing rows only   | No                       | Yes                                          |
+| `search_events`                     | No                                 | No                      | No                       | Yes                                          |
+| `admin_audit_log`                   | No                                 | No                      | No                       | Admin: own entries; Super Admin: all entries |
+| `users` / `profiles`                | No                                 | Own profile only        | Own profile only         | Yes                                          |
+| `user_roles`                        | No                                 | Own roles only          | No                       | Yes                                          |
+| `categories`                        | Yes (all active)                   | N/A                     | N/A                      | Yes                                          |
+| `cities`                            | Yes (all)                          | N/A                     | N/A                      | Yes                                          |
 
 ---
 
@@ -107,16 +113,16 @@ No design work in this ticket.
 
 **Endpoints to test for auth bypass and IDOR:**
 
-| Endpoint | Test scenario |
-|---|---|
-| `GET /api/search` | No auth needed; test that `status != 'published'` listings never appear |
-| `POST /api/upload` | Test without session (expect 401); test uploading to another user's listing (expect 403) |
-| `POST /api/listings/duplicate-check` | Test without session (expect 401) |
-| `POST /api/saves` | Test without session (expect 401); test saving on behalf of another `user_id` (expect 403/ignored) |
-| `DELETE /api/saves/[id]` | Test deleting another user's save by guessing the save ID (expect 403 or 404) |
-| `POST /api/analytics/event` | Test injecting a `listing_id` belonging to a private draft listing (event should be recorded but not exploitable) |
-| `GET /api/dashboard/analytics` | Test with a `listing_id` belonging to another owner (expect 403) |
-| All Server Actions (createListing, updateListing, approveClaim, etc.) | Test each without a session; test each with a valid session but insufficient role |
+| Endpoint                                                              | Test scenario                                                                                                     |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `GET /api/search`                                                     | No auth needed; test that `status != 'published'` listings never appear                                           |
+| `POST /api/upload`                                                    | Test without session (expect 401); test uploading to another user's listing (expect 403)                          |
+| `POST /api/listings/duplicate-check`                                  | Test without session (expect 401)                                                                                 |
+| `POST /api/saves`                                                     | Test without session (expect 401); test saving on behalf of another `user_id` (expect 403/ignored)                |
+| `DELETE /api/saves/[id]`                                              | Test deleting another user's save by guessing the save ID (expect 403 or 404)                                     |
+| `POST /api/analytics/event`                                           | Test injecting a `listing_id` belonging to a private draft listing (event should be recorded but not exploitable) |
+| `GET /api/dashboard/analytics`                                        | Test with a `listing_id` belonging to another owner (expect 403)                                                  |
+| All Server Actions (createListing, updateListing, approveClaim, etc.) | Test each without a session; test each with a valid session but insufficient role                                 |
 
 ---
 
@@ -136,12 +142,14 @@ No design work in this ticket.
 2. **Findings backlog tickets:** For every Critical or High finding, open a hotfix ticket in the backlog with the finding description, reproduction steps, and proposed fix. These tickets must be resolved and verified before the launch gate.
 
 **Testing methodology:**
+
 - Use Supabase Studio "SQL Editor" with a non-service-role Supabase JS client to test RLS policies directly — no application layer involvement
 - Use curl or Bruno (REST client) for Route Handler testing — not the application UI
 - Use `next/headers` session cookies from a logged-in browser session for authenticated API tests
 - For the OWASP review: use the OWASP Testing Guide (WSTG) as the reference; document each category with specific findings or "No findings" per category
 
 **OWASP Top 10 categories to check:**
+
 1. Broken Access Control — IDOR, RLS bypass, privilege escalation
 2. Cryptographic Failures — secrets in client bundle, HTTP vs. HTTPS, session storage
 3. Injection — SQL injection via search params, form fields, URL slugs
@@ -154,6 +162,7 @@ No design work in this ticket.
 10. Server-Side Request Forgery — any server-side URL fetch from user-controlled input
 
 **Key checks that commonly fail on first audit:**
+
 - Direct URL access to `/admin/*` with a supporter session — must redirect, not 403 with admin route confirmation
 - POST to a Server Action with a forged `listing_id` in the form payload
 - `GET /api/dashboard/analytics?listing_id=[other-owner-listing-id]` — must return 403
@@ -179,12 +188,12 @@ No design work in this ticket.
 
 ## Failure States
 
-| Failure | Resolution |
-|---|---|
-| Critical RLS bypass found | Hotfix ticket opened; RLS policy corrected; re-tested before launch |
+| Failure                                 | Resolution                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Critical RLS bypass found               | Hotfix ticket opened; RLS policy corrected; re-tested before launch                                              |
 | Service role key found in client bundle | Emergency hotfix; key rotated in Supabase and all environments; variable renamed to remove `NEXT_PUBLIC_` prefix |
-| IDOR vulnerability in a Route Handler | Hotfix ticket; ownership check added; tested before launch |
-| Known CVE in npm dependency | Dependency updated or replaced; `npm audit` re-run |
+| IDOR vulnerability in a Route Handler   | Hotfix ticket; ownership check added; tested before launch                                                       |
+| Known CVE in npm dependency             | Dependency updated or replaced; `npm audit` re-run                                                               |
 
 ---
 
@@ -204,13 +213,13 @@ This is an audit ticket. No accessibility requirements.
 
 ## QA Test Cases
 
-| # | Scenario | Role | Steps | Expected result |
-|---|---|---|---|---|
-| QA-1 | Unauthenticated access to `/dashboard` | Anonymous | Navigate to `https://theblacqlist.com/dashboard` without being signed in | Redirected to `/sign-in?next=/dashboard`; dashboard content not visible |
-| QA-2 | Non-admin access to `/admin` | Supporter | Sign in as supporter; navigate to `/admin` | Redirected to `/`; no "access denied" message that confirms `/admin` exists |
-| QA-3 | IDOR on analytics endpoint | Owner | Sign in as Owner A; GET `/api/dashboard/analytics?listing_id=[Owner B's listing ID]` | 403 response; no Owner B data returned |
-| QA-4 | Service role key not in client bundle | Any | Open browser DevTools → Network; load the homepage; search all responses for `service_role` | No response contains the string `service_role` |
-| QA-5 | RLS: draft listing not public | Anonymous | Direct Supabase JS query for a listing with `status = 'draft'` using the anon key | Zero rows returned |
+| #    | Scenario                               | Role      | Steps                                                                                       | Expected result                                                             |
+| ---- | -------------------------------------- | --------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| QA-1 | Unauthenticated access to `/dashboard` | Anonymous | Navigate to `https://theblacqlist.com/dashboard` without being signed in                    | Redirected to `/sign-in?next=/dashboard`; dashboard content not visible     |
+| QA-2 | Non-admin access to `/admin`           | Supporter | Sign in as supporter; navigate to `/admin`                                                  | Redirected to `/`; no "access denied" message that confirms `/admin` exists |
+| QA-3 | IDOR on analytics endpoint             | Owner     | Sign in as Owner A; GET `/api/dashboard/analytics?listing_id=[Owner B's listing ID]`        | 403 response; no Owner B data returned                                      |
+| QA-4 | Service role key not in client bundle  | Any       | Open browser DevTools → Network; load the homepage; search all responses for `service_role` | No response contains the string `service_role`                              |
+| QA-5 | RLS: draft listing not public          | Anonymous | Direct Supabase JS query for a listing with `status = 'draft'` using the anon key           | Zero rows returned                                                          |
 
 ---
 

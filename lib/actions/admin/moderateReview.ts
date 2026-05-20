@@ -1,12 +1,12 @@
-"use server"
+'use server'
 
-import { revalidatePath } from "next/cache"
-import { createServiceClient } from "@/lib/supabase/server"
-import { getAdminSession, writeAuditLog } from "@/lib/admin/guard"
-import { buildEntityUrl } from "@/lib/listings/url"
+import { revalidatePath } from 'next/cache'
+import { createServiceClient } from '@/lib/supabase/server'
+import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 export type ModerateReviewState =
-  | { success: true; reviewId: string; decision: "published" | "rejected" }
+  | { success: true; reviewId: string; decision: 'published' | 'rejected' }
   | { error: string }
   | null
 
@@ -15,51 +15,60 @@ export async function moderateReviewAction(
   formData: FormData
 ): Promise<ModerateReviewState> {
   const admin = await getAdminSession()
-  if (!admin) return { error: "You do not have permission to perform this action." }
+  if (!admin) return { error: 'You do not have permission to perform this action.' }
 
-  const reviewId = formData.get("review_id")?.toString().trim() ?? ""
-  const decision = formData.get("decision")?.toString().trim()
-  const rejectionReason = formData.get("rejection_reason")?.toString().trim() || null
+  const reviewId = formData.get('review_id')?.toString().trim() ?? ''
+  const decision = formData.get('decision')?.toString().trim()
+  const rejectionReason = formData.get('rejection_reason')?.toString().trim() || null
 
-  if (!reviewId) return { error: "Missing review ID." }
-  if (decision !== "published" && decision !== "rejected") {
+  if (!reviewId) return { error: 'Missing review ID.' }
+  if (decision !== 'published' && decision !== 'rejected') {
     return { error: "Decision must be 'published' or 'rejected'." }
   }
 
   const serviceClient = createServiceClient()
 
   const { data: review } = await serviceClient
-    .from("reviews")
-    .select("id, status, listing_id, listings(slug, entity_type, cities(slug))")
-    .eq("id", reviewId)
+    .from('reviews')
+    .select('id, status, listing_id, listings(slug, entity_type, cities(slug))')
+    .eq('id', reviewId)
     .maybeSingle()
 
-  if (!review) return { error: "Review not found." }
+  if (!review) return { error: 'Review not found.' }
 
   const now = new Date().toISOString()
   const updateData =
-    decision === "published"
-      ? { status: "published", published_at: now, reviewed_at: now, reviewed_by: admin.user.id }
-      : { status: "rejected", rejection_reason: rejectionReason, reviewed_at: now, reviewed_by: admin.user.id }
+    decision === 'published'
+      ? { status: 'published', published_at: now, reviewed_at: now, reviewed_by: admin.user.id }
+      : {
+          status: 'rejected',
+          rejection_reason: rejectionReason,
+          reviewed_at: now,
+          reviewed_by: admin.user.id,
+        }
 
   const { error: updateError } = await serviceClient
-    .from("reviews")
+    .from('reviews')
     .update(updateData)
-    .eq("id", reviewId)
+    .eq('id', reviewId)
 
-  if (updateError) return { error: "Failed to update review. Please try again." }
+  if (updateError) return { error: 'Failed to update review. Please try again.' }
 
   // Resolve moderation queue entry if present
   await serviceClient
-    .from("moderation_queue")
-    .update({ status: "resolved", resolved_at: now })
-    .eq("entity_id", reviewId)
-    .eq("queue_type", "review")
-    .eq("status", "pending")
+    .from('moderation_queue')
+    .update({ status: 'resolved', resolved_at: now })
+    .eq('entity_id', reviewId)
+    .eq('queue_type', 'review')
+    .eq('status', 'pending')
 
   // Revalidate the entity page when publishing
-  if (decision === "published") {
-    const listing = review.listings as { slug: string; entity_type: string; cities: { slug: string } | null } | null
+  if (decision === 'published') {
+    const listing = review.listings as {
+      slug: string
+      entity_type: string
+      cities: { slug: string } | null
+    } | null
     if (listing?.slug && listing?.entity_type) {
       revalidatePath(buildEntityUrl(listing.entity_type, listing.cities?.slug, listing.slug))
     }
@@ -67,8 +76,8 @@ export async function moderateReviewAction(
 
   void writeAuditLog({
     adminUserId: admin.user.id,
-    action: "moderate_review",
-    targetTable: "reviews",
+    action: 'moderate_review',
+    targetTable: 'reviews',
     targetId: reviewId,
     beforeState: { status: review.status },
     afterState: { status: decision },

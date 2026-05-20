@@ -1,25 +1,20 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Menu } from "lucide-react"
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { signOutAction } from "@/lib/actions/auth/signOut"
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Menu } from 'lucide-react'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { signOutAction } from '@/lib/actions/auth/signOut'
 
 const navLinks = [
-  { label: "Discover", href: "/discover" },
-  { label: "Search", href: "/search" },
-  { label: "Cities", href: "/cities" },
-  { label: "For Business", href: "/for-business" },
+  { label: 'Discover', href: '/discover' },
+  { label: 'Search', href: '/search' },
+  { label: 'Cities', href: '/cities' },
+  { label: 'For Business', href: '/for-business' },
 ] as const
 
 interface Props {
@@ -46,19 +41,16 @@ export function MobileNav({ isSignedIn }: Props) {
           aria-label="Open navigation menu"
           aria-expanded={isOpen}
           className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-md text-cream",
-            "hover:text-amber-gold transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg",
+            'flex h-11 w-11 items-center justify-center rounded-md text-cream',
+            'hover:text-amber-gold transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg'
           )}
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
       </SheetTrigger>
 
-      <SheetContent
-        side="right"
-        className="bg-deep-bg border-charcoal/30 p-0 w-4/5 max-w-sm"
-      >
+      <SheetContent side="right" className="bg-deep-bg border-charcoal/30 p-0 w-4/5 max-w-sm">
         {/* Visually hidden title for screen reader accessibility */}
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
 
@@ -82,12 +74,12 @@ export function MobileNav({ isSignedIn }: Props) {
                   <Link
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    aria-current={pathname === link.href ? "page" : undefined}
+                    aria-current={pathname === link.href ? 'page' : undefined}
                     className={cn(
-                      "flex items-center min-h-[48px] px-2 rounded-md font-subhead text-base transition-colors",
-                      "text-cream hover:text-amber-gold hover:bg-white/5",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold",
-                      pathname === link.href && "text-amber-gold",
+                      'flex items-center min-h-[48px] px-2 rounded-md font-subhead text-base transition-colors',
+                      'text-cream hover:text-amber-gold hover:bg-white/5',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold',
+                      pathname === link.href && 'text-amber-gold'
                     )}
                   >
                     {link.label}
@@ -112,10 +104,7 @@ export function MobileNav({ isSignedIn }: Props) {
                     My Account
                   </Link>
                 </Button>
-                <form
-                  action={signOutAction}
-                  onSubmit={() => setIsOpen(false)}
-                >
+                <form action={signOutAction} onSubmit={() => setIsOpen(false)}>
                   <Button
                     type="submit"
                     className="w-full h-12 border border-amber-gold text-amber-gold bg-transparent hover:bg-amber-gold/10 font-subhead font-bold"

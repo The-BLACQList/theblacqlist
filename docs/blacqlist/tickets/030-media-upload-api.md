@@ -18,6 +18,7 @@ The media upload endpoint is a gating dependency for every feature that involves
 This endpoint is documented in the API contract as Endpoint 21 (Upload Entity Media). The scope extension in this ticket covers the `subtype` parameter approach described in the ticket prompt (which aligns with the `media_role` field in the contract).
 
 Source artifacts:
+
 - `docs/blacqlist/architecture/api-contract.md` — Section 4, Endpoint 21: Upload Entity Media
 - `docs/blacqlist/ux/mvp-screen-map.md` — Add Business Step 5 (media upload), Page Editor gallery section, Claim form (document upload)
 - `docs/blacqlist/ux/empty-loading-error-success-states.md` — Section 11.2 (gallery image upload states in Page Editor)
@@ -35,6 +36,7 @@ This ticket depends on Ticket 002 (Supabase project setup with storage buckets c
 ## Scope
 
 **In scope:**
+
 - `app/api/upload/route.ts` — `POST` Route Handler, `Content-Type: multipart/form-data`
 - Form fields: `file` (binary/File), `bucket` (`'listing-media'` | `'verification-docs'` | `'receipts'`), `entity_type` (string, e.g., `'listing'`, `'user'`), `entity_id` (UUID of the parent entity), `media_role` (optional: `'logo'` | `'cover'` | `'gallery'` for listing-media bucket; `'claim-doc'` for verification-docs; `'receipt'` for receipts)
 - MIME type validation from file bytes (NOT from `Content-Type` header): use the `file-type` npm package or buffer magic bytes inspection. Reject if MIME does not match the allowed set for the bucket.
@@ -62,6 +64,7 @@ This ticket depends on Ticket 002 (Supabase project setup with storage buckets c
 - Analytics event: `media_uploaded` — properties: `{ listing_id: entity_id, file_type: mime, bucket, media_role }`
 
 **Out of scope:**
+
 - Image resizing, compression, or thumbnail generation (V1 — use Supabase Image Transform or an edge function)
 - Video upload (V1)
 - Audio upload (not planned)
@@ -73,14 +76,14 @@ This ticket depends on Ticket 002 (Supabase project setup with storage buckets c
 
 ## Dependencies
 
-| Dependency | Type | Status |
-|---|---|---|
+| Dependency                                                                                              | Type           | Status                                                         |
+| ------------------------------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- |
 | BLACQ-002: Supabase project setup with `listing-media`, `verification-docs`, `receipts` buckets created | Infrastructure | Not started — bucket names and RLS policies must be configured |
-| `media_attachments` table in the database schema | Database | Must exist (Ticket 009 or earlier schema ticket) |
-| `listings` table with `owner_user_id` column | Database | Must exist |
-| `file-type` npm package (or equivalent buffer magic bytes library) | Dependency | Must be installed: `npm install file-type` |
-| Supabase service_role key available as `SUPABASE_SERVICE_ROLE_KEY` env var | Environment | Must be set |
-| `uuid` generation: `crypto.randomUUID()` available in Node.js 18+ | Runtime | Available in Next.js 14 |
+| `media_attachments` table in the database schema                                                        | Database       | Must exist (Ticket 009 or earlier schema ticket)               |
+| `listings` table with `owner_user_id` column                                                            | Database       | Must exist                                                     |
+| `file-type` npm package (or equivalent buffer magic bytes library)                                      | Dependency     | Must be installed: `npm install file-type`                     |
+| Supabase service_role key available as `SUPABASE_SERVICE_ROLE_KEY` env var                              | Environment    | Must be set                                                    |
+| `uuid` generation: `crypto.randomUUID()` available in Node.js 18+                                       | Runtime        | Available in Next.js 14                                        |
 
 ---
 
@@ -147,26 +150,28 @@ Not applicable — this is a pure API ticket with no UI components. The upload s
 - **Response:** `{ data: { path: string } }` — HTTP 201
 - **Error codes:**
 
-| Code | HTTP | Condition |
-|---|---|---|
-| `AUTH_REQUIRED` | 401 | No valid session |
-| `FORBIDDEN` | 403 | `owner_user_id != auth.uid()` for listing-media |
-| `VALIDATION_ERROR` | 400 | Missing required fields, invalid bucket value, invalid UUID for entity_id |
-| `INVALID_FILE_TYPE` | 400 | MIME type not allowed for the target bucket |
-| `FILE_TOO_LARGE` | 413 | File exceeds size limit for the bucket + media_role combination |
-| `UPLOAD_FAILED` | 500 | Supabase Storage upload rejected or timed out |
+| Code                | HTTP | Condition                                                                 |
+| ------------------- | ---- | ------------------------------------------------------------------------- |
+| `AUTH_REQUIRED`     | 401  | No valid session                                                          |
+| `FORBIDDEN`         | 403  | `owner_user_id != auth.uid()` for listing-media                           |
+| `VALIDATION_ERROR`  | 400  | Missing required fields, invalid bucket value, invalid UUID for entity_id |
+| `INVALID_FILE_TYPE` | 400  | MIME type not allowed for the target bucket                               |
+| `FILE_TOO_LARGE`    | 413  | File exceeds size limit for the bucket + media_role combination           |
+| `UPLOAD_FAILED`     | 500  | Supabase Storage upload rejected or timed out                             |
 
 ---
 
 ## Implementation Notes
 
 **Files to create:**
+
 - `app/api/upload/route.ts` — Route Handler, exports `POST`
 - `lib/services/upload.ts` — `uploadFile(params: UploadParams): Promise<{ path: string }>` — service function with validation, ownership check, storage upload, and `media_attachments` INSERT
 - `lib/validations/upload.ts` — zod schema for upload form fields
 - `lib/utils/mime.ts` — `validateMimeType(buffer: Buffer, allowedTypes: string[]): Promise<string | null>` — reads magic bytes using `file-type`, returns detected MIME or null if not in allowed set. Also exports `mimeToExtension(mime: string): string`.
 
 **Files to modify:**
+
 - `package.json` — add `file-type` dependency (run `npm install file-type`)
 
 **Key patterns:**
@@ -175,9 +180,14 @@ Not applicable — this is a pure API ticket with no UI components. The upload s
 // app/api/upload/route.ts
 export async function POST(request: Request) {
   const supabase = createRouteHandlerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
-    return Response.json({ error: 'Authentication required', code: 'AUTH_REQUIRED' }, { status: 401 })
+    return Response.json(
+      { error: 'Authentication required', code: 'AUTH_REQUIRED' },
+      { status: 401 }
+    )
   }
 
   const formData = await request.formData()
@@ -190,25 +200,45 @@ export async function POST(request: Request) {
   // Validate fields with zod
   const validated = uploadSchema.safeParse({ bucket, entityId, entityType, mediaRole })
   if (!validated.success) {
-    return Response.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', fields: validated.error.flatten().fieldErrors }, { status: 400 })
+    return Response.json(
+      {
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        fields: validated.error.flatten().fieldErrors,
+      },
+      { status: 400 }
+    )
   }
 
   // File size check
   const sizeLimit = getSizeLimit(bucket, mediaRole)
   if (file.size > sizeLimit) {
-    return Response.json({ error: `File too large. Maximum size is ${formatBytes(sizeLimit)}.`, code: 'FILE_TOO_LARGE' }, { status: 413 })
+    return Response.json(
+      {
+        error: `File too large. Maximum size is ${formatBytes(sizeLimit)}.`,
+        code: 'FILE_TOO_LARGE',
+      },
+      { status: 413 }
+    )
   }
 
   // MIME validation from bytes
   const buffer = Buffer.from(await file.arrayBuffer())
   const detectedMime = await validateMimeType(buffer, getAllowedMimes(bucket))
   if (!detectedMime) {
-    return Response.json({ error: 'File type not supported.', code: 'INVALID_FILE_TYPE' }, { status: 400 })
+    return Response.json(
+      { error: 'File type not supported.', code: 'INVALID_FILE_TYPE' },
+      { status: 400 }
+    )
   }
 
   // Ownership check for listing-media
   if (bucket === 'listing-media') {
-    const { data: listing } = await supabase.from('listings').select('owner_user_id').eq('id', entityId).single()
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('owner_user_id')
+      .eq('id', entityId)
+      .single()
     if (!listing || listing.owner_user_id !== user.id) {
       return Response.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 })
     }
@@ -221,10 +251,15 @@ export async function POST(request: Request) {
 
   // Upload to Supabase Storage (service_role client)
   const serviceClient = createServiceRoleClient()
-  const { error: uploadError } = await serviceClient.storage.from(bucket).upload(path, buffer, { contentType: detectedMime })
+  const { error: uploadError } = await serviceClient.storage
+    .from(bucket)
+    .upload(path, buffer, { contentType: detectedMime })
   if (uploadError) {
     console.error('[upload] Storage error:', uploadError)
-    return Response.json({ error: 'Upload failed. Please try again.', code: 'UPLOAD_FAILED' }, { status: 500 })
+    return Response.json(
+      { error: 'Upload failed. Please try again.', code: 'UPLOAD_FAILED' },
+      { status: 500 }
+    )
   }
 
   // Insert media_attachments record for gallery uploads
@@ -245,8 +280,16 @@ export async function POST(request: Request) {
 
 ```typescript
 // Storage path construction
-function buildStoragePath(bucket: string, entityId: string, mediaRole: string | null, uuid: string, ext: string, userId: string): string {
-  if (bucket === 'listing-media') return `listings/${entityId}/${mediaRole ?? 'gallery'}/${uuid}.${ext}`
+function buildStoragePath(
+  bucket: string,
+  entityId: string,
+  mediaRole: string | null,
+  uuid: string,
+  ext: string,
+  userId: string
+): string {
+  if (bucket === 'listing-media')
+    return `listings/${entityId}/${mediaRole ?? 'gallery'}/${uuid}.${ext}`
   if (bucket === 'verification-docs') return `claims/${entityId}/${uuid}.${ext}`
   if (bucket === 'receipts') return `receipts/${userId}/${uuid}.${ext}`
   throw new Error(`Unknown bucket: ${bucket}`)
@@ -257,21 +300,25 @@ function buildStoragePath(bucket: string, entityId: string, mediaRole: string | 
 // File size limits
 function getSizeLimit(bucket: string, mediaRole: string | null): number {
   if (bucket === 'listing-media') {
-    if (mediaRole === 'cover') return 5 * 1024 * 1024    // 5MB
-    if (mediaRole === 'logo') return 2 * 1024 * 1024     // 2MB
-    return 3 * 1024 * 1024                               // 3MB gallery
+    if (mediaRole === 'cover') return 5 * 1024 * 1024 // 5MB
+    if (mediaRole === 'logo') return 2 * 1024 * 1024 // 2MB
+    return 3 * 1024 * 1024 // 3MB gallery
   }
-  return 10 * 1024 * 1024                                // 10MB (verification-docs, receipts)
+  return 10 * 1024 * 1024 // 10MB (verification-docs, receipts)
 }
 ```
 
 **`file-type` usage:**
+
 ```typescript
 import { fileTypeFromBuffer } from 'file-type'
 
-export async function validateMimeType(buffer: Buffer, allowedTypes: string[]): Promise<string | null> {
+export async function validateMimeType(
+  buffer: Buffer,
+  allowedTypes: string[]
+): Promise<string | null> {
   const result = await fileTypeFromBuffer(buffer)
-  if (!result) return null  // Cannot detect type
+  if (!result) return null // Cannot detect type
   if (!allowedTypes.includes(result.mime)) return null
   return result.mime
 }
@@ -280,6 +327,7 @@ export async function validateMimeType(buffer: Buffer, allowedTypes: string[]): 
 **Note:** `file-type` is an ESM-only package as of version 19+. Ensure the Next.js project is configured to handle ESM dependencies, OR use version 16.x (last CommonJS-compatible version). Check `package.json` `type` field before installing.
 
 **Do not:**
+
 - Trust `file.type` from the `File` object or `Content-Type` from the request — always inspect magic bytes.
 - Use the original filename from the `File` object — always generate a UUID filename.
 - Store CDN URLs in the database or return them in the response — return only the storage path.
@@ -308,15 +356,15 @@ export async function validateMimeType(buffer: Buffer, allowedTypes: string[]): 
 
 ## Failure States
 
-| Failure | Condition | Response | Recovery |
-|---|---|---|---|
-| File field missing from FormData | Request malformed | 400 VALIDATION_ERROR: "file is required" | Client must include the file field |
-| Supabase Storage upload fails | Network issue, quota exceeded, or storage error | 500 UPLOAD_FAILED — safe message, full error logged | Client shows "Upload failed. Try again." |
-| `media_attachments` INSERT fails after successful upload | Database write error | 500 UPLOAD_FAILED — the file is in storage but no record exists. Log the orphaned path for cleanup. | Admin cleanup job; client shows "Upload failed" |
-| Invalid `entity_id` UUID format | Malformed UUID in form field | 400 VALIDATION_ERROR | Client corrects the UUID |
-| Invalid `bucket` value | Not one of the three valid bucket names | 400 VALIDATION_ERROR | Client must use the correct bucket name |
-| File with zero bytes | Empty file upload | 400 INVALID_FILE_TYPE — `file-type` returns null for empty buffer | Client re-selects the file |
-| Ownership check: listing not found | `entity_id` does not match any listing | 403 FORBIDDEN — treated as ownership failure (do not reveal whether the listing exists) | N/A |
+| Failure                                                  | Condition                                       | Response                                                                                            | Recovery                                        |
+| -------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| File field missing from FormData                         | Request malformed                               | 400 VALIDATION_ERROR: "file is required"                                                            | Client must include the file field              |
+| Supabase Storage upload fails                            | Network issue, quota exceeded, or storage error | 500 UPLOAD_FAILED — safe message, full error logged                                                 | Client shows "Upload failed. Try again."        |
+| `media_attachments` INSERT fails after successful upload | Database write error                            | 500 UPLOAD_FAILED — the file is in storage but no record exists. Log the orphaned path for cleanup. | Admin cleanup job; client shows "Upload failed" |
+| Invalid `entity_id` UUID format                          | Malformed UUID in form field                    | 400 VALIDATION_ERROR                                                                                | Client corrects the UUID                        |
+| Invalid `bucket` value                                   | Not one of the three valid bucket names         | 400 VALIDATION_ERROR                                                                                | Client must use the correct bucket name         |
+| File with zero bytes                                     | Empty file upload                               | 400 INVALID_FILE_TYPE — `file-type` returns null for empty buffer                                   | Client re-selects the file                      |
+| Ownership check: listing not found                       | `entity_id` does not match any listing          | 403 FORBIDDEN — treated as ownership failure (do not reveal whether the listing exists)             | N/A                                             |
 
 ---
 
@@ -340,17 +388,17 @@ Not applicable — this is a server-side API endpoint with no UI.
 
 ## QA Test Cases
 
-| ID | Test | Steps | Expected |
-|---|---|---|---|
-| QA-030-1 | Valid JPEG gallery upload | POST to `/api/upload` with valid JPEG, bucket=listing-media, media_role=gallery, valid entity_id | 201 response; `{ data: { path: "listings/[id]/gallery/[uuid].jpg" } }`; record in `media_attachments` |
-| QA-030-2 | File too large (cover) | POST 6MB JPEG with media_role=cover | 413 FILE_TOO_LARGE; no file in storage |
-| QA-030-3 | MIME type mismatch (magic bytes) | POST file with `.jpg` extension but PDF magic bytes | 400 INVALID_FILE_TYPE; no file in storage |
-| QA-030-4 | Unauthenticated upload | POST without session cookie | 401 AUTH_REQUIRED |
-| QA-030-5 | Wrong owner | POST with valid JPEG to a listing owned by a different user | 403 FORBIDDEN; no file in storage |
-| QA-030-6 | PDF to verification-docs | POST PDF (< 10MB) to bucket=verification-docs | 201 response; path format `claims/[entity_id]/[uuid].pdf` |
-| QA-030-7 | PDF to listing-media (invalid) | POST PDF to bucket=listing-media | 400 INVALID_FILE_TYPE |
-| QA-030-8 | Logo upload — no media_attachments record | POST JPEG with media_role=logo | 201 response; path format `listings/[id]/logo/[uuid].jpg`; NO record inserted into `media_attachments` |
-| QA-030-9 | WebP upload | POST WebP image to listing-media | 201 response; path ends in `.webp` |
+| ID       | Test                                      | Steps                                                                                            | Expected                                                                                               |
+| -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| QA-030-1 | Valid JPEG gallery upload                 | POST to `/api/upload` with valid JPEG, bucket=listing-media, media_role=gallery, valid entity_id | 201 response; `{ data: { path: "listings/[id]/gallery/[uuid].jpg" } }`; record in `media_attachments`  |
+| QA-030-2 | File too large (cover)                    | POST 6MB JPEG with media_role=cover                                                              | 413 FILE_TOO_LARGE; no file in storage                                                                 |
+| QA-030-3 | MIME type mismatch (magic bytes)          | POST file with `.jpg` extension but PDF magic bytes                                              | 400 INVALID_FILE_TYPE; no file in storage                                                              |
+| QA-030-4 | Unauthenticated upload                    | POST without session cookie                                                                      | 401 AUTH_REQUIRED                                                                                      |
+| QA-030-5 | Wrong owner                               | POST with valid JPEG to a listing owned by a different user                                      | 403 FORBIDDEN; no file in storage                                                                      |
+| QA-030-6 | PDF to verification-docs                  | POST PDF (< 10MB) to bucket=verification-docs                                                    | 201 response; path format `claims/[entity_id]/[uuid].pdf`                                              |
+| QA-030-7 | PDF to listing-media (invalid)            | POST PDF to bucket=listing-media                                                                 | 400 INVALID_FILE_TYPE                                                                                  |
+| QA-030-8 | Logo upload — no media_attachments record | POST JPEG with media_role=logo                                                                   | 201 response; path format `listings/[id]/logo/[uuid].jpg`; NO record inserted into `media_attachments` |
+| QA-030-9 | WebP upload                               | POST WebP image to listing-media                                                                 | 201 response; path ends in `.webp`                                                                     |
 
 ---
 

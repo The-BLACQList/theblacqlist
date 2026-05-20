@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { useActionState } from "react"
-import { useFormStatus } from "react-dom"
-import Link from "next/link"
-import { ArrowLeft, Loader2, CheckCircle } from "lucide-react"
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
+import Link from 'next/link'
+import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 
-import { updateProfileAction } from "@/lib/actions/account/updateProfile"
-import { cn } from "@/lib/utils"
+import { updateProfileAction } from '@/lib/actions/account/updateProfile'
+import { cn } from '@/lib/utils'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -14,11 +14,11 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      aria-label={pending ? "Saving changes…" : "Save changes"}
+      aria-label={pending ? 'Saving changes…' : 'Save changes'}
       className="h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? "Saving…" : "Save changes"}
+      {pending ? 'Saving…' : 'Save changes'}
     </button>
   )
 }
@@ -26,20 +26,15 @@ function SubmitButton() {
 export default function AccountSettingsPage() {
   const [state, action] = useActionState(updateProfileAction, null)
 
-  const isSuccess = state && "success" in state && state.success
+  const isSuccess = state && 'success' in state && state.success
 
   const getFieldError = (field: string) =>
-    state &&
-    "fieldErrors" in state &&
-    state.fieldErrors &&
-    field in state.fieldErrors
+    state && 'fieldErrors' in state && state.fieldErrors && field in state.fieldErrors
       ? state.fieldErrors[field as keyof typeof state.fieldErrors]
       : null
 
   const generalError =
-    state && "error" in state && !("fieldErrors" in state && state.fieldErrors)
-      ? state.error
-      : null
+    state && 'error' in state && !('fieldErrors' in state && state.fieldErrors) ? state.error : null
 
   return (
     <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
@@ -53,9 +48,7 @@ export default function AccountSettingsPage() {
           Back to account
         </Link>
 
-        <h1 className="font-headline text-3xl text-brand-black mb-6">
-          Account settings
-        </h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-6">Account settings</h1>
 
         {isSuccess && (
           <div
@@ -92,37 +85,28 @@ export default function AccountSettingsPage() {
                 type="text"
                 autoComplete="name"
                 maxLength={100}
-                aria-describedby={
-                  getFieldError("display_name")
-                    ? "display_name-error"
-                    : undefined
-                }
-                aria-invalid={!!getFieldError("display_name")}
+                aria-describedby={getFieldError('display_name') ? 'display_name-error' : undefined}
+                aria-invalid={!!getFieldError('display_name')}
                 className={cn(
-                  "h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black",
-                  getFieldError("display_name")
-                    ? "border-red-400"
-                    : "border-charcoal/30"
+                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                  getFieldError('display_name') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="Your name"
               />
-              {getFieldError("display_name") && (
+              {getFieldError('display_name') && (
                 <p
                   id="display_name-error"
                   role="alert"
                   className="text-xs font-subhead text-red-600 mt-0.5"
                 >
-                  {getFieldError("display_name")}
+                  {getFieldError('display_name')}
                 </p>
               )}
             </div>
 
             {/* Bio */}
             <div className="flex flex-col gap-1">
-              <label
-                htmlFor="bio"
-                className="font-subhead text-sm font-semibold text-brand-black"
-              >
+              <label htmlFor="bio" className="font-subhead text-sm font-semibold text-brand-black">
                 Bio
               </label>
               <textarea
@@ -130,27 +114,20 @@ export default function AccountSettingsPage() {
                 name="bio"
                 rows={3}
                 maxLength={500}
-                aria-describedby={cn(
-                  "bio-hint",
-                  getFieldError("bio") ? "bio-error" : undefined
-                )}
-                aria-invalid={!!getFieldError("bio")}
+                aria-describedby={cn('bio-hint', getFieldError('bio') ? 'bio-error' : undefined)}
+                aria-invalid={!!getFieldError('bio')}
                 className={cn(
-                  "rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 py-2.5 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none",
-                  getFieldError("bio") ? "border-red-400" : "border-charcoal/30"
+                  'rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 py-2.5 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none',
+                  getFieldError('bio') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="A little about you…"
               />
               <p id="bio-hint" className="text-xs font-subhead text-charcoal/50">
                 Max 500 characters.
               </p>
-              {getFieldError("bio") && (
-                <p
-                  id="bio-error"
-                  role="alert"
-                  className="text-xs font-subhead text-red-600 mt-0.5"
-                >
-                  {getFieldError("bio")}
+              {getFieldError('bio') && (
+                <p id="bio-error" role="alert" className="text-xs font-subhead text-red-600 mt-0.5">
+                  {getFieldError('bio')}
                 </p>
               )}
             </div>
@@ -168,25 +145,21 @@ export default function AccountSettingsPage() {
                 name="website_url"
                 type="url"
                 autoComplete="url"
-                aria-describedby={
-                  getFieldError("website_url") ? "website_url-error" : undefined
-                }
-                aria-invalid={!!getFieldError("website_url")}
+                aria-describedby={getFieldError('website_url') ? 'website_url-error' : undefined}
+                aria-invalid={!!getFieldError('website_url')}
                 className={cn(
-                  "h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black",
-                  getFieldError("website_url")
-                    ? "border-red-400"
-                    : "border-charcoal/30"
+                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                  getFieldError('website_url') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="https://yourwebsite.com"
               />
-              {getFieldError("website_url") && (
+              {getFieldError('website_url') && (
                 <p
                   id="website_url-error"
                   role="alert"
                   className="text-xs font-subhead text-red-600 mt-0.5"
                 >
-                  {getFieldError("website_url")}
+                  {getFieldError('website_url')}
                 </p>
               )}
             </div>

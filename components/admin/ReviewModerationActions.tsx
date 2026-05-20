@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useActionState, useState } from "react"
-import { Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react"
-import { moderateReviewAction } from "@/lib/actions/admin/moderateReview"
+import { useActionState, useState } from 'react'
+import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { moderateReviewAction } from '@/lib/actions/admin/moderateReview'
 
 interface Props {
   reviewId: string
@@ -11,10 +11,10 @@ interface Props {
 export function ReviewModerationActions({ reviewId }: Props) {
   const [state, action, isPending] = useActionState(moderateReviewAction, null)
   const [showRejectForm, setShowRejectForm] = useState(false)
-  const [rejectionReason, setRejectionReason] = useState("")
+  const [rejectionReason, setRejectionReason] = useState('')
 
-  if (state && "success" in state) {
-    return state.decision === "published" ? (
+  if (state && 'success' in state) {
+    return state.decision === 'published' ? (
       <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-3">
         <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
         <p className="font-subhead text-sm font-semibold text-green-700">
@@ -24,17 +24,18 @@ export function ReviewModerationActions({ reviewId }: Props) {
     ) : (
       <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3">
         <XCircle className="size-4 text-red-600 shrink-0" aria-hidden="true" />
-        <p className="font-subhead text-sm font-semibold text-red-700">
-          Review rejected.
-        </p>
+        <p className="font-subhead text-sm font-semibold text-red-700">Review rejected.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
-      {state && "error" in state && (
-        <div role="alert" className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+      {state && 'error' in state && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3"
+        >
           <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
           <p className="font-body text-sm text-red-700">{state.error}</p>
         </div>
