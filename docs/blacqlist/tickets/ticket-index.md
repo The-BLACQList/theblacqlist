@@ -1,0 +1,105 @@
+# BLACQList Dev Ticket Index
+
+**Total tickets:** 95
+**Phases:** 0–18
+**Last updated:** 2026-05-07
+
+---
+
+| # | Title | Phase | Priority | Depends On | Can Build Now | Notes |
+|---|---|---|---|---|---|---|
+| [001](001-nextjs-project-init.md) | Next.js 14 project initialization and tooling | Phase 0 | P0 | — | Yes | Start here |
+| [002](002-supabase-setup.md) | Supabase project setup and environment configuration | Phase 0 | P0 | 001 | After deps | |
+| [003](003-vercel-deployment-pipeline.md) | Vercel deployment pipeline and preview environments | Phase 0 | P0 | 001 | After deps | |
+| [004](004-error-tracking-sentry.md) | Error tracking setup (Sentry) | Phase 0 | P1 | 001, 002, 003 | After deps | |
+| [005](005-code-quality-tooling.md) | Code quality tooling (ESLint, Prettier, Husky, commitlint) | Phase 0 | P1 | 001 | After deps | |
+| [006](006-geographic-tables-migration.md) | Geographic reference tables migration (states, cities) | Phase 1 | P0 | 002 | After deps | |
+| [007](007-category-taxonomy-migration.md) | Category taxonomy migration and seed data | Phase 1 | P0 | 006 | After deps | |
+| [008](008-user-profiles-roles-migration.md) | User profiles and roles migration | Phase 1 | P0 | 006 | After deps | |
+| [009](009-listings-base-business-extension-migration.md) | Listings base table and business extension migration | Phase 1 | P0 | 006, 007, 008 | After deps | |
+| [010](010-listing-supplementary-tables-migration.md) | Listing supplementary tables (hours, links, services, media) | Phase 1 | P0 | 009 | After deps | |
+| [011](011-engagement-tables-migration.md) | Engagement tables migration (saves, claims, reviews, collections) | Phase 1 | P0 | 009 | After deps | |
+| [012](012-analytics-audit-tables-migration.md) | Analytics and audit tables migration | Phase 1 | P1 | 009 | After deps | |
+| [013](013-rls-policies-all-mvp-tables.md) | RLS policies for all 21 MVP tables | Phase 1 | P0 | 006–012 | After deps | |
+| [014](014-auth-flows.md) | Auth flows — sign up, sign in, sign out, verify, reset | Phase 1 | P0 | 013, 015 | After deps | |
+| [015](015-app-shell-layout.md) | App shell — root layout, nav, fonts, brand tokens, CSS | Phase 2 | P0 | 001 | After deps | |
+| [016](016-homepage.md) | Homepage page component | Phase 2 | P1 | 015, 009 | After deps | |
+| [017](017-for-business-about-pages.md) | For Business and About static pages | Phase 2 | P2 | 015 | After deps | |
+| [018](018-legal-pages.md) | Legal pages — Privacy Policy and Terms of Service | Phase 2 | P1 | 015 | After deps | [LEGAL REVIEW REQUIRED] before merge |
+| [019](019-404-error-loading-pages.md) | 404, error boundary, and route-level loading pages | Phase 2 | P1 | 015 | After deps | |
+| [020](020-blacqlist-page-data-layer.md) | BLACQList Page — route, data layer, and page component | Phase 2 | P0 | 009, 010, 013, 015 | After deps | |
+| [021](021-blacqlist-page-hero-about-hours-contact-social.md) | BLACQList Page: hero, about, hours, contact, social sections | Phase 3 | P1 | 020 | After deps | |
+| [022](022-blacqlist-page-gallery-services-cta.md) | BLACQList Page: gallery, services, and primary CTA sections | Phase 3 | P1 | 021, 020 | After deps | |
+| [023](023-blacqlist-page-seo-og-jsonld-sitemap.md) | BLACQList Page: SEO metadata, OG image, JSON-LD, sitemap | Phase 3 | P1 | 020 | After deps | |
+| [024](024-blacqlist-page-save-share-analytics-sticky-cta.md) | BLACQList Page: save/share, sticky CTA bar, analytics events | Phase 3 | P1 | 022 | After deps | |
+| [025](025-search-api-endpoint.md) | Search API endpoint (GET /api/search) | Phase 4 | P0 | 009, 013 | After deps | |
+| [026](026-search-results-page.md) | Search results page (/search) | Phase 4 | P1 | 025, 015 | After deps | |
+| [027](027-city-landing-pages.md) | City landing pages (/[city-slug]) | Phase 4 | P1 | 025, 015 | After deps | |
+| [028](028-city-category-landing-pages.md) | City + category landing pages (/[city-slug]/[category-slug]) | Phase 4 | P1 | 027 | After deps | Note routing conflict with entity-type segments |
+| [029](029-discover-browse-page.md) | Discover / browse page (/discover) | Phase 4 | P2 | 025, 026 | After deps | |
+| [030](030-media-upload-api.md) | Media upload API (POST /api/upload) | Phase 5 | P0 | 002 | After deps | file-type npm package v19+ is ESM-only — check compat |
+| [031](031-listing-duplicate-check-api.md) | Listing duplicate-check API | Phase 5 | P1 | 009, 013 | After deps | |
+| [032](032-add-business-form-steps-1-4.md) | Add Business multi-step form — steps 1–4 | Phase 5 | P1 | 014, 031 | After deps | |
+| [033](033-add-business-form-steps-5-7.md) | Add Business multi-step form — steps 5–7 | Phase 5 | P1 | 032, 030, 031 | After deps | |
+| [034](034-claim-entry-page.md) | Claim entry page (/claim) | Phase 5 | P1 | 025, 014 | After deps | |
+| [035](035-claim-form-doc-upload.md) | Claim form and verification document upload (/claim/[listing-id]) | Phase 5 | P1 | 034, 030 | After deps | |
+| [036](036-claim-status-tracking.md) | Claim status tracking page (/account/claims) | Phase 5 | P2 | 035, 014 | After deps | |
+| [037](037-admin-layout-nav-auth-guard.md) | Admin layout, navigation, and auth guard | Phase 6 | P0 | 008, 013, 058 | After deps | |
+| [038](038-admin-listings-table.md) | Admin listings table (/admin/listings) | Phase 6 | P1 | 037 | After deps | listings.status CHECK constraint does not include 'rejected' — verify before implementing rejectEntity SA |
+| [039](039-admin-listing-detail-edit.md) | Admin listing detail and edit (/admin/listings/[id]) | Phase 6 | P1 | 038 | After deps | |
+| [040](040-admin-claims-queue.md) | Admin claims queue (/admin/claims) | Phase 6 | P0 | 037, 011 | After deps | |
+| [041](041-admin-claim-review-approve-reject.md) | Admin claim review — approve/reject (/admin/claims/[id]) | Phase 6 | P0 | 040, 037 | After deps | approveClaim SA must be atomic — recommend Supabase RPC function |
+| [042](042-admin-users-table.md) | Admin users table — view, role change, suspend (/admin/users) | Phase 6 | P1 | 037, 008 | After deps | profiles.suspended_at column must be added (patch 008 migration or add in 042) |
+| [043](043-admin-collections-management.md) | Admin collections management table and editor (/admin/collections) | Phase 6 | P2 | 037, 011 | After deps | |
+| [044](044-admin-category-management.md) | Admin category management (/admin/categories) | Phase 6 | P2 | 037, 007 | After deps | |
+| [045](045-save-unsave-api-button-component.md) | Save/unsave API routes and SaveButton component | Phase 7 | P1 | 011, 013 | After deps | |
+| [046](046-saved-listings-page.md) | Saved listings page (/account/saved) | Phase 7 | P1 | 045, 013, 014 | After deps | |
+| [047](047-share-functionality.md) | Share functionality — copy link, OG preview, Web Share API | Phase 7 | P2 | 023, 049 | After deps | |
+| [048](048-review-intake-server-actions.md) | Review intake server actions and form (createReview, updateReview) | Phase 7 | P1 | 011, 013, 014 | After deps | Reviews stored status='intake'; NOT displayed publicly at MVP |
+| [049](049-analytics-event-ingestion-api.md) | Analytics event ingestion API (POST /api/analytics/event) | Phase 7 | P1 | 012 | After deps | |
+| [050](050-owner-dashboard-home.md) | Owner dashboard home — stats, claim status, checklist (/dashboard) | Phase 8 | P1 | 013, 014, 049, 009 | After deps | |
+| [051](051-page-editor-hero-about.md) | Page editor — hero and about sections (/dashboard/page) | Phase 8 | P1 | 050, 030, 009, 010, 013, 014 | After deps | |
+| [052](052-page-editor-contact-hours-social.md) | Page editor — contact, hours, and social links sections | Phase 8 | P1 | 051, 010, 013, 014 | After deps | |
+| [053](053-page-editor-gallery-management.md) | Page editor — gallery management (upload, reorder, delete) | Phase 8 | P1 | 051, 030, 010, 013, 014 | After deps | |
+| [054](054-services-manager.md) | Services manager — CRUD + drag-to-reorder (/dashboard/services) | Phase 8 | P1 | 050, 010, 013, 014 | After deps | |
+| [055](055-page-editor-cta-publish-settings.md) | Page editor — CTA configuration and publish/unpublish settings | Phase 8 | P1 | 051, 052, 009, 010, 013, 014 | After deps | |
+| [056](056-account-settings.md) | Account settings — profile, password, delete account (/account/settings) | Phase 9 | P1 | 014, 015, 058, 008, 030 | After deps | |
+| [057](057-user-onboarding-flow.md) | User onboarding flow — post-signup role selection (/onboarding) | Phase 9 | P1 | 014, 015, 008, 013, 058 | After deps | |
+| [058](058-auth-middleware.md) | Auth middleware — route protection, role guards, session refresh | Phase 9 | P0 | 014, 008, 002 | After deps | Blocks all protected routes (037, 050, 056, 057) |
+| [059](059-collections-index-page.md) | Collections index page (/collections) | Phase 10 | P2 | 011, 015 | After deps | |
+| [060](060-collection-detail-page.md) | Collection detail page (/collection/[slug]) | Phase 10 | P2 | 059, 049 | After deps | |
+| [061](061-admin-collection-editor.md) | Admin collection editor — create, add/remove/reorder, publish | Phase 10 | P2 | 037, 043, 011, 030 | After deps | |
+| [062](062-homepage-featured-section.md) | Homepage featured section — featured listings and collection slot | Phase 10 | P1 | 016, 011, 012 | After deps | |
+| [063](063-receipt-upload-api.md) | Receipt upload API — POST to receipts bucket, signed URL generation | Phase 11 | P2 | 002, 014 | After deps | client_idempotency_key column must exist in receipt_uploads migration |
+| [064](064-receipt-submission-form.md) | Receipt submission form — manual entry, camera capture, OCR stub | Phase 11 | P2 | 014, 063, 015 | After deps | client_idempotency_key must be generated client-side and sent with upload |
+| [065](065-admin-receipts-queue.md) | Admin receipts review queue (/admin/receipts) | Phase 11 | P2 | 037, 063 | After deps | |
+| [066](066-supporter-receipts-history.md) | Supporter receipts history list view (/account/receipts) | Phase 11 | P2 | 014, 015, 063 | After deps | |
+| [067](067-flow-map-data-model.md) | Flow map data model — spend_events, flow_nodes, flow_edges | Phase 12 | P3 | 002, 009, 006 | After deps | |
+| [068](068-community-spend-api-widget.md) | Community spend aggregate API and public display widget | Phase 12 | P3 | 067, 016 | After deps | |
+| [069](069-personal-impact-api.md) | Personal impact API (GET /api/flow/personal-impact) | Phase 12 | P3 | 014, 067, 063 | After deps | |
+| [070](070-vendor-listing-extension.md) | Vendor listing extension table and API | Phase 13 | P3 | 009 | After deps | |
+| [071](071-products-table-and-api.md) | Products table migration and API endpoints | Phase 13 | P3 | 070, 009, 013 | After deps | products.status in DB exposed as is_active: boolean in API — document translation |
+| [072](072-vendor-storefront-page.md) | Vendor storefront page (/[city-slug]/vendor/[listing-slug]) | Phase 13 | P3 | 071, 070, 020, 021, 022, 023 | After deps | |
+| [073](073-product-crud-server-actions.md) | Product create/update/delete Server Actions (/dashboard/products) | Phase 13 | P3 | 071, 030, 014, 050 | After deps | |
+| [074](074-admin-product-moderation.md) | Admin product moderation (/admin/products) | Phase 13 | P3 | 073, 071, 037, 012 | After deps | |
+| [075](075-plans-subscriptions-stripe-setup.md) | Plans and subscriptions tables and Stripe integration setup | Phase 14 | P3 | 009 | After deps | Stripe Connect (payouts) is V2 — this ticket covers subscriptions only |
+| [076](076-listing-tier-upgrade-flow.md) | Listing tier upgrade flow — Stripe Checkout (/dashboard/billing) | Phase 14 | P3 | 075, 050, 014 | After deps | Stripe Connect (payouts) is V2 — this ticket covers subscriptions only |
+| [077](077-sponsored-placements.md) | Sponsored placements system and admin management (/admin/sponsorships) | Phase 14 | P3 | 009, 037, 012 | After deps | |
+| [078](078-stripe-webhook-handler.md) | Stripe webhook handler — subscription lifecycle events | Phase 14 | P3 | 075, 012 | After deps | |
+| [079](079-anthropic-api-integration.md) | Anthropic Claude API integration and prompt infrastructure | Phase 15 | P3 | 001, 002 | After deps | |
+| [080](080-ai-page-optimization-suggestions.md) | AI page optimization suggestions (owner dashboard) | Phase 15 | P3 | 079, 050 | After deps | Behind AI_FEATURES_ENABLED feature flag |
+| [081](081-ai-admin-moderation-flags.md) | AI admin moderation flags — quality issues in admin queue | Phase 15 | P3 | 038, 039, 079 | After deps | Behind AI_FEATURES_ENABLED feature flag |
+| [082](082-analytics-daily-aggregation.md) | Entity analytics daily aggregation — Supabase scheduled Edge Function | Phase 16 | P2 | 012, 049 | After deps | |
+| [083](083-owner-analytics-dashboard.md) | Owner analytics dashboard — 7/30-day charts (/dashboard/analytics) | Phase 16 | P2 | 050, 082 | After deps | |
+| [084](084-admin-platform-analytics.md) | Admin platform analytics dashboard (/admin/analytics) | Phase 16 | P2 | 037 | After deps | |
+| [085](085-search-analytics.md) | Search analytics — trending queries, zero-result queries | Phase 16 | P2 | 025, 037 | After deps | |
+| [086](086-security-audit.md) | Security audit — RLS verification, auth boundary, OWASP review | Phase 17 | P0 | 013, 014 | After deps | Deliverable is a security audit report, not code |
+| [087](087-accessibility-audit.md) | Accessibility audit and WCAG AA remediation — all MVP screens | Phase 17 | P1 | 015–083 | After deps | Deliverable is audit report + remediations |
+| [088](088-performance-optimization.md) | Performance optimization — Core Web Vitals, ISR, image optimization | Phase 17 | P1 | 015–083 | After deps | Target LCP < 2.5s, CLS < 0.1, INP < 200ms |
+| [089](089-regression-qa-sign-off.md) | Full regression QA test suite and sign-off | Phase 17 | P0 | 086, 087, 088 | After deps | No launch until all P0 cases pass |
+| [090](090-seo-audit.md) | SEO audit — sitemap.xml, robots.txt, Search Console submission | Phase 17 | P1 | 023, 027, 020–024 | After deps | |
+| [091](091-supabase-production-setup.md) | Supabase production project migration and configuration | Phase 18 | P0 | 013 | After deps | |
+| [092](092-vercel-production-deployment.md) | Vercel production deployment configuration | Phase 18 | P0 | 003, 091 | After deps | |
+| [093](093-seed-data-import.md) | Seed data import script — launch listings | Phase 18 | P0 | 091 | After deps | |
+| [094](094-production-monitoring-alerting.md) | Production monitoring, alerting, and on-call setup | Phase 18 | P0 | 092 | After deps | |
+| [095](095-incident-response-runbook.md) | Post-launch incident response runbook and support playbook | Phase 18 | P1 | 094 | After deps | Documentation-only ticket — no product code |

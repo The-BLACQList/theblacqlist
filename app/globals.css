@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* ─── Brand Color Tokens ─────────────────────────────────────────────────── */
+@theme {
+  --color-brand-black: #000000;
+  --color-deep-bg: #19191E;
+  --color-charcoal: #595758;
+  --color-amber-gold: #E2A428;
+  --color-light-gold: #FFD867;
+  --color-pale-lavender: #E9E9F7;
+  --color-cream: #FCFAF4;
+
+  /* Font families — CSS vars injected by next/font */
+  --font-headline: var(--font-glacial), sans-serif;
+  --font-subhead: var(--font-lato), sans-serif;
+  --font-body: var(--font-quicksand), sans-serif;
+}
+
+/* ─── CSS Custom Properties (raw brand values for non-Tailwind use) ────────── */
+:root {
+  --brand-black: #000000;
+  --deep-bg: #19191E;
+  --charcoal: #595758;
+  --amber-gold: #E2A428;
+  --light-gold: #FFD867;
+  --pale-lavender: #E9E9F7;
+  --cream: #FCFAF4;
+
+  /* ─── shadcn/ui semantic variables ───────────────────────────────────────── */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #E9E9F7;
+  --secondary-foreground: #000000;
+  --muted: #E9E9F7;
+  --muted-foreground: #595758;
+  --accent: #E9E9F7;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #E2A428;
+  --radius: 0.5rem;
+
+  /* Glacial Indifference placeholder until font file is loaded */
+  --font-glacial: sans-serif;
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body), sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline), sans-serif;
+    line-height: 1.15;
+  }
+
+  /* Ensure focus rings use Amber Gold */
+  :focus-visible {
+    outline: 2px solid var(--amber-gold);
+    outline-offset: 2px;
+  }
+}
