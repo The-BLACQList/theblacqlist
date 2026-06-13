@@ -119,14 +119,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     query = query.eq('city_id', cityResult.data.id)
   }
 
-  const { data, count } = await query
-    .order('is_featured', { ascending: false })
-    .order('save_count', { ascending: false })
-    .range(offset, offset + LISTINGS_PAGE_SIZE - 1)
-
-  const organicEntities: DiscoveryEntity[] = data ? (data as unknown as RawRow[]).map(mapRow) : []
-
-  // Inject sponsored placements on page 1 only.
+  // Build sponsored placements query now (before awaiting main query) so both can run in parallel on page 1.
+  let spQueryPromise: Promise<{ data: unknown[] | null }> | null = null
   if (page === 1) {
     const now = new Date().toISOString()
     let spQuery = supabase
@@ -156,14 +150,27 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     if (categoryResult.data?.id) {
       spQuery = spQuery.or(`category_id.eq.${categoryResult.data.id},category_id.is.null`)
     }
+    spQueryPromise = spQuery as unknown as Promise<{ data: unknown[] | null }>
+  }
 
-    const { data: spRows } = await spQuery
+  const [{ data, count }, spResult] = await Promise.all([
+    query
+      .order('is_featured', { ascending: false })
+      .order('save_count', { ascending: false })
+      .range(offset, offset + LISTINGS_PAGE_SIZE - 1),
+    spQueryPromise ?? Promise.resolve({ data: null }),
+  ])
+
+  const organicEntities: DiscoveryEntity[] = data ? (data as unknown as RawRow[]).map(mapRow) : []
+
+  if (page === 1) {
+    const { data: spRows } = spResult as { data: unknown[] | null }
 
     if (spRows && spRows.length > 0) {
       const sponsoredIds = new Set<string>()
       const toInject: Array<{ position: number; entity: DiscoveryEntity }> = []
 
-      for (const sp of spRows) {
+      for (const sp of spRows as Array<{ position: number | null; listings: unknown }>) {
         const raw = sp.listings as unknown as RawRow | null
         if (!raw) continue
         const entity = { ...mapRow(raw), is_sponsored: true }

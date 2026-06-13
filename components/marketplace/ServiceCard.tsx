@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Briefcase, Globe, MapPin, Plane } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 
@@ -59,11 +60,12 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
         {service.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={service.cover_image_url}
             alt={service.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

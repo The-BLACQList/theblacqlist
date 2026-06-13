@@ -88,20 +88,9 @@ function SignInContent() {
 
         {/* Password */}
         <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="password"
-              className="font-subhead text-sm font-semibold text-brand-black"
-            >
-              Password
-            </label>
-            <Link
-              href="/forgot-password"
-              className="text-xs font-subhead text-charcoal hover:text-brand-black underline underline-offset-2"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <label htmlFor="password" className="font-subhead text-sm font-semibold text-brand-black">
+            Password
+          </label>
           <div className="relative">
             <input
               id="password"
@@ -139,6 +128,14 @@ function SignInContent() {
               {passwordError}
             </p>
           )}
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-xs font-subhead text-charcoal hover:text-brand-black underline underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/20"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         <div className="mt-2">

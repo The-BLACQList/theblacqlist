@@ -143,7 +143,7 @@ No API changes.
 | --------------------------------- | ------------- | --------- | -------- | ----- | ----------- |
 | View BLACQList Page               | Pass          | Pass      | Pass     | Pass  | Pass        |
 | Search with city filter           | Pass          | Pass      | Pass     | Pass  | Pass        |
-| Attempt to save (unauthenticated) | Sign-in modal | Pass      | Pass     | Pass  | Pass        |
+| Attempt to save (unauthenticated) | Redirect to /sign-in with ?next= | Pass      | Pass     | Pass  | Pass        |
 | Access `/dashboard`               | Redirect      | Redirect  | Pass     | Pass  | Pass        |
 | Access `/admin`                   | Redirect      | Redirect  | Redirect | Pass  | Pass        |
 

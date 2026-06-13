@@ -39,15 +39,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description = `${entity.tagline} — ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const ogImage = entity.cover_image_path
+    ? `${supabaseUrl}/storage/v1/object/public/listing-media/${entity.cover_image_path}`
+    : undefined
+
   return {
-    title: `${entity.name} | The BLACQList`,
+    title: `${entity.name} — ${locationLabel}`,
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       title: entity.name,
       description: entity.tagline,
       url: canonicalUrl,
-      ...(entity.cover_image_path && { images: [entity.cover_image_path] }),
+      ...(ogImage && { images: [ogImage] }),
     },
     twitter: {
       card: 'summary_large_image',

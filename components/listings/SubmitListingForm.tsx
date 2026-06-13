@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { submitListingAction } from '@/lib/actions/listings/submitListing'
+import { MediaStep } from '@/app/add-business/_components/steps/MediaStep'
+import { CtaStep } from '@/app/add-business/_components/steps/CtaStep'
+import { PreviewPublishStep } from '@/app/add-business/_components/steps/PreviewPublishStep'
 import type { CategoryOption } from '@/app/add-business/page'
 
 const DRAFT_KEY = 'draft-add-business'
@@ -64,7 +66,17 @@ const SOCIAL_FIELDS: [SocialKey, string][] = [
   ['social_youtube', 'YouTube'],
 ]
 
-const STEP_TITLES = ['About your business', 'Where you operate', 'How to reach you', 'Your story']
+const STEP_TITLES = [
+  'About your business',
+  'Where you operate',
+  'How to reach you',
+  'Your story',
+  'Add photos',
+  'Primary action',
+  'Preview & publish',
+]
+
+const CTA_STEP6_VALUES = ['book', 'order', 'call', 'visit', 'message']
 
 interface FormFields {
   entity_type: string
@@ -124,23 +136,33 @@ interface Props {
 
 export function SubmitListingForm({ categories }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [step, setStep] = useState(1)
-  const [fields, setFields] = useState<FormFields>(() => {
-    if (typeof window === 'undefined') return INITIAL
+  const [step, setStep] = useState(0)
+
+  const [fields, setFields] = useState<FormFields>(INITIAL)
+
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<FormFields>
-        return { ...INITIAL, ...parsed }
+        // Safe: runs once on mount to hydrate draft from localStorage — avoids SSR mismatch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setFields({ ...INITIAL, ...parsed })
       }
     } catch {
       // ignore corrupt draft
     }
-    return INITIAL
-  })
+  }, [])
+
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [serverError, setServerError] = useState<string | null>(null)
+
+  // Media upload state (not persisted to localStorage)
+  const [tempEntityId] = useState(() => crypto.randomUUID())
+  const [logoCdnUrl, setLogoCdnUrl] = useState<string | null>(null)
+  const [coverCdnUrl, setCoverCdnUrl] = useState<string | null>(null)
+  const [logoPath, setLogoPath] = useState<string | null>(null)
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(null)
+  const [galleryPaths, setGalleryPaths] = useState<string[]>([])
 
   function set<K extends keyof FormFields>(key: K, val: FormFields[K]) {
     setFields((prev) => {
@@ -158,6 +180,22 @@ export function SubmitListingForm({ categories }: Props) {
       if (!(k in prev)) return prev
       const next = { ...prev }
       delete next[k]
+      return next
+    })
+  }
+
+  function setCtaFields(type: string, url: string) {
+    setFields((prev) => {
+      const next = { ...prev, cta_type: type, cta_url: url }
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.cta_type
+      delete next.cta_url
       return next
     })
   }
@@ -199,6 +237,10 @@ export function SubmitListingForm({ categories }: Props) {
     } else if (s === 4) {
       if (fields.description.trim().length < 20)
         e.description = 'Description must be at least 20 characters.'
+    } else if (s === 6) {
+      if (!CTA_STEP6_VALUES.includes(fields.cta_type)) {
+        e.cta_step6 = 'Select how customers should reach you.'
+      }
     }
     return e
   }
@@ -220,50 +262,16 @@ export function SubmitListingForm({ categories }: Props) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function handleSubmit() {
-    const e = validate(4)
-    if (Object.keys(e).length) {
-      setErrors(e)
-      return
-    }
-
-    const fd = new FormData()
-    fd.append('entity_type', fields.entity_type)
-    fd.append('name', fields.name.trim())
-    fd.append('tagline', fields.tagline.trim())
-    fd.append('category_id', fields.category_id)
-    fd.append('location_type', fields.location_type)
-    fd.append('city_text', fields.city_text.trim())
-    fd.append('state_text', fields.state_text.trim())
-    fd.append('service_area_description', fields.service_area_description.trim())
-    fd.append('ships_nationwide', String(fields.ships_nationwide))
-    fd.append('website_url', fields.website_url.trim())
-    fd.append('email', fields.email.trim())
-    fd.append('phone', fields.phone.trim())
-    fd.append('cta_type', fields.cta_type)
-    fd.append('cta_url', fields.cta_url.trim())
-    fd.append('social_instagram', fields.social_instagram.trim())
-    fd.append('social_facebook', fields.social_facebook.trim())
-    fd.append('social_twitter', fields.social_twitter.trim())
-    fd.append('social_tiktok', fields.social_tiktok.trim())
-    fd.append('social_linkedin', fields.social_linkedin.trim())
-    fd.append('social_youtube', fields.social_youtube.trim())
-    fd.append('description', fields.description.trim())
-    fd.append('founder_story', fields.founder_story.trim())
-
-    startTransition(async () => {
-      const result = await submitListingAction(null, fd)
-      if (!result) return
-      if ('success' in result) {
-        try {
-          localStorage.removeItem(DRAFT_KEY)
-        } catch {}
-        router.push(`/add-business/submitted?name=${encodeURIComponent(result.listingName)}`)
-        return
-      }
-      setServerError(result.error)
-      if (result.fieldErrors) setErrors(result.fieldErrors as Record<string, string>)
-    })
+  function onPublishSuccess(listingName: string) {
+    try {
+      localStorage.removeItem(DRAFT_KEY)
+    } catch {}
+    const isDraft = listingName.endsWith(' (draft)')
+    const name = listingName.replace(/ \(draft\)$/, '')
+    const qs = isDraft
+      ? `?name=${encodeURIComponent(name)}&type=draft`
+      : `?name=${encodeURIComponent(name)}`
+    router.push(`/add-business/submitted${qs}`)
   }
 
   const err = (f: string) => errors[f] as string | undefined
@@ -294,25 +302,80 @@ export function SubmitListingForm({ categories }: Props) {
   const showCityState = fields.location_type === 'physical' || fields.location_type === 'hybrid'
   const showServiceArea = fields.location_type === 'service_area'
 
+  const isStep6Valid = CTA_STEP6_VALUES.includes(fields.cta_type)
+
+  const categoryName = categories.find((c) => c.id === fields.category_id)?.name ?? ''
+
   return (
     <div>
-      {/* Step indicator */}
+      {/* Step 0 — Eligibility gate */}
+      {step === 0 && (
+        <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
+          <div>
+            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-2">
+              Before you start
+            </p>
+            <h2 className="font-headline text-2xl text-brand-black mb-3">Who can list on The BLACQList?</h2>
+            <p className="font-subhead text-sm text-charcoal leading-relaxed">
+              The BLACQList is an editorial directory. Every listing is reviewed against one
+              criterion: is this a Black-owned business?
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {[
+              'Majority Black-owned — at least 51% Black or African American ownership',
+              'Operational control — Black owner(s) actively manage the business',
+              'Currently operating — not closed or inactive',
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15">
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+                    <path d="M1 4l2.5 2.5L9 1" stroke="#E2A428" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="font-subhead text-sm text-charcoal">{item}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="font-subhead text-xs text-charcoal/50 leading-relaxed">
+            By continuing, you confirm that your business meets these criteria. Submissions are
+            reviewed by our team before going live. See our{' '}
+            <a href="/terms#business-listings" target="_blank" rel="noopener noreferrer" className="text-amber-gold hover:underline">
+              Terms of Service
+            </a>{' '}
+            for the full definition.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="h-12 w-full rounded-full bg-amber-gold text-brand-black font-subhead text-sm font-bold hover:bg-amber-gold/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
+          >
+            My business meets these criteria — Continue
+          </button>
+        </div>
+      )}
+
+      {/* Step indicator — only shown once form has started */}
+      {step >= 1 && (
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-0.5">
-            Step {step} of 4
+            Step {step} of 7
           </p>
           <p className="font-subhead text-sm font-medium text-charcoal">{STEP_TITLES[step - 1]}</p>
         </div>
-        <div className="flex items-center gap-2" role="group" aria-label="Form progress">
-          {[1, 2, 3, 4].map((s) => (
+        <div className="flex items-center gap-1.5" role="group" aria-label="Form progress">
+          {[1, 2, 3, 4, 5, 6, 7].map((s) => (
             <div
               key={s}
               aria-label={`Step ${s}${s < step ? ' complete' : s === step ? ' current' : ''}`}
               className={cn(
                 'h-2 rounded-full transition-all',
                 s === step
-                  ? 'w-6 bg-brand-black'
+                  ? 'w-5 bg-brand-black'
                   : s < step
                     ? 'w-2 bg-amber-gold'
                     : 'w-2 bg-charcoal/20'
@@ -321,6 +384,7 @@ export function SubmitListingForm({ categories }: Props) {
           ))}
         </div>
       </div>
+      )}
 
       {/* Step 1 — About your business */}
       {step === 1 && (
@@ -840,15 +904,6 @@ export function SubmitListingForm({ categories }: Props) {
       {/* Step 4 — Your story */}
       {step === 4 && (
         <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-5">
-          {serverError && (
-            <div
-              role="alert"
-              className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-subhead text-red-700"
-            >
-              {serverError}
-            </div>
-          )}
-
           {/* Description */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
@@ -918,8 +973,76 @@ export function SubmitListingForm({ categories }: Props) {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between mt-6">
+      {/* Step 5 — Add photos */}
+      {step === 5 && (
+        <MediaStep
+          tempEntityId={tempEntityId}
+          logoCdnUrl={logoCdnUrl}
+          coverCdnUrl={coverCdnUrl}
+          galleryPaths={galleryPaths}
+          onLogoChange={(path, cdnUrl) => {
+            setLogoPath(path)
+            setLogoCdnUrl(cdnUrl)
+          }}
+          onCoverChange={(path, cdnUrl) => {
+            setCoverImagePath(path)
+            setCoverCdnUrl(cdnUrl)
+          }}
+          onGalleryChange={setGalleryPaths}
+        />
+      )}
+
+      {/* Step 6 — Primary action (visual cards) */}
+      {step === 6 && (
+        <CtaStep
+          ctaType={fields.cta_type}
+          ctaUrl={fields.cta_url}
+          phone={fields.phone}
+          email={fields.email}
+          onChange={setCtaFields}
+        />
+      )}
+
+      {/* Step 7 — Preview & publish */}
+      {step === 7 && (
+        <PreviewPublishStep
+          snapshot={{
+            tempEntityId,
+            entity_type: fields.entity_type,
+            name: fields.name,
+            tagline: fields.tagline,
+            category_id: fields.category_id,
+            categoryName,
+            location_type: fields.location_type,
+            city_text: fields.city_text,
+            state_text: fields.state_text,
+            service_area_description: fields.service_area_description,
+            ships_nationwide: fields.ships_nationwide,
+            website_url: fields.website_url,
+            email: fields.email,
+            phone: fields.phone,
+            cta_type: fields.cta_type,
+            cta_url: fields.cta_url,
+            social_instagram: fields.social_instagram,
+            social_facebook: fields.social_facebook,
+            social_twitter: fields.social_twitter,
+            social_tiktok: fields.social_tiktok,
+            social_linkedin: fields.social_linkedin,
+            social_youtube: fields.social_youtube,
+            description: fields.description,
+            founder_story: fields.founder_story,
+            logo_path: logoPath,
+            cover_image_path: coverImagePath,
+            gallery_paths: galleryPaths,
+            logoCdnUrl,
+            coverCdnUrl,
+          }}
+          onSuccess={onPublishSuccess}
+        />
+      )}
+
+      {/* Navigation — only shown after eligibility gate */}
+      {step >= 1 && <div className="flex items-center justify-between mt-6">
         {step > 1 ? (
           <button
             type="button"
@@ -933,26 +1056,17 @@ export function SubmitListingForm({ categories }: Props) {
           <div />
         )}
 
-        {step < 4 ? (
+        {step < 7 && (
           <button
             type="button"
             onClick={goNext}
-            className="h-11 px-6 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
+            disabled={step === 6 && !isStep6Valid}
+            className="h-11 px-6 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
           >
             Continue
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending}
-            className="h-11 px-6 rounded-full bg-amber-gold text-brand-black font-subhead text-sm font-bold hover:bg-amber-gold/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Submitting…' : 'Submit for review'}
-          </button>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

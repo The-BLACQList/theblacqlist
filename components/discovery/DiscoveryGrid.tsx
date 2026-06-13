@@ -89,8 +89,8 @@ export function DiscoveryGrid({
       </p>
 
       <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
-        {entities.map((entity) => (
-          <EntityCard key={entity.id} entity={entity} />
+        {entities.map((entity, i) => (
+          <EntityCard key={entity.id} entity={entity} isPriority={i === 0} />
         ))}
       </CardGrid>
 

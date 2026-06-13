@@ -11,6 +11,7 @@ import { SocialSection } from '@/components/dashboard/SocialSection'
 import { CtaSection } from '@/components/dashboard/CtaSection'
 import { SeoSection } from '@/components/dashboard/SeoSection'
 import { HoursSection } from '@/components/dashboard/HoursSection'
+import { PublishSection } from '@/components/dashboard/PublishSection'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -25,7 +26,7 @@ export default async function EditPage({ params }: Props) {
     .from('listings')
     .select(
       `
-      id, name, slug, status, entity_type, tagline, meta_title, meta_description,
+      id, name, slug, status, trust_tier, entity_type, tagline, meta_title, meta_description,
       cities(slug, name),
       listing_details_business(
         description, phone, email, website_url,
@@ -100,6 +101,12 @@ export default async function EditPage({ params }: Props) {
           </Link>
         )}
       </div>
+
+      <PublishSection
+        listingId={listing.id}
+        status={listing.status}
+        trustTier={listing.trust_tier}
+      />
 
       <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
 

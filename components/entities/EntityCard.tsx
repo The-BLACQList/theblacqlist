@@ -13,6 +13,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 interface EntityCardProps {
   entity: DiscoveryEntity
   className?: string
+  isPriority?: boolean
 }
 
 const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
@@ -55,7 +56,7 @@ function CoverPlaceholder({ name }: { name: string }) {
   )
 }
 
-export function EntityCard({ entity, className }: EntityCardProps) {
+export function EntityCard({ entity, className, isPriority = false }: EntityCardProps) {
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
 
@@ -73,6 +74,7 @@ export function EntityCard({ entity, className }: EntityCardProps) {
             src={entity.cover_image_path}
             alt=""
             fill
+            priority={isPriority}
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />

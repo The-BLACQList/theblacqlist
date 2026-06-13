@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 95
+**Total tickets:** 98
 **Phases:** 0–18
-**Last updated:** 2026-05-07
+**Last updated:** 2026-06-07
 
 ---
 
@@ -103,3 +103,6 @@
 | [093](093-seed-data-import.md)                               | Seed data import script — launch listings                                | Phase 18 | P0       | 091                          | After deps    |                                                                                                           |
 | [094](094-production-monitoring-alerting.md)                 | Production monitoring, alerting, and on-call setup                       | Phase 18 | P0       | 092                          | After deps    |                                                                                                           |
 | [095](095-incident-response-runbook.md)                      | Post-launch incident response runbook and support playbook               | Phase 18 | P1       | 094                          | After deps    | Documentation-only ticket — no product code                                                               |
+| [096](096-modal-focus-accessibility.md)                      | Modal accessibility — focus trap, Escape, focus restore                  | Phase 17 | P1       | —                            | Done          | Fixed 2026-06-07: report-correction dialog → Radix Dialog; J15 passes                                     |
+| [097](097-accessible-save-interaction.md)                    | Accessible save interaction (unblocks VoiceOver J10/J11)                 | Phase 17 | P2       | 096                          | Needs decision | No save modal exists; product decision: direct-save vs. modal                                            |
+| [098](098-color-contrast-aa-remediation.md)                  | Color contrast — WCAG AA remediation                                     | Phase 17 | P1       | —                            | In progress   | Footer fixed; amber-as-text, Claimed badge, sign-up muted text remaining                                  |

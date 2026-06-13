@@ -3,6 +3,8 @@ import { Lato, Quicksand } from 'next/font/google'
 import './globals.css'
 import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const lato = Lato({
   weight: ['400', '700'],
@@ -19,8 +21,24 @@ const quicksand = Quicksand({
 })
 
 export const metadata: Metadata = {
-  title: 'The BLACQList',
+  title: {
+    default: 'The BLACQList',
+    template: '%s | The BLACQList',
+  },
   description: 'Discover and support Black-owned businesses.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'),
+  openGraph: {
+    type: 'website',
+    siteName: 'The BLACQList',
+    title: 'The BLACQList — Discover Black-Owned Businesses',
+    description: 'Find, save, and support Black-owned businesses near you.',
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The BLACQList',
+    description: 'Discover and support Black-owned businesses.',
+  },
 }
 
 export default function RootLayout({
@@ -44,6 +62,8 @@ export default function RootLayout({
           {children}
         </main>
         <PublicFooter />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

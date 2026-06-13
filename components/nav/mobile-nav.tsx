@@ -4,7 +4,13 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -51,8 +57,11 @@ export function MobileNav({ isSignedIn }: Props) {
       </SheetTrigger>
 
       <SheetContent side="right" className="bg-deep-bg border-charcoal/30 p-0 w-4/5 max-w-sm">
-        {/* Visually hidden title for screen reader accessibility */}
+        {/* Visually hidden title + description for screen reader accessibility */}
         <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+        <SheetDescription className="sr-only">
+          Browse The BLACQList and access your account.
+        </SheetDescription>
 
         <div className="flex flex-col h-full px-6 py-6">
           {/* Logo */}

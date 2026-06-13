@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Package, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { CTAButton } from '@/components/marketplace/CTAButton'
@@ -96,13 +97,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
-          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden">
+          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden relative">
             {product.cover_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={product.cover_image_url}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+                priority
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

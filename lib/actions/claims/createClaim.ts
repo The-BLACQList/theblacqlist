@@ -45,6 +45,7 @@ export async function createClaimAction(
   const verificationPhone = formData.get('verification_phone')?.toString().trim() || null
   const roleAtBusiness = formData.get('role_at_business')?.toString().trim() ?? ''
   const notes = formData.get('notes')?.toString().trim() || null
+  const verificationDocPath = formData.get('verification_doc_path')?.toString().trim() || null
 
   // ── Validate ────────────────────────────────────────────────────────────────
   const fieldErrors: FieldErrors = {}
@@ -135,6 +136,7 @@ export async function createClaimAction(
       verification_phone: verificationPhone,
       role_at_business: roleAtBusiness,
       notes,
+      verification_doc_paths: verificationDocPath ? [verificationDocPath] : null,
     })
     .select('id')
     .single()

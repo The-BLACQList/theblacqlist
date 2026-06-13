@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Briefcase, Globe, MapPin, Plane, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { CTAButton } from '@/components/marketplace/CTAButton'
@@ -104,13 +105,15 @@ export default async function ServiceDetailPage({ params }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
-          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden">
+          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden relative">
             {svc.cover_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={svc.cover_image_url}
                 alt={svc.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+                priority
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">

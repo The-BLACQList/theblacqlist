@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Package } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 
@@ -45,11 +46,12 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
         {product.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.cover_image_url}
             alt={product.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

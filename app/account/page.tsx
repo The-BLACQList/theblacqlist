@@ -9,6 +9,7 @@ import {
   TrendingUp,
   History,
   Sparkles,
+  LayoutDashboard,
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
@@ -35,6 +36,22 @@ export default async function AccountPage() {
 
         {/* Quick links */}
         <div className="flex flex-col gap-3">
+          <Link
+            href="/dashboard/pages"
+            className="flex items-center gap-4 bg-white rounded-xl border border-charcoal/10 p-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pale-lavender flex items-center justify-center">
+              <LayoutDashboard className="size-5 text-amber-gold" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-subhead text-sm font-semibold text-brand-black">My listings</p>
+              <p className="font-subhead text-xs text-charcoal/60">
+                Manage your drafts and published pages
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
+          </Link>
+
           <Link
             href="/account/activity"
             className="flex items-center gap-4 bg-white rounded-xl border border-charcoal/10 p-4 hover:shadow-md transition-shadow"
@@ -152,7 +169,6 @@ export default async function AccountPage() {
           </Link>
         </div>
 
-        {/* TODO: Full account dashboard pending owner dashboard build */}
       </div>
     </main>
   )

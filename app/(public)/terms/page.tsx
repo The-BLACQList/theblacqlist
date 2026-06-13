@@ -102,11 +102,20 @@ export default function TermsPage() {
 
           <section id="business-listings" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">4. Business Listings</h2>
+            <p>
+              <strong>Editorial focus.</strong> The BLACQList is an editorial directory that curates
+              businesses meeting our community focus. For purposes of this platform,
+              &ldquo;Black-owned&rdquo; means a business in which Black or African American
+              individual(s) hold majority ownership (≥51%) and exercise meaningful operational
+              control or management authority. Listing inclusion is an editorial decision. We reserve
+              the right to decline any submission that does not meet our editorial criteria, and to
+              exercise that discretion without prior notice and without liability.
+            </p>
             <p>Business owners who create or claim listings represent and warrant that:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>They have authority to represent the business (as an owner, partner, or authorized agent)</li>
               <li>All information submitted is accurate, complete, and not misleading</li>
-              <li>The business is genuinely Black-owned as represented</li>
+              <li>The business is genuinely Black-owned as defined above (≥51% Black or African American ownership and operational control)</li>
               <li>Any images, logos, or content submitted do not violate third-party intellectual property rights</li>
               <li>The business is operating lawfully and in compliance with applicable laws</li>
             </ul>

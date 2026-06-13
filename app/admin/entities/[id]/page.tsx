@@ -38,7 +38,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, category_id, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
+      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, category_id, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -110,6 +110,25 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                 value={submitterProfile?.display_name ?? listing.submitted_by ?? 'Unknown'}
               />
               <Row label="Submitted at" value={new Date(listing.created_at).toLocaleString()} />
+              <Row
+                label="Ownership attested"
+                value={
+                  listing.ownership_attested ? (
+                    <span className="inline-flex items-center gap-1 text-green-700 font-semibold">
+                      ✓ Yes
+                      {listing.ownership_attested_at && (
+                        <span className="font-normal text-charcoal/50">
+                          — {new Date(listing.ownership_attested_at).toLocaleDateString()}
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-amber-600 font-semibold">
+                      ✗ Not attested
+                    </span>
+                  )
+                }
+              />
             </dl>
           </div>
 
@@ -174,6 +193,16 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-4">Trust tier</h2>
             <TrustTierActions listingId={listing.id} currentTier={listing.trust_tier} />
+          </div>
+
+          <div className="rounded-xl border border-charcoal/10 bg-white p-5">
+            <h2 className="font-headline text-base text-brand-black mb-3">Content</h2>
+            <Link
+              href={`/admin/entities/${listing.id}/edit`}
+              className="w-full inline-flex items-center justify-center h-10 rounded-lg border border-charcoal/20 text-charcoal font-subhead text-sm font-semibold hover:border-charcoal/50 hover:text-brand-black transition-colors"
+            >
+              Edit listing content
+            </Link>
           </div>
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
