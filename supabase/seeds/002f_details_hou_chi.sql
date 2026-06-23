@@ -215,8 +215,8 @@ INSERT INTO listing_details_business (
    'visit',NULL,'$',NULL),
 
   ('00c00003-0000-0000-0000-000000000025',
-   'West African and Afro-Caribbean restaurant in Andersonville serving vibrant Senegalese and Caribbean dishes including thiéboudienne, griot, and mafé in a beautifully warm and welcoming dining room.',
-   '4437 N Broadway','Chicago','IL','60640',
+   'West African and Afro-Caribbean restaurant in Bronzeville serving vibrant Senegalese and Caribbean dishes including thiéboudienne, griot, and mafé in a beautifully warm and welcoming dining room.',
+   '1126 E 47th St','Chicago','IL','60653',
    NULL,NULL,NULL,
    'visit',NULL,'$$',NULL),
 
