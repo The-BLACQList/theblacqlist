@@ -109,20 +109,32 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ---
 
-## `🙋🏾‍♀️ F5 · 🔴` Set up **Resend** (email)
-⬛ Infra · ⏳ founder-gated · **Unblocks:** transactional email (sign-up verify, password reset, claim status)
+## `🙋🏾‍♀️ F5 · 🔴` Set up **Resend** (email) — _audited 2026-06-23_
+⬛ Infra · ⏳ founder-gated · **Unblocks:** the 6 app transactional emails (welcome, claim status, listing rejected, admin claim alert). _Auth emails (password reset / future sign-up confirm) are a **separate** step — see Part B._
 
-**Description.** Create a Resend account and the keys we send transactional email with. We need **two** keys — a **live** key for production and a **test** key for staging/preview — plus domain verification so emails come from `noreply@theblacqlist.com` and land in inboxes (not spam). Free tier is fine at launch volume. **Done when** both keys exist and the domain shows verified in Resend.
+**Audit (2026-06-23).** The app has **two** email systems, and the original card only covered one:
+- **Resend = app emails** (`lib/email/resend.ts`): 6 react-email templates — welcome, claim-submitted, claim-admin-notification, claim-approved, claim-rejected, entity-rejected. From = `RESEND_FROM_EMAIL` (default `The BLACQList <noreply@theblacqlist.com>`). **If the key is missing it just logs + skips — nothing breaks**, emails simply don't send.
+- **Supabase Auth = its own emails**: password reset (`resetPasswordForEmail`) is sent by **Supabase**, not Resend. Sign-up confirmation is currently **OFF** (`enable_confirmations = false`), so password-reset is the only live auth email today. Without custom SMTP, it sends from a `supabase.io` address with low rate limits.
 
-**Checklist.**
-- Create a Resend account
-- Create a **live** API key (`re_live_…`) and a **test** API key (`re_test_…`) — save both for F9
-- Add `theblacqlist.com` as a domain in Resend
-- Copy Resend's SPF/DKIM/DMARC records into **Bluehost** DNS (see F4 — merge SPF if you use Bluehost email)
-- Confirm the domain shows **verified** in Resend
-- Sender address will be `noreply@theblacqlist.com`
+**Done when** the live + test keys exist, the sending domain is verified in Resend, and (Part B) the production Supabase project's Auth SMTP points at Resend.
 
-**Links.** [Resend](https://resend.com) · [API keys](https://resend.com/docs/dashboard/api-keys/introduction) · [Domain verification](https://resend.com/docs/dashboard/domains/introduction)
+### Part A — Resend (app emails)
+- Create a Resend account (free tier is fine at launch volume).
+- Create a **live** key (`re_live_…`) → for the **Production** Vercel scope, and a **test** key (`re_test_…`) → for **Preview**. Save both for **F9**.
+- **Verify a *sending subdomain* `send.theblacqlist.com`** in Resend (Domains → Add Domain) — **not** the root domain. Reason: your root has a **Google Workspace SPF** already, and you can't have two SPF records; a subdomain keeps Resend's SPF/DKIM isolated and leaves Google email untouched.
+- Sender address will be **`noreply@send.theblacqlist.com`** → set `RESEND_FROM_EMAIL = 'The BLACQList <noreply@send.theblacqlist.com>'`.
+- Set **`ADMIN_NOTIFICATION_EMAIL`** = the inbox that should receive "new claim submitted" alerts.
+- Add Resend's **SPF/DKIM/DMARC** records for `send.theblacqlist.com` in **Bluehost DNS** (coordinate with **F4**; the subdomain means these never touch your Google MX/root SPF). Confirm the domain shows **Verified** in Resend.
+
+### Part B — Supabase Auth SMTP → Resend (so password-reset email comes from your domain)
+- In the **production** Supabase project → **Authentication → SMTP Settings** → enable custom SMTP:
+  - Host `smtp.resend.com` · Port `465` · Username `resend` · Password = a Resend API key · Sender `noreply@send.theblacqlist.com`.
+- Same screen / **URL Configuration**: set **Site URL** = `https://theblacqlist.com` and add `https://theblacqlist.com/auth/callback` to the **Redirect URLs** allowlist (the app builds auth links from `NEXT_PUBLIC_APP_URL`).
+- (Staging Supabase: optional — leave default or point at the same Resend subdomain with the test key.)
+
+**Env vars (already present by name in Vercel — set/confirm the values):** `RESEND_API_KEY` (Prod=live · Preview=test, **secret**) · `RESEND_FROM_EMAIL` (both) · `ADMIN_NOTIFICATION_EMAIL` (both). Secrets → you paste; hand the keys over in **F9**.
+
+**Links.** [Resend](https://resend.com) · [API keys](https://resend.com/docs/dashboard/api-keys/introduction) · [Domain (subdomain) verification](https://resend.com/docs/dashboard/domains/introduction) · [Resend SMTP](https://resend.com/docs/send-with-smtp) · [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
 
 ---
 
