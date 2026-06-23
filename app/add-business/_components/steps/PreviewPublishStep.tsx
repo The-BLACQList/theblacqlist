@@ -271,7 +271,7 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
           <div className="px-4 py-4 flex flex-col gap-3">
             {snapshot.categoryName && (
               <div>
-                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal/50 mb-1">
+                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal-soft mb-1">
                   Category
                 </p>
                 <span className="inline-flex items-center rounded-full border border-charcoal/20 px-2.5 py-0.5 font-subhead text-xs text-charcoal">
@@ -282,25 +282,25 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
 
             {hasContact && (
               <div>
-                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal/50 mb-1.5">
+                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal-soft mb-1.5">
                   Contact
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {snapshot.phone && (
                     <span className="inline-flex items-center gap-1.5 font-body text-xs text-charcoal">
-                      <Phone className="size-3 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Phone className="size-3 text-amber flex-shrink-0" aria-hidden="true" />
                       {snapshot.phone}
                     </span>
                   )}
                   {snapshot.email && (
                     <span className="inline-flex items-center gap-1.5 font-body text-xs text-charcoal break-all">
-                      <Mail className="size-3 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Mail className="size-3 text-amber flex-shrink-0" aria-hidden="true" />
                       {snapshot.email}
                     </span>
                   )}
                   {snapshot.website_url && (
                     <span className="inline-flex items-center gap-1.5 font-body text-xs text-charcoal break-all">
-                      <Globe className="size-3 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Globe className="size-3 text-amber flex-shrink-0" aria-hidden="true" />
                       {snapshot.website_url.replace(/^https?:\/\/(www\.)?/, '')}
                     </span>
                   )}
@@ -310,7 +310,7 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
 
             {snapshot.description && (
               <div>
-                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal/50 mb-1">
+                <p className="font-subhead text-[10px] font-semibold uppercase tracking-wider text-charcoal-soft mb-1">
                   About
                 </p>
                 <p className="font-body text-xs text-charcoal leading-relaxed line-clamp-4">
@@ -370,7 +370,7 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
             )}
             {isDraftPending ? 'Saving…' : 'Save as draft'}
           </button>
-          <p className="text-center font-subhead text-xs text-charcoal/40">
+          <p className="text-center font-subhead text-xs text-charcoal-faint">
             Drafts are only visible to you and won&apos;t appear in the directory.
           </p>
         </div>

@@ -42,7 +42,7 @@ export function ErrorState({
         </Button>
       )}
 
-      <Link href={homeHref} className="text-amber-gold hover:underline font-subhead text-sm">
+      <Link href={homeHref} className="text-amber hover:underline font-subhead text-sm">
         Go home
       </Link>
     </div>

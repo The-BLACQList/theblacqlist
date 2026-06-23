@@ -77,7 +77,7 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
       {/* Content */}
       <div className="p-4 flex flex-col flex-1 gap-2">
         {showVendor && service.vendor_name && (
-          <p className="font-subhead text-xs text-charcoal/50 truncate">
+          <p className="font-subhead text-xs text-charcoal-soft truncate">
             {service.vendor_slug ? (
               <Link href={`/vendors/${service.vendor_slug}`} className="hover:text-charcoal">
                 {service.vendor_name}
@@ -91,26 +91,26 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
         <h3 className="font-headline text-base text-brand-black leading-snug">
           <Link
             href={`/marketplace/services/${service.global_slug}`}
-            className="hover:text-amber-gold transition-colors"
+            className="hover:text-amber transition-colors"
           >
             {service.name}
           </Link>
         </h3>
 
         {service.description && (
-          <p className="font-body text-xs text-charcoal/60 line-clamp-2">{service.description}</p>
+          <p className="font-body text-xs text-charcoal-soft line-clamp-2">{service.description}</p>
         )}
 
         {/* Price + duration */}
         <div className="flex items-baseline gap-2 mt-auto pt-2">
           <span className="font-subhead text-base font-bold text-brand-black">{priceLabel}</span>
           {service.duration_text && (
-            <span className="font-body text-xs text-charcoal/40">{service.duration_text}</span>
+            <span className="font-body text-xs text-charcoal-faint">{service.duration_text}</span>
           )}
         </div>
 
         {/* Delivery mode */}
-        <p className="font-body text-[10px] text-charcoal/40 flex items-center gap-1">
+        <p className="font-body text-[10px] text-charcoal-faint flex items-center gap-1">
           <DeliveryIcon className="size-3 shrink-0" aria-hidden="true" />
           {DELIVERY_LABELS[service.delivery_mode] ?? service.delivery_mode}
         </p>

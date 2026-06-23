@@ -15,9 +15,9 @@ interface Props {
 function StatCard({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4">
-      <p className="font-body text-xs text-charcoal/50">{label}</p>
+      <p className="font-body text-xs text-charcoal-soft">{label}</p>
       <p className="font-headline text-2xl text-brand-black mt-1">{value}</p>
-      {sub && <p className="font-body text-[11px] text-charcoal/40 mt-0.5">{sub}</p>}
+      {sub && <p className="font-body text-[11px] text-charcoal-faint mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -39,7 +39,7 @@ function TrendBar({ value, max, date }: { value: number; max: number; date: stri
           style={{ height: `${Math.max(pct, value > 0 ? 4 : 0)}%` }}
         />
       </div>
-      <span className="font-body text-[9px] text-charcoal/40 truncate w-full text-center">
+      <span className="font-body text-[9px] text-charcoal-faint truncate w-full text-center">
         {label.split(' ')[1]}
       </span>
     </div>
@@ -59,7 +59,7 @@ function MiniChart({
   if (rows.length === 0 || max === 0) {
     return (
       <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-6 text-center">
-        <p className="font-body text-xs text-charcoal/40">No {label.toLowerCase()} data yet.</p>
+        <p className="font-body text-xs text-charcoal-faint">No {label.toLowerCase()} data yet.</p>
       </div>
     )
   }
@@ -103,14 +103,14 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       <div className="max-w-2xl space-y-4">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
-          <p className="font-body text-sm text-charcoal/60 mt-0.5">{listing.name}</p>
+          <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
           <Lock className="size-10 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
           <h2 className="font-headline text-xl text-brand-black mb-2">
             Analytics is a paid feature
           </h2>
-          <p className="font-body text-sm text-charcoal/60 max-w-sm mx-auto mb-6">
+          <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
             Upgrade to Standard or Premium to see page views, CTA clicks, saves, shares, and your
             trend charts.
           </p>
@@ -205,14 +205,14 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
-          <p className="font-body text-sm text-charcoal/60 mt-0.5">{listing.name}</p>
+          <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <PeriodToggle period={period} />
       </div>
 
       {/* Lifetime totals */}
       <div>
-        <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-3">
+        <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
           All time
         </h2>
         <div className="grid grid-cols-3 gap-4">
@@ -224,7 +224,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
 
       {/* Period metric cards */}
       <div>
-        <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-3">
+        <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
           {periodLabel === 'last 7 days' ? 'Last 7 days' : 'Last 30 days'}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -239,8 +239,8 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {dailyRows.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
           <BarChart2 className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
-          <p className="font-body text-sm text-charcoal/60">Data collection has started.</p>
-          <p className="font-body text-xs text-charcoal/40 mt-1">
+          <p className="font-body text-sm text-charcoal-soft">Data collection has started.</p>
+          <p className="font-body text-xs text-charcoal-faint mt-1">
             Daily trend charts will appear here after the first aggregation run (tonight at 2 AM
             UTC).
           </p>
@@ -248,25 +248,25 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       ) : (
         <div className="space-y-4">
           <div>
-            <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-2">
+            <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
               Page views — daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="page_views" label="Page views" />
           </div>
           <div>
-            <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-2">
+            <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
               CTA clicks — daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="cta_clicks" label="CTA clicks" />
           </div>
           <div>
-            <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-2">
+            <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
               Saves — daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="saves" label="Saves" />
           </div>
           <div>
-            <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-2">
+            <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
               Shares — daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="shares" label="Shares" />
@@ -276,25 +276,25 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
 
       {/* Top search queries */}
       <div>
-        <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-3">
+        <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
           Top search queries — {periodLabel}
         </h2>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {topQueries.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
               No search click data yet for this period.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">
                     #
                   </th>
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Query
                   </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Clicks
                   </th>
                 </tr>
@@ -302,11 +302,11 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
               <tbody className="divide-y divide-charcoal/5">
                 {topQueries.map((row, i) => (
                   <tr key={row.query} className="hover:bg-[#f9f9fb]">
-                    <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                    <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                     <td className="px-4 py-2.5 font-subhead text-sm text-brand-black truncate max-w-[200px]">
                       {row.query}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                       {row.count}
                     </td>
                   </tr>

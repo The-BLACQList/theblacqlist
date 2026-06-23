@@ -26,7 +26,7 @@ function StarRating({ rating }: { rating: number }) {
           aria-hidden="true"
         />
       ))}
-      <span className="ml-1 font-mono text-xs text-charcoal/60">{rating}</span>
+      <span className="ml-1 font-mono text-xs text-charcoal-soft">{rating}</span>
     </span>
   )
 }
@@ -83,7 +83,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Review moderation</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Approve or reject user-submitted reviews before they appear on listing pages.
         </p>
       </div>
@@ -96,8 +96,8 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
             href={`/admin/reviews?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? 'border-amber-gold text-amber-gold'
-                : 'border-transparent text-charcoal/60 hover:text-brand-black'
+                ? 'border-amber-gold text-amber'
+                : 'border-transparent text-charcoal-soft hover:text-brand-black'
             }`}
           >
             {label}
@@ -108,7 +108,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
       {/* Table */}
       {!reviews || reviews.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">
+          <p className="font-subhead text-sm text-charcoal-soft">
             No {status === 'intake' ? 'pending' : status} reviews found.
           </p>
         </div>
@@ -120,22 +120,22 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
           >
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Reviewer
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Business
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Rating
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Excerpt
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Submitted
                 </th>
                 <th className="px-4 py-3" />
@@ -155,7 +155,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                         {reviewerName}
                       </p>
                       {review.reviewer_user_id && (
-                        <p className="font-mono text-xs text-charcoal/40 mt-0.5">
+                        <p className="font-mono text-xs text-charcoal-faint mt-0.5">
                           {review.reviewer_user_id.slice(0, 8)}…
                         </p>
                       )}
@@ -169,7 +169,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                       <StarRating rating={review.rating} />
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
-                      <p className="font-body text-xs text-charcoal/60 truncate">
+                      <p className="font-body text-xs text-charcoal-soft truncate">
                         {excerpt.length > 80 ? `${excerpt.slice(0, 80)}…` : excerpt || '—'}
                       </p>
                     </td>
@@ -177,14 +177,14 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
                       <AdminStatusBadge status={review.status} />
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {formatDate(review.created_at)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/reviews/${review.id}`}
-                        className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                        className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                         aria-label={`Review submission by ${reviewerName}${listing?.name ? ` for ${listing.name}` : ''}`}
                       >
                         Review →
@@ -199,7 +199,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/60">
+              <p className="font-body text-xs text-charcoal-soft">
                 {count} total · page {pageNum} of {totalPages}
               </p>
               <div className="flex gap-2">

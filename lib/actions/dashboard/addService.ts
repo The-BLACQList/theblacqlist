@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -18,6 +19,7 @@ export async function addServiceAction(
   const name = formData.get('name')?.toString().trim() ?? ''
   const description = formData.get('description')?.toString().trim() || null
   const priceDisplay = formData.get('price_display')?.toString().trim() || null
+  const groupLabel = formData.get('group_label')?.toString().trim() || null
 
   if (!listingId) return { error: 'Missing listing ID.' }
   if (!name) return { error: 'Service name is required.' }
@@ -59,6 +61,15 @@ export async function addServiceAction(
     .single()
 
   if (error || !newService) return { error: 'Failed to add service. Please try again.' }
+
+  // Fail-soft: set the group label separately so a not-yet-migrated column never
+  // blocks adding a service (the group simply won't stick until the migration runs).
+  if (groupLabel) {
+    await (supabase as unknown as SupabaseClient)
+      .from('services')
+      .update({ group_label: groupLabel })
+      .eq('id', newService.id)
+  }
 
   if (listing.status === 'published') {
     const citySlug = (listing.cities as { slug: string } | null)?.slug

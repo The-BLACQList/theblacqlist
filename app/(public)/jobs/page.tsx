@@ -23,7 +23,7 @@ export default function JobsPage() {
       </Section>
 
       <Section variant="white">
-        <span className="inline-block rounded-full border border-amber-gold text-amber-gold text-xs font-subhead font-semibold px-3 py-1 mb-5">
+        <span className="inline-block rounded-full border border-amber-gold text-amber text-xs font-subhead font-semibold px-3 py-1 mb-5">
           Beta Feature
         </span>
         <SectionHeading subtitle="The BLACQList jobs board will connect job seekers with Black-owned businesses hiring across every industry and city.">

@@ -15,7 +15,7 @@ export default function CookiesPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Cookie Policy" subtitle="Last updated: May 20, 2026" />
+        <PageHeader title="Cookie Policy" subtitle="Last updated: June 20, 2026" />
       </Section>
 
       <Section variant="white">
@@ -23,11 +23,11 @@ export default function CookiesPage() {
           <nav aria-label="Page contents" className="rounded-xl border border-gray-100 bg-white px-5 py-4">
             <p className="font-subhead text-sm font-semibold text-brand-black mb-3">Contents</p>
             <ol className="list-decimal ml-5 space-y-1 text-sm">
-              <li><a href="#what-are-cookies" className="text-amber-gold hover:underline">What Are Cookies</a></li>
-              <li><a href="#cookies-we-use" className="text-amber-gold hover:underline">Cookies We Use</a></li>
-              <li><a href="#what-we-dont-use" className="text-amber-gold hover:underline">What We Do Not Use</a></li>
-              <li><a href="#managing-cookies" className="text-amber-gold hover:underline">Managing Cookies</a></li>
-              <li><a href="#contact" className="text-amber-gold hover:underline">Contact</a></li>
+              <li><a href="#what-are-cookies" className="text-amber hover:underline">What Are Cookies</a></li>
+              <li><a href="#cookies-we-use" className="text-amber hover:underline">Cookies We Use</a></li>
+              <li><a href="#what-we-dont-use" className="text-amber hover:underline">What We Do Not Use</a></li>
+              <li><a href="#managing-cookies" className="text-amber hover:underline">Managing Cookies</a></li>
+              <li><a href="#contact" className="text-amber hover:underline">Contact</a></li>
             </ol>
           </nav>
 
@@ -67,7 +67,7 @@ export default function CookiesPage() {
                     requiring you to sign in again
                   </li>
                 </ul>
-                <p className="text-sm text-charcoal/70 mt-2">
+                <p className="text-sm text-charcoal-soft mt-2">
                   These tokens are stored in httpOnly cookies and are not accessible to JavaScript
                   running in your browser, which reduces the risk of token theft.
                 </p>
@@ -78,11 +78,12 @@ export default function CookiesPage() {
                   Analytics (privacy-preserving, no personal tracking)
                 </h3>
                 <p>
-                  We use Vercel Analytics to understand how visitors interact with the platform —
-                  for example, which pages are most visited and where users encounter issues.
-                  Vercel Analytics is designed without traditional tracking cookies: it does not
-                  set a persistent identifier cookie, does not track you across sites, and does
-                  not build a personal behavioral profile.
+                  We use Vercel Analytics and Vercel Speed Insights to understand how visitors
+                  interact with the platform — for example, which pages are most visited, where
+                  users encounter issues, and how quickly pages load. These tools are designed
+                  without traditional tracking cookies: they do not set a persistent identifier
+                  cookie, do not track you across sites, and do not build a personal behavioral
+                  profile.
                 </p>
                 <p className="mt-2">
                   Data collected through Vercel Analytics is aggregated and cannot be used to
@@ -128,7 +129,7 @@ export default function CookiesPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chrome cookie settings (opens in new window)"
-                  className="text-amber-gold hover:underline"
+                  className="text-amber hover:underline"
                 >
                   Google Chrome
                 </a>
@@ -139,7 +140,7 @@ export default function CookiesPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Firefox cookie settings (opens in new window)"
-                  className="text-amber-gold hover:underline"
+                  className="text-amber hover:underline"
                 >
                   Mozilla Firefox
                 </a>
@@ -150,7 +151,7 @@ export default function CookiesPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Safari cookie settings (opens in new window)"
-                  className="text-amber-gold hover:underline"
+                  className="text-amber hover:underline"
                 >
                   Safari
                 </a>
@@ -169,7 +170,7 @@ export default function CookiesPage() {
               Questions about our use of cookies or similar technologies:{' '}
               <a
                 href="mailto:privacy@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 privacy@theblacqlist.com
               </a>
@@ -177,10 +178,10 @@ export default function CookiesPage() {
           </section>
 
           <div className="mt-16 pt-8 border-t border-gray-200 flex flex-col gap-3 sm:flex-row sm:gap-8">
-            <Link href="/privacy" className="text-amber-gold font-bold text-lg hover:underline">
+            <Link href="/privacy" className="text-amber font-bold text-lg hover:underline">
               Read our Privacy Policy →
             </Link>
-            <Link href="/terms" className="text-amber-gold font-bold text-lg hover:underline">
+            <Link href="/terms" className="text-amber font-bold text-lg hover:underline">
               Read our Terms of Service →
             </Link>
           </div>

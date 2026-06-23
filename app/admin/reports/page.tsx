@@ -78,7 +78,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Reports & corrections</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Handle user-submitted correction requests and flagged listings.
         </p>
       </div>
@@ -91,8 +91,8 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             href={`/admin/reports?status=${value}&type=${type}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? 'border-amber-gold text-amber-gold'
-                : 'border-transparent text-charcoal/60 hover:text-brand-black'
+                ? 'border-amber-gold text-amber'
+                : 'border-transparent text-charcoal-soft hover:text-brand-black'
             }`}
           >
             {label}
@@ -109,7 +109,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             className={`px-3 py-1 rounded-full border font-subhead text-xs font-semibold transition-colors ${
               type === value
                 ? 'bg-brand-black text-white border-brand-black'
-                : 'border-charcoal/15 text-charcoal/60 hover:border-charcoal/30 hover:text-brand-black'
+                : 'border-charcoal/15 text-charcoal-soft hover:border-charcoal/30 hover:text-brand-black'
             }`}
           >
             {label}
@@ -120,7 +120,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
       {/* Table */}
       {!items || items.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">
+          <p className="font-subhead text-sm text-charcoal-soft">
             No {status} {type !== 'all' ? type.replace('_', ' ') : ''} reports found.
           </p>
         </div>
@@ -129,16 +129,16 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Listing
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Type
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Submitted
                 </th>
                 <th className="px-4 py-3" />
@@ -153,12 +153,12 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                       <p className="font-subhead text-sm font-semibold text-brand-black">
                         {listing?.name ?? 'Unknown listing'}
                       </p>
-                      <p className="font-mono text-xs text-charcoal/40 mt-0.5">
+                      <p className="font-mono text-xs text-charcoal-faint mt-0.5">
                         {item.entity_id.slice(0, 8)}…
                       </p>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-subhead text-xs text-charcoal/60">
+                      <span className="font-subhead text-xs text-charcoal-soft">
                         {item.queue_type === 'flagged_listing' ? 'Flagged listing' : 'Correction'}
                       </span>
                     </td>
@@ -166,7 +166,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                       <AdminStatusBadge status={item.status} />
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {formatDate(item.created_at)}
                       </span>
                     </td>
@@ -175,7 +175,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                         {listing && (
                           <Link
                             href={`/admin/entities/${item.entity_id}`}
-                            className="font-subhead text-xs font-semibold text-charcoal/60 hover:text-brand-black"
+                            className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-brand-black"
                           >
                             View listing
                           </Link>
@@ -194,7 +194,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/60">
+              <p className="font-body text-xs text-charcoal-soft">
                 {count} total · page {pageNum} of {totalPages}
               </p>
               <div className="flex gap-2">

@@ -20,7 +20,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 export function ReceiptStatusBadge({ status }: Props) {
   const config = statusConfig[status] ?? {
     label: status,
-    className: 'bg-charcoal/5 text-charcoal/60 border border-charcoal/10',
+    className: 'bg-charcoal/5 text-charcoal-soft border border-charcoal/10',
   }
 
   return (

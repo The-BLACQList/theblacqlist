@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -70,11 +71,24 @@ export async function updateServiceAction(
   if (priceDisplay !== undefined) updatePayload.price_display = priceDisplay || null
   if (isFeaturedRaw !== undefined) updatePayload.is_featured = isFeaturedRaw === 'true'
 
-  if (Object.keys(updatePayload).length === 0) return { error: 'No changes to save.' }
+  if (Object.keys(updatePayload).length === 0 && !formData.has('group_label')) {
+    return { error: 'No changes to save.' }
+  }
 
-  const { error } = await supabase.from('services').update(updatePayload).eq('id', serviceId)
+  if (Object.keys(updatePayload).length > 0) {
+    const { error } = await supabase.from('services').update(updatePayload).eq('id', serviceId)
+    if (error) return { error: 'Failed to update service. Please try again.' }
+  }
 
-  if (error) return { error: 'Failed to update service. Please try again.' }
+  // Fail-soft: group label updated separately so a not-yet-migrated column can't
+  // block the edit (set whenever the form includes the field, empty clears it).
+  if (formData.has('group_label')) {
+    const groupLabel = formData.get('group_label')?.toString().trim() || null
+    await (supabase as unknown as SupabaseClient)
+      .from('services')
+      .update({ group_label: groupLabel })
+      .eq('id', serviceId)
+  }
 
   if (listing.status === 'published') {
     const citySlug = listing.cities?.slug

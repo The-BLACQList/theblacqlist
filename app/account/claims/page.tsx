@@ -30,7 +30,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   },
   withdrawn: {
     label: 'Withdrawn',
-    className: 'bg-charcoal/5 text-charcoal/60 border-charcoal/15',
+    className: 'bg-charcoal/5 text-charcoal-soft border-charcoal/15',
   },
 }
 
@@ -78,7 +78,7 @@ export default async function AccountClaimsPage() {
         {/* Back nav */}
         <Link
           href="/account"
-          className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/60 hover:text-charcoal mb-6"
+          className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal mb-6"
         >
           <ChevronLeft className="size-3.5" aria-hidden="true" />
           Back to account
@@ -87,7 +87,7 @@ export default async function AccountClaimsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-headline text-3xl text-brand-black mb-1">My claims</h1>
-          <p className="font-subhead text-sm text-charcoal/60">
+          <p className="font-subhead text-sm text-charcoal-soft">
             Listing ownership claims you&apos;ve submitted
           </p>
         </div>
@@ -99,7 +99,7 @@ export default async function AccountClaimsPage() {
             <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
               No claims yet
             </p>
-            <p className="font-body text-sm text-charcoal/60 mb-4">
+            <p className="font-body text-sm text-charcoal-soft mb-4">
               You haven&apos;t submitted any listing claims.
             </p>
             <Link
@@ -131,7 +131,7 @@ export default async function AccountClaimsPage() {
                             listing.cities?.slug,
                             listing.slug
                           )}
-                          className="font-subhead text-sm font-semibold text-brand-black hover:text-amber-gold transition-colors"
+                          className="font-subhead text-sm font-semibold text-brand-black hover:text-amber transition-colors"
                         >
                           {listing.name}
                         </Link>
@@ -140,7 +140,7 @@ export default async function AccountClaimsPage() {
                           Listing unavailable
                         </p>
                       )}
-                      {city && <p className="font-body text-xs text-charcoal/60 mt-0.5">{city}</p>}
+                      {city && <p className="font-body text-xs text-charcoal-soft mt-0.5">{city}</p>}
                     </div>
                     <span
                       className={`flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-full border font-subhead text-xs font-semibold ${statusInfo.className}`}
@@ -150,7 +150,7 @@ export default async function AccountClaimsPage() {
                   </div>
 
                   <div className="flex items-center justify-between gap-4 pt-3 border-t border-charcoal/8">
-                    <p className="font-body text-xs text-charcoal/50">
+                    <p className="font-body text-xs text-charcoal-soft">
                       Submitted {formatDate(claim.created_at)}
                     </p>
                     {canWithdraw && <ClaimWithdrawButton claimId={claim.id} />}

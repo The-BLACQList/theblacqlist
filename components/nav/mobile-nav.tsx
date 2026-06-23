@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { BrandMark } from '@/components/ui/brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 
@@ -48,7 +49,7 @@ export function MobileNav({ isSignedIn }: Props) {
           aria-expanded={isOpen}
           className={cn(
             'flex h-11 w-11 items-center justify-center rounded-md text-cream',
-            'hover:text-amber-gold transition-colors',
+            'hover:text-gold transition-colors',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg'
           )}
         >
@@ -64,13 +65,17 @@ export function MobileNav({ isSignedIn }: Props) {
         </SheetDescription>
 
         <div className="flex flex-col h-full px-6 py-6">
-          {/* Logo */}
+          {/* Logo: node-Q mark + Jost wordmark */}
           <Link
             href="/"
-            className="font-headline text-xl text-white hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
+            aria-label="The BLACQList — home"
+            className="group flex items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
             onClick={() => setIsOpen(false)}
           >
-            The BLACQList
+            <BrandMark className="h-7 w-7 text-gold" />
+            <span className="font-headline text-base font-medium tracking-[0.14em] text-white group-hover:text-gold transition-colors">
+              THE BLACQLIST
+            </span>
           </Link>
 
           <Separator className="my-6 bg-charcoal/40" />
@@ -86,9 +91,9 @@ export function MobileNav({ isSignedIn }: Props) {
                     aria-current={pathname === link.href ? 'page' : undefined}
                     className={cn(
                       'flex items-center min-h-[48px] px-2 rounded-md font-subhead text-base transition-colors',
-                      'text-cream hover:text-amber-gold hover:bg-white/5',
+                      'text-cream hover:text-gold hover:bg-white/5',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold',
-                      pathname === link.href && 'text-amber-gold'
+                      pathname === link.href && 'text-gold'
                     )}
                   >
                     {link.label}
@@ -116,7 +121,7 @@ export function MobileNav({ isSignedIn }: Props) {
                 <form action={signOutAction} onSubmit={() => setIsOpen(false)}>
                   <Button
                     type="submit"
-                    className="w-full h-12 border border-amber-gold text-amber-gold bg-transparent hover:bg-amber-gold/10 font-subhead font-bold"
+                    className="w-full h-12 border border-amber-gold text-gold bg-transparent hover:bg-amber-gold/10 font-subhead font-bold"
                     variant="outline"
                   >
                     Sign Out

@@ -25,7 +25,7 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Visibility</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Control whether your listing is visible to the public.
         </p>
       </div>
@@ -37,7 +37,7 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
             <>
               <Globe className="size-4 text-green-600 shrink-0" aria-hidden="true" />
               <span className="font-subhead text-sm font-semibold text-green-700">Published</span>
-              <span className="font-body text-xs text-charcoal/50">— visible to everyone</span>
+              <span className="font-body text-xs text-charcoal-soft">— visible to everyone</span>
             </>
           )}
           {isPending_ && (
@@ -48,16 +48,16 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
           )}
           {(isDraftReviewable || isDraftUnsubmitted) && (
             <>
-              <EyeOff className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
-              <span className="font-subhead text-sm font-semibold text-charcoal/60">Draft</span>
-              <span className="font-body text-xs text-charcoal/40">— not visible to the public</span>
+              <EyeOff className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
+              <span className="font-subhead text-sm font-semibold text-charcoal-soft">Draft</span>
+              <span className="font-body text-xs text-charcoal-faint">— not visible to the public</span>
             </>
           )}
         </div>
 
         {/* Pending — read-only message */}
         {isPending_ && (
-          <p className="font-body text-sm text-charcoal/60 leading-relaxed">
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
             Your listing is being reviewed by The BLACQList team. This typically takes 3–5 business
             days. You&apos;ll receive an email when it&apos;s approved.
           </p>
@@ -65,11 +65,11 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
 
         {/* Draft + unclaimed — submit for review */}
         {isDraftUnsubmitted && (
-          <p className="font-body text-sm text-charcoal/60 leading-relaxed">
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
             This listing hasn&apos;t been submitted for review yet.{' '}
             <Link
               href="/add-business"
-              className="font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2"
+              className="font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
               Complete your listing
             </Link>{' '}

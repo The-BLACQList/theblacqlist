@@ -66,18 +66,18 @@ export default async function GuideDetailPage({ params }: Props) {
       <section className="px-4 py-12 md:py-16 max-w-[720px] mx-auto">
         <Link
           href="/guides"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-6 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           All guides
         </Link>
 
         <div className="flex flex-wrap items-center gap-3 mb-3">
-          <p className="font-subhead text-xs font-semibold text-amber-gold uppercase tracking-widest">
+          <p className="font-subhead text-xs font-semibold text-amber uppercase tracking-widest">
             City Guide
           </p>
           {guide.city && (
-            <span className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/50">
+            <span className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft">
               <MapPin className="size-3" aria-hidden="true" />
               {guide.city}
             </span>
@@ -88,12 +88,12 @@ export default async function GuideDetailPage({ params }: Props) {
           {guide.title}
         </h1>
         {guide.subtitle && (
-          <p className="font-body text-lg text-charcoal/70 leading-relaxed mb-3">
+          <p className="font-body text-lg text-charcoal-soft leading-relaxed mb-3">
             {guide.subtitle}
           </p>
         )}
         {guide.published_at && (
-          <time dateTime={guide.published_at} className="font-subhead text-xs text-charcoal/40">
+          <time dateTime={guide.published_at} className="font-subhead text-xs text-charcoal-faint">
             {formatDate(guide.published_at)}
           </time>
         )}
@@ -109,7 +109,7 @@ export default async function GuideDetailPage({ params }: Props) {
           )}
 
           {sections.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/60 py-8 text-center">
+            <p className="font-body text-sm text-charcoal-soft py-8 text-center">
               Sections coming soon.
             </p>
           ) : (

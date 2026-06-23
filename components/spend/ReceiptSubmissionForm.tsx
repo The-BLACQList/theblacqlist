@@ -8,9 +8,9 @@ import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceipt
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
 
 const inputCls =
-  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
+  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
 const textareaCls =
-  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
+  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
 
 function Field({
   id,
@@ -30,7 +30,7 @@ function Field({
       <label htmlFor={id} className="block font-subhead text-sm font-semibold text-brand-black">
         {label}
       </label>
-      {hint && <p className="font-body text-xs text-charcoal/50">{hint}</p>}
+      {hint && <p className="font-body text-xs text-charcoal-soft">{hint}</p>}
       {children}
       {error && (
         <p role="alert" className="font-body text-xs text-red-600">
@@ -99,7 +99,7 @@ export function ReceiptSubmissionForm() {
         error={fieldErrors.amount_dollars}
       >
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-charcoal/50 pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-charcoal-soft pointer-events-none">
             $
           </span>
           <input
@@ -149,15 +149,15 @@ export function ReceiptSubmissionForm() {
         >
           Receipt photo
         </label>
-        <p className="font-body text-xs text-charcoal/50">
+        <p className="font-body text-xs text-charcoal-soft">
           Optional — attach a photo of your receipt. JPEG, PNG, HEIC, up to 10 MB.
         </p>
         <label
           htmlFor="receipt_file"
           className="flex items-center gap-3 h-11 px-3 rounded-lg border border-dashed border-charcoal/30 bg-white cursor-pointer hover:border-amber-gold/60 hover:bg-amber-gold/5 transition-colors"
         >
-          <Upload className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
-          <span className="font-body text-sm text-charcoal/50 truncate">
+          <Upload className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
+          <span className="font-body text-sm text-charcoal-soft truncate">
             {fileName ?? 'Choose a photo…'}
           </span>
           <input
@@ -180,8 +180,8 @@ export function ReceiptSubmissionForm() {
       {/* Privacy notice + opt-out */}
       <div className="rounded-lg bg-pale-lavender/60 border border-charcoal/10 p-4 space-y-3">
         <div className="flex items-start gap-2">
-          <Info className="size-4 text-charcoal/40 shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="font-body text-xs text-charcoal/60 leading-relaxed">
+          <Info className="size-4 text-charcoal-faint shrink-0 mt-0.5" aria-hidden="true" />
+          <p className="font-body text-xs text-charcoal-soft leading-relaxed">
             Receipt details are private — only you and BLACQList admins can see your submission. We
             use anonymized totals to power the community spend map. Your name is never attached to
             public data.
@@ -193,7 +193,7 @@ export function ReceiptSubmissionForm() {
             name="aggregate_opt_out"
             className="mt-0.5 rounded border-charcoal/30 accent-amber-gold"
           />
-          <span className="font-body text-xs text-charcoal/70 leading-relaxed">
+          <span className="font-body text-xs text-charcoal-soft leading-relaxed">
             Exclude my spend from community totals and the public flow map.
           </span>
         </label>
@@ -240,7 +240,7 @@ export function ReceiptListRow({
         <p className="font-subhead text-sm font-semibold text-brand-black truncate">
           {businessLabel}
         </p>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">{purchaseDate}</p>
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">{purchaseDate}</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">
@@ -258,7 +258,7 @@ function StatusPill({ status }: { status: string }) {
     approved: { label: 'Approved', cls: 'bg-green-50 text-green-700' },
     rejected: { label: 'Rejected', cls: 'bg-red-50 text-red-700' },
   }
-  const cfg = map[status] ?? { label: status, cls: 'bg-charcoal/5 text-charcoal/60' }
+  const cfg = map[status] ?? { label: status, cls: 'bg-charcoal/5 text-charcoal-soft' }
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${cfg.cls}`}

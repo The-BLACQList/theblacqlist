@@ -72,31 +72,31 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Users</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           All registered users and their platform roles.
-          {totalCount > 0 && <span className="ml-1 text-charcoal/40">({totalCount} total)</span>}
+          {totalCount > 0 && <span className="ml-1 text-charcoal-faint">({totalCount} total)</span>}
         </p>
       </div>
 
       {users.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">No users found.</p>
+          <p className="font-subhead text-sm text-charcoal-soft">No users found.</p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   User
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Admin roles
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Joined
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Last sign in
                 </th>
                 {isSuperAdmin && <th className="px-4 py-3" />}
@@ -115,9 +115,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                         {displayName ?? user.email ?? '—'}
                       </p>
                       {displayName && (
-                        <p className="font-body text-xs text-charcoal/50 mt-0.5">{user.email}</p>
+                        <p className="font-body text-xs text-charcoal-soft mt-0.5">{user.email}</p>
                       )}
-                      <p className="font-mono text-xs text-charcoal/30 mt-0.5">
+                      <p className="font-mono text-xs text-charcoal-faint mt-0.5">
                         {user.id.slice(0, 8)}…
                       </p>
                     </td>
@@ -134,16 +134,16 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                           ))}
                         </div>
                       ) : (
-                        <span className="font-body text-xs text-charcoal/30">—</span>
+                        <span className="font-body text-xs text-charcoal-faint">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {user.created_at ? formatDate(user.created_at) : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : 'Never'}
                       </span>
                     </td>
@@ -165,7 +165,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/60">
+              <p className="font-body text-xs text-charcoal-soft">
                 {totalCount} total · page {pageNum} of {totalPages}
               </p>
               <div className="flex gap-2">

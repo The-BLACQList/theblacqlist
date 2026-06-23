@@ -73,7 +73,7 @@ function UploadZone({
   return (
     <div className="flex flex-col gap-2">
       <p className="font-subhead text-sm font-semibold text-brand-black">{label}</p>
-      <p className="font-subhead text-xs text-charcoal/50 -mt-1">{hint}</p>
+      <p className="font-subhead text-xs text-charcoal-soft -mt-1">{hint}</p>
 
       {state.status === 'success' && state.cdnUrl ? (
         <div className="relative w-full h-40 rounded-xl overflow-hidden border border-charcoal/20 bg-charcoal/5">
@@ -103,12 +103,12 @@ function UploadZone({
           )}
         >
           {state.status === 'uploading' ? (
-            <Loader2 className="size-6 animate-spin text-amber-gold" aria-hidden="true" />
+            <Loader2 className="size-6 animate-spin text-amber" aria-hidden="true" />
           ) : (
             <Upload
               className={cn(
                 'size-6',
-                state.status === 'error' ? 'text-red-400' : 'text-charcoal/40'
+                state.status === 'error' ? 'text-red-400' : 'text-charcoal-faint'
               )}
               aria-hidden="true"
             />
@@ -116,7 +116,7 @@ function UploadZone({
           <span
             className={cn(
               'font-subhead text-xs',
-              state.status === 'error' ? 'text-red-600' : 'text-charcoal/50'
+              state.status === 'error' ? 'text-red-600' : 'text-charcoal-soft'
             )}
           >
             {state.status === 'uploading'
@@ -260,7 +260,7 @@ export function MediaStep({
   return (
     <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
       <div>
-        <p className="font-subhead text-sm text-charcoal/60 leading-relaxed">
+        <p className="font-subhead text-sm text-charcoal-soft leading-relaxed">
           Add photos to help people recognize your business. All photos are optional — you can add
           or update them later.
         </p>
@@ -294,9 +294,9 @@ export function MediaStep({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <p className="font-subhead text-sm font-semibold text-brand-black">Gallery photos</p>
-          <span className="font-subhead text-xs text-charcoal/40">{successCount}/12</span>
+          <span className="font-subhead text-xs text-charcoal-faint">{successCount}/12</span>
         </div>
-        <p className="font-subhead text-xs text-charcoal/50 -mt-1">
+        <p className="font-subhead text-xs text-charcoal-soft -mt-1">
           Up to 12 photos, 3 MB each. JPG, PNG, or WebP.
         </p>
 
@@ -309,7 +309,7 @@ export function MediaStep({
               >
                 {item.status === 'uploading' && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="size-5 animate-spin text-amber-gold" />
+                    <Loader2 className="size-5 animate-spin text-amber" />
                   </div>
                 )}
                 {item.status === 'success' && item.cdnUrl && (
@@ -335,7 +335,7 @@ export function MediaStep({
                     <button
                       type="button"
                       onClick={() => removeGalleryItem(item.localId)}
-                      className="font-subhead text-[10px] text-charcoal/50 underline"
+                      className="font-subhead text-[10px] text-charcoal-soft underline"
                     >
                       Remove
                     </button>
@@ -350,7 +350,7 @@ export function MediaStep({
           <button
             type="button"
             onClick={() => galleryInputRef.current?.click()}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-charcoal/25 bg-charcoal/3 font-subhead text-xs text-charcoal/50 hover:border-amber-gold hover:bg-amber-gold/5 hover:text-charcoal transition-colors"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-charcoal/25 bg-charcoal/3 font-subhead text-xs text-charcoal-soft hover:border-amber-gold hover:bg-amber-gold/5 hover:text-charcoal transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" />
             Add photos ({12 - successCount} remaining)

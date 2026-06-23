@@ -127,7 +127,7 @@ export function ProductForm({
           maxLength={200}
           defaultValue={defaultValues?.name ?? ''}
           placeholder="e.g. Handmade Candle Set"
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.name ? 'name-error' : undefined}
         />
         {fieldErrors.name && (
@@ -152,7 +152,7 @@ export function ProductForm({
           maxLength={2000}
           defaultValue={defaultValues?.description ?? ''}
           placeholder="Describe your product — materials, dimensions, use cases..."
-          className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold resize-none"
+          className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold resize-none"
         />
       </div>
 
@@ -173,7 +173,7 @@ export function ProductForm({
             step="0.01"
             defaultValue={defaultValues?.price_dollars ?? ''}
             placeholder="0.00"
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
             aria-describedby={fieldErrors.price_cents ? 'price-error' : undefined}
           />
           {fieldErrors.price_cents && (
@@ -197,7 +197,7 @@ export function ProductForm({
             step="0.01"
             defaultValue={defaultValues?.compare_price_dollars ?? ''}
             placeholder="Original price"
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
             aria-describedby={fieldErrors.compare_at_price_cents ? 'compare-error' : undefined}
           />
           {fieldErrors.compare_at_price_cents && (
@@ -215,7 +215,7 @@ export function ProductForm({
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
           Price display text{' '}
-          <span className="font-normal text-charcoal/40">(optional override)</span>
+          <span className="font-normal text-charcoal-faint">(optional override)</span>
         </label>
         <input
           id="price_display_text"
@@ -224,7 +224,7 @@ export function ProductForm({
           maxLength={80}
           defaultValue={defaultValues?.price_display_text ?? ''}
           placeholder='e.g. "Starting at $25" or "$25–$100"'
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
         />
       </div>
 
@@ -242,7 +242,7 @@ export function ProductForm({
           type="url"
           defaultValue={defaultValues?.cover_image_url ?? ''}
           placeholder="https://..."
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.cover_image_url ? 'image-error' : undefined}
         />
         {fieldErrors.cover_image_url && (
@@ -255,7 +255,7 @@ export function ProductForm({
       {/* Tags */}
       <div className="space-y-1">
         <label htmlFor="tags" className="block font-subhead text-sm font-semibold text-brand-black">
-          Tags <span className="font-normal text-charcoal/40">(comma-separated)</span>
+          Tags <span className="font-normal text-charcoal-faint">(comma-separated)</span>
         </label>
         <input
           id="tags"
@@ -263,7 +263,7 @@ export function ProductForm({
           type="text"
           defaultValue={defaultValues?.tags ?? ''}
           placeholder="e.g. candles, handmade, gifts"
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
         />
       </div>
 
@@ -315,7 +315,7 @@ export function ProductForm({
           maxLength={300}
           defaultValue={defaultValues?.return_policy_note ?? ''}
           placeholder="e.g. All sales final. No returns on digital products."
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
         />
       </div>
 
@@ -325,7 +325,7 @@ export function ProductForm({
           htmlFor="external_purchase_url"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Purchase URL <span className="font-normal text-charcoal/40">(where to buy)</span>
+          Purchase URL <span className="font-normal text-charcoal-faint">(where to buy)</span>
         </label>
         <input
           id="external_purchase_url"
@@ -333,7 +333,7 @@ export function ProductForm({
           type="url"
           defaultValue={defaultValues?.external_purchase_url ?? ''}
           placeholder="https://yourstore.com/product"
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.external_purchase_url ? 'purchase-url-error' : undefined}
         />
         {fieldErrors.external_purchase_url && (
@@ -341,7 +341,7 @@ export function ProductForm({
             {fieldErrors.external_purchase_url}
           </p>
         )}
-        <p className="font-body text-xs text-charcoal/40">
+        <p className="font-body text-xs text-charcoal-faint">
           Customers will be taken to this URL when they click &quot;Shop Now&quot;.
         </p>
       </div>

@@ -33,7 +33,7 @@ export default async function GuidesPage() {
     <main className="min-h-screen bg-pale-lavender">
       {/* Hero */}
       <section className="px-4 py-14 md:py-20 max-w-[960px] mx-auto">
-        <p className="font-subhead text-xs font-semibold text-amber-gold uppercase tracking-widest mb-3">
+        <p className="font-subhead text-xs font-semibold text-amber uppercase tracking-widest mb-3">
           City Guides
         </p>
         <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight mb-4">
@@ -53,7 +53,7 @@ export default async function GuidesPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
                 City guides coming soon
               </p>
-              <p className="font-body text-sm text-charcoal/60">
+              <p className="font-body text-sm text-charcoal-soft">
                 Starting with Atlanta — curated city guides are on the way.
               </p>
               <Link

@@ -29,9 +29,9 @@ interface Props {
 }
 
 const inputCls =
-  'w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black'
+  'w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black'
 
-const labelCls = 'block font-subhead text-xs font-semibold text-charcoal/60 mb-1'
+const labelCls = 'block font-subhead text-xs font-semibold text-charcoal-soft mb-1'
 
 export function EntityEditForm({ listingId, name, tagline, details }: Props) {
   const [state, action, isPending] = useActionState(updateEntityContentAction, null)
@@ -77,7 +77,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
             name="description"
             rows={5}
             defaultValue={details?.description ?? ''}
-            className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none"
+            className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none"
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

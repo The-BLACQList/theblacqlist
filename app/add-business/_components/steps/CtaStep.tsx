@@ -69,7 +69,7 @@ export function CtaStep({ ctaType, ctaUrl, phone, email, onChange }: Props) {
 
   return (
     <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-4">
-      <p className="font-subhead text-sm text-charcoal/60 leading-relaxed">
+      <p className="font-subhead text-sm text-charcoal-soft leading-relaxed">
         Choose the primary action you want visitors to take when they find your listing.
       </p>
 
@@ -98,14 +98,14 @@ export function CtaStep({ ctaType, ctaUrl, phone, email, onChange }: Props) {
                 >
                   {card.label}
                 </p>
-                <p className="font-subhead text-xs text-charcoal/50 mt-0.5">{card.description}</p>
+                <p className="font-subhead text-xs text-charcoal-soft mt-0.5">{card.description}</p>
               </button>
 
               {isSelected && (
                 <div className="mt-2 px-1">
                   <label
                     htmlFor={`cta-input-${card.value}`}
-                    className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1.5"
+                    className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1.5"
                   >
                     {card.inputLabel}
                   </label>
@@ -115,7 +115,7 @@ export function CtaStep({ ctaType, ctaUrl, phone, email, onChange }: Props) {
                     value={ctaUrl}
                     onChange={(e) => onChange(ctaType, e.target.value)}
                     placeholder={card.inputPlaceholder}
-                    className="h-11 w-full rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+                    className="h-11 w-full rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
                   />
                 </div>
               )}

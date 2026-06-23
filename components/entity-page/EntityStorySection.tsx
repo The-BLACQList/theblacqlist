@@ -54,7 +54,7 @@ export function EntityStorySection({ entity }: Props) {
             <button
               type="button"
               onClick={() => setExpanded(!expanded)}
-              className="mt-4 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2 transition-colors"
+              className="mt-4 font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2 transition-colors"
               aria-expanded={expanded}
             >
               {expanded ? 'Read less' : 'Read more'}

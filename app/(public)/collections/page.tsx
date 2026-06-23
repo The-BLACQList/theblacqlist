@@ -33,7 +33,7 @@ export default async function CollectionsPage() {
     <main className="min-h-screen bg-pale-lavender">
       {/* Hero */}
       <section className="px-4 py-14 md:py-20 max-w-[960px] mx-auto">
-        <p className="font-subhead text-xs font-semibold text-amber-gold uppercase tracking-widest mb-3">
+        <p className="font-subhead text-xs font-semibold text-amber uppercase tracking-widest mb-3">
           Collections
         </p>
         <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight mb-4">
@@ -52,7 +52,7 @@ export default async function CollectionsPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
                 No collections yet
               </p>
-              <p className="font-body text-sm text-charcoal/60">
+              <p className="font-body text-sm text-charcoal-soft">
                 Check back soon — curated lists are on the way.
               </p>
             </div>

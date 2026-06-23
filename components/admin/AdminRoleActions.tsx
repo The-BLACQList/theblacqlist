@@ -22,7 +22,7 @@ export function AdminRoleActions({ userId, adminRoles, isSelf }: Props) {
   const hasAdminRole = Boolean(adminRole)
 
   if (isSelf) {
-    return <span className="font-body text-xs text-charcoal/30 italic">you</span>
+    return <span className="font-body text-xs text-charcoal-faint italic">you</span>
   }
 
   return (
@@ -46,7 +46,7 @@ export function AdminRoleActions({ userId, adminRoles, isSelf }: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold disabled:opacity-50"
+            className="font-subhead text-xs font-semibold text-amber hover:text-light-gold disabled:opacity-50"
           >
             Make admin
           </button>

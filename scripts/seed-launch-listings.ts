@@ -39,9 +39,37 @@ interface ListingHours {
 }
 
 interface ListingLink {
+  // JSON key is "platform"; it maps onto the listing_links.link_type column.
   platform: string
   url: string
 }
+
+// Allowed values for listing_links.link_type (matches the column CHECK).
+const ALLOWED_LINK_TYPES = new Set([
+  'website',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'linkedin',
+  'twitter',
+  'booking',
+  'menu',
+  'order',
+  'other',
+])
+
+// Social platforms already stored on listing_details_business.social_* — seeding
+// these into listing_links too would duplicate them on the page, so we skip them.
+// listing_links is reserved for flexible action links (booking, menu, order, …).
+const SOCIAL_LINK_TYPES = new Set([
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'linkedin',
+  'twitter',
+])
 
 interface ListingInput {
   name: string
@@ -204,18 +232,23 @@ async function seedCity(
       }
     }
 
-    // Insert links if provided
+    // Insert flexible links if provided. This block only runs for newly-inserted
+    // listings (existing ones `continue` above), so a plain insert is idempotent.
+    // Social links are skipped — they already live in social_* columns.
     if (listing.links && listing.links.length > 0) {
-      const linkRows = listing.links.map((l) => ({
-        listing_id: listingId,
-        platform: l.platform,
-        url: l.url,
-      }))
-      const { error: linksErr } = await supabase
-        .from('listing_links')
-        .upsert(linkRows, { onConflict: 'listing_id,platform', ignoreDuplicates: true })
-      if (linksErr) {
-        console.warn(`[${cityLabel}] Links warning for ${listing.name}:`, linksErr.message)
+      const linkRows = listing.links
+        .filter((l) => /^https:\/\//i.test(l.url) && !SOCIAL_LINK_TYPES.has(l.platform))
+        .map((l, i) => ({
+          listing_id: listingId,
+          link_type: ALLOWED_LINK_TYPES.has(l.platform) ? l.platform : 'other',
+          url: l.url,
+          display_order: i,
+        }))
+      if (linkRows.length > 0) {
+        const { error: linksErr } = await supabase.from('listing_links').insert(linkRows)
+        if (linksErr) {
+          console.warn(`[${cityLabel}] Links warning for ${listing.name}:`, linksErr.message)
+        }
       }
     }
 

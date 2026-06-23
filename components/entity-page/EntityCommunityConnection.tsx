@@ -25,11 +25,11 @@ export function EntityCommunityConnection({ entity }: Props) {
         </div>
 
         {/* Community corrections */}
-        <p className="font-body text-sm text-charcoal/70 text-center">
+        <p className="font-body text-sm text-charcoal-soft text-center">
           Know something that needs to be updated?{' '}
           <a
             href={`/corrections?listing=${entity.id}`}
-            className="text-amber-gold hover:text-light-gold underline underline-offset-2 font-subhead font-semibold"
+            className="text-amber hover:text-light-gold underline underline-offset-2 font-subhead font-semibold"
           >
             Suggest a correction
           </a>

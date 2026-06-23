@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Products | Dashboard' }
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
-  draft: 'bg-charcoal/10 text-charcoal/60',
+  draft: 'bg-charcoal/10 text-charcoal-soft',
   archived: 'bg-amber-100 text-amber-700',
 }
 
@@ -55,7 +55,7 @@ export default async function DashboardProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Products</h1>
-          <p className="font-body text-sm text-charcoal/60 mt-0.5">
+          <p className="font-body text-sm text-charcoal-soft mt-0.5">
             Manage your marketplace products.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default async function DashboardProductsPage() {
         <div className="rounded-xl border border-charcoal/10 bg-white py-16 text-center">
           <Package className="size-12 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
           <p className="font-headline text-lg text-brand-black">No products yet</p>
-          <p className="font-body text-sm text-charcoal/50 mt-2 max-w-xs mx-auto">
+          <p className="font-body text-sm text-charcoal-soft mt-2 max-w-xs mx-auto">
             Add your first product to start selling in the marketplace.
           </p>
           <Link
@@ -88,19 +88,19 @@ export default async function DashboardProductsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-pale-lavender/40">
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                   Product
                 </th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden sm:table-cell">
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide hidden sm:table-cell">
                   Listing
                 </th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden md:table-cell">
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Price
                 </th>
-                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                   Actions
                 </th>
               </tr>
@@ -112,16 +112,16 @@ export default async function DashboardProductsPage() {
                     <p className="font-subhead text-sm font-semibold text-brand-black">{p.name}</p>
                   </td>
                   <td className="px-5 py-4 hidden sm:table-cell">
-                    <p className="font-body text-xs text-charcoal/60">{p.listing_name}</p>
+                    <p className="font-body text-xs text-charcoal-soft">{p.listing_name}</p>
                   </td>
                   <td className="px-5 py-4 hidden md:table-cell">
-                    <p className="font-body text-xs text-charcoal/60">
+                    <p className="font-body text-xs text-charcoal-soft">
                       {p.price_display_text ?? (p.price_cents ? formatPrice(p.price_cents) : '—')}
                     </p>
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`inline-flex px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-charcoal/10 text-charcoal/60'}`}
+                      className={`inline-flex px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${STATUS_STYLES[p.status] ?? 'bg-charcoal/10 text-charcoal-soft'}`}
                     >
                       {p.status}
                     </span>
@@ -134,7 +134,7 @@ export default async function DashboardProductsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="View public product page"
-                          className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
+                          className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors"
                         >
                           <ExternalLink className="size-4" aria-hidden="true" />
                         </Link>

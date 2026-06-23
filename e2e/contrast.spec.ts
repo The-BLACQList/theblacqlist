@@ -43,17 +43,17 @@ export function contrastRatio(c1: Rgb, c2: Rgb): number {
 const AA_NORMAL = 4.5
 
 test.describe('J. Accessibility — color contrast', () => {
-  test('J12 — amber gold buttons: #000000 on #E2A428 ≥ 4.5:1', () => {
-    const ratio = contrastRatio(hexToRgb('#000000'), hexToRgb('#E2A428'))
+  test('J12 — gold CTA on dark: #000000 on #C4A065 ≥ 4.5:1', () => {
+    const ratio = contrastRatio(hexToRgb('#000000'), hexToRgb('#C4A065'))
     expect(ratio, `contrast ratio was ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL)
   })
 
-  test('J13 — body text on cream: #595758 on #FCFAF4 ≥ 4.5:1', () => {
-    const ratio = contrastRatio(hexToRgb('#595758'), hexToRgb('#FCFAF4'))
+  test('J13 — body text on off-white: #595758 on #F4F4F7 ≥ 4.5:1', () => {
+    const ratio = contrastRatio(hexToRgb('#595758'), hexToRgb('#F4F4F7'))
     expect(ratio, `contrast ratio was ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA_NORMAL)
   })
 
-  // Tie the token math to the live UI: the hero CTA uses the amber-gold token.
+  // Tie the token math to the live UI: the hero CTA uses the gold token (gold on the dark scrim).
   test('J12 (live) — hero CTA rendered colors meet 4.5:1', async ({ page }) => {
     await page.goto('/discover')
     await page

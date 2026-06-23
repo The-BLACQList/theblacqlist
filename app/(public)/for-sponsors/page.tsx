@@ -57,7 +57,7 @@ export default function ForSponsorsPage() {
       {/* Dark hero — keep existing structure */}
       <section className="bg-deep-bg" aria-labelledby="for-sponsors-heading">
         <Container className="py-16 md:py-24">
-          <p className="font-subhead text-amber-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
             For Sponsors &amp; Partners
           </p>
           <h1
@@ -117,7 +117,7 @@ export default function ForSponsorsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           {HOW_IT_WORKS.map((step) => (
             <div key={step.step} className="flex flex-col gap-3">
-              <span className="font-headline text-4xl text-amber-gold leading-none">
+              <span className="font-headline text-4xl text-gold leading-none">
                 {step.step}
               </span>
               <h3 className="font-subhead text-base font-semibold text-brand-black">
@@ -138,7 +138,7 @@ export default function ForSponsorsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl">
           {/* Sponsored Spotlight */}
           <div className="rounded-xl border border-charcoal/15 p-6">
-            <span className="inline-block rounded-full bg-amber-gold/15 text-amber-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
+            <span className="inline-block rounded-full bg-amber-gold/15 text-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Limited Inventory
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
@@ -148,9 +148,9 @@ export default function ForSponsorsPage() {
             </p>
             <p className="font-headline text-2xl text-brand-black mb-1">
               $299–$999
-              <span className="font-subhead text-sm text-charcoal/50 ml-1">/mo</span>
+              <span className="font-subhead text-sm text-charcoal-soft ml-1">/mo</span>
             </p>
-            <p className="font-body text-xs text-charcoal/50 mb-4">
+            <p className="font-body text-xs text-charcoal-soft mb-4">
               Pricing varies by zone and inventory
             </p>
             <Button
@@ -173,9 +173,9 @@ export default function ForSponsorsPage() {
             </p>
             <p className="font-headline text-2xl text-brand-black mb-1">
               $49–$99
-              <span className="font-subhead text-sm text-charcoal/50 ml-1">/ 30 days</span>
+              <span className="font-subhead text-sm text-charcoal-soft ml-1">/ 30 days</span>
             </p>
-            <p className="font-body text-xs text-charcoal/50 mb-4">
+            <p className="font-body text-xs text-charcoal-soft mb-4">
               Coming soon — join the waitlist
             </p>
             <Button

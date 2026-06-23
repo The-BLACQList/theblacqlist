@@ -31,7 +31,7 @@ export function PeriodToggle({ period }: Props) {
           className={`px-3 py-1 rounded-md font-subhead text-xs font-semibold transition-colors ${
             period === p
               ? 'bg-amber-gold text-brand-black shadow-sm'
-              : 'text-charcoal/50 hover:text-brand-black'
+              : 'text-charcoal-soft hover:text-brand-black'
           }`}
         >
           {p === '7d' ? '7 days' : '30 days'}

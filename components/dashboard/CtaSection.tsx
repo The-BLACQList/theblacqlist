@@ -42,7 +42,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Primary call to action</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           The main button shown on your public page. Choose the action that best fits your business.
         </p>
       </div>
@@ -52,7 +52,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
         <div>
           <label
             htmlFor="cta-type"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
             Action type <span aria-hidden="true">*</span>
           </label>
@@ -79,7 +79,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
           <div>
             <label
               htmlFor="cta-url"
-              className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+              className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
             >
               Destination URL <span aria-hidden="true">*</span>
             </label>
@@ -90,7 +90,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
               defaultValue={ctaUrl ?? ''}
               placeholder="https://example.com/book"
               required={requiresUrl}
-              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
             />
           </div>
         )}
@@ -98,10 +98,10 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
         <div>
           <label
             htmlFor="cta-label"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
             Button label override{' '}
-            <span className="font-normal text-charcoal/40">(optional, max 50 chars)</span>
+            <span className="font-normal text-charcoal-faint">(optional, max 50 chars)</span>
           </label>
           <input
             id="cta-label"
@@ -110,7 +110,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
             defaultValue={ctaLabelOverride ?? ''}
             maxLength={50}
             placeholder="Leave blank to use the default label"
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
 

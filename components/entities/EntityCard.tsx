@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Route } from 'next'
-import { BookmarkPlus } from 'lucide-react'
+import { BookmarkPlus, Calendar } from 'lucide-react'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Badge } from '@/components/ui/badge'
@@ -41,6 +41,12 @@ function getEntityHref(entity: DiscoveryEntity): string {
   return buildEntityUrl(entity.entity_type, entity.city?.slug, entity.slug)
 }
 
+function formatEventDate(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
 function CoverPlaceholder({ name }: { name: string }) {
   const initials = name
     .split(' ')
@@ -51,7 +57,7 @@ function CoverPlaceholder({ name }: { name: string }) {
     .toUpperCase()
   return (
     <div className="w-full h-full bg-deep-bg flex items-center justify-center" aria-hidden="true">
-      <span className="font-headline text-4xl text-amber-gold select-none">{initials}</span>
+      <span className="font-headline text-4xl text-gold select-none">{initials}</span>
     </div>
   )
 }
@@ -134,9 +140,31 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
         {/* Category + location */}
         <p className="text-xs font-subhead text-charcoal">
           {entity.category.name}
-          <span className="mx-1 text-charcoal/40">·</span>
+          <span className="mx-1 text-charcoal-faint">·</span>
           {locationStr}
         </p>
+
+        {/* Event date (event cards only) */}
+        {entity.entity_type === 'event' && entity.event_starts_at && (
+          <p className="text-xs font-subhead font-semibold text-amber flex items-center gap-1">
+            <Calendar className="size-3.5 shrink-0" aria-hidden="true" />
+            {formatEventDate(entity.event_starts_at)}
+          </p>
+        )}
+
+        {/* Identity & Ownership chips (e.g. Black-Woman-Owned) */}
+        {entity.identity_chips && entity.identity_chips.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {entity.identity_chips.map((chip) => (
+              <span
+                key={chip}
+                className="inline-block rounded-full bg-pale-lavender text-brand-black text-[10px] font-subhead font-semibold px-2 py-0.5"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Description */}
         <p className="text-sm font-subhead text-charcoal leading-relaxed line-clamp-2 flex-1">

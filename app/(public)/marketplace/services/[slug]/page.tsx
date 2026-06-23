@@ -84,7 +84,7 @@ export default async function ServiceDetailPage({ params }: Props) {
       <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
+          <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal-faint">
             <li>
               <Link href="/marketplace" className="hover:text-charcoal">
                 Marketplace
@@ -125,11 +125,11 @@ export default async function ServiceDetailPage({ params }: Props) {
           {/* Details */}
           <div className="space-y-5">
             {listing && (
-              <p className="font-subhead text-sm text-charcoal/50">
+              <p className="font-subhead text-sm text-charcoal-soft">
                 Offered by{' '}
                 <Link
                   href={`/vendors/${listing.slug}`}
-                  className="font-semibold text-brand-black hover:text-amber-gold"
+                  className="font-semibold text-brand-black hover:text-amber"
                 >
                   {listing.name}
                 </Link>
@@ -142,12 +142,12 @@ export default async function ServiceDetailPage({ params }: Props) {
             <div className="flex items-baseline gap-3">
               <span className="font-subhead text-2xl font-bold text-brand-black">{priceLabel}</span>
               {svc.duration_text && (
-                <span className="font-body text-sm text-charcoal/40">{svc.duration_text}</span>
+                <span className="font-body text-sm text-charcoal-faint">{svc.duration_text}</span>
               )}
             </div>
 
             {/* Delivery mode */}
-            <p className="flex items-center gap-1.5 font-body text-sm text-charcoal/60">
+            <p className="flex items-center gap-1.5 font-body text-sm text-charcoal-soft">
               <DeliveryIcon className="size-4 shrink-0" aria-hidden="true" />
               {DELIVERY_LABELS[svc.delivery_mode] ?? svc.delivery_mode}
             </p>
@@ -168,7 +168,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             {/* Description */}
             {svc.description && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-                <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal/50 mb-2">
+                <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal-soft mb-2">
                   About this service
                 </h2>
                 <p className="font-body text-sm text-charcoal leading-relaxed whitespace-pre-line">
@@ -179,7 +179,7 @@ export default async function ServiceDetailPage({ params }: Props) {
 
             <Link
               href="/marketplace/services"
-              className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/40 hover:text-charcoal"
+              className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal"
             >
               <ArrowLeft className="size-3" aria-hidden="true" />
               Back to services

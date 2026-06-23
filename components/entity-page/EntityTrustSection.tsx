@@ -49,14 +49,14 @@ export function EntityTrustSection({ entity }: Props) {
                 </p>
                 <Link
                   href={`/claim/${entity.id}`}
-                  className="inline-flex items-center font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2"
+                  className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
                 >
                   Claim this listing
                 </Link>
               </div>
             )}
 
-            <p className="font-subhead text-xs text-charcoal/60 mt-4">
+            <p className="font-subhead text-xs text-charcoal-soft mt-4">
               <Link
                 href="/about/trust"
                 className="hover:text-charcoal underline underline-offset-2"
@@ -74,14 +74,14 @@ export function EntityTrustSection({ entity }: Props) {
                   {entity.avg_rating.toFixed(1)}
                 </p>
                 <p className="font-subhead text-xs text-charcoal mt-0.5">out of 5</p>
-                <p className="font-subhead text-xs text-charcoal/60 mt-1">
+                <p className="font-subhead text-xs text-charcoal-soft mt-1">
                   {entity.review_count.toLocaleString()} reviews
                 </p>
               </>
             ) : (
-              <p className="font-subhead text-sm text-charcoal/60">No reviews yet</p>
+              <p className="font-subhead text-sm text-charcoal-soft">No reviews yet</p>
             )}
-            <p className="font-subhead text-[10px] text-charcoal/40 mt-3 uppercase tracking-wide">
+            <p className="font-subhead text-[10px] text-charcoal-faint mt-3 uppercase tracking-wide">
               Reviews coming soon
             </p>
           </div>

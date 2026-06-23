@@ -58,7 +58,7 @@ export default async function ArticleDetailPage({ params }: Props) {
       <section className="px-4 py-12 md:py-16 max-w-[720px] mx-auto">
         <Link
           href="/blacqlight"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-6 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           The BLACQLight
@@ -81,7 +81,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           {article.title}
         </h1>
         {article.subtitle && (
-          <p className="font-body text-lg text-charcoal/70 leading-relaxed mb-4">
+          <p className="font-body text-lg text-charcoal-soft leading-relaxed mb-4">
             {article.subtitle}
           </p>
         )}
@@ -93,12 +93,12 @@ export default async function ArticleDetailPage({ params }: Props) {
             </span>
           )}
           {article.author_name && article.published_at && (
-            <span className="text-charcoal/30" aria-hidden="true">
+            <span className="text-charcoal-faint" aria-hidden="true">
               ·
             </span>
           )}
           {article.published_at && (
-            <time dateTime={article.published_at} className="font-subhead text-xs text-charcoal/50">
+            <time dateTime={article.published_at} className="font-subhead text-xs text-charcoal-soft">
               {formatDate(article.published_at)}
             </time>
           )}
@@ -111,7 +111,7 @@ export default async function ArticleDetailPage({ params }: Props) {
           {article.body ? (
             <EditorialRichTextDisplay body={article.body} />
           ) : (
-            <p className="font-body text-sm text-charcoal/60 text-center py-8">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8">
               Article content coming soon.
             </p>
           )}

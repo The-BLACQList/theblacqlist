@@ -1,30 +1,59 @@
 @import 'tailwindcss';
 
-/* ─── Brand Color Tokens ─────────────────────────────────────────────────── */
+/* ─── Brand Color Tokens (2026 refresh) ──────────────────────────────────────
+ *  Gold-on-dark / amber-on-light is the core rule. The champagne gold #C4A065
+ *  fails WCAG on white (~2.2:1), so amber #8F6600 (5.16:1 on white) carries all
+ *  light-surface interactive elements. Legacy token NAMES are preserved so the
+ *  ~170 markup files that reference them remap by value with zero churn.
+ * ──────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-brand-black: #000000;
-  --color-deep-bg: #19191e;
-  --color-charcoal: #595758;
-  --color-amber-gold: #e2a428;
-  --color-light-gold: #ffd867;
-  --color-pale-lavender: #e9e9f7;
-  --color-cream: #fcfaf4;
+  /* Core neutrals */
+  --color-brand-black: #000000; /* ink — unchanged */
+  --color-charcoal: #595758; /* neutral-700 — unchanged (7.2:1 on white) */
+  --color-charcoal-soft: #6b6b6b; /* AA-passing muted text (5.3:1) — replaces text-charcoal/50–70 */
+  --color-charcoal-faint: #737373; /* AA-passing faint/hint text (4.7:1) — replaces text-charcoal/30–40 */
+  --color-ground: #08080a; /* near-black ground */
+  --color-deep-bg: #08080a; /* legacy name → ground */
+  --color-off-white: #f4f4f7; /* light surface */
+  --color-cream: #f4f4f7; /* legacy name → off-white */
+  --color-pale-lavender: #eceae6; /* lavender retired → warm neutral-100 */
+  --color-neutral-100: #eceae6;
+  --color-neutral-300: #c9c7c4;
+  --color-neutral-500: #8a8888;
+
+  /* Brand accents */
+  --color-gold: #c4a065; /* dark-surface accent (the node-Q gold) */
+  --color-amber-gold: #c4a065; /* legacy name → gold */
+  --color-amber: #8f6600; /* light-surface interactive */
+  --color-light-gold: #ffd867; /* optional highlight/hover on dark */
+
+  /* Category (functional disc markers only — never section fills) */
+  --color-cat-brick: #b07a12;
+  --color-cat-products: #c0256b;
+  --color-cat-pro: #1a7a6b;
+  --color-cat-creative: #6b3fb5;
+  --color-cat-events: #2563b0;
+  --color-cat-jobs: #1f7e94;
 
   /* Font families — CSS vars injected by next/font */
-  --font-headline: var(--font-glacial), sans-serif;
-  --font-subhead: var(--font-lato), sans-serif;
-  --font-body: var(--font-quicksand), sans-serif;
+  --font-headline: var(--font-jost), 'Century Gothic', 'Futura', system-ui, sans-serif;
+  --font-subhead: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ─── CSS Custom Properties (raw brand values for non-Tailwind use) ────────── */
 :root {
   --brand-black: #000000;
-  --deep-bg: #19191e;
+  --ground: #08080a;
+  --deep-bg: #08080a;
   --charcoal: #595758;
-  --amber-gold: #e2a428;
+  --gold: #c4a065;
+  --amber-gold: #c4a065;
+  --amber: #8f6600;
   --light-gold: #ffd867;
-  --pale-lavender: #e9e9f7;
-  --cream: #fcfaf4;
+  --off-white: #f4f4f7;
+  --cream: #f4f4f7;
+  --pale-lavender: #eceae6;
 
   /* ─── shadcn/ui semantic variables ───────────────────────────────────────── */
   --background: #ffffff;
@@ -35,21 +64,18 @@
   --popover-foreground: #000000;
   --primary: #000000;
   --primary-foreground: #ffffff;
-  --secondary: #e9e9f7;
+  --secondary: #eceae6;
   --secondary-foreground: #000000;
-  --muted: #e9e9f7;
+  --muted: #eceae6;
   --muted-foreground: #595758;
-  --accent: #e9e9f7;
+  --accent: #eceae6;
   --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #e2a428;
+  --ring: #8f6600; /* amber — passes 3:1 on white (5.16) and near-black (~3.4) */
   --radius: 0.5rem;
-
-  /* Glacial Indifference placeholder until font file is loaded */
-  --font-glacial: sans-serif;
 }
 
 /* ─── Base Styles ─────────────────────────────────────────────────────────── */
@@ -75,11 +101,13 @@
   h6 {
     font-family: var(--font-headline), sans-serif;
     line-height: 1.15;
+    letter-spacing: 0.02em; /* Jost display: light/medium, slightly wide */
   }
 
-  /* Ensure focus rings use Amber Gold */
+  /* Focus rings default to amber so they read on both light and dark surfaces.
+     Dark-surface components may override with gold (ring-amber-gold) explicitly. */
   :focus-visible {
-    outline: 2px solid var(--amber-gold);
+    outline: 2px solid var(--amber);
     outline-offset: 2px;
   }
 }

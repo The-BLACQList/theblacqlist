@@ -51,7 +51,7 @@ export default async function CitiesPage() {
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-8 md:py-12">
           <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-2">Cities</h1>
-          <p className="font-subhead text-sm text-charcoal/60">
+          <p className="font-subhead text-sm text-charcoal-soft">
             Black-owned businesses, city by city.
           </p>
         </Container>
@@ -60,7 +60,7 @@ export default async function CitiesPage() {
       {/* City grid */}
       <Container className="py-8">
         {citiesWithCounts.length === 0 ? (
-          <p className="font-body text-sm text-charcoal/60">No cities available yet.</p>
+          <p className="font-body text-sm text-charcoal-soft">No cities available yet.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {citiesWithCounts.map((city) => {
@@ -74,16 +74,16 @@ export default async function CitiesPage() {
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
-                      <h2 className="font-headline text-xl text-brand-black group-hover:text-amber-gold transition-colors">
+                      <h2 className="font-headline text-xl text-brand-black group-hover:text-amber transition-colors">
                         {city.name}
                       </h2>
-                      <p className="font-subhead text-xs text-charcoal/50 mt-0.5 flex items-center gap-1">
+                      <p className="font-subhead text-xs text-charcoal-soft mt-0.5 flex items-center gap-1">
                         <MapPin className="size-3 shrink-0" aria-hidden="true" />
                         {city.states?.name ?? locationLabel}
                       </p>
                     </div>
                     <ChevronRight
-                      className="size-5 text-charcoal/25 group-hover:text-amber-gold transition-colors shrink-0 mt-0.5"
+                      className="size-5 text-charcoal/25 group-hover:text-amber transition-colors shrink-0 mt-0.5"
                       aria-hidden="true"
                     />
                   </div>

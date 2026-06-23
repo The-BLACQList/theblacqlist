@@ -38,7 +38,7 @@ export default async function AdminCollectionsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Collections</h1>
-          <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             Manage curated listing collections visible on the public site.
           </p>
         </div>
@@ -56,7 +56,7 @@ export default async function AdminCollectionsPage() {
           <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
             No collections yet
           </p>
-          <p className="font-body text-sm text-charcoal/60 mb-4">
+          <p className="font-body text-sm text-charcoal-soft mb-4">
             Create your first collection to curate listings for the public site.
           </p>
           <Link
@@ -72,19 +72,19 @@ export default async function AdminCollectionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Title
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Slug
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Listings
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Created
                 </th>
                 <th className="px-4 py-3" />
@@ -97,10 +97,10 @@ export default async function AdminCollectionsPage() {
                     <p className="font-subhead text-sm font-semibold text-brand-black">{c.title}</p>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="font-body text-xs text-charcoal/50">{c.slug}</span>
+                    <span className="font-body text-xs text-charcoal-soft">{c.slug}</span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="font-body text-xs text-charcoal/60">
+                    <span className="font-body text-xs text-charcoal-soft">
                       {countMap[c.id] ?? 0}
                     </span>
                   </td>
@@ -109,21 +109,21 @@ export default async function AdminCollectionsPage() {
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-subhead font-semibold ${
                         c.is_active
                           ? 'bg-green-50 text-green-700'
-                          : 'bg-charcoal/5 text-charcoal/60'
+                          : 'bg-charcoal/5 text-charcoal-soft'
                       }`}
                     >
                       {c.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="font-body text-xs text-charcoal/60">
+                    <span className="font-body text-xs text-charcoal-soft">
                       {formatDate(c.created_at)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/collections/${c.id}/edit`}
-                      className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                      className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                     >
                       Edit →
                     </Link>

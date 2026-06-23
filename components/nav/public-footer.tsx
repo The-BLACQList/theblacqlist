@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
+import { BrandMark } from '@/components/ui/brand-mark'
 
 // ─── Inline SVG icons for social platforms not in this lucide-react version ──
 
@@ -122,8 +123,18 @@ export function PublicFooter() {
   return (
     <footer className="bg-black text-white">
       <Container className="py-12 md:py-16">
-        {/* ── Top section: tagline + social ──────────────────────────────── */}
+        {/* ── Top section: logo + tagline + social ───────────────────────── */}
         <div>
+          <Link
+            href="/"
+            aria-label="The BLACQList — home"
+            className="inline-flex items-center gap-2.5 mb-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          >
+            <BrandMark className="h-8 w-8 text-gold" />
+            <span className="font-headline text-lg font-medium tracking-[0.14em] text-white">
+              THE BLACQLIST
+            </span>
+          </Link>
           <p className="font-headline text-3xl md:text-4xl text-cream mb-4">Find &amp; Be Found.</p>
 
           <div className="flex items-center gap-4">
@@ -176,7 +187,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {columns.map((col) => (
             <div key={col.heading}>
-              <h3 className="text-amber-gold text-xs uppercase tracking-wider font-subhead font-bold mb-3">
+              <h3 className="text-gold text-xs uppercase tracking-wider font-subhead font-bold mb-3">
                 {col.heading}
               </h3>
               <ul className="flex flex-col gap-2">

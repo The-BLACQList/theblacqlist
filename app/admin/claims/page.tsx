@@ -74,7 +74,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Claims</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Review and decide on business ownership claims.
         </p>
       </div>
@@ -87,8 +87,8 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
             href={`/admin/claims?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? 'border-amber-gold text-amber-gold'
-                : 'border-transparent text-charcoal/60 hover:text-brand-black'
+                ? 'border-amber-gold text-amber'
+                : 'border-transparent text-charcoal-soft hover:text-brand-black'
             }`}
           >
             {label}
@@ -99,7 +99,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
       {/* Table */}
       {!claims || claims.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">
+          <p className="font-subhead text-sm text-charcoal-soft">
             No {status.replace(/_/g, ' ')} claims found.
           </p>
         </div>
@@ -108,19 +108,19 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
           <table className="w-full text-sm" aria-label={`${status.replace(/_/g, ' ')} claims`}>
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Claimant
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Business
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Role
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Submitted
                 </th>
                 <th className="px-4 py-3" />
@@ -139,7 +139,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                       <p className="font-subhead text-sm font-semibold text-brand-black">
                         {claimantName}
                       </p>
-                      <p className="font-mono text-xs text-charcoal/40 mt-0.5">
+                      <p className="font-mono text-xs text-charcoal-faint mt-0.5">
                         {claim.claimant_user_id?.slice(0, 8)}…
                       </p>
                     </td>
@@ -148,13 +148,13 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                         {listing?.name ?? '—'}
                       </p>
                       {listing?.entity_type && (
-                        <p className="font-body text-xs text-charcoal/60 capitalize mt-0.5">
+                        <p className="font-body text-xs text-charcoal-soft capitalize mt-0.5">
                           {listing.entity_type.replace(/_/g, ' ')}
                         </p>
                       )}
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {claim.role_at_business
                           ? (ROLE_LABELS[claim.role_at_business] ?? claim.role_at_business)
                           : '—'}
@@ -164,14 +164,14 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
                       <AdminStatusBadge status={claim.status} />
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {formatDate(dateStr)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/claims/${claim.id}`}
-                        className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                        className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                         aria-label={`Review claim from ${claimantName}${listing?.name ? ` for ${listing.name}` : ''}`}
                       >
                         Review →
@@ -186,7 +186,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/60">
+              <p className="font-body text-xs text-charcoal-soft">
                 {count} total · page {pageNum} of {totalPages}
               </p>
               <div className="flex gap-2">

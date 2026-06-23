@@ -151,7 +151,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         <Container className="py-5">
           <nav
             aria-label="Breadcrumb"
-            className="flex items-center gap-1.5 font-subhead text-xs text-charcoal/50 mb-2"
+            className="flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft mb-2"
           >
             <Link href="/cities" className="hover:text-charcoal transition-colors">
               Cities
@@ -163,7 +163,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             Black-Owned Businesses in {city.name}
           </h1>
           {city.metro_area && (
-            <p className="font-body text-sm text-charcoal/50 mt-1">{city.metro_area}</p>
+            <p className="font-body text-sm text-charcoal-soft mt-1">{city.metro_area}</p>
           )}
         </Container>
       </div>
@@ -171,7 +171,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       {/* Mobile filter note */}
       <div className="md:hidden border-b border-charcoal/10 bg-white">
         <Container className="py-3">
-          <p className="text-xs font-subhead text-charcoal/50">
+          <p className="text-xs font-subhead text-charcoal-soft">
             Filters available on desktop · Full mobile filters coming soon
           </p>
         </Container>

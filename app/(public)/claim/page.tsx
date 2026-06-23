@@ -67,11 +67,11 @@ export default async function ClaimPage({ searchParams }: PageProps) {
                 <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
                   No matching businesses found
                 </p>
-                <p className="font-body text-sm text-charcoal/60">
+                <p className="font-body text-sm text-charcoal-soft">
                   Try a different name, or{' '}
                   <Link
                     href="/add-business"
-                    className="text-amber-gold hover:text-light-gold underline underline-offset-2"
+                    className="text-amber hover:text-light-gold underline underline-offset-2"
                   >
                     add your business
                   </Link>{' '}
@@ -80,7 +80,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="font-subhead text-xs text-charcoal/60 mb-3">
+                <p className="font-subhead text-xs text-charcoal-soft mb-3">
                   {results.length} result{results.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
                 </p>
                 {results.map((listing) => {
@@ -98,12 +98,12 @@ export default async function ClaimPage({ searchParams }: PageProps) {
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
                           {listing.categories?.name && (
-                            <span className="font-body text-xs text-charcoal/60">
+                            <span className="font-body text-xs text-charcoal-soft">
                               {listing.categories.name}
                             </span>
                           )}
                           {city && (
-                            <span className="flex items-center gap-0.5 font-body text-xs text-charcoal/60">
+                            <span className="flex items-center gap-0.5 font-body text-xs text-charcoal-soft">
                               <MapPin className="size-3" aria-hidden="true" />
                               {city}
                             </span>
@@ -112,7 +112,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
                       </div>
 
                       {isAlreadyClaimed ? (
-                        <span className="flex-shrink-0 font-subhead text-xs text-charcoal/50 bg-charcoal/8 px-3 py-1 rounded-full">
+                        <span className="flex-shrink-0 font-subhead text-xs text-charcoal-soft bg-charcoal/8 px-3 py-1 rounded-full">
                           Already claimed
                         </span>
                       ) : (
@@ -132,11 +132,11 @@ export default async function ClaimPage({ searchParams }: PageProps) {
         )}
 
         {!query && (
-          <p className="font-body text-sm text-center text-charcoal/50 mt-8">
+          <p className="font-body text-sm text-center text-charcoal-soft mt-8">
             Don&apos;t see your business?{' '}
             <Link
               href="/add-business"
-              className="text-amber-gold hover:text-light-gold underline underline-offset-2"
+              className="text-amber hover:text-light-gold underline underline-offset-2"
             >
               Add it to The BLACQList
             </Link>

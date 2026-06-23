@@ -102,12 +102,12 @@ const container: React.CSSProperties = {
 }
 
 const header: React.CSSProperties = {
-  backgroundColor: '#19191E',
+  backgroundColor: '#08080A',
   padding: '24px 32px',
 }
 
 const logoText: React.CSSProperties = {
-  color: '#E2A428',
+  color: '#C4A065',
   fontSize: '18px',
   fontWeight: '700',
   letterSpacing: '0.12em',
@@ -144,7 +144,7 @@ const paragraph: React.CSSProperties = {
 
 const reasonBox: React.CSSProperties = {
   backgroundColor: '#F5F5F0',
-  borderLeft: '3px solid #E9E9F7',
+  borderLeft: '3px solid #ECEAE6',
   borderRadius: '4px',
   margin: '0 0 20px',
   padding: '14px 16px',
@@ -167,7 +167,7 @@ const reasonText: React.CSSProperties = {
 }
 
 const button: React.CSSProperties = {
-  backgroundColor: '#19191E',
+  backgroundColor: '#08080A',
   borderRadius: '100px',
   color: '#FFFFFF',
   display: 'inline-block',
@@ -179,12 +179,12 @@ const button: React.CSSProperties = {
 }
 
 const divider: React.CSSProperties = {
-  borderColor: '#E9E9F7',
+  borderColor: '#ECEAE6',
   margin: '0 0 24px',
 }
 
 const link: React.CSSProperties = {
-  color: '#E2A428',
+  color: '#8F6600',
   textDecoration: 'underline',
 }
 

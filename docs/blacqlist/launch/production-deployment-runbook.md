@@ -15,7 +15,7 @@ Before starting this runbook, confirm:
 - [ ] `pnpm tsc --noEmit` passes with zero errors on the deploy branch
 - [ ] `pnpm exec eslint . --ext .ts,.tsx` passes with zero errors
 - [ ] The deploy branch is `main` and HEAD reflects the intended release
-- [ ] The Supabase production project exists and is on Pro plan (required for PITR)
+- [ ] The Supabase production project exists and is on Pro plan (gives daily backups now; PITR is added at the M7 launch gate)
 - [ ] All required environment variables are staged in Vercel (see `environment-variable-checklist.md`)
 - [ ] The production domain `theblacqlist.com` is registered and you have DNS access
 - [ ] At least one other engineer is available and reachable during the deployment window
@@ -63,13 +63,15 @@ Complete all steps in `supabase-production-checklist.md` before proceeding. This
 
 **Order of operations:**
 
-1. Enable PITR and verify it is active before running any migrations
+1. Confirm a recent **daily backup** exists (Pro includes these) — this is the setup-phase safety net; **PITR is NOT required for the steps below** (empty DB)
 2. Enable PgBouncer in transaction mode
 3. Enable the `pg_trgm` extension
 4. Create the three storage buckets: `listing-media` (public), `verification-docs` (private), `receipts` (private)
 5. Apply migrations in order (Step 3 below)
 6. Apply seed data (Step 4 below)
 7. Configure Auth settings and redirect URLs
+
+> **PITR** (~$100/mo add-on) is enabled later, at the **M7 launch gate**, right before the public launch / before the real business-data seed — not during this setup. Pro daily backups cover everything above.
 8. Create the initial admin user (Step 5 below)
 
 ---

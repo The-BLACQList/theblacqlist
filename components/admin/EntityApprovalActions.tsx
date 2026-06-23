@@ -124,9 +124,9 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Explain why this listing is being rejected…"
-              className="w-full px-3 py-2 rounded-lg border border-red-300 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-red-400/40 resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-red-300 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-red-400/40 resize-none"
             />
-            <p className="font-body text-xs text-charcoal/50 mt-0.5 text-right">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5 text-right">
               {rejectReason.length}/500
             </p>
           </div>
@@ -142,7 +142,7 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
             <button
               type="button"
               onClick={() => setShowRejectForm(false)}
-              className="px-4 h-10 rounded-lg border border-charcoal/20 text-charcoal/60 hover:text-brand-black font-subhead text-sm transition-colors"
+              className="px-4 h-10 rounded-lg border border-charcoal/20 text-charcoal-soft hover:text-brand-black font-subhead text-sm transition-colors"
             >
               Cancel
             </button>

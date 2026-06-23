@@ -105,7 +105,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
-          <p className="font-headline text-2xl text-amber-gold">The BLACQList</p>
+          <p className="font-headline text-2xl text-gold">The BLACQList</p>
           <p className="font-subhead text-sm text-white/50 mt-1">Step {step} of 2</p>
           {/* Progress bar */}
           <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden w-48 mx-auto">
@@ -159,7 +159,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
                   <button
                     type="button"
                     onClick={handleCitySkip}
-                    className="font-subhead text-sm text-charcoal/60 hover:text-charcoal underline underline-offset-2"
+                    className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                   >
                     Skip for now
                   </button>
@@ -199,7 +199,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
                     <p className="font-subhead text-sm font-semibold text-brand-black">
                       Search for my listing
                     </p>
-                    <p className="font-subhead text-xs text-charcoal/60">
+                    <p className="font-subhead text-xs text-charcoal-soft">
                       Claim an existing BLACQList Page
                     </p>
                   </div>
@@ -217,7 +217,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
                     <p className="font-subhead text-sm font-semibold text-brand-black">
                       Add my business
                     </p>
-                    <p className="font-subhead text-xs text-charcoal/60">
+                    <p className="font-subhead text-xs text-charcoal-soft">
                       Create a new BLACQList Page
                     </p>
                   </div>
@@ -226,7 +226,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
                 <button
                   type="button"
                   onClick={() => void handleFinalSubmit()}
-                  className="font-subhead text-sm text-charcoal/60 hover:text-charcoal underline underline-offset-2 text-center mt-2"
+                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
                 >
                   I&apos;ll do this later
                 </button>
@@ -290,7 +290,7 @@ export function OnboardingFlow({ cities }: OnboardingFlowProps) {
                       router.push(getPostOnboardingDestination())
                     )
                   }}
-                  className="font-subhead text-sm text-charcoal/60 hover:text-charcoal underline underline-offset-2"
+                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                 >
                   Skip
                 </button>

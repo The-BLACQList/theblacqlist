@@ -79,7 +79,7 @@ export function AdminSidebar({ role }: Props) {
 
       {/* Role badge */}
       <div className="px-5 py-4 border-t border-white/10">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-gold/20 text-amber-gold text-xs font-subhead font-semibold">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-gold/20 text-gold text-xs font-subhead font-semibold">
           {role === 'super_admin' ? 'Super Admin' : 'Admin'}
         </span>
       </div>

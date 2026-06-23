@@ -20,7 +20,7 @@ function periodToInterval(period: Period): string {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-3">
+    <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
       {children}
     </h2>
   )
@@ -137,12 +137,12 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
       <div>
         <Link
           href="/admin/analytics"
-          className="inline-flex items-center gap-1 font-body text-xs text-charcoal/50 hover:text-brand-black transition-colors mb-3"
+          className="inline-flex items-center gap-1 font-body text-xs text-charcoal-soft hover:text-brand-black transition-colors mb-3"
         >
           <ArrowLeft className="size-3" aria-hidden="true" /> Analytics
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Search Analytics</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Trending queries and content gaps based on zero-result searches.
         </p>
       </div>
@@ -159,7 +159,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
           </SectionHeading>
           <a
             href={`/api/admin/analytics/search/export?table=top&${exportParams.toString()}`}
-            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-brand-black transition-colors"
+            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-brand-black transition-colors"
             aria-label="Download top queries as CSV"
           >
             <Download className="size-3" aria-hidden="true" /> CSV
@@ -167,7 +167,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {topQueries.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
               No search data yet. Data appears after users begin searching.
             </p>
           ) : (
@@ -178,23 +178,23 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
                 </caption>
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">#</th>
-                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Query</th>
-                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Count</th>
-                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">Avg results</th>
+                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">#</th>
+                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Query</th>
+                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Count</th>
+                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">Avg results</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-charcoal/5">
                   {topQueries.map((row, i) => (
                     <tr key={row.query} className="hover:bg-[#f9f9fb]">
-                      <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                       <td className="px-4 py-2.5 font-subhead text-sm text-brand-black max-w-xs truncate" title={row.query}>
                         {row.query.length > 80 ? `${row.query.slice(0, 80)}…` : row.query}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                         {row.count.toLocaleString()}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50 hidden md:table-cell">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft hidden md:table-cell">
                         {row.avg_results ?? '—'}
                       </td>
                     </tr>
@@ -215,7 +215,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
           </SectionHeading>
           <a
             href={`/api/admin/analytics/search/export?table=zero&${exportParams.toString()}`}
-            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-brand-black transition-colors"
+            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-brand-black transition-colors"
             aria-label="Download zero-result queries as CSV"
           >
             <Download className="size-3" aria-hidden="true" /> CSV
@@ -223,7 +223,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {zeroQueries.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
               No zero-result searches in this period.
             </p>
           ) : (
@@ -234,10 +234,10 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
                 </caption>
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">#</th>
-                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Query</th>
-                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">Count</th>
-                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">Last searched</th>
+                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">#</th>
+                    <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Query</th>
+                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Count</th>
+                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">Last searched</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-charcoal/5">
@@ -246,7 +246,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
                       key={row.query}
                       className={`hover:bg-[#f9f9fb] ${row.count > 10 ? 'bg-amber-50' : ''}`}
                     >
-                      <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                       <td className="px-4 py-2.5 font-subhead text-sm text-brand-black max-w-xs truncate" title={row.query}>
                         {row.query.length > 80 ? `${row.query.slice(0, 80)}…` : row.query}
                         {row.count > 10 && (
@@ -255,10 +255,10 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                         {row.count.toLocaleString()}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50 hidden md:table-cell">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft hidden md:table-cell">
                         {new Date(row.last_searched).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',

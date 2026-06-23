@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Privacy Policy" subtitle="Last updated: May 20, 2026" />
+        <PageHeader title="Privacy Policy" subtitle="Last updated: June 20, 2026" />
       </Section>
 
       <Section variant="white">
@@ -23,17 +23,17 @@ export default function PrivacyPage() {
           <nav aria-label="Page contents" className="rounded-xl border border-gray-100 bg-white px-5 py-4">
             <p className="font-subhead text-sm font-semibold text-brand-black mb-3">Contents</p>
             <ol className="list-decimal ml-5 space-y-1 text-sm">
-              <li><a href="#who-we-are" className="text-amber-gold hover:underline">Who We Are</a></li>
-              <li><a href="#information-collected" className="text-amber-gold hover:underline">Information We Collect</a></li>
-              <li><a href="#how-we-use" className="text-amber-gold hover:underline">How We Use Your Information</a></li>
-              <li><a href="#receipt-data" className="text-amber-gold hover:underline">Receipt and Spend Data</a></li>
-              <li><a href="#information-sharing" className="text-amber-gold hover:underline">Information Sharing</a></li>
-              <li><a href="#third-party-services" className="text-amber-gold hover:underline">Third-Party Services</a></li>
-              <li><a href="#data-retention" className="text-amber-gold hover:underline">Data Retention</a></li>
-              <li><a href="#your-rights" className="text-amber-gold hover:underline">Your Rights</a></li>
-              <li><a href="#security" className="text-amber-gold hover:underline">Security</a></li>
-              <li><a href="#changes" className="text-amber-gold hover:underline">Changes to This Policy</a></li>
-              <li><a href="#contact" className="text-amber-gold hover:underline">Contact Us</a></li>
+              <li><a href="#who-we-are" className="text-amber hover:underline">Who We Are</a></li>
+              <li><a href="#information-collected" className="text-amber hover:underline">Information We Collect</a></li>
+              <li><a href="#how-we-use" className="text-amber hover:underline">How We Use Your Information</a></li>
+              <li><a href="#receipt-data" className="text-amber hover:underline">Receipt and Spend Data</a></li>
+              <li><a href="#information-sharing" className="text-amber hover:underline">Information Sharing</a></li>
+              <li><a href="#third-party-services" className="text-amber hover:underline">Third-Party Services</a></li>
+              <li><a href="#data-retention" className="text-amber hover:underline">Data Retention</a></li>
+              <li><a href="#your-rights" className="text-amber hover:underline">Your Rights</a></li>
+              <li><a href="#security" className="text-amber hover:underline">Security</a></li>
+              <li><a href="#changes" className="text-amber hover:underline">Changes to This Policy</a></li>
+              <li><a href="#contact" className="text-amber hover:underline">Contact Us</a></li>
             </ol>
           </nav>
 
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
               about this policy can be directed to{' '}
               <a
                 href="mailto:privacy@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 privacy@theblacqlist.com
               </a>
@@ -70,10 +70,10 @@ export default function PrivacyPage() {
             <h3 className="font-subhead font-semibold text-brand-black mt-4">Information collected automatically</h3>
             <p>When you use the platform, we automatically collect:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>Log data (IP address, browser type, operating system, referring URLs, pages visited, time and date of your visit)</li>
+              <li>Log data (browser type, operating system, referring URLs, pages visited, time and date of your visit). Your IP address is used transiently to deliver and secure the service and, where recorded for analytics, is stored only in irreversible hashed form — we do not retain your raw IP address</li>
               <li>Usage data (search queries, listings viewed, saves, clicks on calls-to-action) — stored in anonymized form</li>
               <li>Device information (device type, screen resolution)</li>
-              <li>Session authentication tokens managed through cookies (see our <Link href="/cookies" className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors">Cookie Policy</Link>)</li>
+              <li>Session authentication tokens managed through cookies (see our <Link href="/cookies" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">Cookie Policy</Link>)</li>
             </ul>
           </section>
 
@@ -178,7 +178,7 @@ export default function PrivacyPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Supabase privacy policy (opens in new window)"
-                        className="text-amber-gold hover:underline"
+                        className="text-amber hover:underline"
                       >
                         supabase.com/privacy
                       </a>
@@ -193,7 +193,7 @@ export default function PrivacyPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Vercel privacy policy (opens in new window)"
-                        className="text-amber-gold hover:underline"
+                        className="text-amber hover:underline"
                       >
                         vercel.com/legal/privacy-policy
                       </a>
@@ -208,7 +208,7 @@ export default function PrivacyPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Resend privacy policy (opens in new window)"
-                        className="text-amber-gold hover:underline"
+                        className="text-amber hover:underline"
                       >
                         resend.com/legal/privacy-policy
                       </a>
@@ -223,7 +223,7 @@ export default function PrivacyPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Sentry privacy policy (opens in new window)"
-                        className="text-amber-gold hover:underline"
+                        className="text-amber hover:underline"
                       >
                         sentry.io/privacy
                       </a>
@@ -231,14 +231,14 @@ export default function PrivacyPage() {
                   </tr>
                   <tr>
                     <td className="p-3">Stripe</td>
-                    <td className="p-3">Payment processing (subscription plans)</td>
+                    <td className="p-3">Payment processing — used when paid features become available</td>
                     <td className="p-3">
                       <a
                         href="https://stripe.com/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Stripe privacy policy (opens in new window)"
-                        className="text-amber-gold hover:underline"
+                        className="text-amber hover:underline"
                       >
                         stripe.com/privacy
                       </a>
@@ -272,9 +272,9 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
               <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
-              <li><strong>Deletion:</strong> Request deletion of your account and personal data</li>
+              <li><strong>Deletion:</strong> Delete your account and personal data yourself from Account → Settings, or request deletion by email</li>
               <li><strong>Opt-out of aggregation:</strong> Opt your spend data out of community aggregation at any time from your account settings</li>
-              <li><strong>Portability:</strong> Request a copy of your data in a structured, machine-readable format</li>
+              <li><strong>Portability:</strong> Request a copy of your data; we will provide it in a structured, machine-readable format where technically feasible</li>
               <li><strong>Complaint:</strong> Lodge a complaint with a data protection supervisory authority in your jurisdiction</li>
             </ul>
             <p className="mt-2">
@@ -283,7 +283,7 @@ export default function PrivacyPage() {
               We do not sell personal information. To exercise your rights, contact us at{' '}
               <a
                 href="mailto:privacy@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 privacy@theblacqlist.com
               </a>
@@ -293,7 +293,7 @@ export default function PrivacyPage() {
               To exercise any of these rights, email{' '}
               <a
                 href="mailto:privacy@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 privacy@theblacqlist.com
               </a>{' '}
@@ -343,17 +343,22 @@ export default function PrivacyPage() {
               <strong>Email:</strong>{' '}
               <a
                 href="mailto:privacy@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 privacy@theblacqlist.com
               </a>
+            </p>
+            <p>
+              <strong>The BLACQList</strong>, operated by [CONFIRM: legal entity name]
+              <br />
+              [CONFIRM: mailing address]
             </p>
           </section>
 
           <div className="mt-16 pt-8 border-t border-gray-200">
             <Link
               href="/terms"
-              className="text-amber-gold font-bold text-lg hover:underline"
+              className="text-amber font-bold text-lg hover:underline"
             >
               Read our Terms of Service →
             </Link>

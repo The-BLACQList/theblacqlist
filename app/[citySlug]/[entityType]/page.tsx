@@ -155,7 +155,7 @@ async function CategoryContent({
           </Link>
           <Link
             href="/add-business"
-            className="inline-block rounded-full border border-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-amber-gold hover:bg-amber-gold hover:text-brand-black transition-colors"
+            className="inline-block rounded-full border border-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-amber hover:bg-amber-gold hover:text-brand-black transition-colors"
           >
             Add your business
           </Link>
@@ -196,7 +196,7 @@ export default async function CityCategoryPage({ params, searchParams }: PagePro
         <Container className="py-5">
           <nav
             aria-label="Breadcrumb"
-            className="flex items-center gap-1.5 font-subhead text-xs text-charcoal/50 mb-2"
+            className="flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft mb-2"
           >
             <Link href="/" className="hover:text-charcoal transition-colors">
               Home
@@ -214,7 +214,7 @@ export default async function CityCategoryPage({ params, searchParams }: PagePro
           </h1>
 
           {category.description && (
-            <p className="font-body text-sm text-charcoal/70 mt-1 max-w-xl">
+            <p className="font-body text-sm text-charcoal-soft mt-1 max-w-xl">
               {category.description}
             </p>
           )}

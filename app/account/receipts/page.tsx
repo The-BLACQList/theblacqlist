@@ -56,7 +56,7 @@ export default async function MyReceiptsPage({
         <div>
           <Link
             href="/account"
-            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-4 transition-colors"
+            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             Account
@@ -64,7 +64,7 @@ export default async function MyReceiptsPage({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="font-headline text-2xl text-brand-black">My receipts</h1>
-              <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+              <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
                 Track your support for Black-owned businesses
               </p>
             </div>
@@ -93,13 +93,13 @@ export default async function MyReceiptsPage({
         {/* Impact summary */}
         {totalApproved > 0 && (
           <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-            <p className="font-subhead text-xs text-charcoal/50 font-semibold uppercase tracking-wide">
+            <p className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide">
               Verified community spend
             </p>
             <p className="font-headline text-3xl text-brand-black mt-1">
               {formatDollars(totalApproved)}
             </p>
-            <p className="font-body text-xs text-charcoal/50 mt-0.5">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5">
               Across {receiptList.filter((r) => r.status === 'approved').length} approved{' '}
               {receiptList.filter((r) => r.status === 'approved').length === 1
                 ? 'receipt'
@@ -113,7 +113,7 @@ export default async function MyReceiptsPage({
           {receiptList.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
-              <p className="font-body text-xs text-charcoal/50 mt-1 mb-4">
+              <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
                 Submit a receipt to start tracking your community impact.
               </p>
               <Link
@@ -145,7 +145,7 @@ export default async function MyReceiptsPage({
           )}
         </div>
 
-        <p className="font-body text-xs text-charcoal/40 text-center">
+        <p className="font-body text-xs text-charcoal-faint text-center">
           Receipt details are private. Only you and BLACQList admins can view your submissions.
         </p>
       </div>

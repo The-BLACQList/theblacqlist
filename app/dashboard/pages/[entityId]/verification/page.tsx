@@ -41,12 +41,12 @@ export default async function OwnerVerificationPage({ params }: Props) {
       <div>
         <Link
           href={`/dashboard/pages/${entityId}`}
-          className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/60 hover:text-charcoal mb-4"
+          className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal mb-4"
         >
           ← Back to listing
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Get Verified</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-1">
+        <p className="font-body text-sm text-charcoal-soft mt-1">
           A Verified badge shows customers your business is legitimate and trusted.
         </p>
       </div>
@@ -56,12 +56,12 @@ export default async function OwnerVerificationPage({ params }: Props) {
           <p className="font-subhead text-sm font-semibold text-brand-black">
             Verification not available
           </p>
-          <p className="font-body text-sm text-charcoal/70 mt-1">
+          <p className="font-body text-sm text-charcoal-soft mt-1">
             Verification is only available for claimed listings. Your listing must be claimed first.
           </p>
           <Link
             href="/claim"
-            className="inline-flex items-center gap-1 mt-3 font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+            className="inline-flex items-center gap-1 mt-3 font-subhead text-xs font-semibold text-amber hover:text-light-gold"
           >
             Claim this listing →
           </Link>
@@ -102,10 +102,10 @@ export default async function OwnerVerificationPage({ params }: Props) {
           !verification_status) && (
           <div className="space-y-4">
             <div className="flex items-start gap-3 rounded-xl border border-charcoal/10 bg-white px-5 py-4">
-              <BadgeCheck className="size-5 shrink-0 text-amber-gold mt-0.5" aria-hidden="true" />
+              <BadgeCheck className="size-5 shrink-0 text-amber mt-0.5" aria-hidden="true" />
               <div>
                 <p className="font-subhead text-sm font-semibold text-brand-black">How it works</p>
-                <ol className="mt-1.5 space-y-1 font-body text-sm text-charcoal/70 list-decimal list-inside">
+                <ol className="mt-1.5 space-y-1 font-body text-sm text-charcoal-soft list-decimal list-inside">
                   <li>Upload one or more verification documents below</li>
                   <li>Our team reviews them within 2–3 business days</li>
                   <li>Once approved, your listing shows a Verified badge</li>

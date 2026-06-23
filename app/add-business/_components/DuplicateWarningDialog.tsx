@@ -54,7 +54,7 @@ export function DuplicateWarningDialog({ duplicates, onContinue, onCancel }: Pro
             >
               Similar listings found
             </h2>
-            <p id="dup-dialog-desc" className="font-subhead text-xs text-charcoal/60 mt-0.5">
+            <p id="dup-dialog-desc" className="font-subhead text-xs text-charcoal-soft mt-0.5">
               We found listings with similar names. Is your business already listed?
             </p>
           </div>
@@ -69,7 +69,7 @@ export function DuplicateWarningDialog({ duplicates, onContinue, onCancel }: Pro
                   <Image src={dup.cover_image_url} alt="" fill className="object-cover" />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-headline text-lg text-charcoal/30">
+                    <span className="font-headline text-lg text-charcoal-faint">
                       {dup.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
@@ -80,14 +80,14 @@ export function DuplicateWarningDialog({ duplicates, onContinue, onCancel }: Pro
                   {dup.name}
                 </p>
                 {dup.city && (
-                  <p className="font-subhead text-xs text-charcoal/50">{dup.city.name}</p>
+                  <p className="font-subhead text-xs text-charcoal-soft">{dup.city.name}</p>
                 )}
                 <StatusBadge tier={dup.trust_tier as Parameters<typeof StatusBadge>[0]['tier']} size="small" />
               </div>
               <Link
                 href={`/claim/${dup.id}`}
                 onClick={onCancel}
-                className="shrink-0 font-subhead text-xs font-semibold text-amber-gold hover:text-amber-gold/80 whitespace-nowrap"
+                className="shrink-0 font-subhead text-xs font-semibold text-amber hover:text-amber/80 whitespace-nowrap"
               >
                 Claim →
               </Link>

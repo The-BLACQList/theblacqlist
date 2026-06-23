@@ -1,5 +1,6 @@
 'use server'
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES, VALID_CTA_TYPES } from '@/lib/constants/listing'
 
@@ -69,6 +70,16 @@ export async function createListingAction(
   const tempEntityId = formData.get('temp_entity_id')?.toString().trim() || null
   const ownershipAttested = formData.get('ownership_attested') === 'true'
 
+  // Event-only fields (read regardless; used only when entityType === 'event').
+  const isEvent = entityType === 'event'
+  const startsAtRaw = formData.get('starts_at')?.toString().trim() || ''
+  const endsAtRaw = formData.get('ends_at')?.toString().trim() || ''
+  const isOnline = formData.get('is_online') === 'true'
+  const venueName = formData.get('venue_name')?.toString().trim() || null
+  const venueAddress = formData.get('venue_address')?.toString().trim() || null
+  const ticketUrl = formData.get('ticket_url')?.toString().trim() || null
+  const priceText = formData.get('price_text')?.toString().trim() || null
+
   const fieldErrors: FieldErrors = {}
 
   if (!VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number])) {
@@ -97,35 +108,68 @@ export async function createListingAction(
     fieldErrors.description = 'Description must be 2000 characters or fewer.'
   }
 
-  if (!VALID_LOCATION_TYPES.includes(locationType as (typeof VALID_LOCATION_TYPES)[number])) {
+  // Events derive their location_type from the online toggle; everything else
+  // submits an explicit location_type.
+  const effectiveLocationType = isEvent ? (isOnline ? 'virtual' : 'physical') : locationType
+  if (
+    !VALID_LOCATION_TYPES.includes(effectiveLocationType as (typeof VALID_LOCATION_TYPES)[number])
+  ) {
     fieldErrors.location_type = 'Select where you operate.'
   }
 
-  if (!VALID_CTA_TYPES.includes(ctaType as (typeof VALID_CTA_TYPES)[number])) {
-    fieldErrors.cta_type = 'Select a primary call to action.'
-  }
+  // Parsed event timestamps (only meaningful when isEvent).
+  let startsAtIso: string | null = null
+  let endsAtIso: string | null = null
 
-  if (websiteUrl && !isValidUrl(websiteUrl)) {
-    fieldErrors.website_url = 'Website must start with https://'
-  }
-  if (email && !isValidEmail(email)) {
-    fieldErrors.email = 'Enter a valid email address.'
-  }
-  if (ctaUrl && !isValidUrl(ctaUrl)) {
-    fieldErrors.cta_url = 'URL must start with https://'
-  }
+  if (isEvent) {
+    const start = startsAtRaw ? new Date(startsAtRaw) : null
+    if (!start || isNaN(start.getTime())) {
+      fieldErrors.starts_at = 'Enter a valid start date and time.'
+    } else {
+      startsAtIso = start.toISOString()
+    }
+    if (endsAtRaw) {
+      const end = new Date(endsAtRaw)
+      if (isNaN(end.getTime())) {
+        fieldErrors.ends_at = 'Enter a valid end date and time.'
+      } else if (start && !isNaN(start.getTime()) && end < start) {
+        fieldErrors.ends_at = 'End must be after the start.'
+      } else {
+        endsAtIso = end.toISOString()
+      }
+    }
+    if (ticketUrl && !isValidUrl(ticketUrl)) {
+      fieldErrors.ticket_url = 'Ticket link must start with https://'
+    }
+    if (!isOnline && !venueName) {
+      fieldErrors.venue_name = 'Add a venue name, or mark the event online.'
+    }
+  } else {
+    if (!VALID_CTA_TYPES.includes(ctaType as (typeof VALID_CTA_TYPES)[number])) {
+      fieldErrors.cta_type = 'Select a primary call to action.'
+    }
+    if (websiteUrl && !isValidUrl(websiteUrl)) {
+      fieldErrors.website_url = 'Website must start with https://'
+    }
+    if (email && !isValidEmail(email)) {
+      fieldErrors.email = 'Enter a valid email address.'
+    }
+    if (ctaUrl && !isValidUrl(ctaUrl)) {
+      fieldErrors.cta_url = 'URL must start with https://'
+    }
 
-  const socialFields: [string, string | null][] = [
-    ['social_instagram', socialInstagram],
-    ['social_facebook', socialFacebook],
-    ['social_twitter', socialTwitter],
-    ['social_tiktok', socialTiktok],
-    ['social_linkedin', socialLinkedin],
-    ['social_youtube', socialYoutube],
-  ]
-  for (const [key, val] of socialFields) {
-    if (val && !isValidUrl(val)) {
-      fieldErrors[key] = 'Must be a valid URL starting with https://'
+    const socialFields: [string, string | null][] = [
+      ['social_instagram', socialInstagram],
+      ['social_facebook', socialFacebook],
+      ['social_twitter', socialTwitter],
+      ['social_tiktok', socialTiktok],
+      ['social_linkedin', socialLinkedin],
+      ['social_youtube', socialYoutube],
+    ]
+    for (const [key, val] of socialFields) {
+      if (val && !isValidUrl(val)) {
+        fieldErrors[key] = 'Must be a valid URL starting with https://'
+      }
     }
   }
 
@@ -169,7 +213,7 @@ export async function createListingAction(
       name,
       entity_type: entityType,
       category_id: categoryId,
-      location_type: locationType,
+      location_type: effectiveLocationType,
       status: 'draft',
       source: 'owner',
       submitted_by: user.id,
@@ -193,28 +237,52 @@ export async function createListingAction(
     return { error: 'Something went wrong creating your listing. Please try again.' }
   }
 
-  const { error: detailsError } = await supabase.from('listing_details_business').insert({
-    listing_id: listing.id,
-    description,
-    cta_type: ctaType,
-    cta_url: ctaUrl,
-    email,
-    phone,
-    website_url: websiteUrl,
-    city_text: cityText,
-    state: stateText,
-    ships_nationwide: shipsNationwide,
-    social_instagram: socialInstagram,
-    social_facebook: socialFacebook,
-    social_twitter: socialTwitter,
-    social_tiktok: socialTiktok,
-    social_linkedin: socialLinkedin,
-    social_youtube: socialYoutube,
-  })
+  const detailsError = isEvent
+    ? (
+        await (supabase as unknown as SupabaseClient).from('listing_details_event').insert({
+          listing_id: listing.id,
+          description,
+          starts_at: startsAtIso!,
+          ends_at: endsAtIso,
+          is_online: isOnline,
+          venue_name: venueName,
+          venue_address: venueAddress,
+          city_text: cityText,
+          state: stateText,
+          ticket_url: ticketUrl,
+          price_text: priceText,
+          cta_type: 'get-tickets',
+          cta_url: ticketUrl,
+        })
+      ).error
+    : (
+        await supabase.from('listing_details_business').insert({
+          listing_id: listing.id,
+          description,
+          cta_type: ctaType,
+          cta_url: ctaUrl,
+          email,
+          phone,
+          website_url: websiteUrl,
+          city_text: cityText,
+          state: stateText,
+          ships_nationwide: shipsNationwide,
+          social_instagram: socialInstagram,
+          social_facebook: socialFacebook,
+          social_twitter: socialTwitter,
+          social_tiktok: socialTiktok,
+          social_linkedin: socialLinkedin,
+          social_youtube: socialYoutube,
+        })
+      ).error
 
   if (detailsError) {
     await supabase.from('listings').delete().eq('id', listing.id)
-    return { error: 'Failed to save your business details. Please try again.' }
+    return {
+      error: isEvent
+        ? 'Failed to save your event details. Please try again.'
+        : 'Failed to save your business details. Please try again.',
+    }
   }
 
   const serviceClient = createServiceClient()

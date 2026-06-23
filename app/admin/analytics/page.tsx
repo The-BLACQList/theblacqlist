@@ -69,9 +69,9 @@ function buildPublishedWeeklyBuckets(
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4">
-      <p className="font-body text-xs text-charcoal/50">{label}</p>
+      <p className="font-body text-xs text-charcoal-soft">{label}</p>
       <p className="font-headline text-2xl text-brand-black mt-1">{value}</p>
-      {sub && <p className="font-body text-[11px] text-charcoal/40 mt-0.5">{sub}</p>}
+      {sub && <p className="font-body text-[11px] text-charcoal-faint mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -86,7 +86,7 @@ function TrendBar({ count, max, label }: { count: number; max: number; label: st
           style={{ height: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
         />
       </div>
-      <span className="font-body text-[9px] text-charcoal/40 truncate w-full text-center">
+      <span className="font-body text-[9px] text-charcoal-faint truncate w-full text-center">
         {label}
       </span>
     </div>
@@ -95,7 +95,7 @@ function TrendBar({ count, max, label }: { count: number; max: number; label: st
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide mb-3">
+    <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
       {children}
     </h2>
   )
@@ -246,7 +246,7 @@ export default async function AdminAnalyticsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Platform-level activity and growth metrics.
         </p>
       </div>
@@ -294,20 +294,20 @@ export default async function AdminAnalyticsPage() {
           <SectionHeading>Top pages by views — last 30 days</SectionHeading>
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
             {topListings.length === 0 ? (
-              <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+              <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
                 No aggregated data yet. Run a backfill to populate.
               </p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">
                       #
                     </th>
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                       Listing
                     </th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                       Views
                     </th>
                   </tr>
@@ -315,16 +315,16 @@ export default async function AdminAnalyticsPage() {
                 <tbody className="divide-y divide-charcoal/5">
                   {topListings.map((row, i) => (
                     <tr key={row.listing_id} className="hover:bg-[#f9f9fb]">
-                      <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                       <td className="px-4 py-2.5">
                         <p className="font-subhead text-sm text-brand-black truncate max-w-[180px]">
                           {row.listing_name}
                         </p>
                         {row.city_name && (
-                          <p className="font-body text-xs text-charcoal/50">{row.city_name}</p>
+                          <p className="font-body text-xs text-charcoal-soft">{row.city_name}</p>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                         {row.total_views.toLocaleString()}
                       </td>
                     </tr>
@@ -339,23 +339,23 @@ export default async function AdminAnalyticsPage() {
           <SectionHeading>Top searches — last 30 days</SectionHeading>
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
             {topQueries.length === 0 ? (
-              <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+              <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
                 No search data yet.
               </p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">
                       #
                     </th>
-                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                       Query
                     </th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                       Searches
                     </th>
-                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                    <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                       Avg results
                     </th>
                   </tr>
@@ -363,14 +363,14 @@ export default async function AdminAnalyticsPage() {
                 <tbody className="divide-y divide-charcoal/5">
                   {topQueries.map((row, i) => (
                     <tr key={row.query} className="hover:bg-[#f9f9fb]">
-                      <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                      <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                       <td className="px-4 py-2.5 font-subhead text-sm text-brand-black truncate max-w-[180px]">
                         {row.query}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                         {row.search_count.toLocaleString()}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50 hidden md:table-cell">
+                      <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft hidden md:table-cell">
                         {row.avg_results ?? '—'}
                       </td>
                     </tr>
@@ -387,7 +387,7 @@ export default async function AdminAnalyticsPage() {
         <SectionHeading>Aggregation job log — last 5 runs</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {jobLog.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
               No aggregation runs yet. Run{' '}
               <code className="font-mono text-xs bg-charcoal/5 px-1 rounded">
                 SELECT aggregate_entity_analytics()
@@ -398,16 +398,16 @@ export default async function AdminAnalyticsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Date
                   </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Listings
                   </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Duration
                   </th>
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Status
                   </th>
                 </tr>
@@ -418,10 +418,10 @@ export default async function AdminAnalyticsPage() {
                     <td className="px-4 py-2.5 font-body text-sm text-brand-black">
                       {run.run_date}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                       {run.listings_processed.toLocaleString()}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50">
+                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                       {formatDuration(run.duration_ms)}
                     </td>
                     <td className="px-4 py-2.5">
@@ -462,23 +462,23 @@ export default async function AdminAnalyticsPage() {
         <SectionHeading>Top cities by published listings</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {cityLeaderboard.length === 0 ? (
-            <p className="font-body text-sm text-charcoal/50 text-center py-8 px-4">
+            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
               No cities with published listings yet.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide w-8">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">
                     #
                   </th>
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     City
                   </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Listings
                   </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                     % of total
                   </th>
                 </tr>
@@ -486,12 +486,12 @@ export default async function AdminAnalyticsPage() {
               <tbody className="divide-y divide-charcoal/5">
                 {cityLeaderboard.map((city, i) => (
                   <tr key={city.slug} className="hover:bg-[#f9f9fb]">
-                    <td className="px-4 py-2.5 font-body text-xs text-charcoal/40">{i + 1}</td>
+                    <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
                     <td className="px-4 py-2.5 font-subhead text-sm text-brand-black">{city.name}</td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/70">
+                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
                       {city.count.toLocaleString()}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal/50 hidden md:table-cell">
+                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft hidden md:table-cell">
                       {totalListings > 0 ? `${Math.round((city.count / totalListings) * 100)}%` : '—'}
                     </td>
                   </tr>
@@ -511,11 +511,11 @@ export default async function AdminAnalyticsPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black">
                 Search Analytics
               </p>
-              <p className="font-body text-xs text-charcoal/50 mt-0.5">
+              <p className="font-body text-xs text-charcoal-soft mt-0.5">
                 Top queries, zero-result queries, city filters, CSV export
               </p>
             </div>
-            <ChevronRight className="size-4 text-charcoal/40 shrink-0" aria-hidden="true" />
+            <ChevronRight className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
           </div>
         </Link>
       </div>

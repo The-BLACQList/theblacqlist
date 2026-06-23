@@ -46,7 +46,7 @@ export function EmptyState({
       {secondaryAction && (
         <Link
           href={secondaryAction.href}
-          className="font-subhead text-sm text-amber-gold hover:underline min-h-[44px] inline-flex items-center"
+          className="font-subhead text-sm text-amber hover:underline min-h-[44px] inline-flex items-center"
         >
           {secondaryAction.label}
         </Link>

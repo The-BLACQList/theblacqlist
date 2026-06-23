@@ -28,7 +28,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 font-body text-xs font-semibold text-charcoal/50 hover:text-brand-black underline underline-offset-2 transition-colors"
+        className="mt-2 font-body text-xs font-semibold text-charcoal-soft hover:text-brand-black underline underline-offset-2 transition-colors"
       >
         Respond as owner
       </button>
@@ -46,7 +46,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
         rows={3}
         autoFocus
         placeholder="Write your response to this review…"
-        className="w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+        className="w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
       />
       {state.error && (
         <p role="alert" className="font-body text-xs text-red-600">

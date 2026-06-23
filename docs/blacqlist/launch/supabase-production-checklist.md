@@ -4,7 +4,7 @@
 **Status:** Pre-deployment checklist
 **Applies to:** Production Supabase project only (separate from staging)
 
-Complete every section in order. Do not apply migrations until PITR is confirmed active. Do not open the site to users until RLS verification is complete.
+Complete every section in order. Migrations may be applied to the **empty** production DB during setup/testing (Supabase Pro's included daily backups cover this phase) — **PITR is enabled before public launch (gate M7)**, not before the initial setup migrations. Do not open the site to users until RLS verification is complete.
 
 ---
 
@@ -13,18 +13,19 @@ Complete every section in order. Do not apply migrations until PITR is confirmed
 ### 1.1 Plan and billing
 
 - [ ] Production Supabase project is on **Pro plan** or higher
-  - Reason: PITR requires Pro plan. PITR is non-negotiable for production.
+  - Reason: Pro (~$25/mo) gives **daily backups + no auto-pause**, and is required to add PITR later. Keep Pro now; it's the only ongoing infra cost until launch.
   - Verify: Supabase Dashboard → Settings → Billing → current plan
 - [ ] Billing email is a monitored address (not a personal email that may be missed)
 - [ ] Usage alerts are configured: Supabase Dashboard → Settings → Billing → Spend Caps
 
-### 1.2 Point-in-Time Recovery (PITR)
+### 1.2 Backups & Point-in-Time Recovery (PITR)
 
-- [ ] PITR is enabled
-  - Verify: Supabase Dashboard → Settings → Backups → "Point in Time Recovery" shows enabled
-  - PITR window: 7 days minimum
-- [ ] A successful backup exists (dashboard shows last backup timestamp)
-- [ ] **Do not run migrations until PITR is confirmed active.** A failed migration on a project without PITR may be unrecoverable.
+**During setup/testing (now):** the production DB is empty, so **Pro's included daily backups** (7-day retention) are the safety net — migrations may be applied without PITR. If a setup migration goes wrong, restore the latest daily backup or recreate the empty project. No real data is at risk yet.
+
+**PITR is a paid add-on (~$100/mo for the 7-day window) and is enabled before the public launch — gate M7 — when real user data starts to accrue.** Do not enable it during testing (cost); do not launch to users without it.
+
+- [ ] A successful **daily backup** exists now (dashboard → Settings → Backups shows a recent timestamp)
+- [ ] **PITR enabled — at gate M7, before public launch** (Settings → Backups → "Point in Time Recovery", 7-day window). _Deferred during testing._
 
 ### 1.3 Connection pooling
 

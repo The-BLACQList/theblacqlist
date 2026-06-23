@@ -187,11 +187,6 @@ INSERT INTO listings (
    'business',(SELECT id FROM categories WHERE slug='food-dining'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
    'physical','published','free','unclaimed',true,43,15,'admin',now()),
 
-  ('00a00001-0000-0000-0000-000000000034','The Beehive ATL','beehive-atl',
-   'Boutique collective of local makers selling apparel, jewelry, and home goods.',
-   'business',(SELECT id FROM categories WHERE slug='retail-gifts'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'physical','published','free','unclaimed',false,16,5,'admin',now()),
-
   ('00a00001-0000-0000-0000-000000000035','Images USA','images-usa-atlanta',
    'Atlanta''s pioneering Black-owned multicultural marketing agency serving brands for 35+ years.',
    'business',(SELECT id FROM categories WHERE slug='social-media-marketing'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
@@ -206,11 +201,6 @@ INSERT INTO listings (
    'Full-service video production and digital marketing agency for visionary brands.',
    'business',(SELECT id FROM categories WHERE slug='creative-media'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
    'physical','published','free','unclaimed',false,8,2,'admin',now()),
-
-  ('00a00001-0000-0000-0000-000000000038','Centered Life Therapy','centered-life-therapy',
-   'Mental health counseling that honors your full humanity and cultural identity.',
-   'business',(SELECT id FROM categories WHERE slug='healthcare'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'physical','published','free','unclaimed',false,10,3,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000039','Just 4 Girls Salon','just-4-girls-salon',
    'Specialized hair salon dedicated to girls and women of all hair types and ages.',
@@ -268,11 +258,6 @@ INSERT INTO listings (
    'business',(SELECT id FROM categories WHERE slug='food-dining'),(SELECT id FROM cities WHERE slug='houston-tx'),
    'physical','published','free','unclaimed',false,22,8,'admin',now()),
 
-  ('00b00002-0000-0000-0000-000000000008','Phil & Derek''s','phil-and-dereks',
-   'Cajun-Creole kitchen and jazz lounge serving soulful seafood and live music nightly.',
-   'business',(SELECT id FROM categories WHERE slug='food-dining'),(SELECT id FROM cities WHERE slug='houston-tx'),
-   'physical','published','free','unclaimed',false,24,9,'admin',now()),
-
   ('00b00002-0000-0000-0000-000000000009','Salon Meyerland','salon-meyerland',
    'Houston''s premier Black hair salon suite with 74 expert stylists under one roof.',
    'business',(SELECT id FROM categories WHERE slug='beauty-grooming'),(SELECT id FROM cities WHERE slug='houston-tx'),
@@ -282,16 +267,6 @@ INSERT INTO listings (
    'Natural and relaxed Black hair salon specializing in silk press, locs, and pixie cuts.',
    'business',(SELECT id FROM categories WHERE slug='beauty-grooming'),(SELECT id FROM cities WHERE slug='houston-tx'),
    'physical','published','free','unclaimed',false,13,5,'admin',now()),
-
-  ('00b00002-0000-0000-0000-000000000011','MELODRAMA Boutique','melodrama-boutique',
-   'Third Ward women''s fashion boutique mixing classic and contemporary threads since 2002.',
-   'business',(SELECT id FROM categories WHERE slug='fashion-apparel'),(SELECT id FROM cities WHERE slug='houston-tx'),
-   'physical','published','free','unclaimed',false,16,6,'admin',now()),
-
-  ('00b00002-0000-0000-0000-000000000012','Yoga House Houston','yoga-house-houston',
-   'Houston''s first Black-owned yoga studio offering Kemetic and traditional yoga practices.',
-   'business',(SELECT id FROM categories WHERE slug='wellness-health'),(SELECT id FROM cities WHERE slug='houston-tx'),
-   'physical','published','free','unclaimed',false,21,8,'admin',now()),
 
   ('00b00002-0000-0000-0000-000000000013','TWT Fitness','twt-fitness-houston',
    'Women-only fitness studio built on community, accountability, and real transformation.',
@@ -404,11 +379,6 @@ INSERT INTO listings (
    'business',(SELECT id FROM categories WHERE slug='social-media-marketing'),(SELECT id FROM cities WHERE slug='chicago-il'),
    'physical','published','free','unclaimed',false,14,5,'admin',now()),
 
-  ('00c00003-0000-0000-0000-000000000013','Premier Health Urgent Care','premier-health-urgent-care',
-   'Chicago''s first Black-owned urgent care facility serving the South Side''s Hyde Park community.',
-   'business',(SELECT id FROM categories WHERE slug='healthcare'),(SELECT id FROM cities WHERE slug='chicago-il'),
-   'physical','published','free','unclaimed',false,16,5,'admin',now()),
-
   ('00c00003-0000-0000-0000-000000000014','The Silver Room','silver-room-chicago',
    'Hyde Park''s eclectic jewel for handmade jewelry, fashion, art, and music since 1997.',
    'business',(SELECT id FROM categories WHERE slug='retail-gifts'),(SELECT id FROM cities WHERE slug='chicago-il'),
@@ -418,11 +388,6 @@ INSERT INTO listings (
    'Chicago theater company combating racism through transformative African American theatrical arts.',
    'business',(SELECT id FROM categories WHERE slug='events-entertainment'),(SELECT id FROM cities WHERE slug='chicago-il'),
    'physical','published','free','unclaimed',true,28,11,'admin',now()),
-
-  ('00c00003-0000-0000-0000-000000000016','Semicolon Bookstore','semicolon-bookstore',
-   'Chicago''s pioneering Black woman-owned bookstore celebrating diverse literature and art.',
-   'business',(SELECT id FROM categories WHERE slug='books-publishing'),(SELECT id FROM cities WHERE slug='chicago-il'),
-   'physical','draft','free','unclaimed',false,42,18,'admin',now()), -- CLOSED until 2027 per Instagram; draft so it doesn't appear publicly
 
   ('00c00003-0000-0000-0000-000000000017','Da Book Joint','da-book-joint',
    'South Side Chicago''s cherished Black bookstore championing African American fiction since 2007.',
@@ -655,12 +620,6 @@ INSERT INTO listing_details_business (
    NULL,'https://nourishandbloommarket.com','https://instagram.com/nourishandbloommarket',
    'shop','https://nourishandbloommarket.com','$$',2022),
 
-  ('00a00001-0000-0000-0000-000000000034',
-   'A vibrant collective boutique in Inman Park carrying local makers'' apparel, jewelry, home goods, and art. The Beehive is a living marketplace for Atlanta''s creative community, offering something new with every visit.',
-   '1250 Caroline St NE Suite C120','Atlanta','GA','30307',
-   '(404) 581-9261','https://thebeehiveatl.com',NULL,
-   'shop','https://thebeehiveatl.com','$$',NULL),
-
   ('00a00001-0000-0000-0000-000000000035',
    'Atlanta''s pioneering Black-owned multicultural marketing agency, founded in 1988 and serving Fortune 500 brands with authentic, research-driven campaigns. Images USA has spent over three decades crafting communications that resonate deeply with diverse audiences.',
    '40 Marietta St NW','Atlanta','GA','30303',
@@ -678,12 +637,6 @@ INSERT INTO listing_details_business (
    NULL,'Atlanta','GA',NULL,
    NULL,NULL,NULL,
    'get-quote',NULL,'$$$',NULL),
-
-  ('00a00001-0000-0000-0000-000000000038',
-   'An Atlanta-based mental health practice offering individual and group therapy rooted in culturally informed care. Serving Black clients who deserve therapeutic support that truly honors their full lived experience, history, and humanity.',
-   NULL,'Atlanta','GA',NULL,
-   NULL,NULL,NULL,
-   'book',NULL,'$$$',NULL),
 
   ('00a00001-0000-0000-0000-000000000039',
    'A specialized hair salon in the Kennesaw area dedicated to providing excellent hair care for girls and women of all ages and textures. Known for a nurturing atmosphere and stylists who truly understand and celebrate Black hair.',
@@ -752,12 +705,6 @@ INSERT INTO listing_details_business (
    '(713) 635-6384','https://triplejsmokehouse.com','https://instagram.com/triplejs.smokehouse',
    'order','https://triplejsmokehouse.com','$',NULL),
 
-  ('00b00002-0000-0000-0000-000000000008',
-   'A lively Cajun-Creole kitchen and jazz lounge in EaDo serving soulful seafood plates and live music nightly. Phil & Derek''s captures the spirit of New Orleans right in Houston''s vibrant Third Ward area.',
-   '1701 Webster St Suite E','Houston','TX','77003',
-   '(281) 501-3261','https://philanddereksreloaded.com','https://instagram.com/philanddereks',
-   'visit','https://philanddereksreloaded.com','$$',NULL),
-
   ('00b00002-0000-0000-0000-000000000009',
    'One of Houston''s largest and most established Black hair salon suites, with over 70 independent stylists under one roof serving all hair types and textures. A destination for anyone seeking expert natural hair care, extensions, color, or protective styles in Southwest Houston.',
    '10350 S Post Oak Rd','Houston','TX','77035',
@@ -769,18 +716,6 @@ INSERT INTO listing_details_business (
    NULL,'Houston','TX',NULL,
    NULL,'https://trendzbytammy.com',NULL,
    'book','https://trendzbytammy.com','$$',NULL),
-
-  ('00b00002-0000-0000-0000-000000000011',
-   'A Third Ward Houston fashion institution since 2002, MELODRAMA offers curated women''s clothing that blends classic elegance with contemporary edge. A beloved destination for style-forward shoppers who appreciate quality, individuality, and a boutique that knows the culture.',
-   '5306 Almeda Rd','Houston','TX','77004',
-   '(713) 523-1608','https://melodramaboutique.com',NULL,
-   'shop','https://melodramaboutique.com','$$$',2002),
-
-  ('00b00002-0000-0000-0000-000000000012',
-   'Houston''s first Black-owned yoga studio, offering Kemetic yoga, traditional Hatha, and wellness workshops rooted in African traditions. A sanctuary on Cleburne Street where community, healing, and intentional movement come together.',
-   '1815 Cleburne Ste C','Houston','TX','77004',
-   '(713) 240-3073','https://yogahousehouston.com',NULL,
-   'book','https://yogahousehouston.com','$$',2010),
 
   ('00b00002-0000-0000-0000-000000000013',
    'A women-only fitness studio in the Houston area built entirely on community, accountability, and real transformation. TWT creates an encouraging environment where women of all fitness levels feel safe, supported, and motivated to reach their goals.',
@@ -915,12 +850,6 @@ INSERT INTO listing_details_business (
    '(312) 874-7204','https://mywhyagency.com',NULL,
    'get-quote','https://mywhyagency.com','$$$',2016),
 
-  ('00c00003-0000-0000-0000-000000000013',
-   'Chicago''s first Black-owned urgent care facility, serving the Hyde Park and Kenwood communities with accessible, high-quality medical care since 2019. Premier Health is committed to reducing health disparities on Chicago''s South Side through compassionate, expert service.',
-   '1301 E 47th St Bldg 2','Chicago','IL','60653',
-   NULL,'https://premierucchicago.com',NULL,
-   'visit','https://premierucchicago.com','$$',2019),
-
   ('00c00003-0000-0000-0000-000000000014',
    'A Hyde Park treasure since 1997, The Silver Room is Chicago''s eclectic destination for handmade jewelry, fashion, art, music, and community. Beyond retail, The Silver Room hosts the beloved annual Silver Room Block Party celebrating Black art, culture, and local commerce.',
    '1506 E 53rd St','Chicago','IL','60615',
@@ -932,12 +861,6 @@ INSERT INTO listing_details_business (
    '4450 N Clark St','Chicago','IL','60640',
    NULL,'https://blackensembletheater.org','https://instagram.com/blackensemble',
    'book','https://blackensembletheater.org','$$',1976),
-
-  ('00c00003-0000-0000-0000-000000000016',
-   'Chicago''s pioneering Black woman-owned bookstore celebrating diverse literature, art, and community in Garfield Park. Founded by Danielle Mullen, Semicolon has become a national symbol of Black intellectual life, literary entrepreneurship, and the enduring power of the independent bookstore.',
-   '3155 W Fifth Ave','Chicago','IL','60624',
-   NULL,'https://semicolonchi.com','https://instagram.com/semicolonchi',
-   'shop','https://semicolonchi.com','$',2019),
 
   ('00c00003-0000-0000-0000-000000000017',
    'A South Side Chicago Black bookstore championing African American fiction, history, and culture since 2007. Da Book Joint is a community anchor where readers find books that speak directly to their lives, histories, and imaginations — often titles you won''t find elsewhere.',

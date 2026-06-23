@@ -11,7 +11,7 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
   return (
     <div className="text-center py-4">
       <div className="w-14 h-14 rounded-full bg-amber-gold/10 flex items-center justify-center mx-auto mb-4">
-        <Mail className="size-7 text-amber-gold" aria-hidden="true" />
+        <Mail className="size-7 text-amber" aria-hidden="true" />
       </div>
 
       <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
@@ -26,7 +26,7 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
         .
       </p>
 
-      <p className="font-subhead text-sm text-charcoal/60 mt-3 leading-relaxed">
+      <p className="font-subhead text-sm text-charcoal-soft mt-3 leading-relaxed">
         Click the link in the email to activate your account.
         <br />
         Didn&apos;t receive it? Check your spam folder.

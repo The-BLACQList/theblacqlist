@@ -28,6 +28,7 @@ function SignInContent() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? ''
   const error = searchParams.get('error')
+  const accountDeleted = searchParams.get('deleted') === '1'
 
   const [state, action] = useActionState(signInAction, null)
   const [showPassword, setShowPassword] = useState(false)
@@ -46,6 +47,15 @@ function SignInContent() {
     <>
       <h1 className="font-headline text-[26px] text-brand-black mb-1">Welcome back</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">Sign in to your BLACQList account.</p>
+
+      {accountDeleted && (
+        <div
+          role="status"
+          className="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm font-subhead text-green-700"
+        >
+          Your account and personal data have been deleted. Thanks for being part of the community.
+        </div>
+      )}
 
       {(generalError ?? callbackError) && (
         <div
@@ -74,7 +84,7 @@ function SignInContent() {
             aria-describedby={emailError ? 'email-error' : undefined}
             aria-invalid={!!emailError}
             className={cn(
-              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
               emailError ? 'border-red-400' : 'border-charcoal/30'
             )}
             placeholder="you@example.com"
@@ -101,7 +111,7 @@ function SignInContent() {
               aria-describedby={passwordError ? 'password-error' : undefined}
               aria-invalid={!!passwordError}
               className={cn(
-                'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                 passwordError ? 'border-red-400' : 'border-charcoal/30'
               )}
               placeholder="••••••••"
@@ -110,7 +120,7 @@ function SignInContent() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/50 hover:text-charcoal transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-soft hover:text-charcoal transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="size-4" aria-hidden="true" />

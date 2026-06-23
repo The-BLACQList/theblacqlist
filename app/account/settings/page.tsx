@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 
 import { updateProfileAction } from '@/lib/actions/account/updateProfile'
 import { cn } from '@/lib/utils'
+import { DeleteAccountSection } from './DeleteAccountSection'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -88,7 +89,7 @@ export default function AccountSettingsPage() {
                 aria-describedby={getFieldError('display_name') ? 'display_name-error' : undefined}
                 aria-invalid={!!getFieldError('display_name')}
                 className={cn(
-                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                   getFieldError('display_name') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="Your name"
@@ -117,12 +118,12 @@ export default function AccountSettingsPage() {
                 aria-describedby={cn('bio-hint', getFieldError('bio') ? 'bio-error' : undefined)}
                 aria-invalid={!!getFieldError('bio')}
                 className={cn(
-                  'rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 py-2.5 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none',
+                  'rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 py-2.5 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black resize-none',
                   getFieldError('bio') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="A little about you…"
               />
-              <p id="bio-hint" className="text-xs font-subhead text-charcoal/50">
+              <p id="bio-hint" className="text-xs font-subhead text-charcoal-soft">
                 Max 500 characters.
               </p>
               {getFieldError('bio') && (
@@ -148,7 +149,7 @@ export default function AccountSettingsPage() {
                 aria-describedby={getFieldError('website_url') ? 'website_url-error' : undefined}
                 aria-invalid={!!getFieldError('website_url')}
                 className={cn(
-                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                  'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                   getFieldError('website_url') ? 'border-red-400' : 'border-charcoal/30'
                 )}
                 placeholder="https://yourwebsite.com"
@@ -169,6 +170,9 @@ export default function AccountSettingsPage() {
             </div>
           </form>
         </div>
+
+        {/* Danger zone */}
+        <DeleteAccountSection />
       </div>
     </main>
   )

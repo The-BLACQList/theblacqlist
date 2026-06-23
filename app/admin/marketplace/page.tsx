@@ -44,7 +44,7 @@ export default async function AdminMarketplacePage() {
     <div className="space-y-8 max-w-5xl">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Marketplace</h1>
-        <p className="font-body text-sm text-charcoal/50 mt-0.5">
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">
           Products and services listed in the BLACQList Marketplace.
         </p>
       </div>
@@ -58,7 +58,7 @@ export default async function AdminMarketplacePage() {
           { label: 'Draft services', count: serviceCounts.draft },
         ].map(({ label, count }) => (
           <div key={label} className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <p className="font-subhead text-xs text-charcoal/60 uppercase tracking-wide mb-1">
+            <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1">
               {label}
             </p>
             <p className="font-headline text-4xl text-brand-black">{count.toLocaleString()}</p>
@@ -79,30 +79,30 @@ export default async function AdminMarketplacePage() {
             href="/marketplace/products"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-subhead text-xs text-amber-gold hover:text-light-gold"
+            className="font-subhead text-xs text-amber hover:text-light-gold"
           >
             View public marketplace →
           </Link>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {(products ?? []).length === 0 ? (
-            <p className="px-5 py-8 font-body text-sm text-charcoal/50 text-center">
+            <p className="px-5 py-8 font-body text-sm text-charcoal-soft text-center">
               No products yet.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f5f5f7]">
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Product
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden md:table-cell">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                     Vendor
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     View
                   </th>
                 </tr>
@@ -121,7 +121,7 @@ export default async function AdminMarketplacePage() {
                         {listing && (
                           <Link
                             href={`/vendors/${listing.slug}`}
-                            className="font-body text-xs text-charcoal/60 hover:text-charcoal"
+                            className="font-body text-xs text-charcoal-soft hover:text-charcoal"
                             target="_blank"
                           >
                             {listing.name}
@@ -137,7 +137,7 @@ export default async function AdminMarketplacePage() {
                             href={`/marketplace/products/${p.global_slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-subhead text-xs text-amber-gold hover:text-light-gold"
+                            className="font-subhead text-xs text-amber hover:text-light-gold"
                           >
                             View →
                           </Link>
@@ -165,30 +165,30 @@ export default async function AdminMarketplacePage() {
             href="/marketplace/services"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-subhead text-xs text-amber-gold hover:text-light-gold"
+            className="font-subhead text-xs text-amber hover:text-light-gold"
           >
             View public marketplace →
           </Link>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {(services ?? []).length === 0 ? (
-            <p className="px-5 py-8 font-body text-sm text-charcoal/50 text-center">
+            <p className="px-5 py-8 font-body text-sm text-charcoal-soft text-center">
               No services yet.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f5f5f7]">
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Service
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide hidden md:table-cell">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                     Provider
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     View
                   </th>
                 </tr>
@@ -207,7 +207,7 @@ export default async function AdminMarketplacePage() {
                         {listing && (
                           <Link
                             href={`/vendors/${listing.slug}`}
-                            className="font-body text-xs text-charcoal/60 hover:text-charcoal"
+                            className="font-body text-xs text-charcoal-soft hover:text-charcoal"
                             target="_blank"
                           >
                             {listing.name}
@@ -223,7 +223,7 @@ export default async function AdminMarketplacePage() {
                             href={`/marketplace/services/${s.global_slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-subhead text-xs text-amber-gold hover:text-light-gold"
+                            className="font-subhead text-xs text-amber hover:text-light-gold"
                           >
                             View →
                           </Link>

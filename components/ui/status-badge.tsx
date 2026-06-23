@@ -34,13 +34,13 @@ const TIER_CONFIG: Record<TrustTier, TierConfig> = {
   },
   verified: {
     label: 'Verified',
-    bgClass: 'bg-[#D4A017]',
+    bgClass: 'bg-light-gold', // bright gold, black text — distinct from champagne certified
     textClass: 'text-brand-black',
     Icon: CheckCircle,
   },
   certified: {
     label: 'BLACQList Certified',
-    bgClass: 'bg-amber-gold',
+    bgClass: 'bg-gold', // champagne gold — top tier
     textClass: 'text-brand-black',
     Icon: Star,
   },

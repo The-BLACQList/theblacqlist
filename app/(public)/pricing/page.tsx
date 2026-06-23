@@ -156,10 +156,10 @@ export default function PricingPage() {
 
               <div className="mb-4">
                 <h3 className="font-headline text-xl text-brand-black mb-1">{plan.name}</h3>
-                <p className="font-subhead text-xs text-charcoal/60 mb-3">{plan.tagline}</p>
+                <p className="font-subhead text-xs text-charcoal-soft mb-3">{plan.tagline}</p>
                 <div className="flex items-baseline gap-1">
                   <span className="font-headline text-3xl text-brand-black">{plan.price}</span>
-                  <span className="font-subhead text-sm text-charcoal/50">{plan.period}</span>
+                  <span className="font-subhead text-sm text-charcoal-soft">{plan.period}</span>
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl">
           {/* Sponsored Spotlight */}
           <div className="rounded-xl border border-charcoal/15 bg-white p-6">
-            <span className="inline-block rounded-full bg-amber-gold/15 text-amber-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
+            <span className="inline-block rounded-full bg-amber-gold/15 text-amber text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
               Limited Inventory
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
@@ -213,7 +213,7 @@ export default function PricingPage() {
             </p>
             <p className="font-headline text-2xl text-brand-black mb-4">
               $299–$999
-              <span className="font-subhead text-sm text-charcoal/50 ml-1">/mo</span>
+              <span className="font-subhead text-sm text-charcoal-soft ml-1">/mo</span>
             </p>
             <Button
               asChild
@@ -234,7 +234,7 @@ export default function PricingPage() {
             </p>
             <p className="font-headline text-2xl text-brand-black mb-4">
               $49–$99
-              <span className="font-subhead text-sm text-charcoal/50 ml-1">/ 30 days</span>
+              <span className="font-subhead text-sm text-charcoal-soft ml-1">/ 30 days</span>
             </p>
             <Button
               asChild
@@ -258,7 +258,7 @@ export default function PricingPage() {
               <summary className="flex cursor-pointer items-start justify-between gap-4 font-subhead font-semibold text-sm text-brand-black list-none">
                 <span>{item.q}</span>
                 <span
-                  className="mt-0.5 shrink-0 text-charcoal/40 group-open:rotate-45 transition-transform"
+                  className="mt-0.5 shrink-0 text-charcoal-faint group-open:rotate-45 transition-transform"
                   aria-hidden="true"
                 >
                   +
@@ -273,7 +273,7 @@ export default function PricingPage() {
       {/* Sponsor teaser */}
       <section className="bg-deep-bg" aria-labelledby="sponsor-teaser-heading">
         <Container className="py-16 md:py-20 text-center">
-          <p className="font-subhead text-amber-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
             For Brands & Organizations
           </p>
           <h2

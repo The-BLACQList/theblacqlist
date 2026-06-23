@@ -431,23 +431,29 @@ export type Database = {
       }
       collection_items: {
         Row: {
+          blurb: string | null
           collection_id: string
           created_at: string
           display_order: number
+          headline: string | null
           id: string
           listing_id: string
         }
         Insert: {
+          blurb?: string | null
           collection_id: string
           created_at?: string
           display_order?: number
+          headline?: string | null
           id?: string
           listing_id: string
         }
         Update: {
+          blurb?: string | null
           collection_id?: string
           created_at?: string
           display_order?: number
+          headline?: string | null
           id?: string
           listing_id?: string
         }
@@ -468,8 +474,47 @@ export type Database = {
           },
         ]
       }
+      collection_sections: {
+        Row: {
+          body: string | null
+          collection_id: string
+          created_at: string
+          display_order: number
+          heading: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          collection_id: string
+          created_at?: string
+          display_order?: number
+          heading: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          collection_id?: string
+          created_at?: string
+          display_order?: number
+          heading?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_sections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collections: {
         Row: {
+          body: string | null
           cover_image_path: string | null
           created_at: string
           created_by: string | null
@@ -478,10 +523,12 @@ export type Database = {
           id: string
           is_active: boolean
           slug: string
+          subtitle: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          body?: string | null
           cover_image_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -490,10 +537,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           slug: string
+          subtitle?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          body?: string | null
           cover_image_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -502,6 +551,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           slug?: string
+          subtitle?: string | null
           title?: string
           updated_at?: string
         }

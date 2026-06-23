@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Star, BadgeCheck, MessageSquare } from 'lucide-react'
 import type { EntityPageData, ReviewItem } from '@/types'
 import { ReviewForm } from '@/components/entity-page/ReviewForm'
@@ -18,7 +19,7 @@ function StarRow({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }
         <Star
           key={i}
           className={`${px} ${
-            i < rating ? 'fill-amber-gold text-amber-gold' : 'fill-transparent text-charcoal/20'
+            i < rating ? 'fill-amber-gold text-amber' : 'fill-transparent text-charcoal/20'
           }`}
           aria-hidden="true"
         />
@@ -30,6 +31,26 @@ function StarRow({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }
 function formatDate(iso: string): string {
   const d = new Date(iso)
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+function CriteriaChips({ criteria }: { criteria: ReviewItem['criteria'] }) {
+  if (!criteria || criteria.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {criteria.map((c) => (
+        <span
+          key={c.name}
+          className="inline-flex items-center gap-1 rounded-full bg-cream border border-charcoal/10 px-2.5 py-1 font-subhead text-[11px] font-semibold text-charcoal"
+        >
+          {c.name}
+          <span className="inline-flex items-center gap-0.5 text-brand-black">
+            <Star className="size-3 fill-amber-gold text-amber" aria-hidden="true" />
+            {c.rating}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
 }
 
 function ReviewCard({
@@ -67,6 +88,31 @@ function ReviewCard({
         <p className="font-body text-sm text-charcoal leading-relaxed">{review.body}</p>
       )}
 
+      <CriteriaChips criteria={review.criteria} />
+
+      {review.photos.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {review.photos.map((photo) => (
+            <li key={photo.id}>
+              <a
+                href={photo.src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg overflow-hidden border border-charcoal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/50"
+              >
+                <Image
+                  src={photo.src}
+                  alt={photo.alt || 'Review photo'}
+                  width={80}
+                  height={80}
+                  className="size-20 object-cover hover:opacity-90 transition-opacity"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="flex items-center gap-2 pt-1">
         <span className="inline-flex items-center justify-center size-7 rounded-full bg-deep-bg text-white font-headline text-xs flex-shrink-0">
           {initial}
@@ -76,7 +122,7 @@ function ReviewCard({
             {displayName}
           </p>
           {review.published_at && (
-            <p className="font-body text-xs text-charcoal/60 mt-0.5">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5">
               {formatDate(review.published_at)}
             </p>
           )}
@@ -87,8 +133,8 @@ function ReviewCard({
       {review.owner_response && (
         <div className="mt-1 rounded-lg bg-pale-lavender/40 border border-charcoal/10 px-4 py-3">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <MessageSquare className="size-3.5 text-charcoal/50" aria-hidden="true" />
-            <p className="font-subhead text-xs font-semibold text-charcoal/60">
+            <MessageSquare className="size-3.5 text-charcoal-soft" aria-hidden="true" />
+            <p className="font-subhead text-xs font-semibold text-charcoal-soft">
               Response from the owner
               {review.owner_responded_at && (
                 <span className="font-normal ml-1">· {formatDate(review.owner_responded_at)}</span>
@@ -142,11 +188,24 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
                 <span className="font-subhead font-semibold text-brand-black text-base">
                   {roundedAvg.toFixed(1)}
                 </span>
-                <span className="font-body text-sm text-charcoal/60">
+                <span className="font-body text-sm text-charcoal-soft">
                   ({entity.review_count} {entity.review_count === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
             </div>
+            {entity.reviewCriteriaAverages.length > 0 && (
+              <dl className="flex flex-wrap gap-x-6 gap-y-2 sm:justify-end">
+                {entity.reviewCriteriaAverages.map((c) => (
+                  <div key={c.name} className="flex items-center gap-1.5">
+                    <dt className="font-body text-sm text-charcoal-soft">{c.name}</dt>
+                    <dd className="inline-flex items-center gap-0.5 font-subhead text-sm font-semibold text-brand-black">
+                      <Star className="size-3.5 fill-amber-gold text-amber" aria-hidden="true" />
+                      {c.average.toFixed(1)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
         )}
 
@@ -175,7 +234,11 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             {hasReviews && (
               <h3 className="font-headline text-lg text-brand-black mb-4">Share your experience</h3>
             )}
-            <ReviewForm listingId={entity.id} listingName={entity.name} />
+            <ReviewForm
+              listingId={entity.id}
+              listingName={entity.name}
+              criteria={entity.reviewCriteria}
+            />
           </div>
         )}
       </div>

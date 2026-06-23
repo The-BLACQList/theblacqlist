@@ -1,13 +1,20 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { loadAttributeGroups } from '@/lib/listings/facets'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
 import { AboutSection } from '@/components/dashboard/AboutSection'
 import { ContactSection } from '@/components/dashboard/ContactSection'
 import { SocialSection } from '@/components/dashboard/SocialSection'
+import { AttributesSection } from '@/components/dashboard/AttributesSection'
+import { VideoSection } from '@/components/dashboard/VideoSection'
+import { LinksSection } from '@/components/dashboard/LinksSection'
+import { FaqSection } from '@/components/dashboard/FaqSection'
+import { EventDetailsSection } from '@/components/dashboard/EventDetailsSection'
 import { CtaSection } from '@/components/dashboard/CtaSection'
 import { SeoSection } from '@/components/dashboard/SeoSection'
 import { HoursSection } from '@/components/dashboard/HoursSection'
@@ -44,6 +51,122 @@ export default async function EditPage({ params }: Props) {
     .maybeSingle()
 
   if (!listing) notFound()
+
+  // Events use a dedicated editor — the business-shaped sections below don't apply.
+  if (listing.entity_type === 'event') {
+    const sbEvent = supabase as unknown as SupabaseClient
+    const [{ data: eventRow }, { data: ownerBusinesses }] = await Promise.all([
+      sbEvent
+        .from('listing_details_event')
+        .select(
+          'starts_at, ends_at, is_online, venue_name, venue_address, city_text, state, ticket_url, price_text, description, organizer_listing_id'
+        )
+        .eq('listing_id', listing.id)
+        .maybeSingle(),
+      supabase
+        .from('listings')
+        .select('id, name')
+        .eq('owner_user_id', owner.user.id)
+        .neq('entity_type', 'event')
+        .is('deleted_at', null)
+        .order('name'),
+    ])
+    const cityE = listing.cities as { slug: string; name: string } | null
+    const publicUrlE = buildEntityUrl(listing.entity_type, cityE?.slug, listing.slug)
+
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-headline text-2xl text-brand-black">{listing.name}</h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className={`px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
+                  listing.status === 'published'
+                    ? 'bg-green-100 text-green-700'
+                    : listing.status === 'pending'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-charcoal/10 text-charcoal-soft'
+                }`}
+              >
+                {listing.status}
+              </span>
+              <span className="font-subhead text-xs text-amber">Event</span>
+            </div>
+          </div>
+          {publicUrlE && (
+            <Link
+              href={publicUrlE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-brand-black transition-colors"
+            >
+              Preview <ExternalLink className="size-3" aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+
+        <PublishSection listingId={listing.id} status={listing.status} trustTier={listing.trust_tier} />
+
+        <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
+
+        <EventDetailsSection
+          listingId={listing.id}
+          event={eventRow ?? null}
+          businesses={(ownerBusinesses ?? []) as { id: string; name: string }[]}
+        />
+
+        <SeoSection
+          listingId={listing.id}
+          metaTitle={listing.meta_title}
+          metaDescription={listing.meta_description}
+          name={listing.name}
+          description={(eventRow as { description?: string | null } | null)?.description ?? null}
+        />
+      </div>
+    )
+  }
+
+  // Attribute groups for this entity type + the listing's current selections,
+  // plus the (fail-soft) video field — queried separately so a not-yet-migrated
+  // column can't break the editor.
+  const sb = supabase as unknown as SupabaseClient
+  const [
+    attributeGroups,
+    { data: selectedAttrRows },
+    { data: videoRow },
+    { data: linkRows },
+    { data: faqRows },
+  ] = await Promise.all([
+      loadAttributeGroups(supabase, listing.entity_type),
+      sb.from('listing_attributes').select('value_id').eq('listing_id', listing.id),
+      sb
+        .from('listing_details_business')
+        .select('video_embed_url')
+        .eq('listing_id', listing.id)
+        .maybeSingle(),
+      sb
+        .from('listing_links')
+        .select('id, link_type, url, label')
+        .eq('listing_id', listing.id)
+        .order('display_order', { ascending: true }),
+      // Fail-soft: listing_faqs may not be migrated yet.
+      sb
+        .from('listing_faqs')
+        .select('id, question, answer')
+        .eq('listing_id', listing.id)
+        .order('display_order', { ascending: true }),
+    ])
+  const selectedValueIds = ((selectedAttrRows as { value_id: string }[] | null) ?? []).map(
+    (r) => r.value_id
+  )
+  const videoEmbedUrl =
+    (videoRow as { video_embed_url: string | null } | null)?.video_embed_url ?? null
+  const links =
+    (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
+    []
+  const faqs =
+    (faqRows as { id: string; question: string; answer: string }[] | null) ?? []
 
   const details = listing.listing_details_business as {
     description: string | null
@@ -82,12 +205,12 @@ export default async function EditPage({ params }: Props) {
                   ? 'bg-green-100 text-green-700'
                   : listing.status === 'pending'
                     ? 'bg-amber-100 text-amber-700'
-                    : 'bg-charcoal/10 text-charcoal/60'
+                    : 'bg-charcoal/10 text-charcoal-soft'
               }`}
             >
               {listing.status}
             </span>
-            {city && <p className="font-body text-xs text-charcoal/50">{city.name}</p>}
+            {city && <p className="font-body text-xs text-charcoal-soft">{city.name}</p>}
           </div>
         </div>
         {publicUrl && (
@@ -95,7 +218,7 @@ export default async function EditPage({ params }: Props) {
             href={publicUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/50 hover:text-brand-black transition-colors"
+            className="shrink-0 inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-brand-black transition-colors"
           >
             Preview <ExternalLink className="size-3" aria-hidden="true" />
           </Link>
@@ -134,6 +257,18 @@ export default async function EditPage({ params }: Props) {
         socialYoutube={details?.social_youtube ?? null}
         socialTwitter={details?.social_twitter ?? null}
       />
+
+      <AttributesSection
+        listingId={listing.id}
+        groups={attributeGroups}
+        selectedValueIds={selectedValueIds}
+      />
+
+      <VideoSection listingId={listing.id} videoEmbedUrl={videoEmbedUrl} />
+
+      <LinksSection listingId={listing.id} links={links} />
+
+      <FaqSection listingId={listing.id} faqs={faqs} />
 
       <CtaSection
         listingId={listing.id}

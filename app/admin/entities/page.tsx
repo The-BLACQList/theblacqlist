@@ -50,7 +50,7 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Entities</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Review and moderate submitted business listings.
         </p>
       </div>
@@ -63,8 +63,8 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
             href={`/admin/entities?status=${value}`}
             className={`px-4 py-2 font-subhead text-sm font-semibold border-b-2 -mb-px transition-colors ${
               status === value
-                ? 'border-amber-gold text-amber-gold'
-                : 'border-transparent text-charcoal/60 hover:text-brand-black'
+                ? 'border-amber-gold text-amber'
+                : 'border-transparent text-charcoal-soft hover:text-brand-black'
             }`}
           >
             {label}
@@ -75,26 +75,26 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
       {/* Table */}
       {!listings || listings.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal/60">No {status} entities found.</p>
+          <p className="font-subhead text-sm text-charcoal-soft">No {status} entities found.</p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Business name
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Type
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Category
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Submitted
                 </th>
                 <th className="px-4 py-3" />
@@ -110,18 +110,18 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
                         {listing.name}
                       </p>
                       {listing.tagline && (
-                        <p className="font-body text-xs text-charcoal/60 line-clamp-1 mt-0.5">
+                        <p className="font-body text-xs text-charcoal-soft line-clamp-1 mt-0.5">
                           {listing.tagline}
                         </p>
                       )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-body text-xs text-charcoal/60 capitalize">
+                      <span className="font-body text-xs text-charcoal-soft capitalize">
                         {listing.entity_type.replace(/_/g, ' ')}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {category?.name ?? '—'}
                       </span>
                     </td>
@@ -129,14 +129,14 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
                       <AdminStatusBadge status={listing.status} />
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <span className="font-body text-xs text-charcoal/60">
+                      <span className="font-body text-xs text-charcoal-soft">
                         {formatDate(listing.created_at)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/entities/${listing.id}`}
-                        className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                        className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                       >
                         Review →
                       </Link>
@@ -150,7 +150,7 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/60">
+              <p className="font-body text-xs text-charcoal-soft">
                 {count} total · page {pageNum} of {totalPages}
               </p>
               <div className="flex gap-2">

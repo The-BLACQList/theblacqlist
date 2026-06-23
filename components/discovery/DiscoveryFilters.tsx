@@ -188,7 +188,7 @@ export function DiscoveryFilters({
           {['Online / Virtual', 'Ships Nationwide', 'In-Person'].map((label) => (
             <label
               key={label}
-              className="flex items-center gap-2 text-sm font-subhead text-charcoal/50 cursor-not-allowed select-none"
+              className="flex items-center gap-2 text-sm font-subhead text-charcoal-soft cursor-not-allowed select-none"
             >
               <input
                 type="checkbox"
@@ -197,7 +197,7 @@ export function DiscoveryFilters({
                 aria-label={`${label} (coming soon)`}
               />
               {label}
-              <span className="ml-auto text-[10px] text-charcoal/40 uppercase tracking-wide">
+              <span className="ml-auto text-[10px] text-charcoal-faint uppercase tracking-wide">
                 Soon
               </span>
             </label>
@@ -210,7 +210,7 @@ export function DiscoveryFilters({
         <legend className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2">
           Trust Level
         </legend>
-        <label className="flex items-center gap-2 text-sm font-subhead text-charcoal/50 cursor-not-allowed select-none">
+        <label className="flex items-center gap-2 text-sm font-subhead text-charcoal-soft cursor-not-allowed select-none">
           <input
             type="checkbox"
             disabled
@@ -218,7 +218,7 @@ export function DiscoveryFilters({
             aria-label="Verified only (coming soon)"
           />
           Verified &amp; Certified only
-          <span className="ml-auto text-[10px] text-charcoal/40 uppercase tracking-wide">Soon</span>
+          <span className="ml-auto text-[10px] text-charcoal-faint uppercase tracking-wide">Soon</span>
         </label>
       </fieldset>
     </aside>

@@ -279,14 +279,14 @@ export function SubmitListingForm({ categories }: Props) {
   const inputCls = (f: string) =>
     cn(
       'h-11 w-full rounded-lg border bg-white font-subhead text-sm text-brand-black px-3',
-      'placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+      'placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
       err(f) ? 'border-red-400' : 'border-charcoal/30'
     )
 
   const textareaCls = (f: string) =>
     cn(
       'w-full rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 py-2.5 resize-none',
-      'placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+      'placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
       err(f) ? 'border-red-400' : 'border-charcoal/30'
     )
 
@@ -295,7 +295,7 @@ export function SubmitListingForm({ categories }: Props) {
       'h-11 w-full rounded-lg border bg-white font-subhead text-sm px-3',
       'focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
       'appearance-none cursor-pointer',
-      hasValue ? 'text-brand-black' : 'text-charcoal/40',
+      hasValue ? 'text-brand-black' : 'text-charcoal-faint',
       err(f) ? 'border-red-400' : 'border-charcoal/30'
     )
 
@@ -312,7 +312,7 @@ export function SubmitListingForm({ categories }: Props) {
       {step === 0 && (
         <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
           <div>
-            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-2">
+            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-2">
               Before you start
             </p>
             <h2 className="font-headline text-2xl text-brand-black mb-3">Who can list on The BLACQList?</h2>
@@ -331,7 +331,7 @@ export function SubmitListingForm({ categories }: Props) {
               <div key={item} className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15">
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                    <path d="M1 4l2.5 2.5L9 1" stroke="#E2A428" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M1 4l2.5 2.5L9 1" stroke="#C4A065" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <p className="font-subhead text-sm text-charcoal">{item}</p>
@@ -339,10 +339,10 @@ export function SubmitListingForm({ categories }: Props) {
             ))}
           </div>
 
-          <p className="font-subhead text-xs text-charcoal/50 leading-relaxed">
+          <p className="font-subhead text-xs text-charcoal-soft leading-relaxed">
             By continuing, you confirm that your business meets these criteria. Submissions are
             reviewed by our team before going live. See our{' '}
-            <a href="/terms#business-listings" target="_blank" rel="noopener noreferrer" className="text-amber-gold hover:underline">
+            <a href="/terms#business-listings" target="_blank" rel="noopener noreferrer" className="text-amber hover:underline">
               Terms of Service
             </a>{' '}
             for the full definition.
@@ -362,7 +362,7 @@ export function SubmitListingForm({ categories }: Props) {
       {step >= 1 && (
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-0.5">
+          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-0.5">
             Step {step} of 7
           </p>
           <p className="font-subhead text-sm font-medium text-charcoal">{STEP_TITLES[step - 1]}</p>
@@ -466,7 +466,7 @@ export function SubmitListingForm({ categories }: Props) {
                   *
                 </span>
               </label>
-              <span className="text-xs font-subhead text-charcoal/40" aria-hidden="true">
+              <span className="text-xs font-subhead text-charcoal-faint" aria-hidden="true">
                 {fields.tagline.length}/120
               </span>
             </div>
@@ -481,7 +481,7 @@ export function SubmitListingForm({ categories }: Props) {
               className={inputCls('tagline')}
               placeholder="What you do in one line"
             />
-            <p id="tagline-hint" className="text-xs font-subhead text-charcoal/40">
+            <p id="tagline-hint" className="text-xs font-subhead text-charcoal-faint">
               Shown on directory cards. 10–120 characters.
             </p>
             {err('tagline') && (
@@ -695,7 +695,7 @@ export function SubmitListingForm({ categories }: Props) {
               <span className="font-subhead text-sm font-semibold text-brand-black">
                 Ships or delivers nationwide
               </span>
-              <p className="font-subhead text-xs text-charcoal/50 mt-0.5">
+              <p className="font-subhead text-xs text-charcoal-soft mt-0.5">
                 Check if you ship products or offer services across the U.S.
               </p>
             </div>
@@ -717,7 +717,7 @@ export function SubmitListingForm({ categories }: Props) {
                 *
               </span>
             </label>
-            <p className="font-subhead text-xs text-charcoal/50 -mt-0.5 mb-0.5">
+            <p className="font-subhead text-xs text-charcoal-soft -mt-0.5 mb-0.5">
               What should someone do when they find your listing?
             </p>
             <select
@@ -775,7 +775,7 @@ export function SubmitListingForm({ categories }: Props) {
                 {err('cta_url')}
               </p>
             ) : (
-              <p id="cta_url-hint" className="text-xs font-subhead text-charcoal/40">
+              <p id="cta_url-hint" className="text-xs font-subhead text-charcoal-faint">
                 Optional. Must start with https://
               </p>
             )}
@@ -864,14 +864,14 @@ export function SubmitListingForm({ categories }: Props) {
           <div>
             <p className="font-subhead text-sm font-semibold text-brand-black mb-3">
               Social links
-              <span className="font-normal text-charcoal/50 ml-1.5 text-xs">(optional)</span>
+              <span className="font-normal text-charcoal-soft ml-1.5 text-xs">(optional)</span>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SOCIAL_FIELDS.map(([key, label]) => (
                 <div key={key} className="flex flex-col gap-1">
                   <label
                     htmlFor={key}
-                    className="font-subhead text-xs font-semibold text-charcoal/70"
+                    className="font-subhead text-xs font-semibold text-charcoal-soft"
                   >
                     {label}
                   </label>
@@ -916,7 +916,7 @@ export function SubmitListingForm({ categories }: Props) {
                   *
                 </span>
               </label>
-              <span className="text-xs font-subhead text-charcoal/40" aria-hidden="true">
+              <span className="text-xs font-subhead text-charcoal-faint" aria-hidden="true">
                 {fields.description.length}/2000
               </span>
             </div>
@@ -934,7 +934,7 @@ export function SubmitListingForm({ categories }: Props) {
               className={textareaCls('description')}
               placeholder="Tell people what makes your business unique, what you offer, and who you serve."
             />
-            <p id="description-hint" className="text-xs font-subhead text-charcoal/40">
+            <p id="description-hint" className="text-xs font-subhead text-charcoal-faint">
               20–2000 characters. Shown on your full listing page.
             </p>
             {err('description') && (
@@ -955,7 +955,7 @@ export function SubmitListingForm({ categories }: Props) {
               className="font-subhead text-sm font-semibold text-brand-black"
             >
               Founder story
-              <span className="font-normal text-charcoal/50 ml-1.5 text-xs">(optional)</span>
+              <span className="font-normal text-charcoal-soft ml-1.5 text-xs">(optional)</span>
             </label>
             <textarea
               id="founder_story"
@@ -967,7 +967,7 @@ export function SubmitListingForm({ categories }: Props) {
             />
           </div>
 
-          <p className="text-xs font-subhead text-charcoal/40">
+          <p className="text-xs font-subhead text-charcoal-faint">
             <span className="text-red-500">*</span> Required fields
           </p>
         </div>

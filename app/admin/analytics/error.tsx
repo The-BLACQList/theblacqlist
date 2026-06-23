@@ -8,7 +8,7 @@ export default function AdminAnalyticsError({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <p className="font-body text-sm text-charcoal/60 mb-4">
+      <p className="font-body text-sm text-charcoal-soft mb-4">
         Couldn&apos;t load platform analytics. Try refreshing.
       </p>
       <button

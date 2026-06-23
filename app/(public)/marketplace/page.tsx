@@ -65,11 +65,11 @@ export default async function MarketplacePage() {
       {/* Hero */}
       <section className="bg-brand-black py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <p className="font-subhead text-xs font-semibold text-amber-gold uppercase tracking-widest mb-3">
+          <p className="font-subhead text-xs font-semibold text-gold uppercase tracking-widest mb-3">
             BLACQList Marketplace
           </p>
           <h1 className="font-headline text-4xl md:text-5xl text-white leading-tight max-w-2xl">
-            Shop Black. Book Black. <span className="text-amber-gold">Keep the dollar moving.</span>
+            Shop Black. Book Black. <span className="text-gold">Keep the dollar moving.</span>
           </h1>
           <p className="font-body text-base text-white/60 mt-4 max-w-xl">
             Products and services from verified Black-owned businesses. Every purchase is a vote for
@@ -102,13 +102,13 @@ export default async function MarketplacePage() {
               <h2 id="products-heading" className="font-headline text-2xl text-brand-black">
                 Featured Products
               </h2>
-              <p className="font-body text-sm text-charcoal/50 mt-0.5">
+              <p className="font-body text-sm text-charcoal-soft mt-0.5">
                 Shipped nationwide or available for pickup
               </p>
             </div>
             <Link
               href="/marketplace/products"
-              className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold transition-colors"
+              className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber hover:text-light-gold transition-colors"
               aria-label="View all products"
             >
               View all <ArrowRight className="size-4" aria-hidden="true" />
@@ -125,12 +125,12 @@ export default async function MarketplacePage() {
             <div className="rounded-xl border border-charcoal/10 bg-white py-16 text-center">
               <Package className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No products yet</p>
-              <p className="font-body text-xs text-charcoal/50 mt-1 max-w-xs mx-auto">
+              <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
                 Vendors are setting up their storefronts. Check back soon.
               </p>
               <Link
                 href="/add-business"
-                className="inline-flex items-center gap-1.5 mt-4 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold"
+                className="inline-flex items-center gap-1.5 mt-4 font-subhead text-sm font-semibold text-amber hover:text-light-gold"
               >
                 List your business <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
@@ -145,13 +145,13 @@ export default async function MarketplacePage() {
               <h2 id="services-heading" className="font-headline text-2xl text-brand-black">
                 Featured Services
               </h2>
-              <p className="font-body text-sm text-charcoal/50 mt-0.5">
+              <p className="font-body text-sm text-charcoal-soft mt-0.5">
                 Book sessions, request quotes, or hire a professional
               </p>
             </div>
             <Link
               href="/marketplace/services"
-              className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold transition-colors"
+              className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber hover:text-light-gold transition-colors"
               aria-label="View all services"
             >
               View all <ArrowRight className="size-4" aria-hidden="true" />
@@ -168,7 +168,7 @@ export default async function MarketplacePage() {
             <div className="rounded-xl border border-charcoal/10 bg-white py-16 text-center">
               <Briefcase className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No services yet</p>
-              <p className="font-body text-xs text-charcoal/50 mt-1 max-w-xs mx-auto">
+              <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
                 Service providers are joining the marketplace. Check back soon.
               </p>
             </div>
@@ -178,7 +178,7 @@ export default async function MarketplacePage() {
         {/* Vendor CTA */}
         <section className="rounded-xl bg-pale-lavender px-6 py-10 text-center">
           <h2 className="font-headline text-2xl text-brand-black">Sell on BLACQList</h2>
-          <p className="font-body text-sm text-charcoal/60 mt-2 max-w-md mx-auto">
+          <p className="font-body text-sm text-charcoal-soft mt-2 max-w-md mx-auto">
             Have products or services to offer? List your business and start reaching the community.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">

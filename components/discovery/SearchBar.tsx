@@ -52,7 +52,7 @@ export function SearchBar({
       </label>
       <div className="relative flex-1">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-charcoal/50 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-charcoal-soft pointer-events-none"
           aria-hidden="true"
         />
         <input
@@ -62,7 +62,7 @@ export function SearchBar({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full h-11 pl-9 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+          className="w-full h-11 pl-9 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
         />
       </div>
       <Button

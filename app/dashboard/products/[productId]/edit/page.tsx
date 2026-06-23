@@ -48,13 +48,13 @@ export default async function EditProductPage({ params }: Props) {
       <div>
         <Link
           href="/dashboard/products"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/40 hover:text-charcoal mb-3"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mb-3"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Back to products
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Edit product</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">{product.name}</p>
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">{product.name}</p>
       </div>
 
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">

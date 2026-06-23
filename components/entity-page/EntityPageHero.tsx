@@ -109,7 +109,7 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
                 className={cn(
                   'size-4',
                   i < Math.round(entity.avg_rating!)
-                    ? 'fill-amber-gold text-amber-gold'
+                    ? 'fill-amber-gold text-gold'
                     : 'fill-transparent text-white/30'
                 )}
                 aria-hidden="true"
@@ -127,7 +127,7 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
           <a
             id="hero-cta"
             href={ctaHref}
-            className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold min-w-[120px]"
+            className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[120px]"
           >
             {ctaLabel}
           </a>

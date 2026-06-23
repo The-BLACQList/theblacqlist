@@ -15,7 +15,7 @@ export default function TermsPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Terms of Service" subtitle="Last updated: May 20, 2026" />
+        <PageHeader title="Terms of Service" subtitle="Last updated: June 20, 2026" />
       </Section>
 
       <Section variant="white">
@@ -23,20 +23,20 @@ export default function TermsPage() {
           <nav aria-label="Page contents" className="rounded-xl border border-gray-100 bg-white px-5 py-4">
             <p className="font-subhead text-sm font-semibold text-brand-black mb-3">Contents</p>
             <ol className="list-decimal ml-5 space-y-1 text-sm">
-              <li><a href="#acceptance" className="text-amber-gold hover:underline">Acceptance of Terms</a></li>
-              <li><a href="#the-platform" className="text-amber-gold hover:underline">The Platform</a></li>
-              <li><a href="#user-accounts" className="text-amber-gold hover:underline">User Accounts</a></li>
-              <li><a href="#business-listings" className="text-amber-gold hover:underline">Business Listings</a></li>
-              <li><a href="#community-content" className="text-amber-gold hover:underline">Community Content</a></li>
-              <li><a href="#receipt-data" className="text-amber-gold hover:underline">Receipt and Spend Data</a></li>
-              <li><a href="#prohibited-uses" className="text-amber-gold hover:underline">Prohibited Uses</a></li>
-              <li><a href="#intellectual-property" className="text-amber-gold hover:underline">Intellectual Property</a></li>
-              <li><a href="#disclaimers" className="text-amber-gold hover:underline">Disclaimers</a></li>
-              <li><a href="#limitation-of-liability" className="text-amber-gold hover:underline">Limitation of Liability</a></li>
-              <li><a href="#termination" className="text-amber-gold hover:underline">Termination</a></li>
-              <li><a href="#governing-law" className="text-amber-gold hover:underline">Governing Law</a></li>
-              <li><a href="#changes" className="text-amber-gold hover:underline">Changes to Terms</a></li>
-              <li><a href="#contact" className="text-amber-gold hover:underline">Contact</a></li>
+              <li><a href="#acceptance" className="text-amber hover:underline">Acceptance of Terms</a></li>
+              <li><a href="#the-platform" className="text-amber hover:underline">The Platform</a></li>
+              <li><a href="#user-accounts" className="text-amber hover:underline">User Accounts</a></li>
+              <li><a href="#business-listings" className="text-amber hover:underline">Business Listings</a></li>
+              <li><a href="#community-content" className="text-amber hover:underline">Community Content</a></li>
+              <li><a href="#receipt-data" className="text-amber hover:underline">Receipt and Spend Data</a></li>
+              <li><a href="#prohibited-uses" className="text-amber hover:underline">Prohibited Uses</a></li>
+              <li><a href="#intellectual-property" className="text-amber hover:underline">Intellectual Property</a></li>
+              <li><a href="#disclaimers" className="text-amber hover:underline">Disclaimers</a></li>
+              <li><a href="#limitation-of-liability" className="text-amber hover:underline">Limitation of Liability</a></li>
+              <li><a href="#termination" className="text-amber hover:underline">Termination</a></li>
+              <li><a href="#governing-law" className="text-amber hover:underline">Governing Law</a></li>
+              <li><a href="#changes" className="text-amber hover:underline">Changes to Terms</a></li>
+              <li><a href="#contact" className="text-amber hover:underline">Contact</a></li>
             </ol>
           </nav>
 
@@ -45,7 +45,7 @@ export default function TermsPage() {
             <p>
               By accessing or using The BLACQList (&ldquo;the Platform&rdquo;), you agree to be bound
               by these Terms of Service (&ldquo;Terms&rdquo;) and our{' '}
-              <Link href="/privacy" className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors">
+              <Link href="/privacy" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
                 Privacy Policy
               </Link>
               , which is incorporated by reference. If you do not agree to these Terms, do not use
@@ -84,7 +84,7 @@ export default function TermsPage() {
               <li>Be at least 18 years of age</li>
               <li>Keep your account credentials secure and not share them with others</li>
               <li>Notify us immediately of any unauthorized use of your account at{' '}
-                <a href="mailto:support@theblacqlist.com" className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors">
+                <a href="mailto:support@theblacqlist.com" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
                   support@theblacqlist.com
                 </a>
               </li>
@@ -202,6 +202,29 @@ export default function TermsPage() {
               photos, logos) remains the property of those business owners, subject to the license
               granted in Section 5.
             </p>
+            <h3 className="font-subhead font-semibold text-brand-black mt-4">
+              Copyright complaints (DMCA)
+            </h3>
+            <p>
+              We respect intellectual property rights and respond to valid notices of alleged
+              copyright infringement. If you believe content on the Platform infringes your
+              copyright, send a written notice to our designated agent at{' '}
+              <a
+                href="mailto:notice@theblacqlist.com"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
+              >
+                notice@theblacqlist.com
+              </a>{' '}
+              including: your contact information, identification of the copyrighted work, the
+              location of the allegedly infringing material on the Platform, a statement of good-faith
+              belief that the use is unauthorized, a statement under penalty of perjury that your
+              notice is accurate and you are authorized to act, and your physical or electronic
+              signature. We will remove infringing material in appropriate cases and may terminate
+              the accounts of repeat infringers.
+            </p>
+            <p className="text-sm text-charcoal-soft">
+              [CONFIRM: DMCA designated agent name + registration with the U.S. Copyright Office]
+            </p>
           </section>
 
           <section id="disclaimers" className="space-y-3">
@@ -302,17 +325,22 @@ export default function TermsPage() {
               Questions about these Terms:{' '}
               <a
                 href="mailto:legal@theblacqlist.com"
-                className="text-brand-black underline underline-offset-2 hover:text-amber-gold transition-colors"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
               >
                 legal@theblacqlist.com
               </a>
+            </p>
+            <p>
+              <strong>The BLACQList</strong>, operated by [CONFIRM: legal entity name]
+              <br />
+              [CONFIRM: mailing address]
             </p>
           </section>
 
           <div className="mt-16 pt-8 border-t border-gray-200">
             <Link
               href="/privacy"
-              className="text-amber-gold font-bold text-lg hover:underline"
+              className="text-amber font-bold text-lg hover:underline"
             >
               Read our Privacy Policy →
             </Link>

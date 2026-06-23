@@ -22,9 +22,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-4 py-2 border-b border-charcoal/8 last:border-0">
-      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal/60 pt-0.5">{label}</dt>
+      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal-soft pt-0.5">{label}</dt>
       <dd className="flex-1 font-body text-sm text-brand-black">
-        {value ?? <span className="text-charcoal/40">—</span>}
+        {value ?? <span className="text-charcoal-faint">—</span>}
       </dd>
     </div>
   )
@@ -73,7 +73,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
       {/* Back nav */}
       <Link
         href="/admin/entities"
-        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/60 hover:text-charcoal"
+        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
         ← Back to entities
       </Link>
@@ -117,7 +117,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                     <span className="inline-flex items-center gap-1 text-green-700 font-semibold">
                       ✓ Yes
                       {listing.ownership_attested_at && (
-                        <span className="font-normal text-charcoal/50">
+                        <span className="font-normal text-charcoal-soft">
                           — {new Date(listing.ownership_attested_at).toLocaleDateString()}
                         </span>
                       )}
@@ -158,7 +158,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                         href={details.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-amber-gold hover:underline truncate block"
+                        className="text-amber hover:underline truncate block"
                       >
                         {details.website_url}
                       </a>
@@ -170,7 +170,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                 <Row label="Facebook" value={details.social_facebook} />
               </dl>
             ) : (
-              <p className="font-body text-sm text-charcoal/50">No business details found.</p>
+              <p className="font-body text-sm text-charcoal-soft">No business details found.</p>
             )}
           </div>
         </div>
@@ -183,7 +183,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
               <EntityApprovalActions listingId={listing.id} listingName={listing.name} />
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
-                <p className="font-subhead text-sm text-charcoal/60">
+                <p className="font-subhead text-sm text-charcoal-soft">
                   This listing is <strong>{listing.status}</strong>. No further action needed.
                 </p>
               </div>
@@ -207,7 +207,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Listing ID</h2>
-            <p className="font-mono text-xs text-charcoal/60 break-all">{listing.id}</p>
+            <p className="font-mono text-xs text-charcoal-soft break-all">{listing.id}</p>
           </div>
         </div>
       </div>

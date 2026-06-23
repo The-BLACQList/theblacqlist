@@ -24,7 +24,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
             </div>
           </div>
 
-          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal/50 mb-3">
+          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft mb-3">
             Draft saved
           </p>
 
@@ -38,7 +38,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
           </p>
 
           <div className="bg-white rounded-2xl border border-charcoal/10 p-5 text-left mb-8">
-            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal/50 mb-2">
+            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft mb-2">
               What&apos;s next
             </p>
             <p className="font-subhead text-sm text-charcoal leading-relaxed">
@@ -71,11 +71,11 @@ export default async function SubmittedPage({ searchParams }: Props) {
       <div className="max-w-[560px] w-full mx-auto text-center py-12">
         <div className="flex justify-center mb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-gold/15">
-            <CheckCircle className="h-8 w-8 text-amber-gold" aria-hidden="true" />
+            <CheckCircle className="h-8 w-8 text-amber" aria-hidden="true" />
           </div>
         </div>
 
-        <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-3">
+        <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-3">
           Submission received
         </p>
 
@@ -89,7 +89,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
         </p>
 
         <div className="bg-white rounded-2xl border border-charcoal/10 p-5 text-left mb-8">
-          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal/50 mb-3">
+          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft mb-3">
             What happens next
           </p>
           <ol className="flex flex-col gap-3">
@@ -99,7 +99,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
               'Your listing goes live on The BLACQList.',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15 font-subhead text-xs font-bold text-amber-gold mt-0.5">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15 font-subhead text-xs font-bold text-amber mt-0.5">
                   {i + 1}
                 </span>
                 <span className="font-subhead text-sm text-charcoal">{step}</span>

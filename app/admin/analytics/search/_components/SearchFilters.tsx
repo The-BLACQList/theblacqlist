@@ -40,7 +40,7 @@ export function SearchFilters({ cities, period, city }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex flex-col gap-1">
-        <label htmlFor="period-select" className="font-subhead text-xs text-charcoal/50">
+        <label htmlFor="period-select" className="font-subhead text-xs text-charcoal-soft">
           Period
         </label>
         <select
@@ -58,7 +58,7 @@ export function SearchFilters({ cities, period, city }: Props) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="city-select" className="font-subhead text-xs text-charcoal/50">
+        <label htmlFor="city-select" className="font-subhead text-xs text-charcoal-soft">
           City
         </label>
         <select
@@ -79,7 +79,7 @@ export function SearchFilters({ cities, period, city }: Props) {
       {hasNonDefault && (
         <button
           onClick={() => router.replace(pathname)}
-          className="mt-5 font-body text-xs text-charcoal/50 hover:text-brand-black underline underline-offset-2 transition-colors"
+          className="mt-5 font-body text-xs text-charcoal-soft hover:text-brand-black underline underline-offset-2 transition-colors"
         >
           Clear filters
         </button>

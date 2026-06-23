@@ -158,6 +158,8 @@ File a P1 incident ticket within 24 hours documenting:
 
 ## Scenario C — PITR Restore (Destructive Migration)
 
+> **Requires PITR to be enabled.** PITR is turned on at the **M7 launch gate**, before the public launch / real data — so this path applies **post-launch**. During the empty-DB **setup/testing** phase (PITR off), recovery from a bad migration is instead: **restore the latest Pro daily backup**, or simply **recreate the empty project** (no real data lost).
+
 **When to use:** A migration dropped a table, dropped a column, truncated data, or performed an irreversible data transformation. A simple reverse migration cannot restore the lost data.
 
 **Estimated time to restore:** 30–90 minutes (PITR restore time depends on database size and Supabase infrastructure)

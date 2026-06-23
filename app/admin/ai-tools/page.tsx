@@ -19,7 +19,7 @@ function formatRelativeTime(ts: string): string {
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4">
-      <p className="font-body text-xs text-charcoal/50">{label}</p>
+      <p className="font-body text-xs text-charcoal-soft">{label}</p>
       <p className="font-headline text-2xl text-brand-black mt-1">{value}</p>
     </div>
   )
@@ -30,7 +30,7 @@ const STATUS_STYLES: Record<string, string> = {
   approved: 'bg-blue-100 text-blue-700',
   applied: 'bg-green-100 text-green-700',
   rejected: 'bg-red-100 text-red-700',
-  expired: 'bg-charcoal/10 text-charcoal/50',
+  expired: 'bg-charcoal/10 text-charcoal-soft',
 }
 
 export default async function AdminAiToolsPage() {
@@ -77,7 +77,7 @@ export default async function AdminAiToolsPage() {
       {/* Header */}
       <div>
         <h1 className="font-headline text-2xl text-brand-black">AI Tools</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Platform AI system status and suggestion review.
         </p>
       </div>
@@ -89,7 +89,7 @@ export default async function AdminAiToolsPage() {
           <p className="font-subhead text-sm font-semibold text-brand-black">
             Provider: Mock mode — No AI provider connected
           </p>
-          <p className="font-body text-xs text-charcoal/50 mt-0.5">
+          <p className="font-body text-xs text-charcoal-soft mt-0.5">
             The Anthropic API is not configured. All suggestions are generated from mock data. See{' '}
             <span className="font-mono">docs/blacqlist/ai/ai-agent-roadmap.md</span> for V2 Provider
             phase gates.
@@ -114,7 +114,7 @@ export default async function AdminAiToolsPage() {
         </div>
 
         {recent.length === 0 ? (
-          <p className="px-5 py-8 font-body text-sm text-charcoal/50 text-center">
+          <p className="px-5 py-8 font-body text-sm text-charcoal-soft text-center">
             No suggestions yet. Suggestions appear here once AI agents generate them.
           </p>
         ) : (
@@ -122,19 +122,19 @@ export default async function AdminAiToolsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-pale-lavender/30">
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/60 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Listing
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                     Agent
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/60 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Type
                   </th>
-                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal/60 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-left font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal/60 uppercase tracking-wide">
+                  <th className="px-5 py-3 text-right font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
                     When
                   </th>
                 </tr>
@@ -142,10 +142,10 @@ export default async function AdminAiToolsPage() {
               <tbody className="divide-y divide-charcoal/5">
                 {recent.map((row) => (
                   <tr key={row.id} className="hover:bg-pale-lavender/10 transition-colors">
-                    <td className="px-5 py-3 font-mono text-[11px] text-charcoal/40 max-w-[120px] truncate">
+                    <td className="px-5 py-3 font-mono text-[11px] text-charcoal-faint max-w-[120px] truncate">
                       {row.listing_id ? row.listing_id.slice(0, 8) + '…' : '—'}
                     </td>
-                    <td className="px-5 py-3 font-body text-xs text-charcoal/60 hidden md:table-cell">
+                    <td className="px-5 py-3 font-body text-xs text-charcoal-soft hidden md:table-cell">
                       {row.agent_type}
                     </td>
                     <td className="px-5 py-3 font-mono text-xs text-brand-black">
@@ -154,13 +154,13 @@ export default async function AdminAiToolsPage() {
                     <td className="px-5 py-3">
                       <span
                         className={`px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${
-                          STATUS_STYLES[row.status] ?? 'bg-charcoal/10 text-charcoal/50'
+                          STATUS_STYLES[row.status] ?? 'bg-charcoal/10 text-charcoal-soft'
                         }`}
                       >
                         {row.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-body text-xs text-charcoal/50 text-right whitespace-nowrap">
+                    <td className="px-5 py-3 font-body text-xs text-charcoal-soft text-right whitespace-nowrap">
                       {formatRelativeTime(row.created_at)}
                     </td>
                   </tr>
@@ -177,7 +177,7 @@ export default async function AdminAiToolsPage() {
           <h2 className="font-subhead text-sm font-semibold text-brand-black">
             Prompt templates ({promptKeys.length})
           </h2>
-          <p className="font-body text-xs text-charcoal/50 mt-0.5">
+          <p className="font-body text-xs text-charcoal-soft mt-0.5">
             Defined in <span className="font-mono">lib/ai/prompts.ts</span> — no API calls, string
             constants only.
           </p>
@@ -211,10 +211,10 @@ export default async function AdminAiToolsPage() {
             },
           ].map(({ phase, detail }) => (
             <div key={phase} className="flex items-start gap-3">
-              <span className="font-subhead text-xs font-semibold text-charcoal/50 w-36 shrink-0 mt-0.5">
+              <span className="font-subhead text-xs font-semibold text-charcoal-soft w-36 shrink-0 mt-0.5">
                 {phase}
               </span>
-              <span className="font-body text-xs text-charcoal/60">{detail}</span>
+              <span className="font-body text-xs text-charcoal-soft">{detail}</span>
             </div>
           ))}
         </div>

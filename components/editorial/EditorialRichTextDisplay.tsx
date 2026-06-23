@@ -34,7 +34,7 @@ export function EditorialRichTextDisplay({ body, className = '' }: Props) {
           return (
             <blockquote
               key={i}
-              className="border-l-4 border-amber-gold/40 pl-4 italic font-body text-base text-charcoal/70 leading-relaxed"
+              className="border-l-4 border-amber-gold/40 pl-4 italic font-body text-base text-charcoal-soft leading-relaxed"
             >
               {para.slice(2)}
             </blockquote>

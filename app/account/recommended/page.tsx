@@ -82,7 +82,7 @@ export default async function RecommendedPage() {
         </Link>
 
         <h1 className="font-headline text-3xl text-brand-black mb-2">Recommended for you</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mb-8">
+        <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {!hasSaves
             ? 'Based on businesses you save.'
             : recommendations.length === 0
@@ -93,12 +93,12 @@ export default async function RecommendedPage() {
         {!hasSaves ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
-              <Sparkles className="size-7 text-charcoal/30" aria-hidden="true" />
+              <Sparkles className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">
               Save businesses to get recommendations
             </h2>
-            <p className="font-subhead text-sm text-charcoal/60 max-w-xs leading-relaxed">
+            <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               When you save businesses you love, we&apos;ll suggest similar ones you might enjoy.
             </p>
             <Link
@@ -111,12 +111,12 @@ export default async function RecommendedPage() {
         ) : recommendations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
-              <Sparkles className="size-7 text-charcoal/30" aria-hidden="true" />
+              <Sparkles className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">
               No new recommendations yet
             </h2>
-            <p className="font-subhead text-sm text-charcoal/60 max-w-xs leading-relaxed">
+            <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               Save more businesses across different categories to broaden your recommendations.
             </p>
             <Link
@@ -136,17 +136,17 @@ export default async function RecommendedPage() {
                 <div className="flex-1 min-w-0">
                   <Link
                     href={buildEntityUrl(l.entity_type, l.cities?.slug, l.slug)}
-                    className="font-headline text-base text-brand-black hover:text-amber-gold transition-colors line-clamp-1"
+                    className="font-headline text-base text-brand-black hover:text-amber transition-colors line-clamp-1"
                   >
                     {l.name}
                   </Link>
                   {l.tagline && (
-                    <p className="font-subhead text-sm text-charcoal/60 mt-0.5 line-clamp-1">
+                    <p className="font-subhead text-sm text-charcoal-soft mt-0.5 line-clamp-1">
                       {l.tagline}
                     </p>
                   )}
                   {l.cities && (
-                    <p className="font-subhead text-xs text-charcoal/40 mt-1">
+                    <p className="font-subhead text-xs text-charcoal-faint mt-1">
                       {l.cities.name}
                       {l.cities.states?.code ? `, ${l.cities.states.code}` : ''}
                     </p>
@@ -158,7 +158,7 @@ export default async function RecommendedPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Visit ${l.name} website`}
-                    className="inline-flex items-center justify-center size-9 rounded-full text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors shrink-0"
+                    className="inline-flex items-center justify-center size-9 rounded-full text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors shrink-0"
                   >
                     <ExternalLink className="size-4" aria-hidden="true" />
                   </a>

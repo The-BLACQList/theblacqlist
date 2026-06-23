@@ -25,7 +25,7 @@ function StarDisplay({ rating }: { rating: number }) {
           key={s}
           className={cn(
             'size-3.5',
-            s <= rating ? 'fill-amber-gold text-amber-gold' : 'fill-none text-charcoal/20'
+            s <= rating ? 'fill-amber-gold text-amber' : 'fill-none text-charcoal/20'
           )}
           aria-hidden="true"
         />
@@ -38,7 +38,7 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-6">
-        <p className="font-body text-sm text-charcoal/60">
+        <p className="font-body text-sm text-charcoal-soft">
           No reviews yet. Be the first to share your experience.
         </p>
       </div>
@@ -53,7 +53,7 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
           <span className="font-headline text-3xl text-brand-black">{avgRating.toFixed(1)}</span>
           <div>
             <StarDisplay rating={Math.round(avgRating)} />
-            <p className="font-body text-xs text-charcoal/50 mt-0.5">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5">
               {reviewCount.toLocaleString()} reviews
             </p>
           </div>
@@ -69,7 +69,7 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
                 {review.reviewer_display_name ?? 'BLACQList Community Member'}
               </p>
               {review.published_at && (
-                <p className="font-body text-xs text-charcoal/40 mt-0.5">
+                <p className="font-body text-xs text-charcoal-faint mt-0.5">
                   {new Date(review.published_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
