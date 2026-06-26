@@ -3,6 +3,7 @@ import { Jost, Inter } from 'next/font/google'
 import './globals.css'
 import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
+import { ChromeGate } from '@/components/layout/chrome-gate'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -58,12 +59,11 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <PublicHeader />
-        {/* pt offsets the fixed header: 56px mobile / 64px desktop */}
-        <main id="main-content" className="flex-1 pt-14 md:pt-16">
+        {/* ChromeGate hides the public header/footer on standalone routes
+            (the /coming-soon gate); every other route renders them as before. */}
+        <ChromeGate header={<PublicHeader />} footer={<PublicFooter />}>
           {children}
-        </main>
-        <PublicFooter />
+        </ChromeGate>
         <Analytics />
         <SpeedInsights />
       </body>
