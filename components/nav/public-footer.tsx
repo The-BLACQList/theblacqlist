@@ -103,7 +103,6 @@ const columns: FooterColumn[] = [
     links: [
       { label: 'About', href: '/about', active: true },
       { label: 'Contact', href: '/contact', active: true },
-      { label: 'Careers', href: '/careers', active: false },
       { label: 'Press', href: '/press', active: false },
     ],
   },

@@ -16,33 +16,35 @@ export const metadata: Metadata = {
 }
 
 const CATEGORIES = [
-  { label: 'Food & Dining' },
-  { label: 'Beauty & Wellness' },
-  { label: 'Retail & Shopping' },
-  { label: 'Professional Services' },
-  { label: 'Arts & Entertainment' },
-  { label: 'Health & Fitness' },
-  { label: 'Home & Living' },
-  { label: 'Technology' },
-  { label: 'Finance & Legal' },
-  { label: 'Education' },
-  { label: 'Events & Experiences' },
-  { label: 'Community & Nonprofits' },
+  { label: 'Food & Dining', slug: 'food-dining' },
+  { label: 'Beauty & Grooming', slug: 'beauty-grooming' },
+  { label: 'Wellness & Health', slug: 'wellness-health' },
+  { label: 'Fashion & Apparel', slug: 'fashion-apparel' },
+  { label: 'Professional Services', slug: 'professional-services' },
+  { label: 'Creative & Media', slug: 'creative-media' },
+  { label: 'Home & Living', slug: 'home-living' },
+  { label: 'Technology', slug: 'technology' },
+  { label: 'Legal & Financial', slug: 'legal-financial' },
+  { label: 'Education & Tutoring', slug: 'education-tutoring' },
+  { label: 'Events & Entertainment', slug: 'events-entertainment' },
+  { label: 'Retail & Gifts', slug: 'retail-gifts' },
 ]
 
 const CITIES = [
-  { label: 'Atlanta', state: 'GA' },
-  { label: 'New York', state: 'NY' },
-  { label: 'Washington', state: 'DC' },
-  { label: 'Houston', state: 'TX' },
-  { label: 'Chicago', state: 'IL' },
-  { label: 'Los Angeles', state: 'CA' },
-  { label: 'Miami', state: 'FL' },
-  { label: 'Philadelphia', state: 'PA' },
-  { label: 'Detroit', state: 'MI' },
-  { label: 'Charlotte', state: 'NC' },
-  { label: 'Dallas', state: 'TX' },
-  { label: 'Baltimore', state: 'MD' },
+  // Live cities (have listings) link to their filtered Discover view.
+  { label: 'Atlanta', state: 'GA', slug: 'atlanta-ga', live: true },
+  { label: 'Houston', state: 'TX', slug: 'houston-tx', live: true },
+  { label: 'Chicago', state: 'IL', slug: 'chicago-il', live: true },
+  // Coming soon — shown dimmed + non-clickable until they launch.
+  { label: 'New York', state: 'NY', slug: 'new-york-ny', live: false },
+  { label: 'Washington', state: 'DC', slug: 'washington-dc', live: false },
+  { label: 'Los Angeles', state: 'CA', slug: 'los-angeles-ca', live: false },
+  { label: 'Miami', state: 'FL', slug: 'miami-fl', live: false },
+  { label: 'Philadelphia', state: 'PA', slug: 'philadelphia-pa', live: false },
+  { label: 'Detroit', state: 'MI', slug: 'detroit-mi', live: false },
+  { label: 'Charlotte', state: 'NC', slug: 'charlotte-nc', live: false },
+  { label: 'Dallas', state: 'TX', slug: 'dallas-tx', live: false },
+  { label: 'Baltimore', state: 'MD', slug: 'baltimore-md', live: false },
 ]
 
 const FEATURES = [
@@ -173,7 +175,7 @@ export default function HomePage() {
           {CATEGORIES.map((cat) => (
             <Link
               key={cat.label}
-              href="/discover"
+              href={`/discover?category=${cat.slug}`}
               className="flex items-center justify-center text-center rounded-lg border border-charcoal/20 bg-white px-4 py-3 font-subhead text-sm text-brand-black hover:border-amber-gold hover:bg-cream transition-colors min-h-[44px]"
             >
               {cat.label}
@@ -190,16 +192,27 @@ export default function HomePage() {
           </SectionHeading>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {CITIES.map((city) => (
-            <Link
-              key={`${city.label}-${city.state}`}
-              href="/discover"
-              className="flex flex-col items-start rounded-lg border border-pale-lavender bg-white px-4 py-3 hover:border-amber-gold hover:bg-cream transition-colors"
-            >
-              <span className="font-headline text-sm text-brand-black">{city.label}</span>
-              <span className="font-subhead text-xs text-charcoal">{city.state}</span>
-            </Link>
-          ))}
+          {CITIES.map((city) =>
+            city.live ? (
+              <Link
+                key={`${city.label}-${city.state}`}
+                href={`/discover/${city.slug}`}
+                className="flex flex-col items-start rounded-lg border border-pale-lavender bg-white px-4 py-3 hover:border-amber-gold hover:bg-cream transition-colors"
+              >
+                <span className="font-headline text-sm text-brand-black">{city.label}</span>
+                <span className="font-subhead text-xs text-charcoal">{city.state}</span>
+              </Link>
+            ) : (
+              <div
+                key={`${city.label}-${city.state}`}
+                aria-disabled="true"
+                className="flex flex-col items-start rounded-lg border border-pale-lavender bg-white px-4 py-3 opacity-60 cursor-default"
+              >
+                <span className="font-headline text-sm text-brand-black">{city.label}</span>
+                <span className="font-subhead text-xs text-charcoal">{city.state} · Coming soon</span>
+              </div>
+            )
+          )}
         </div>
         <p className="font-subhead text-sm text-charcoal mt-5">
           More cities launching soon.{' '}
