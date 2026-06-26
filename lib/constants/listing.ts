@@ -1,26 +1,25 @@
-// Canonical value sets — these MUST match the DB CHECK constraints on
-// listings.entity_type / listings.location_type / listing_details_business.cta_type
-// (migration 20260510000000). Keeping these in sync with the DB is what prevents
-// the add-business form from submitting a value the database then rejects.
-//
-// The add-business form offers a curated SUBSET of entity types
-// (Business / Professional / Creative). Events use the dedicated /add-event flow;
-// Jobs and Vendor are valid in the DB but not offered in the business form yet.
+// Canonical value sets — these MUST match the LIVE DB CHECK constraints, which
+// are set by migration `20260524000001_fix_entity_location_cta_constraints`
+// (+ `20260622000007` re-adding 'event' to entity_type). NOTE: these differ from
+// the original `20260510000000` schema — that earlier constraint was superseded.
+// Do not "reconcile" against the initial schema; 20260524000001 is the truth.
 export const VALID_ENTITY_TYPES = [
   'business',
-  'professional',
+  'restaurant',
+  'service_provider',
   'creative',
-  'event',
-  'job',
+  'professional',
   'vendor',
+  'event',
 ] as const
 
 export const VALID_LOCATION_TYPES = [
   'physical',
-  'online',
+  'virtual',
   'hybrid',
-  'virtual-services',
-  'ships-nationwide',
+  'service_area',
+  'national',
+  'traveling',
 ] as const
 
 export const VALID_CTA_TYPES = [
@@ -33,4 +32,12 @@ export const VALID_CTA_TYPES = [
   'shop',
   'subscribe',
   'contact',
+  'commission',
+  'inquire',
+  'get-tickets',
+  'rsvp',
+  'register',
+  'learn-more',
+  'apply',
+  'buy-now',
 ] as const

@@ -8,29 +8,34 @@ import { MediaStep } from '@/app/add-business/_components/steps/MediaStep'
 import { CtaStep } from '@/app/add-business/_components/steps/CtaStep'
 import { PreviewPublishStep } from '@/app/add-business/_components/steps/PreviewPublishStep'
 import type { CategoryOption } from '@/app/add-business/page'
+import {
+  VALID_ENTITY_TYPES,
+  VALID_LOCATION_TYPES,
+  VALID_CTA_TYPES,
+} from '@/lib/constants/listing'
 
 const DRAFT_KEY = 'draft-add-business'
 
-// Entity types offered in the business form. Events use /add-event; the
-// Brick & Mortar vs Products & Services distinction is captured by location_type
-// (presence), not by a separate type — see the facet taxonomy.
+// These option values MUST match the live DB CHECK constraints
+// (migration 20260524000001 + 20260622000007) — see lib/constants/listing.ts.
 const ENTITY_TYPE_OPTIONS = [
   { value: 'business', label: 'Business' },
-  { value: 'professional', label: 'Professional' },
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'service_provider', label: 'Service Provider' },
   { value: 'creative', label: 'Creative' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'vendor', label: 'Vendor' },
 ]
 
-// location_type values MUST match the DB CHECK (physical/online/hybrid/
-// virtual-services/ships-nationwide). These are the "presence" facet.
 const LOCATION_TYPE_OPTIONS = [
   { value: 'physical', label: 'Physical location' },
-  { value: 'online', label: 'Online / virtual' },
+  { value: 'virtual', label: 'Online / virtual' },
   { value: 'hybrid', label: 'Physical + online' },
-  { value: 'virtual-services', label: 'Service-based (no storefront)' },
-  { value: 'ships-nationwide', label: 'Ships nationwide' },
+  { value: 'service_area', label: 'Service area' },
+  { value: 'national', label: 'Nationwide' },
+  { value: 'traveling', label: 'Traveling / mobile' },
 ]
 
-// cta_type values MUST match the listing_details_business.cta_type DB CHECK.
 const CTA_TYPE_OPTIONS = [
   { value: 'book', label: 'Book an appointment' },
   { value: 'order', label: 'Order online' },
@@ -41,6 +46,14 @@ const CTA_TYPE_OPTIONS = [
   { value: 'shop', label: 'Shop now' },
   { value: 'subscribe', label: 'Subscribe' },
   { value: 'contact', label: 'Contact us' },
+  { value: 'commission', label: 'Commission work' },
+  { value: 'inquire', label: 'Make an inquiry' },
+  { value: 'get-tickets', label: 'Get tickets' },
+  { value: 'rsvp', label: 'RSVP' },
+  { value: 'register', label: 'Register' },
+  { value: 'learn-more', label: 'Learn more' },
+  { value: 'apply', label: 'Apply now' },
+  { value: 'buy-now', label: 'Buy now' },
 ]
 
 type SocialKey =
@@ -139,6 +152,14 @@ export function SubmitListingForm({ categories }: Props) {
       const raw = localStorage.getItem(DRAFT_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<FormFields>
+        // Drop persisted enum values no longer offered (e.g. after a DB constraint
+        // change) so a stale draft can't resubmit a value the database now rejects.
+        if (parsed.entity_type && !(VALID_ENTITY_TYPES as readonly string[]).includes(parsed.entity_type))
+          parsed.entity_type = ''
+        if (parsed.location_type && !(VALID_LOCATION_TYPES as readonly string[]).includes(parsed.location_type))
+          parsed.location_type = ''
+        if (parsed.cta_type && !(VALID_CTA_TYPES as readonly string[]).includes(parsed.cta_type))
+          parsed.cta_type = ''
         // Safe: runs once on mount to hydrate draft from localStorage — avoids SSR mismatch
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFields({ ...INITIAL, ...parsed })
@@ -302,7 +323,7 @@ export function SubmitListingForm({ categories }: Props) {
     )
 
   const showCityState = fields.location_type === 'physical' || fields.location_type === 'hybrid'
-  const showServiceArea = fields.location_type === 'virtual-services'
+  const showServiceArea = fields.location_type === 'service_area'
 
   const isStep6Valid = CTA_STEP6_VALUES.includes(fields.cta_type)
 
