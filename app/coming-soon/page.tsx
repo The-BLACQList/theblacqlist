@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 
 import { BrandMark } from '@/components/ui/brand-mark'
 import { ComingSoonForm } from './coming-soon-form'
+import { NodeNetworkBackground } from './node-network-background'
 
 export const metadata: Metadata = {
   title: 'Launching soon',
@@ -69,10 +70,13 @@ const socials = [
 export default function ComingSoonPage() {
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-deep-bg px-6 py-16 text-white">
+      {/* Interactive Gold Node Network — moves with the cursor, ripples on click */}
+      <NodeNetworkBackground />
+
       {/* subtle gold glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-1/3 left-1/2 h-[60vh] w-[60vh] -translate-x-1/2 rounded-full bg-amber-gold/10 blur-[120px]"
+        className="pointer-events-none absolute -top-1/3 left-1/2 z-[1] h-[60vh] w-[60vh] -translate-x-1/2 rounded-full bg-amber-gold/10 blur-[120px]"
       />
 
       <div className="relative z-10 w-full max-w-xl text-center">
