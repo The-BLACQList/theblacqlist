@@ -23,7 +23,7 @@
 | You need | Where to get it |
 |---|---|
 | The repo on the latest `main` | `cd projects/theblacqlist && git checkout main && git pull` |
-| Dependencies installed | `npm install` (in the repo) |
+| Dependencies installed | `pnpm install` — **this is a pnpm project**. Do **not** run `npm install` (npm 11 crashes on pnpm's `node_modules`). pnpm is already on your Mac; if a stray `npm install` left a mess, `rm -rf node_modules && pnpm install`. |
 | **Supabase access token** (for the CLI login) | https://supabase.com/dashboard/account/tokens → **Generate new token** → copy it |
 | **Production DB password** | Supabase → **theblacqlist-production** → Settings → Database → **Database password** (if you don't have it saved, click **Reset database password** and save the new one) |
 | **Production `service_role` key** | Settings → **API** → Project API keys → **`service_role`** → reveal + copy |
@@ -183,7 +183,7 @@ cd projects/theblacqlist
 
 SUPABASE_URL=https://ytlrnczevdnsfdzjbeqg.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=<prod service_role key from §1> \
-npm run seed:launch
+pnpm run seed:launch
 ```
 > The script reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from the environment (it does **not** read `.env`), so they must be on the command line exactly as above. `SUPABASE_URL` is the **prod** URL — that's what makes this write to production.
 
