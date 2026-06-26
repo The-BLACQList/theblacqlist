@@ -23,7 +23,7 @@ export function ClaimSearchForm({ defaultValue = '' }: Props) {
     <form onSubmit={handleSubmit} className="flex gap-3">
       <div className="relative flex-1">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-charcoal/40 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-charcoal-faint pointer-events-none"
           aria-hidden="true"
         />
         <input
@@ -32,7 +32,7 @@ export function ClaimSearchForm({ defaultValue = '' }: Props) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Search by business name…"
-          className="w-full h-11 pl-9 pr-4 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
+          className="w-full h-11 pl-9 pr-4 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
           autoComplete="off"
           aria-label="Search for a business to claim"
         />

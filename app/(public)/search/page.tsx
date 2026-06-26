@@ -39,7 +39,7 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
           Or{' '}
           <Link
             href="/discover"
-            className="text-amber-gold underline underline-offset-2 hover:text-light-gold"
+            className="text-amber underline underline-offset-2 hover:text-light-gold"
           >
             browse all businesses
           </Link>{' '}

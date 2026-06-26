@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
+import { BrandMark } from '@/components/ui/brand-mark'
 
 // ─── Inline SVG icons for social platforms not in this lucide-react version ──
 
@@ -122,8 +123,18 @@ export function PublicFooter() {
   return (
     <footer className="bg-black text-white">
       <Container className="py-12 md:py-16">
-        {/* ── Top section: tagline + social ──────────────────────────────── */}
+        {/* ── Top section: logo + tagline + social ───────────────────────── */}
         <div>
+          <Link
+            href="/"
+            aria-label="The BLACQList — home"
+            className="inline-flex items-center gap-2.5 mb-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          >
+            <BrandMark className="h-8 w-8 text-gold" />
+            <span className="font-headline text-lg font-medium tracking-[0.14em] text-white">
+              THE BLACQLIST
+            </span>
+          </Link>
           <p className="font-headline text-3xl md:text-4xl text-cream mb-4">Find &amp; Be Found.</p>
 
           <div className="flex items-center gap-4">
@@ -132,7 +143,7 @@ export function PublicFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="The BLACQList on Instagram"
-              className="text-charcoal hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <InstagramIcon />
             </Link>
@@ -142,7 +153,7 @@ export function PublicFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="The BLACQList on X (Twitter)"
-              className="text-charcoal hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -152,7 +163,7 @@ export function PublicFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="The BLACQList on LinkedIn"
-              className="text-charcoal hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <LinkedInIcon />
             </Link>
@@ -162,7 +173,7 @@ export function PublicFooter() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="The BLACQList on TikTok"
-              className="text-charcoal hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <TikTokIcon />
             </Link>
@@ -176,7 +187,7 @@ export function PublicFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {columns.map((col) => (
             <div key={col.heading}>
-              <h3 className="text-amber-gold text-xs uppercase tracking-wider font-subhead font-bold mb-3">
+              <h3 className="text-gold text-xs uppercase tracking-wider font-subhead font-bold mb-3">
                 {col.heading}
               </h3>
               <ul className="flex flex-col gap-2">
@@ -193,7 +204,7 @@ export function PublicFooter() {
                   ) : (
                     <li key={link.label}>
                       {/* Not interactive — sr-only suffix is more reliable than aria-label on a span */}
-                      <span className="text-charcoal text-sm font-subhead pointer-events-none cursor-not-allowed">
+                      <span className="text-gray-400 text-sm font-subhead pointer-events-none cursor-not-allowed">
                         {link.label}
                         <span className="sr-only"> (coming soon)</span>
                       </span>
@@ -210,24 +221,24 @@ export function PublicFooter() {
 
         {/* ── Legal row ─────────────────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <p className="text-charcoal text-xs font-subhead">&copy; 2026 The BLACQList</p>
+          <p className="text-gray-400 text-xs font-subhead">&copy; 2026 The BLACQList</p>
 
           <div className="flex flex-wrap items-center gap-4">
             <Link
               href="/privacy"
-              className="text-charcoal hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-charcoal hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Terms of Service
             </Link>
             <Link
               href="/cookies"
-              className="text-charcoal hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-gray-400 hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Cookie Policy
             </Link>

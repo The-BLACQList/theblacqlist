@@ -17,7 +17,7 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Basic info</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Your business name and tagline appear on your public page.
         </p>
       </div>
@@ -27,7 +27,7 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
         <div>
           <label
             htmlFor="bi-name"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
             Business name <span aria-hidden="true">*</span>
           </label>
@@ -38,14 +38,14 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
             defaultValue={name}
             required
             maxLength={200}
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
 
         <div>
           <label
             htmlFor="bi-tagline"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
             Tagline
           </label>
@@ -56,7 +56,7 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
             defaultValue={tagline ?? ''}
             maxLength={140}
             placeholder="One-line description of your business"
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
 

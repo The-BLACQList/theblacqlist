@@ -28,7 +28,10 @@ export async function createCollectionAction(
 
   const title = formData.get('title')?.toString().trim() ?? ''
   const slugInput = formData.get('slug')?.toString().trim()
+  const subtitle = formData.get('subtitle')?.toString().trim() || null
   const description = formData.get('description')?.toString().trim() || null
+  const body = formData.get('body')?.toString().trim() || null
+  const coverImagePath = formData.get('cover_image_path')?.toString().trim() || null
   const isActive = formData.get('is_active') === 'on'
 
   if (!title) return { error: 'Title is required.' }
@@ -44,7 +47,16 @@ export async function createCollectionAction(
   const serviceClient = createServiceClient()
   const { data, error } = await serviceClient
     .from('collections')
-    .insert({ title, slug, description, is_active: isActive, created_by: user?.id ?? null })
+    .insert({
+      title,
+      slug,
+      subtitle,
+      description,
+      body,
+      cover_image_path: coverImagePath,
+      is_active: isActive,
+      created_by: user?.id ?? null,
+    })
     .select('id')
     .single()
 
@@ -69,7 +81,10 @@ export async function updateCollectionAction(
   const id = formData.get('id')?.toString() ?? ''
   const title = formData.get('title')?.toString().trim() ?? ''
   const slug = formData.get('slug')?.toString().trim() ?? ''
+  const subtitle = formData.get('subtitle')?.toString().trim() || null
   const description = formData.get('description')?.toString().trim() || null
+  const body = formData.get('body')?.toString().trim() || null
+  const coverImagePath = formData.get('cover_image_path')?.toString().trim() || null
   const isActive = formData.get('is_active') === 'on'
 
   if (!id) return { error: 'Invalid collection.' }
@@ -79,7 +94,15 @@ export async function updateCollectionAction(
   const serviceClient = createServiceClient()
   const { error } = await serviceClient
     .from('collections')
-    .update({ title, slug, description, is_active: isActive })
+    .update({
+      title,
+      slug,
+      subtitle,
+      description,
+      body,
+      cover_image_path: coverImagePath,
+      is_active: isActive,
+    })
     .eq('id', id)
 
   if (error) {
@@ -159,5 +182,125 @@ export async function removeCollectionItemAction(
   if (error) return { error: 'Failed to remove listing. Please try again.' }
 
   revalidatePath('/admin/collections')
+  revalidatePath('/collections/[slug]', 'page')
+  return { success: true }
+}
+
+// ─── Update collection item (editorial blurb / headline / order) ──────────────
+
+export async function updateCollectionItemAction(
+  _prev: CollectionActionState,
+  formData: FormData
+): Promise<CollectionActionState> {
+  await requireAdmin()
+
+  const itemId = formData.get('item_id')?.toString() ?? ''
+  if (!itemId) return { error: 'Invalid item.' }
+
+  const blurb = formData.get('blurb')?.toString().trim() || null
+  const headline = formData.get('headline')?.toString().trim() || null
+  const displayOrderRaw = formData.get('display_order')?.toString()
+
+  const update: { blurb: string | null; headline: string | null; display_order?: number } = {
+    blurb,
+    headline,
+  }
+  if (displayOrderRaw != null && displayOrderRaw !== '') {
+    const n = Number.parseInt(displayOrderRaw, 10)
+    if (!Number.isNaN(n)) update.display_order = n
+  }
+
+  const serviceClient = createServiceClient()
+  const { error } = await serviceClient.from('collection_items').update(update).eq('id', itemId)
+
+  if (error) return { error: 'Failed to update item. Please try again.' }
+
+  revalidatePath('/admin/collections')
+  revalidatePath('/collections/[slug]', 'page')
+  return { success: true }
+}
+
+// ─── Collection sections (editorial narrative blocks) ─────────────────────────
+
+export async function addCollectionSectionAction(
+  _prev: CollectionActionState,
+  formData: FormData
+): Promise<CollectionActionState> {
+  await requireAdmin()
+
+  const collectionId = formData.get('collection_id')?.toString() ?? ''
+  const heading = formData.get('heading')?.toString().trim() ?? ''
+  const body = formData.get('body')?.toString().trim() || null
+  const displayOrderRaw = formData.get('display_order')?.toString()
+
+  if (!collectionId) return { error: 'Collection is required.' }
+  if (!heading) return { error: 'Section heading is required.' }
+
+  const displayOrder =
+    displayOrderRaw && !Number.isNaN(Number.parseInt(displayOrderRaw, 10))
+      ? Number.parseInt(displayOrderRaw, 10)
+      : 0
+
+  const serviceClient = createServiceClient()
+  const { error } = await serviceClient
+    .from('collection_sections')
+    .insert({ collection_id: collectionId, heading, body, display_order: displayOrder })
+
+  if (error) return { error: 'Failed to add section. Please try again.' }
+
+  revalidatePath('/admin/collections')
+  revalidatePath('/collections/[slug]', 'page')
+  return { success: true }
+}
+
+export async function updateCollectionSectionAction(
+  _prev: CollectionActionState,
+  formData: FormData
+): Promise<CollectionActionState> {
+  await requireAdmin()
+
+  const sectionId = formData.get('section_id')?.toString() ?? ''
+  const heading = formData.get('heading')?.toString().trim() ?? ''
+  const body = formData.get('body')?.toString().trim() || null
+  const displayOrderRaw = formData.get('display_order')?.toString()
+
+  if (!sectionId) return { error: 'Invalid section.' }
+  if (!heading) return { error: 'Section heading is required.' }
+
+  const update: { heading: string; body: string | null; display_order?: number } = { heading, body }
+  if (displayOrderRaw != null && displayOrderRaw !== '') {
+    const n = Number.parseInt(displayOrderRaw, 10)
+    if (!Number.isNaN(n)) update.display_order = n
+  }
+
+  const serviceClient = createServiceClient()
+  const { error } = await serviceClient
+    .from('collection_sections')
+    .update(update)
+    .eq('id', sectionId)
+
+  if (error) return { error: 'Failed to update section. Please try again.' }
+
+  revalidatePath('/admin/collections')
+  revalidatePath('/collections/[slug]', 'page')
+  return { success: true }
+}
+
+export async function removeCollectionSectionAction(
+  _prev: CollectionActionState,
+  formData: FormData
+): Promise<CollectionActionState> {
+  await requireAdmin()
+
+  const sectionId = formData.get('section_id')?.toString() ?? ''
+  if (!sectionId) return { error: 'Invalid section.' }
+
+  const serviceClient = createServiceClient()
+  const { error } = await serviceClient.from('collection_sections').delete().eq('id', sectionId)
+
+  if (error) return { error: 'Failed to remove section. Please try again.' }
+
+  revalidatePath('/admin/collections')
+  revalidatePath('/collections/[slug]', 'page')
   return { success: true }
 }

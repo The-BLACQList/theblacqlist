@@ -1,6 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+
+const REVIEW_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const REVIEW_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+const REVIEW_PHOTO_MAX_COUNT = 3
 
 export type CreateReviewState =
   | { success: true; reviewId: string }
@@ -39,6 +44,23 @@ export async function createReviewAction(
     const d = new Date(visitDate)
     if (isNaN(d.getTime()) || d > new Date()) {
       return { error: 'Visit date must be a valid past date.', field: 'visit_date' }
+    }
+  }
+
+  // Validate optional photos up-front (before the review is saved) so the user can
+  // fix and resubmit cleanly — once the review exists, the duplicate guard blocks retry.
+  const photoFiles = formData
+    .getAll('photos')
+    .filter((f): f is File => f instanceof File && f.size > 0)
+  if (photoFiles.length > REVIEW_PHOTO_MAX_COUNT) {
+    return { error: `You can attach up to ${REVIEW_PHOTO_MAX_COUNT} photos.`, field: 'photos' }
+  }
+  for (const f of photoFiles) {
+    if (!REVIEW_PHOTO_TYPES.includes(f.type)) {
+      return { error: 'Photos must be JPEG, PNG, or WebP.', field: 'photos' }
+    }
+    if (f.size > REVIEW_PHOTO_MAX_BYTES) {
+      return { error: 'Each photo must be under 5 MB.', field: 'photos' }
     }
   }
 
@@ -85,6 +107,66 @@ export async function createReviewAction(
     .single()
 
   if (error || !review) return { error: 'Failed to submit your review. Please try again.' }
+
+  // Optional per-criterion scores arrive as `criterion:<uuid>` form fields.
+  // These ride the review's moderation gate and are best-effort: a failure here
+  // (e.g. review_ratings not migrated yet) must not fail the saved review.
+  const criterionRows: { review_id: string; criterion_id: string; rating: number }[] = []
+  for (const [key, raw] of formData.entries()) {
+    if (!key.startsWith('criterion:')) continue
+    const criterionId = key.slice('criterion:'.length).trim()
+    const value = parseInt(raw.toString().trim(), 10)
+    if (!criterionId || isNaN(value) || value < 1 || value > 5) continue
+    criterionRows.push({ review_id: review.id, criterion_id: criterionId, rating: value })
+  }
+  if (criterionRows.length > 0) {
+    try {
+      await (supabase as unknown as SupabaseClient).from('review_ratings').insert(criterionRows)
+    } catch {
+      // best-effort enrichment only — the review itself is already saved
+    }
+  }
+
+  // Upload any photos via the service client (mirrors the receipt-upload flow — a
+  // reviewer is not the listing owner, so the owner-gated upload APIs won't work).
+  // Photos land pending (is_approved=false) and only become public when an admin
+  // publishes the review. Best-effort: a photo failure must not fail the saved review.
+  if (photoFiles.length > 0) {
+    try {
+      const service = createServiceClient()
+      const mediaRows: {
+        entity_type: string
+        entity_id: string
+        file_path: string
+        file_type: string
+        file_size_bytes: number
+        uploaded_by: string
+        is_approved: boolean
+      }[] = []
+      for (const f of photoFiles) {
+        const ext = f.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const path = `reviews/${review.id}/${crypto.randomUUID()}.${ext}`
+        const { error: upErr } = await service.storage
+          .from('listing-media')
+          .upload(path, f, { contentType: f.type, upsert: false })
+        if (upErr) continue
+        mediaRows.push({
+          entity_type: 'review',
+          entity_id: review.id,
+          file_path: path,
+          file_type: f.type,
+          file_size_bytes: f.size,
+          uploaded_by: user.id,
+          is_approved: false,
+        })
+      }
+      if (mediaRows.length > 0) {
+        await (service as unknown as SupabaseClient).from('media_attachments').insert(mediaRows)
+      }
+    } catch {
+      // best-effort — the review is already saved
+    }
+  }
 
   return { success: true, reviewId: review.id }
 }

@@ -71,7 +71,7 @@ export default async function SavedListingsPage() {
         </Link>
 
         <h1 className="font-headline text-3xl text-brand-black mb-2">Saved businesses</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mb-8">
+        <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {listings.length === 0
             ? 'Businesses you save will appear here.'
             : `${listings.length} saved ${listings.length === 1 ? 'business' : 'businesses'}`}
@@ -80,10 +80,10 @@ export default async function SavedListingsPage() {
         {listings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
-              <Bookmark className="size-7 text-charcoal/30" aria-hidden="true" />
+              <Bookmark className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">No saved businesses yet</h2>
-            <p className="font-subhead text-sm text-charcoal/60 max-w-xs leading-relaxed">
+            <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               Tap the heart icon on any listing to save it here for later.
             </p>
             <Link
@@ -103,16 +103,16 @@ export default async function SavedListingsPage() {
                 <div className="flex-1 min-w-0">
                   <Link
                     href={buildEntityUrl(l.entity_type, l.citySlug, l.slug)}
-                    className="font-headline text-base text-brand-black hover:text-amber-gold transition-colors line-clamp-1"
+                    className="font-headline text-base text-brand-black hover:text-amber transition-colors line-clamp-1"
                   >
                     {l.name}
                   </Link>
                   {l.tagline && (
-                    <p className="font-subhead text-sm text-charcoal/60 mt-0.5 line-clamp-1">
+                    <p className="font-subhead text-sm text-charcoal-soft mt-0.5 line-clamp-1">
                       {l.tagline}
                     </p>
                   )}
-                  {l.city && <p className="font-subhead text-xs text-charcoal/40 mt-1">{l.city}</p>}
+                  {l.city && <p className="font-subhead text-xs text-charcoal-faint mt-1">{l.city}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {l.website_url && (
@@ -121,7 +121,7 @@ export default async function SavedListingsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={`Visit ${l.name} website`}
-                      className="inline-flex items-center justify-center size-9 rounded-full text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
+                      className="inline-flex items-center justify-center size-9 rounded-full text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors"
                     >
                       <ExternalLink className="size-4" aria-hidden="true" />
                     </a>

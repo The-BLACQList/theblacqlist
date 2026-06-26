@@ -34,17 +34,17 @@ function ForgotPasswordContent() {
     return (
       <div className="text-center py-4">
         <div className="w-14 h-14 rounded-full bg-amber-gold/10 flex items-center justify-center mx-auto mb-4">
-          <Mail className="size-7 text-amber-gold" aria-hidden="true" />
+          <Mail className="size-7 text-amber" aria-hidden="true" />
         </div>
         <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
         <p className="font-subhead text-sm text-charcoal leading-relaxed">
           If <span className="font-semibold text-brand-black">{state.email}</span> is registered, we
           sent a reset link. It expires in 1 hour.
         </p>
-        <p className="font-subhead text-sm text-charcoal/60 mt-2">
+        <p className="font-subhead text-sm text-charcoal-soft mt-2">
           Didn&apos;t receive it? Check your spam folder.
         </p>
-        <p className="font-subhead text-xs text-charcoal/40 mt-6">
+        <p className="font-subhead text-xs text-charcoal-faint mt-6">
           <Link
             href="/sign-in"
             className="text-brand-black underline underline-offset-2 hover:text-charcoal"
@@ -86,7 +86,7 @@ function ForgotPasswordContent() {
             aria-describedby={emailError ? 'email-error' : undefined}
             aria-invalid={!!emailError}
             className={cn(
-              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
               emailError ? 'border-red-400' : 'border-charcoal/30'
             )}
             placeholder="you@example.com"

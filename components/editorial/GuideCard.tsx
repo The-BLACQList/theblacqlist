@@ -17,25 +17,25 @@ export function GuideCard({ title, slug, subtitle, city, sectionCount }: Props) 
     >
       <div className="flex items-start justify-between gap-3">
         <div className="size-9 rounded-lg bg-pale-lavender flex items-center justify-center flex-shrink-0">
-          <BookOpen className="size-4 text-amber-gold" aria-hidden="true" />
+          <BookOpen className="size-4 text-amber" aria-hidden="true" />
         </div>
         {sectionCount !== undefined && (
-          <span className="font-subhead text-xs text-charcoal/50 shrink-0">
+          <span className="font-subhead text-xs text-charcoal-soft shrink-0">
             {sectionCount} {sectionCount === 1 ? 'section' : 'sections'}
           </span>
         )}
       </div>
       <div>
-        <h2 className="font-headline text-base text-brand-black group-hover:text-amber-gold transition-colors leading-snug">
+        <h2 className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
           {title}
         </h2>
         {subtitle && (
-          <p className="font-body text-sm text-charcoal/60 leading-relaxed mt-1 line-clamp-2">
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed mt-1 line-clamp-2">
             {subtitle}
           </p>
         )}
         {city && (
-          <span className="inline-flex items-center gap-1 mt-2 font-subhead text-xs text-charcoal/50">
+          <span className="inline-flex items-center gap-1 mt-2 font-subhead text-xs text-charcoal-soft">
             <MapPin className="size-3" aria-hidden="true" />
             {city}
           </span>

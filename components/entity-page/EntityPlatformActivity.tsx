@@ -22,7 +22,7 @@ export function EntityPlatformActivity({ entity }: Props) {
 
         <div className="flex flex-wrap gap-6">
           <div className="flex items-center gap-2">
-            <Bookmark className="size-5 text-amber-gold" aria-hidden="true" fill="currentColor" />
+            <Bookmark className="size-5 text-amber" aria-hidden="true" fill="currentColor" />
             <span className="font-subhead text-sm text-charcoal">
               <span className="font-semibold text-brand-black">
                 {entity.save_count.toLocaleString()}

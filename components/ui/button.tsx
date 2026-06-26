@@ -15,6 +15,9 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
+        // Brand: amber + white for light surfaces (WCAG 5.16:1); gold + black for dark surfaces.
+        brand: 'bg-amber text-white hover:bg-amber/90',
+        brandGold: 'bg-gold text-brand-black hover:bg-light-gold',
       },
       size: {
         default: 'h-10 px-4 py-2',

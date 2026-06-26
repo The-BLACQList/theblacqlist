@@ -28,7 +28,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
       <div>
         <label
           htmlFor="ver-notes"
-          className="block font-subhead text-xs text-charcoal/60 uppercase tracking-wide mb-1.5"
+          className="block font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1.5"
         >
           Admin notes (optional)
         </label>
@@ -37,7 +37,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
           name="notes"
           rows={3}
           placeholder="Document your decision or any issues found…"
-          className="w-full rounded-lg border border-charcoal/15 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+          className="w-full rounded-lg border border-charcoal/15 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
         />
       </div>
 

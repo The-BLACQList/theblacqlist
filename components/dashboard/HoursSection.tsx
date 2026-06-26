@@ -46,7 +46,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Hours</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Set your weekly hours. These appear on your public page.
         </p>
       </div>
@@ -60,7 +60,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
             const day = hours[key]
             return (
               <div key={key} className="flex items-center gap-3 min-h-[36px]">
-                <span className="font-subhead text-xs font-semibold text-charcoal/60 w-7 shrink-0">
+                <span className="font-subhead text-xs font-semibold text-charcoal-soft w-7 shrink-0">
                   {label}
                 </span>
 
@@ -72,7 +72,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
                     aria-label={`Mark ${label} as closed`}
                     className="size-3.5 accent-charcoal"
                   />
-                  <span className="font-body text-xs text-charcoal/50">Closed</span>
+                  <span className="font-body text-xs text-charcoal-soft">Closed</span>
                 </label>
 
                 {!day.closed && (
@@ -84,7 +84,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
                       aria-label={`${label} opening time`}
                       className="w-28 px-2 py-1.5 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
                     />
-                    <span className="font-body text-xs text-charcoal/40">–</span>
+                    <span className="font-body text-xs text-charcoal-faint">–</span>
                     <input
                       type="time"
                       value={day.close}

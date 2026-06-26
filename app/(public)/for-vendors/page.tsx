@@ -17,7 +17,7 @@ export default function ForVendorsPage() {
     <>
       <section className="bg-deep-bg" aria-labelledby="for-vendors-heading">
         <Container className="py-16 md:py-24">
-          <p className="font-subhead text-amber-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
             For Vendors
           </p>
           <h1

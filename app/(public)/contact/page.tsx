@@ -64,7 +64,7 @@ export default function ContactPage() {
                 <h2 className="font-headline text-base text-brand-black">{heading}</h2>
               </div>
               <p className="font-body text-sm text-charcoal leading-relaxed">{body}</p>
-              <span className="font-subhead text-sm font-semibold text-brand-black group-hover:text-amber-gold transition-colors mt-auto">
+              <span className="font-subhead text-sm font-semibold text-brand-black group-hover:text-amber transition-colors mt-auto">
                 {label}
               </span>
             </a>

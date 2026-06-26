@@ -80,13 +80,13 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
   const tabCls = (v: StatusFilter) =>
     v === activeFilter
       ? 'font-subhead text-sm font-semibold text-brand-black border-b-2 border-amber-gold pb-2'
-      : 'font-subhead text-sm text-charcoal/50 hover:text-brand-black pb-2 transition-colors'
+      : 'font-subhead text-sm text-charcoal-soft hover:text-brand-black pb-2 transition-colors'
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Review community receipt submissions
         </p>
       </div>
@@ -107,7 +107,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
       {receiptList.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm font-semibold text-brand-black">No receipts</p>
-          <p className="font-body text-xs text-charcoal/50 mt-1">
+          <p className="font-body text-xs text-charcoal-soft mt-1">
             No {activeFilter === 'all' ? '' : activeFilter.replace('_', ' ')} receipts found.
           </p>
         </div>
@@ -126,20 +126,20 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                         {businessLabel}
                       </p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="font-subhead text-xs text-charcoal/50">
+                        <span className="font-subhead text-xs text-charcoal-soft">
                           {formatDollars(receipt.amount_cents)}
                         </span>
                         <span className="text-charcoal/20">·</span>
-                        <span className="font-subhead text-xs text-charcoal/50">
+                        <span className="font-subhead text-xs text-charcoal-soft">
                           {receipt.purchase_date}
                         </span>
                         <span className="text-charcoal/20">·</span>
-                        <span className="font-body text-xs text-charcoal/40">
+                        <span className="font-body text-xs text-charcoal-faint">
                           Submitted {formatDate(receipt.created_at)}
                         </span>
                       </div>
                       {receipt.notes && (
-                        <p className="font-body text-xs text-charcoal/50 mt-1.5 italic">
+                        <p className="font-body text-xs text-charcoal-soft mt-1.5 italic">
                           &ldquo;{receipt.notes}&rdquo;
                         </p>
                       )}
@@ -149,7 +149,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                         </p>
                       )}
                       {receipt.file_path && (
-                        <p className="font-body text-xs text-charcoal/40 mt-1">
+                        <p className="font-body text-xs text-charcoal-faint mt-1">
                           Receipt image attached
                         </p>
                       )}
@@ -188,11 +188,11 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                           type="text"
                           placeholder="Reason (optional)"
                           maxLength={200}
-                          className="h-8 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-xs text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-1 focus:ring-amber-gold/60 w-48"
+                          className="h-8 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-xs text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-1 focus:ring-amber-gold/60 w-48"
                         />
                         <button
                           type="submit"
-                          className="h-8 px-4 rounded-full border border-charcoal/20 text-charcoal/70 hover:bg-red-50 hover:border-red-200 hover:text-red-600 font-subhead font-bold text-xs transition-colors"
+                          className="h-8 px-4 rounded-full border border-charcoal/20 text-charcoal-soft hover:bg-red-50 hover:border-red-200 hover:text-red-600 font-subhead font-bold text-xs transition-colors"
                         >
                           Reject
                         </button>

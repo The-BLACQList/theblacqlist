@@ -29,7 +29,7 @@ export function AddOfferingForm({ listingId }: Props) {
         <div>
           <label
             htmlFor="svc-name"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
             Name <span aria-hidden="true">*</span>
           </label>
@@ -40,39 +40,55 @@ export function AddOfferingForm({ listingId }: Props) {
             maxLength={200}
             required
             placeholder="e.g. Natural Hair Consultation"
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
 
         <div>
           <label
             htmlFor="svc-desc"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Description <span className="font-normal text-charcoal/40">(optional)</span>
+            Description <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <textarea
             id="svc-desc"
             name="description"
             rows={2}
             placeholder="Brief description of this service…"
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
           />
         </div>
 
         <div>
           <label
             htmlFor="svc-price"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Price <span className="font-normal text-charcoal/40">(optional)</span>
+            Price <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             id="svc-price"
             name="price_display"
             type="text"
             placeholder="e.g. $75, Starting at $50, Free"
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="svc-group"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
+          >
+            Group / section <span className="font-normal text-charcoal-faint">(optional)</span>
+          </label>
+          <input
+            id="svc-group"
+            name="group_label"
+            type="text"
+            placeholder="e.g. Appetizers, Entrées, Packages"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
 

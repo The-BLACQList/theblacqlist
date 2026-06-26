@@ -12,6 +12,7 @@ interface Service {
   price_display: string | null
   is_featured: boolean | null
   display_order: number
+  group_label?: string | null
 }
 
 interface Props {
@@ -36,7 +37,7 @@ function DeleteServiceButton({ serviceId }: { serviceId: string }) {
             e.preventDefault()
           }
         }}
-        className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors"
+        className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal-faint hover:text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors"
       >
         {isPending ? (
           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -71,7 +72,7 @@ function ServiceRow({ service }: { service: Service }) {
               type="button"
               onClick={() => setEditing(false)}
               aria-label="Cancel edit"
-              className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
+              className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
@@ -82,7 +83,7 @@ function ServiceRow({ service }: { service: Service }) {
             defaultValue={service.description ?? ''}
             placeholder="Description (optional)"
             aria-label="Service description"
-            className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
           <input
             name="price_display"
@@ -90,7 +91,15 @@ function ServiceRow({ service }: { service: Service }) {
             defaultValue={service.price_display ?? ''}
             placeholder="Price (optional)"
             aria-label="Service price"
-            className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+          />
+          <input
+            name="group_label"
+            type="text"
+            defaultValue={service.group_label ?? ''}
+            placeholder="Group / section (optional)"
+            aria-label="Service group or section"
+            className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -98,9 +107,9 @@ function ServiceRow({ service }: { service: Service }) {
               name="is_featured"
               value="true"
               defaultChecked={service.is_featured ?? false}
-              className="rounded border-charcoal/30 text-amber-gold focus:ring-amber-gold/40"
+              className="rounded border-charcoal/30 text-amber focus:ring-amber-gold/40"
             />
-            <span className="font-body text-xs text-charcoal/70">Mark as featured</span>
+            <span className="font-body text-xs text-charcoal-soft">Mark as featured</span>
           </label>
 
           {state && 'error' in state && (
@@ -139,16 +148,21 @@ function ServiceRow({ service }: { service: Service }) {
             {service.name}
           </p>
           {service.is_featured && (
-            <Star className="size-3.5 text-amber-gold shrink-0" aria-label="Featured" />
+            <Star className="size-3.5 text-amber shrink-0" aria-label="Featured" />
           )}
         </div>
         {service.description && (
-          <p className="font-body text-xs text-charcoal/60 mt-0.5 line-clamp-2">
+          <p className="font-body text-xs text-charcoal-soft mt-0.5 line-clamp-2">
             {service.description}
           </p>
         )}
         {service.price_display && (
-          <p className="font-body text-xs text-charcoal/50 mt-1">{service.price_display}</p>
+          <p className="font-body text-xs text-charcoal-soft mt-1">{service.price_display}</p>
+        )}
+        {service.group_label && (
+          <p className="font-subhead text-[10px] uppercase tracking-wide text-charcoal-faint mt-1">
+            {service.group_label}
+          </p>
         )}
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
@@ -156,7 +170,7 @@ function ServiceRow({ service }: { service: Service }) {
           type="button"
           onClick={() => setEditing(true)}
           aria-label="Edit service"
-          className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
+          className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors"
         >
           <Pencil className="size-4" aria-hidden="true" />
         </button>
@@ -169,7 +183,7 @@ function ServiceRow({ service }: { service: Service }) {
 export function OfferingsList({ services }: Props) {
   if (services.length === 0) {
     return (
-      <p className="font-body text-sm text-charcoal/50 text-center py-6">
+      <p className="font-body text-sm text-charcoal-soft text-center py-6">
         No services added yet. Add your first one below.
       </p>
     )

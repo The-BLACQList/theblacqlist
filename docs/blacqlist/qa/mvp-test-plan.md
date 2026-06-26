@@ -187,7 +187,7 @@ All features implemented and shipped as of the AI Foundation milestone:
 | --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | 1   | Navigate to `/[citySlug]/business/[listingSlug]` | Page renders with business info                                                                                      |
 | 2   | Verify data source                               | **Note: currently uses mock data (`MOCK_ENTITIES`), not real DB.** Page shows mock content regardless of URL params. |
-| 3   | Check Save button (unauthenticated)              | Prompts sign-in or shows disabled state                                                                              |
+| 3   | Check Save button (unauthenticated)              | Redirects to /sign-in with ?next= param (returns to listing after sign-in)                                           |
 | 4   | Check Save button (signed in)                    | Toggles save state; persists on refresh                                                                              |
 | 5   | Check Share button                               | Opens native share or copies URL                                                                                     |
 | 6   | Check CTA button                                 | Navigates to correct destination based on `cta_type`                                                                 |

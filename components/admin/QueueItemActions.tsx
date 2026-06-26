@@ -46,7 +46,7 @@ export function QueueItemActions({ queueId, revalidatePath = '/admin/reports' }:
         <button
           type="submit"
           disabled={isPending}
-          className="font-subhead text-xs font-semibold text-charcoal/50 hover:text-charcoal disabled:opacity-50"
+          className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-charcoal disabled:opacity-50"
         >
           Dismiss
         </button>

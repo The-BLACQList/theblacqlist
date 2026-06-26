@@ -66,7 +66,7 @@ function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
     <span
       suppressHydrationWarning
       className={`inline-flex items-center gap-1.5 font-subhead text-sm ${
-        status.open ? 'text-green-600' : 'text-charcoal/60'
+        status.open ? 'text-green-600' : 'text-charcoal-soft'
       }`}
     >
       <span
@@ -140,7 +140,7 @@ export function EntityAtAGlance({ entity }: Props) {
                     className="inline-flex items-start gap-2 font-body text-sm text-charcoal hover:text-brand-black group"
                   >
                     <MapPin
-                      className="size-4 mt-0.5 text-amber-gold flex-shrink-0"
+                      className="size-4 mt-0.5 text-amber flex-shrink-0"
                       aria-hidden="true"
                     />
                     <span className="group-hover:underline whitespace-pre-line">{fullAddress}</span>
@@ -197,7 +197,7 @@ export function EntityAtAGlance({ entity }: Props) {
                       href={`tel:${details.phone.replace(/\D/g, '')}`}
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black"
                     >
-                      <Phone className="size-4 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Phone className="size-4 text-amber flex-shrink-0" aria-hidden="true" />
                       {details.phone}
                     </a>
                   )}
@@ -206,7 +206,7 @@ export function EntityAtAGlance({ entity }: Props) {
                       href={`mailto:${details.email}`}
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black break-all"
                     >
-                      <Mail className="size-4 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Mail className="size-4 text-amber flex-shrink-0" aria-hidden="true" />
                       {details.email}
                     </a>
                   )}
@@ -217,7 +217,7 @@ export function EntityAtAGlance({ entity }: Props) {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black break-all"
                     >
-                      <Globe className="size-4 text-amber-gold flex-shrink-0" aria-hidden="true" />
+                      <Globe className="size-4 text-amber flex-shrink-0" aria-hidden="true" />
                       {details.website_url.replace(/^https?:\/\/(www\.)?/, '')}
                     </a>
                   )}
@@ -252,7 +252,7 @@ export function EntityAtAGlance({ entity }: Props) {
                         className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black transition-colors"
                       >
                         <ExternalLink
-                          className="size-3.5 flex-shrink-0 text-amber-gold"
+                          className="size-3.5 flex-shrink-0 text-amber"
                           aria-hidden="true"
                         />
                         {label}

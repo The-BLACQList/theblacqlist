@@ -21,7 +21,7 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">SEO</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           These fields control how your page appears in Google search results. Defaults to your
           business name and description if left blank.
         </p>
@@ -32,9 +32,9 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
         <div>
           <label
             htmlFor="seo-title"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            SEO title <span className="font-normal text-charcoal/40">(max 60 chars)</span>
+            SEO title <span className="font-normal text-charcoal-faint">(max 60 chars)</span>
           </label>
           <input
             id="seo-title"
@@ -44,10 +44,10 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
             placeholder={`${name} | The BLACQList`}
             maxLength={60}
             onChange={(e) => setTitleChars(e.target.value.length)}
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
           <p
-            className={`font-body text-xs text-right mt-0.5 ${titleChars > 55 ? 'text-amber-gold' : 'text-charcoal/40'}`}
+            className={`font-body text-xs text-right mt-0.5 ${titleChars > 55 ? 'text-amber' : 'text-charcoal-faint'}`}
           >
             {titleChars}/60
           </p>
@@ -56,9 +56,9 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
         <div>
           <label
             htmlFor="seo-desc"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            SEO description <span className="font-normal text-charcoal/40">(max 160 chars)</span>
+            SEO description <span className="font-normal text-charcoal-faint">(max 160 chars)</span>
           </label>
           <textarea
             id="seo-desc"
@@ -68,10 +68,10 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
             placeholder={description?.slice(0, 160) ?? 'Describe your business for search engines…'}
             maxLength={160}
             onChange={(e) => setDescChars(e.target.value.length)}
-            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+            className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
           />
           <p
-            className={`font-body text-xs text-right mt-0.5 ${descChars > 150 ? 'text-amber-gold' : 'text-charcoal/40'}`}
+            className={`font-body text-xs text-right mt-0.5 ${descChars > 150 ? 'text-amber' : 'text-charcoal-faint'}`}
           >
             {descChars}/160
           </p>

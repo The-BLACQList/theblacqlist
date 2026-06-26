@@ -44,7 +44,7 @@ export function FlowNodeTable({
 
       {nodes.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="font-body text-sm text-charcoal/50">{emptyText}</p>
+          <p className="font-body text-sm text-charcoal-soft">{emptyText}</p>
         </div>
       ) : (
         <div className="divide-y divide-charcoal/5">
@@ -54,7 +54,7 @@ export function FlowNodeTable({
               linkToEntity && node.slug ? (
                 <Link
                   href={`/b/${node.slug}`}
-                  className="font-subhead text-sm font-semibold text-brand-black hover:text-amber-gold transition-colors truncate"
+                  className="font-subhead text-sm font-semibold text-brand-black hover:text-amber transition-colors truncate"
                 >
                   {node.name}
                 </Link>
@@ -67,7 +67,7 @@ export function FlowNodeTable({
             return (
               <div key={node.entity_id} className="px-5 py-3.5">
                 <div className="flex items-center gap-3 mb-1.5">
-                  <span className="font-subhead text-xs text-charcoal/30 w-5 text-right shrink-0">
+                  <span className="font-subhead text-xs text-charcoal-faint w-5 text-right shrink-0">
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">{nameEl}</div>
@@ -75,7 +75,7 @@ export function FlowNodeTable({
                     <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">
                       {formatDollars(node.total_amount_cents)}
                     </span>
-                    <span className="font-body text-xs text-charcoal/40 ml-2">
+                    <span className="font-body text-xs text-charcoal-faint ml-2">
                       {node.transaction_count}{' '}
                       {node.transaction_count === 1 ? 'receipt' : 'receipts'}
                     </span>

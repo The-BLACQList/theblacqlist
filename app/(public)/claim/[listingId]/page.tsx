@@ -62,7 +62,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
               owner. If you believe this is an error or need access, please{' '}
               <Link
                 href="/contact"
-                className="text-amber-gold hover:text-light-gold underline underline-offset-2"
+                className="text-amber hover:text-light-gold underline underline-offset-2"
               >
                 contact us
               </Link>
@@ -70,7 +70,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
             </p>
             <Link
               href="/claim"
-              className="inline-flex items-center font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2"
+              className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
               Search for another listing
             </Link>
@@ -103,7 +103,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
             </p>
             <Link
               href="/account/claims"
-              className="inline-flex items-center font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2"
+              className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
               View your claims in your account
             </Link>
@@ -128,7 +128,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
         <nav aria-label="Breadcrumb" className="mb-6">
           <Link
             href="/claim"
-            className="font-subhead text-xs text-charcoal/60 hover:text-charcoal underline underline-offset-2"
+            className="font-subhead text-xs text-charcoal-soft hover:text-charcoal underline underline-offset-2"
           >
             ← Back to search
           </Link>
@@ -136,12 +136,12 @@ export default async function ClaimListingPage({ params }: PageProps) {
 
         {/* Listing identity */}
         <div className="bg-white rounded-xl border border-charcoal/10 p-5 mb-6">
-          <p className="font-subhead text-xs text-charcoal/50 uppercase tracking-wide mb-1">
+          <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1">
             Claiming
           </p>
           <p className="font-headline text-xl text-brand-black">{listing.name}</p>
           {(category || locationParts.length > 0) && (
-            <p className="font-body text-xs text-charcoal/60 mt-0.5">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5">
               {[category, locationParts.join(', ')].filter(Boolean).join(' · ')}
             </p>
           )}

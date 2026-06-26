@@ -34,7 +34,7 @@ export function DashboardSidebar({ ownerEmail }: Props) {
       <div className="px-5 py-5 border-b border-white/10">
         <Link
           href="/dashboard"
-          className="font-headline text-base text-amber-gold leading-tight block"
+          className="font-headline text-base text-gold leading-tight block"
         >
           BLACQList
           <br />
@@ -52,7 +52,7 @@ export function DashboardSidebar({ ownerEmail }: Props) {
               href={href}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
                 active
-                  ? 'bg-amber-gold/15 text-amber-gold'
+                  ? 'bg-amber-gold/15 text-gold'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -83,7 +83,7 @@ export function DashboardSidebar({ ownerEmail }: Props) {
                   href={href}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
                     active
-                      ? 'bg-amber-gold/15 text-amber-gold'
+                      ? 'bg-amber-gold/15 text-gold'
                       : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
                 >

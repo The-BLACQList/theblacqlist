@@ -40,7 +40,7 @@ export default async function UpgradePage() {
     <div className="max-w-4xl">
       <div className="mb-8">
         <h1 className="font-headline text-2xl text-brand-black mb-2">Upgrade Your Plan</h1>
-        <p className="font-body text-sm text-charcoal/70 max-w-lg">
+        <p className="font-body text-sm text-charcoal-soft max-w-lg">
           Unlock analytics, priority placement, and more for your listing.
         </p>
       </div>
@@ -73,7 +73,7 @@ export default async function UpgradePage() {
                   <span className="font-headline text-2xl text-brand-black">
                     ${plan.price_monthly}
                   </span>
-                  <span className="font-subhead text-xs text-charcoal/40">
+                  <span className="font-subhead text-xs text-charcoal-faint">
                     {plan.price_monthly === 0 ? 'forever' : '/mo'}
                   </span>
                 </div>
@@ -83,7 +83,7 @@ export default async function UpgradePage() {
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-start gap-1.5 font-subhead text-xs text-charcoal/70"
+                    className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
                   >
                     <span
                       className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
@@ -96,7 +96,7 @@ export default async function UpgradePage() {
 
               {plan.slug === 'free' ? (
                 <div className="h-10 flex items-center">
-                  <span className="font-subhead text-xs text-charcoal/40">Your current plan</span>
+                  <span className="font-subhead text-xs text-charcoal-faint">Your current plan</span>
                 </div>
               ) : isPurchasable ? (
                 <CheckoutButton
@@ -108,7 +108,7 @@ export default async function UpgradePage() {
               ) : (
                 <button
                   disabled
-                  className="w-full h-10 rounded-full bg-charcoal/10 text-charcoal/40 font-body font-bold text-sm cursor-not-allowed"
+                  className="w-full h-10 rounded-full bg-charcoal/10 text-charcoal-faint font-body font-bold text-sm cursor-not-allowed"
                   aria-label={`${plan.name} — coming soon`}
                 >
                   Coming Soon

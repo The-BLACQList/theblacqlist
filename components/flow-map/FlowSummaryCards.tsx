@@ -7,11 +7,11 @@ interface SummaryCardProps {
 function SummaryCard({ label, value, subtext }: SummaryCardProps) {
   return (
     <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-      <p className="font-subhead text-xs text-charcoal/50 font-semibold uppercase tracking-wide">
+      <p className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide">
         {label}
       </p>
       <p className="font-headline text-3xl text-brand-black mt-1">{value}</p>
-      {subtext && <p className="font-body text-xs text-charcoal/40 mt-0.5">{subtext}</p>}
+      {subtext && <p className="font-body text-xs text-charcoal-faint mt-0.5">{subtext}</p>}
     </div>
   )
 }

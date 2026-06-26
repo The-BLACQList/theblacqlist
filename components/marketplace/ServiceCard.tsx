@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Briefcase, Globe, MapPin, Plane } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 
@@ -59,11 +60,12 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
         {service.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={service.cover_image_url}
             alt={service.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -75,7 +77,7 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
       {/* Content */}
       <div className="p-4 flex flex-col flex-1 gap-2">
         {showVendor && service.vendor_name && (
-          <p className="font-subhead text-xs text-charcoal/50 truncate">
+          <p className="font-subhead text-xs text-charcoal-soft truncate">
             {service.vendor_slug ? (
               <Link href={`/vendors/${service.vendor_slug}`} className="hover:text-charcoal">
                 {service.vendor_name}
@@ -89,26 +91,26 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
         <h3 className="font-headline text-base text-brand-black leading-snug">
           <Link
             href={`/marketplace/services/${service.global_slug}`}
-            className="hover:text-amber-gold transition-colors"
+            className="hover:text-amber transition-colors"
           >
             {service.name}
           </Link>
         </h3>
 
         {service.description && (
-          <p className="font-body text-xs text-charcoal/60 line-clamp-2">{service.description}</p>
+          <p className="font-body text-xs text-charcoal-soft line-clamp-2">{service.description}</p>
         )}
 
         {/* Price + duration */}
         <div className="flex items-baseline gap-2 mt-auto pt-2">
           <span className="font-subhead text-base font-bold text-brand-black">{priceLabel}</span>
           {service.duration_text && (
-            <span className="font-body text-xs text-charcoal/40">{service.duration_text}</span>
+            <span className="font-body text-xs text-charcoal-faint">{service.duration_text}</span>
           )}
         </div>
 
         {/* Delivery mode */}
-        <p className="font-body text-[10px] text-charcoal/40 flex items-center gap-1">
+        <p className="font-body text-[10px] text-charcoal-faint flex items-center gap-1">
           <DeliveryIcon className="size-3 shrink-0" aria-hidden="true" />
           {DELIVERY_LABELS[service.delivery_mode] ?? service.delivery_mode}
         </p>

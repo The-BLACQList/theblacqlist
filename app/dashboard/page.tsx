@@ -13,7 +13,7 @@ function CompletenessItem({ done, label }: { done: boolean; label: string }) {
         <Circle className="size-4 text-charcoal/25 shrink-0" aria-hidden="true" />
       )}
       <span
-        className={`font-body text-sm ${done ? 'text-charcoal/60 line-through' : 'text-charcoal/80'}`}
+        className={`font-body text-sm ${done ? 'text-charcoal-soft line-through' : 'text-charcoal/80'}`}
       >
         {label}
       </span>
@@ -43,14 +43,14 @@ export default async function DashboardPage() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Dashboard</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">
           Manage your BLACQList business pages.
         </p>
       </div>
 
       {!listings || listings.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-body text-charcoal/60">
+          <p className="font-body text-charcoal-soft">
             No pages found. Contact support if you believe this is an error.
           </p>
         </div>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
                             ? 'bg-green-100 text-green-700'
                             : listing.status === 'pending'
                               ? 'bg-amber-100 text-amber-700'
-                              : 'bg-charcoal/10 text-charcoal/60'
+                              : 'bg-charcoal/10 text-charcoal-soft'
                         }`}
                       >
                         {listing.status}
@@ -98,14 +98,14 @@ export default async function DashboardPage() {
                         className={`inline-block px-2 py-0.5 rounded-full font-subhead text-xs ${
                           listing.trust_tier === 'claimed' || listing.trust_tier === 'verified'
                             ? 'bg-blue-100 text-blue-700'
-                            : 'bg-charcoal/8 text-charcoal/50'
+                            : 'bg-charcoal/8 text-charcoal-soft'
                         }`}
                       >
                         {listing.trust_tier}
                       </span>
                     </div>
                     {listing.last_edited_by_owner_at && (
-                      <p className="font-body text-xs text-charcoal/40 mt-0.5 flex items-center gap-1">
+                      <p className="font-body text-xs text-charcoal-faint mt-0.5 flex items-center gap-1">
                         <Clock className="size-3" aria-hidden="true" />
                         Last saved {new Date(listing.last_edited_by_owner_at).toLocaleDateString()}
                       </p>
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
                       href={publicUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 inline-flex items-center gap-1.5 text-xs font-subhead text-charcoal/50 hover:text-brand-black transition-colors"
+                      className="shrink-0 inline-flex items-center gap-1.5 text-xs font-subhead text-charcoal-soft hover:text-brand-black transition-colors"
                     >
                       View page <ExternalLink className="size-3" aria-hidden="true" />
                     </Link>
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
 
                 {/* Completeness checklist */}
                 <div className="px-5 py-4">
-                  <p className="font-subhead text-xs font-semibold text-charcoal/50 mb-2 uppercase tracking-wide">
+                  <p className="font-subhead text-xs font-semibold text-charcoal-soft mb-2 uppercase tracking-wide">
                     Profile completeness — {doneCount}/{completeness.length}
                   </p>
                   <ul className="space-y-1.5 mb-4">
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
                   </ul>
                   <Link
                     href={`/dashboard/pages/${listing.id}/edit`}
-                    className="inline-flex items-center gap-1.5 font-subhead text-sm font-semibold text-amber-gold hover:underline"
+                    className="inline-flex items-center gap-1.5 font-subhead text-sm font-semibold text-amber hover:underline"
                   >
                     Edit page <ChevronRight className="size-4" aria-hidden="true" />
                   </Link>

@@ -107,7 +107,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
         <p className="font-subhead text-sm font-semibold text-brand-black">
           Upload verification documents
         </p>
-        <p className="font-body text-sm text-charcoal/70">
+        <p className="font-body text-sm text-charcoal-soft">
           Upload at least one: business license, utility bill, lease agreement, or government-issued
           ID showing your business name. Max 5 files, 10 MB each. JPEG, PNG, and PDF accepted.
         </p>
@@ -120,8 +120,8 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
           className={`flex items-center justify-center gap-2 w-full h-14 rounded-xl border-2 border-dashed cursor-pointer transition-colors font-subhead text-sm font-semibold
             ${
               uploading || files.length >= MAX_FILES
-                ? 'border-charcoal/15 text-charcoal/30 cursor-not-allowed'
-                : 'border-charcoal/25 text-charcoal/60 hover:border-amber-gold hover:text-amber-gold'
+                ? 'border-charcoal/15 text-charcoal-faint cursor-not-allowed'
+                : 'border-charcoal/25 text-charcoal-soft hover:border-amber-gold hover:text-amber'
             }`}
         >
           {uploading ? (
@@ -162,21 +162,21 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
               className="flex items-center gap-3 rounded-lg border border-charcoal/10 bg-white px-4 py-2.5"
             >
               {f.type === 'application/pdf' ? (
-                <FileText className="size-4 shrink-0 text-charcoal/50" aria-hidden="true" />
+                <FileText className="size-4 shrink-0 text-charcoal-soft" aria-hidden="true" />
               ) : (
-                <ImageIcon className="size-4 shrink-0 text-charcoal/50" aria-hidden="true" />
+                <ImageIcon className="size-4 shrink-0 text-charcoal-soft" aria-hidden="true" />
               )}
               <span className="flex-1 min-w-0 font-body text-sm text-brand-black truncate">
                 {f.name}
               </span>
-              <span className="font-body text-xs text-charcoal/50 shrink-0">
+              <span className="font-body text-xs text-charcoal-soft shrink-0">
                 {formatBytes(f.size)}
               </span>
               <button
                 type="button"
                 onClick={() => removeFile(f.path)}
                 aria-label={`Remove ${f.name}`}
-                className="shrink-0 p-1 rounded hover:bg-charcoal/8 text-charcoal/40 hover:text-charcoal"
+                className="shrink-0 p-1 rounded hover:bg-charcoal/8 text-charcoal-faint hover:text-charcoal"
               >
                 <X className="size-3.5" aria-hidden="true" />
               </button>

@@ -19,9 +19,9 @@ interface Props {
 }
 
 const inputCls =
-  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
+  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
 const textareaCls =
-  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
+  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
 
 export default async function EditGuidePage({ params }: Props) {
   await requireAdmin()
@@ -51,13 +51,13 @@ export default async function EditGuidePage({ params }: Props) {
       <div>
         <Link
           href="/admin/guides"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Guides
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Edit guide</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">{guide.title}</p>
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{guide.title}</p>
       </div>
 
       {/* Guide details */}
@@ -74,7 +74,7 @@ export default async function EditGuidePage({ params }: Props) {
       <div className="rounded-xl border border-charcoal/10 bg-white p-6 space-y-5">
         <div>
           <h2 className="font-headline text-base text-brand-black">Sections</h2>
-          <p className="font-subhead text-xs text-charcoal/50 mt-0.5">
+          <p className="font-subhead text-xs text-charcoal-soft mt-0.5">
             {sectionList.length} {sectionList.length === 1 ? 'section' : 'sections'}
           </p>
         </div>
@@ -87,7 +87,7 @@ export default async function EditGuidePage({ params }: Props) {
                 className="rounded-lg border border-charcoal/10 bg-[#f9f9fb] p-4"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-subhead text-xs text-charcoal/40 font-semibold">
+                  <span className="font-subhead text-xs text-charcoal-faint font-semibold">
                     Section {i + 1}
                   </span>
                   <form
@@ -101,7 +101,7 @@ export default async function EditGuidePage({ params }: Props) {
                     <button
                       type="submit"
                       aria-label="Delete section"
-                      className="flex items-center justify-center size-7 rounded text-charcoal/30 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      className="flex items-center justify-center size-7 rounded text-charcoal-faint hover:text-red-500 hover:bg-red-50 transition-colors"
                     >
                       <Trash2 className="size-3.5" aria-hidden="true" />
                     </button>
@@ -111,7 +111,7 @@ export default async function EditGuidePage({ params }: Props) {
                   {section.heading}
                 </p>
                 {section.body && (
-                  <p className="font-body text-xs text-charcoal/50 mt-1 line-clamp-2 leading-relaxed">
+                  <p className="font-body text-xs text-charcoal-soft mt-1 line-clamp-2 leading-relaxed">
                     {section.body.substring(0, 120)}…
                   </p>
                 )}

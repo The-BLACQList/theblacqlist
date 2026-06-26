@@ -37,14 +37,14 @@ function AltTextForm({ item }: { item: MediaItem }) {
   if (!editing) {
     return (
       <div className="flex items-center gap-1 min-w-0">
-        <p className="font-body text-xs text-charcoal/50 truncate flex-1">
+        <p className="font-body text-xs text-charcoal-soft truncate flex-1">
           {item.alt_text || <span className="italic">No alt text</span>}
         </p>
         <button
           type="button"
           onClick={() => setEditing(true)}
           aria-label="Edit alt text"
-          className="shrink-0 text-charcoal/30 hover:text-charcoal/60 transition-colors"
+          className="shrink-0 text-charcoal-faint hover:text-charcoal-soft transition-colors"
         >
           <Pencil className="size-3" aria-hidden="true" />
         </button>
@@ -63,7 +63,7 @@ function AltTextForm({ item }: { item: MediaItem }) {
           maxLength={200}
           placeholder="Describe this image…"
           aria-label="Alt text"
-          className="flex-1 min-w-0 px-2 py-1 rounded border border-charcoal/20 font-body text-xs text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-1 focus:ring-amber-gold/40"
+          className="flex-1 min-w-0 px-2 py-1 rounded border border-charcoal/20 font-body text-xs text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-1 focus:ring-amber-gold/40"
         />
         <button
           type="submit"
@@ -81,7 +81,7 @@ function AltTextForm({ item }: { item: MediaItem }) {
           type="button"
           onClick={() => setEditing(false)}
           aria-label="Cancel"
-          className="shrink-0 inline-flex items-center justify-center size-6 rounded text-charcoal/40 hover:bg-charcoal/5 transition-colors"
+          className="shrink-0 inline-flex items-center justify-center size-6 rounded text-charcoal-faint hover:bg-charcoal/5 transition-colors"
         >
           <X className="size-3" aria-hidden="true" />
         </button>
@@ -261,10 +261,10 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
           className="w-full rounded-lg border-2 border-dashed border-charcoal/20 px-4 py-8 text-center hover:border-amber-gold/40 hover:bg-amber-gold/5 transition-colors group"
         >
           <ImagePlus
-            className="size-8 text-charcoal/25 group-hover:text-amber-gold/50 mx-auto mb-2 transition-colors"
+            className="size-8 text-charcoal/25 group-hover:text-amber/50 mx-auto mb-2 transition-colors"
             aria-hidden="true"
           />
-          <p className="font-subhead text-sm font-semibold text-charcoal/50 group-hover:text-charcoal/70">
+          <p className="font-subhead text-sm font-semibold text-charcoal-soft group-hover:text-charcoal-soft">
             Click to choose a photo
           </p>
           <p className="font-body text-xs text-charcoal/35 mt-0.5">
@@ -323,7 +323,7 @@ export function MediaGrid({ media, supabaseStorageUrl, listingId }: Props) {
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Photos</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Add photos to showcase your business. Use descriptive alt text to improve accessibility
           and SEO.
         </p>

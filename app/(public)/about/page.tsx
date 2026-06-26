@@ -77,6 +77,31 @@ export default function AboutPage() {
         </div>
       </Section>
 
+      <Section variant="white">
+        <div className="max-w-2xl">
+          <SectionHeading subtitle="Our editorial focus, clearly stated.">
+            Who We Feature
+          </SectionHeading>
+          <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
+            <p>
+              The BLACQList is an editorial directory. Every listing in our directory has been
+              submitted and reviewed against a single criterion: is this a Black-owned business?
+            </p>
+            <p>
+              For our purposes, &ldquo;Black-owned&rdquo; means a business in which Black or
+              African American individual(s) hold majority ownership (&ge;51%) and exercise
+              meaningful operational control or management authority.
+            </p>
+            <p>
+              Listing decisions are editorial judgments — the same way a publication decides what
+              to cover. We reserve the right to decline any submission that does not meet our
+              editorial criteria. This is what makes the directory trustworthy for the community
+              it was built to serve.
+            </p>
+          </div>
+        </div>
+      </Section>
+
       <Section variant="deep-bg">
         <div className="max-w-xl">
           <SectionHeading

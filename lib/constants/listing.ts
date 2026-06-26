@@ -5,6 +5,7 @@ export const VALID_ENTITY_TYPES = [
   'creative',
   'professional',
   'vendor',
+  'event',
 ] as const
 
 export const VALID_LOCATION_TYPES = [

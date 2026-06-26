@@ -21,12 +21,12 @@ export default async function DashboardPagesPage() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">My Pages</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">Your BLACQList business pages.</p>
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">Your BLACQList business pages.</p>
       </div>
 
       {!listings || listings.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-body text-charcoal/60">No pages found.</p>
+          <p className="font-body text-charcoal-soft">No pages found.</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -46,16 +46,16 @@ export default async function DashboardPagesPage() {
                             ? 'bg-green-100 text-green-700'
                             : listing.status === 'pending'
                               ? 'bg-amber-100 text-amber-700'
-                              : 'bg-charcoal/10 text-charcoal/60'
+                              : 'bg-charcoal/10 text-charcoal-soft'
                         }`}
                       >
                         {listing.status}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
-                      {city && <p className="font-body text-xs text-charcoal/50">{city.name}</p>}
+                      {city && <p className="font-body text-xs text-charcoal-soft">{city.name}</p>}
                       {listing.last_edited_by_owner_at && (
-                        <p className="font-body text-xs text-charcoal/40 flex items-center gap-1">
+                        <p className="font-body text-xs text-charcoal-faint flex items-center gap-1">
                           <Clock className="size-3" aria-hidden="true" />
                           Saved {new Date(listing.last_edited_by_owner_at).toLocaleDateString()}
                         </p>
@@ -69,7 +69,7 @@ export default async function DashboardPagesPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="View public page"
-                        className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:text-charcoal hover:bg-charcoal/5 transition-colors"
+                        className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal-faint hover:text-charcoal hover:bg-charcoal/5 transition-colors"
                       >
                         <ExternalLink className="size-4" aria-hidden="true" />
                       </Link>

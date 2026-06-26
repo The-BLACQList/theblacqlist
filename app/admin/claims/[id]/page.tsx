@@ -26,9 +26,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-4 py-2 border-b border-charcoal/8 last:border-0">
-      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal/60 pt-0.5">{label}</dt>
+      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal-soft pt-0.5">{label}</dt>
       <dd className="flex-1 font-body text-sm text-brand-black">
-        {value ?? <span className="text-charcoal/40">—</span>}
+        {value ?? <span className="text-charcoal-faint">—</span>}
       </dd>
     </div>
   )
@@ -92,7 +92,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
       {/* Back nav */}
       <Link
         href="/admin/claims"
-        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/60 hover:text-charcoal"
+        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
         ← Back to claims
       </Link>
@@ -106,7 +106,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
           <div className="flex items-center gap-2 mt-1">
             <AdminStatusBadge status={claim.status} />
             {claim.role_at_business && (
-              <span className="font-subhead text-xs text-charcoal/60 capitalize">
+              <span className="font-subhead text-xs text-charcoal-soft capitalize">
                 {ROLE_LABELS[claim.role_at_business] ?? claim.role_at_business}
               </span>
             )}
@@ -125,7 +125,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
               <Row
                 label="User ID"
                 value={
-                  <span className="font-mono text-xs text-charcoal/60 break-all">
+                  <span className="font-mono text-xs text-charcoal-soft break-all">
                     {claim.claimant_user_id ?? '—'}
                   </span>
                 }
@@ -176,7 +176,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
                   value={
                     <Link
                       href={`/admin/entities/${listing.id}`}
-                      className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                      className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                     >
                       Open entity page →
                     </Link>
@@ -184,7 +184,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
                 />
               </dl>
             ) : (
-              <p className="font-body text-sm text-charcoal/50">Associated listing not found.</p>
+              <p className="font-body text-sm text-charcoal-soft">Associated listing not found.</p>
             )}
           </div>
 
@@ -227,7 +227,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
               />
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
-                <p className="font-subhead text-sm text-charcoal/60">
+                <p className="font-subhead text-sm text-charcoal-soft">
                   This claim is <strong>{claim.status.replace(/_/g, ' ')}</strong>. No further
                   action needed.
                 </p>
@@ -237,7 +237,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Claim ID</h2>
-            <p className="font-mono text-xs text-charcoal/60 break-all">{claim.id}</p>
+            <p className="font-mono text-xs text-charcoal-soft break-all">{claim.id}</p>
           </div>
         </div>
       </div>

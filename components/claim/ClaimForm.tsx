@@ -1,8 +1,8 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, AlertCircle, Loader2, Upload, FileText } from 'lucide-react'
 import { createClaimAction } from '@/lib/actions/claims/createClaim'
 
 interface Props {
@@ -16,15 +16,67 @@ const ROLES = [
   { value: 'authorized_agent', label: 'Authorized agent' },
 ] as const
 
+type DocUploadStatus = 'idle' | 'uploading' | 'success' | 'error'
+
 export function ClaimForm({ listingId, listingName }: Props) {
   const [state, formAction, isPending] = useActionState(createClaimAction, null)
   const [notesLength, setNotesLength] = useState(0)
+  const [tempEntityId] = useState(() => crypto.randomUUID())
+  const [docPath, setDocPath] = useState<string | null>(null)
+  const [docName, setDocName] = useState<string | null>(null)
+  const [docSize, setDocSize] = useState<number | null>(null)
+  const [docStatus, setDocStatus] = useState<DocUploadStatus>('idle')
+  const [docError, setDocError] = useState<string | null>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleDocFile(file: File) {
+    setDocStatus('uploading')
+    setDocError(null)
+    setDocName(file.name)
+    setDocSize(file.size)
+
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('bucket', 'verification-docs')
+    fd.append('entity_id', tempEntityId)
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = (await res.json()) as { data?: { path: string }; error?: string }
+      if (!res.ok || !json.data?.path) {
+        setDocStatus('error')
+        setDocError(json.error ?? 'Upload failed. Please try again.')
+        setDocPath(null)
+      } else {
+        setDocStatus('success')
+        setDocPath(json.data.path)
+      }
+    } catch {
+      setDocStatus('error')
+      setDocError('Upload failed. Please check your connection and try again.')
+      setDocPath(null)
+    }
+  }
+
+  function removeDoc() {
+    setDocPath(null)
+    setDocName(null)
+    setDocSize(null)
+    setDocStatus('idle')
+    setDocError(null)
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   if (state && 'success' in state) {
     return (
       <div className="rounded-xl bg-white border border-charcoal/10 p-6 md:p-8">
         <div className="flex items-start gap-3 mb-4">
-          <CheckCircle className="size-6 text-amber-gold flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <CheckCircle className="size-6 text-amber flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <h2 className="font-headline text-xl text-brand-black mb-1">Claim submitted!</h2>
             <p className="font-body text-sm text-charcoal leading-relaxed">
@@ -35,7 +87,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         </div>
         <Link
           href="/account/claims"
-          className="inline-flex items-center font-subhead text-sm font-semibold text-amber-gold hover:text-light-gold underline underline-offset-2"
+          className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
         >
           View your claims in your account
         </Link>
@@ -49,6 +101,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
   return (
     <form action={formAction} className="space-y-6" noValidate>
       <input type="hidden" name="listing_id" value={listingId} />
+      <input type="hidden" name="verification_doc_path" value={docPath ?? ''} />
 
       {topError && !fieldErrors && (
         <div
@@ -78,7 +131,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         >
           Business email address <span aria-hidden="true">*</span>
         </label>
-        <p className="font-body text-xs text-charcoal/60">
+        <p className="font-body text-xs text-charcoal-soft">
           An email address associated with this business — used to verify your connection to it.
         </p>
         <input
@@ -88,7 +141,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           required
           autoComplete="email"
           inputMode="email"
-          className="w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 aria-[invalid=true]:border-red-400"
+          className="w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60 aria-[invalid=true]:border-red-400"
           aria-invalid={fieldErrors?.verification_email ? true : undefined}
           aria-describedby={
             fieldErrors?.verification_email ? 'verification_email-error' : undefined
@@ -107,7 +160,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           htmlFor="verification_phone"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Business phone number <span className="font-normal text-charcoal/60">(optional)</span>
+          Business phone number <span className="font-normal text-charcoal-soft">(optional)</span>
         </label>
         <input
           id="verification_phone"
@@ -115,7 +168,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           name="verification_phone"
           autoComplete="tel"
           inputMode="tel"
-          className="w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
+          className="w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60"
         />
       </div>
 
@@ -154,13 +207,13 @@ export function ClaimForm({ listingId, listingName }: Props) {
             htmlFor="notes"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            Additional notes <span className="font-normal text-charcoal/60">(optional)</span>
+            Additional notes <span className="font-normal text-charcoal-soft">(optional)</span>
           </label>
-          <span className="font-body text-xs text-charcoal/50" aria-live="polite">
+          <span className="font-body text-xs text-charcoal-soft" aria-live="polite">
             {notesLength}/500
           </span>
         </div>
-        <p className="font-body text-xs text-charcoal/60">
+        <p className="font-body text-xs text-charcoal-soft">
           Any additional context that may help us verify your claim.
         </p>
         <textarea
@@ -169,7 +222,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           rows={4}
           maxLength={500}
           onChange={(e) => setNotesLength(e.target.value.length)}
-          className="w-full px-3 py-2 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-none aria-[invalid=true]:border-red-400"
+          className="w-full px-3 py-2 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-none aria-[invalid=true]:border-red-400"
           aria-invalid={fieldErrors?.notes ? true : undefined}
           aria-describedby={fieldErrors?.notes ? 'notes-error' : undefined}
         />
@@ -178,6 +231,77 @@ export function ClaimForm({ listingId, listingName }: Props) {
             {fieldErrors.notes}
           </p>
         )}
+      </div>
+
+      {/* Verification document (optional) */}
+      <div className="space-y-1.5">
+        <p className="font-subhead text-sm font-semibold text-brand-black">
+          Verification document <span className="font-normal text-charcoal-soft">(optional)</span>
+        </p>
+        <p className="font-body text-xs text-charcoal-soft">
+          A business card, invoice, utility bill, or any document showing your connection to this
+          business. JPG, PNG, or PDF, up to 10 MB.
+        </p>
+
+        {docStatus === 'success' && docName ? (
+          <div className="flex items-center gap-3 rounded-lg border border-charcoal/20 bg-charcoal/3 px-3 py-2.5">
+            <FileText className="size-4 shrink-0 text-amber" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="font-subhead text-xs font-semibold text-brand-black truncate">
+                {docName}
+              </p>
+              {docSize !== null && (
+                <p className="font-body text-[10px] text-charcoal-soft">{formatBytes(docSize)}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={removeDoc}
+              aria-label="Remove document"
+              className="shrink-0 font-subhead text-xs text-charcoal-soft hover:text-red-600 underline"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => docInputRef.current?.click()}
+            disabled={docStatus === 'uploading'}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-charcoal/25 bg-white font-subhead text-xs text-charcoal-soft hover:border-amber-gold hover:bg-amber-gold/5 hover:text-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {docStatus === 'uploading' ? (
+              <>
+                <Loader2 className="size-4 animate-spin text-amber" aria-hidden="true" />
+                Uploading…
+              </>
+            ) : (
+              <>
+                <Upload className="size-4" aria-hidden="true" />
+                {docStatus === 'error' ? 'Tap to retry' : 'Upload a document'}
+              </>
+            )}
+          </button>
+        )}
+
+        {docError && (
+          <p role="alert" className="font-body text-xs text-red-600">
+            {docError}
+          </p>
+        )}
+
+        <input
+          ref={docInputRef}
+          type="file"
+          accept="image/jpeg,image/png,application/pdf"
+          className="sr-only"
+          aria-hidden="true"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleDocFile(file)
+            e.target.value = ''
+          }}
+        />
       </div>
 
       {/* Submit */}
@@ -190,7 +314,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         {isPending ? 'Submitting…' : 'Submit claim'}
       </button>
 
-      <p className="font-body text-xs text-charcoal/50 text-center">
+      <p className="font-body text-xs text-charcoal-soft text-center">
         By submitting, you confirm that you are authorized to claim this business.
       </p>
     </form>

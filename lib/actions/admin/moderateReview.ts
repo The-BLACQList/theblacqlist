@@ -54,6 +54,16 @@ export async function moderateReviewAction(
 
   if (updateError) return { error: 'Failed to update review. Please try again.' }
 
+  // Approve the review's photos when the review is published — they ride the same
+  // gate as the review body and stay hidden (is_approved=false) if it's rejected.
+  if (decision === 'published') {
+    await serviceClient
+      .from('media_attachments')
+      .update({ is_approved: true })
+      .eq('entity_type', 'review')
+      .eq('entity_id', reviewId)
+  }
+
   // Resolve moderation queue entry if present
   await serviceClient
     .from('moderation_queue')

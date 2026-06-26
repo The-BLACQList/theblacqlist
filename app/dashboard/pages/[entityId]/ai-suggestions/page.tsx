@@ -68,14 +68,14 @@ export default async function AiSuggestionsPage({ params }: Props) {
       <div className="max-w-2xl space-y-4">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">AI Suggestions</h1>
-          <p className="font-body text-sm text-charcoal/60 mt-0.5">{listing.name}</p>
+          <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
           <Lock className="size-10 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
           <h2 className="font-headline text-xl text-brand-black mb-2">
             AI Suggestions is a paid feature
           </h2>
-          <p className="font-body text-sm text-charcoal/60 max-w-sm mx-auto mb-6">
+          <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
             Upgrade to Standard or Premium to unlock your page optimization score, AI-generated copy
             suggestions, and SEO recommendations.
           </p>
@@ -160,13 +160,13 @@ export default async function AiSuggestionsPage({ params }: Props) {
       {/* Header */}
       <div>
         <h1 className="font-headline text-2xl text-brand-black">AI Suggestions</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">{listing.name}</p>
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
       </div>
 
       {/* Page Optimization Checklist */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+          <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
             Page optimization score
           </h2>
         </div>
@@ -179,7 +179,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
             return (
               <div key={cat} className={catIdx > 0 ? 'border-t border-charcoal/5' : undefined}>
                 <div className="px-5 py-2.5 bg-pale-lavender/30">
-                  <p className="font-subhead text-[11px] font-semibold text-charcoal/50 uppercase tracking-wide">
+                  <p className="font-subhead text-[11px] font-semibold text-charcoal-soft uppercase tracking-wide">
                     {CATEGORY_LABELS[cat]}
                   </p>
                 </div>
@@ -200,13 +200,13 @@ export default async function AiSuggestionsPage({ params }: Props) {
                       <div className="min-w-0">
                         <p
                           className={`font-body text-sm ${
-                            item.passed ? 'text-brand-black' : 'text-charcoal/60'
+                            item.passed ? 'text-brand-black' : 'text-charcoal-soft'
                           }`}
                         >
                           {item.label}
                         </p>
                         {!item.passed && (
-                          <p className="font-body text-xs text-charcoal/40 mt-0.5">{item.hint}</p>
+                          <p className="font-body text-xs text-charcoal-faint mt-0.5">{item.hint}</p>
                         )}
                       </div>
                     </li>
@@ -220,15 +220,15 @@ export default async function AiSuggestionsPage({ params }: Props) {
 
       {/* AI Suggestions section */}
       <div className="space-y-4">
-        <h2 className="font-subhead text-xs font-semibold text-charcoal/50 uppercase tracking-wide">
+        <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
           AI-generated suggestions
         </h2>
 
         {suggestions.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
             <Sparkles className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
-            <p className="font-body text-sm text-charcoal/60">AI copy suggestions coming in V2.</p>
-            <p className="font-body text-xs text-charcoal/40 mt-1">
+            <p className="font-body text-sm text-charcoal-soft">AI copy suggestions coming in V2.</p>
+            <p className="font-body text-xs text-charcoal-faint mt-1">
               Once available, AI-generated suggestions for your description, SEO copy, and social
               captions will appear here — ready for your review and approval before anything is
               published.
@@ -239,7 +239,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
             {suggestions.map((s) => (
               <div key={s.id} className="px-5 py-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="font-mono text-xs text-charcoal/50">{s.suggestion_type}</span>
+                  <span className="font-mono text-xs text-charcoal-soft">{s.suggestion_type}</span>
                   <span
                     className={`px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${
                       s.status === 'applied'
@@ -261,10 +261,10 @@ export default async function AiSuggestionsPage({ params }: Props) {
 
       {/* Approval note */}
       <div className="rounded-xl border border-charcoal/10 bg-pale-lavender/20 px-5 py-4">
-        <p className="font-subhead text-xs font-semibold text-charcoal/60 mb-1">
+        <p className="font-subhead text-xs font-semibold text-charcoal-soft mb-1">
           How AI suggestions work
         </p>
-        <p className="font-body text-xs text-charcoal/50 leading-relaxed">
+        <p className="font-body text-xs text-charcoal-soft leading-relaxed">
           All AI-generated suggestions require your review and approval before anything is published
           to your page. You stay in control — nothing changes without you explicitly applying it.
         </p>

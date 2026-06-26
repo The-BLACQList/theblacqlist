@@ -2,6 +2,8 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
+import { sendEmail } from '@/lib/email/resend'
+import { EntityRejectedEmail } from '@/lib/email/templates/entity-rejected'
 
 export type RejectEntityState = { success: true; listingId: string } | { error: string } | null
 
@@ -28,7 +30,7 @@ export async function rejectEntityAction(
 
   const { data: listing } = await serviceClient
     .from('listings')
-    .select('id, name, status')
+    .select('id, name, status, submitted_by')
     .eq('id', listingId)
     .maybeSingle()
 
@@ -62,6 +64,21 @@ export async function rejectEntityAction(
     beforeState: { status: listing.status },
     afterState: { status: 'rejected', rejection_reason: reason },
   })
+
+  // ── Rejection email (fire-and-forget) ────────────────────────────────────────
+  if (listing.submitted_by) {
+    void (async () => {
+      const { data: userData } = await serviceClient.auth.admin.getUserById(listing.submitted_by!)
+      const submitterEmail = userData?.user?.email
+      if (submitterEmail) {
+        await sendEmail({
+          to: submitterEmail,
+          subject: `An update on your submission for ${listing.name}`,
+          react: EntityRejectedEmail({ listingName: listing.name, reason }),
+        })
+      }
+    })()
+  }
 
   return { success: true, listingId }
 }

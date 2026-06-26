@@ -1,0 +1,9 @@
+# Modern-browser target — drops legacy JS polyfills (Array.prototype.at/flat/flatMap,
+# Object.fromEntries/hasOwn, String.prototype.trim*) that Next ships for old browsers.
+# Thresholds chosen so all those polyfills drop while supporting browsers back to ~2021–22.
+chrome >= 93
+edge >= 93
+firefox >= 92
+safari >= 15.4
+ios_saf >= 15.4
+not dead

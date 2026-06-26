@@ -51,7 +51,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
     <div className="rounded-xl bg-white border border-charcoal/10 overflow-hidden">
       <div className="px-5 py-4 border-b border-charcoal/5 flex items-center justify-between">
         <h2 className="font-headline text-base text-brand-black">Network view</h2>
-        <span className="font-subhead text-xs text-charcoal/40 border border-charcoal/10 rounded-full px-2 py-0.5">
+        <span className="font-subhead text-xs text-charcoal-faint border border-charcoal/10 rounded-full px-2 py-0.5">
           Beta — full graph coming
         </span>
       </div>
@@ -59,7 +59,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
       {!hasNodes ? (
         <div className="px-5 py-16 text-center">
           <p className="font-subhead text-sm font-semibold text-brand-black">No flow data yet</p>
-          <p className="font-body text-xs text-charcoal/50 mt-1">
+          <p className="font-body text-xs text-charcoal-soft mt-1">
             As community members submit receipts, businesses will appear here as nodes.
           </p>
         </div>
@@ -78,7 +78,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
               y1={CENTER_Y}
               x2={node.x}
               y2={node.y}
-              stroke="#D4A017"
+              stroke="#C4A065"
               strokeOpacity={0.2}
               strokeWidth={1.5}
               strokeDasharray="4 4"
@@ -104,7 +104,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
           ))}
 
           {/* Center "Community" node */}
-          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#D4A017" />
+          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#C4A065" />
           <text
             x={CENTER_X}
             y={CENTER_Y + 4}

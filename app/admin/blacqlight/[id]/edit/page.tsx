@@ -38,13 +38,13 @@ export default async function EditArticlePage({ params }: Props) {
       <div>
         <Link
           href="/admin/blacqlight"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           BLACQLight
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Edit article</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">{article.title}</p>
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{article.title}</p>
       </div>
 
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">
@@ -62,7 +62,7 @@ export default async function EditArticlePage({ params }: Props) {
             <Link
               href={`/blacqlight/${article.slug}`}
               target="_blank"
-              className="underline underline-offset-2 hover:text-amber-gold"
+              className="underline underline-offset-2 hover:text-amber"
             >
               /blacqlight/{article.slug}
             </Link>

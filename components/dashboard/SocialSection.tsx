@@ -77,7 +77,7 @@ export function SocialSection({
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Social links</h2>
-        <p className="font-body text-xs text-charcoal/50 mt-0.5">
+        <p className="font-body text-xs text-charcoal-soft mt-0.5">
           All URLs must start with https://
         </p>
       </div>
@@ -88,7 +88,7 @@ export function SocialSection({
           <div key={name}>
             <label
               htmlFor={id}
-              className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+              className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
             >
               {label}
             </label>
@@ -98,7 +98,7 @@ export function SocialSection({
               type="url"
               defaultValue={values[name] ?? ''}
               placeholder={placeholder}
-              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
             />
           </div>
         ))}

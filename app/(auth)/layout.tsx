@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { BrandMark } from '@/components/ui/brand-mark'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -9,13 +10,17 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-deep-bg flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Wordmark */}
-        <div className="text-center mb-8">
+        {/* Logo: node-Q mark + Jost wordmark */}
+        <div className="mb-8 flex justify-center">
           <Link
             href="/"
-            className="font-headline text-2xl text-amber-gold hover:text-light-gold transition-colors"
+            aria-label="The BLACQList — home"
+            className="group flex flex-col items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
-            The BLACQList
+            <BrandMark className="h-12 w-12 text-gold transition-colors group-hover:text-light-gold" />
+            <span className="font-headline text-xl font-medium tracking-[0.14em] text-white">
+              THE BLACQLIST
+            </span>
           </Link>
         </div>
 

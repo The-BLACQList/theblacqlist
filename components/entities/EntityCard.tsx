@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Route } from 'next'
-import { BookmarkPlus } from 'lucide-react'
+import { BookmarkPlus, Calendar } from 'lucide-react'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 interface EntityCardProps {
   entity: DiscoveryEntity
   className?: string
+  isPriority?: boolean
 }
 
 const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
@@ -40,6 +41,12 @@ function getEntityHref(entity: DiscoveryEntity): string {
   return buildEntityUrl(entity.entity_type, entity.city?.slug, entity.slug)
 }
 
+function formatEventDate(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
 function CoverPlaceholder({ name }: { name: string }) {
   const initials = name
     .split(' ')
@@ -50,12 +57,12 @@ function CoverPlaceholder({ name }: { name: string }) {
     .toUpperCase()
   return (
     <div className="w-full h-full bg-deep-bg flex items-center justify-center" aria-hidden="true">
-      <span className="font-headline text-4xl text-amber-gold select-none">{initials}</span>
+      <span className="font-headline text-4xl text-gold select-none">{initials}</span>
     </div>
   )
 }
 
-export function EntityCard({ entity, className }: EntityCardProps) {
+export function EntityCard({ entity, className, isPriority = false }: EntityCardProps) {
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
 
@@ -73,6 +80,7 @@ export function EntityCard({ entity, className }: EntityCardProps) {
             src={entity.cover_image_path}
             alt=""
             fill
+            priority={isPriority}
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
@@ -132,9 +140,31 @@ export function EntityCard({ entity, className }: EntityCardProps) {
         {/* Category + location */}
         <p className="text-xs font-subhead text-charcoal">
           {entity.category.name}
-          <span className="mx-1 text-charcoal/40">·</span>
+          <span className="mx-1 text-charcoal-faint">·</span>
           {locationStr}
         </p>
+
+        {/* Event date (event cards only) */}
+        {entity.entity_type === 'event' && entity.event_starts_at && (
+          <p className="text-xs font-subhead font-semibold text-amber flex items-center gap-1">
+            <Calendar className="size-3.5 shrink-0" aria-hidden="true" />
+            {formatEventDate(entity.event_starts_at)}
+          </p>
+        )}
+
+        {/* Identity & Ownership chips (e.g. Black-Woman-Owned) */}
+        {entity.identity_chips && entity.identity_chips.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {entity.identity_chips.map((chip) => (
+              <span
+                key={chip}
+                className="inline-block rounded-full bg-pale-lavender text-brand-black text-[10px] font-subhead font-semibold px-2 py-0.5"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Description */}
         <p className="text-sm font-subhead text-charcoal leading-relaxed line-clamp-2 flex-1">

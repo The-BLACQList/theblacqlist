@@ -12,10 +12,10 @@ import type { GuideActionState } from '@/lib/actions/editorial/guides'
 // ─── Shared field styles ──────────────────────────────────────────────────────
 
 const inputCls =
-  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
+  'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
 
 const textareaCls =
-  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
+  'w-full px-3 py-2.5 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60 resize-y'
 
 function Label({
   htmlFor,
@@ -34,7 +34,7 @@ function Label({
       >
         {children}
       </label>
-      {hint && <p className="font-body text-xs text-charcoal/50 mb-1.5">{hint}</p>}
+      {hint && <p className="font-body text-xs text-charcoal-soft mb-1.5">{hint}</p>}
     </div>
   )
 }
@@ -73,7 +73,10 @@ interface CollectionFormProps {
     id?: string
     title?: string
     slug?: string
+    subtitle?: string | null
     description?: string | null
+    body?: string | null
+    cover_image_path?: string | null
     is_active?: boolean
   }
   redirectOnSuccess?: string
@@ -136,14 +139,60 @@ export function CollectionAdminForm({
         />
       </Field>
 
-      <Field id="description" label="Description">
+      <Field id="subtitle" label="Subtitle" hint="A short deck shown under the title in the hero.">
+        <input
+          id="subtitle"
+          name="subtitle"
+          type="text"
+          maxLength={300}
+          defaultValue={defaultValues?.subtitle ?? ''}
+          placeholder="Ten spots that define how Atlanta eats"
+          className={inputCls}
+        />
+      </Field>
+
+      <Field
+        id="description"
+        label="Description"
+        hint="Used for SEO and link previews. Keep it short."
+      >
         <textarea
           id="description"
           name="description"
-          rows={3}
+          rows={2}
           defaultValue={defaultValues?.description ?? ''}
           placeholder="A short description of this collection…"
           className={textareaCls}
+        />
+      </Field>
+
+      <Field
+        id="body"
+        label="Intro narrative"
+        hint="The story that opens the collection. Use ## for headings, ### for sub-headings, > for block quotes. Double line breaks create new paragraphs."
+      >
+        <textarea
+          id="body"
+          name="body"
+          rows={10}
+          defaultValue={defaultValues?.body ?? ''}
+          placeholder="Set the scene for this collection…"
+          className={textareaCls}
+        />
+      </Field>
+
+      <Field
+        id="cover_image_path"
+        label="Cover image"
+        hint="Optional. A full image URL or Supabase Storage path for the hero banner."
+      >
+        <input
+          id="cover_image_path"
+          name="cover_image_path"
+          type="text"
+          defaultValue={defaultValues?.cover_image_path ?? ''}
+          placeholder="https://… or storage/path.jpg"
+          className={inputCls}
         />
       </Field>
 

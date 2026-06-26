@@ -12,7 +12,7 @@ export function ClaimWithdrawButton({ claimId }: Props) {
   const [state, formAction, isPending] = useActionState(withdrawClaimAction, null)
 
   if (state && 'success' in state) {
-    return <span className="font-subhead text-xs text-charcoal/60">Withdrawn</span>
+    return <span className="font-subhead text-xs text-charcoal-soft">Withdrawn</span>
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -28,7 +28,7 @@ export function ClaimWithdrawButton({ claimId }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/60 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isPending && <Loader2 className="size-3 animate-spin" aria-hidden="true" />}
           {isPending ? 'Withdrawing…' : 'Withdraw claim'}

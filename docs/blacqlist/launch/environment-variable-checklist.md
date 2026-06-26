@@ -52,7 +52,11 @@ For each variable:
 | ---------------------- | -------------------- | ----------- | ---------------------------------------------------------- |
 | `NEXT_PUBLIC_SITE_URL` | Production           | No          | `https://theblacqlist.com`                                 |
 | `NEXT_PUBLIC_SITE_URL` | Preview              | No          | `https://theblacqlist.vercel.app` (or primary staging URL) |
+| `NEXT_PUBLIC_APP_URL`  | Production           | No          | `https://theblacqlist.com` — **drives auth-redirect + claim-email links** (used 5× in code) |
+| `NEXT_PUBLIC_APP_URL`  | Preview              | No          | `https://theblacqlist.vercel.app` (or staging URL)         |
 | `AUTH_SECRET`          | Production + Preview | **Yes**     | 32-byte random secret                                      |
+
+> **`NEXT_PUBLIC_APP_URL` vs `NEXT_PUBLIC_SITE_URL`:** the code uses both. `APP_URL` builds auth/claim **email links** (must be the real domain in Production or reset links break); `SITE_URL` drives SEO/canonical/OG/`.ics`. Keep them identical in Production (`https://theblacqlist.com`).
 
 **How to generate `AUTH_SECRET`:**
 
@@ -75,9 +79,11 @@ Use a different value for production vs staging. Store both in your team's secre
 
 | Variable            | Scope                | Server only | Value notes                     |
 | ------------------- | -------------------- | ----------- | ------------------------------- |
-| `RESEND_API_KEY`    | Production           | **Yes**     | Resend live key — `re_live_...` |
-| `RESEND_API_KEY`    | Preview              | **Yes**     | Resend test key — `re_test_...` |
-| `RESEND_FROM_EMAIL` | Production + Preview | **Yes**     | `noreply@theblacqlist.com`      |
+| `RESEND_API_KEY`    | Production           | **Yes**     | Resend **production** key (`re_…`) |
+| `RESEND_API_KEY`    | Preview              | **Yes**     | Resend **preview** key (`re_…`)    |
+| `RESEND_FROM_EMAIL` | Production + Preview | No          | `The BLACQList <noreply@send.theblacqlist.com>` |
+
+> **Note (2026-06-24):** Resend API keys are **all** `re_…` — there is **no** `re_live_`/`re_test_` prefix (that's Stripe). Create two keys and name them (production / preview). The verified sender is the **subdomain** `noreply@send.theblacqlist.com`, not the bare root.
 
 **How to get the Resend API key:**
 
@@ -85,16 +91,15 @@ Use a different value for production vs staging. Store both in your team's secre
 - Create separate keys for production and staging
 - Production key should have "Full access" or "Sending access"
 
-**Domain verification (required before production email works):**
+**Domain verification (DONE 2026-06-24):**
 
-- Resend Dashboard → Domains → Add Domain → `theblacqlist.com`
-- Add the SPF, DKIM, and DMARC DNS records shown by Resend at your domain registrar
-- Confirm all three records show green/verified status in Resend before testing email
+- Verified the **sending subdomain** `send.theblacqlist.com` in Resend (DKIM + SPF + MX green; DMARC `v=DMARC1; p=none;` added). The subdomain keeps Resend's SPF/DKIM off the Google-Workspace root SPF.
+- Custom SMTP also wired into **both** Supabase projects so Auth (password-reset) mail sends from the domain too.
 
 **Checklist:**
 
-- [ ] Production `RESEND_API_KEY` is a live key (not a test key)
-- [ ] `theblacqlist.com` sending domain is verified in Resend (SPF + DKIM + DMARC green)
+- [x] Production `RESEND_API_KEY` is the production key (Resend keys are all `re_…` — name them, no live/test prefix)
+- [x] `send.theblacqlist.com` sending subdomain is verified in Resend (DKIM + SPF + MX green)
 - [ ] Test email delivery end-to-end after deployment (sign up with a test account, confirm email arrives)
 - [ ] Email arrives in inbox, not spam
 
@@ -106,6 +111,9 @@ Use a different value for production vs staging. Store both in your team's secre
 | ------------------------ | ---------- | ----------- | ---------------------------------------------------------- |
 | `NEXT_PUBLIC_SENTRY_DSN` | Production | No          | Production Sentry DSN                                      |
 | `NEXT_PUBLIC_SENTRY_DSN` | Preview    | No          | Staging Sentry DSN (separate project or same with env tag) |
+| `SENTRY_DSN` _(optional)_ | Prod + Preview | Yes  | Same DSN, server-only. The server/edge configs **prefer** `SENTRY_DSN` and fall back to `NEXT_PUBLIC_SENTRY_DSN`, so this is optional — set it only if you want the server DSN kept out of the client bundle. |
+
+> **Note:** Sentry runs only when `NODE_ENV=production`, which Vercel sets for **all** deployed builds including **Preview** — so the Preview scope must use the **staging** DSN, and local dev (`NODE_ENV=development`) reports nothing. A missing DSN is fail-soft (events dropped, app unaffected). PII scrubbing is enforced in code (`lib/observability/sentry-scrub.ts`), not in the dashboard.
 
 **How to get the Sentry DSN:**
 
@@ -123,9 +131,17 @@ These are used during `pnpm build` for source map upload — they are build-time
 
 | Variable            | Value                                                   |
 | ------------------- | ------------------------------------------------------- |
-| `SENTRY_AUTH_TOKEN` | Sentry API token — set in Vercel as a CI build variable |
-| `SENTRY_ORG`        | Sentry organization slug                                |
-| `SENTRY_PROJECT`    | Sentry project slug                                     |
+| `SENTRY_AUTH_TOKEN` | Sentry **org** auth token — set in Vercel (Build). Org-scoped so it covers both projects. |
+| `SENTRY_ORG`        | `the-blacqlist`                                         |
+| `SENTRY_PROJECT`    | `theblacqlist-production` (Production) · `theblacqlist-staging` (Preview) |
+
+**Runtime test guard (optional but recommended):**
+
+| Variable           | Scope      | Server only | Value notes |
+| ------------------ | ---------- | ----------- | ----------- |
+| `SENTRY_TEST_TOKEN` | Production | **Yes**     | Any random string you choose. Guards `GET /api/_debug/sentry?token=…` (404 without it) so you can run the **K5** post-deploy check — fire the route, confirm a `production`-tagged, source-mapped, PII-free event lands. |
+
+> **Sentry setup (F6) is DONE 2026-06-24:** org `the-blacqlist`, projects `theblacqlist-production` + `theblacqlist-staging`, source-map upload verified in the prod build, DSN set both scopes. Remaining = K5 + alert rule + uptime monitors, all post-deploy. See the F6 card.
 
 ---
 
@@ -203,8 +219,9 @@ Quick reference for which variables are required in each environment at MVP laun
 | `SUPABASE_SERVICE_ROLE_KEY`     | Local service role         | Staging service role              | Production service role    |
 | `NEXT_PUBLIC_SITE_URL`          | `http://localhost:3000`    | `https://theblacqlist.vercel.app` | `https://theblacqlist.com` |
 | `AUTH_SECRET`                   | Any random value           | Staging-specific value            | Production-specific value  |
-| `RESEND_API_KEY`                | Optional (logs to console) | `re_test_...`                     | `re_live_...`              |
-| `RESEND_FROM_EMAIL`             | Optional                   | `noreply@theblacqlist.com`        | `noreply@theblacqlist.com` |
+| `NEXT_PUBLIC_APP_URL`           | `http://localhost:3000`    | `https://theblacqlist.vercel.app` | `https://theblacqlist.com` |
+| `RESEND_API_KEY`                | Optional (logs to console) | preview key (`re_…`)              | production key (`re_…`)    |
+| `RESEND_FROM_EMAIL`             | Optional                   | `noreply@send.theblacqlist.com`   | `noreply@send.theblacqlist.com` |
 | `NEXT_PUBLIC_SENTRY_DSN`        | Not set                    | Staging DSN                       | Production DSN             |
 | Stripe variables                | Optional                   | Test mode keys                    | Live mode keys (V1)        |
 | Anthropic/Algolia               | Not set                    | Not set                           | Not set until V2           |

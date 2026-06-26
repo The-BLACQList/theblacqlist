@@ -33,7 +33,7 @@ export default async function AddBusinessPage() {
     <main className="min-h-screen bg-pale-lavender pt-16 pb-16 px-4">
       <div className="max-w-[680px] mx-auto py-10">
         <div className="mb-8">
-          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber-gold mb-2">
+          <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-2">
             Get Listed
           </p>
           <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-3">

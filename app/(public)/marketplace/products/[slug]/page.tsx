@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Package, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { CTAButton } from '@/components/marketplace/CTAButton'
@@ -75,7 +76,7 @@ export default async function ProductDetailPage({ params }: Props) {
       <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6">
-          <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
+          <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal-faint">
             <li>
               <Link href="/marketplace" className="hover:text-charcoal">
                 Marketplace
@@ -96,13 +97,15 @@ export default async function ProductDetailPage({ params }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
-          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden">
+          <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden relative">
             {product.cover_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={product.cover_image_url}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+                priority
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -115,11 +118,11 @@ export default async function ProductDetailPage({ params }: Props) {
           <div className="space-y-5">
             {/* Vendor */}
             {listing && (
-              <p className="font-subhead text-sm text-charcoal/50">
+              <p className="font-subhead text-sm text-charcoal-soft">
                 Sold by{' '}
                 <Link
                   href={`/vendors/${listing.slug}`}
-                  className="font-semibold text-brand-black hover:text-amber-gold"
+                  className="font-semibold text-brand-black hover:text-amber"
                 >
                   {listing.name}
                 </Link>
@@ -132,7 +135,7 @@ export default async function ProductDetailPage({ params }: Props) {
             <div className="flex items-baseline gap-3">
               <span className="font-subhead text-2xl font-bold text-brand-black">{priceLabel}</span>
               {compareLabel && (
-                <span className="font-body text-base text-charcoal/40 line-through">
+                <span className="font-body text-base text-charcoal-faint line-through">
                   {compareLabel}
                 </span>
               )}
@@ -154,7 +157,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Description */}
             {product.description && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-                <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal/50 mb-2">
+                <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal-soft mb-2">
                   About this product
                 </h2>
                 <p className="font-body text-sm text-charcoal leading-relaxed whitespace-pre-line">
@@ -169,7 +172,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2 py-0.5 rounded-full bg-pale-lavender font-subhead text-xs text-charcoal/60"
+                    className="px-2 py-0.5 rounded-full bg-pale-lavender font-subhead text-xs text-charcoal-soft"
                   >
                     {tag}
                   </span>
@@ -179,12 +182,12 @@ export default async function ProductDetailPage({ params }: Props) {
 
             {/* Shipping + return policy */}
             <div className="space-y-2 pt-2 border-t border-charcoal/10">
-              <p className="font-body text-xs text-charcoal/50">
+              <p className="font-body text-xs text-charcoal-soft">
                 <span className="font-semibold text-charcoal">Fulfillment:</span>{' '}
                 {shippingLabel[product.shipping_options] ?? product.shipping_options}
               </p>
               {product.return_policy_note && (
-                <p className="font-body text-xs text-charcoal/50">
+                <p className="font-body text-xs text-charcoal-soft">
                   <span className="font-semibold text-charcoal">Returns:</span>{' '}
                   {product.return_policy_note}
                 </p>
@@ -194,7 +197,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {/* Back link */}
             <Link
               href="/marketplace/products"
-              className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/40 hover:text-charcoal mt-2"
+              className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mt-2"
             >
               <ArrowLeft className="size-3" aria-hidden="true" />
               Back to products

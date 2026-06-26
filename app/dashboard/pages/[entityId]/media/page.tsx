@@ -35,7 +35,7 @@ export default async function MediaPage({ params }: Props) {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Media</h1>
-        <p className="font-body text-sm text-charcoal/60 mt-0.5">{listing.name}</p>
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
       </div>
 
       <MediaGrid

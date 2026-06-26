@@ -31,7 +31,7 @@ export default async function AdminBlacqlightPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">BLACQLight</h1>
-          <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             Manage editorial articles and spotlight stories.
           </p>
         </div>
@@ -49,7 +49,7 @@ export default async function AdminBlacqlightPage() {
           <p className="font-subhead text-sm font-semibold text-brand-black mb-1">
             No articles yet
           </p>
-          <p className="font-body text-sm text-charcoal/60 mb-4">
+          <p className="font-body text-sm text-charcoal-soft mb-4">
             Write your first BLACQLight story.
           </p>
           <Link
@@ -65,16 +65,16 @@ export default async function AdminBlacqlightPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Title
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden lg:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Author
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide hidden md:table-cell">
+                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Published
                 </th>
                 <th className="px-4 py-3" />
@@ -85,10 +85,10 @@ export default async function AdminBlacqlightPage() {
                 <tr key={a.id} className="hover:bg-[#f9f9fb] transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-subhead text-sm font-semibold text-brand-black">{a.title}</p>
-                    <p className="font-body text-xs text-charcoal/40 mt-0.5">{a.slug}</p>
+                    <p className="font-body text-xs text-charcoal-faint mt-0.5">{a.slug}</p>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
-                    <span className="font-body text-xs text-charcoal/60">
+                    <span className="font-body text-xs text-charcoal-soft">
                       {a.author_name ?? '—'}
                     </span>
                   </td>
@@ -97,21 +97,21 @@ export default async function AdminBlacqlightPage() {
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-subhead font-semibold ${
                         a.status === 'published'
                           ? 'bg-green-50 text-green-700'
-                          : 'bg-charcoal/5 text-charcoal/60'
+                          : 'bg-charcoal/5 text-charcoal-soft'
                       }`}
                     >
                       {a.status === 'published' ? 'Published' : 'Draft'}
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="font-body text-xs text-charcoal/60">
+                    <span className="font-body text-xs text-charcoal-soft">
                       {a.published_at ? formatDate(a.published_at) : '—'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/blacqlight/${a.id}/edit`}
-                      className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                      className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                     >
                       Edit →
                     </Link>

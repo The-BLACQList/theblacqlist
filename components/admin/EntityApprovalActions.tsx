@@ -5,6 +5,15 @@ import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { approveEntityAction } from '@/lib/actions/admin/approveEntity'
 import { rejectEntityAction } from '@/lib/actions/admin/rejectEntity'
 
+const REJECTION_PRESETS = [
+  { label: 'Select a preset reason…', value: '' },
+  { label: 'Does not meet editorial focus', value: 'This submission does not meet our current editorial guidelines.' },
+  { label: 'Incomplete information', value: 'We need more information to review this listing. Please resubmit with complete details.' },
+  { label: 'Duplicate listing', value: 'A listing for this business already exists in our directory.' },
+  { label: 'Appears inactive', value: 'We were unable to verify that this business is currently active.' },
+  { label: 'Unverifiable information', value: 'The information provided could not be verified. Please ensure all details are accurate and resubmit.' },
+]
+
 interface Props {
   listingId: string
   listingName: string
@@ -96,6 +105,16 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
             >
               Rejection reason <span aria-hidden="true">*</span>
             </label>
+            <select
+              aria-label="Preset rejection reason"
+              className="w-full mb-2 px-3 py-2 rounded-lg border border-red-300 bg-white font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-red-400/40"
+              onChange={(e) => { if (e.target.value) setRejectReason(e.target.value) }}
+              defaultValue=""
+            >
+              {REJECTION_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
             <textarea
               id="reject-reason"
               name="reason"
@@ -105,9 +124,9 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Explain why this listing is being rejected…"
-              className="w-full px-3 py-2 rounded-lg border border-red-300 bg-white font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-red-400/40 resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-red-300 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-red-400/40 resize-none"
             />
-            <p className="font-body text-xs text-charcoal/50 mt-0.5 text-right">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5 text-right">
               {rejectReason.length}/500
             </p>
           </div>
@@ -123,7 +142,7 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
             <button
               type="button"
               onClick={() => setShowRejectForm(false)}
-              className="px-4 h-10 rounded-lg border border-charcoal/20 text-charcoal/60 hover:text-brand-black font-subhead text-sm transition-colors"
+              className="px-4 h-10 rounded-lg border border-charcoal/20 text-charcoal-soft hover:text-brand-black font-subhead text-sm transition-colors"
             >
               Cancel
             </button>

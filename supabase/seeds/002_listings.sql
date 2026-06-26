@@ -802,7 +802,7 @@ INSERT INTO listings (
    'physical','published','free','unclaimed',false,27,10,'admin',now()),
 
   ('00c00003-0000-0000-0000-000000000025','Gorée Cuisine Chicago','goree-cuisine-chicago',
-   'West African and Afro-Caribbean flavors in a warm, welcoming Andersonville setting.',
+   'West African and Afro-Caribbean flavors in a warm, welcoming Bronzeville setting.',
    'business',(SELECT id FROM categories WHERE slug='food-dining'),(SELECT id FROM cities WHERE slug='chicago-il'),
    'physical','published','free','unclaimed',true,33,13,'admin',now()),
 
@@ -1852,8 +1852,8 @@ INSERT INTO listing_details_business (
    'visit',NULL,'$',NULL),
 
   ('00c00003-0000-0000-0000-000000000025',
-   'West African and Afro-Caribbean restaurant in Andersonville serving vibrant Senegalese and Caribbean dishes including thiéboudienne, griot, and mafé in a beautifully warm and welcoming dining room.',
-   '4437 N Broadway','Chicago','IL','60640',
+   'West African and Afro-Caribbean restaurant in Bronzeville serving vibrant Senegalese and Caribbean dishes including thiéboudienne, griot, and mafé in a beautifully warm and welcoming dining room.',
+   '1126 E 47th St','Chicago','IL','60653',
    NULL,NULL,NULL,
    'visit',NULL,'$$',NULL),
 

@@ -129,7 +129,7 @@ export function ServiceForm({
           maxLength={200}
           defaultValue={defaultValues?.name ?? ''}
           placeholder="e.g. Brand Identity Package"
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.name ? 'name-error' : undefined}
         />
         {fieldErrors.name && (
@@ -154,7 +154,7 @@ export function ServiceForm({
           maxLength={2000}
           defaultValue={defaultValues?.description ?? ''}
           placeholder="What does this service include? Who is it for?"
-          className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold resize-none"
+          className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold resize-none"
         />
       </div>
 
@@ -175,7 +175,7 @@ export function ServiceForm({
             step="0.01"
             defaultValue={defaultValues?.starting_price_dollars ?? ''}
             placeholder="0.00"
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
             aria-describedby={fieldErrors.starting_price_cents ? 'price-error' : undefined}
           />
           {fieldErrors.starting_price_cents && (
@@ -198,7 +198,7 @@ export function ServiceForm({
             maxLength={80}
             defaultValue={defaultValues?.duration_text ?? ''}
             placeholder='e.g. "1 hour" or "varies"'
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           />
         </div>
       </div>
@@ -210,7 +210,7 @@ export function ServiceForm({
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
           Price display text{' '}
-          <span className="font-normal text-charcoal/40">(optional override)</span>
+          <span className="font-normal text-charcoal-faint">(optional override)</span>
         </label>
         <input
           id="price_display_text"
@@ -219,7 +219,7 @@ export function ServiceForm({
           maxLength={80}
           defaultValue={defaultValues?.price_display_text ?? ''}
           placeholder='e.g. "Starting at $500" or "Packages from $200"'
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
         />
       </div>
 
@@ -261,7 +261,7 @@ export function ServiceForm({
           type="url"
           defaultValue={defaultValues?.cover_image_url ?? ''}
           placeholder="https://..."
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.cover_image_url ? 'image-error' : undefined}
         />
         {fieldErrors.cover_image_url && (
@@ -285,7 +285,7 @@ export function ServiceForm({
           type="url"
           defaultValue={defaultValues?.booking_url ?? ''}
           placeholder="https://calendly.com/yourname or https://yoursite.com/contact"
-          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold"
           aria-describedby={fieldErrors.booking_url ? 'booking-error' : undefined}
         />
         {fieldErrors.booking_url && (
@@ -293,7 +293,7 @@ export function ServiceForm({
             {fieldErrors.booking_url}
           </p>
         )}
-        <p className="font-body text-xs text-charcoal/40">
+        <p className="font-body text-xs text-charcoal-faint">
           Customers will be sent here when they click &quot;Book Now&quot; or &quot;Request
           Quote&quot;.
         </p>

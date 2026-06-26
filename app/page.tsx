@@ -7,7 +7,7 @@ import { Section } from '@/components/layout/section'
 import { SectionHeading } from '@/components/ui/section-heading'
 import { Button } from '@/components/ui/button'
 
-export const revalidate = 3600
+export const revalidate = 1800
 
 export const metadata: Metadata = {
   title: 'Find & Be Found. | The BLACQList',
@@ -91,7 +91,7 @@ export default function HomePage() {
         </div>
 
         <Container className="relative z-10 py-28 md:py-40">
-          <p className="font-subhead text-amber-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
             Atlanta-born. National from day one.
           </p>
           <h1
@@ -104,7 +104,7 @@ export default function HomePage() {
             The national directory for Black-owned businesses — built by community, powered by
             culture.
           </p>
-          <p className="font-body text-amber-gold text-base font-bold mb-10">
+          <p className="font-body text-gold text-base font-bold mb-10">
             Keep the dollar moving.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -205,7 +205,7 @@ export default function HomePage() {
           More cities launching soon.{' '}
           <Link
             href="/sign-up"
-            className="text-amber-gold underline underline-offset-2 hover:text-light-gold transition-colors"
+            className="text-amber underline underline-offset-2 hover:text-light-gold transition-colors"
           >
             Get notified when we reach your city.
           </Link>
@@ -276,7 +276,7 @@ export default function HomePage() {
       {/* ─── Community spend / flow map teaser ────────────────────────────── */}
       <Section variant="brand-black" id="flow-map">
         <div className="max-w-2xl">
-          <span className="inline-block rounded-full border border-amber-gold text-amber-gold text-xs font-subhead font-semibold px-3 py-1 mb-4">
+          <span className="inline-block rounded-full border border-amber-gold text-gold text-xs font-subhead font-semibold px-3 py-1 mb-4">
             Coming Soon
           </span>
           <SectionHeading

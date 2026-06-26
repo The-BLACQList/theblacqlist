@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { Star } from 'lucide-react'
 
@@ -28,9 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-4 py-2 border-b border-charcoal/8 last:border-0">
-      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal/60 pt-0.5">{label}</dt>
+      <dt className="w-36 shrink-0 font-subhead text-xs text-charcoal-soft pt-0.5">{label}</dt>
       <dd className="flex-1 font-body text-sm text-brand-black">
-        {value ?? <span className="text-charcoal/40">—</span>}
+        {value ?? <span className="text-charcoal-faint">—</span>}
       </dd>
     </div>
   )
@@ -67,6 +68,20 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
     .maybeSingle()
 
   if (!review) notFound()
+
+  // Review photos (any approval state — the admin should see pending ones before deciding).
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const { data: photoRows } = await serviceClient
+    .from('media_attachments')
+    .select('id, file_path, is_approved')
+    .eq('entity_type', 'review')
+    .eq('entity_id', id)
+    .order('created_at', { ascending: true })
+  const photos = (photoRows ?? []).map((p) => ({
+    id: p.id,
+    src: `${supabaseUrl}/storage/v1/object/public/listing-media/${p.file_path}`,
+    isApproved: p.is_approved,
+  }))
 
   const listing = review.listings as {
     id: string
@@ -112,7 +127,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
       {/* Back nav */}
       <Link
         href="/admin/reviews"
-        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal/60 hover:text-charcoal"
+        className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
         ← Back to reviews
       </Link>
@@ -146,7 +161,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 {review.body}
               </p>
             ) : (
-              <p className="font-body text-sm text-charcoal/40 italic">No written review body.</p>
+              <p className="font-body text-sm text-charcoal-faint italic">No written review body.</p>
             )}
 
             <div className="mt-4 pt-4 border-t border-charcoal/8">
@@ -168,6 +183,42 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
             </div>
           </div>
 
+          {/* Review photos (pending until the review is published) */}
+          {photos.length > 0 && (
+            <div className="rounded-xl border border-charcoal/10 bg-white p-5">
+              <h2 className="font-headline text-base text-brand-black mb-1">
+                Photos ({photos.length})
+              </h2>
+              <p className="font-body text-xs text-charcoal-soft mb-3">
+                Publishing this review makes these photos public. Rejecting keeps them hidden.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {photos.map((p) => (
+                  <a
+                    key={p.id}
+                    href={p.src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative block"
+                  >
+                    <Image
+                      src={p.src}
+                      alt="Review photo"
+                      width={112}
+                      height={112}
+                      className="size-28 rounded-lg object-cover border border-charcoal/10"
+                    />
+                    {!p.isApproved && (
+                      <span className="absolute top-1 left-1 rounded bg-amber-100 text-amber-800 font-subhead text-[10px] font-semibold px-1.5 py-0.5">
+                        Pending
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Reviewer info */}
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Reviewer</h2>
@@ -177,7 +228,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 label="User ID"
                 value={
                   review.reviewer_user_id ? (
-                    <span className="font-mono text-xs text-charcoal/60 break-all">
+                    <span className="font-mono text-xs text-charcoal-soft break-all">
                       {review.reviewer_user_id}
                     </span>
                   ) : null
@@ -200,14 +251,14 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                         href={entityHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                        className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                       >
                         Open listing page →
                       </Link>
                     ) : (
                       <Link
                         href={`/admin/entities/${listing.id}`}
-                        className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold"
+                        className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                       >
                         Open entity admin page →
                       </Link>
@@ -216,7 +267,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 />
               </dl>
             ) : (
-              <p className="font-body text-sm text-charcoal/50">Associated listing not found.</p>
+              <p className="font-body text-sm text-charcoal-soft">Associated listing not found.</p>
             )}
           </div>
 
@@ -256,7 +307,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
               <ReviewModerationActions reviewId={review.id} />
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
-                <p className="font-subhead text-sm text-charcoal/60">
+                <p className="font-subhead text-sm text-charcoal-soft">
                   This review is <strong>{review.status.replace(/_/g, ' ')}</strong>. No further
                   action needed.
                 </p>
@@ -266,7 +317,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Review ID</h2>
-            <p className="font-mono text-xs text-charcoal/60 break-all">{review.id}</p>
+            <p className="font-mono text-xs text-charcoal-soft break-all">{review.id}</p>
           </div>
         </div>
       </div>

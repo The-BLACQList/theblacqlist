@@ -84,12 +84,12 @@ const container: React.CSSProperties = {
 }
 
 const header: React.CSSProperties = {
-  backgroundColor: '#19191E',
+  backgroundColor: '#08080A',
   padding: '24px 32px',
 }
 
 const logoText: React.CSSProperties = {
-  color: '#E2A428',
+  color: '#C4A065',
   fontSize: '18px',
   fontWeight: '700',
   letterSpacing: '0.12em',
@@ -101,7 +101,7 @@ const content: React.CSSProperties = {
 }
 
 const eyebrow: React.CSSProperties = {
-  color: '#E2A428',
+  color: '#8F6600',
   fontSize: '11px',
   fontWeight: '700',
   letterSpacing: '0.12em',
@@ -125,7 +125,7 @@ const paragraph: React.CSSProperties = {
 }
 
 const divider: React.CSSProperties = {
-  borderColor: '#E9E9F7',
+  borderColor: '#ECEAE6',
   margin: '0 0 16px',
 }
 
@@ -146,7 +146,7 @@ const metaValue: React.CSSProperties = {
 }
 
 const link: React.CSSProperties = {
-  color: '#E2A428',
+  color: '#8F6600',
   textDecoration: 'underline',
 }
 

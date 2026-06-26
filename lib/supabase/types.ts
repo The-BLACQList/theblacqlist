@@ -1,10 +1,36 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: '14.5'
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -46,6 +72,125 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      ai_generation_requests: {
+        Row: {
+          agent_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          listing_id: string | null
+          model: string | null
+          prompt_version: string | null
+          provider: string
+          request_tokens: number | null
+          response_tokens: number | null
+          status: string
+          suggestion_id: string | null
+        }
+        Insert: {
+          agent_type: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          listing_id?: string | null
+          model?: string | null
+          prompt_version?: string | null
+          provider?: string
+          request_tokens?: number | null
+          response_tokens?: number | null
+          status?: string
+          suggestion_id?: string | null
+        }
+        Update: {
+          agent_type?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          listing_id?: string | null
+          model?: string | null
+          prompt_version?: string | null
+          provider?: string
+          request_tokens?: number | null
+          response_tokens?: number | null
+          status?: string
+          suggestion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generation_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_generation_requests_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "ai_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_suggestions: {
+        Row: {
+          agent_type: string
+          applied_at: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          metadata: Json
+          prompt_version: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggestion_text: string
+          suggestion_type: string
+          updated_at: string
+        }
+        Insert: {
+          agent_type: string
+          applied_at?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          metadata?: Json
+          prompt_version?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggestion_text: string
+          suggestion_type: string
+          updated_at?: string
+        }
+        Update: {
+          agent_type?: string
+          applied_at?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          metadata?: Json
+          prompt_version?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggestion_text?: string
+          suggestion_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_suggestions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       analytics_events: {
         Row: {
@@ -89,6 +234,39 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_job_log: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          errors: number
+          id: string
+          listings_processed: number
+          notes: string | null
+          run_date: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          errors?: number
+          id?: string
+          listings_processed?: number
+          notes?: string | null
+          run_date: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          errors?: number
+          id?: string
+          listings_processed?: number
+          notes?: string | null
+          run_date?: string
+          status?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -128,11 +306,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'categories_parent_id_fkey'
-            columns: ['parent_id']
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -181,11 +359,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cities_state_id_fkey'
-            columns: ['state_id']
+            foreignKeyName: "cities_state_id_fkey"
+            columns: ["state_id"]
             isOneToOne: false
-            referencedRelation: 'states'
-            referencedColumns: ['id']
+            referencedRelation: "states"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -243,55 +421,100 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'claims_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "claims_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
       collection_items: {
         Row: {
+          blurb: string | null
           collection_id: string
           created_at: string
           display_order: number
+          headline: string | null
           id: string
           listing_id: string
         }
         Insert: {
+          blurb?: string | null
           collection_id: string
           created_at?: string
           display_order?: number
+          headline?: string | null
           id?: string
           listing_id: string
         }
         Update: {
+          blurb?: string | null
           collection_id?: string
           created_at?: string
           display_order?: number
+          headline?: string | null
           id?: string
           listing_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'collection_items_collection_id_fkey'
-            columns: ['collection_id']
+            foreignKeyName: "collection_items_collection_id_fkey"
+            columns: ["collection_id"]
             isOneToOne: false
-            referencedRelation: 'collections'
-            referencedColumns: ['id']
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'collection_items_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "collection_items_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collection_sections: {
+        Row: {
+          body: string | null
+          collection_id: string
+          created_at: string
+          display_order: number
+          heading: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          collection_id: string
+          created_at?: string
+          display_order?: number
+          heading: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          collection_id?: string
+          created_at?: string
+          display_order?: number
+          heading?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_sections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
           },
         ]
       }
       collections: {
         Row: {
+          body: string | null
           cover_image_path: string | null
           created_at: string
           created_by: string | null
@@ -300,10 +523,12 @@ export type Database = {
           id: string
           is_active: boolean
           slug: string
+          subtitle: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          body?: string | null
           cover_image_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -312,10 +537,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           slug: string
+          subtitle?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          body?: string | null
           cover_image_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -324,6 +551,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           slug?: string
+          subtitle?: string | null
           title?: string
           updated_at?: string
         }
@@ -419,11 +647,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'entity_analytics_daily_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "entity_analytics_daily_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -451,18 +679,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'flow_edges_source_node_id_fkey'
-            columns: ['source_node_id']
+            foreignKeyName: "flow_edges_source_node_id_fkey"
+            columns: ["source_node_id"]
             isOneToOne: false
-            referencedRelation: 'flow_nodes'
-            referencedColumns: ['id']
+            referencedRelation: "flow_nodes"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'flow_edges_target_node_id_fkey'
-            columns: ['target_node_id']
+            foreignKeyName: "flow_edges_target_node_id_fkey"
+            columns: ["target_node_id"]
             isOneToOne: false
-            referencedRelation: 'flow_nodes'
-            referencedColumns: ['id']
+            referencedRelation: "flow_nodes"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -523,11 +751,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'guide_sections_guide_id_fkey'
-            columns: ['guide_id']
+            foreignKeyName: "guide_sections_guide_id_fkey"
+            columns: ["guide_id"]
             isOneToOne: false
-            referencedRelation: 'guides'
-            referencedColumns: ['id']
+            referencedRelation: "guides"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -675,11 +903,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'listing_details_business_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "listing_details_business_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: true
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -716,11 +944,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'listing_hours_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "listing_hours_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -757,11 +985,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'listing_links_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "listing_links_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -797,6 +1025,8 @@ export type Database = {
           noindex: boolean
           og_image_path: string | null
           owner_user_id: string | null
+          ownership_attested: boolean
+          ownership_attested_at: string | null
           published_at: string | null
           review_count: number
           save_count: number
@@ -855,6 +1085,8 @@ export type Database = {
           noindex?: boolean
           og_image_path?: string | null
           owner_user_id?: string | null
+          ownership_attested?: boolean
+          ownership_attested_at?: string | null
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -913,6 +1145,8 @@ export type Database = {
           noindex?: boolean
           og_image_path?: string | null
           owner_user_id?: string | null
+          ownership_attested?: boolean
+          ownership_attested_at?: string | null
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -942,25 +1176,25 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'listings_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "listings_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'listings_city_id_fkey'
-            columns: ['city_id']
+            foreignKeyName: "listings_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: 'cities'
-            referencedColumns: ['id']
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'listings_claim_id_fkey'
-            columns: ['claim_id']
+            foreignKeyName: "listings_claim_id_fkey"
+            columns: ["claim_id"]
             isOneToOne: false
-            referencedRelation: 'claims'
-            referencedColumns: ['id']
+            referencedRelation: "claims"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -983,7 +1217,7 @@ export type Database = {
           shipping_options: string
           slug: string
           status: string
-          tags: string[]
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
@@ -1004,7 +1238,7 @@ export type Database = {
           shipping_options?: string
           slug: string
           status?: string
-          tags?: string[]
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -1025,23 +1259,30 @@ export type Database = {
           shipping_options?: string
           slug?: string
           status?: string
-          tags?: string[]
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'marketplace_products_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "marketplace_products_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'marketplace_products_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "marketplace_products_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_products_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1105,11 +1346,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'marketplace_services_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "marketplace_services_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_services_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1281,11 +1529,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'profiles_city_id_fkey'
-            columns: ['city_id']
+            foreignKeyName: "profiles_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: 'cities'
-            referencedColumns: ['id']
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1349,11 +1597,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'receipt_uploads_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "receipt_uploads_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1364,8 +1612,8 @@ export type Database = {
           id: string
           is_verified_purchase: boolean
           listing_id: string
-          owner_response: string | null
           owner_responded_at: string | null
+          owner_response: string | null
           published_at: string | null
           rating: number
           rejection_reason: string | null
@@ -1383,8 +1631,8 @@ export type Database = {
           id?: string
           is_verified_purchase?: boolean
           listing_id: string
-          owner_response?: string | null
           owner_responded_at?: string | null
+          owner_response?: string | null
           published_at?: string | null
           rating: number
           rejection_reason?: string | null
@@ -1402,8 +1650,8 @@ export type Database = {
           id?: string
           is_verified_purchase?: boolean
           listing_id?: string
-          owner_response?: string | null
           owner_responded_at?: string | null
+          owner_response?: string | null
           published_at?: string | null
           rating?: number
           rejection_reason?: string | null
@@ -1417,11 +1665,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'reviews_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1446,11 +1694,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'saves_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "saves_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1490,18 +1738,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'search_events_city_id_fkey'
-            columns: ['city_id']
+            foreignKeyName: "search_events_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: 'cities'
-            referencedColumns: ['id']
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'search_events_clicked_listing_id_fkey'
-            columns: ['clicked_listing_id']
+            foreignKeyName: "search_events_clicked_listing_id_fkey"
+            columns: ["clicked_listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1541,11 +1789,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'services_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "services_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1585,25 +1833,143 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'spend_events_city_id_fkey'
-            columns: ['city_id']
+            foreignKeyName: "spend_events_city_id_fkey"
+            columns: ["city_id"]
             isOneToOne: false
-            referencedRelation: 'cities'
-            referencedColumns: ['id']
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'spend_events_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "spend_events_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'spend_events_receipt_upload_id_fkey'
-            columns: ['receipt_upload_id']
+            foreignKeyName: "spend_events_receipt_upload_id_fkey"
+            columns: ["receipt_upload_id"]
             isOneToOne: false
-            referencedRelation: 'receipt_uploads'
-            referencedColumns: ['id']
+            referencedRelation: "receipt_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsor_campaigns: {
+        Row: {
+          budget_cents: number | null
+          campaign_type: string
+          contact_email: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          notes: string | null
+          sponsor_name: string
+          starts_at: string | null
+          status: string
+          target_cities: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          budget_cents?: number | null
+          campaign_type: string
+          contact_email: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          notes?: string | null
+          sponsor_name: string
+          starts_at?: string | null
+          status?: string
+          target_cities?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          budget_cents?: number | null
+          campaign_type?: string
+          contact_email?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          notes?: string | null
+          sponsor_name?: string
+          starts_at?: string | null
+          status?: string
+          target_cities?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sponsored_placements: {
+        Row: {
+          category_id: string | null
+          city_id: string | null
+          created_at: string
+          ends_at: string | null
+          id: string
+          listing_id: string
+          placement_type: string
+          placement_zone: string | null
+          position: number | null
+          price_cents: number | null
+          starts_at: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          city_id?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          listing_id: string
+          placement_type: string
+          placement_zone?: string | null
+          position?: number | null
+          price_cents?: number | null
+          starts_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          city_id?: string | null
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          listing_id?: string
+          placement_type?: string
+          placement_zone?: string | null
+          position?: number | null
+          price_cents?: number | null
+          starts_at?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_placements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_placements_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1631,98 +1997,62 @@ export type Database = {
         }
         Relationships: []
       }
-      sponsored_placements: {
-        Row: {
-          id: string
-          listing_id: string
-          placement_type: string
-          placement_zone: string | null
-          position: number | null
-          city_id: string | null
-          category_id: string | null
-          starts_at: string | null
-          ends_at: string | null
-          status: string
-          price_cents: number | null
-          stripe_payment_intent_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          listing_id: string
-          placement_type: string
-          placement_zone?: string | null
-          position?: number | null
-          city_id?: string | null
-          category_id?: string | null
-          starts_at?: string | null
-          ends_at?: string | null
-          status?: string
-          price_cents?: number | null
-          stripe_payment_intent_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          listing_id?: string
-          placement_type?: string
-          placement_zone?: string | null
-          position?: number | null
-          city_id?: string | null
-          category_id?: string | null
-          starts_at?: string | null
-          ends_at?: string | null
-          status?: string
-          price_cents?: number | null
-          stripe_payment_intent_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       subscriptions: {
         Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
           id: string
           listing_id: string
-          user_id: string
           plan_id: string | null
           status: string
-          current_period_start: string | null
-          current_period_end: string | null
-          stripe_subscription_id: string | null
           stripe_customer_id: string | null
-          created_at: string
+          stripe_subscription_id: string | null
           updated_at: string
+          user_id: string
         }
         Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           listing_id: string
-          user_id: string
           plan_id?: string | null
           status?: string
-          current_period_start?: string | null
-          current_period_end?: string | null
-          stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
-          created_at?: string
+          stripe_subscription_id?: string | null
           updated_at?: string
+          user_id: string
         }
         Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           listing_id?: string
-          user_id?: string
           plan_id?: string | null
           status?: string
-          current_period_start?: string | null
-          current_period_end?: string | null
-          stripe_subscription_id?: string | null
           stripe_customer_id?: string | null
-          created_at?: string
+          stripe_subscription_id?: string | null
           updated_at?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1751,123 +2081,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'user_roles_listing_id_fkey'
-            columns: ['listing_id']
+            foreignKeyName: "user_roles_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      ai_suggestions: {
-        Row: {
-          id: string
-          listing_id: string
-          suggestion_type: string
-          agent_type: string
-          prompt_version: string | null
-          suggestion_text: string
-          metadata: Json
-          status: string
-          reviewed_by: string | null
-          reviewed_at: string | null
-          applied_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          listing_id: string
-          suggestion_type: string
-          agent_type: string
-          prompt_version?: string | null
-          suggestion_text: string
-          metadata?: Json
-          status?: string
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          applied_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          listing_id?: string
-          suggestion_type?: string
-          agent_type?: string
-          prompt_version?: string | null
-          suggestion_text?: string
-          metadata?: Json
-          status?: string
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          applied_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'ai_suggestions_listing_id_fkey'
-            columns: ['listing_id']
-            isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      ai_generation_requests: {
-        Row: {
-          id: string
-          listing_id: string | null
-          agent_type: string
-          prompt_version: string | null
-          model: string | null
-          provider: string
-          request_tokens: number | null
-          response_tokens: number | null
-          status: string
-          error_message: string | null
-          suggestion_id: string | null
-          created_by: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          listing_id?: string | null
-          agent_type: string
-          prompt_version?: string | null
-          model?: string | null
-          provider?: string
-          request_tokens?: number | null
-          response_tokens?: number | null
-          status?: string
-          error_message?: string | null
-          suggestion_id?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          listing_id?: string | null
-          agent_type?: string
-          prompt_version?: string | null
-          model?: string | null
-          provider?: string
-          request_tokens?: number | null
-          response_tokens?: number | null
-          status?: string
-          error_message?: string | null
-          suggestion_id?: string | null
-          created_by?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'ai_generation_requests_listing_id_fkey'
-            columns: ['listing_id']
-            isOneToOne: false
-            referencedRelation: 'listings'
-            referencedColumns: ['id']
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1876,13 +2094,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aggregate_entity_analytics: {
+        Args: { target_date?: string }
+        Returns: Json
+      }
+      auto_grant_certified: { Args: never; Returns: Json }
+      get_top_listings_by_views: {
+        Args: { days_back?: number; limit_n?: number }
+        Returns: {
+          city_name: string
+          listing_id: string
+          listing_name: string
+          total_views: number
+        }[]
+      }
+      get_top_search_queries: {
+        Args: { days_back?: number; limit_n?: number }
+        Returns: {
+          avg_results: number
+          query: string
+          search_count: number
+        }[]
+      }
       has_role: { Args: { p_role: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       owns_entity: { Args: { p_entity_id: string }; Returns: boolean }
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { '': string }; Returns: string[] }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
@@ -1893,31 +2133,33 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -1926,23 +2168,23 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -1951,23 +2193,23 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema['Tables']
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -1976,40 +2218,44 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema['Enums']
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema['CompositeTypes']
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
 } as const
+

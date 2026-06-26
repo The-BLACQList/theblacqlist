@@ -51,7 +51,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
     <form action={action} className="space-y-5">
       {/* Listing search */}
       <div>
-        <label className="block font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-1.5">
+        <label className="block font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-1.5">
           Listing <span aria-hidden="true">*</span>
         </label>
         {selectedListing ? (
@@ -63,7 +63,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
                 setSelectedListing(null)
                 setListingSearch('')
               }}
-              className="font-body text-xs text-charcoal/50 hover:text-charcoal underline"
+              className="font-body text-xs text-charcoal-soft hover:text-charcoal underline"
             >
               Change
             </button>
@@ -75,7 +75,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
               value={listingSearch}
               onChange={(e) => handleListingSearch(e.target.value)}
               placeholder="Search listings by name…"
-              className="w-full rounded-lg border border-charcoal/20 px-4 py-2.5 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+              className="w-full rounded-lg border border-charcoal/20 px-4 py-2.5 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
             />
             {listingResults.length > 0 && (
               <ul className="absolute z-10 mt-1 w-full rounded-lg border border-charcoal/10 bg-white shadow-lg overflow-hidden">
@@ -95,7 +95,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
                 ))}
               </ul>
             )}
-            {searching && <p className="mt-1 font-body text-xs text-charcoal/50">Searching…</p>}
+            {searching && <p className="mt-1 font-body text-xs text-charcoal-soft">Searching…</p>}
           </div>
         )}
         <input type="hidden" name="listing_id" value={selectedListing?.id ?? ''} />
@@ -105,10 +105,10 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
       <div>
         <label
           htmlFor="city_id"
-          className="block font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-1.5"
+          className="block font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-1.5"
         >
           City{' '}
-          <span className="font-normal text-charcoal/40 normal-case">
+          <span className="font-normal text-charcoal-faint normal-case">
             (leave blank for all cities)
           </span>
         </label>
@@ -130,10 +130,10 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
       <div>
         <label
           htmlFor="category_id"
-          className="block font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-1.5"
+          className="block font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-1.5"
         >
           Category{' '}
-          <span className="font-normal text-charcoal/40 normal-case">
+          <span className="font-normal text-charcoal-faint normal-case">
             (leave blank for all categories)
           </span>
         </label>
@@ -153,7 +153,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
 
       {/* Position */}
       <fieldset>
-        <legend className="font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-2">
+        <legend className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
           Position <span aria-hidden="true">*</span>
         </legend>
         <div className="flex gap-3">
@@ -178,7 +178,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
         <div>
           <label
             htmlFor="starts_at"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-1.5"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-1.5"
           >
             Starts <span aria-hidden="true">*</span>
           </label>
@@ -193,7 +193,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
         <div>
           <label
             htmlFor="ends_at"
-            className="block font-subhead text-xs font-semibold text-charcoal/70 uppercase tracking-wide mb-1.5"
+            className="block font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-1.5"
           >
             Ends <span aria-hidden="true">*</span>
           </label>

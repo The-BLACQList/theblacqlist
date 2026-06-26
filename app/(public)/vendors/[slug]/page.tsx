@@ -93,7 +93,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
       <div className="bg-white border-b border-charcoal/10 py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <nav aria-label="Breadcrumb" className="mb-3">
-            <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
+            <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal-faint">
               <li>
                 <Link href="/marketplace" className="hover:text-charcoal">
                   Marketplace
@@ -110,10 +110,10 @@ export default async function VendorStorefrontPage({ params }: Props) {
 
           <div className="flex flex-wrap items-center gap-3 mt-1.5">
             {category && (
-              <span className="font-subhead text-xs text-charcoal/60">{category.name}</span>
+              <span className="font-subhead text-xs text-charcoal-soft">{category.name}</span>
             )}
             {city && (
-              <span className="flex items-center gap-1 font-body text-xs text-charcoal/50">
+              <span className="flex items-center gap-1 font-body text-xs text-charcoal-soft">
                 <MapPin className="size-3 shrink-0" aria-hidden="true" />
                 {city.name}, {city.state_abbr}
               </span>
@@ -126,7 +126,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
           </div>
 
           {listing.tagline && (
-            <p className="font-body text-sm text-charcoal/60 mt-2 max-w-2xl leading-relaxed">
+            <p className="font-body text-sm text-charcoal-soft mt-2 max-w-2xl leading-relaxed">
               {listing.tagline}
             </p>
           )}
@@ -140,14 +140,14 @@ export default async function VendorStorefrontPage({ params }: Props) {
             {hasProducts && (
               <section aria-labelledby="vendor-products-heading">
                 <div className="flex items-center gap-2 mb-5">
-                  <Package className="size-5 text-charcoal/40" aria-hidden="true" />
+                  <Package className="size-5 text-charcoal-faint" aria-hidden="true" />
                   <h2
                     id="vendor-products-heading"
                     className="font-headline text-xl text-brand-black"
                   >
                     Products
                   </h2>
-                  <span className="ml-1 font-body text-xs text-charcoal/40">
+                  <span className="ml-1 font-body text-xs text-charcoal-faint">
                     ({products.length})
                   </span>
                 </div>
@@ -162,14 +162,14 @@ export default async function VendorStorefrontPage({ params }: Props) {
             {hasServices && (
               <section aria-labelledby="vendor-services-heading">
                 <div className="flex items-center gap-2 mb-5">
-                  <Briefcase className="size-5 text-charcoal/40" aria-hidden="true" />
+                  <Briefcase className="size-5 text-charcoal-faint" aria-hidden="true" />
                   <h2
                     id="vendor-services-heading"
                     className="font-headline text-xl text-brand-black"
                   >
                     Services
                   </h2>
-                  <span className="ml-1 font-body text-xs text-charcoal/40">
+                  <span className="ml-1 font-body text-xs text-charcoal-faint">
                     ({services.length})
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
           <div className="rounded-xl border border-charcoal/10 bg-white py-20 text-center">
             <Package className="size-12 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
             <p className="font-headline text-lg text-brand-black">No marketplace listings yet</p>
-            <p className="font-body text-sm text-charcoal/50 mt-2 max-w-xs mx-auto">
+            <p className="font-body text-sm text-charcoal-soft mt-2 max-w-xs mx-auto">
               {listing.name} hasn&apos;t added any products or services to the marketplace yet.
               Check back soon.
             </p>
@@ -194,7 +194,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
 
         <Link
           href="/marketplace"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/40 hover:text-charcoal"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
           Back to marketplace

@@ -11,9 +11,9 @@ export default async function UpgradeSuccessPage() {
   return (
     <div className="max-w-lg">
       <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
-        <CheckCircle className="size-12 text-amber-gold mx-auto mb-4" aria-hidden="true" />
+        <CheckCircle className="size-12 text-amber mx-auto mb-4" aria-hidden="true" />
         <h1 className="font-headline text-2xl text-brand-black mb-2">You&apos;re upgraded!</h1>
-        <p className="font-body text-sm text-charcoal/70 mb-8 max-w-sm mx-auto">
+        <p className="font-body text-sm text-charcoal-soft mb-8 max-w-sm mx-auto">
           Your subscription is active. Your new plan features are available now.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

@@ -87,7 +87,7 @@ function SignUpContent() {
     return (
       <div className="text-center py-4">
         <div className="w-14 h-14 rounded-full bg-amber-gold/10 flex items-center justify-center mx-auto mb-4">
-          <Mail className="size-7 text-amber-gold" aria-hidden="true" />
+          <Mail className="size-7 text-amber" aria-hidden="true" />
         </div>
         <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
         <p className="font-subhead text-sm text-charcoal leading-relaxed">
@@ -97,10 +97,10 @@ function SignUpContent() {
           </span>
           .
         </p>
-        <p className="font-subhead text-sm text-charcoal/60 mt-2">
+        <p className="font-subhead text-sm text-charcoal-soft mt-2">
           Didn&apos;t receive it? Check your spam folder.
         </p>
-        <p className="font-subhead text-xs text-charcoal/40 mt-6">
+        <p className="font-subhead text-xs text-charcoal-faint mt-6">
           Already verified?{' '}
           <Link
             href={next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in'}
@@ -152,7 +152,7 @@ function SignUpContent() {
             aria-describedby={getFieldError('displayName') ? 'displayName-error' : undefined}
             aria-invalid={!!getFieldError('displayName')}
             className={cn(
-              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
               getFieldError('displayName') ? 'border-red-400' : 'border-charcoal/30'
             )}
             placeholder="Your name"
@@ -182,7 +182,7 @@ function SignUpContent() {
             aria-describedby={getFieldError('email') ? 'email-error' : undefined}
             aria-invalid={!!getFieldError('email')}
             className={cn(
-              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+              'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
               getFieldError('email') ? 'border-red-400' : 'border-charcoal/30'
             )}
             placeholder="you@example.com"
@@ -221,7 +221,7 @@ function SignUpContent() {
               )}
               aria-invalid={!!getFieldError('password')}
               className={cn(
-                'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
+                'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                 getFieldError('password') ? 'border-red-400' : 'border-charcoal/30'
               )}
               placeholder="Min. 8 characters"
@@ -230,7 +230,7 @@ function SignUpContent() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/50 hover:text-charcoal transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-soft hover:text-charcoal transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="size-4" aria-hidden="true" />
@@ -239,7 +239,7 @@ function SignUpContent() {
               )}
             </button>
           </div>
-          <p id="password-hint" className="text-xs font-subhead text-charcoal/50">
+          <p id="password-hint" className="text-xs font-subhead text-charcoal-soft">
             Must be at least 8 characters.
           </p>
           {getFieldError('password') && (
@@ -283,7 +283,7 @@ function SignUpContent() {
                     <span className="font-subhead text-sm font-semibold text-brand-black leading-snug">
                       {option.label}
                     </span>
-                    <span className="font-subhead text-xs text-charcoal/70 leading-snug mt-0.5">
+                    <span className="font-subhead text-xs text-charcoal-soft leading-snug mt-0.5">
                       {option.description}
                     </span>
                   </span>
@@ -294,7 +294,7 @@ function SignUpContent() {
         </fieldset>
 
         {/* Terms */}
-        <p className="text-xs font-subhead text-charcoal/60 mt-1 leading-relaxed">
+        <p className="text-xs font-subhead text-charcoal-soft mt-1 leading-relaxed">
           By creating an account you agree to our{' '}
           <Link
             href="/terms"

@@ -26,7 +26,7 @@ INSERT INTO listings (
    'physical','published','free','unclaimed',false,27,10,'admin',now()),
 
   ('00c00003-0000-0000-0000-000000000025','Gorée Cuisine Chicago','goree-cuisine-chicago',
-   'West African and Afro-Caribbean flavors in a warm, welcoming Andersonville setting.',
+   'West African and Afro-Caribbean flavors in a warm, welcoming Bronzeville setting.',
    'business',(SELECT id FROM categories WHERE slug='food-dining'),(SELECT id FROM cities WHERE slug='chicago-il'),
    'physical','published','free','unclaimed',true,33,13,'admin',now()),
 

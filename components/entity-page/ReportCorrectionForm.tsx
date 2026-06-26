@@ -1,10 +1,19 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Loader2, Flag, X, CheckCircle } from 'lucide-react'
+import { Loader2, Flag, CheckCircle } from 'lucide-react'
 import { submitCorrectionAction } from '@/lib/actions/corrections/submitCorrection'
 import { CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from '@/lib/constants/corrections'
 import { cn } from '@/lib/utils'
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog'
 
 interface Props {
   listingId: string
@@ -29,43 +38,25 @@ export function ReportCorrectionForm({ listingId }: Props) {
     if (issue === 'other') setShowOther(!selected.has('other'))
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal/50 hover:text-charcoal/80 underline underline-offset-2 transition-colors"
-      >
-        <Flag className="size-3" aria-hidden="true" />
-        Report incorrect information
-      </button>
-    )
-  }
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="correction-heading"
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 bg-brand-black/50"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setOpen(false)
-      }}
-    >
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-charcoal/10">
-          <h2 id="correction-heading" className="font-headline text-base text-brand-black">
-            Report a problem with this listing
-          </h2>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close"
-            className="inline-flex items-center justify-center size-8 rounded-lg text-charcoal/40 hover:bg-charcoal/5 hover:text-charcoal transition-colors"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-charcoal/80 underline underline-offset-2 transition-colors"
+        >
+          <Flag className="size-3" aria-hidden="true" />
+          Report incorrect information
+        </button>
+      </DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader className="px-5 py-4 pr-12 border-b border-charcoal/10">
+          <DialogTitle>Report a problem with this listing</DialogTitle>
+          <DialogDescription className="sr-only">
+            Select the issues you noticed with this listing and optionally describe the problem.
+          </DialogDescription>
+        </DialogHeader>
 
         {state && 'success' in state ? (
           <div className="px-5 py-8 text-center" role="status" aria-live="polite">
@@ -73,22 +64,18 @@ export function ReportCorrectionForm({ listingId }: Props) {
             <p className="font-subhead text-base font-semibold text-brand-black mb-1">
               Thanks — we&apos;re on it.
             </p>
-            <p className="font-body text-sm text-charcoal/60 mb-4">
+            <p className="font-body text-sm text-charcoal-soft mb-4">
               Our team reviews all reports. We&apos;ll update the listing if the information is
               incorrect.
             </p>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="inline-flex items-center h-9 px-5 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors"
-            >
+            <DialogClose className="inline-flex items-center h-9 px-5 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
               Close
-            </button>
+            </DialogClose>
           </div>
         ) : (
           <form action={formAction} className="px-5 py-4 space-y-4">
             <input type="hidden" name="listing_id" value={listingId} />
-            <p className="font-body text-sm text-charcoal/70">
+            <p className="font-body text-sm text-charcoal-soft">
               Help us keep The BLACQList accurate. Select all that apply.
             </p>
 
@@ -111,7 +98,7 @@ export function ReportCorrectionForm({ listingId }: Props) {
                         value={issue}
                         checked={selected.has(issue)}
                         onChange={() => toggleIssue(issue)}
-                        className="rounded border-charcoal/30 text-amber-gold focus:ring-amber-gold/40"
+                        className="rounded border-charcoal/30 text-amber focus:ring-amber-gold/40"
                       />
                       <span className="font-body text-sm text-brand-black">
                         {ISSUE_LABELS[issue]}
@@ -126,10 +113,10 @@ export function ReportCorrectionForm({ listingId }: Props) {
               <div>
                 <label
                   htmlFor="correction-notes"
-                  className="block font-subhead text-xs font-semibold text-charcoal/70 mb-1"
+                  className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
                 >
                   Describe the issue{' '}
-                  <span className="font-normal text-charcoal/40">(optional, max 500 chars)</span>
+                  <span className="font-normal text-charcoal-faint">(optional, max 500 chars)</span>
                 </label>
                 <textarea
                   id="correction-notes"
@@ -137,7 +124,7 @@ export function ReportCorrectionForm({ listingId }: Props) {
                   rows={3}
                   maxLength={500}
                   placeholder="Please describe what is incorrect…"
-                  className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal/40 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
                 />
               </div>
             )}
@@ -152,13 +139,9 @@ export function ReportCorrectionForm({ listingId }: Props) {
             )}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center h-9 px-4 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors"
-              >
+              <DialogClose className="inline-flex items-center h-9 px-4 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
                 Cancel
-              </button>
+              </DialogClose>
               <button
                 type="submit"
                 disabled={isPending || selected.size === 0}
@@ -170,7 +153,7 @@ export function ReportCorrectionForm({ listingId }: Props) {
             </div>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

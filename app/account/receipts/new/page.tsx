@@ -21,13 +21,13 @@ export default async function NewReceiptPage() {
         <div>
           <Link
             href="/account/receipts"
-            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-4 transition-colors"
+            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             My receipts
           </Link>
           <h1 className="font-headline text-2xl text-brand-black">Submit a receipt</h1>
-          <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             Record a purchase at a Black-owned business to track your community impact.
           </p>
         </div>

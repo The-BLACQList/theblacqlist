@@ -84,7 +84,7 @@ export function EntityCard({
 
         {/* Featured badge — top-left */}
         {isFeatured && (
-          <span className="absolute top-2 left-2 z-10 inline-flex items-center rounded-full border border-amber-gold text-amber-gold bg-transparent text-[11px] px-2 py-0.5 font-subhead font-semibold leading-none">
+          <span className="absolute top-2 left-2 z-10 inline-flex items-center rounded-full border border-amber-gold text-amber bg-transparent text-[11px] px-2 py-0.5 font-subhead font-semibold leading-none">
             Featured
           </span>
         )}

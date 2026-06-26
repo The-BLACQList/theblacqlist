@@ -17,7 +17,7 @@ export function AdminStatCard({ label, count, href, urgent = false }: Props) {
         urgent && count > 0 ? 'border-amber-300' : 'border-charcoal/10'
       )}
     >
-      <p className="font-subhead text-xs text-charcoal/60 uppercase tracking-wide mb-1">{label}</p>
+      <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1">{label}</p>
       <p
         className={cn(
           'font-headline text-4xl',
@@ -26,7 +26,7 @@ export function AdminStatCard({ label, count, href, urgent = false }: Props) {
       >
         {count.toLocaleString()}
       </p>
-      <p className="font-subhead text-xs text-amber-gold mt-2">View queue →</p>
+      <p className="font-subhead text-xs text-amber mt-2">View queue →</p>
     </Link>
   )
 }

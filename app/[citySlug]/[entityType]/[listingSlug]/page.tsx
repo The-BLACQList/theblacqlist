@@ -9,8 +9,14 @@ import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { EntityPageHero } from '@/components/entity-page/EntityPageHero'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
+import { EntityLinks } from '@/components/entity-page/EntityLinks'
+import { EntityEventDetails } from '@/components/entity-page/EntityEventDetails'
+import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
 import { EntityStorySection } from '@/components/entity-page/EntityStorySection'
 import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferingsSection'
+import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
+import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
+import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityTrustSection } from '@/components/entity-page/EntityTrustSection'
@@ -39,15 +45,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description = `${entity.tagline} — ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const ogImage = entity.cover_image_path
+    ? `${supabaseUrl}/storage/v1/object/public/listing-media/${entity.cover_image_path}`
+    : undefined
+
   return {
-    title: `${entity.name} | The BLACQList`,
+    title: `${entity.name} — ${locationLabel}`,
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: {
       title: entity.name,
       description: entity.tagline,
       url: canonicalUrl,
-      ...(entity.cover_image_path && { images: [entity.cover_image_path] }),
+      ...(ogImage && { images: [ogImage] }),
     },
     twitter: {
       card: 'summary_large_image',
@@ -96,13 +107,49 @@ function buildJsonLd(entity: Awaited<ReturnType<typeof getEntityPageFromDB>>, en
   return jsonLd
 }
 
+function buildEventJsonLd(
+  entity: Awaited<ReturnType<typeof getEntityPageFromDB>>,
+  entityType: string
+) {
+  if (!entity || !entity.event) return null
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
+  const ev = entity.event
+
+  const jsonLd: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: entity.name,
+    description: ev.description || entity.tagline,
+    url: `${BASE_URL}${buildEntityUrl(entityType, entity.city?.slug, entity.slug)}`,
+    startDate: ev.starts_at,
+    ...(ev.ends_at && { endDate: ev.ends_at }),
+    eventAttendanceMode: ev.is_online
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : 'https://schema.org/OfflineEventAttendanceMode',
+    location: ev.is_online
+      ? { '@type': 'VirtualLocation', url: ev.ticket_url ?? `${BASE_URL}` }
+      : {
+          '@type': 'Place',
+          name: ev.venue_name ?? entity.name,
+          address: [ev.venue_address, ev.city_name, ev.state_abbr].filter(Boolean).join(', '),
+        },
+    ...(ev.ticket_url && {
+      offers: { '@type': 'Offer', url: ev.ticket_url, ...(ev.price_text && { description: ev.price_text }) },
+    }),
+    ...(ev.organizer && { organizer: { '@type': 'Organization', name: ev.organizer.name } }),
+  }
+
+  return jsonLd
+}
+
 export default async function EntityPage({ params }: PageProps) {
   const { entityType, listingSlug } = await params
   const entity = await getEntityPageFromDB(listingSlug)
 
   if (!entity) notFound()
 
-  const jsonLd = buildJsonLd(entity, entityType)
+  const isEvent = entity.entity_type === 'event'
+  const jsonLd = isEvent ? buildEventJsonLd(entity, entityType) : buildJsonLd(entity, entityType)
 
   // Check current user state (saves, ownership, existing review)
   const supabase = await createClient()
@@ -162,37 +209,67 @@ export default async function EntityPage({ params }: PageProps) {
 
       {/* Sections — each manages its own background and max-width */}
 
-      {/* At a Glance — bg-white */}
-      <EntityAtAGlance entity={entity} />
+      {isEvent ? (
+        <>
+          {/* Event details — When/Where, ticket CTA, organizer, about */}
+          <EntityEventDetails entity={entity} />
 
-      {/* Story — bg-cream */}
-      <EntityStorySection entity={entity} />
+          {/* Media Gallery — bg-deep-bg; hidden if no images */}
+          <EntityMediaGallery entity={entity} images={entity.images} />
 
-      {/* Offerings — bg-white */}
-      <EntityOfferingsSection entity={entity} />
+          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
+          <EntityRelatedDiscovery entity={entity} />
+        </>
+      ) : (
+        <>
+          {/* At a Glance — bg-white */}
+          <EntityAtAGlance entity={entity} />
 
-      {/* Media Gallery — bg-deep-bg; hidden if no images */}
-      <EntityMediaGallery entity={entity} images={entity.images} />
+          {/* Owner-managed links (book / menu / order / socials) — bg-white; hidden if none */}
+          <EntityLinks entity={entity} />
 
-      {/* Reviews — bg-white */}
-      <EntityReviewsSection
-        entity={entity}
-        userId={user?.id ?? null}
-        isOwner={isOwner}
-        hasReviewed={hasReviewed}
-      />
+          {/* Story — bg-cream */}
+          <EntityStorySection entity={entity} />
 
-      {/* Trust & Verification — bg-pale-lavender */}
-      <EntityTrustSection entity={entity} />
+          {/* Offerings — bg-white */}
+          <EntityOfferingsSection entity={entity} />
 
-      {/* Community — bg-white */}
-      <EntityCommunityConnection entity={entity} />
+          {/* Attributes & amenities — bg-cream; hidden if none set */}
+          <EntityAttributes attributes={entity.attributes} />
 
-      {/* Platform Activity — bg-cream; hidden if no saves */}
-      <EntityPlatformActivity entity={entity} />
+          {/* FAQ — bg-white; hidden if no questions */}
+          <EntityFaqSection faqs={entity.faqs} />
 
-      {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
-      <EntityRelatedDiscovery entity={entity} />
+          {/* Upcoming events this business organizes — bg-cream; hidden if none */}
+          <EntityUpcomingEvents entity={entity} />
+
+          {/* Media Gallery — bg-deep-bg; hidden if no images */}
+          <EntityMediaGallery entity={entity} images={entity.images} />
+
+          {/* Video — bg-cream; hidden if no (valid) embed */}
+          <EntityVideoSection entity={entity} />
+
+          {/* Reviews — bg-white */}
+          <EntityReviewsSection
+            entity={entity}
+            userId={user?.id ?? null}
+            isOwner={isOwner}
+            hasReviewed={hasReviewed}
+          />
+
+          {/* Trust & Verification — bg-pale-lavender */}
+          <EntityTrustSection entity={entity} />
+
+          {/* Community — bg-white */}
+          <EntityCommunityConnection entity={entity} />
+
+          {/* Platform Activity — bg-cream; hidden if no saves */}
+          <EntityPlatformActivity entity={entity} />
+
+          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
+          <EntityRelatedDiscovery entity={entity} />
+        </>
+      )}
     </div>
   )
 }

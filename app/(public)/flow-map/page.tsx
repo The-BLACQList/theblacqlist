@@ -190,7 +190,7 @@ export default async function FlowMapPage() {
               ? `${formatDollars(totalAmountCents)} circulated`
               : 'Where does our money go?'}
           </h1>
-          <p className="font-subhead text-sm text-charcoal/60 mt-3 max-w-[520px] leading-relaxed">
+          <p className="font-subhead text-sm text-charcoal-soft mt-3 max-w-[520px] leading-relaxed">
             Every receipt submitted to The BLACQList becomes an anonymized data point in our
             community dollar-flow map. No buyer names. No private data. Just the collective movement
             of dollars.
@@ -235,7 +235,7 @@ export default async function FlowMapPage() {
         <div className="rounded-xl bg-white border border-charcoal/10 p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-headline text-base text-brand-black">Filter by city or category</h2>
-            <span className="font-subhead text-xs text-charcoal/40 border border-charcoal/10 rounded-full px-2 py-0.5">
+            <span className="font-subhead text-xs text-charcoal-faint border border-charcoal/10 rounded-full px-2 py-0.5">
               Coming soon
             </span>
           </div>
@@ -243,7 +243,7 @@ export default async function FlowMapPage() {
             <button
               disabled
               aria-disabled="true"
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal/30 font-subhead text-sm cursor-not-allowed"
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal-faint font-subhead text-sm cursor-not-allowed"
             >
               <Filter className="size-3.5" aria-hidden="true" />
               All cities
@@ -251,7 +251,7 @@ export default async function FlowMapPage() {
             <button
               disabled
               aria-disabled="true"
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal/30 font-subhead text-sm cursor-not-allowed"
+              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal-faint font-subhead text-sm cursor-not-allowed"
             >
               <Filter className="size-3.5" aria-hidden="true" />
               All categories
@@ -282,7 +282,7 @@ export default async function FlowMapPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black">
                 Sign in to see your impact
               </p>
-              <p className="font-body text-xs text-charcoal/50 mt-1 mb-4">
+              <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
                 Your personal spend data is private and only visible to you.
               </p>
               <Link
@@ -297,7 +297,7 @@ export default async function FlowMapPage() {
             personalImpact.pendingCount === 0 ? (
             <div className="bg-white px-5 py-8 text-center">
               <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
-              <p className="font-body text-xs text-charcoal/50 mt-1 mb-4">
+              <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
                 Submit a receipt to start tracking your personal impact.
               </p>
               <Link
@@ -311,7 +311,7 @@ export default async function FlowMapPage() {
             <div className="bg-white px-5 py-5 space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
-                  <p className="font-subhead text-xs text-charcoal/50 uppercase tracking-wide">
+                  <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Total spent
                   </p>
                   <p className="font-headline text-2xl text-brand-black mt-0.5">
@@ -319,7 +319,7 @@ export default async function FlowMapPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-subhead text-xs text-charcoal/50 uppercase tracking-wide">
+                  <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Businesses
                   </p>
                   <p className="font-headline text-2xl text-brand-black mt-0.5">
@@ -327,7 +327,7 @@ export default async function FlowMapPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="font-subhead text-xs text-charcoal/50 uppercase tracking-wide">
+                  <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Approved
                   </p>
                   <p className="font-headline text-2xl text-brand-black mt-0.5">
@@ -336,7 +336,7 @@ export default async function FlowMapPage() {
                 </div>
                 {personalImpact.pendingCount > 0 && (
                   <div>
-                    <p className="font-subhead text-xs text-charcoal/50 uppercase tracking-wide">
+                    <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                       Pending
                     </p>
                     <p className="font-headline text-2xl text-amber-700 mt-0.5">
@@ -348,7 +348,7 @@ export default async function FlowMapPage() {
 
               {personalImpact.topBusinesses.length > 0 && (
                 <div className="pt-3 border-t border-charcoal/5 space-y-2">
-                  <p className="font-subhead text-xs text-charcoal/50 font-semibold uppercase tracking-wide">
+                  <p className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide">
                     Your top businesses
                   </p>
                   {personalImpact.topBusinesses.map((b) => (
@@ -360,7 +360,7 @@ export default async function FlowMapPage() {
                         <span className="font-subhead text-sm text-brand-black tabular-nums">
                           {formatDollars(b.amount_cents)}
                         </span>
-                        <span className="font-body text-xs text-charcoal/40">
+                        <span className="font-body text-xs text-charcoal-faint">
                           {b.receipt_count} {b.receipt_count === 1 ? 'receipt' : 'receipts'}
                         </span>
                       </div>
@@ -372,7 +372,7 @@ export default async function FlowMapPage() {
               <div className="pt-2">
                 <Link
                   href="/account/receipts"
-                  className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold transition-colors"
+                  className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
                 >
                   View all my receipts →
                 </Link>
@@ -384,19 +384,19 @@ export default async function FlowMapPage() {
         {/* ── Entity impact placeholder ─────────────────────────────────────── */}
         <div className="rounded-xl bg-white border border-charcoal/10 p-5 flex items-start gap-4">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pale-lavender flex items-center justify-center">
-            <Building2 className="size-5 text-amber-gold" aria-hidden="true" />
+            <Building2 className="size-5 text-amber" aria-hidden="true" />
           </div>
           <div>
             <p className="font-subhead text-sm font-semibold text-brand-black">
               Own a business on The BLACQList?
             </p>
-            <p className="font-body text-xs text-charcoal/60 mt-0.5 mb-3">
+            <p className="font-body text-xs text-charcoal-soft mt-0.5 mb-3">
               See how much the community has spent at your business through the owner dashboard.
               Detailed entity impact stats are available to verified business owners.
             </p>
             <Link
               href="/for-business"
-              className="font-subhead text-xs font-semibold text-amber-gold hover:text-light-gold transition-colors"
+              className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
             >
               Learn about the owner dashboard →
             </Link>
@@ -408,7 +408,7 @@ export default async function FlowMapPage() {
           <p className="font-subhead text-xs font-semibold text-brand-black mb-1">
             Privacy by design
           </p>
-          <p className="font-body text-xs text-charcoal/50 leading-relaxed">
+          <p className="font-body text-xs text-charcoal-soft leading-relaxed">
             All dollar-flow data is anonymized. Individual receipt details and buyer identities are
             never included in public views. Community totals only appear when contributed to by 5 or
             more distinct transactions. Users can opt out of community aggregates at any time.

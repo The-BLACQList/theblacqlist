@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Package } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 
@@ -45,11 +46,12 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
         {product.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.cover_image_url}
             alt={product.name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -61,7 +63,7 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
       {/* Content */}
       <div className="p-4 flex flex-col flex-1 gap-2">
         {showVendor && product.vendor_name && (
-          <p className="font-subhead text-xs text-charcoal/50 truncate">
+          <p className="font-subhead text-xs text-charcoal-soft truncate">
             {product.vendor_slug ? (
               <Link href={`/vendors/${product.vendor_slug}`} className="hover:text-charcoal">
                 {product.vendor_name}
@@ -75,26 +77,26 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
         <h3 className="font-headline text-base text-brand-black leading-snug">
           <Link
             href={`/marketplace/products/${product.global_slug}`}
-            className="hover:text-amber-gold transition-colors"
+            className="hover:text-amber transition-colors"
           >
             {product.name}
           </Link>
         </h3>
 
         {product.description && (
-          <p className="font-body text-xs text-charcoal/60 line-clamp-2">{product.description}</p>
+          <p className="font-body text-xs text-charcoal-soft line-clamp-2">{product.description}</p>
         )}
 
         {/* Price */}
         <div className="flex items-baseline gap-2 mt-auto pt-2">
           <span className="font-subhead text-base font-bold text-brand-black">{priceLabel}</span>
           {compareLabel && (
-            <span className="font-body text-xs text-charcoal/40 line-through">{compareLabel}</span>
+            <span className="font-body text-xs text-charcoal-faint line-through">{compareLabel}</span>
           )}
         </div>
 
         {/* Shipping */}
-        <p className="font-body text-[10px] text-charcoal/40 capitalize">
+        <p className="font-body text-[10px] text-charcoal-faint capitalize">
           {product.shipping_options === 'digital'
             ? 'Digital delivery'
             : product.shipping_options === 'pickup'

@@ -125,6 +125,8 @@ Use when: a migration file was included in the deploy and that migration is reve
 
 Use when: the migration dropped a column, dropped a table, or corrupted data — and Path B cannot undo it.
 
+> **Requires PITR enabled** (turned on at the **M7** gate before public launch) — so this is a **post-launch** path. During the empty-DB **setup/testing** phase (PITR off), recover instead by **restoring the latest Pro daily backup** or **recreating the empty project** — no real data is at stake.
+
 **This scenario is serious. Do not rush.**
 
 1. Supabase Dashboard (production project) → Settings → Backups → Point-in-time Recovery

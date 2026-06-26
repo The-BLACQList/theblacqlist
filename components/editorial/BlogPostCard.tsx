@@ -36,24 +36,24 @@ export function BlogPostCard({ title, slug, subtitle, authorName, publishedAt, t
         </div>
       )}
       <div>
-        <h2 className="font-headline text-base text-brand-black group-hover:text-amber-gold transition-colors leading-snug">
+        <h2 className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
           {title}
         </h2>
         {subtitle && (
-          <p className="font-body text-sm text-charcoal/60 leading-relaxed mt-1 line-clamp-2">
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed mt-1 line-clamp-2">
             {subtitle}
           </p>
         )}
       </div>
       <div className="flex items-center gap-2 mt-auto pt-1">
-        {authorName && <span className="font-subhead text-xs text-charcoal/60">{authorName}</span>}
+        {authorName && <span className="font-subhead text-xs text-charcoal-soft">{authorName}</span>}
         {authorName && publishedAt && (
-          <span className="text-charcoal/30" aria-hidden="true">
+          <span className="text-charcoal-faint" aria-hidden="true">
             ·
           </span>
         )}
         {publishedAt && (
-          <time dateTime={publishedAt} className="font-subhead text-xs text-charcoal/50">
+          <time dateTime={publishedAt} className="font-subhead text-xs text-charcoal-soft">
             {formatDate(publishedAt)}
           </time>
         )}

@@ -70,9 +70,9 @@ export default async function AdminOverviewPage() {
       {/* Header */}
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Overview</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Signed in as {user.email} ·{' '}
-          <span className="text-amber-gold">
+          <span className="text-amber">
             {role === 'super_admin' ? 'Super Admin' : 'Admin'}
           </span>
         </p>
@@ -105,7 +105,7 @@ export default async function AdminOverviewPage() {
         <h2 className="font-headline text-lg text-brand-black mb-4">Recent queue activity</h2>
         {!recentQueue || recentQueue.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
-            <p className="font-subhead text-sm text-charcoal/60">
+            <p className="font-subhead text-sm text-charcoal-soft">
               All clear — no pending items in the queue.
             </p>
           </div>
@@ -114,16 +114,16 @@ export default async function AdminOverviewPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Type
                   </th>
-                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Entity ID
                   </th>
-                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal/60 uppercase tracking-wide">
+                  <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
                     Age
                   </th>
                 </tr>
@@ -146,16 +146,16 @@ export default async function AdminOverviewPage() {
                           {QUEUE_TYPE_LABELS[item.queue_type] ?? item.queue_type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-charcoal/60 max-w-[160px] truncate">
+                      <td className="px-4 py-3 font-mono text-xs text-charcoal-soft max-w-[160px] truncate">
                         {item.entity_id}
                       </td>
                       <td className="px-4 py-3">
                         <AdminStatusBadge status={item.status} />
                       </td>
-                      <td className="px-4 py-3 font-body text-xs text-charcoal/60">
+                      <td className="px-4 py-3 font-body text-xs text-charcoal-soft">
                         <Link
                           href={itemHref}
-                          className="text-amber-gold hover:text-light-gold font-subhead font-semibold"
+                          className="text-amber hover:text-light-gold font-subhead font-semibold"
                         >
                           {formatRelativeDate(item.created_at)} →
                         </Link>
@@ -184,7 +184,7 @@ export default async function AdminOverviewPage() {
             <Link
               key={href}
               href={href}
-              className="rounded-xl border border-charcoal/10 bg-white px-4 py-3 font-subhead text-sm font-semibold text-brand-black hover:border-amber-gold/40 hover:text-amber-gold transition-colors"
+              className="rounded-xl border border-charcoal/10 bg-white px-4 py-3 font-subhead text-sm font-semibold text-brand-black hover:border-amber-gold/40 hover:text-amber transition-colors"
             >
               {label} →
             </Link>

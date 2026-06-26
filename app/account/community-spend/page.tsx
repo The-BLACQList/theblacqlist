@@ -94,7 +94,7 @@ export default async function CommunitySpendPage() {
         {/* Header */}
         <div>
           <h1 className="font-headline text-3xl text-brand-black">Community spend</h1>
-          <p className="font-subhead text-sm text-charcoal/60 mt-1 max-w-[480px]">
+          <p className="font-subhead text-sm text-charcoal-soft mt-1 max-w-[480px]">
             Anonymized community data showing how BLACQList users are supporting Black-owned
             businesses. No personal data is attached to these totals.
           </p>
@@ -142,20 +142,20 @@ export default async function CommunitySpendPage() {
             {topBusinesses.length > 0 && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Building2 className="size-4 text-amber-gold" aria-hidden="true" />
+                  <Building2 className="size-4 text-amber" aria-hidden="true" />
                   <h2 className="font-headline text-base text-brand-black">Top businesses</h2>
                 </div>
                 <div className="space-y-3">
                   {topBusinesses.map((b, i) => (
                     <div key={b.entity_id} className="flex items-center gap-3">
-                      <span className="font-subhead text-xs text-charcoal/30 w-5 text-right shrink-0">
+                      <span className="font-subhead text-xs text-charcoal-faint w-5 text-right shrink-0">
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="font-subhead text-sm font-semibold text-brand-black truncate">
                           {b.name}
                         </p>
-                        <p className="font-body text-xs text-charcoal/50">
+                        <p className="font-body text-xs text-charcoal-soft">
                           {b.transaction_count} {b.transaction_count === 1 ? 'receipt' : 'receipts'}
                         </p>
                       </div>
@@ -172,20 +172,20 @@ export default async function CommunitySpendPage() {
             {topCities.length > 0 && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="size-4 text-amber-gold" aria-hidden="true" />
+                  <MapPin className="size-4 text-amber" aria-hidden="true" />
                   <h2 className="font-headline text-base text-brand-black">Top cities</h2>
                 </div>
                 <div className="space-y-3">
                   {topCities.map((c, i) => (
                     <div key={c.entity_id} className="flex items-center gap-3">
-                      <span className="font-subhead text-xs text-charcoal/30 w-5 text-right shrink-0">
+                      <span className="font-subhead text-xs text-charcoal-faint w-5 text-right shrink-0">
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="font-subhead text-sm font-semibold text-brand-black truncate">
                           {c.name}
                         </p>
-                        <p className="font-body text-xs text-charcoal/50">
+                        <p className="font-body text-xs text-charcoal-soft">
                           {c.transaction_count} {c.transaction_count === 1 ? 'receipt' : 'receipts'}
                         </p>
                       </div>
@@ -202,8 +202,8 @@ export default async function CommunitySpendPage() {
 
         {/* Privacy note */}
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-charcoal/10">
-          <TrendingUp className="size-4 text-charcoal/30 shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="font-body text-xs text-charcoal/50 leading-relaxed">
+          <TrendingUp className="size-4 text-charcoal-faint shrink-0 mt-0.5" aria-hidden="true" />
+          <p className="font-body text-xs text-charcoal-soft leading-relaxed">
             All totals are anonymized. Individual receipts are never shown publicly. Users who opt
             out are excluded from community totals.
           </p>

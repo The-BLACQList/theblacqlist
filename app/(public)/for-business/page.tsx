@@ -37,7 +37,7 @@ export default function ForBusinessPage() {
       {/* Hero */}
       <section className="bg-deep-bg" aria-labelledby="for-business-heading">
         <Container className="py-16 md:py-24">
-          <p className="font-subhead text-amber-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
             For Business Owners
           </p>
           <h1

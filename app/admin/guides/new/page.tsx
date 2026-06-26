@@ -16,13 +16,13 @@ export default async function NewGuidePage() {
       <div>
         <Link
           href="/admin/guides"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal/50 hover:text-amber-gold mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Guides
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">New guide</h1>
-        <p className="font-subhead text-sm text-charcoal/60 mt-0.5">
+        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Create a new city guide. Add sections after saving.
         </p>
       </div>

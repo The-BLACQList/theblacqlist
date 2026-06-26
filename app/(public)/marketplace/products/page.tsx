@@ -41,7 +41,7 @@ export default async function MarketplaceProductsPage() {
       <div className="bg-white border-b border-charcoal/10 py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <nav aria-label="Breadcrumb" className="mb-3">
-            <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal/40">
+            <ol className="flex items-center gap-1.5 font-body text-xs text-charcoal-faint">
               <li>
                 <Link href="/marketplace" className="hover:text-charcoal">
                   Marketplace
@@ -54,7 +54,7 @@ export default async function MarketplaceProductsPage() {
             </ol>
           </nav>
           <h1 className="font-headline text-3xl text-brand-black">Products</h1>
-          <p className="font-body text-sm text-charcoal/50 mt-1">
+          <p className="font-body text-sm text-charcoal-soft mt-1">
             {products.length > 0
               ? `${products.length} product${products.length === 1 ? '' : 's'} from Black-owned businesses`
               : 'Products from Black-owned businesses'}
@@ -67,7 +67,7 @@ export default async function MarketplaceProductsPage() {
           <div className="rounded-xl border border-charcoal/10 bg-white py-20 text-center">
             <Package className="size-12 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
             <p className="font-headline text-lg text-brand-black">No products yet</p>
-            <p className="font-body text-sm text-charcoal/50 mt-2 max-w-xs mx-auto">
+            <p className="font-body text-sm text-charcoal-soft mt-2 max-w-xs mx-auto">
               Vendors are building their storefronts. Check back soon, or list your own business.
             </p>
             <Link

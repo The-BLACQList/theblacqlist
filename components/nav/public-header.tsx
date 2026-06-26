@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
+import { BrandMark } from '@/components/ui/brand-mark'
 import { createClient } from '@/lib/supabase/server'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 
@@ -26,12 +27,16 @@ export async function PublicHeader() {
           aria-label="Main navigation"
           className="flex h-full items-center justify-between gap-4"
         >
-          {/* Logo */}
+          {/* Logo: node-Q mark + Jost wordmark */}
           <Link
             href="/"
-            className="font-headline text-lg md:text-xl text-white hover:text-amber-gold transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
+            aria-label="The BLACQList — home"
+            className="group flex items-center gap-2 shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
-            The BLACQList
+            <BrandMark className="h-7 w-7 md:h-8 md:w-8 text-gold transition-colors" />
+            <span className="font-headline text-base md:text-lg font-medium tracking-[0.14em] text-white group-hover:text-gold transition-colors">
+              THE BLACQLIST
+            </span>
           </Link>
 
           {/* Desktop nav links */}
@@ -40,7 +45,7 @@ export async function PublicHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="font-subhead text-sm text-cream hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
+                  className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
                 >
                   {link.label}
                 </Link>
@@ -53,7 +58,7 @@ export async function PublicHeader() {
             <Link
               href="/search"
               aria-label="Search"
-              className="flex h-10 w-10 items-center justify-center rounded-md text-cream hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
+              className="flex h-10 w-10 items-center justify-center rounded-md text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -62,14 +67,14 @@ export async function PublicHeader() {
               <>
                 <Link
                   href="/account"
-                  className="font-subhead text-sm text-cream hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
+                  className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
                 >
                   My Account
                 </Link>
                 <form action={signOutAction}>
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center h-9 px-4 rounded-md font-subhead text-sm font-bold border border-amber-gold text-amber-gold hover:bg-amber-gold/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
+                    className="inline-flex items-center justify-center h-9 px-4 rounded-md font-subhead text-sm font-bold border border-amber-gold text-gold hover:bg-amber-gold/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
                   >
                     Sign Out
                   </button>
@@ -79,7 +84,7 @@ export async function PublicHeader() {
               <>
                 <Link
                   href="/sign-in"
-                  className="font-subhead text-sm text-cream hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
+                  className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
                 >
                   Sign In
                 </Link>
@@ -98,7 +103,7 @@ export async function PublicHeader() {
             <Link
               href="/search"
               aria-label="Search"
-              className="flex h-11 w-11 items-center justify-center rounded-md text-cream hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
+              className="flex h-11 w-11 items-center justify-center rounded-md text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>

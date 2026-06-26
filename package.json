@@ -11,6 +11,16 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "echo 'No tests configured' && exit 0",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test e2e/a11y.spec.ts e2e/keyboard-a11y.spec.ts e2e/contrast.spec.ts e2e/form-labels.spec.ts",
+    "test:a11y:axe": "playwright test e2e/a11y.spec.ts",
+    "test:a11y:report": "playwright show-report",
+    "test:infra": "playwright test e2e/infra.spec.ts",
+    "test:cross-browser": "playwright test e2e/cross-browser.spec.ts",
+    "test:gates": "playwright test e2e/launch-gates.spec.ts",
+    "seed:launch": "npx tsx scripts/seed-launch-listings.ts",
+    "test:seed-idempotent": "bash scripts/check-seed-idempotent.sh",
     "prepare": "husky"
   },
   "dependencies": {
@@ -21,30 +31,37 @@
     "@sentry/nextjs": "^10.53.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
-    "next": "16.2.5",
+    "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.3",
     "stripe": "^22.1.1",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.5",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.8"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

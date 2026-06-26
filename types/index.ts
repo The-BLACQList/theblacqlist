@@ -32,6 +32,10 @@ export interface DiscoveryEntity {
   avg_rating: number | null
   review_count: number
   save_count: number
+  /** Up to two Identity & Ownership attribute names shown as card chips. */
+  identity_chips?: string[]
+  /** Event start (ISO) — attached fail-soft for entity_type='event' so cards can show a date. */
+  event_starts_at?: string | null
 }
 
 // ─── CTA Types ────────────────────────────────────────────────────────────────
@@ -102,6 +106,7 @@ export interface ServiceItem {
   name: string
   description: string
   price: string | null
+  group: string | null
 }
 
 export interface SocialLinks {
@@ -129,6 +134,7 @@ export interface BusinessDetails {
   cta_url: string | null
   cta_label_override: string | null
   ships_nationwide: boolean
+  video_embed_url: string | null
   services: ServiceItem[]
 }
 
@@ -136,6 +142,11 @@ export interface GalleryImage {
   id: string
   src: string
   alt: string
+}
+
+export interface ReviewCriterionScore {
+  name: string
+  rating: number
 }
 
 export interface ReviewItem {
@@ -148,6 +159,70 @@ export interface ReviewItem {
   reviewer_display_name?: string | null
   owner_response: string | null
   owner_responded_at: string | null
+  criteria: ReviewCriterionScore[]
+  photos: GalleryImage[]
+}
+
+export interface ReviewCriterion {
+  id: string
+  name: string
+}
+
+export interface ReviewCriterionAverage {
+  name: string
+  average: number
+  count: number
+}
+
+export interface EntityAttributeValue {
+  name: string
+  slug: string
+  icon: string | null
+}
+
+export interface EntityAttributeGroup {
+  group: string
+  values: EntityAttributeValue[]
+}
+
+export interface EntityLink {
+  id: string
+  type: string
+  url: string
+  label: string | null
+}
+
+export interface EntityFaq {
+  id: string
+  question: string
+  answer: string
+}
+
+export interface OrganizerEvent {
+  id: string
+  name: string
+  url: string
+  starts_at: string
+  is_online: boolean
+  venue_name: string | null
+  city_name: string | null
+}
+
+export interface EventDetails {
+  description: string
+  starts_at: string
+  ends_at: string | null
+  timezone: string | null
+  is_online: boolean
+  venue_name: string | null
+  venue_address: string | null
+  city_name: string | null
+  state_abbr: string | null
+  ticket_url: string | null
+  price_text: string | null
+  cta_type: string
+  cta_url: string | null
+  organizer: { name: string; url: string } | null
 }
 
 export interface EntityPageData {
@@ -170,7 +245,14 @@ export interface EntityPageData {
   save_count: number
   owner_user_id: string | null
   details: BusinessDetails
+  event: EventDetails | null
+  organizerEvents: OrganizerEvent[]
+  attributes: EntityAttributeGroup[]
+  links: EntityLink[]
+  faqs: EntityFaq[]
   related: DiscoveryEntity[]
   images: GalleryImage[]
   reviews: ReviewItem[]
+  reviewCriteria: ReviewCriterion[]
+  reviewCriteriaAverages: ReviewCriterionAverage[]
 }
