@@ -87,7 +87,20 @@ npx supabase migration list --linked
 You'll see a table with **Local** and **Remote** columns. Read it:
 
 - **✅ Clean (expected if June-21 used `db push`):** the 20 versions `20260510000000` … `20260601000000` show a timestamp in **both** Local and Remote; the 9 newer ones show in **Local only**. → **Go straight to §3.3.**
-- **⚠️ Drifted (if June-21 was a manual SQL paste):** the first 20 are **missing from the Remote column** even though those tables clearly exist in the DB. This means the ledger doesn't know they're applied. **Do NOT just push** — it would try to recreate existing tables. Instead, tell the ledger they're already applied, then push:
+- **⚠️ Drifted (June-21 used a manual SQL run, not `db push`) — THIS IS OUR CASE:** the **Remote column is empty for *all* rows**, even the first 20 whose tables clearly exist. The ledger doesn't know anything is applied. **Do NOT just push** — it would try to recreate existing tables and error.
+
+  **First, confirm exactly which migrations are live** — run in the prod SQL Editor (this makes the repair airtight):
+  ```sql
+  select
+    to_regclass('public.listings')              is not null as m1_listings,
+    to_regclass('public.subscriptions')         is not null as m6_subscriptions,
+    to_regclass('public.collection_sections')   is not null as m21_collections,
+    to_regclass('public.attribute_groups')      is not null as m22_attributes,
+    to_regclass('public.listing_faqs')          is not null as m26_faqs,
+    to_regclass('public.review_criteria')       is not null as m27_review_criteria,
+    to_regclass('public.listing_details_event') is not null as m29_events;
+  ```
+  **Expected:** `m1_listings` + `m6_subscriptions` = **true** (the first 20 migrations are applied), and `m21`–`m29` = **false** (the 9 newest are NOT). If that's what you see, mark the first 20 as applied in the ledger (this only writes ledger rows — it does **not** touch your schema), then push:
   ```bash
   npx supabase migration repair --status applied \
     20260510000000 20260510000001 20260511000000 20260511000001 20260511000002 \
