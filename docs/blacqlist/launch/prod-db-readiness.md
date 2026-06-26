@@ -198,9 +198,11 @@ cd projects/theblacqlist
 
 SUPABASE_URL=https://ytlrnczevdnsfdzjbeqg.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=<prod service_role key from §1> \
-pnpm run seed:launch
+npx -y tsx scripts/seed-launch-listings.ts
 ```
 > The script reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from the environment (it does **not** read `.env`), so they must be on the command line exactly as above. `SUPABASE_URL` is the **prod** URL — that's what makes this write to production.
+>
+> **Run it directly with `npx -y tsx …`, NOT `pnpm run seed:launch`.** pnpm v11's pre-run "deps up-to-date" check re-runs `pnpm install`, which exits with an error on this project's un-approved build scripts (`@sentry/cli`, `sharp`, `unrs-resolver`) and **aborts before the seed even starts**. Running the script directly with `npx tsx` skips that check. (Alternative: `pnpm approve-builds` once, then `pnpm run seed:launch` works — but the direct command is simpler.)
 
 ### 6.2 — What it does (per listing)
 Resolves the city + category by slug, then upserts: `listings` → `listing_details_business` → `listing_hours` → action `listing_links` → refreshes the search vector. All upserts use `ON CONFLICT … ignoreDuplicates`, so it's **idempotent**.
