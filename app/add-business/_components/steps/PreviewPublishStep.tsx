@@ -54,6 +54,8 @@ interface FormSnapshot {
 interface Props {
   snapshot: FormSnapshot
   onSuccess: (listingName: string) => void
+  /** Jump the parent form to a given step (1–7) — used by the error summary. */
+  onGoToStep?: (step: number) => void
 }
 
 async function resolveCityId(cityText: string): Promise<string | null> {
@@ -130,7 +132,7 @@ const FIELD_INFO: Record<string, { label: string; step: number }> = {
   cta_url: { label: 'Action link', step: 6 },
 }
 
-export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
+export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
   const [isPublishPending, startPublishTransition] = useTransition()
   const [isDraftPending, startDraftTransition] = useTransition()
   const [serverError, setServerError] = useState<string | null>(null)
@@ -364,14 +366,25 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
                 const info = FIELD_INFO[key]
                 return (
                   <li key={key} className="font-subhead text-sm text-red-700">
-                    {info && <span className="font-semibold">{info.label} (Step {info.step}): </span>}
+                    {info && onGoToStep ? (
+                      <button
+                        type="button"
+                        onClick={() => onGoToStep(info.step)}
+                        className="font-semibold underline decoration-red-400 underline-offset-2 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded-sm"
+                      >
+                        {info.label} (Step {info.step})
+                      </button>
+                    ) : (
+                      info && <span className="font-semibold">{info.label} (Step {info.step})</span>
+                    )}
+                    {info ? ': ' : ''}
                     {msg}
                   </li>
                 )
               })}
             </ul>
             <p className="font-subhead text-xs text-red-600 mt-2">
-              Use the Back button to return to the step above and fix it.
+              {onGoToStep ? 'Click an error to jump to that step and fix it.' : 'Use the Back button to return to the step above and fix it.'}
             </p>
           </div>
         )}

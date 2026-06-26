@@ -256,6 +256,14 @@ export function SubmitListingForm({ categories }: Props) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Jump directly to a step (used by the preview step's error summary so a
+  // visitor can click an error and land on the field that needs fixing).
+  function goToStep(s: number) {
+    setErrors({})
+    setStep(s)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   function onPublishSuccess(listingName: string) {
     try {
       localStorage.removeItem(DRAFT_KEY)
@@ -1032,6 +1040,7 @@ export function SubmitListingForm({ categories }: Props) {
             coverCdnUrl,
           }}
           onSuccess={onPublishSuccess}
+          onGoToStep={goToStep}
         />
       )}
 

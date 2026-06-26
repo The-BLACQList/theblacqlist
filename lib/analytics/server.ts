@@ -2,6 +2,8 @@
 // For use in Server Components, Route Handlers, and Server Actions only.
 // Never import this in client components.
 
+import { after } from 'next/server'
+
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Json } from '@/lib/supabase/types'
 import type { AnalyticsEventName, AnyEventProperties } from './constants'
@@ -16,18 +18,26 @@ interface TrackEventInput {
 }
 
 /**
- * Fire-and-forget analytics insert via the service client.
- * Never awaits — analytics must not delay response paths.
+ * Analytics insert via the service client. Runs in `after()` so it executes
+ * AFTER the response is sent — guaranteed to complete on serverless (an
+ * un-awaited promise during render would otherwise be dropped) without delaying
+ * the response. Valid in Server Components, Route Handlers, and Server Actions.
  */
 export function trackServerEvent(input: TrackEventInput): void {
-  const serviceClient = createServiceClient()
-  void serviceClient.from('analytics_events').insert({
-    event_name: input.event_name,
-    entity_id: input.entity_id ?? null,
-    entity_type: input.entity_type ?? null,
-    user_id: input.user_id ?? null,
-    session_id: input.session_id ?? null,
-    properties: (input.properties ?? {}) as Json,
+  after(async () => {
+    try {
+      const serviceClient = createServiceClient()
+      await serviceClient.from('analytics_events').insert({
+        event_name: input.event_name,
+        entity_id: input.entity_id ?? null,
+        entity_type: input.entity_type ?? null,
+        user_id: input.user_id ?? null,
+        session_id: input.session_id ?? null,
+        properties: (input.properties ?? {}) as Json,
+      })
+    } catch {
+      // best-effort analytics — never throw
+    }
   })
 }
 

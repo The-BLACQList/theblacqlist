@@ -154,8 +154,16 @@ export async function createListingAction(
     if (email && !isValidEmail(email)) {
       fieldErrors.email = 'Enter a valid email address.'
     }
-    if (ctaUrl && !isValidUrl(ctaUrl)) {
-      fieldErrors.cta_url = 'URL must start with https://'
+    // cta_url holds different value kinds depending on the action: an email for
+    // "message", a phone for "call", a web link otherwise. Validate accordingly.
+    if (ctaUrl) {
+      if (ctaType === 'message') {
+        if (!isValidEmail(ctaUrl)) fieldErrors.cta_url = 'Enter a valid email address.'
+      } else if (ctaType === 'call') {
+        // phone number — accept as entered (rendered as a tel: link)
+      } else if (!isValidUrl(ctaUrl)) {
+        fieldErrors.cta_url = 'URL must start with https://'
+      }
     }
 
     const socialFields: [string, string | null][] = [
