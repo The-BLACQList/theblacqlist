@@ -11,24 +11,26 @@ import type { CategoryOption } from '@/app/add-business/page'
 
 const DRAFT_KEY = 'draft-add-business'
 
+// Entity types offered in the business form. Events use /add-event; the
+// Brick & Mortar vs Products & Services distinction is captured by location_type
+// (presence), not by a separate type — see the facet taxonomy.
 const ENTITY_TYPE_OPTIONS = [
   { value: 'business', label: 'Business' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'service_provider', label: 'Service Provider' },
-  { value: 'creative', label: 'Creative' },
   { value: 'professional', label: 'Professional' },
-  { value: 'vendor', label: 'Vendor' },
+  { value: 'creative', label: 'Creative' },
 ]
 
+// location_type values MUST match the DB CHECK (physical/online/hybrid/
+// virtual-services/ships-nationwide). These are the "presence" facet.
 const LOCATION_TYPE_OPTIONS = [
   { value: 'physical', label: 'Physical location' },
-  { value: 'virtual', label: 'Online / virtual' },
+  { value: 'online', label: 'Online / virtual' },
   { value: 'hybrid', label: 'Physical + online' },
-  { value: 'service_area', label: 'Service area' },
-  { value: 'national', label: 'Nationwide' },
-  { value: 'traveling', label: 'Traveling / mobile' },
+  { value: 'virtual-services', label: 'Service-based (no storefront)' },
+  { value: 'ships-nationwide', label: 'Ships nationwide' },
 ]
 
+// cta_type values MUST match the listing_details_business.cta_type DB CHECK.
 const CTA_TYPE_OPTIONS = [
   { value: 'book', label: 'Book an appointment' },
   { value: 'order', label: 'Order online' },
@@ -39,14 +41,6 @@ const CTA_TYPE_OPTIONS = [
   { value: 'shop', label: 'Shop now' },
   { value: 'subscribe', label: 'Subscribe' },
   { value: 'contact', label: 'Contact us' },
-  { value: 'commission', label: 'Commission work' },
-  { value: 'inquire', label: 'Make an inquiry' },
-  { value: 'get-tickets', label: 'Get tickets' },
-  { value: 'rsvp', label: 'RSVP' },
-  { value: 'register', label: 'Register' },
-  { value: 'learn-more', label: 'Learn more' },
-  { value: 'apply', label: 'Apply now' },
-  { value: 'buy-now', label: 'Buy now' },
 ]
 
 type SocialKey =
@@ -300,7 +294,7 @@ export function SubmitListingForm({ categories }: Props) {
     )
 
   const showCityState = fields.location_type === 'physical' || fields.location_type === 'hybrid'
-  const showServiceArea = fields.location_type === 'service_area'
+  const showServiceArea = fields.location_type === 'virtual-services'
 
   const isStep6Valid = CTA_STEP6_VALUES.includes(fields.cta_type)
 

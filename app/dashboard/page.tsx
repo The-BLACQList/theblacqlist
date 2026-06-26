@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight } from 'lucide-react'
+import { redirect } from 'next/navigation'
+import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight, Store } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { requireOwner } from '@/lib/dashboard/guard'
+import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { EmptyState } from '@/components/ui/empty-state'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -22,7 +24,8 @@ function CompletenessItem({ done, label }: { done: boolean; label: string }) {
 }
 
 export default async function DashboardPage() {
-  const owner = await requireOwner()
+  const owner = await getOwnerSession()
+  if (!owner) redirect('/sign-in?next=/dashboard')
   const supabase = await createClient()
 
   const { data: listings } = await supabase
@@ -49,11 +52,12 @@ export default async function DashboardPage() {
       </div>
 
       {!listings || listings.length === 0 ? (
-        <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-body text-charcoal-soft">
-            No pages found. Contact support if you believe this is an error.
-          </p>
-        </div>
+        <EmptyState
+          heading="No listings yet"
+          body="Create your first business page on The BLACQList to manage it here."
+          action={{ href: '/add-business', label: 'Add your business' }}
+          icon={Store}
+        />
       ) : (
         <div className="space-y-4">
           {listings.map((listing) => {

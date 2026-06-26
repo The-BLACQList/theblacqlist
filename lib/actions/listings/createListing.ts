@@ -110,7 +110,7 @@ export async function createListingAction(
 
   // Events derive their location_type from the online toggle; everything else
   // submits an explicit location_type.
-  const effectiveLocationType = isEvent ? (isOnline ? 'virtual' : 'physical') : locationType
+  const effectiveLocationType = isEvent ? (isOnline ? 'online' : 'physical') : locationType
   if (
     !VALID_LOCATION_TYPES.includes(effectiveLocationType as (typeof VALID_LOCATION_TYPES)[number])
   ) {

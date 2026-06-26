@@ -160,6 +160,32 @@ async function attachEventStartDates(
   }
 }
 
+// Per-user save state fetched separately (fail-soft) so discover cards show the
+// correct saved/unsaved icon. Anon users (no userId) get isSaved=false.
+async function attachSavedState(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string | undefined,
+  entities: DiscoveryEntity[]
+): Promise<void> {
+  if (entities.length === 0) return
+  if (!userId) {
+    for (const e of entities) e.isSaved = false
+    return
+  }
+  const ids = entities.map((e) => e.id)
+  const { data, error } = await supabase
+    .from('saves')
+    .select('listing_id')
+    .eq('user_id', userId)
+    .in('listing_id', ids)
+  if (error || !data) {
+    for (const e of entities) e.isSaved = false
+    return
+  }
+  const saved = new Set((data as Array<{ listing_id: string }>).map((r) => r.listing_id))
+  for (const e of entities) e.isSaved = saved.has(e.id)
+}
+
 export async function queryListings(params: ListingsParams): Promise<ListingsResult> {
   const supabase = await createClient()
   const page = Math.max(1, params.page ?? 1)
@@ -276,6 +302,12 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // Identity chips + event dates fetched separately (resilient to missing tables).
   await attachIdentityChips(supabase, finalEntities)
   await attachEventStartDates(supabase, finalEntities)
+
+  // Per-user save state for the card bookmark icon (fail-soft; anon → all false).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  await attachSavedState(supabase, user?.id, finalEntities)
 
   return { entities: finalEntities, total: search.total, page, pageSize: LISTINGS_PAGE_SIZE, facets }
 }

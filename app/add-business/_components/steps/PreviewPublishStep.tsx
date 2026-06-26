@@ -109,27 +109,61 @@ function buildFormData(snapshot: FormSnapshot): FormData {
   return fd
 }
 
+// Maps a server fieldError key → a human label + the step (1-indexed) it lives on,
+// so this final step can tell the user EXACTLY which field on which step to fix.
+const FIELD_INFO: Record<string, { label: string; step: number }> = {
+  entity_type: { label: 'Listing type', step: 1 },
+  name: { label: 'Business name', step: 1 },
+  tagline: { label: 'Short description', step: 1 },
+  category_id: { label: 'Category', step: 1 },
+  location_type: { label: 'Where you operate', step: 2 },
+  website_url: { label: 'Website', step: 3 },
+  email: { label: 'Email', step: 3 },
+  social_instagram: { label: 'Instagram link', step: 3 },
+  social_facebook: { label: 'Facebook link', step: 3 },
+  social_twitter: { label: 'X / Twitter link', step: 3 },
+  social_tiktok: { label: 'TikTok link', step: 3 },
+  social_linkedin: { label: 'LinkedIn link', step: 3 },
+  social_youtube: { label: 'YouTube link', step: 3 },
+  description: { label: 'About your business', step: 4 },
+  cta_type: { label: 'Primary action', step: 6 },
+  cta_url: { label: 'Action link', step: 6 },
+}
+
 export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
   const [isPublishPending, startPublishTransition] = useTransition()
   const [isDraftPending, startDraftTransition] = useTransition()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<string, string>> | null>(null)
   const [duplicates, setDuplicates] = useState<DuplicateResult[] | null>(null)
   const [pendingPublish, setPendingPublish] = useState(false)
   const [ownershipAttested, setOwnershipAttested] = useState(false)
 
+  // Show field-level errors (with their step) when the server returns them;
+  // otherwise fall back to a single generic message.
+  function showError(
+    result: { error: string; fieldErrors?: Partial<Record<string, string>> } | null,
+    fallback: string
+  ) {
+    if (result?.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+      setFieldErrors(result.fieldErrors)
+      setServerError(null)
+    } else {
+      setFieldErrors(null)
+      setServerError(result?.error ?? fallback)
+    }
+  }
+
   async function runPublish() {
     setServerError(null)
+    setFieldErrors(null)
     const fd = buildFormData(snapshot)
     fd.append('ownership_attested', 'true')
 
     const createResult = await createListingAction(null, fd)
 
     if (!createResult || 'error' in createResult) {
-      setServerError(
-        ('error' in (createResult ?? {})) && createResult
-          ? createResult.error
-          : 'Something went wrong. Please try again.'
-      )
+      showError(createResult, 'Something went wrong. Please try again.')
       return
     }
 
@@ -168,12 +202,11 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
   async function handleDraftSave() {
     startDraftTransition(async () => {
       setServerError(null)
+      setFieldErrors(null)
       const fd = buildFormData(snapshot)
       const result = await createListingAction(null, fd)
       if (!result || 'error' in result) {
-        setServerError(
-          ('error' in (result ?? {})) && result ? result.error : 'Failed to save draft.'
-        )
+        showError(result, 'Failed to save draft.')
         return
       }
       onSuccess(`${snapshot.name} (draft)`)
@@ -320,6 +353,28 @@ export function PreviewPublishStep({ snapshot, onSuccess }: Props) {
             )}
           </div>
         </div>
+
+        {fieldErrors && Object.keys(fieldErrors).length > 0 && (
+          <div role="alert" className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+            <p className="font-subhead text-sm font-semibold text-red-800 mb-1.5">
+              Please fix these before submitting:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              {Object.entries(fieldErrors).map(([key, msg]) => {
+                const info = FIELD_INFO[key]
+                return (
+                  <li key={key} className="font-subhead text-sm text-red-700">
+                    {info && <span className="font-semibold">{info.label} (Step {info.step}): </span>}
+                    {msg}
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="font-subhead text-xs text-red-600 mt-2">
+              Use the Back button to return to the step above and fix it.
+            </p>
+          </div>
+        )}
 
         {serverError && (
           <div

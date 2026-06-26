@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Route } from 'next'
-import { BookmarkPlus, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SaveIconButton } from '@/components/ui/save-icon-button'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity } from '@/types'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -88,17 +89,13 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
           <CoverPlaceholder name={entity.name} />
         )}
 
-        {/* Top-right badges row */}
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
-          {/* Save button — visual placeholder; auth not yet built */}
-          <button
-            aria-label="Save this listing (sign in required)"
-            className="flex items-center justify-center size-10 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-1"
-            type="button"
-          >
-            <BookmarkPlus size={18} aria-hidden="true" />
-          </button>
-        </div>
+        {/* Save / bookmark — real button (handles auth: anon click → sign-in) */}
+        <SaveIconButton
+          listingId={entity.id}
+          listingName={entity.name}
+          initialIsSaved={entity.isSaved ?? false}
+          className="z-10"
+        />
 
         {/* Featured / Sponsored badge */}
         {(entity.is_featured || entity.is_sponsored) && (

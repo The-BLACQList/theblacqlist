@@ -36,6 +36,8 @@ export interface DiscoveryEntity {
   identity_chips?: string[]
   /** Event start (ISO) — attached fail-soft for entity_type='event' so cards can show a date. */
   event_starts_at?: string | null
+  /** Per-user save state — attached fail-soft in queryListings (anon → false). */
+  isSaved?: boolean
 }
 
 // ─── CTA Types ────────────────────────────────────────────────────────────────
