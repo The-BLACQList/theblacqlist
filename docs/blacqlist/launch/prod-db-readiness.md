@@ -29,6 +29,8 @@
 | **Production `service_role` key** | Settings → **API** → Project API keys → **`service_role`** → reveal + copy |
 | **Production Project URL** | Settings → **API** → **Project URL** = `https://ytlrnczevdnsfdzjbeqg.supabase.co` |
 
+> **Expected on `pnpm install`:** you'll likely see `[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @sentry/cli, sharp, unrs-resolver`. That's **normal** — pnpm skips dependency build scripts by default, and none of those are needed for the migrations, the reference seed, or the listing seed. Ignore it. _(Only if you later run a local `next build`: `pnpm approve-builds` and approve `sharp`.)_
+
 Sanity-check the CLI is available (no install needed — `npx` fetches it):
 ```bash
 npx supabase --version      # any recent version is fine
