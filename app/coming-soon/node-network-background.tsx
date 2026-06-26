@@ -243,8 +243,8 @@ export function NodeNetworkBackground() {
       for (const rp of ripples) {
         const age = now - rp.start
         const progress = age / RIPPLE_MS
-        const r = age * rp.speed
-        const alpha = (1 - progress) * 0.4 * rp.alphaScale
+        const r = Math.max(0, age * rp.speed) // never negative (arc radius must be ≥ 0)
+        const alpha = Math.max(0, (1 - progress) * 0.4 * rp.alphaScale)
         ctx!.strokeStyle = rgba(GOLD, alpha)
         ctx!.lineWidth = 1.5
         ctx!.beginPath()
@@ -267,13 +267,15 @@ export function NodeNetworkBackground() {
     }
 
     // Spawn a ripple at (x, y) and send dollars flowing along the nearest node's edges.
-    // Shared by taps (full strength) and ambient circulation (gentle).
-    function emit(x: number, y: number, opts: EmitOpts = {}) {
+    // Shared by taps (full strength) and ambient circulation (gentle). `now` is the
+    // current frame's clock so the ripple is drawn with a consistent time base (a
+    // mismatch here produced a negative age → negative arc radius).
+    function emit(x: number, y: number, now: number, opts: EmitOpts = {}) {
       const flowCount = opts.flows ?? 5
       ripples.push({
         x,
         y,
-        start: performance.now(),
+        start: now,
         speed: opts.rippleSpeed ?? TAP_RIPPLE_SPEED,
         alphaScale: opts.rippleAlpha ?? 1,
       })
@@ -306,13 +308,13 @@ export function NodeNetworkBackground() {
     }
 
     // Self-emitted "dollars in motion" so the network feels alive without interaction.
-    function emitAmbient() {
+    function emitAmbient(now: number) {
       const n = nodes[Math.floor(Math.random() * nodes.length)]
       if (!n) return
-      emit(n.x, n.y, { flows: 3, rippleSpeed: 0.38, rippleAlpha: 0.55 })
+      emit(n.x, n.y, now, { flows: 3, rippleSpeed: 0.38, rippleAlpha: 0.55 })
     }
 
-    function update() {
+    function update(now: number) {
       for (const n of nodes) {
         n.x += n.vx
         n.y += n.vy
@@ -331,7 +333,6 @@ export function NodeNetworkBackground() {
         if (f.t >= 1) f.life -= 0.08
         if (f.t >= 1 && f.life <= 0) flows.splice(i, 1)
       }
-      const now = performance.now()
       for (let i = ripples.length - 1; i >= 0; i--) {
         const rp = ripples[i]
         if (rp && now - rp.start > RIPPLE_MS) ripples.splice(i, 1)
@@ -339,7 +340,7 @@ export function NodeNetworkBackground() {
       // Ambient circulation — only while the loop runs (so off under reduced-motion
       // and when the tab is hidden).
       if (now >= nextAmbient) {
-        emitAmbient()
+        emitAmbient(now)
         nextAmbient = now + rand(AMBIENT_MIN_MS, AMBIENT_MAX_MS)
       }
     }
@@ -364,9 +365,13 @@ export function NodeNetworkBackground() {
     let running = false
 
     function loop(now: number) {
-      update()
-      render(now)
-      rafId = requestAnimationFrame(loop)
+      // Reschedule in finally so a single bad frame can never freeze the effect.
+      try {
+        update(now)
+        render(now)
+      } finally {
+        if (running) rafId = requestAnimationFrame(loop)
+      }
     }
 
     function start() {
@@ -397,7 +402,9 @@ export function NodeNetworkBackground() {
 
     function onPointerDown(e: PointerEvent) {
       const rect = canvas!.getBoundingClientRect()
-      emit(e.clientX - rect.left, e.clientY - rect.top)
+      // performance.now() shares the rAF time origin; an event always precedes the
+      // next frame's timestamp, so the ripple's age stays ≥ 0.
+      emit(e.clientX - rect.left, e.clientY - rect.top, performance.now())
     }
 
     function onVisibility() {
