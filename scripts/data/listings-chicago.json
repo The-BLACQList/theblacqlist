@@ -1333,5 +1333,30 @@
     "founded_year": null,
     "hours": [],
     "links": []
+  },
+  {
+    "name": "Gorée Cuisine",
+    "slug": "goree-cuisine-chicago",
+    "tagline": "West African and Afro-Caribbean flavors in a warm, welcoming Bronzeville setting.",
+    "description": "West African and Afro-Caribbean restaurant in Bronzeville serving vibrant Senegalese and Caribbean dishes including thiéboudienne, griot, and mafé in a beautifully warm and welcoming dining room.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "food-dining",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "address_line_1": "1126 E 47th St",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60653",
+    "phone": null,
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": "$$",
+    "founded_year": null,
+    "hours": [],
+    "links": []
   }
 ]

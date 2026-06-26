@@ -9,13 +9,11 @@
 
 ---
 
-## ⚠️ 3 decisions to make first (they change the steps)
+## ✅ 3 decisions — RESOLVED (founder, 2026-06-24)
 
-1. **Images.** The launch listings have **no images** in the data, and the seed script uploads none — so prod would launch **imageless**. Your "≥40% of listings with an image" threshold (~102 images) needs a separate source → upload → `media_attachments` step that doesn't exist yet. **→ Source & upload images, or relax this for soft launch?**
-2. **Identity attributes.** The seed doesn't tag listings with attributes, so the **"Black-Owned" / identity filters** on Discover will be **empty** for the real listings. **→ Add a generic backfill (tag all 253 Black-Owned), or launch with category/city/text filters only?**
-3. **Gorée Cuisine** is **not** in the launch JSON (`listings-chicago.json`), and your address fix went into the dev SQL fixtures, not the JSON. **→ Should Gorée be in the launch set?** If yes, add it to the JSON with `1126 E 47th St, Chicago, IL 60653` (Bronzeville).
-
-The migrations + reference seed (Steps 1–2) are safe to run regardless. The listing seed (Step 4) is where decisions 2–3 land.
+1. **Images → soft-launch, deferred.** No image-coverage gate for launch; listings go live without photos and fill in over time (owner claims + curation). No action in this runbook.
+2. **Identity attributes → no backfill.** Since *every* listing is Black-owned, a "Black-Owned" filter is redundant — so no attribute backfill. The Identity & Ownership facet launches empty. _(Optional follow-up: hide the redundant "Black-Owned" value from the Discover sidebar — small UI tweak, not blocking.)_
+3. **Gorée → added.** Added to `scripts/data/listings-chicago.json` with `1126 E 47th St, Chicago, IL 60653` (Bronzeville). **Chicago is now 52, total 254.**
 
 ---
 
@@ -88,17 +86,15 @@ union all select 'review_criteria', count(*) from review_criteria;
 
 ---
 
-## Step 3 — Resolve the data decisions (2 & 3 above)
+## Step 3 — Data decisions (resolved — no action)
 
-- **If adding Gorée** → add its entry to `scripts/data/listings-chicago.json` (corrected Bronzeville address) before Step 4. (Chicago count becomes 52.)
-- **If backfilling identity attributes** → I'll prepare a small generic backfill SQL (tag all published listings "Black-Owned", attach any obvious facets) to run *after* Step 4. Tell me and I'll write it.
-- **Images** → if sourcing now, upload to the `listing-media` bucket and we add a `media_attachments` insert step. If deferring, note it as a known soft-launch gap.
+All three are settled: **images deferred**, **no attribute backfill**, **Gorée already added** to the JSON. Nothing to do here — go straight to Step 4.
 
 ---
 
 ## Step 4 — Seed the 253 launch listings
 
-The production seed is the JSON + TypeScript script (NOT the `supabase/seeds/*.sql` files — those are dev fixtures). The 3 JSON files already hold your reviewed set: **Atlanta 151 · Houston 51 · Chicago 51 = 253**.
+The production seed is the JSON + TypeScript script (NOT the `supabase/seeds/*.sql` files — those are dev fixtures). The 3 JSON files already hold your reviewed set: **Atlanta 151 · Houston 51 · Chicago 52 = 254** (Chicago includes Gorée).
 
 ```bash
 cd projects/theblacqlist
@@ -113,7 +109,7 @@ npx tsx scripts/seed-launch-listings.ts
   ```
   [Atlanta] Inserted: 151, Skipped: 0, Errors: 0
   [Houston] Inserted: 51,  Skipped: 0, Errors: 0
-  [Chicago] Inserted: 51,  Skipped: 0, Errors: 0
+  [Chicago] Inserted: 52,  Skipped: 0, Errors: 0
   ```
 
 > The prod **service_role** key (from Supabase → project → Settings → API). It bypasses RLS for the insert — keep it out of chat/files; paste it inline in your terminal only.
@@ -128,10 +124,10 @@ select c.slug, count(*)
 from listings l join cities c on c.id = l.city_id
 where l.status = 'published'
 group by c.slug order by c.slug;
--- expect atlanta-ga 151, houston-tx 51, chicago-il 51
+-- expect atlanta-ga 151, houston-tx 51, chicago-il 52
 
 -- Details + hours present
-select count(*) from listing_details_business;          -- ~253
+select count(*) from listing_details_business;          -- ~254
 select count(distinct listing_id) from listing_hours;   -- listings with hours
 
 -- Search works
