@@ -39,15 +39,15 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Production data: founder keep/edit/remove pass **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements → ATL 151 / HOU 51 / CHI 51); _remaining: image coverage + production import (093)_
 - `[MVP] 🟠 P1` Founder legal confirms: entity name + mailing address + DMCA agent
 - `[MVP] 🔴 P0` Supabase production project (091) — _🟢 **schema + reference data live** (38 tables, RLS, 3 buckets, search, reference seed — 2026-06-21); only **auth config + admin user** remain (need the prod domain/deploy), PITR at M7_
-- `[MVP] 🔴 P0` Vercel production deploy (092) + domain / DNS / SSL — _**F3 ✅ done 2026-06-23** (Git relinked to org repo, Vercel MCP access, Preview build green); **remaining:** Production-scope env repoint to prod Supabase (F9) + DNS/SSL (F4) + merge `feat/phase-2-legal-pages` → `main` for a production build_
-- `[MVP] 🔴 P0` Email: Resend production domain verification
+- `[MVP] 🔴 P0` Vercel production deploy (092) + domain / DNS / SSL — _**F3 ✅** (Git relinked, MCP, Preview green) · **F9 "set-now" env ✅ 2026-06-24** (4 vars set, build green); **remaining:** F9 **Supabase cutover** → prod project (gated on 091/093) · DNS/SSL (F4) · merge `feat/phase-2-legal-pages` → `main` for a current production build_
+- `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before F4 go-live_
 - `[MVP] 🔴 P0` Production seed import (093)
 
 **🎯 Up Next**
 - `[MVP] 🟠 P1` Staging QA: account-deletion end-to-end walk-through — _needs an authed session_
 - `[MVP] 🟡 P2` SEO audit (090) — _GSC submission only, post-deploy_
 - `[MVP] 🔴 P0` Regression QA sign-off (089) — incl. TA-01–TA-25 + cross-browser L4–L12
-- `[MVP] 🔴 P0` Monitoring & alerting (094) + Sentry PII scrubbing
+- `[MVP] 🔴 P0` Monitoring & alerting (094) + Sentry PII scrubbing — _**F6 founder setup ✅** (source maps verified, DSN set); only K5 prod-error test + alert rule + K7 uptime remain, all post-deploy_
 - `[MVP] 🟠 P1` Post-deploy production tests (K4 / K5 / K7 + smoke)
 - `[MVP] 🔴 P0` Launch-gate sign-offs (M3, M5, M6, M7, M10)
 - `[MVP] 🔴 P0` Soft launch → Go/No-Go → Public announcement
@@ -55,6 +55,9 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 **✅ Done (this stretch)**
 - 🙋🏾‍♀️ **Founder F1** — Supabase **production** project created (Pro plan) · 2026-06-21
 - 🙋🏾‍♀️ **Founder F2** — domain `theblacqlist.com` confirmed at Bluehost (active, auto-renew, exp Aug 17 2026) · 2026-06-21 _(⚠️ live WordPress site + Google Workspace email on it — F4 DNS cutover is a go-live step)_
+- 🙋🏾‍♀️ **Founder F5** — Resend email **wiring complete** · 2026-06-24 (sending subdomain `send.theblacqlist.com` verified · 2 `re_…` keys · custom SMTP on **both** Supabase projects · auth email sends from domain · DMARC added) _(deliverability warm-up before F4 is the only follow-up)_
+- 🙋🏾‍♀️ **Founder F6** — Sentry **wiring complete + verified** · 2026-06-24 (org `the-blacqlist`, prod+staging projects, auth token/org/project set → **source-map upload confirmed in the prod build**, `NEXT_PUBLIC_SENTRY_DSN` set both scopes) _(K5 prod-error test + alert rule + K7 uptime are post-deploy, on card 094)_
+- 🙋🏾‍♀️ **Founder F9 (partial)** — production env vars **"set-now" batch ✅** · 2026-06-24 (`NEXT_PUBLIC_APP_URL` confirmed + `NEXT_PUBLIC_SITE_URL` + `ADMIN_NOTIFICATION_EMAIL` + `SENTRY_TEST_TOKEN`; build green) _(remaining: the 3 Supabase vars at cutover, gated on 091/093 — see `f9-production-env-handoff.md`)_
 - ⚙️ **091 production DB foundation** — 21 migrations + reference data applied to the prod Supabase (38 tables · RLS · 3 buckets · search · states/cities/categories/plans · 0 listings) · 2026-06-21
 - BRM-01 / BRM-02 accessibility fixes
 - Amber-as-text contrast fix (098: `text-amber-gold` → `text-amber` on light, `text-gold` on dark)
@@ -341,14 +344,15 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 ---
 
 **`[MVP] 🔴 P0` Email: Resend production domain verification**
-⬛ Infra · **Due Jul 2** · 2–48h DNS lead · ⏳ Waiting-external (DNS)
+⬛ Infra · **Due Jul 2** · 🟡 **wiring ✅ 2026-06-24** (domain verified · SMTP on both Supabase projects · sends from domain · DMARC added) · _remaining: deliverability warm-up → "inbox, not spam"_
 
 **Description.** Transactional email — signup verification, claim notifications, password reset — must actually reach inboxes before launch, which requires verifying our sending domain with Resend via SPF/DKIM/DMARC DNS records. Like the app domain, it carries a DNS-propagation lead time (up to 48h), so it runs in parallel with the domain setup. Done when all three DNS records are green in Resend and a real signup email lands in an inbox (not spam) with a working link.
 
 **Checklist.**
-- Add `theblacqlist.com` in Resend; SPF + DKIM + DMARC records green
-- Live key (prod) + test key (preview); `RESEND_FROM_EMAIL=noreply@theblacqlist.com`
-- End-to-end test: signup → verification email lands in inbox (not spam), link works
+- ✅ Verified **sending subdomain** `send.theblacqlist.com` in Resend (DKIM / SPF / MX green); DMARC `v=DMARC1; p=none;` added _(subdomain keeps Resend SPF/DKIM off the Google-Workspace root SPF)_
+- ✅ Two `re_…` keys (prod + preview — Resend has no live/test prefix); `RESEND_FROM_EMAIL=The BLACQList <noreply@send.theblacqlist.com>`
+- ✅ Part B: custom SMTP (`smtp.resend.com:465`, user `resend`) enabled on **both** Supabase projects so Auth mail (password reset) sends from the domain
+- ⚠️ End-to-end test: reset email **sends from `noreply@send.theblacqlist.com`** ✅ but **lands in spam** today (new-domain reputation) — pending warm-up + "Not spam" before "inbox, not spam" is fully met
 
 ---
 
@@ -365,7 +369,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 ---
 
 **`[MVP] 🔴 P0` Monitoring & alerting (094) + Sentry PII scrubbing**
-⬛ Infra · **Due Jul 7** · ~4–5h
+⬛ Infra · **Due Jul 7** · ~4–5h · _Sentry **code complete + F6 founder setup done** (org `the-blacqlist`, prod+staging projects, source-map upload **verified in prod build 2026-06-24**, `NEXT_PUBLIC_SENTRY_DSN` set both scopes, PII scrubbing 3 tests ✅); remaining = K5 prod-error test + ≥5/5min alert rule + K7 uptime monitors, all **post-deploy**_
 
 **Description.** Gives us eyes on production health from the first minute — error tracking, analytics, uptime checks, and alerts — so we hear about problems before users do. Critically, Sentry PII scrubbing must be configured *before* the first production deploy so we never capture users' emails or phone numbers in error events. Done when Sentry is capturing (PII-free) with alerts wired, Vercel Analytics is on, the health endpoint is live, and three uptime monitors are green.
 

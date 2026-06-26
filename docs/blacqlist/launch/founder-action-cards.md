@@ -78,7 +78,7 @@ These are the **founder-owned** companions to the engineering cards on the main 
 | `SUPABASE_SERVICE_ROLE_KEY` | Prod + Preview (**Build *and* Runtime**) | **yes** |
 | `NEXT_PUBLIC_SITE_URL` | Prod = `theblacqlist.com` · Preview = staging URL | no |
 | `AUTH_SECRET` | Prod + Preview (different values) | **yes** |
-| `RESEND_API_KEY` | Prod = live · Preview = test | **yes** |
+| `RESEND_API_KEY` | Prod + Preview (two `re_…` keys) | **yes** |
 | `RESEND_FROM_EMAIL` | Prod + Preview | yes |
 | `NEXT_PUBLIC_SENTRY_DSN` (+ build-time `SENTRY_AUTH_TOKEN`/`ORG`/`PROJECT`) | Prod + Preview | mixed |
 
@@ -109,8 +109,10 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ---
 
-## `🙋🏾‍♀️ F5 · 🔴` Set up **Resend** (email) — _audited 2026-06-23_
+## `🙋🏾‍♀️ F5 · ✅` Set up **Resend** (email) — _DONE 2026-06-24_
 ⬛ Infra · ⏳ founder-gated · **Unblocks:** the 6 app transactional emails (welcome, claim status, listing rejected, admin claim alert). _Auth emails (password reset / future sign-up confirm) are a **separate** step — see Part B._
+
+> **✅ DONE (2026-06-24).** Sending subdomain **`send.theblacqlist.com` verified** in Resend (DKIM / SPF / MX all green). Both API keys created + saved (production + preview). `RESEND_FROM_EMAIL = 'The BLACQList <noreply@send.theblacqlist.com>'`. Custom SMTP (Part B) enabled on **both** Supabase projects — `theblacqlist-production` **and** the staging project the `.vercel.app` build currently points at (`ChaDe1922's Project`) — so auth mail keeps working through the **F9** prod-env repoint. Password-reset test confirmed sending **from the domain**; DMARC `v=DMARC1; p=none;` added. **Only follow-up:** deliverability warm-up — first sends land in spam (normal for a brand-new sending domain); "Not spam" + send volume + the new DMARC record resolve it before **F4** go-live.
 
 **Audit (2026-06-23).** The app has **two** email systems, and the original card only covered one:
 - **Resend = app emails** (`lib/email/resend.ts`): 6 react-email templates — welcome, claim-submitted, claim-admin-notification, claim-approved, claim-rejected, entity-rejected. From = `RESEND_FROM_EMAIL` (default `The BLACQList <noreply@theblacqlist.com>`). **If the key is missing it just logs + skips — nothing breaks**, emails simply don't send.
@@ -120,7 +122,7 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ### Part A — Resend (app emails)
 - Create a Resend account (free tier is fine at launch volume).
-- Create a **live** key (`re_live_…`) → for the **Production** Vercel scope, and a **test** key (`re_test_…`) → for **Preview**. Save both for **F9**.
+- Create **two API keys** — both are `re_…` (Resend has **no** `live`/`test` prefix; that's a Stripe convention — you just name them): one named for the **Production** Vercel scope, one for **Preview**. Save both for **F9**.
 - **Verify a *sending subdomain* `send.theblacqlist.com`** in Resend (Domains → Add Domain) — **not** the root domain. Reason: your root has a **Google Workspace SPF** already, and you can't have two SPF records; a subdomain keeps Resend's SPF/DKIM isolated and leaves Google email untouched.
 - Sender address will be **`noreply@send.theblacqlist.com`** → set `RESEND_FROM_EMAIL = 'The BLACQList <noreply@send.theblacqlist.com>'`.
 - Set **`ADMIN_NOTIFICATION_EMAIL`** = the inbox that should receive "new claim submitted" alerts.
@@ -132,25 +134,49 @@ These are the **founder-owned** companions to the engineering cards on the main 
 - Same screen / **URL Configuration**: set **Site URL** = `https://theblacqlist.com` and add `https://theblacqlist.com/auth/callback` to the **Redirect URLs** allowlist (the app builds auth links from `NEXT_PUBLIC_APP_URL`).
 - (Staging Supabase: optional — leave default or point at the same Resend subdomain with the test key.)
 
-**Env vars (already present by name in Vercel — set/confirm the values):** `RESEND_API_KEY` (Prod=live · Preview=test, **secret**) · `RESEND_FROM_EMAIL` (both) · `ADMIN_NOTIFICATION_EMAIL` (both). Secrets → you paste; hand the keys over in **F9**.
+**Env vars (already present by name in Vercel — set/confirm the values):** `RESEND_API_KEY` (Prod + Preview — two `re_…` keys, **secret**) · `RESEND_FROM_EMAIL` (both, = `The BLACQList <noreply@send.theblacqlist.com>`) · `ADMIN_NOTIFICATION_EMAIL` (both). Secrets → you paste; hand the keys over in **F9**.
 
 **Links.** [Resend](https://resend.com) · [API keys](https://resend.com/docs/dashboard/api-keys/introduction) · [Domain (subdomain) verification](https://resend.com/docs/dashboard/domains/introduction) · [Resend SMTP](https://resend.com/docs/send-with-smtp) · [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
 
 ---
 
-## `🙋🏾‍♀️ F6 · 🟠` Set up **Sentry** (error monitoring)
+## `🙋🏾‍♀️ F6 · ✅` Set up **Sentry** (error monitoring) — _DONE 2026-06-24_
 ⬛ Infra · ⏳ founder-gated · **Unblocks:** 094 (monitoring & alerting)
 
-**Description.** Sentry tells us about production errors before users do. Create a **production** project and a **staging** project, and grab the DSN for each plus a build token (so error stack traces are readable). Free tier is fine for our volume. **Done when** you've got both DSNs and a build auth token saved for F9.
+> **✅ DONE (2026-06-24).** Founder owns Sentry org **`the-blacqlist`** with projects **`theblacqlist-production`** + **`theblacqlist-staging`**. Org auth token + `SENTRY_ORG` + `SENTRY_PROJECT` set in Vercel → **source-map upload verified in the production build** (93 client + 1,034 server bundles uploaded; release `bee61fd…`). `NEXT_PUBLIC_SENTRY_DSN` set for Production + Preview → runtime errors report. _(We deliberately **skipped `@sentry/wizard`** — it would have overwritten the hardened, PII-scrubbed config; manual env wiring instead.)_ **Post-deploy remainder (rides launch, tracked on card 094):** K5 (fire `/api/_debug/sentry?token=` → confirm a `production`-tagged, source-mapped, PII-free event), the ≥5-errors/5-min alert rule, and 3 uptime monitors (K7).
 
-**Checklist.**
-- Create a Sentry account/org
-- Create a **production** project (note its DSN) and a **staging** project (note its DSN)
-- Generate an **auth token** for source-map upload (Settings → Auth Tokens)
-- Note your **org slug** and **project slug**
-- Save DSNs + token for F9
+> **✅ The code is already done + launch-safe.** `@sentry/nextjs` is fully wired (client/server/edge configs, production-only, 10% trace sampling), source-map upload is configured in `next.config.ts`, there's a health endpoint (`/api/health`), a guarded prod-error test route (`/api/_debug/sentry`), and a global error boundary. **PII scrubbing is enforced in code** — `lib/observability/sentry-scrub.ts` keeps only a user `id` (drops email/IP/name), deletes request bodies/cookies/auth headers, and redacts email+phone from messages — with **3 passing unit tests** (`tests/sentry-scrub.test.ts`). That satisfies the **K6** "no PII in events" audit at the code level. **F6 is therefore not a code task — it's account setup + env wiring (below).**
 
-**Links.** [Sentry](https://sentry.io) · [Next.js setup guide](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
+**Description.** Sentry tells us about production errors before users do. You create the Sentry account + projects and grab the DSNs and a build token; the app already knows what to do with them. Free tier is fine for our volume. **Done when** both DSNs + a build auth token (+ org/project slugs) are saved for **F9**, the env vars are set in Vercel, and one alert rule exists.
+
+### Part A — Sentry account + projects
+- **Confirm account ownership.** A dev Sentry org already exists from the build (org id `o…57486336`, DSN in `.env.local`). ⚠️ If that org is the **developer's personal account**, create a **founder-owned** org now and use it for production — monitoring should belong to you, same as the Vercel/Supabase/Apple accounts. If it's already yours, reuse it.
+- Create a **production** project (note its DSN) and a **staging** project (note its DSN). _(One project with environment tags also works, but two is cleaner.)_
+- Generate a **build auth token** (Settings → Auth Tokens) for source-map upload; note your **org slug** and **project slug**.
+- Save both DSNs + the token + slugs for **F9**.
+- Add **one alert rule**: ≥ 5 errors in 5 minutes → email or Slack.
+
+### Part B — Vercel env vars
+
+| Variable | Scope | Secret? | Value |
+|---|---|---|---|
+| `NEXT_PUBLIC_SENTRY_DSN` | Prod = prod DSN · Preview = **staging** DSN | no | browser + server DSN |
+| `SENTRY_DSN` _(optional)_ | same split | yes-ish | server-only; the code prefers it and falls back to the public one |
+| `SENTRY_AUTH_TOKEN` | **Build** scope | **yes** | source-map upload token |
+| `SENTRY_ORG` | **Build** scope | no | org slug |
+| `SENTRY_PROJECT` | **Build** scope | no | project slug |
+
+**Gotchas (from the audit):**
+- **Everything here is fail-soft.** A missing DSN → errors just aren't reported (the app never breaks). A missing `SENTRY_AUTH_TOKEN`/`ORG`/`PROJECT` → the build **still succeeds**, source maps simply don't upload (stack traces are minified but still readable). Unlike the Supabase service-role key, **a missing Sentry token does not fail `next build`.**
+- **PII scrubbing is in the code, not the dashboard** — you do **not** configure scrubbing in Sentry. Just verify zero PII on a real production event (K5) after deploy.
+- **Sentry only runs when `NODE_ENV=production`** — which Vercel sets for **every** deployed build, including **Preview**. So Preview deployments report to Sentry too → give the **Preview** scope the **staging** DSN (not the prod one). Local `npm run dev` (`NODE_ENV=development`) keeps Sentry off.
+- The 3 build-time vars are **Build scope, not Runtime** — they're only read during `next build`.
+
+**Post-deploy verification (094 / K5 / K7 — needs the live site):**
+- Hit `https://<prod>/api/_debug/sentry?token=<SENTRY_TEST_TOKEN>` → confirm the event lands in Sentry tagged `environment: production`, the stack trace shows real `.tsx` files (source maps), and there's **zero PII**. Remove/disable the test route after.
+- Confirm `/api/health` returns `ok`; wire 3 uptime monitors (`/`, `/api/health`, `/discover`).
+
+**Links.** [Sentry](https://sentry.io) · [Auth Tokens](https://docs.sentry.io/account/auth-tokens/) · [Next.js setup guide](https://docs.sentry.io/platforms/javascript/guides/nextjs/) · authoritative var list: [environment-variable-checklist.md](./environment-variable-checklist.md)
 
 ---
 
@@ -186,19 +212,22 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ---
 
-## `🙋🏾‍♀️ F9 · 🔴` Hand over the **secrets** — securely
-⬛ Infra · ⏳ founder-gated · _depends on F1, F5, F6_ · **Unblocks:** 092 (env vars)
+## `🙋🏾‍♀️ F9 · 🟡` Set the **production env vars** (in Vercel) — _partial 2026-06-24_
+⬛ Infra · ⏳ founder-gated · _depends on F1, F5, F6_ · **Unblocks:** 092 (production deploy)
 
-**Description.** Collect all the keys from F1/F5/F6 into a **password manager** and share that entry with me. **Never** email or Slack secrets. I generate the one server-only `AUTH_SECRET` myself — you don't need to. **Done when** I can pull every value below from a shared, secure vault. Rule of thumb: anything named `NEXT_PUBLIC_*` is safe to be public; everything else is a secret (the **service_role** key especially must never be public).
+> **🟡 PARTIAL (2026-06-24).** The 4 "set now" vars are in and the **build is green**: `NEXT_PUBLIC_APP_URL` (confirmed = `https://theblacqlist.com`), `NEXT_PUBLIC_SITE_URL`, `ADMIN_NOTIFICATION_EMAIL`, `SENTRY_TEST_TOKEN`. **Remaining = the Supabase production cutover** (the 3 `…SUPABASE…` vars), 🔴 **gated** on the production database being migrated + seeded (091 completion + 093). Full walk-through: **[f9-production-env-handoff.md](./f9-production-env-handoff.md)**.
+
+**Description.** Set the Production-scope environment variables in **Vercel → Settings → Environment Variables** so the live site has its real configuration. _(Reframed 2026-06-24: you paste the values **directly into Vercel** — the old "share keys via a password manager" step is obsolete, since the env tooling has no API and secrets stay on your side regardless.)_ Rule of thumb: anything named `NEXT_PUBLIC_*` is safe to be public; everything else is a secret (the **service_role** key especially must never be public).
 
 **Checklist.**
-- Supabase: **Project URL**, **anon key**, **service_role key** (from F1)
-- Resend: **live key**, **test key**, sender `noreply@theblacqlist.com` (from F5)
-- Sentry: **prod DSN**, **staging DSN**, **auth token**, org + project slugs (from F6)
-- Put all of the above in 1Password / Bitwarden and share with me
+- ✅ Resend (production key + `noreply@send.theblacqlist.com` sender) — set in **F5**
+- ✅ Sentry (DSN + org auth token + org/project slugs) — set in **F6**
+- ✅ `AUTH_SECRET` — set (Jun 13)
+- ✅ The 4 "set now" vars: `NEXT_PUBLIC_APP_URL` · `NEXT_PUBLIC_SITE_URL` · `ADMIN_NOTIFICATION_EMAIL` · `SENTRY_TEST_TOKEN`
+- 🔴 **At cutover (gated on 091/093):** `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` → repoint from staging to `theblacqlist-production` (`ytlrnczevdnsfdzjbeqg`), then redeploy
 - Confirm none of the secret keys are prefixed `NEXT_PUBLIC_`
 
-**Links.** [authoritative variable list](./environment-variable-checklist.md) · [1Password](https://1password.com) · [Bitwarden](https://bitwarden.com)
+**Links.** **[F9 production env handoff (detailed)](./f9-production-env-handoff.md)** · [authoritative variable list](./environment-variable-checklist.md)
 
 ---
 
