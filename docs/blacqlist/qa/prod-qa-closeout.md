@@ -232,8 +232,8 @@ Run **Chrome DevTools → Lighthouse → Mobile** on the **bypassed** prod URLs 
 | 1 · Account deletion (code review) | ✅ PASS | 2026-06-26 | Cascade matches Privacy §7 |
 | 1 · Account deletion (live walk-through) | ⬜ | | Founder run + SQL |
 | 2 · K7 health endpoints live | ✅ PASS | 2026-06-28 | both 200 / ok (re-verified on e192df2) |
-| 2 · K7 uptime monitors configured | ⬜ | | Founder — Sentry Uptime, 3 monitors (no new service) |
+| 2 · K7 uptime monitors configured | ✅ PASS | 2026-06-28 | Sentry Uptime — 3 monitors live (no new service) |
 | 3 · K5 Sentry prod error | ⬜ | | Founder + Sentry |
-| 4 · 086 RLS structural | ⬜ | | prod SQL |
-| 4 · 086 RLS behavioral | ⬜ | | anon + 2nd user |
+| 4 · 086 RLS structural | ✅ PASS | 2026-06-28 | Query 1: 0 RLS-off tables; Query 3: all 9 high-risk tables policied |
+| 4 · 086 RLS behavioral | ✅ PASS | 2026-06-28 | B1 nonpublished=0; B2 stranger saves/receipts=0 (SQL-editor impersonation) |
 | 5 · 088 Lighthouse (5 pages) | ⬜ | | Founder, bypassed URLs |
