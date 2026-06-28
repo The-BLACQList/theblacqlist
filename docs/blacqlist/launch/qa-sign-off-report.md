@@ -1,19 +1,18 @@
 # QA Sign-Off Report — The BLACQList
 
 **Ticket:** 089  
-**Status:** Pending — execute after 086, 087, 088 complete  
-**Environment:** Staging Vercel URL (not localhost)  
-**Prerequisite:** Seed data applied (150+ Atlanta, 50+ Houston, 50+ Chicago listings)
+**Status:** Prerequisites cleared (2026-06-28) — **ready to execute the TA-01–25 pass on production via `?preview=<token>`**  
+**Environment:** Production `theblacqlist.com` behind the coming-soon gate — reach pages with `?preview=<COMING_SOON_BYPASS_TOKEN>` (the gate allowlists `/api/*` + `/auth/*`).  
+**Prerequisite:** Seed data applied — prod has **254 listings (ATL 151 / HOU 51 / CHI 52)**, M9 met.
 
 ---
 
 ## Prerequisites Checklist
 
-- [ ] Ticket 086 (security audit) — all Critical and High findings resolved
-- [ ] Ticket 087 (accessibility audit) — all Critical findings resolved
-- [ ] Ticket 088 (performance) — Lighthouse scores documented, all `<img>` converted
-- [ ] Staging environment: all migrations applied
-- [ ] Staging environment: seed data loaded
+- [x] Ticket 086 (security audit) — RLS re-verified on prod 2026-06-28 (Query 1: 0 RLS-off tables; all 9 high-risk tables policied; anon + uid-isolation spot-checks pass). Evidence: `docs/blacqlist/qa/prod-qa-closeout.md` §4 + `security-audit-report.md`.
+- [x] Ticket 087 (accessibility audit) — quick-fixes P1 cleared (097 save announcement + 098 contrast); commit `b2b9305`. Auth-page CLS fix `939c95f`.
+- [x] Ticket 088 (performance) — prod Lighthouse run 2026-06-28: Perf 90–100, CLS 0, TBT low on all 5 pages (sign-up CLS 0.764→0 fixed). Evidence: `prod-qa-closeout.md` §5.
+- [x] Production environment: all migrations applied (093) + seed loaded (254 listings)
 - [ ] Test accounts provisioned (see below)
 
 ---
