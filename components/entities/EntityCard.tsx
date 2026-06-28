@@ -10,6 +10,7 @@ import { SaveIconButton } from '@/components/ui/save-icon-button'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity } from '@/types'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 interface EntityCardProps {
   entity: DiscoveryEntity
@@ -66,6 +67,7 @@ function CoverPlaceholder({ name }: { name: string }) {
 export function EntityCard({ entity, className, isPriority = false }: EntityCardProps) {
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
+  const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
 
   return (
     <article
@@ -76,9 +78,9 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
     >
       {/* Cover image — 3:2 aspect ratio */}
       <div className="relative w-full aspect-[3/2] bg-deep-bg overflow-hidden shrink-0">
-        {entity.cover_image_path ? (
+        {cover.src ? (
           <Image
-            src={entity.cover_image_path}
+            src={cover.src}
             alt=""
             fill
             priority={isPriority}

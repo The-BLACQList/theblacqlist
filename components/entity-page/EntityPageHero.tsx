@@ -5,6 +5,7 @@ import { SaveButton } from '@/components/entity-page/SaveButton'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
+import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 interface Props {
   entity: EntityPageData
@@ -29,6 +30,7 @@ function CoverPlaceholder({ name }: { name: string }) {
 export function EntityPageHero({ entity, initialSaved = false }: Props) {
   const isPremium = entity.tier === 'premium'
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
+  const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
 
   // CTA href: "call" type uses tel: link, otherwise use cta_url or fallback "#"
   const ctaHref =
@@ -47,9 +49,9 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
       )}
     >
       {/* Cover image or placeholder */}
-      {entity.cover_image_path ? (
+      {cover.src ? (
         <Image
-          src={entity.cover_image_path}
+          src={cover.src}
           alt=""
           fill
           priority

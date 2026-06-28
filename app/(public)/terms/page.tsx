@@ -331,7 +331,7 @@ export default function TermsPage() {
               </a>
             </p>
             <p>
-              <strong>The BLACQList</strong>, operated by [CONFIRM: legal entity name]
+              <strong>The BLACQList</strong>, operated by The BLACQList, LLC
               <br />
               [CONFIRM: mailing address]
             </p>

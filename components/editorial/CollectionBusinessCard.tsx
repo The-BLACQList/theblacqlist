@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 
@@ -42,6 +43,7 @@ export function CollectionBusinessCard({ listing, blurb, headline, position }: P
   const location = city ? (city.states?.code ? `${city.name}, ${city.states.code}` : city.name) : null
   const href = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
   const showBadge = listing.trust_tier === 'verified' || listing.trust_tier === 'certified'
+  const cover = resolveCoverImage(listing.cover_image_path, listing.entity_type, listing.id)
 
   return (
     <article className="group relative flex flex-col sm:flex-row gap-4 sm:gap-5 rounded-2xl border border-charcoal/10 bg-white p-4 sm:p-5 transition-colors hover:border-gold/40">
@@ -52,9 +54,9 @@ export function CollectionBusinessCard({ listing, blurb, headline, position }: P
         tabIndex={-1}
         className="relative shrink-0 h-40 sm:h-28 sm:w-28 w-full overflow-hidden rounded-xl bg-deep-bg"
       >
-        {listing.cover_image_path ? (
+        {cover.src ? (
           <Image
-            src={listing.cover_image_path}
+            src={cover.src}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 112px"

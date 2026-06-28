@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { EntityPageHero } from '@/components/entity-page/EntityPageHero'
@@ -45,9 +46,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description = `${entity.tagline} — ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-  const ogImage = entity.cover_image_path
-    ? `${supabaseUrl}/storage/v1/object/public/listing-media/${entity.cover_image_path}`
+  // Owner cover → absolute Storage URL; type default → app-relative path made
+  // absolute for OG. Null (no default photo configured yet) → no OG image.
+  const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
+  const ogImage = cover.src
+    ? cover.isDefault
+      ? `${BASE_URL}${cover.src}`
+      : cover.src
     : undefined
 
   return {
