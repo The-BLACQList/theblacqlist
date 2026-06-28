@@ -7,8 +7,13 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
+  // Top-anchored (items-start), NOT vertically centered: the auth forms are
+  // client components whose height settles after hydration; centering would
+  // re-center the whole block on that height change → large CLS (sign-up
+  // measured 0.764). Anchoring to the top makes height changes grow downward
+  // with no shift.
   return (
-    <div className="min-h-screen bg-deep-bg flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-deep-bg flex items-start justify-center px-4 py-12 md:py-16">
       <div className="w-full max-w-md">
         {/* Logo: node-Q mark + Jost wordmark */}
         <div className="mb-8 flex justify-center">
