@@ -139,7 +139,7 @@ These are used during `pnpm build` for source map upload — they are build-time
 
 | Variable           | Scope      | Server only | Value notes |
 | ------------------ | ---------- | ----------- | ----------- |
-| `SENTRY_TEST_TOKEN` | Production | **Yes**     | Any random string you choose. Guards `GET /api/_debug/sentry?token=…` (404 without it) so you can run the **K5** post-deploy check — fire the route, confirm a `production`-tagged, source-mapped, PII-free event lands. |
+| `SENTRY_TEST_TOKEN` | Production | **Yes**     | Any random string you choose. Guards `GET /api/debug/sentry?token=…` (404 without it) so you can run the **K5** post-deploy check — fire the route, confirm a `production`-tagged, source-mapped, PII-free event lands. |
 
 > **Sentry setup (F6) is DONE 2026-06-24:** org `the-blacqlist`, projects `theblacqlist-production` + `theblacqlist-staging`, source-map upload verified in the prod build, DSN set both scopes. Remaining = K5 + alert rule + uptime monitors, all post-deploy. See the F6 card.
 

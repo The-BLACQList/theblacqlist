@@ -117,10 +117,10 @@ Sentry's uptime checks are **status-code based** (2xx = up), **follow 3xx redire
 
 ## 3. K5 — Sentry production error test
 
-`app/api/_debug/sentry/route.ts` is guarded by `SENTRY_TEST_TOKEN` (set in Vercel) and lives under `/api` (allowlisted).
+`app/api/debug/sentry/route.ts` is guarded by `SENTRY_TEST_TOKEN` (set in Vercel) and lives under `/api` (allowlisted).
 
 ### Run 🙋🏾‍♀️
-1. Trigger: `https://theblacqlist.com/api/_debug/sentry?token=<SENTRY_TEST_TOKEN>` → expect **HTTP 500** + thrown error. *(Without/with a wrong token → 404 `{"error":"Not found"}`.)*
+1. Trigger: `https://theblacqlist.com/api/debug/sentry?token=<SENTRY_TEST_TOKEN>` → expect **HTTP 500** + thrown error. *(Without/with a wrong token → 404 `{"error":"Not found"}`.)*
 2. In **Sentry** (prod project) confirm the event:
    - tagged **`environment: production`**,
    - **source-mapped** (stack shows real `.tsx` frames, not minified),

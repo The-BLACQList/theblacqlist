@@ -80,7 +80,7 @@ These can't be verified locally — they need the deployed app and external dash
 
 ### K5 — Sentry production error
 1. In the production environment set **`SENTRY_TEST_TOKEN`** to a random secret (and ensure a valid `SENTRY_DSN`). Redeploy.
-2. Visit `https://<prod-host>/api/_debug/sentry?token=<that-secret>` → it returns 500 and throws on purpose.
+2. Visit `https://<prod-host>/api/debug/sentry?token=<that-secret>` → it returns 500 and throws on purpose.
 3. In **Sentry**, confirm the new event appears with **`environment: production`**.
 **Pass:** event present, tagged production. **Record:** Sentry event link.
 > Without the token the route returns 404, so it's safe to leave deployed. (K6 — no PII — is already covered by `pnpm test:unit`; while you're in Sentry, eyeball that the event has no email/phone/name.)

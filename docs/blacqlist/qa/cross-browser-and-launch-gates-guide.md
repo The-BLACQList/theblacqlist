@@ -73,6 +73,6 @@ Runs `e2e/launch-gates.spec.ts`. A **failing** test = the gate is genuinely **no
 | **M5** Claim SLA ≤48h | Policy is documented (`docs/blacqlist/launch/user-feedback-plan.md`); confirm the team commits to it. |
 | **M6** On-call schedule | `docs/blacqlist/launch/on-call.md` exists but **names are placeholders** — fill in real contacts + rotation. |
 | **M7** Supabase PITR | Enable PITR on the **production** Supabase project (dashboard → Settings → Database). |
-| **M10** Sentry prod errors | In production, set `SENTRY_TEST_TOKEN`, hit `/api/_debug/sentry?token=…`, confirm the event in Sentry with `environment: production` and no PII (see infra guide). |
+| **M10** Sentry prod errors | In production, set `SENTRY_TEST_TOKEN`, hit `/api/debug/sentry?token=…`, confirm the event in Sentry with `environment: production` and no PII (see infra guide). |
 
 M8's full sign-off is also yours: confirm all production env vars are set in Vercel (the repo scan only proves no hardcoded localhost in source).

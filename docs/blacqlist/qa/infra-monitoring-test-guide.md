@@ -62,10 +62,10 @@ Runs `scripts/seed-launch-listings.ts` twice against local Supabase and asserts 
 3. Within ~30 min, confirm pageview events in the Vercel project → Analytics dashboard.
 
 ### K5 — Sentry production error
-Sentry is `enabled` only when `NODE_ENV === 'production'`. A **guarded** trigger route exists: `app/api/_debug/sentry/route.ts`.
+Sentry is `enabled` only when `NODE_ENV === 'production'`. A **guarded** trigger route exists: `app/api/debug/sentry/route.ts`.
 1. Set `SENTRY_TEST_TOKEN=<random>` in the production environment (and a valid `SENTRY_DSN`).
 2. Deploy.
-3. Hit `https://<prod-host>/api/_debug/sentry?token=<random>` → returns 500 and throws.
+3. Hit `https://<prod-host>/api/debug/sentry?token=<random>` → returns 500 and throws.
 4. In Sentry, confirm the event appears with **`environment: production`**.
 (Without the token, the route returns 404 — safe to leave deployed.)
 

@@ -88,7 +88,7 @@ These don't touch the database, so you can do them today with zero risk. All in 
 ### ④ `SENTRY_TEST_TOKEN`  — _ADD (new)_
 - **Value:** any random string you make up — e.g. a UUID like `7f3a9c20-1e4b-4d8a-bb02-9f1c6e5a2d77`
 - **Environment:** Production · **Sensitive:** 🔒 yes
-- **Why:** it unlocks a hidden test route (`/api/_debug/sentry?token=…`) so that *after* you go live you can deliberately trigger one error and confirm Sentry catches it (the "K5" check). Without this token that route stays disabled (returns 404), which is the safe default.
+- **Why:** it unlocks a hidden test route (`/api/debug/sentry?token=…`) so that *after* you go live you can deliberately trigger one error and confirm Sentry catches it (the "K5" check). Without this token that route stays disabled (returns 404), which is the safe default.
 
 ---
 

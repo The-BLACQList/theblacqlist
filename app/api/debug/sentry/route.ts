@@ -13,5 +13,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  throw new Error('Sentry test error — triggered via /api/_debug/sentry')
+  throw new Error('Sentry test error — triggered via /api/debug/sentry')
 }
