@@ -223,7 +223,7 @@ Results (founder ran 2026-06-28; **Slow-4G + emulated Moto G Power** — worst-c
 | Discover | 90 | 3.6s | 0 | 30ms | ✅ score |
 | Listing | 100 | 1.5s | 0 | 60ms | ✅ |
 | Search | 90 | 3.6s | 0 | 30ms | ✅ score |
-| Sign-up | 67→~90 | 3.4s | **0.764 → ~0** | 70ms | ✅ after CLS fix |
+| Sign-up | 91 (was 67) | 3.4s | **0** (was 0.764) | 40ms | ✅ CLS fixed (`939c95f`) |
 
 **Sign-up CLS 0.764 = fixed** (`939c95f`): the auth layout vertically-centered a client form whose height settles after hydration → re-center shift. Top-anchored (`items-center`→`items-start`) so height changes grow downward, no shift. Re-run sign-up to confirm CLS ~0 + Perf ~90+.
 
@@ -242,4 +242,4 @@ Results (founder ran 2026-06-28; **Slow-4G + emulated Moto G Power** — worst-c
 | 3 · K5 Sentry prod error | ✅ PASS | 2026-06-28 | Event captured in prod Sentry. Fixed 3 stacked bugs: route `_debug`→`debug` (9477c86) + token reset + **added `instrumentation.ts`** so Sentry initializes server-side & captures route errors (8bb6b87). ⚠️ Client capture under Turbopack = follow-up (`instrumentation-client.ts`). |
 | 4 · 086 RLS structural | ✅ PASS | 2026-06-28 | Query 1: 0 RLS-off tables; Query 3: all 9 high-risk tables policied |
 | 4 · 086 RLS behavioral | ✅ PASS | 2026-06-28 | B1 nonpublished=0; B2 stranger saves/receipts=0 (SQL-editor impersonation) |
-| 5 · 088 Lighthouse (5 pages) | 🟡 scores pass; sign-up CLS fixed | 2026-06-28 | 4/5 Perf 90–100, CLS 0, TBT low. Sign-up CLS 0.764 → fixed (`939c95f`, top-anchor auth layout) — re-run to confirm. LCP ~3.6s = Slow-4G lab worst-case (scores 90+); field-validate post-launch. |
+| 5 · 088 Lighthouse (5 pages) | ✅ PASS | 2026-06-28 | All 5: Perf 90–100, CLS 0, TBT low. Sign-up CLS 0.764→0 + Perf 67→91 after auth-layout top-anchor (`939c95f`), confirmed on re-run. LCP ~3.4–3.6s = Slow-4G lab worst-case (scores pass); field-validate post-launch. |
