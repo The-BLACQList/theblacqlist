@@ -137,7 +137,7 @@ export default async function CollectionDetailPage({ params }: Props) {
             {collection.title}
           </h1>
           {collection.subtitle && (
-            <p className="font-body text-lg text-charcoal/80 max-w-2xl leading-relaxed">
+            <p className="font-body text-lg text-charcoal max-w-2xl leading-relaxed">
               {collection.subtitle}
             </p>
           )}

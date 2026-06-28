@@ -28,7 +28,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <div className="bg-white rounded-2xl shadow-xl p-8">{children}</div>
 
         {/* Footer */}
-        <p className="text-center text-xs font-subhead text-white/40 mt-6">
+        <p className="text-center text-xs font-subhead text-white/60 mt-6">
           &copy; {new Date().getFullYear()} The BLACQList. All rights reserved.
         </p>
       </div>

@@ -16,8 +16,8 @@
   --color-deep-bg: #08080a; /* legacy name → ground */
   --color-off-white: #f4f4f7; /* light surface */
   --color-cream: #f4f4f7; /* legacy name → off-white */
-  --color-pale-lavender: #eceae6; /* lavender retired → warm neutral-100 */
-  --color-neutral-100: #eceae6;
+  --color-pale-lavender: #f2f0ee; /* warm neutral-100; lightened from #eceae6 so amber/charcoal-soft text clears AA on this tint (098) */
+  --color-neutral-100: #f2f0ee;
   --color-neutral-300: #c9c7c4;
   --color-neutral-500: #8a8888;
 
@@ -53,7 +53,7 @@
   --light-gold: #ffd867;
   --off-white: #f4f4f7;
   --cream: #f4f4f7;
-  --pale-lavender: #eceae6;
+  --pale-lavender: #f2f0ee;
 
   /* ─── shadcn/ui semantic variables ───────────────────────────────────────── */
   --background: #ffffff;

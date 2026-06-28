@@ -46,36 +46,36 @@ J9 manual testing found the **"Forgot password?"** link on `/sign-in` was being 
 
 ---
 
-## J10 — VoiceOver: save modal  🚫 BLOCKED (feature not built)
+## J10 — VoiceOver: save action (direct, no modal)  ✅ READY
 
-**Criterion (target):** Focus trapped in modal; Escape returns focus to the Save button; modal title + contents announced.
+**Decision (ticket 097, 2026-06-26):** Save is a **direct one-tap action**, not a modal. The Save/♥ button toggles immediately (optimistic), announces the outcome via a polite `aria-live` region, and `aria-pressed` reflects state. Signed-out activation redirects to `/sign-in` (announced as a page change).
 
-**Current state:** **There is no Save modal.** Saving a listing (the Save/♥ button on a listing page) performs a direct API call and, when signed out, redirects to `/sign-in`. There is no dialog to trap focus in. **This test cannot be run until a Save modal/dialog is implemented.**
+**Criterion:** The Save button's state + outcome are announced to VoiceOver; no focus is trapped (there is no dialog).
 
-**When the Save modal is built, run this script:**
-1. On a listing page, Tab to the **Save** button; note where focus is.
-2. Activate it (VO + Space) to open the modal.
-3. Confirm focus **moves into the modal** and the **modal title is announced**.
-4. Tab through the modal — confirm focus **stays inside** (does not reach page content behind it).
-5. Press **Escape** — confirm the modal closes and focus **returns to the Save button** (VoiceOver re-announces "Save…").
+**Script (signed in):**
+1. On a listing page, Tab to the **Save** button. Confirm it's announced ("Save this business, button", not pressed).
+2. Activate it (VO + Space). Confirm VoiceOver announces **"Saved"** (the polite live region) and the button now reports **pressed** with label "Remove from saved businesses".
+3. Activate again. Confirm **"Removed from saved"** is announced and the button returns to not-pressed.
+4. Confirm focus **stays on the Save button** throughout (no dialog, no focus jump).
 
-**Recommendation:** build the modal with Radix Dialog (already a dependency, used by the mobile-nav Sheet) so focus trap + Escape + focus restore come for free — see the J15 finding below.
+**Script (signed out):** Activate Save → confirm the browser navigates to `/sign-in` and VoiceOver announces the new page.
+
+**Pass:** save/unsave announced via `aria-live`; `aria-pressed` toggles; signed-out → sign-in page announced.
 
 ---
 
 ## J11 — VoiceOver: search → listing → save flow
 
-**Criterion:** Homepage → search → listing → save modal — all steps completable by keyboard + VoiceOver.
+**Criterion:** Homepage → search → listing → save — all steps completable by keyboard + VoiceOver.
 
 **Steps (keyboard + VoiceOver):**
 1. From `/` (or `/discover`), **Tab** to the search field. Confirm it's announced ("Search businesses, search text field").
 2. Type a query, press **Return**. Confirm the results page is announced and the result count/region is reachable ("Discovery results").
 3. **Tab** to the first result link. Confirm the business name is announced as a link. Activate it (Return / VO + Space).
 4. On the listing page, confirm the **heading (business name)** is announced and the main content is reachable.
-5. **Save step:** 🚫 **BLOCKED** — see J10. The save action has no modal yet. For now, verify only that the **Save button is reachable and announced** ("Save this business, button"); activating it while signed out should navigate to sign-in (announced as a page change).
+5. **Save step:** Tab to the **Save** button ("Save this business, button"). Activate it → confirm **"Saved"** is announced (the `aria-live` region) and `aria-pressed` flips to pressed. (Signed out: activation navigates to sign-in, announced as a page change.) See J10.
 
-**Pass (partial, current):** Steps 1–4 fully completable by keyboard + VoiceOver; Save button reachable/announced.
-**Blocked:** The "save modal" portion of step 5 — pending the Save modal feature.
+**Pass:** Steps 1–5 fully completable by keyboard + VoiceOver, including the direct-save announcement.
 
 > Automated coverage for the keyboard path: J7 (search → first result by keyboard) passes in `pnpm test:a11y`. This script adds the VoiceOver announcement verification.
 

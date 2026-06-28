@@ -28,7 +28,7 @@ const TIER_CONFIG: Record<TrustTier, TierConfig> = {
   },
   claimed: {
     label: 'Claimed',
-    bgClass: 'bg-[#3B82F6]',
+    bgClass: 'bg-[#2563EB]', // blue-600 — white text ≈ 5:1 (AA); was #3B82F6 at 3.67:1
     textClass: 'text-white',
     Icon: CheckCircle,
   },

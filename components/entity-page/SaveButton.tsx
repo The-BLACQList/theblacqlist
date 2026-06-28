@@ -56,19 +56,56 @@ export function SaveButton({
     })
   }
 
+  // Polite live region announces the save/unsave outcome to screen readers
+  // (matches SaveIconButton). The button's aria-label is unaffected.
+  const liveRegion = (
+    <span className="sr-only" aria-live="polite">
+      {saved ? 'Saved' : 'Removed from saved'}
+    </span>
+  )
+
   if (variant === 'pill') {
     return (
+      <>
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={isPending}
+          aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
+          aria-pressed={saved}
+          className={cn(
+            'inline-flex items-center gap-2 h-10 px-4 rounded-full font-subhead font-semibold text-sm transition-colors',
+            saved
+              ? 'bg-amber-gold/15 text-amber border border-amber-gold/30'
+              : 'bg-charcoal/8 text-charcoal border border-charcoal/15 hover:border-amber-gold/30 hover:text-amber',
+            className
+          )}
+        >
+          <Heart
+            className={cn('size-4', saved ? 'fill-amber-gold text-amber' : '')}
+            aria-hidden="true"
+          />
+          {saved ? 'Saved' : 'Save'}
+        </button>
+        {liveRegion}
+      </>
+    )
+  }
+
+  return (
+    <>
       <button
         type="button"
         onClick={toggle}
         disabled={isPending}
         aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
         aria-pressed={saved}
+        tabIndex={tabIndex}
         className={cn(
-          'inline-flex items-center gap-2 h-10 px-4 rounded-full font-subhead font-semibold text-sm transition-colors',
+          'inline-flex items-center justify-center size-10 rounded-full transition-colors',
           saved
-            ? 'bg-amber-gold/15 text-amber border border-amber-gold/30'
-            : 'bg-charcoal/8 text-charcoal border border-charcoal/15 hover:border-amber-gold/30 hover:text-amber',
+            ? 'bg-amber-gold/20 text-amber hover:bg-amber-gold/30'
+            : 'bg-white/10 text-white hover:bg-white/20',
           className
         )}
       >
@@ -76,31 +113,8 @@ export function SaveButton({
           className={cn('size-4', saved ? 'fill-amber-gold text-amber' : '')}
           aria-hidden="true"
         />
-        {saved ? 'Saved' : 'Save'}
       </button>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={isPending}
-      aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
-      aria-pressed={saved}
-      tabIndex={tabIndex}
-      className={cn(
-        'inline-flex items-center justify-center size-10 rounded-full transition-colors',
-        saved
-          ? 'bg-amber-gold/20 text-amber hover:bg-amber-gold/30'
-          : 'bg-white/10 text-white hover:bg-white/20',
-        className
-      )}
-    >
-      <Heart
-        className={cn('size-4', saved ? 'fill-amber-gold text-amber' : '')}
-        aria-hidden="true"
-      />
-    </button>
+      {liveRegion}
+    </>
   )
 }

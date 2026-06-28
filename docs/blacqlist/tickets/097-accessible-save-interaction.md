@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft — needs product/UX decision before build
+✅ **Resolved — Option 1 (keep direct one-tap save) chosen + implemented 2026-06-26**
 
 ## Phase
 
@@ -41,6 +41,10 @@ As a screen-reader user, when I save a business I want the result clearly announ
 1. **Keep direct save, update the tests** (recommended if the one-tap UX stays). No modal. Ensure the Save button announces state changes accessibly: `aria-pressed` toggles (already present), and a polite `aria-live` confirmation ("Saved" / "Removed"). Rewrite J10/J11 to verify the direct interaction + announcement instead of a modal.
 2. **Introduce a save-confirmation / save-to-collection modal.** Build it with the new `components/ui/dialog.tsx` (ticket 096) so focus trap + Escape + focus restore come for free. Then J10/J11 can be run as written.
 
+### Decision (founder, 2026-06-26): **Option 1 — keep direct one-tap save.**
+
+A bookmark shouldn't require a confirmation step (fewer taps; standard pattern; aligns with the data-collection "fastest input path" rule). Implemented: added a polite `aria-live` "Saved" / "Removed from saved" announcement to `components/entity-page/SaveButton.tsx` (both `icon` and `pill` variants) so the detail-page/quick-action save now matches `SaveIconButton` (cards), which already announced. J10/J11 rewritten to verify the direct interaction + announcement (no modal).
+
 ---
 
 ## Scope (once decided)
@@ -61,11 +65,11 @@ As a screen-reader user, when I save a business I want the result clearly announ
 
 ## Acceptance Criteria
 
-- [ ] Product decision recorded (direct save vs. modal).
-- [ ] Save result is announced to screen readers (`aria-live`).
-- [ ] If a modal is used: focus trap, Escape, and focus restore verified (reuse ticket 096 patterns).
-- [ ] J10 and J11 either pass as written (modal) or are rewritten to match the shipped interaction and pass.
-- [ ] VoiceOver manual scripts updated to match.
+- [x] Product decision recorded (direct save — see Decision above).
+- [x] Save result is announced to screen readers (`aria-live`) — `SaveButton` + `SaveIconButton`.
+- [x] If a modal is used: focus trap, Escape, focus restore verified — N/A (no modal).
+- [x] J10 and J11 rewritten to match the shipped direct-save interaction.
+- [x] VoiceOver manual scripts updated to match.
 
 ---
 
