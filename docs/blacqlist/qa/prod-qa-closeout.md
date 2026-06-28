@@ -87,14 +87,23 @@ from listings where id = ':listing_id';
 
 Both are allowlisted, so they answer even while gated. (`/api/health` returns 200 with `status:"degraded"` if Supabase is unreachable — monitor the JSON `status`, not just the HTTP code.)
 
-### Set up monitors 🙋🏾‍♀️
-In an uptime service (Better Stack / UptimeRobot / Pingdom), add 3 checks, 5-min interval, alert if down >5 min:
+### Set up monitors 🙋🏾‍♀️ — Sentry Uptime (chosen: no new service; reuses the F6 Sentry)
 
-| Target | Expect |
-|---|---|
-| `https://theblacqlist.com/api/health` | 200, body `status:"ok"` |
-| `https://theblacqlist.com/api/health/supabase` | 200, body `status:"ok"` |
-| `https://theblacqlist.com/?preview=<token>` | 200 (frontend liveness; the token bypasses the gate) — or just monitor `/` for the 307→/coming-soon while gated |
+Sentry's uptime checks are **status-code based** (2xx = up), **follow 3xx redirects** (they verify the final 200), support 5-min intervals, and open an issue after N consecutive failures. Add **3 monitors** (GET · 5-min interval · environment `production`):
+
+| # | URL | Expect | Catches |
+|---|---|---|---|
+| 1 | `https://theblacqlist.com/api/health/supabase` | 2xx | **DB outage** — returns **503** if Supabase is unreachable (the real DB signal) |
+| 2 | `https://theblacqlist.com/api/health` | 2xx | App/serverless liveness (⚠️ always 200 even when degraded — see note) |
+| 3 | `https://theblacqlist.com/` | 2xx | Frontend/edge liveness — Sentry follows the 307→`/coming-soon`→200, so **no `?preview` token needed** (stays 200 at public launch) |
+
+**Setup (per monitor):** Sentry → your **production** project → **Insights → Uptime** (or **Alerts → Create Alert → "Uptime Monitor"**; or `sentry.io/monitors/new`) → set the URL, **Method GET**, **Interval 5 minutes**, **Environment `production`** → save. Send the alert to the same destination as your existing Sentry error alerts (email / Slack).
+
+**Threshold:** the default opens an issue after **3 consecutive failures** (~15 min at a 5-min interval). To honor "alert if down >5 min," lower it to **1–2 consecutive failures** in the monitor's Thresholds.
+
+**Notes / why these 3:**
+- ⚠️ **`/api/health` always returns HTTP 200** (its body flips to `status:"degraded"` when Supabase is down), so a *status-only* check on it won't catch a DB outage — that's why **#1 (`/api/health/supabase`, which returns 503 on failure) is the primary DB signal**. If your Sentry plan has the **Verification / Early-Adopter** assertions feature, add a JSON-body assertion `status == "ok"` on #2 to also catch the degraded state.
+- The bypass **token stays out of Sentry** — #3 watches `/` and Sentry follows the redirect to the 200, so no secret lands in a third-party dashboard.
 
 ---
 
@@ -183,7 +192,7 @@ Run **Chrome DevTools → Lighthouse → Mobile** on the **bypassed** prod URLs 
 | 1 · Account deletion (code review) | ✅ PASS | 2026-06-26 | Cascade matches Privacy §7 |
 | 1 · Account deletion (live walk-through) | ⬜ | | Founder run + SQL |
 | 2 · K7 health endpoints live | ✅ PASS | 2026-06-28 | both 200 / ok (re-verified on e192df2) |
-| 2 · K7 uptime monitors configured | ⬜ | | Founder |
+| 2 · K7 uptime monitors configured | ⬜ | | Founder — Sentry Uptime, 3 monitors (no new service) |
 | 3 · K5 Sentry prod error | ⬜ | | Founder + Sentry |
 | 4 · 086 RLS structural | ⬜ | | prod SQL |
 | 4 · 086 RLS behavioral | ⬜ | | anon + 2nd user |
