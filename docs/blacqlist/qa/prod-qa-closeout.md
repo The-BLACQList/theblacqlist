@@ -160,12 +160,44 @@ from pg_policies where schemaname = 'public'
 group by tablename order by tablename;
 ```
 
-### B. Behavioral spot-checks 🙋🏾‍♀️ (as anon + as a 2nd user, via the app/API)
-- **Anon can't read a non-published listing:** with the prod **anon** key, `GET …/rest/v1/listings?status=eq.draft&select=id` → returns `[]` (RLS blocks). *(Service-role/SQL-editor bypasses RLS — these must run as anon.)*
-- **Non-owner can't read another user's private rows:** signed in as user B, attempt to read user A's `saves` / `receipt_uploads` → empty / 403.
-- **Direct-URL probe:** as user B (or anon), open a draft/owned-only page belonging to user A → blocked (redirect / 404 / empty), not leaked.
+### B. Behavioral spot-checks 🙋🏾‍♀️ (prod SQL editor — role impersonation)
 
-**Pass:** no user-data table appears with RLS off (query 1); each of the 9 high-risk tables has ≥1 policy (query 3); anon + non-owner reads of protected rows return nothing (B). The raw policy count (query 2) is informational — not a pass/fail.
+Run these **right in the prod SQL editor** — no anon key, no second user, no curl. The editor normally runs as a superuser that **bypasses RLS**, so each check wraps `set local role …` in `begin … rollback` to actually exercise the policies. Verified predicates: `listings` anon = `status='published' AND deleted_at IS NULL`; `saves`/`receipt_uploads` = `user_id = auth.uid()`.
+
+```sql
+-- B1) Anon sees ONLY published listings (no draft/pending leak):
+begin;
+  set local role anon;
+  select
+    count(*)                                       as anon_total_visible,
+    count(*) filter (where status <> 'published')  as nonpublished_visible  -- MUST be 0
+  from listings;
+rollback;
+
+-- B2) uid isolation — impersonate a stranger authenticated uid that owns nothing;
+--     it must see 0 of everyone's private rows (proves policies scope to auth.uid()):
+begin;
+  select set_config('request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
+  set local role authenticated;
+  select
+    (select count(*) from saves)           as stranger_sees_saves,     -- MUST be 0
+    (select count(*) from receipt_uploads) as stranger_sees_receipts;  -- MUST be 0
+rollback;
+
+-- B3) Control (optional) — prove it's not blanket-deny: impersonate YOUR real uid
+--     (Supabase → Auth → Users) and confirm you can read your own saves:
+begin;
+  select set_config('request.jwt.claims',
+    '{"sub":"<YOUR_ADMIN_UUID>","role":"authenticated"}', true);
+  set local role authenticated;
+  select count(*) as you_see_your_own_saves from saves;  -- = # of listings you've saved
+rollback;
+```
+
+*(Optional, even-more-end-to-end:* a real anon-key REST call — `curl 'https://ytlrnczevdnsfdzjbeqg.supabase.co/rest/v1/listings?status=eq.draft&select=id' -H "apikey: <ANON_KEY>"` → `[]` — exercises PostgREST + RLS as a real client. B1–B3 already verify the policy logic, so this is belt-and-suspenders.)*
+
+**Pass:** no user-data table appears with RLS off (query 1); each of the 9 high-risk tables has ≥1 policy (query 3); **B1 `nonpublished_visible` = 0** and **B2 both counts = 0** (B3 ≥ 0, your own). The raw policy count (query 2) is informational — not a pass/fail.
 
 ---
 
