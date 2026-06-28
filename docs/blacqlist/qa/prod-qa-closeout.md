@@ -233,7 +233,7 @@ Run **Chrome DevTools → Lighthouse → Mobile** on the **bypassed** prod URLs 
 | 1 · Account deletion (live walk-through) | ⬜ | | Founder run + SQL |
 | 2 · K7 health endpoints live | ✅ PASS | 2026-06-28 | both 200 / ok (re-verified on e192df2) |
 | 2 · K7 uptime monitors configured | ✅ PASS | 2026-06-28 | Sentry Uptime — 3 monitors live (no new service) |
-| 3 · K5 Sentry prod error | ⬜ | | Founder + Sentry |
+| 3 · K5 Sentry prod error | ✅ PASS | 2026-06-28 | Event captured in prod Sentry. Fixed 3 stacked bugs: route `_debug`→`debug` (9477c86) + token reset + **added `instrumentation.ts`** so Sentry initializes server-side & captures route errors (8bb6b87). ⚠️ Client capture under Turbopack = follow-up (`instrumentation-client.ts`). |
 | 4 · 086 RLS structural | ✅ PASS | 2026-06-28 | Query 1: 0 RLS-off tables; Query 3: all 9 high-risk tables policied |
 | 4 · 086 RLS behavioral | ✅ PASS | 2026-06-28 | B1 nonpublished=0; B2 stranger saves/receipts=0 (SQL-editor impersonation) |
 | 5 · 088 Lighthouse (5 pages) | ⬜ | | Founder, bypassed URLs |
