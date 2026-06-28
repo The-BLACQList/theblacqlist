@@ -80,4 +80,19 @@ where l.status = 'published' and l.deleted_at is null and l.entity_type <> 'even
 | 3 · Descriptions <100 | Ideally empty. Any rows → I help backfill descriptions (or accept as P2). |
 | 4 · CTA | `business_listings` > 0 and CTA type always set; `missing_cta_url` informational. |
 
-**"Zero gaps"** for the card = checks 2 and 3 reviewed and either clean or with an explicit accepted-risk note. Paste the outputs and I'll make the call with you.
+**"Zero gaps"** for the card = checks 2 and 3 reviewed and either clean or with an explicit accepted-risk note.
+
+---
+
+## Results + decision (founder ran on prod, 2026-06-28)
+
+| Check | Result | Call |
+|---|---|---|
+| 1 · Real cover % | 254 published · 0 real · **0.0%** | Non-blocker — decision (A) branded defaults render on every page |
+| 2 · Category × city <3 | Many combos at 1–2 (ATL Automotive/Education/Events/Non-Profits=1, Home&Living/RealEstate=2; ~10 Chicago categories=1; several Houston=1–2) | **Accepted-risk** — content depth, not a defect; thin filters return 1–2 results |
+| 3 · Descriptions <100 | ~25–30 business listings at **72–99 chars** (real, complete, just under the bar) | **Accepted-risk** — serviceable; backfill is P2 |
+| 4 · CTA | 254 business · **55 missing `cta_url`** | Informational — `visit`/`call` CTAs need no URL |
+
+**Decision: ACCEPT AS-IS FOR SOFT LAUNCH (founder, 2026-06-28).** No hard launch blockers. The "≥40% cover / ≥3-per-category / ≥100-char" targets are perfectionist quality bars, not correctness gates — nothing is broken or empty, and the data is fully functional. The thin categories, short descriptions, and real-cover backfill are **P2 post-launch** work that fills naturally as owners claim/edit their pages and as listings are added.
+
+→ **Production-data card = PASS (with notes).** Preflight item cleared.
