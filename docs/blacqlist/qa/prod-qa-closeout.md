@@ -101,6 +101,14 @@ Sentry's uptime checks are **status-code based** (2xx = up), **follow 3xx redire
 
 **Threshold:** the default opens an issue after **3 consecutive failures** (~15 min at a 5-min interval). To honor "alert if down >5 min," lower it to **1–2 consecutive failures** in the monitor's Thresholds.
 
+**Field settings (apply to all 3 monitors):**
+- **Interval** 5 min · **Method** GET · **Timeout** 10s (health routes hit Supabase + can cold-start; 5s also works) · **Allow Sampling** off.
+- **Verification → Assertions:** Status Code `> 199` AND `< 300` (2xx). On `/api/health` only, optionally add a body assertion `status` = `ok` if your plan offers it (that route always returns 200, so status alone won't catch "degraded").
+- **Failure Threshold** 2 (≈10 min) · **Recovery Threshold** 1 (≈5 min).
+- **Issue Ownership → Assign:** yourself — gives downtime issues an owner and notifies you.
+- **Alert (step 7):** click **Create New Alert** → notify on the downtime issue (email / Slack). Don't rely only on the F6 error-count alert (≥5 / 5 min) — a single uptime issue won't meet that threshold.
+- Finish: **Test Monitor** (expect green) → **Create Monitor**. Acknowledge the data-region banner — the URLs are public health checks, no PII.
+
 **Notes / why these 3:**
 - ⚠️ **`/api/health` always returns HTTP 200** (its body flips to `status:"degraded"` when Supabase is down), so a *status-only* check on it won't catch a DB outage — that's why **#1 (`/api/health/supabase`, which returns 503 on failure) is the primary DB signal**. If your Sentry plan has the **Verification / Early-Adopter** assertions feature, add a JSON-body assertion `status == "ok"` on #2 to also catch the degraded state.
 - The bypass **token stays out of Sentry** — #3 watches `/` and Sentry follows the redirect to the 200, so no secret lands in a third-party dashboard.
