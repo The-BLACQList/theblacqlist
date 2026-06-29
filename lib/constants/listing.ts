@@ -41,3 +41,23 @@ export const VALID_CTA_TYPES = [
   'apply',
   'buy-now',
 ] as const
+
+// Owner-managed flexible link types (listing_links.link_type). Lives here (a
+// plain module) — NOT in the 'use server' action — because client components
+// import it; a non-function export from a 'use server' file is replaced by a
+// server-action reference on the client (breaking `LINK_TYPES.map`).
+export const LINK_TYPES = [
+  'website',
+  'instagram',
+  'facebook',
+  'tiktok',
+  'youtube',
+  'linkedin',
+  'twitter',
+  'booking',
+  'menu',
+  'order',
+  'other',
+] as const
+
+export type LinkType = (typeof LINK_TYPES)[number]

@@ -2,8 +2,9 @@
 
 import { useActionState, useRef, useEffect } from 'react'
 import { Loader2, Plus, AlertCircle, Trash2 } from 'lucide-react'
-import { addListingLinkAction, LINK_TYPES } from '@/lib/actions/dashboard/addListingLink'
+import { addListingLinkAction } from '@/lib/actions/dashboard/addListingLink'
 import { deleteListingLinkAction } from '@/lib/actions/dashboard/deleteListingLink'
+import { LINK_TYPES } from '@/lib/constants/listing'
 
 interface LinkRow {
   id: string

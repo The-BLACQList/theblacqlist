@@ -4,22 +4,13 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { LINK_TYPES } from '@/lib/constants/listing'
 
 export type AddListingLinkState = { success: true } | { error: string } | null
 
-export const LINK_TYPES = [
-  'website',
-  'instagram',
-  'facebook',
-  'tiktok',
-  'youtube',
-  'linkedin',
-  'twitter',
-  'booking',
-  'menu',
-  'order',
-  'other',
-] as const
+// LINK_TYPES moved to lib/constants/listing.ts — a 'use server' module must only
+// export async functions; a constant export here is mangled into a server-action
+// reference on the client (caused the LinksSection `LINK_TYPES.map` crash).
 
 export async function addListingLinkAction(
   _prev: AddListingLinkState,
