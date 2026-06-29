@@ -155,6 +155,10 @@ export async function updateListingContentAction(
     if (error) return { error: 'Failed to save business details. Please try again.' }
   }
 
+  // ── Revalidate the editor route so the just-saved value shows without a hard
+  //    reload (the post-action RSC refresh otherwise reads a stale cache). ─────
+  revalidatePath(`/dashboard/pages/${listingId}/edit`)
+
   // ── Revalidate public page only if listing is published ───────────────────
   if (listing.status === 'published') {
     const citySlug = (listing.cities as { slug: string } | null)?.slug
