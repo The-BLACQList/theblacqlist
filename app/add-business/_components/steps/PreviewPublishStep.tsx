@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { createListingAction } from '@/lib/actions/listings/createListing'
 import { submitListingForReviewAction } from '@/lib/actions/listings/submitListingForReview'
 import { DuplicateWarningDialog } from '@/app/add-business/_components/DuplicateWarningDialog'
+import { FullPagePreview } from '@/app/add-business/_components/FullPagePreview'
 
 interface DuplicateResult {
   id: string
@@ -19,7 +20,7 @@ interface DuplicateResult {
   city: { name: string; slug: string } | null
 }
 
-interface FormSnapshot {
+export interface FormSnapshot {
   tempEntityId: string
   entity_type: string
   name: string
@@ -140,6 +141,7 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
   const [duplicates, setDuplicates] = useState<DuplicateResult[] | null>(null)
   const [pendingPublish, setPendingPublish] = useState(false)
   const [ownershipAttested, setOwnershipAttested] = useState(false)
+  const [showFullPreview, setShowFullPreview] = useState(false)
 
   // Show field-level errors (with their step) when the server returns them;
   // otherwise fall back to a single generic message.
@@ -251,13 +253,27 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
         />
       )}
 
+      {showFullPreview && (
+        <FullPagePreview snapshot={snapshot} onClose={() => setShowFullPreview(false)} />
+      )}
+
       <div className="flex flex-col gap-4">
-        {/* Preview banner */}
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <Eye className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
-          <p className="font-subhead text-xs text-amber-800 font-medium">
-            Preview — this is how your page will look to visitors.
-          </p>
+        {/* Preview banner + full-page preview launcher */}
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <Eye className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
+            <p className="font-subhead text-xs text-amber-800 font-medium">
+              Preview — this is how your page will look to visitors.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowFullPreview(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 h-9 px-4 rounded-lg bg-brand-black text-white font-subhead text-xs font-bold hover:bg-charcoal transition-colors"
+          >
+            <Eye className="size-3.5" aria-hidden="true" />
+            Preview full page
+          </button>
         </div>
 
         {/* Preview card */}
