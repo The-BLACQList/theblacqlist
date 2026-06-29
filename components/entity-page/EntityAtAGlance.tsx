@@ -21,6 +21,25 @@ const DAY_LABELS: Record<Day, string> = {
   sunday: 'Sun',
 }
 
+// Social values are stored as bare handles OR full URLs. A bare handle dropped
+// straight into href becomes a broken RELATIVE link (e.g. /blackcoffeeatl), so
+// normalize to an absolute profile URL per platform.
+const SOCIAL_BASE: Record<string, string> = {
+  instagram: 'https://instagram.com/',
+  facebook: 'https://facebook.com/',
+  linkedin: 'https://www.linkedin.com/in/',
+  tiktok: 'https://tiktok.com/@',
+  youtube: 'https://youtube.com/@',
+  twitter: 'https://x.com/',
+}
+function normalizeSocialUrl(platform: string, raw: string): string {
+  const v = raw.trim()
+  if (/^https?:\/\//i.test(v)) return v // already an absolute URL
+  if (v.includes('/') && v.includes('.')) return `https://${v}` // looks like a domain path
+  const handle = v.replace(/^@+/, '')
+  return (SOCIAL_BASE[platform] ?? 'https://') + handle
+}
+
 function formatTime(t: string): string {
   const [hStr, mStr] = t.split(':')
   const h = parseInt(hStr ?? '0')
@@ -246,7 +265,7 @@ export function EntityAtAGlance({ entity }: Props) {
                     .map(({ key, label }) => (
                       <a
                         key={key}
-                        href={details.social[key]!}
+                        href={normalizeSocialUrl(key, details.social[key]!)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black transition-colors"

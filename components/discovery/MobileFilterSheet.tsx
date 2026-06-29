@@ -43,15 +43,26 @@ export function MobileFilterSheet(props: FacetSidebarProps) {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[88%] max-w-sm overflow-y-auto">
-        <SheetHeader>
+      {/* bg-white belt-and-suspenders so the panel is solid even if a theme token regresses */}
+      <SheetContent side="left" className="w-[88%] max-w-sm overflow-y-auto bg-white flex flex-col p-0">
+        <SheetHeader className="px-6 pt-6">
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription className="sr-only">
             Refine results by identity, price, amenities, and more.
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-5">
+        <div className="flex-1 overflow-y-auto px-6 mt-5">
           <FacetSidebar {...props} />
+        </div>
+        {/* Sticky footer — filters apply instantly to the URL; this just closes the sheet */}
+        <div className="sticky bottom-0 border-t border-charcoal/10 bg-white px-6 py-3">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="w-full h-11 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors"
+          >
+            Show results
+          </button>
         </div>
       </SheetContent>
     </Sheet>
