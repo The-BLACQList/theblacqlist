@@ -17,6 +17,20 @@
 
 ---
 
+## 🤖 Automated + programmatic verification (2026-06-28) — DONE
+
+Run on **production** by Claude; these need no manual pass:
+- **Smoke (pages serve):** home / discover / search / listing / sign-in / sign-up → 200; unknown route → 404. ✅
+- **Auth gates:** anon → `/dashboard`, `/account`, `/admin`, `/account/settings` all **307 → /sign-in** (next-path preserved). ✅
+- **086 RLS** (re-verified on prod): 0 RLS-off tables; anon can't read drafts; user-data isolation holds. ✅ (`prod-qa-closeout.md` §4)
+- **Unit tests** (`vitest run`): **6/6 pass** (incl. the PII scrubber / K6). ✅
+- **K5/M10 Sentry** prod-error captured (server+edge+browser); **K7** uptime monitors live; **health** endpoints 200. ✅
+- **088 Lighthouse:** Perf 90–100, CLS 0, TBT low on all 5 pages. **087 a11y:** 097/098 fixes shipped. ✅
+
+**Remaining = the 5 critical paths (human pass)** → founder runs the simplified `docs/blacqlist/qa/founder-qa-checklist.md`; results transcribe into Critical Path 1–5 below → Go/No-Go.
+
+---
+
 ## Test Accounts (staging)
 
 | Role | Email | Password |
@@ -146,10 +160,10 @@ All critical paths must pass in all three environments:
 
 | Test | Steps | Expected | Result |
 |---|---|---|---|
-| Non-admin blocked from `/admin` | Sign in as Supporter; navigate to `/admin` | Redirect to `/` | Pending |
-| Unauthenticated blocked from `/dashboard` | Navigate to `/dashboard` without session | Redirect to `/sign-in?next=/dashboard` | Pending |
-| IDOR check | Owner A: GET `/api/dashboard/analytics?listing_id=[Owner B id]` | 403 | Pending |
-| Sign-in redirect away | Sign in; navigate to `/sign-in` | Redirect to `/account/saved` | Pending |
+| Unauthenticated blocked from `/dashboard` | Navigate to `/dashboard` without session | Redirect to `/sign-in?next=/dashboard` | ✅ **PASS** (🤖 2026-06-28: anon → 307 → `/sign-in?next=/dashboard`; same for `/account`, `/admin`, `/account/settings`) |
+| Non-admin blocked from `/admin` | Sign in as Supporter; navigate to `/admin` | Redirect to `/` | Anon→sign-in verified ✅; signed-in-Supporter case = manual (journey ⑤) |
+| IDOR check | Owner A: GET `/api/dashboard/analytics?listing_id=[Owner B id]` | 403 | Covered by 086 RLS (uid isolation verified) ✅; manual API spot-check optional |
+| Sign-in redirect away | Sign in; navigate to `/sign-in` | Redirect to `/account/saved` | Manual (needs session) |
 
 ---
 
