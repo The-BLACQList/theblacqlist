@@ -236,7 +236,7 @@ Results (founder ran 2026-06-28; **Slow-4G + emulated Moto G Power** — worst-c
 | Item | Status | Date | Notes |
 |---|---|---|---|
 | 1 · Account deletion (code review) | ✅ PASS | 2026-06-26 | Cascade matches Privacy §7 |
-| 1 · Account deletion (live walk-through) | ⬜ | | Founder run + SQL |
+| 1 · Account deletion (live walk-through) | ⬜ ready to run | | Turnkey standalone walk-through (+ baseline capture) at `docs/blacqlist/qa/account-deletion-walkthrough.md` — founder runs ~10–15 min on prod, pastes before/after SQL, 🤖 reviews → sign off |
 | 2 · K7 health endpoints live | ✅ PASS | 2026-06-28 | both 200 / ok (re-verified on e192df2) |
 | 2 · K7 uptime monitors configured | ✅ PASS | 2026-06-28 | Sentry Uptime — 3 monitors live (no new service) |
 | 3 · K5 Sentry prod error | ✅ PASS | 2026-06-28 | Event captured in prod Sentry. Fixed 3 stacked bugs: route `_debug`→`debug` (9477c86) + token reset + **added `instrumentation.ts`** so Sentry initializes server-side & captures route errors (8bb6b87). ⚠️ Client capture under Turbopack = follow-up (`instrumentation-client.ts`). |
