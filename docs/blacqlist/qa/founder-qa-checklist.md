@@ -53,7 +53,7 @@ Go to `/admin?preview=<token>`
 ## Anything broken? Note it here
 > _(write any "this didn't work" lines — or "all good")_
 
--
+- ✅ **All good — all 5 journeys passed (founder, 2026-06-30), no bugs.** Results transcribed into `docs/blacqlist/launch/qa-sign-off-report.md` (Critical Paths 1–5 = PASS); Go/No-Go = **GO for soft launch**.
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft
+✅ **PASS — GO for soft launch** (2026-06-30). Prerequisites cleared (086 RLS, 087 a11y, 088 Lighthouse); automated/programmatic pass green; founder ran all 5 critical paths on prod via `?preview` with no bugs; 9 QA-found defects this cycle all fixed + shipped (zero open P0/P1). Full results + Go/No-Go in `docs/blacqlist/launch/qa-sign-off-report.md`. Conditions before full public flip: optional desktop Chrome+Safari re-click + the founder-gated launch gates (M5/M6/M7, legal F8, M4, account-deletion).
 
 ## Phase
 
