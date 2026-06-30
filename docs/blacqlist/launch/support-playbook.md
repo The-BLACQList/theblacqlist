@@ -1,8 +1,16 @@
 # Support Playbook — The BLACQList
 
-**Last updated:** 2026-05-18  
+**Last updated:** 2026-06-30  
 **Audience:** Anyone handling user-reported issues — not just engineers. Written in plain language.  
 **How to use:** Match the user's reported symptom to an issue below. Follow the diagnostic steps in order. If the issue doesn't match any entry, escalate to engineering.
+
+---
+
+## Claim Queue Ownership & SLA (gate M5)
+
+- **Owner:** Chalece Delacoudray (founder) — reviews the admin claims queue at `/admin/claims`.
+- **SLA:** business-ownership claims are reviewed within **≤48 hours during business hours** (the committed user SLA in [on-call.md](./on-call.md)).
+- **Solo operation (2026-06-30):** the founder is the sole claim reviewer for now; a dedicated reviewer/backup is a pre-scale follow-up. See the single-operator note in [on-call.md](./on-call.md).
 
 ---
 

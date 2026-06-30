@@ -1,7 +1,9 @@
 # On-Call Schedule — The BLACQList
 
-**Last updated:** 2026-05-22  
+**Last updated:** 2026-06-30  
 **Purpose:** Who to contact and who is responsible during the first 30 days post-launch.
+
+> **Single-operator note (2026-06-30):** BLACQList currently runs **solo** — the founder is every role and there is **no human backup on-call yet**. This is a known, accepted risk for the gated soft launch (low volume, trusted testers). Standing up a real backup on-call (and the planned dedicated BLACQList ops/agent bundle) is a **pre-scale follow-up** before broad public growth. Until then, the founder is the single point of contact for all severities.
 
 ---
 
@@ -9,21 +11,25 @@
 
 | Role | Name | Contact | Escalation |
 |---|---|---|---|
-| Tech Lead / On-Call Eng | _[name]_ | _[phone / Slack]_ | Primary for all P0/P1 incidents |
-| Product Lead | _[name]_ | _[phone / Slack]_ | Escalate if user-facing or business-impacting |
-| Ops / Infrastructure | _[name]_ | _[phone / Slack]_ | Supabase, Vercel, DNS issues |
-| Backup On-Call | _[name]_ | _[phone / Slack]_ | When primary is unavailable |
+| Tech Lead / On-Call Eng | Chalece Delacoudray (founder) | cdelacoudray@gmail.com | Primary for all P0/P1 incidents |
+| Product Lead | Chalece Delacoudray (founder) | cdelacoudray@gmail.com | Escalate if user-facing or business-impacting |
+| Ops / Infrastructure | Chalece Delacoudray (founder) | cdelacoudray@gmail.com | Supabase, Vercel, DNS issues |
+| Backup On-Call | — (none yet — solo operation) | — | _Add a backup before scaling past soft launch_ |
+
+_Phone intentionally omitted — email is the chosen channel. Add a phone/Slack here if desired._
 
 ---
 
 ## On-Call Rotation — First 30 Days
 
+_Solo operation — the founder is primary every week; no secondary rotation yet._
+
 | Week | Primary | Backup |
 |---|---|---|
-| Week 1 (launch week) | _[name]_ | _[name]_ |
-| Week 2 | _[name]_ | _[name]_ |
-| Week 3 | _[name]_ | _[name]_ |
-| Week 4 | _[name]_ | _[name]_ |
+| Week 1 (launch week) | Chalece (founder) | — (solo) |
+| Week 2 | Chalece (founder) | — (solo) |
+| Week 3 | Chalece (founder) | — (solo) |
+| Week 4 | Chalece (founder) | — (solo) |
 
 ---
 
@@ -50,14 +56,12 @@
 
 ## Key Dashboard Links
 
-Fill in after production deploy:
-
 | Service | Link | Purpose |
 |---|---|---|
-| Vercel | _[url]_ | Deployments, logs, rollback |
-| Supabase | _[url]_ | Database, auth, storage, logs |
-| Sentry | _[url]_ | Error tracking and alerts |
-| Uptime Monitor | _[url]_ | Availability monitoring |
+| Vercel | https://vercel.com/the-blacql-ist/theblacqlist | Deployments, logs, rollback |
+| Supabase (prod) | https://supabase.com/dashboard/project/ytlrnczevdnsfdzjbeqg | Database, auth, storage, logs |
+| Sentry | https://the-blacqlist.sentry.io | Error tracking and alerts |
+| Uptime Monitor | Sentry Uptime (same org — 3 monitors on `/`, `/api/health`, `/api/health/supabase`) | Availability monitoring |
 
 ---
 
