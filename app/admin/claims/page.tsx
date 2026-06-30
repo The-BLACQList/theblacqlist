@@ -68,6 +68,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
     { value: 'under_review', label: 'Under Review' },
     { value: 'approved', label: 'Approved' },
     { value: 'rejected', label: 'Rejected' },
+    { value: 'withdrawn', label: 'Withdrawn' },
   ]
 
   return (

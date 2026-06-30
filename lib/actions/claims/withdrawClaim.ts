@@ -59,5 +59,15 @@ export async function withdrawClaimAction(
     }
   }
 
+  // Dismiss the open moderation-queue row so the admin queue no longer shows this
+  // withdrawn claim as pending. Mirrors approveClaim/rejectClaim's queue resolution;
+  // 'dismissed' (not 'resolved') = the claimant withdrew, no admin decision.
+  await serviceClient
+    .from('moderation_queue')
+    .update({ status: 'dismissed', resolved_at: new Date().toISOString() })
+    .eq('entity_id', claimId)
+    .eq('entity_type', 'claim')
+    .in('status', ['pending', 'assigned'])
+
   return { success: true }
 }
