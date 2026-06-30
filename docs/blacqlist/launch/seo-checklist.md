@@ -134,12 +134,14 @@ Expected format: `[Business Name] — [City] | The BLACQList`
 
 ## Post-Launch Actions (after production deploy)
 
-- [ ] Submit `https://theblacqlist.com/sitemap.xml` to Google Search Console
-- [ ] Verify property ownership (HTML meta tag in root layout or DNS TXT record)
-- [ ] Request indexing for homepage
-- [ ] Request indexing for 5 priority listing pages
-- [ ] Document verification method: `[HTML meta tag / DNS record / file upload]`
-- [ ] Note submission date: ___________
+- [x] **Verify property ownership** — done 2026-06-30 via **DNS record (Domain property)**; "Ownership verified."
+- [x] **Submit `https://theblacqlist.com/sitemap.xml`** to Google Search Console — done 2026-06-30; Status **Success**, **269 pages discovered** (full URL required for a Domain property — bare `sitemap.xml` is rejected).
+- [ ] Request indexing for homepage — **after the public flip** (`COMING_SOON_MODE=false`); while gated, pages 307→/coming-soon so they won't index yet (discovered ≠ indexed).
+- [ ] Request indexing for 5 priority listing pages — after the public flip.
+- [x] Verification method: **DNS record (Domain property)**.
+- [x] Submission date: **2026-06-30**.
+
+> **090 status (2026-06-30):** sitemap + robots verified live on prod (robots 200 w/ sitemap ref; sitemap 200 `application/xml`, base `https://theblacqlist.com`, 269 URLs). GSC domain verified + sitemap submitted (Success, 269 discovered). **Remaining = indexing, which follows automatically once the gate is flipped public.**
 
 ---
 

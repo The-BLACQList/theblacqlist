@@ -102,13 +102,13 @@ Test at: [search.google.com/test/rich-results](https://search.google.com/test/ri
 
 ---
 
-## 7. Post-Launch: Google Search Console (after Ticket 092)
+## 7. Post-Launch: Google Search Console (done 2026-06-30)
 
-- [ ] Create property at search.google.com/search-console using `https://theblacqlist.com`
-- [ ] Verify via HTML meta tag method (add `google-site-verification` to root `layout.tsx` metadata)
-- [ ] Submit `https://theblacqlist.com/sitemap.xml`
-- [ ] Request indexing for: homepage, 5 highest-priority listing pages, 3 city pages
-- [ ] Document verification meta tag value in `docs/blacqlist/launch/environment-variable-checklist.md`
+- [x] Create property — **Domain property** `theblacqlist.com`.
+- [x] Verify ownership — **DNS record (Domain property)** method (chosen over the HTML-meta method since the gated site redirects the homepage to `/coming-soon`; DNS is gate-independent and covers the whole domain). No code change needed.
+- [x] Submit `https://theblacqlist.com/sitemap.xml` — Status **Success**, **269 pages discovered**. (Domain property requires the full URL, not the bare path.)
+- [ ] Request indexing for: homepage, priority listing pages, city pages — **after the public flip** (pages are discovered but won't index while the gate redirects Googlebot).
+- [x] Verification method = DNS record (no meta tag needed; nothing to add to env checklist).
 
 ---
 
