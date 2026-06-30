@@ -10,6 +10,7 @@ import {
   History,
   Sparkles,
   LayoutDashboard,
+  Star,
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
@@ -113,6 +114,22 @@ export default async function AccountPage() {
               <p className="font-subhead text-sm font-semibold text-brand-black">My claims</p>
               <p className="font-subhead text-xs text-charcoal-soft">
                 Listing claims you&apos;ve submitted
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
+          </Link>
+
+          <Link
+            href="/account/reviews"
+            className="flex items-center gap-4 bg-white rounded-xl border border-charcoal/10 p-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pale-lavender flex items-center justify-center">
+              <Star className="size-5 text-amber" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-subhead text-sm font-semibold text-brand-black">My reviews</p>
+              <p className="font-subhead text-xs text-charcoal-soft">
+                Reviews you&apos;ve written and their status
               </p>
             </div>
             <ChevronRight className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />

@@ -67,11 +67,29 @@ export async function deleteAccountAction(
 
     // 2) Reviews are SET NULL on user delete (anonymize) — but the data-handling
     //    spec says remove the user's reviews. Do it explicitly.
-    await service.from('reviews').delete().eq('reviewer_user_id', userId)
+    const { error: reviewsErr } = await service
+      .from('reviews')
+      .delete()
+      .eq('reviewer_user_id', userId)
+    if (reviewsErr) {
+      // Log but don't abort — the auth delete below is what matters; a stuck
+      // review would surface as the deleteUser error and we want to see both.
+      console.error('[deleteAccount] reviews delete failed:', reviewsErr)
+    }
 
     // 3) Delete the auth user. FK cascades/SET NULLs handle the relational cleanup.
     const { error: deleteErr } = await service.auth.admin.deleteUser(userId)
     if (deleteErr) {
+      // Surface the real cause server-side (Vercel runtime logs / Sentry). The
+      // user message stays generic; the actual Postgres/Auth error is what we
+      // need to fix a failed deletion (e.g. a blocking FK or trigger).
+      console.error('[deleteAccount] auth.admin.deleteUser failed:', {
+        userId,
+        message: deleteErr.message,
+        status: (deleteErr as { status?: number }).status,
+        code: (deleteErr as { code?: string }).code,
+        error: deleteErr,
+      })
       return {
         error:
           'We could not delete your account right now. Please try again, or email privacy@theblacqlist.com.',
