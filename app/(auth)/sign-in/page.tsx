@@ -38,8 +38,10 @@ function SignInContent() {
   const emailError = state && 'error' in state && state.field === 'email' ? state.error : null
   const passwordError = state && 'error' in state && state.field === 'password' ? state.error : null
 
-  const callbackError =
-    error === 'auth_callback_failed'
+  const isResetLinkExpired = error === 'reset_link_expired'
+  const callbackError = isResetLinkExpired
+    ? 'Your password-reset link is invalid or has expired.'
+    : error === 'auth_callback_failed'
       ? 'That verification link has expired or is invalid. Please sign in again.'
       : null
 
@@ -62,7 +64,12 @@ function SignInContent() {
           role="alert"
           className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm font-subhead text-red-700"
         >
-          {generalError ?? callbackError}
+          {generalError ?? callbackError}{' '}
+          {isResetLinkExpired && !generalError && (
+            <Link href="/forgot-password" className="underline underline-offset-2 font-semibold">
+              Request a new link
+            </Link>
+          )}
         </div>
       )}
 

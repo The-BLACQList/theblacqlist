@@ -96,8 +96,11 @@ export async function proxy(request: NextRequest) {
   }
 
   // Authenticated user visiting sign-in or sign-up → redirect to account
-  // (Redirects to /dashboard once the owner dashboard is built)
-  if (user && AUTH_PAGES.includes(pathname)) {
+  // (Redirects to /dashboard once the owner dashboard is built).
+  // Exception: when the URL carries an ?error (e.g. an auth-callback failure
+  // redirected here), let the page render so the error is shown rather than
+  // swallowed by a bounce to /account.
+  if (user && AUTH_PAGES.includes(pathname) && !request.nextUrl.searchParams.has('error')) {
     const url = request.nextUrl.clone()
     url.pathname = '/account'
     return NextResponse.redirect(url)
