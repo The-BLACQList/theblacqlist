@@ -28,18 +28,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(failRedirect)
   }
 
+  // Do NOT sign out an existing session here: the recovery flow is PKCE, and
+  // supabase.auth.signOut() → _removeSession() deletes the code_verifier cookie
+  // that exchangeCodeForSession needs, which breaks the reset. The exchange
+  // simply overwrites whatever session is present with the recovery session.
   const supabase = await createClient()
-
-  // Clear any session already present in this browser before establishing the
-  // recovery session — otherwise account A's reset collides with account B's
-  // session and the single-use link is consumed/expired. Local scope only: it
-  // drops this browser's cookie without revoking the other account elsewhere and
-  // makes no network call. It does not touch the PKCE code_verifier cookie that
-  // exchangeCodeForSession needs (separate cookie key).
-  if (isRecovery) {
-    await supabase.auth.signOut({ scope: 'local' })
-  }
-
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
