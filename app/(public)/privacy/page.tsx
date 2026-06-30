@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Privacy Policy" subtitle="Last updated: June 20, 2026" />
+        <PageHeader title="Privacy Policy" subtitle="Last updated: June 30, 2026" />
       </Section>
 
       <Section variant="white">
@@ -351,7 +351,9 @@ export default function PrivacyPage() {
             <p>
               <strong>The BLACQList</strong>, operated by The BLACQList, LLC
               <br />
-              [CONFIRM: mailing address]
+              3133 Maple Dr NE, Ste 240 #1130
+              <br />
+              Atlanta, GA 30305
             </p>
           </section>
 

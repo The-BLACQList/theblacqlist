@@ -2,7 +2,7 @@
 
 ## Status
 
-Deferred — founder/legal action; Terms now reference the process with a `[CONFIRM]` placeholder.
+✅ **Done (2026-06-30).** DMCA designated agent registered with the U.S. Copyright Office — service provider/agent **The BLACQList, LLC**, Registration No. **DMCA-1074879** (pay.gov tracking 283O6ROF; payment processing as of registration). Terms §8 now names the agent + registration + the takedown contact (`notice@theblacqlist.com`) and mailing address (3133 Maple Dr NE, Ste 240 #1130, Atlanta, GA 30305) — the `[CONFIRM]` placeholder is replaced. _Remaining (founder, non-blocking): confirm the registration shows active in the USCO directory once payment clears; attorney final review._
 
 ## Phase
 

@@ -40,15 +40,17 @@ Privacy §8 ("Portability: Request a copy of your data in a structured, machine-
 Privacy §6 lists Stripe ("Payment processing (subscription plans)"). Stripe is scaffolded only (placeholder price IDs; no billing flows). Listing a processor that isn't yet processing data slightly overstates the data flow.
 **Resolution (copy):** qualify the Stripe row — "Payment processing — **when paid features become available**" — so the table reflects current reality without needing another revision at V1.
 
-### 4. Controller identity incomplete — no legal entity name / postal address — **Medium**
+### 4. Controller identity incomplete — no legal entity name / postal address — **Medium** — ✅ RESOLVED (2026-06-30)
 Privacy §1/§11 and Terms §14 identify "The BLACQList" and contact emails but **no legal entity name or mailing address.** A postal address is the norm for controller identity and is required in commercial email under CAN-SPAM (note: BLACQList currently sends only *transactional* email, which is exempt — but the address belongs in the policy regardless).
 **Resolution (copy):** insert clearly-marked founder placeholders — `[CONFIRM: legal entity name]`, `[CONFIRM: mailing address]` — do **not** invent them.
 → **Founder action:** supply entity name + mailing address (and confirm corporate form).
+→ **✅ Done:** entity = **The BLACQList, LLC**; mailing address = **3133 Maple Dr NE, Ste 240 #1130, Atlanta, GA 30305** (CMRA / Anytime Mailbox). Wired into Privacy §11 + Terms §14; "Last updated" bumped to June 30, 2026 on Privacy/Terms/Cookies. Placeholders removed.
 
-### 5. No DMCA designated-agent contact — **Medium**
+### 5. No DMCA designated-agent contact — **Medium** — ✅ RESOLVED (2026-06-30)
 Terms §8 (Intellectual Property) asserts IP rights and a §5 takedown right but names **no DMCA agent or copyright-takedown process.** A designated agent registered with the U.S. Copyright Office is what preserves the DMCA safe harbor for user-generated content (reviews, photos, listings).
 **Resolution (copy):** add a copyright/DMCA notice block to Terms §8 with a `notice@` contact and `[CONFIRM: DMCA agent + USCO registration]`.
 → **Founder/Legal action:** register a designated agent with the USCO. → Ticket: `docs/blacqlist/tickets/102-dmca-designated-agent.md`
+→ **✅ Done:** designated agent = **The BLACQList, LLC**, USCO Registration No. **DMCA-1074879** (registered 2026-06-30). Terms §8 now names the agent + registration + `notice@theblacqlist.com` + mailing address; placeholder removed. _Non-blocking follow-ups: USCO status flips active once payment clears; attorney final read._
 
 ### 6. "We collect your IP address" overstates retention — **Low (accuracy, favorable)**
 Privacy §2 lists "IP address" under automatically-collected log data. In reality the app stores IP **only as a SHA-256 hash** (`analytics_events.ip_address`) and Sentry scrubs IP/email/phone before events leave the app (`lib/observability/sentry-scrub.ts`). The current wording understates the product's own privacy posture.

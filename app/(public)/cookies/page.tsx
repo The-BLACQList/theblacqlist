@@ -15,7 +15,7 @@ export default function CookiesPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Cookie Policy" subtitle="Last updated: June 20, 2026" />
+        <PageHeader title="Cookie Policy" subtitle="Last updated: June 30, 2026" />
       </Section>
 
       <Section variant="white">

@@ -15,7 +15,7 @@ export default function TermsPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Terms of Service" subtitle="Last updated: June 20, 2026" />
+        <PageHeader title="Terms of Service" subtitle="Last updated: June 30, 2026" />
       </Section>
 
       <Section variant="white">
@@ -223,7 +223,10 @@ export default function TermsPage() {
               the accounts of repeat infringers.
             </p>
             <p className="text-sm text-charcoal-soft">
-              [CONFIRM: DMCA designated agent name + registration with the U.S. Copyright Office]
+              Our designated agent for copyright notices is The BLACQList, LLC, registered with the
+              U.S. Copyright Office (Registration No. DMCA-1074879). Written notices may be sent to
+              the designated agent at notice@theblacqlist.com or by mail at 3133 Maple Dr NE, Ste 240
+              #1130, Atlanta, GA 30305.
             </p>
           </section>
 
@@ -333,7 +336,9 @@ export default function TermsPage() {
             <p>
               <strong>The BLACQList</strong>, operated by The BLACQList, LLC
               <br />
-              [CONFIRM: mailing address]
+              3133 Maple Dr NE, Ste 240 #1130
+              <br />
+              Atlanta, GA 30305
             </p>
           </section>
 
