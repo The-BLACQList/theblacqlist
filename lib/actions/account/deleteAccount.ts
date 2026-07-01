@@ -77,6 +77,20 @@ export async function deleteAccountAction(
       console.error('[deleteAccount] reviews delete failed:', reviewsErr)
     }
 
+    // 2b) Delete the user's saves HERE, as the service role, before the auth
+    //     delete. `saves` CASCADE-deletes when the auth user is removed, which
+    //     fires the `saves_update_listing_save_count` trigger (an UPDATE on
+    //     public.listings). auth.admin.deleteUser runs as `supabase_auth_admin`,
+    //     which has no privileges on public tables, so that trigger raised
+    //     "permission denied for table listings" and aborted the whole delete
+    //     ("Database error deleting user"). Deleting saves as the service role
+    //     (which is privileged) fires the trigger cleanly, leaving nothing for
+    //     the auth-user cascade to trip over.
+    const { error: savesErr } = await service.from('saves').delete().eq('user_id', userId)
+    if (savesErr) {
+      console.error('[deleteAccount] saves delete failed:', savesErr)
+    }
+
     // 3) Delete the auth user. FK cascades/SET NULLs handle the relational cleanup.
     const { error: deleteErr } = await service.auth.admin.deleteUser(userId)
     if (deleteErr) {
