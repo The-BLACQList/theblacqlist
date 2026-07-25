@@ -2018,8 +2018,60 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_webhooks: {
+        Row: {
+          created_at: string
+          error_message: string
+          event_type: string
+          id: string
+          payload_json: Json | null
+          resolved_at: string | null
+          stripe_event_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message: string
+          event_type: string
+          id?: string
+          payload_json?: Json | null
+          resolved_at?: string | null
+          stripe_event_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string
+          event_type?: string
+          id?: string
+          payload_json?: Json | null
+          resolved_at?: string | null
+          stripe_event_id?: string | null
+        }
+        Relationships: []
+      }
+      stripe_events_processed: {
+        Row: {
+          event_type: string
+          id: string
+          processed_at: string
+          stripe_event_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          processed_at?: string
+          stripe_event_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          processed_at?: string
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
+          canceled_at: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
@@ -2033,6 +2085,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
@@ -2046,6 +2099,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          canceled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null

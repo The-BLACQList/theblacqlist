@@ -6,95 +6,13 @@ import { SectionHeading } from '@/components/ui/section-heading'
 import { PageHeader } from '@/components/layout/page-header'
 import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
+import { PricingPlans } from './PricingPlans'
 
 export const metadata: Metadata = {
   title: 'Pricing | The BLACQList',
   description:
-    'Getting listed is free forever. Paid tiers with advanced features and premium visibility are coming soon — join the waitlist.',
+    'Getting listed is free forever. Upgrade to Standard or Premium for priority placement, analytics, and featured visibility.',
 }
-
-interface Plan {
-  key: string
-  name: string
-  price: string
-  period: string
-  tagline: string
-  features: string[]
-  cta: string
-  href: string
-  featured: boolean
-}
-
-const PLANS: Plan[] = [
-  {
-    key: 'free',
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    tagline: 'Everything you need to get discovered.',
-    features: [
-      'Full BLACQList Page',
-      'Hours, contact & social links',
-      'Marketplace listings (products & services)',
-      'Community reviews',
-      'Basic analytics',
-    ],
-    cta: 'List Your Business Free',
-    href: '/for-business',
-    featured: false,
-  },
-  {
-    key: 'starter',
-    name: 'Starter',
-    price: '$19',
-    period: '/mo',
-    tagline: 'Stand out and be verified.',
-    features: [
-      'Everything in Free',
-      'Verified badge on your page',
-      'Priority placement in search',
-      'Advanced analytics dashboard',
-      'Remove “Powered by BLACQList” badge',
-    ],
-    cta: 'Join the Waitlist',
-    href: '/sign-up',
-    featured: false,
-  },
-  {
-    key: 'growth',
-    name: 'Growth',
-    price: '$49',
-    period: '/mo',
-    tagline: 'Grow with featured placements and editorial exposure.',
-    features: [
-      'Everything in Starter',
-      'Featured collection placement',
-      'BLACQLight editorial eligibility',
-      'Marketplace category spotlight',
-      'Priority support',
-    ],
-    cta: 'Join the Waitlist',
-    href: '/sign-up',
-    featured: true,
-  },
-  {
-    key: 'premium',
-    name: 'Premium',
-    price: '$99',
-    period: '/mo',
-    tagline: 'The full platform, front and center.',
-    features: [
-      'Everything in Growth',
-      'Sponsored Spotlight credit ($299 value)',
-      'Homepage featured placement',
-      'Dedicated account support',
-      'Early access to new features',
-    ],
-    cta: 'Join the Waitlist',
-    href: '/sign-up',
-    featured: false,
-  },
-]
 
 const FAQ_ITEMS = [
   {
@@ -102,8 +20,12 @@ const FAQ_ITEMS = [
     a: 'Yes. A full BLACQList Page — with your profile, hours, contact info, social links, and marketplace listings — is free forever. No credit card required.',
   },
   {
-    q: 'When will paid plans launch?',
-    a: "We're finalizing pricing and rolling out in phases. Sign up for a free listing now and you'll be the first to know when paid plans become available.",
+    q: 'What do the paid plans add?',
+    a: 'Standard unlocks priority search placement, your analytics dashboard, a services list, and the ability to respond to reviews. Premium adds unlimited photos, featured placement, homepage spotlight eligibility, and priority support.',
+  },
+  {
+    q: 'How does annual billing work?',
+    a: 'Choose annual at checkout and you pay for ten months instead of twelve — two months free. You can switch between monthly and annual anytime from your billing portal.',
   },
   {
     q: 'What is a Sponsored Spotlight?',
@@ -115,7 +37,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I cancel a paid plan anytime?',
-    a: 'Yes. No long-term contracts. All paid plans are billed monthly and can be canceled at any time.',
+    a: 'Yes. No long-term contracts. Manage or cancel your plan anytime from your billing portal in the dashboard.',
   },
   {
     q: 'Do I need a credit card to get started?',
@@ -130,69 +52,17 @@ export default function PricingPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Pricing"
-          subtitle="Getting listed is always free. Paid tiers with advanced features and premium visibility are coming soon — join the waitlist to be notified."
+          subtitle="Getting listed is always free. Upgrade to Standard or Premium for priority placement, analytics, and featured visibility — pay monthly or save with annual billing."
         />
       </Section>
 
       {/* Plan grid */}
       <Section variant="white">
-        <SectionHeading subtitle="Annual billing saves up to 20% — pricing announced at launch.">
+        <SectionHeading subtitle="Start free and upgrade any time. Annual billing gives you two months free.">
           Plans for every stage of growth
         </SectionHeading>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-8">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.key}
-              className={`relative flex flex-col rounded-xl border p-6 ${
-                plan.featured ? 'border-amber-gold ring-1 ring-amber-gold' : 'border-charcoal/15'
-              }`}
-            >
-              {plan.featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-1 whitespace-nowrap">
-                  Most Popular
-                </span>
-              )}
-
-              <div className="mb-4">
-                <h3 className="font-headline text-xl text-brand-black mb-1">{plan.name}</h3>
-                <p className="font-subhead text-xs text-charcoal-soft mb-3">{plan.tagline}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-headline text-3xl text-brand-black">{plan.price}</span>
-                  <span className="font-subhead text-sm text-charcoal-soft">{plan.period}</span>
-                </div>
-              </div>
-
-              <ul className="space-y-2 mb-6 flex-1">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 font-subhead text-sm text-charcoal"
-                  >
-                    <span
-                      className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                asChild
-                className={`w-full rounded-full font-body font-bold min-h-[44px] h-auto text-sm ${
-                  plan.featured
-                    ? 'bg-amber-gold text-brand-black hover:bg-light-gold'
-                    : plan.key === 'free'
-                      ? 'bg-brand-black text-white hover:bg-charcoal'
-                      : 'border border-brand-black bg-white text-brand-black hover:bg-brand-black hover:text-white transition-colors'
-                }`}
-              >
-                <Link href={plan.href}>{plan.cta}</Link>
-              </Button>
-            </div>
-          ))}
-        </div>
+        <PricingPlans />
       </Section>
 
       {/* Add-ons */}

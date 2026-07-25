@@ -531,7 +531,7 @@ INSERT INTO listings (
   ('00a00001-0000-0000-0000-000000000141','Black Girl Group Atlanta','black-girl-group-atl',
    'Connecting Black women to freelance and full-time creative roles at top brands.',
    'business',(SELECT id FROM categories WHERE slug='professional-services'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'online','published','free','unclaimed',false,14,4,'admin',now()),
+   'virtual','published','free','unclaimed',false,14,4,'admin',now()),
 
   -- NONPROFITS & COMMUNITY (142–144)
   ('00a00001-0000-0000-0000-000000000142','Urban League of Greater Atlanta','urban-league-greater-atl',

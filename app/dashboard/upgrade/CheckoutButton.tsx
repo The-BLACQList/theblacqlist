@@ -2,15 +2,17 @@
 
 import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
+import type { BillingCycle } from '@/lib/stripe/plans'
 
 interface Props {
   planSlug: string
   listingId: string
   label: string
   highlighted: boolean
+  billingCycle: BillingCycle
 }
 
-export function CheckoutButton({ planSlug, listingId, label, highlighted }: Props) {
+export function CheckoutButton({ planSlug, listingId, label, highlighted, billingCycle }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -21,7 +23,7 @@ export function CheckoutButton({ planSlug, listingId, label, highlighted }: Prop
         const res = await fetch('/api/stripe/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planSlug, listingId }),
+          body: JSON.stringify({ planSlug, listingId, billingCycle }),
         })
         const json = await res.json()
         if (!res.ok) {

@@ -1,7 +1,8 @@
 # Monetization Spec — The BLACQList
 
-**Last updated:** 2026-05-11  
-**Status:** Foundation built — payment integration deferred
+**Last updated:** 2026-07-01
+**Status:** Billing built (V1 — checkout, portal, webhooks, gating). Cost/margin rationale in
+[`pricing-unit-economics.md`](./pricing-unit-economics.md).
 
 ---
 
@@ -46,7 +47,8 @@ The BLACQList generates value for Black-owned businesses by surfacing them to in
 | Dedicated account support                  | —    | —                | —               | ✓                |
 | Early access to new features               | —    | —                | —               | ✓                |
 
-**Annual pricing (billed yearly):** Starter $15/mo · Growth $39/mo · Premium $79/mo
+**Annual pricing (billed yearly, ~20% off):** Starter **$182/yr** ($15.17/mo) · Growth **$470/yr**
+($39.17/mo) · Premium **$950/yr** ($79.17/mo). Each rounds to 20% off 12× the monthly price.
 
 ---
 

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { photoLimit } from '@/lib/stripe/features'
 
 export type UploadMediaState = { success: true; mediaId: string } | { error: string } | null
 
@@ -35,13 +36,29 @@ export async function uploadMediaAction(
   // Verify ownership
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, cities(slug)')
+    .select('id, slug, status, entity_type, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) return { error: 'Listing not found or you do not have permission to upload here.' }
+
+  // Enforce the plan's photo limit server-side (RLS can't count rows).
+  const limit = photoLimit(listing.tier)
+  if (limit !== null) {
+    const { count } = await supabase
+      .from('media_attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', listingId)
+      .eq('entity_type', 'listing')
+
+    if ((count ?? 0) >= limit) {
+      return {
+        error: `Your plan includes up to ${limit} ${limit === 1 ? 'photo' : 'photos'}. Upgrade to add more.`,
+      }
+    }
+  }
 
   // Build a unique storage path scoped to this listing
   const ext = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1]

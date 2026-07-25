@@ -21,6 +21,8 @@
     "test:gates": "playwright test e2e/launch-gates.spec.ts",
     "seed:launch": "npx tsx scripts/seed-launch-listings.ts",
     "test:seed-idempotent": "bash scripts/check-seed-idempotent.sh",
+    "stripe:setup-products": "npx tsx scripts/stripe/setup-products.ts",
+    "stripe:sync-price-ids": "npx tsx scripts/stripe/sync-price-ids.ts",
     "prepare": "husky"
   },
   "dependencies": {

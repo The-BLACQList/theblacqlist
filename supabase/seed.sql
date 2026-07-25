@@ -543,14 +543,20 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- =============================================================================
 -- SECTION 4: PLANS
--- Three tier records: free, standard, premium.
+-- Four tier records: free, starter, growth, premium (see monetization-spec.md).
 -- Stripe price ID fields use placeholder strings at MVP.
 -- REPLACE stripe_price_id_monthly and stripe_price_id_yearly before V1 launch.
 -- =============================================================================
 
-INSERT INTO plans (name, price_monthly, price_yearly, features, stripe_price_id_monthly, stripe_price_id_yearly, is_active, display_order)
+-- plan_key MUST be set: the checkout route and upgrade page both filter plans
+-- by plan_key. Without it the paid flow is dead (checkout 422 / "Coming Soon").
+-- Prices: $0 / $19 / $49 / $99 monthly; $182 / $470 / $950 annual (~20% off).
+-- Stripe price IDs stay as placeholders here — set them with
+-- `pnpm stripe:sync-price-ids` after `pnpm stripe:setup-products`.
+INSERT INTO plans (name, plan_key, price_monthly, price_yearly, features, stripe_price_id_monthly, stripe_price_id_yearly, is_active, display_order)
 VALUES
   (
+    'free',
     'free',
     0.00,
     0.00,
@@ -561,24 +567,37 @@ VALUES
     0
   ),
   (
-    'standard',
-    29.00,
-    290.00,
-    '["everything_in_free","10_photos","owner_analytics_dashboard","claim_badge","services_list","priority_search_placement"]'::jsonb,
-    'price_STANDARD_MONTHLY_PLACEHOLDER',
-    'price_STANDARD_YEARLY_PLACEHOLDER',
+    'starter',
+    'starter',
+    19.00,
+    182.00,
+    '["everything_in_free","verified_badge","priority_search_placement","owner_analytics_dashboard","10_photos","respond_to_reviews","remove_powered_by_badge"]'::jsonb,
+    'price_STARTER_MONTHLY_PLACEHOLDER',
+    'price_STARTER_YEARLY_PLACEHOLDER',
     true,
     1
   ),
   (
+    'growth',
+    'growth',
+    49.00,
+    470.00,
+    '["everything_in_starter","20_photos","featured_collection_placement","editorial_eligibility","marketplace_category_spotlight","priority_support"]'::jsonb,
+    'price_GROWTH_MONTHLY_PLACEHOLDER',
+    'price_GROWTH_YEARLY_PLACEHOLDER',
+    true,
+    2
+  ),
+  (
     'premium',
-    79.00,
-    790.00,
-    '["everything_in_standard","unlimited_photos","featured_placement","homepage_spotlight_eligibility","priority_support","custom_cta_label","advanced_analytics"]'::jsonb,
+    'premium',
+    99.00,
+    950.00,
+    '["everything_in_growth","unlimited_photos","sponsored_spotlight_credit","homepage_featured_placement","dedicated_support","early_access"]'::jsonb,
     'price_PREMIUM_MONTHLY_PLACEHOLDER',
     'price_PREMIUM_YEARLY_PLACEHOLDER',
     true,
-    2
+    3
   )
 ON CONFLICT (name) DO NOTHING;
 
@@ -677,7 +696,7 @@ ON CONFLICT (group_id, slug) DO NOTHING;
 --   states:     51 rows (50 US states + DC)
 --   cities:     13 rows (3 primary launch + 10 secondary)
 --   categories: 25 top-level + 163 subcategories = 188 total rows
---   plans:      3 rows (free, standard, premium)
+--   plans:      4 rows (free, starter, growth, premium)
 --   attribute_groups: 6 rows; attribute_values: 41 rows
 --
 -- NEXT STEPS:
