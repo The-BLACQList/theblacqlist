@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import { Calendar } from 'lucide-react'
 
 import { StatusBadge } from '@/components/ui/status-badge'
+import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SaveIconButton } from '@/components/ui/save-icon-button'
@@ -118,7 +119,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
 
       {/* Card body */}
       <div className="flex flex-col flex-1 p-4 gap-2">
-        {/* Entity type pill + trust badge row */}
+        {/* Entity type pill + ownership + trust badge row */}
         <div className="flex items-center gap-2 flex-wrap">
           <Badge
             variant="outline"
@@ -126,6 +127,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
           >
             {ENTITY_TYPE_LABELS[entity.entity_type]}
           </Badge>
+          <OwnershipBadge label={entity.ownership_label} size="small" />
           <StatusBadge tier={entity.trust_tier} size="small" />
         </div>
 

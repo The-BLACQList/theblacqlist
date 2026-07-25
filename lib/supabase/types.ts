@@ -1048,6 +1048,7 @@ export type Database = {
           owner_user_id: string | null
           ownership_attested: boolean
           ownership_attested_at: string | null
+          ownership_label: string
           published_at: string | null
           review_count: number
           save_count: number
@@ -1108,6 +1109,7 @@ export type Database = {
           owner_user_id?: string | null
           ownership_attested?: boolean
           ownership_attested_at?: string | null
+          ownership_label?: string
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -1168,6 +1170,7 @@ export type Database = {
           owner_user_id?: string | null
           ownership_attested?: boolean
           ownership_attested_at?: string | null
+          ownership_label?: string
           published_at?: string | null
           review_count?: number
           save_count?: number

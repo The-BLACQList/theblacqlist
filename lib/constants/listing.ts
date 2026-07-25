@@ -13,6 +13,23 @@ export const VALID_ENTITY_TYPES = [
   'event',
 ] as const
 
+// Authoritative business ownership label (listings.ownership_label CHECK, set by
+// migration `20260707000000_listings_ownership_label`). Single-select, required
+// at submission. 'black_owned' = majority (>=51%) Black ownership + operational
+// control; 'ally' = supports Black-owned businesses, not itself Black-owned.
+// Black-Owned is centered by editorial ranking only — NOT a commerce gate.
+export const VALID_OWNERSHIP_LABELS = ['black_owned', 'ally'] as const
+
+export type OwnershipLabel = (typeof VALID_OWNERSHIP_LABELS)[number]
+
+export const OWNERSHIP_LABEL_META: Record<
+  OwnershipLabel,
+  { label: string; shortLabel: string }
+> = {
+  black_owned: { label: 'Black-Owned', shortLabel: 'Black-Owned' },
+  ally: { label: 'Ally', shortLabel: 'Ally' },
+}
+
 export const VALID_LOCATION_TYPES = [
   'physical',
   'virtual',

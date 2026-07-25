@@ -12,6 +12,7 @@ import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
   VALID_CTA_TYPES,
+  VALID_OWNERSHIP_LABELS,
 } from '@/lib/constants/listing'
 
 const DRAFT_KEY = 'draft-add-business'
@@ -86,6 +87,7 @@ const STEP_TITLES = [
 const CTA_STEP6_VALUES = ['book', 'order', 'call', 'visit', 'message']
 
 interface FormFields {
+  ownership_label: string
   entity_type: string
   name: string
   tagline: string
@@ -112,6 +114,7 @@ interface FormFields {
 }
 
 const INITIAL: FormFields = {
+  ownership_label: '',
   entity_type: '',
   name: '',
   tagline: '',
@@ -156,6 +159,8 @@ export function SubmitListingForm({ categories }: Props) {
         // change) so a stale draft can't resubmit a value the database now rejects.
         if (parsed.entity_type && !(VALID_ENTITY_TYPES as readonly string[]).includes(parsed.entity_type))
           parsed.entity_type = ''
+        if (parsed.ownership_label && !(VALID_OWNERSHIP_LABELS as readonly string[]).includes(parsed.ownership_label))
+          parsed.ownership_label = ''
         if (parsed.location_type && !(VALID_LOCATION_TYPES as readonly string[]).includes(parsed.location_type))
           parsed.location_type = ''
         if (parsed.cta_type && !(VALID_CTA_TYPES as readonly string[]).includes(parsed.cta_type))
@@ -331,41 +336,102 @@ export function SubmitListingForm({ categories }: Props) {
 
   return (
     <div>
-      {/* Step 0 — Eligibility gate */}
+      {/* Step 0 — Ownership label (Black-Owned / Ally) */}
       {step === 0 && (
         <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
           <div>
             <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-2">
               Before you start
             </p>
-            <h2 className="font-headline text-2xl text-brand-black mb-3">Who can list on The BLACQList?</h2>
+            <h2 className="font-headline text-2xl text-brand-black mb-3">
+              Which best describes your business?
+            </h2>
             <p className="font-subhead text-sm text-charcoal leading-relaxed">
-              The BLACQList is an editorial directory. Every listing is reviewed against one
-              criterion: is this a Black-owned business?
+              The BLACQList centers and elevates Black-owned businesses. Businesses that support the
+              community are welcome too — every listing is clearly labeled so shoppers know exactly
+              who they&apos;re supporting.
             </p>
           </div>
 
-          <div className="flex flex-col gap-2">
+          {/* Ownership choice */}
+          <div
+            role="group"
+            aria-label="Business ownership"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          >
             {[
-              'Majority Black-owned — at least 51% Black or African American ownership',
-              'Operational control — Black owner(s) actively manage the business',
-              'Currently operating — not closed or inactive',
-            ].map((item) => (
-              <div key={item} className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15">
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
-                    <path d="M1 4l2.5 2.5L9 1" stroke="#C4A065" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <p className="font-subhead text-sm text-charcoal">{item}</p>
-              </div>
+              {
+                value: 'black_owned',
+                title: 'Black-Owned',
+                desc: 'Majority (51%+) Black-owned and operated.',
+              },
+              {
+                value: 'ally',
+                title: 'Ally',
+                desc: 'Not Black-owned, but supports Black-owned businesses.',
+              },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={fields.ownership_label === opt.value}
+                onClick={() => set('ownership_label', opt.value)}
+                className={cn(
+                  'rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2',
+                  fields.ownership_label === opt.value
+                    ? 'border-brand-black bg-brand-black text-white'
+                    : 'border-charcoal/20 bg-white text-charcoal hover:border-charcoal/50 hover:text-brand-black'
+                )}
+              >
+                <span className="block font-subhead text-base font-bold">{opt.title}</span>
+                <span
+                  className={cn(
+                    'block font-subhead text-xs mt-1',
+                    fields.ownership_label === opt.value ? 'text-white/80' : 'text-charcoal-soft'
+                  )}
+                >
+                  {opt.desc}
+                </span>
+              </button>
             ))}
           </div>
 
+          {/* Branch-specific criteria */}
+          {fields.ownership_label && (
+            <div className="flex flex-col gap-2">
+              {(fields.ownership_label === 'black_owned'
+                ? [
+                    'Majority Black-owned — at least 51% Black or African American ownership',
+                    'Operational control — Black owner(s) actively manage the business',
+                    'Currently operating — not closed or inactive',
+                  ]
+                : [
+                    'You support Black-owned businesses and the community',
+                    'Your listing will be clearly labeled “Ally”',
+                    'Currently operating — not closed or inactive',
+                  ]
+              ).map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-gold/15">
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">
+                      <path d="M1 4l2.5 2.5L9 1" stroke="#C4A065" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <p className="font-subhead text-sm text-charcoal">{item}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <p className="font-subhead text-xs text-charcoal-soft leading-relaxed">
-            By continuing, you confirm that your business meets these criteria. Submissions are
-            reviewed by our team before going live. See our{' '}
-            <a href="/terms#business-listings" target="_blank" rel="noopener noreferrer" className="text-amber hover:underline">
+            You&apos;ll confirm this on the final step. Submissions are reviewed by our team before
+            going live. See our{' '}
+            <a
+              href="/terms#business-listings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-amber hover:underline"
+            >
               Terms of Service
             </a>{' '}
             for the full definition.
@@ -374,9 +440,10 @@ export function SubmitListingForm({ categories }: Props) {
           <button
             type="button"
             onClick={() => setStep(1)}
-            className="h-12 w-full rounded-full bg-amber-gold text-brand-black font-subhead text-sm font-bold hover:bg-amber-gold/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
+            disabled={!fields.ownership_label}
+            className="h-12 w-full rounded-full bg-amber-gold text-brand-black font-subhead text-sm font-bold hover:bg-amber-gold/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
           >
-            My business meets these criteria — Continue
+            Continue
           </button>
         </div>
       )}
@@ -1031,6 +1098,7 @@ export function SubmitListingForm({ categories }: Props) {
         <PreviewPublishStep
           snapshot={{
             tempEntityId,
+            ownership_label: fields.ownership_label,
             entity_type: fields.entity_type,
             name: fields.name,
             tagline: fields.tagline,

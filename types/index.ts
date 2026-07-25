@@ -13,6 +13,9 @@ export type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 
 export type Tier = 'free' | 'standard' | 'premium'
 
+/** Authoritative ownership label. See lib/constants/listing.ts. */
+export type OwnershipLabel = 'black_owned' | 'ally'
+
 export interface DiscoveryEntity {
   id: string
   name: string
@@ -25,6 +28,7 @@ export interface DiscoveryEntity {
   location_type: LocationType
   trust_tier: TrustTier
   tier: Tier
+  ownership_label: OwnershipLabel
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -238,6 +242,7 @@ export interface EntityPageData {
   location_type: LocationType
   trust_tier: TrustTier
   tier: Tier
+  ownership_label: OwnershipLabel
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null

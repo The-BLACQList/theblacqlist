@@ -110,13 +110,18 @@ export async function searchListings(
   if (params.trust_tier) query = query.eq('trust_tier', params.trust_tier)
   if (params.location_type) query = query.eq('location_type', params.location_type)
 
+  // Editorial centering: Black-Owned ranks ahead of Ally ('black_owned' > 'ally'
+  // lexically, so ascending:false centers Black-Owned). Mirrors the ORDER BY in
+  // search_listings_faceted; keeps the typeahead API consistent with browse.
   if (q) {
     query = query
       .textSearch('search_vector', q, { type: 'websearch', config: 'english' })
+      .order('ownership_label', { ascending: false })
       .order('published_at', { ascending: false })
   } else {
     query = query
       .order('is_featured', { ascending: false })
+      .order('ownership_label', { ascending: false })
       .order('published_at', { ascending: false })
   }
 

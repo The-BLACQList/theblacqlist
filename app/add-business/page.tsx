@@ -5,7 +5,7 @@ import { SubmitListingForm } from '@/components/listings/SubmitListingForm'
 export const metadata = {
   title: 'Add Your Business — The BLACQList',
   description:
-    'Submit your Black-owned business, brand, or creative project for review on The BLACQList.',
+    'Submit your business for review on The BLACQList. Black-owned businesses and allies who support them are welcome — every listing is clearly labeled.',
 }
 
 export interface CategoryOption {

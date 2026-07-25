@@ -5,7 +5,7 @@ import { SlidersHorizontal, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
 import { useFacetParams, FACET_KEYS } from '@/components/discovery/useFacetParams'
-import { ENTITY_TYPES, TRUST_TIERS } from '@/components/discovery/facetConstants'
+import { ENTITY_TYPES, TRUST_TIERS, OWNERSHIP_LABELS } from '@/components/discovery/facetConstants'
 
 const legendClass =
   'font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2'
@@ -41,6 +41,7 @@ export function FacetSidebar({
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
+  const activeOwnership = searchParams.get('ownership') ?? ''
   const openNow = searchParams.get('open_now') === '1'
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
@@ -177,6 +178,32 @@ export function FacetSidebar({
           </select>
         </fieldset>
       )}
+
+      {/* Ownership (Black-Owned / Ally) — authoritative label, no per-option counts */}
+      <fieldset>
+        <legend className={legendClass}>Ownership</legend>
+        <div className="flex flex-col gap-1">
+          {OWNERSHIP_LABELS.map(({ value, label }) => {
+            const isActive = activeOwnership === value
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setParam('ownership', isActive ? '' : value)}
+                className={cn(
+                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
+                  isActive
+                    ? 'bg-brand-black text-white font-semibold'
+                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
+                )}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
 
       {/* Attribute groups (Identity & Ownership, Amenities, …) */}
       {groups.map((group) => (

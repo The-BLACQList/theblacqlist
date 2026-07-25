@@ -7,19 +7,23 @@
 -- Idempotency: ON CONFLICT DO NOTHING — safe to re-run (usage_count trigger
 -- only fires on actual inserts, so counts stay stable on re-run).
 --
--- "Black-Owned" is attached to every published listing — by definition every
--- listing on The BLACQList is Black-owned. The remaining identity/amenity
--- facets are distributed deterministically (by row order) so each facet has a
--- realistic, testable subset and the disjunctive counts are meaningful.
+-- "Black-Owned" is attached to every listing whose authoritative
+-- listings.ownership_label = 'black_owned'. Post-pivot the platform also admits
+-- 'ally' listings (non-Black-owned supporters), so this is no longer universal;
+-- the identity chip is derived from the authoritative column. The remaining
+-- identity/amenity facets are distributed deterministically (by row order) so
+-- each facet has a realistic, testable subset and the disjunctive counts are
+-- meaningful. (All current seed rows are Black-Owned, so counts are unchanged.)
 -- =============================================================================
 
 BEGIN;
 
--- Flagship: every published, non-deleted listing is Black-Owned.
+-- Flagship: attach "Black-Owned" only to listings labeled black_owned.
 INSERT INTO listing_attributes (listing_id, value_id)
 SELECT l.id, 'a2000000-0001-0000-0000-000000000001'  -- black-owned
 FROM listings l
 WHERE l.status = 'published' AND l.deleted_at IS NULL
+  AND l.ownership_label = 'black_owned'
 ON CONFLICT DO NOTHING;
 
 -- Distribute the remaining facets deterministically over published listings.
