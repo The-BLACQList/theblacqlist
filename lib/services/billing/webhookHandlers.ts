@@ -57,9 +57,9 @@ export async function handleSubscriptionUpsert(
   const meta = sub.metadata as Record<string, string>
   const userId = meta.user_id
   const listingId = meta.listing_id
-  const planId = meta.plan_id ?? null
-  const planSlug = (meta.plan_slug ?? 'free') as PlanSlug
-  const billingCycle = meta.billing_cycle ?? null
+  let planId = meta.plan_id ?? null
+  let planSlug = (meta.plan_slug ?? 'free') as PlanSlug
+  let billingCycle = meta.billing_cycle ?? null
 
   if (!userId || !listingId) {
     console.warn('[webhook] subscription missing user_id or listing_id in metadata', sub.id)
@@ -68,6 +68,28 @@ export async function handleSubscriptionUpsert(
 
   // In Stripe API v2026+, period dates live on the first subscription item.
   const firstItem = sub.items.data[0]
+
+  // A Customer Portal plan switch emits subscription.updated with a NEW price but does
+  // NOT rewrite subscription metadata — so metadata is stale. Resolve tier from the live
+  // price against `plans`; fall back to checkout-time metadata only when no row matches.
+  // No is_active filter here: a grandfathered/deactivated plan must still resolve its
+  // tier for existing subscribers (is_active gates purchase, a different concern).
+  const livePriceId =
+    typeof firstItem?.price === 'string' ? firstItem.price : (firstItem?.price?.id ?? null)
+
+  if (livePriceId) {
+    const { data: planRow } = await supabase
+      .from('plans')
+      .select('id, plan_key, stripe_price_id_monthly, stripe_price_id_yearly')
+      .or(`stripe_price_id_monthly.eq.${livePriceId},stripe_price_id_yearly.eq.${livePriceId}`)
+      .maybeSingle()
+    if (planRow) {
+      planId = planRow.id
+      planSlug = planRow.plan_key as PlanSlug
+      billingCycle = planRow.stripe_price_id_yearly === livePriceId ? 'annual' : 'monthly'
+    }
+  }
+
   const customerId =
     typeof sub.customer === 'string'
       ? sub.customer

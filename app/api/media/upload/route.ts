@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
+import { photoLimit } from '@/lib/stripe/features'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_BYTES = 10 * 1024 * 1024 // 10 MB (compression happens client-side)
@@ -36,11 +37,12 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient()
+  const serviceClient = createServiceClient()
 
   // Verify ownership
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, cities(slug)')
+    .select('id, slug, status, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -53,10 +55,28 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Enforce the plan's photo limit server-side (RLS can't count rows).
+  const limit = photoLimit(listing.tier)
+  if (limit !== null) {
+    const { count } = await serviceClient
+      .from('media_attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', listingId)
+      .eq('entity_type', 'listing')
+
+    if ((count ?? 0) >= limit) {
+      return NextResponse.json(
+        {
+          error: `Your plan includes up to ${limit} ${limit === 1 ? 'photo' : 'photos'}. Upgrade to add more.`,
+        },
+        { status: 400 }
+      )
+    }
+  }
+
   const ext = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1]
   const filePath = `${listingId}/${crypto.randomUUID()}.${ext}`
 
-  const serviceClient = createServiceClient()
   const fileBuffer = await file.arrayBuffer()
 
   const { error: uploadError } = await serviceClient.storage

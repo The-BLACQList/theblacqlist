@@ -45,10 +45,12 @@ export default async function UpgradePage() {
   if (primaryListingId) {
     const { data: sub } = await supabase
       .from('subscriptions')
-      .select('status, stripe_customer_id')
+      .select('status, stripe_customer_id, created_at')
       .eq('listing_id', primaryListingId)
       .not('stripe_customer_id', 'is', null)
       .in('status', ['active', 'past_due', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
     canManage = !!sub
   }

@@ -19,30 +19,47 @@ export interface PlanMeta {
 // only for Stripe price IDs and the active flag — never for display copy.
 //
 // Annual prices are ~20% off (whole-dollar; annualSavingsPct rounds each to 20%).
+//
+// Every tier is sold to every business at the same price regardless of ownership label
+// (Black-Owned / Certified Black-Owned / Ally). No tier, price, or benefit is restricted by
+// ownership, and the Certified badge is earned, never purchased — see the note in
+// `lib/stripe/features.ts`. Do not add an ownership-conditional plan or price here.
+//
+// Entitlements behind this copy live in `lib/stripe/features.ts`. When a bullet changes, change the
+// gate or limit too — this list is marketing copy, not the enforcement boundary.
 export const PLANS: PlanMeta[] = [
   {
     slug: 'free',
     name: 'Free',
-    tagline: 'Everything you need to get discovered.',
+    tagline: 'Be found.',
     price_monthly: 0,
     price_yearly: 0,
-    features: ['Basic listing page', 'Contact info & hours', '1 photo', 'Category & city listing'],
+    features: [
+      'Listing page with contact info & hours',
+      '1 photo',
+      'Category, city & map placement',
+      'Appear in search and city pages',
+      'Community reviews on your page',
+    ],
     cta: 'Get started',
     highlighted: false,
   },
   {
     slug: 'starter',
     name: 'Starter',
-    tagline: 'Stand out and get verified.',
+    tagline: 'Look legitimate.',
     price_monthly: 19,
     price_yearly: 182,
     features: [
       'Everything in Free',
       'Verified badge',
-      'Priority search placement',
-      'Owner analytics dashboard',
-      'Up to 10 photos',
+      'Up to 10 photos and 1 video',
+      'Full-length description & 10 tags',
+      'FAQ section (up to 5)',
       'Respond to reviews',
+      'Owner analytics — 30-day history',
+      'Social links on your page',
+      '10 AI listing assists per month',
       'Remove "Powered by BLACQList" badge',
     ],
     cta: 'Upgrade to Starter',
@@ -51,15 +68,21 @@ export const PLANS: PlanMeta[] = [
   {
     slug: 'growth',
     name: 'Growth',
-    tagline: 'Grow with featured placement and editorial reach.',
+    tagline: 'Get chosen.',
     price_monthly: 49,
     price_yearly: 470,
     features: [
       'Everything in Starter',
-      'Up to 20 photos',
-      'Featured collection placement',
-      'BLACQLight editorial eligibility',
-      'Marketplace category spotlight',
+      'Up to 25 photos and 3 videos',
+      'Products & services storefront (up to 25)',
+      'Service menu with pricing',
+      'Events (up to 3 active) & team members',
+      'Rating breakdown — service, quality, value',
+      'Unlimited FAQs and tags',
+      'Priority search placement',
+      'Featured collections & BLACQLight eligibility',
+      'Full analytics — search terms, 12-month history',
+      '100 AI assists per month',
       'Priority support',
     ],
     cta: 'Upgrade to Growth',
@@ -68,16 +91,22 @@ export const PLANS: PlanMeta[] = [
   {
     slug: 'premium',
     name: 'Premium',
-    tagline: 'The full platform, front and center.',
+    tagline: 'Own the category.',
     price_monthly: 99,
     price_yearly: 950,
     features: [
       'Everything in Growth',
-      'Unlimited photos',
-      'Sponsored Spotlight credit ($299 value)',
+      'Up to 50 photos and unlimited video',
+      'Unlimited products, services & events',
+      'Coupons & deals',
+      'Booking and appointment requests',
+      'Up to 3 locations on one account',
       'Homepage featured placement',
+      'Sponsored Spotlight credit ($299 value)',
+      'Category exclusivity in one city',
+      'Community spend impact for your business',
+      '500 AI assists per month + advanced agents',
       'Dedicated account support',
-      'Early access to new features',
     ],
     cta: 'Upgrade to Premium',
     highlighted: false,

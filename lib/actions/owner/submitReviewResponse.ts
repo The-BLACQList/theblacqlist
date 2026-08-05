@@ -39,9 +39,9 @@ export async function submitReviewResponse(
 
   if (!listing) return { error: "Listing not found or you don't own it." }
 
-  // Responding to reviews is a Standard+ feature.
+  // Responding to reviews is a Starter+ feature.
   if (!canAccess(listing.tier, 'review_response')) {
-    return { error: 'Responding to reviews is available on the Standard and Premium plans.' }
+    return { error: 'Responding to reviews is available on the Starter, Growth, and Premium plans.' }
   }
 
   // Confirm review exists and belongs to this listing
