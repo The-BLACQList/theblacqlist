@@ -2,7 +2,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES, VALID_CTA_TYPES } from '@/lib/constants/listing'
+import {
+  VALID_ENTITY_TYPES,
+  VALID_LOCATION_TYPES,
+  VALID_CTA_TYPES,
+  VALID_OWNERSHIP_LABELS,
+} from '@/lib/constants/listing'
 
 type FieldErrors = Partial<Record<string, string>>
 
@@ -69,6 +74,12 @@ export async function createListingAction(
   const coverImagePath = formData.get('cover_image_path')?.toString().trim() || null
   const tempEntityId = formData.get('temp_entity_id')?.toString().trim() || null
   const ownershipAttested = formData.get('ownership_attested') === 'true'
+  // Ownership label is authoritative and required. Default to 'black_owned' only
+  // if the field is entirely absent (older clients); an explicit invalid value is
+  // rejected below.
+  const ownershipLabelRaw = formData.get('ownership_label')
+  const ownershipLabel =
+    ownershipLabelRaw === null ? 'black_owned' : ownershipLabelRaw.toString().trim()
 
   // Event-only fields (read regardless; used only when entityType === 'event').
   const isEvent = entityType === 'event'
@@ -84,6 +95,10 @@ export async function createListingAction(
 
   if (!VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number])) {
     fieldErrors.entity_type = 'Select a listing type.'
+  }
+
+  if (!VALID_OWNERSHIP_LABELS.includes(ownershipLabel as (typeof VALID_OWNERSHIP_LABELS)[number])) {
+    fieldErrors.ownership_label = 'Select whether your business is Black-Owned or an Ally.'
   }
 
   if (name.length < 2) {
@@ -234,6 +249,7 @@ export async function createListingAction(
       service_area_description: serviceAreaDescription,
       logo_path: logoPath,
       cover_image_path: coverImagePath,
+      ownership_label: ownershipLabel,
       ownership_attested: ownershipAttested,
       ownership_attested_at: ownershipAttested ? new Date().toISOString() : null,
     })

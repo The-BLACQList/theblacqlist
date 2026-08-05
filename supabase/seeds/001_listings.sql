@@ -120,7 +120,7 @@ INSERT INTO listings (
   ('00a00001-0000-0000-0000-000000000020','Atlanta Influences Everything','atlanta-influences-everything',
    'Atlanta-born apparel brand celebrating the city''s global cultural influence.',
    'business',(SELECT id FROM categories WHERE slug='fashion-apparel'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'online','published','free','unclaimed',false,19,5,'admin',now()),
+   'virtual','published','free','unclaimed',false,19,5,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000021','TKST Law','tkst-law',
    'Atlanta''s oldest Black-owned law firm with decades of elite corporate litigation excellence.',
@@ -140,12 +140,12 @@ INSERT INTO listings (
   ('00a00001-0000-0000-0000-000000000024','Myavana','myavana',
    'AI-powered hair technology helping textured hair find the right products.',
    'business',(SELECT id FROM categories WHERE slug='technology'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'online','published','free','unclaimed',false,23,6,'admin',now()),
+   'virtual','published','free','unclaimed',false,23,6,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000025','Zyrobotics','zyrobotics',
    'Inclusive assistive technology making STEM learning joyful for children with disabilities.',
    'business',(SELECT id FROM categories WHERE slug='technology'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
-   'online','published','free','unclaimed',false,11,3,'admin',now()),
+   'virtual','published','free','unclaimed',false,11,3,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000026','Brave + Kind Bookshop','brave-and-kind-bookshop',
    'Decatur''s children''s bookshop championing diverse stories and representation.',

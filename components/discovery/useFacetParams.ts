@@ -85,6 +85,7 @@ export const FACET_KEYS = [
   'city',
   'trust_tier',
   'location_type',
+  'ownership',
   'price',
   'attrs',
   'open_now',

@@ -48,3 +48,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# BLACQList Management & Operations bundle (local-only, never deployed).
+# The bundle runs the product day-to-day; it is intentionally not committed.
+# NOTE: lib/meta/ and scripts/meta/ are real app code and ARE committed.
+.claude/
+/CLAUDE.md
+/docs/blacqlist/ops/
+
+# Supabase CLI local state (per-machine link/version cache, not shared config).
+supabase/.temp/
+
+# Local-only test fixtures used during manual QA drives.
+testassets/

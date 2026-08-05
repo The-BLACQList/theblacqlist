@@ -84,19 +84,25 @@ export default function AboutPage() {
           </SectionHeading>
           <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
             <p>
-              The BLACQList is an editorial directory. Every listing in our directory has been
-              submitted and reviewed against a single criterion: is this a Black-owned business?
+              The BLACQList is an editorial directory built to center and elevate Black-owned
+              businesses. Every listing is clearly labeled so you always know exactly who
+              you&rsquo;re supporting.
             </p>
             <p>
-              For our purposes, &ldquo;Black-owned&rdquo; means a business in which Black or
-              African American individual(s) hold majority ownership (&ge;51%) and exercise
-              meaningful operational control or management authority.
+              <strong>Black-Owned</strong> means a business in which Black or African American
+              individual(s) hold majority ownership (&ge;51%) and exercise meaningful operational
+              control or management authority. Black-owned businesses are what the platform is
+              built around — they are featured first across the directory.
             </p>
             <p>
-              Listing decisions are editorial judgments — the same way a publication decides what
-              to cover. We reserve the right to decline any submission that does not meet our
-              editorial criteria. This is what makes the directory trustworthy for the community
-              it was built to serve.
+              <strong>Ally</strong> means a business that supports Black-owned businesses and the
+              community but is not itself majority Black-owned. Allies are welcome and always
+              clearly labeled — never presented as Black-owned.
+            </p>
+            <p>
+              How we present and prioritize listings is an editorial judgment — the same way a
+              publication decides what to cover and what to feature. This is what keeps the
+              directory trustworthy for the community it was built to serve.
             </p>
           </div>
         </div>

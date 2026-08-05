@@ -1,7 +1,8 @@
 # Monetization Spec — The BLACQList
 
-**Last updated:** 2026-05-11  
-**Status:** Foundation built — payment integration deferred
+**Last updated:** 2026-07-01
+**Status:** Billing built (V1 — checkout, portal, webhooks, gating). Cost/margin rationale in
+[`pricing-unit-economics.md`](./pricing-unit-economics.md).
 
 ---
 
@@ -46,7 +47,8 @@ The BLACQList generates value for Black-owned businesses by surfacing them to in
 | Dedicated account support                  | —    | —                | —               | ✓                |
 | Early access to new features               | —    | —                | —               | ✓                |
 
-**Annual pricing (billed yearly):** Starter $15/mo · Growth $39/mo · Premium $79/mo
+**Annual pricing (billed yearly, ~20% off):** Starter **$182/yr** ($15.17/mo) · Growth **$470/yr**
+($39.17/mo) · Premium **$950/yr** ($79.17/mo). Each rounds to 20% off 12× the monthly price.
 
 ---
 
@@ -77,11 +79,32 @@ These are planned but not in scope for this build:
 
 | Stream                      | Description                                                                       | Trigger                                 |
 | --------------------------- | --------------------------------------------------------------------------------- | --------------------------------------- |
-| Marketplace transaction fee | 3–8% fee on purchases routed through BLACQList marketplace (products/services)    | When checkout flows are live            |
+| Marketplace transaction fee | **8%** platform fee on purchases routed through BLACQList marketplace (products/services) — see note | When checkout flows are live            |
 | Featured job postings       | Paid visibility for job listings on BLACQList Jobs module                         | When Jobs module launches               |
 | Event promotion             | Paid amplification for event listings                                             | When Events module launches             |
 | Editorial partnerships      | Paid BLACQLight features and sponsored content slots                              | When editorial pipeline is staffed      |
 | Sponsor campaigns           | Packaged brand sponsorships (City Spotlight, Platform Partner, Community Partner) | When campaign management admin is built |
+
+### Marketplace take rate — reconciled to 8% (2026-07-27)
+
+This figure was documented three different ways: **3–8%** here, and **8–12%** in
+`product/PRD.md` and `product/ruthless-mvp-and-roadmap.md`. **8% is the single point of overlap
+between the two ranges**, so it satisfies both prior specs rather than overriding either.
+
+Rationale beyond the arithmetic:
+
+- The platform provides real demand generation (directory, search, editorial, collections), which
+  justifies more than a bare payment-facilitation rate.
+- It is **mission-consistent**. The venture exists to increase the money flowing *to* Black-owned
+  businesses; a 12% take works against the thing the flow map is built to measure.
+- Stripe Connect processing (2.9% + $0.30) is **separate and additional**. At a 12% platform fee the
+  all-in vendor cost approaches 15%, which is above what a small vendor will accept without a
+  materially stronger demand guarantee than the platform can currently make.
+
+**Status: proposed, pending founder confirmation.** Marketplace checkout is V2 and Stripe Connect is
+not built, so nothing is live and this is reversible. Confirm before any Connect work begins.
+Sensitivity: at an 8% take, $1M/yr of marketplace revenue requires **$12.5M GMV/yr** — against a
+stated V2 target of $10K total GMV, so this is a long-dated line, not a near-term one.
 
 ---
 

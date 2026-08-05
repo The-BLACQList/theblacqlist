@@ -4,7 +4,11 @@ import { X } from 'lucide-react'
 
 import type { FacetGroupData } from '@/lib/listings/facets'
 import { useFacetParams, FACET_KEYS } from '@/components/discovery/useFacetParams'
-import { ENTITY_TYPE_LABEL, TRUST_TIER_LABEL } from '@/components/discovery/facetConstants'
+import {
+  ENTITY_TYPE_LABEL,
+  TRUST_TIER_LABEL,
+  OWNERSHIP_LABEL_MAP,
+} from '@/components/discovery/facetConstants'
 
 interface ActiveFilterChipsProps {
   groups: FacetGroupData[]
@@ -47,6 +51,13 @@ export function ActiveFilterChips({
 
   const trust = searchParams.get('trust_tier')
   if (trust) chips.push({ label: TRUST_TIER_LABEL[trust] ?? trust, onRemove: () => setParam('trust_tier', '') })
+
+  const ownership = searchParams.get('ownership')
+  if (ownership)
+    chips.push({
+      label: OWNERSHIP_LABEL_MAP[ownership] ?? ownership,
+      onRemove: () => setParam('ownership', ''),
+    })
 
   if (searchParams.get('open_now') === '1')
     chips.push({ label: 'Open now', onRemove: () => setParam('open_now', '') })

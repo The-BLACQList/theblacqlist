@@ -100,22 +100,34 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* [Needs professional review] The §4 ownership definitions and the
+              label-conditional warranty below are legally load-bearing (they interact
+              with the §1981 / editorial-directory analysis in
+              docs/blacqlist/legal/legal-pages-and-discrimination-risk-review.md and the
+              attorney redline). Have counsel review before this ships to production. */}
           <section id="business-listings" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">4. Business Listings</h2>
             <p>
-              <strong>Editorial focus.</strong> The BLACQList is an editorial directory that curates
-              businesses meeting our community focus. For purposes of this platform,
-              &ldquo;Black-owned&rdquo; means a business in which Black or African American
-              individual(s) hold majority ownership (≥51%) and exercise meaningful operational
-              control or management authority. Listing inclusion is an editorial decision. We reserve
-              the right to decline any submission that does not meet our editorial criteria, and to
-              exercise that discretion without prior notice and without liability.
+              <strong>Editorial focus.</strong> The BLACQList is an editorial directory that centers
+              and elevates Black-owned businesses. Every business is labeled either
+              &ldquo;Black-Owned&rdquo; or &ldquo;Ally.&rdquo; &ldquo;Black-Owned&rdquo; means a
+              business in which Black or African American individual(s) hold majority ownership
+              (≥51%) and exercise meaningful operational control or management authority.
+              &ldquo;Ally&rdquo; means a business that supports Black-owned businesses but is not
+              itself majority Black-owned. How listings are presented, prioritized, and featured is
+              an editorial decision. We reserve the right to decline, remove, or re-label any
+              submission, and to exercise that discretion without prior notice and without liability.
             </p>
             <p>Business owners who create or claim listings represent and warrant that:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>They have authority to represent the business (as an owner, partner, or authorized agent)</li>
               <li>All information submitted is accurate, complete, and not misleading</li>
-              <li>The business is genuinely Black-owned as defined above (≥51% Black or African American ownership and operational control)</li>
+              <li>
+                The ownership label they select is accurate: a &ldquo;Black-Owned&rdquo; listing is
+                genuinely majority Black-owned (≥51% Black or African American ownership and
+                operational control), and an &ldquo;Ally&rdquo; listing supports Black-owned
+                businesses and is not itself majority Black-owned
+              </li>
               <li>Any images, logos, or content submitted do not violate third-party intellectual property rights</li>
               <li>The business is operating lawfully and in compliance with applicable laws</li>
             </ul>

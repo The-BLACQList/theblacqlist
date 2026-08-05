@@ -38,7 +38,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, category_id, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
+      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, category_id, ownership_label, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -110,6 +110,10 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                 value={submitterProfile?.display_name ?? listing.submitted_by ?? 'Unknown'}
               />
               <Row label="Submitted at" value={new Date(listing.created_at).toLocaleString()} />
+              <Row
+                label="Ownership label"
+                value={listing.ownership_label === 'ally' ? 'Ally' : 'Black-Owned'}
+              />
               <Row
                 label="Ownership attested"
                 value={

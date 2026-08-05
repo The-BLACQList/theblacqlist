@@ -29,6 +29,7 @@ type RawRow = {
   location_type: string
   trust_tier: string
   tier: string
+  ownership_label: string
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -71,6 +72,7 @@ type RawRow = {
 
 const LISTING_SELECT = `
   id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
+  ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id,
   categories!listings_category_id_fkey(name, slug),
@@ -98,6 +100,7 @@ function toDiscoveryEntity(raw: RawRow): DiscoveryEntity {
     location_type: raw.location_type as DiscoveryEntity['location_type'],
     trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
     tier: raw.tier as DiscoveryEntity['tier'],
+    ownership_label: raw.ownership_label as DiscoveryEntity['ownership_label'],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -556,6 +559,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     location_type: raw.location_type as EntityPageData['location_type'],
     trust_tier: raw.trust_tier as EntityPageData['trust_tier'],
     tier: raw.tier as EntityPageData['tier'],
+    ownership_label: raw.ownership_label as EntityPageData['ownership_label'],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,

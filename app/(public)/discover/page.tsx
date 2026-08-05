@@ -26,6 +26,7 @@ interface DiscoverPageProps {
     city?: string
     trust_tier?: string
     location_type?: string
+    ownership?: string
     price?: string
     attrs?: string
     open_now?: string
@@ -51,6 +52,7 @@ async function DiscoverContent({
       city: params.city,
       trust_tier: params.trust_tier,
       location_type: params.location_type,
+      ownership: params.ownership,
       price: params.price ? params.price.split(',').filter(Boolean) : undefined,
       attrs: params.attrs ? params.attrs.split(',').filter(Boolean) : undefined,
       open_now: params.open_now === '1' || params.open_now === 'true',

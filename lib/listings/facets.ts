@@ -56,6 +56,7 @@ export interface RawFacetParams {
   type?: string
   trust_tier?: string
   location_type?: string
+  ownership?: string
   price?: string[]
   attrs?: string[]
   open_now?: boolean
@@ -69,6 +70,7 @@ export interface ResolvedFacetParams {
   p_entity_type: string | null
   p_trust_tier: string | null
   p_location_type: string | null
+  p_ownership_label: string | null
   p_price_ranges: string[] | null
   p_attribute_values: string[] | null
   p_open_now: boolean | null
@@ -164,6 +166,7 @@ export async function resolveFacetParams(
     p_entity_type: raw.type || null,
     p_trust_tier: raw.trust_tier || null,
     p_location_type: raw.location_type || null,
+    p_ownership_label: raw.ownership || null,
     p_price_ranges: price.length > 0 ? price : null,
     p_attribute_values: attrIds.length > 0 ? attrIds : null,
     p_open_now: raw.open_now ? true : null,
@@ -223,6 +226,7 @@ export async function legacyFacetedIds(
   if (resolved.p_entity_type) q = q.eq('entity_type', resolved.p_entity_type)
   if (resolved.p_trust_tier) q = q.eq('trust_tier', resolved.p_trust_tier)
   if (resolved.p_location_type) q = q.eq('location_type', resolved.p_location_type)
+  if (resolved.p_ownership_label) q = q.eq('ownership_label', resolved.p_ownership_label)
   if (resolved.p_q) {
     q = q.textSearch('search_vector', resolved.p_q, { type: 'websearch', config: 'english' })
   }
@@ -241,9 +245,15 @@ export async function getFacetCounts(
   supabase: AnyClient,
   resolved: ResolvedFacetParams
 ): Promise<FacetCounts> {
+  // facet_counts does not take an ownership arg (the Ownership control shows no
+  // per-option counts, like Trust Level). Strip it so PostgREST doesn't reject
+  // the call for an unknown parameter. Ownership still filters the actual result
+  // set via search_listings_faceted.
+  const { p_ownership_label: _ownership, ...countArgs } = resolved
+  void _ownership
   const { data, error } = await (supabase.rpc as unknown as RpcFn)(
     'facet_counts',
-    resolved as unknown as Record<string, unknown>
+    countArgs as unknown as Record<string, unknown>
   )
 
   const counts: FacetCounts = { attribute: {}, price: {}, openNow: 0 }

@@ -22,6 +22,7 @@ interface DuplicateResult {
 
 export interface FormSnapshot {
   tempEntityId: string
+  ownership_label: string
   entity_type: string
   name: string
   tagline: string
@@ -85,6 +86,7 @@ async function fetchDuplicates(name: string, cityId: string): Promise<DuplicateR
 function buildFormData(snapshot: FormSnapshot): FormData {
   const fd = new FormData()
   fd.append('temp_entity_id', snapshot.tempEntityId)
+  fd.append('ownership_label', snapshot.ownership_label)
   fd.append('entity_type', snapshot.entity_type)
   fd.append('name', snapshot.name.trim())
   fd.append('tagline', snapshot.tagline.trim())
@@ -115,6 +117,7 @@ function buildFormData(snapshot: FormSnapshot): FormData {
 // Maps a server fieldError key → a human label + the step (1-indexed) it lives on,
 // so this final step can tell the user EXACTLY which field on which step to fix.
 const FIELD_INFO: Record<string, { label: string; step: number }> = {
+  ownership_label: { label: 'Business ownership (Black-Owned or Ally)', step: 0 },
   entity_type: { label: 'Listing type', step: 1 },
   name: { label: 'Business name', step: 1 },
   tagline: { label: 'Short description', step: 1 },
@@ -424,9 +427,19 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
             aria-describedby="attest-desc"
           />
           <span id="attest-desc" className="font-subhead text-xs text-charcoal leading-relaxed">
-            I confirm this business is majority Black-owned (≥51% Black or African American
-            ownership and operational control), and all information I have submitted is accurate
-            and truthful.
+            {snapshot.ownership_label === 'ally' ? (
+              <>
+                I confirm this business supports Black-owned businesses and is not itself majority
+                Black-owned (it will be labeled “Ally”), and all information I have submitted is
+                accurate and truthful.
+              </>
+            ) : (
+              <>
+                I confirm this business is majority Black-owned (≥51% Black or African American
+                ownership and operational control), and all information I have submitted is accurate
+                and truthful.
+              </>
+            )}
           </span>
         </label>
 

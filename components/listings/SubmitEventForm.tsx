@@ -38,6 +38,9 @@ export function SubmitEventForm({ categories }: Props) {
   return (
     <form action={formAction} className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-5">
       <input type="hidden" name="entity_type" value="event" />
+      {/* Events center a Black-owned business or creator (see attestation below),
+          so they carry the black_owned ownership label. */}
+      <input type="hidden" name="ownership_label" value="black_owned" />
 
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className={labelCls}>

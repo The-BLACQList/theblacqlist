@@ -15,10 +15,19 @@ export const TRUST_TIERS: { value: string; label: string }[] = [
   { value: 'certified', label: 'BLACQList Certified' },
 ]
 
+export const OWNERSHIP_LABELS: { value: string; label: string }[] = [
+  { value: 'black_owned', label: 'Black-Owned' },
+  { value: 'ally', label: 'Ally' },
+]
+
 export const ENTITY_TYPE_LABEL: Record<string, string> = Object.fromEntries(
   ENTITY_TYPES.map((t) => [t.value, t.label])
 )
 
 export const TRUST_TIER_LABEL: Record<string, string> = Object.fromEntries(
   TRUST_TIERS.map((t) => [t.value, t.label])
+)
+
+export const OWNERSHIP_LABEL_MAP: Record<string, string> = Object.fromEntries(
+  OWNERSHIP_LABELS.map((t) => [t.value, t.label])
 )

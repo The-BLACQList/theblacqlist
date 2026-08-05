@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
+import {
+  handlePaymentFailed,
+  handleSubscriptionDeleted,
+  handleSubscriptionUpsert,
+} from '@/lib/services/billing/webhookHandlers'
+import type { Json } from '@/lib/supabase/types'
 
 // Next.js must NOT parse the body — Stripe signature verification requires the raw bytes.
 export const runtime = 'nodejs'
@@ -25,138 +31,56 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient()
 
+  // Idempotency: if we've already processed this event id, acknowledge and stop
+  // BEFORE any write. Stripe redelivers events, and our handlers upsert — so a
+  // duplicate must be a no-op.
+  const { data: seen } = await supabase
+    .from('stripe_events_processed')
+    .select('id')
+    .eq('stripe_event_id', event.id)
+    .maybeSingle()
+
+  if (seen) {
+    return NextResponse.json({ received: true, duplicate: true })
+  }
+
   try {
     switch (event.type) {
       case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const sub = event.data.object as Stripe.Subscription
-        await handleSubscriptionUpsert(supabase, sub)
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpsert(supabase, event.data.object as Stripe.Subscription)
         break
-      }
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription
-        await handleSubscriptionDeleted(supabase, sub)
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(supabase, event.data.object as Stripe.Subscription)
         break
-      }
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        await handlePaymentFailed(supabase, invoice)
+      case 'invoice.payment_failed':
+        await handlePaymentFailed(supabase, event.data.object as Stripe.Invoice)
         break
-      }
       default:
-        // Acknowledge unhandled events without error
+        // Acknowledge unhandled event types without processing (Stripe won't retry 2xx).
         break
     }
   } catch (err) {
-    console.error(`[stripe/webhook] Error handling ${event.type}:`, err)
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`[stripe/webhook] Error handling ${event.type}:`, message)
+    // Record for the on-call trail, then return 500 so Stripe retries.
+    await supabase.from('failed_webhooks').insert({
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload_json: event as unknown as Json,
+      error_message: message,
+    })
     return NextResponse.json({ error: 'Handler failed' }, { status: 500 })
   }
 
+  // Mark processed. The UNIQUE index guards against a race with a concurrent
+  // redelivery — a duplicate-key error here is harmless, so swallow it.
+  const { error: markError } = await supabase
+    .from('stripe_events_processed')
+    .insert({ stripe_event_id: event.id, event_type: event.type })
+  if (markError && markError.code !== '23505') {
+    console.error('[stripe/webhook] Failed to mark event processed:', markError.message)
+  }
+
   return NextResponse.json({ received: true })
-}
-
-// ─── Handlers ────────────────────────────────────────────────────────────────
-
-async function handleSubscriptionUpsert(
-  supabase: ReturnType<typeof createServiceClient>,
-  sub: Stripe.Subscription
-) {
-  const meta = sub.metadata as Record<string, string>
-  const userId = meta.user_id
-  const listingId = meta.listing_id
-  const planId = meta.plan_id ?? null
-  const planSlug = meta.plan_slug ?? 'free'
-
-  if (!userId || !listingId) {
-    console.warn('[stripe/webhook] subscription missing user_id or listing_id in metadata', sub.id)
-    return
-  }
-
-  // In Stripe API v2026+, period dates live on the first subscription item, not on the subscription itself.
-  const firstItem = sub.items.data[0]
-  const periodStart = firstItem?.current_period_start
-    ? new Date(firstItem.current_period_start * 1000).toISOString()
-    : null
-  const periodEnd = firstItem?.current_period_end
-    ? new Date(firstItem.current_period_end * 1000).toISOString()
-    : null
-
-  const customerId =
-    typeof sub.customer === 'string'
-      ? sub.customer
-      : ((sub.customer as Stripe.Customer)?.id ?? null)
-
-  // Upsert subscription row
-  await supabase.from('subscriptions').upsert(
-    {
-      listing_id: listingId,
-      user_id: userId,
-      plan_id: planId,
-      status: normalizeStatus(sub.status),
-      current_period_start: periodStart,
-      current_period_end: periodEnd,
-      stripe_subscription_id: sub.id,
-      stripe_customer_id: customerId,
-    },
-    { onConflict: 'stripe_subscription_id' }
-  )
-
-  // Keep listings.tier in sync — only update to paid tier when subscription is active/trialing
-  const isActive = sub.status === 'active' || sub.status === 'trialing'
-  await supabase
-    .from('listings')
-    .update({ tier: isActive ? planSlug : 'free' })
-    .eq('id', listingId)
-}
-
-async function handleSubscriptionDeleted(
-  supabase: ReturnType<typeof createServiceClient>,
-  sub: Stripe.Subscription
-) {
-  const meta = sub.metadata as Record<string, string>
-  const listingId = meta.listing_id
-
-  await supabase
-    .from('subscriptions')
-    .update({ status: 'canceled' })
-    .eq('stripe_subscription_id', sub.id)
-
-  if (listingId) {
-    await supabase.from('listings').update({ tier: 'free' }).eq('id', listingId)
-  }
-}
-
-async function handlePaymentFailed(
-  supabase: ReturnType<typeof createServiceClient>,
-  invoice: Stripe.Invoice
-) {
-  // In Stripe API v2026+, subscription is accessed via invoice.parent.subscription_details.subscription
-  const parent = invoice.parent as {
-    subscription_details?: { subscription?: string | { id: string } }
-  } | null
-  const subRef = parent?.subscription_details?.subscription
-  const subId = typeof subRef === 'string' ? subRef : (subRef?.id ?? null)
-
-  if (!subId) return
-
-  await supabase
-    .from('subscriptions')
-    .update({ status: 'past_due' })
-    .eq('stripe_subscription_id', subId)
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function normalizeStatus(stripeStatus: Stripe.Subscription.Status): string {
-  const map: Record<Stripe.Subscription.Status, string> = {
-    active: 'active',
-    canceled: 'canceled',
-    incomplete: 'inactive',
-    incomplete_expired: 'canceled',
-    past_due: 'past_due',
-    paused: 'inactive',
-    trialing: 'trialing',
-    unpaid: 'past_due',
-  }
-  return map[stripeStatus] ?? 'inactive'
 }

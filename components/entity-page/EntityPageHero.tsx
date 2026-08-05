@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Share2, Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
@@ -72,8 +73,9 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
         aria-hidden="true"
       />
 
-      {/* Trust badge — upper left */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* Ownership + trust badges — upper left */}
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+        <OwnershipBadge label={entity.ownership_label} size="small" />
         <StatusBadge tier={entity.trust_tier} size="small" />
       </div>
 
