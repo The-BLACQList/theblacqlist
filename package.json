@@ -23,6 +23,11 @@
     "test:seed-idempotent": "bash scripts/check-seed-idempotent.sh",
     "stripe:setup-products": "npx tsx scripts/stripe/setup-products.ts",
     "stripe:sync-price-ids": "npx tsx scripts/stripe/sync-price-ids.ts",
+    "meta:interactions": "npx tsx scripts/meta/fetch-interactions.ts",
+    "meta:insights": "npx tsx scripts/meta/fetch-insights.ts",
+    "meta:publish": "npx tsx scripts/meta/publish-post.ts",
+    "meta:exchange-token": "npx tsx scripts/meta/exchange-token.ts",
+    "ops:metrics": "npx tsx scripts/ops/metrics-pull.ts",
     "prepare": "husky"
   },
   "dependencies": {
