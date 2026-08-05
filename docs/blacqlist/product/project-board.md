@@ -2,9 +2,11 @@
 
 **Trello-ready board covering everything left to build, from MVP public launch to the full "Future of Black Commerce" vision.**
 
-_Last updated: 2026-07-25 · Capacity assumed: Founder + Claude (AI-paced)_
+_Last reconciled against ops truth: **2026-08-05** · Capacity assumed: Founder + Claude (AI-paced)_
 
-> **Re-baselined 2026-06-20.** The 2026-05-22 manual QA log (123/133 Pass across functional, security, a11y, performance, SEO, and cross-browser) showed the audits were **largely already executed and green** — not a multi-day to-do. That retires most of the MVP's audit-*execution* risk and collapses the audit cards to "finish the report + re-verify on production." Combined with **M4** (editorial collection) and **M9** (seed thresholds) cleared in staging, and **BRM-02** (icon-button labels) already compliant, the MVP pulls in ~1 week: **Jul 18 → ~Jul 11**. The binding constraint is now the **founder-/external-gated** items (legal copy review, production data review, DNS/domain), not engineering.
+> **Read this first.** The **order** of everything below is current. The **dates** are not — every milestone and wave window on this board has passed and needs re-baselining (flagged in place). For what is actually moving right now, dated and evidence-tagged, see [`../ops/next-actions.md`](../ops/next-actions.md) and [`../ops/status.md`](../ops/status.md). **When ops and this board disagree, ops wins.**
+
+> **Re-baselined 2026-06-20** — _superseded 2026-08-05; kept for history. Its conclusion ("MVP pulls in to ~Jul 11") did not hold, and its "M4 and M9 cleared in staging" claim is unverified — see the three-environment M9 table below._ The 2026-05-22 manual QA log (123/133 Pass across functional, security, a11y, performance, SEO, and cross-browser) showed the audits were **largely already executed and green** — not a multi-day to-do. That retires most of the MVP's audit-*execution* risk and collapses the audit cards to "finish the report + re-verify on production." Combined with **M4** (editorial collection) and **M9** (seed thresholds) cleared in staging, and **BRM-02** (icon-button labels) already compliant, the MVP pulls in ~1 week: **Jul 18 → ~Jul 11**. The binding constraint is now the **founder-/external-gated** items (legal copy review, production data review, DNS/domain), not engineering.
 
 ---
 
@@ -12,21 +14,23 @@ _Last updated: 2026-07-25 · Capacity assumed: Founder + Claude (AI-paced)_
 
 | Milestone | Target | What it means |
 |---|---|---|
-| 🚀 **Ready to serve customers** (MVP public launch) | **~Sat Jul 11, 2026** (~3 weeks) | The directory works end-to-end in Atlanta, Houston, Chicago. People can discover, save, claim, and list businesses; admins moderate. |
-| 🏁 **Completely done** (full vision) | **~Q2–Q3 2027** (~12 months) | Marketplace + checkout + paid plans, events, jobs, AI agents, **BLACQ Web** (3D commerce-flow map), more cities, and a mobile app — all live. |
+| 🚀 **Ready to serve customers** (MVP public launch) | ~~Sat Jul 11, 2026~~ **⚠️ PASSED — re-baseline required** | The directory works end-to-end in Atlanta, Houston, Chicago. People can discover, save, claim, and list businesses; admins moderate. |
+| 🏁 **Completely done** (full vision) | **~Q2–Q3 2027** (~12 months) — _derived from the passed MVP date; re-baseline with it_ | Marketplace + checkout + paid plans, events, jobs, AI agents, **BLACQ Web** (3D commerce-flow map), more cities, and a mobile app — all live. |
 
-> Confidence is **high for the MVP date** (audits executed + green, only report-writing and a production re-verify remain), and **widens for V1–V4**: payments/compliance, real multi-city business data + consent, a production-grade 3D experience, AI agents, and an app-store mobile app each carry external lead times that AI-pacing accelerates on the *build* side but not on the *review/external* side. The MVP floor is now set by the founder-gated items (legal review, data review), not by build work. Re-baseline after each milestone ships.
+> **⚠️ Dates below this line are stale as of 2026-08-05.** The Jul 11 MVP target and every wave window (Jun 20 – Jul 11) are in the past. **All milestone dates need re-baselining** — the board's own §5 item 3 already calls for re-baselining V1–V4 after MVP ships, and MVP has not shipped. The remaining MVP floor is **not build work**: it is **M9** (a content gap the repo cannot close) plus the founder-/attorney-gated items (legal copy sign-off, Resend deliverability warm-up). Engineering-side, the live near-term lane is the Stripe V1 cutover **G2 → G3 → G4** — tracked with dates and evidence in `docs/blacqlist/ops/next-actions.md`, not here.
+
+> Confidence was **high for the MVP date** (audits executed + green, only report-writing and a production re-verify remained), and **widens for V1–V4**: payments/compliance, real multi-city business data + consent, a production-grade 3D experience, AI agents, and an app-store mobile app each carry external lead times that AI-pacing accelerates on the *build* side but not on the *review/external* side. Re-baseline after each milestone ships.
 
 ---
 
-## 🚦 Board lane snapshot — 2026-06-22
+## 🚦 Board lane snapshot — 2026-08-05
 
 Mirror these into Trello's lists. The cards themselves carry the detail; this is the at-a-glance status.
 
+> **Live near-term truth lives in `docs/blacqlist/ops/`** (`status.md`, `next-actions.md`, `ops-log.md`, `decision-log.md`) — dated and evidence-tagged. This board is the **full roadmap, MVP → V4**. When the two disagree, ops wins for anything in flight; this snapshot is reconciled against it.
+
 **🚧 In Progress**
-- `[V1] 🔴 P0` **Stripe subscriptions — finish local rehearsal (Step 4 → T7)** — branch `feat/stripe-subscriptions-v1` (uncommitted). Local test-mode dress rehearsal paused at Step 4. Founder runs `stripe listen --forward-to localhost:3000/api/stripe/webhook` (`whsec_`→`.env.local`, restart dev), signs up a test owner, claims "Big Dave's Cheesesteaks" (atlanta-ga), runs a Starter checkout with `4242 4242 4242 4242`, then walks T1–T8 _(script in plan `~/.claude/plans/we-re-in-the-middle-rippling-pumpkin.md` + memory `project_blacqlist_stripe_v1.md`)_. **Done when:** checkout → `subscriptions` row + `listings.tier` sync + `admin_audit_log` + `stripe_events_processed` idempotency verified locally; payment-failed grace (`past_due` keeps tier) + portal-cancel → free.
-- `[V1] 🔴 P0` **Stripe — isolated commit** (after rehearsal) — stage **only** Stripe files (plans/features, checkout + portal routes, webhook route + handlers, billing components, migrations `20260701000001/2`, `tests/migrations/*`, setup scripts); **do NOT** sweep the founder's unrelated meta/ops WIP. **Done when:** `git status` shows only Stripe files staged and the branch has one clean, reviewable commit.
-- `[V1] 🔴 P0` **Stripe — gated prod cutover G1 → G4** (runbooks `stripe-golive-{1..4}`) — G1 apply both migrations staging→prod (`db push`, prod ref `ytlrnczevdnsfdzjbeqg`; watch migration-ledger repair) **· GATE-DATA**; G2 `stripe:setup-products` live + `sync-price-ids` prod **· GATE-SPEND+GATE-DATA**; G3 Vercel env (**original "The BLACQList" account LIVE keys**, replacing TBL2's) + register webhook (4 events) + configure Customer Portal **· GATE-DEPLOY**; G4 merge to main + deploy + 30-min Sentry/Vercel/`failed_webhooks` watch. **Done when:** a live test subscription on prod syncs tier end-to-end. Each gate needs an explicit founder go.
+- `[V1] 🔴 P0` **Stripe subscriptions V1 — gated production cutover, G1 done / G2 next** — branch `feat/stripe-subscriptions-v1` @ `b71e8ad`, **four single-concern commits, clean tree, not pushed**. **G1 ✅ DONE 2026-08-05** (GATE-DATA, decision-log 003): all six migrations applied to production `ytlrnczevdnsfdzjbeqg` with no errors; `supabase migration list --linked` → **35/35 `local == remote`** `[Measured — Supabase CLI, 2026-08-05]`; **verification CLOSED — psql spot-checks against production all PASS** `[Measured — psql against ytlrnczevdnsfdzjbeqg, 2026-08-05]` (`plans` = exactly 4 rows, `launch_subscribers` exists, `listings.ownership_label` exists, four trigger functions `prosecdef = t`, `stripe_events_processed` + `failed_webhooks` exist). Prod schema is intentionally **ahead of deployed code** — every migration is additive/backward-compatible; the code that reads them ships at G4. **Next: G2** (`stripe:setup-products` live-mode on the original "The BLACQList" account + `sync-price-ids` → prod `plans`) **· GATE-SPEND + GATE-DATA** — brief ready at `docs/blacqlist/ops/releases/g2-gate-brief-2026-08-05.md`. G2, G3, G4 are each **unapproved** and need their own founder go. Runbooks `stripe-golive-{1..4}`; full state in `ops/status.md` + `ops/next-actions.md`.
 
 **🔍 In Review / QA**
 - `[MVP] 🔴 P0` Security audit (086) — _report written; GO with conditions (prod RLS re-verify · `next` bumped ✅)_
@@ -36,16 +40,20 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Legal: Privacy & Terms compliance review + reconciliation — _copy reconciled; awaiting attorney sign-off_
 - `[MVP] 🟠 P1` Accessibility quick fixes (BRM-01, BRM-02, 098, 097) — _BRM-01/02 done; amber-as-text contrast now fixed; only the 097 save-UX product decision remains_
 
-**⛔ Blocked / Waiting** (founder credentials · DNS lead time · attorney)
+**⛔ Blocked / Waiting** (founder decisions · attorney · deliverability warm-up)
 > 👉 **Founder:** the ordered list of what *you* set up to unblock these — accounts, domain/DNS, data review, legal confirms, secrets handoff — is in **`docs/blacqlist/launch/founder-action-checklist.md`** (narrative) and **`founder-action-cards.md`** (paste-ready Trello cards F1–F10).
-- `[MVP] 🔴 P0` Production data: founder keep/edit/remove pass **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements → ATL 151 / HOU 51 / CHI 51); _remaining: image coverage + production import (093)_
+> _091 (Supabase prod), 092 (Vercel + DNS), and 093 (seed import) were completed 2026-06-26 and have been **moved to ✅ Done** below — they are no longer blocked._
+- `[MVP] 🔴 P0` **M9 content gap — the one G4 blocker that is not code.** Local `e2e/launch-gates.spec.ts:41` fails deterministically: `ATL=38/150, HOU=17/50, CHI=18/50` `[Measured — local Playwright, 2026-08-05]`. Roughly **112 more ATL / 33 HOU / 32 CHI** published listings needed. Not fixable in the repo (`supabase/seed.sql` excludes listings; the launch JSON holds 80 businesses vs. the 250+ required) — it is a **founder content decision**: import a supplier list, run an outreach push, or consciously launch below the threshold and lower the gate as a logged decision. The spec was **not** edited, lowered, or skipped. **Does not block G2 or G3.** (`ops/status.md`, `ops/next-actions.md`, `ops/ops-log.md` — all 2026-08-05)
+- `[MVP] 🔴 P0` **Finding 2 — `priority_placement` defined but unenforced.** Open **product decision** (wire it or drop it); prod-safe, does not block the cutover. Systemic form = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. (`ops/status.md` 2026-08-05)
 - `[MVP] 🟠 P1` Founder legal confirms: entity name + mailing address + DMCA agent
-- `[MVP] ✅ P0` Supabase production project (091) — _🟢 **COMPLETE 2026-06-26** — all 29 migrations + reference vocab + 254 listings + RLS + 3 buckets + search/faceting RPC, **auth config** (Confirm email ON · Site URL + redirect allowlist → `theblacqlist.vercel.app`), **admin user** (UID `…528c`, email confirmed, `admin` role, `/admin` verified). Only **PITR** remains (M7 gate). → **move to Done in Trello**_
-- `[MVP] ✅ P0` Vercel production deploy (092) + domain / DNS / SSL — _**COMPLETE 2026-06-26** — F3 ✅ · F9 env+cutover ✅ · `main` GREEN ✅ · **F4 DNS go-live ✅**: `theblacqlist.com` resolves to Vercel + serves over valid HTTPS (apex A `216.150.1.1`, www→apex, MX/email preserved). → **move to Done in Trello**_
-- `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before F4 go-live_
-- `[MVP] ✅ P0` Production seed import (093) — _**DONE 2026-06-26**: prod DB seeded via `npx tsx scripts/seed-launch-listings.ts` → **ATL 151 / HOU 51 / CHI 52 = 254** published, 0 errors; details/FTS/faceting verified; Gorée corrected_
+- `[MVP] 🟠 P1` Production data: image coverage pass — _keep/edit/remove pass **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements) and the production import (093) is **done**; image coverage is the only piece still open_
+- `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before the public flip_
 
-**🎯 Up Next**
+**🎯 Up Next** — _order is fixed: **G2 → G3 → G4**. Merging `feat/stripe-subscriptions-v1` into `main` **is** the production deploy of the billing code (Vercel builds `main` → prod), so G4 cannot precede G2 and G3. (`ops/next-actions.md` 2026-08-05)_
+- `[V1] 🔴 P0` **G2 — live Stripe products** · **GATE-SPEND + GATE-DATA** · `stripe:setup-products` against the **original "The BLACQList" account in live mode** (not the TBL2 sandbox), then `sync-price-ids` writing the live price IDs into prod `plans`. Creates real billing objects — needs its own founder go. Brief ready: `ops/releases/g2-gate-brief-2026-08-05.md`. _Done when:_ every active plan row carries a live-mode price ID for monthly **and** annual.
+- `[V1] 🔴 P0` **G3 — env + webhook + portal** · **GATE-DEPLOY** · Vercel env vars swapped to the original account's LIVE keys (replacing TBL2's), webhook registered on 4 events, Customer Portal configured.
+- `[V1] 🔴 P0` **G4 — merge + deploy** · **GATE-DEPLOY** · push branch → merge to `main` → deploy → 30-min Sentry / Vercel / `failed_webhooks` watch; bump the Vercel CLI first (`npm i -g vercel@latest`, 54.20.1 → 58.5.1). _Done when:_ a live test subscription on prod syncs listing tier end-to-end.
+- `[MVP] 🔴 P0` **Preview verification — the one pre-deploy item still owed before G4.** Every other line of the `deploy-safety.md` pre-deploy checklist is green as of 2026-08-05 (`ops/status.md`).
 - `[MVP] 🟠 P1` Staging QA: account-deletion end-to-end walk-through — _needs an authed session_
 - `[MVP] 🟡 P2` SEO audit (090) — _GSC submission only, post-deploy_
 - `[MVP] 🔴 P0` Regression QA sign-off (089) — incl. TA-01–TA-25 + cross-browser L4–L12
@@ -55,6 +63,14 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Soft launch → Go/No-Go → Public announcement
 
 **✅ Done (this stretch)**
+- `[V1] 🔴 P0` **G1 — six migrations applied to production** · GATE-DATA approved (decision-log 003); `supabase db push --yes` against `ytlrnczevdnsfdzjbeqg`, no errors `[Observed]`; `migration list --linked` → **35/35 `local == remote`** `[Measured — Supabase CLI, 2026-08-05]`. Prod schema is now intentionally **ahead of** the deployed code — the code reading `ownership_label`, `stripe_events_processed`, `failed_webhooks`, and the 4-tier `plans` ships at G4 · 2026-08-05
+- `[V1] 🔴 P0` **G1 verification CLOSED — SQL spot-checks all PASS** `[Measured — psql against ytlrnczevdnsfdzjbeqg, 2026-08-05]` · `plans` = exactly 4 rows (free · starter · growth · premium), `launch_subscribers` exists, `listings.ownership_label` exists, all four trigger functions `prosecdef = t`, `stripe_events_processed` + `failed_webhooks` exist · 2026-08-05
+- `[MVP] 🔴 P0` **Playwright `e2e/` suite RUN — 49 passed / 1 failed (59.5s)** `[Measured — local Playwright, 2026-08-05]` · closes the `deploy-safety.md` "an unrun check counts as red" item. Green: M1, M2, M4, M8, all 16 a11y axe scans. **Sole failure = M9** (content gap, see ⛔ Blocked) · 2026-08-05
+- `[MVP] 🟠 P1` **`ownership-label.spec.ts` proven — 5/5 on first attempt** · never run since it landed Jul 25; Terms §4 both definitions, About/Ally copy, Discover ownership filter, Black-Owned facet + badge, Ally facet URL `[Measured — local Playwright, 2026-08-05]` · 2026-08-05
+- `[MVP] 🟠 P1` **Jun-22 flaky focus-trap cases genuinely green** · J15a (mobile nav, Radix) and J15b (report-correction dialog) both passed on **attempt 1, no retries** — a retry-only pass would still be labeled flaky `[Measured — local Playwright, 2026-08-05]` · 2026-08-05
+- `[MVP] 🔴 P0` **Pre-deploy quality gates green** · `npx tsc --noEmit` exit 0 · `npx eslint app lib components` exit 0 · unit **65/65 across 11 files** · `pnpm build` exit 0 `[Measured — local, 2026-08-05]` · 2026-08-05
+- `[MVP] 🟡 P2` **Local branch cleanup** · `feat/phase-1-auth-middleware` (`a9ad07f`) and `feat/phase-2-legal-pages` (`e2c991e`) deleted after SHAs were recorded for reversibility; remotes were already pruned under decision-log 001; **no remote refs touched, nothing pushed**. Remaining: `main` @ `488d13c` (exactly in sync with `origin/main`) and `feat/stripe-subscriptions-v1` @ `b71e8ad` `[Observed]` · 2026-08-05
+- `[MVP] 🟠 P1` **M4 closed locally** · `scripts/seed-collections.ts` seeded `atlanta-soul-food-southern-icons` (`is_active=true`), active collections 0 → 1 `[Observed]`. Caveat: all 10 referenced listing slugs were "not found/published", so the collection has **0 attached listings** — same corpus gap as M9. **Local DB only; not closed in production** · 2026-08-05
 - 🙋🏾‍♀️ **Founder F1** — Supabase **production** project created (Pro plan) · 2026-06-21
 - 🙋🏾‍♀️ **Founder F2** — domain `theblacqlist.com` confirmed at Bluehost (active, auto-renew, exp Aug 17 2026) · 2026-06-21 _(⚠️ live WordPress site + Google Workspace email on it — F4 DNS cutover is a go-live step)_
 - 🙋🏾‍♀️ **Founder F5** — Resend email **wiring complete** · 2026-06-24 (sending subdomain `send.theblacqlist.com` verified · 2 `re_…` keys · custom SMTP on **both** Supabase projects · auth email sends from domain · DMARC added) _(deliverability warm-up before F4 is the only follow-up)_
@@ -81,6 +97,15 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - **Pillar B — Listing & Owner Richness** (2026-06-22, _after-launch enhancement track; built tsc/lint clean + a11y green_) — **B1** video · **B3** flexible links · **B4** FAQ accordion · **B5** menu/offerings grouping · **B2a** multi-criteria review ratings (Quality/Service/Value/Atmosphere) · **B2b** moderated review photos (ride the review-publish gate) · **B6** **events as a first-class entity** (`/add-event` → admin review → `/{city}/event/{slug}` page + Event JSON-LD + dashboard editor + "Upcoming events" on organizer business pages + Events discovery filter) · **event polish** (start date on discovery cards + add-to-calendar `.ics`). _Pulls forward big chunks of the V1 "Reviews system" + "Event template" cards (see those cards)._ ⏳ **Staging apply pending — non-blocking:** 4 migrations await a founder paste (`…0004_listing_faqs`, `…0005_review_criteria`, `…0006_review_media_rls`, `…0007_event_entity`); pages render fail-soft before apply. **Not on the MVP critical path.**
 
 > "Done" here means the build/doc work is complete; any production-gated re-verification still lives on the relevant card.
+
+**🧭 Open decisions the founder owns (2026-08-05)** — none of these are code problems; each is a call only the founder can make:
+
+| Decision | State | Where it bites |
+|---|---|---|
+| **M9 content gap** — source ~112 ATL / 33 HOU / 32 CHI more published listings, or consciously launch below threshold and lower the gate as a logged decision | Open — not closable from the repo | Blocks **G4** / MVP launch gate M9; does **not** block G2 or G3 (`ops/status.md`, 2026-08-05) |
+| **Finding 2** — `priority_placement` is defined but unenforced: wire it or drop it | Open — product decision | Non-blocking for the cutover; it is the per-field form of the systemic V1.5 issue (ticket 105) (`ops/next-actions.md`, 2026-08-05) |
+| **8% marketplace fee** — decision-log 002 | **PROPOSED — no founder approval recorded** | Gates any marketplace revenue modeling downstream of V2 |
+| **Legal §1981 / paid-tiers review** — a paid tier, placement, or badge must not be contingent on the `Black-Owned` label; centering stays editorial ranking only | `[Needs professional review]` — attorney sign-off still outstanding | `.claude/rules/moderation-policy.md:48`; also holds the Privacy/Terms card in 🔍 In Review
 
 ---
 
@@ -133,11 +158,13 @@ Trello gives 10 label colors → use them for **Area** (the most useful filter).
 
 ## 3) 📍 Milestones (marker cards)
 
+> **⚠️ Every date in this table is stale (2026-08-05).** The MVP date has passed without launch; V1–V4 hang off it and shift with it. Treat the **order** as current and the **dates** as needing re-baseline. Do not quote these dates to anyone.
+
 | Card | Due | Meaning |
 |---|---|---|
-| 🚀 **MVP Public Launch** | **Jul 11, 2026** | Ready to serve customers — 3 cities, core flows |
-| 🤝 **V1 — Trust & Grow** | Sep 12, 2026 | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities |
-| 🛒 **V2 — Commerce Layer** | Dec 5, 2026 | Marketplace + checkout, receipt OCR, spend dashboards, AI beta |
+| 🚀 **MVP Public Launch** | ~~Jul 11, 2026~~ **⚠️ PASSED — re-baseline** | Ready to serve customers — 3 cities, core flows. Still open: **M9** content gap, legal sign-off, Resend deliverability |
+| 🤝 **V1 — Trust & Grow** | ~~Sep 12, 2026~~ _(depends on MVP)_ | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities. _Stripe subscriptions is **in flight now** (G1 ✅ / G2 next) ahead of this milestone_ |
+| 🛒 **V2 — Commerce Layer** | ~~Dec 5, 2026~~ _(depends on MVP)_ | Marketplace + checkout, receipt OCR, spend dashboards, AI beta |
 | 🧠 **V3 — Intelligence (BLACQ Web + Agents)** | Mar 13, 2027 | 3D commerce-flow map, AI concierge/agents, sponsor campaigns, impact analytics |
 | 📱 **V4 — Scale** | mid-2027 (rolling) | Mobile app, 25+ cities, Spanish, partner API |
 | 🏁 **Full vision complete** | ~Q2–Q3 2027 | "Future of Black Commerce" feature-complete |
@@ -146,10 +173,12 @@ Trello gives 10 label colors → use them for **Area** (the most useful filter).
 
 _Re-baselined 2026-06-20: audits collapse from "execute" to "finish report + re-verify on prod," so the waves compress ~1 week and reorder around the founder-/external-gated floor._
 
-- **Wave A — Reports & founder-gated prep (Jun 20–28):** a11y quick fixes ✅, finish audit reports (RLS matrix, OWASP, axe-to-all-37), legal copy → review, **start founder data review** (`seed-review.csv`), Resend DNS, domain.
-- **Wave B — Production stand-up + seed (Jun 29 – Jul 5):** Supabase prod, Vercel deploy + env, production data import, Sentry PII + monitoring, PITR/backups.
-- **Wave C — Production-only gates & sign-off (Jul 6–9):** post-deploy prod tests (analytics/Sentry/uptime/smoke), regression re-verify + Lighthouse on prod, gate sign-offs, runbooks.
-- **Wave D — Soft launch → public (Jul 10–11):** soft launch, go/no-go, ship.
+> **⚠️ ALL FOUR WAVE WINDOWS HAVE PASSED (2026-08-05).** Jun 20 – Jul 11 is in the past and the MVP did not ship in it. Waves B and C largely **did** happen (Supabase prod, Vercel + DNS, prod seed import — see ✅ Done). What did not close is the founder-/external-gated floor Wave A carried, plus **M9** in production. **Read the wave list below as a checklist of remaining scope, not as a schedule** — re-baseline the dates when the remaining floor items have owners and durations. The live near-term lane is in `../ops/next-actions.md`.
+
+- **Wave A — Reports & founder-gated prep (~~Jun 20–28~~ ⚠️ passed):** a11y quick fixes ✅, finish audit reports (RLS matrix, OWASP, axe-to-all-37), **legal copy → attorney review ⏳ still open**, founder data review (`seed-review.csv`) ✅ applied, **Resend deliverability warm-up ⏳ still open**, domain ✅.
+- **Wave B — Production stand-up + seed (~~Jun 29 – Jul 5~~ ⚠️ passed):** Supabase prod ✅ (ticket 091), Vercel deploy + env ✅ (ticket 092), production data import ✅ (ticket 093), Sentry PII + monitoring ✅, PITR/backups ⏳.
+- **Wave C — Production-only gates & sign-off (~~Jul 6–9~~ ⚠️ passed):** post-deploy prod tests (analytics/Sentry/uptime/smoke), regression re-verify + Lighthouse on prod, gate sign-offs, runbooks — **not yet run against prod**.
+- **Wave D — Soft launch → public (~~Jul 10–11~~ ⚠️ passed):** soft launch, go/no-go, ship — **blocked on M9 in production + the two Wave A items above**.
 
 ---
 
@@ -157,7 +186,16 @@ _Re-baselined 2026-06-20: audits collapse from "execute" to "finish report + re-
 
 - Brand refresh (gold/amber palette, Jost/Inter type, node-Q logo, restyled components) · contrast tokens + J12/J13 tests green
 - **M1** Privacy live · **M2** Terms live · **M8** no hardcoded localhost
-- **M4** ≥1 active editorial collection (staging) · **M9** seed thresholds ATL 251 / HOU 84 / CHI 83 (staging)
+- **M4** ≥1 active editorial collection — closed **locally** 2026-08-05 (`is_active=true`, but **0 attached listings** — same corpus gap as M9) `[Observed — ops/status.md, 2026-08-05]`. **Not yet closed in production.**
+- **M9** seed thresholds (ATL ≥150 / HOU ≥50 / CHI ≥50, `e2e/launch-gates.spec.ts:41`) — **three different figures exist; they are not the same number and must not be merged:**
+
+  | Environment | ATL / HOU / CHI | Gate | Evidence |
+  |---|---|---|---|
+  | Board's original "staging" claim | 251 / 84 / 83 | claimed PASS | `[Unknown]` — never verified; source not recoverable. Treat as unproven. |
+  | **Production** (ticket 093 import) | **151 / 51 / 52** (254 total) | PASS | `[Measured — SQL on prod `ytlrnczevdnsfdzjbeqg`, 2026-06-26]` |
+  | **Local dev DB** | **38 / 17 / 18** | **❌ FAIL** | `[Measured — local Playwright, 2026-08-05]` — deterministic, failed attempt 1 **and** retry |
+
+  The local gate needs roughly **112 more ATL / 33 HOU / 32 CHI** published listings and **is not closable from the repo** (`supabase/seed.sql` excludes listings; the launch JSON holds 80 businesses vs. the 250+ required). This is a **founder content decision**, not a build task. The spec was not edited, lowered, or skipped. **Does not block G2 or G3.**
 - Editorial **Collections** feature (narrative body, per-business blurbs, sections, admin authoring)
 
 ---
@@ -310,11 +348,14 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 **Checklist.**
 - Review researched businesses for accuracy / closures / "is it still Black-owned" / consent — **review sheet ready: `docs/blacqlist/data/seed-review.csv`** (265 rows, flagged-first: 130 carry a metro-area / no-website / no-address / duplicate flag; each row has a 1-click Google Maps verify link; README lists per-city category gaps below the ≥3/city threshold) — _founder's manual keep/edit/remove pass still pending (Blocked/Waiting)_
-- ✅ Atlanta ≥150, Houston ≥50, Chicago ≥50 published (staging: ATL 251 / HOU 84 / CHI 83) — M9 cleared
+- Atlanta ≥150, Houston ≥50, Chicago ≥50 published — **environment-dependent, see the M9 table in §3:**
+  - ✅ **Production:** ATL 151 / HOU 51 / CHI 52 = 254 `[Measured — SQL on prod, 2026-06-26, ticket 093]`
+  - ❌ **Local dev DB:** ATL 38 / HOU 17 / CHI 18 `[Measured — local Playwright, 2026-08-05]` — needs ~112 / 33 / 32 more
+  - ⚠️ The original "staging: ATL 251 / HOU 84 / CHI 83" claim is `[Unknown]` — never verified; do not cite it
 - ≥40% with a cover image · every category ≥3 listings/city · descriptions ≥100 chars · CTA non-null
 - Run preflight validation SQL; zero gaps
 
-**Note:** thresholds met in **staging** (our seed run). The founder review sheet is generated and regenerable (`scripts/build-seed-review.ts`); "Remove"/"Edit" rows drive a cleanup pass on the seed JSON before the **production** import (card 093). Still pending: the founder's accuracy/consent pass, image coverage, and that prod import.
+**Note (2026-08-05):** the founder review sheet is generated and regenerable (`scripts/build-seed-review.ts`); the keep/edit/remove pass was **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements) and the **production import ✅ ran** (card 093). Still pending: image coverage, and closing the **local** M9 gap so `e2e/launch-gates.spec.ts` runs green in CI/dev.
 
 ---
 
@@ -763,13 +804,38 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 ## 5) How to use this board
 
 1. **In Trello:** create the 8 lists (section 2), add the 10 color **Area** labels (section 1), then create cards using the title prefixes + due dates, pasting the **Description** into the card body and the **Checklist** as a Trello checklist. Filter by phase prefix (`[MVP]`, `[V1]`…) to focus one milestone at a time.
-2. **Start now:** Wave A is underway — the a11y quick fixes are ✅ done (BRM-01/02) and the founder data-review sheet is generated (`docs/blacqlist/data/seed-review.csv`). What's left in Wave A is report-writing on the already-green audits and the ⏳ external/founder items — **legal copy review, founder data review, DNS, domain** — which now set the floor. Move those first.
-3. **Re-baseline** the V1–V4 dates after MVP launch — real velocity from the launch sprint sharpens the later estimates.
+2. **Start now:** the live near-term lane is **`../ops/next-actions.md`**, not this board. As of 2026-08-05 that lane is the Stripe V1 gated cutover — **G2 → G3 → G4**, in that fixed order (merging to `main` *is* the production deploy). This board carries the roadmap around it; ops carries what is moving this week, with dates and evidence tags.
+3. **Re-baseline** the milestone dates — **all of them are now stale.** MVP's Jul 11 target passed without launch, so V1–V4 shift with it. Re-baseline after the remaining MVP floor (M9 content, legal sign-off, Resend warm-up) has owners and durations; then re-baseline V1–V4 again after MVP actually ships, using real launch-sprint velocity.
 4. **Decompose** each V1–V4 epic into granular cards at that phase's kickoff (especially **BLACQ Web**, which warrants its own sub-board with the 3D planning/performance/accessibility rules).
 
 ## 6) Source of truth
 
-Built from: `docs/blacqlist/launch/` (production-readiness-plan, remaining-tests-runbook, supabase-production-checklist, production-deployment-runbook, environment-variable-checklist, on-call, rollback/incident runbooks), `docs/blacqlist/qa/` (mvp-release-readiness-checklist, mvp-bug-risk-log, cross-browser-and-launch-gates-guide, manual-qa-runbook), `docs/blacqlist/tickets/` (086–098 audits, 091–095 production), `e2e/launch-gates.spec.ts`, and `docs/blacqlist/product/release-roadmap.md`.
+### The two-file split — read this first
+
+| | This board (`docs/blacqlist/product/project-board.md`) | Ops (`docs/blacqlist/ops/`) |
+|---|---|---|
+| **Answers** | "What is the whole plan, MVP → V4?" | "What is true and moving *right now*?" |
+| **Scope** | Full roadmap: every card, milestone, phase | In-flight work only — currently the Stripe V1 cutover |
+| **Cadence** | Reconciled at milestones; card bodies are stable | Updated every session |
+| **Evidence** | Card descriptions, checklists, milestone framing | Dated + evidence-tagged per `CLAUDE.md` (`[Measured]` / `[Observed]` / `[Unknown]` …) |
+| **Dates** | ⚠️ **stale as of 2026-08-05 — re-baseline required** | Current |
+
+**When they disagree, ops wins.** Ops is dated and evidence-tagged; this board is reconciled periodically.
+
+### Live ops files
+
+| File | Purpose |
+|---|---|
+| [`../ops/status.md`](../ops/status.md) | Current health: RAG signal, open blockers, in-flight release |
+| [`../ops/next-actions.md`](../ops/next-actions.md) | **The 3–5 things to do next** — the live near-term lane |
+| [`../ops/ops-log.md`](../ops/ops-log.md) | Append-only session log |
+| [`../ops/decision-log.md`](../ops/decision-log.md) | Append-only record of every gate decision |
+| [`../ops/releases/`](../ops/releases/) | Release + gate-brief records (e.g. the G2 brief) |
+| [`../ops/runbooks/`](../ops/runbooks/) | Operational procedures |
+
+### Built from
+
+`docs/blacqlist/launch/` (production-readiness-plan, remaining-tests-runbook, supabase-production-checklist, production-deployment-runbook, environment-variable-checklist, on-call, rollback/incident runbooks), `docs/blacqlist/qa/` (mvp-release-readiness-checklist, mvp-bug-risk-log, cross-browser-and-launch-gates-guide, manual-qa-runbook), `docs/blacqlist/tickets/` (086–098 audits, 091–095 production), `e2e/launch-gates.spec.ts`, and `docs/blacqlist/product/release-roadmap.md`.
 
 ---
 
