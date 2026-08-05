@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 98
-**Phases:** 0–18
-**Last updated:** 2026-06-07
+**Total tickets:** 112
+**Phases:** 0–18, plus V1 / V1.5 monetization work
+**Last updated:** 2026-07-27
 
 ---
 
@@ -106,4 +106,17 @@
 | [096](096-modal-focus-accessibility.md)                      | Modal accessibility — focus trap, Escape, focus restore                  | Phase 17 | P1       | —                            | Done          | Fixed 2026-06-07: report-correction dialog → Radix Dialog; J15 passes                                     |
 | [097](097-accessible-save-interaction.md)                    | Accessible save interaction (unblocks VoiceOver J10/J11)                 | Phase 17 | P2       | 096                          | Needs decision | No save modal exists; product decision: direct-save vs. modal                                            |
 | [098](098-color-contrast-aa-remediation.md)                  | Color contrast — WCAG AA remediation                                     | Phase 17 | P1       | —                            | In progress   | Footer fixed; amber-as-text, Claimed badge, sign-up muted text remaining                                  |
+| [099](099-cookie-consent-banner.md) | Cookie-consent banner (GDPR — EU only) | Phase 17 | P3 | — | Deferred | Out of MVP scope (US launch); activate before EU marketing |
+| [100](100-data-export.md) | Self-serve data export ("download my data") | Phase 17 | P3 | — | Deferred | MVP fulfills portability by manual email request |
+| [101](101-verification-doc-purge.md) | Verification-document 90-day purge job | Phase 17 | P2 | — | Deferred | Security plan documents the intent; not implemented |
+| [102](102-dmca-designated-agent.md) | Register a DMCA designated agent | Phase 17 | P1 | — | ✅ Done | Registered 2026-06-30, Reg. No. DMCA-1074879; Terms §8 updated |
 | [103](103-faceted-filtering-identity-facets.md) | Faceted filtering + Identity & Ownership facets | V1 | P2 | 029 | ✅ Done | Verified on staging 2026-06-22 — migrations + attribute data applied, listings reconciled, 32/32 a11y green, filters live on /discover |
+| [104](104-ai-generation-rate-limit.md) | AI cost guardrails — per-tier quotas, consumer caps, spend ceiling, kill-switch | Phase 15 | P1 | — | Yes | **Blocks 079.** Must ship before `ANTHROPIC_API_KEY` is connected |
+| [105](105-enforce-tier-limits-at-call-sites.md) | Enforce the new tier limits at every call site | Phase 14 | P1 | 076, 078 | Yes | Server-side enforcement for the reworked `lib/stripe/features.ts`; without it `/pricing` promises differentiation the server does not enforce |
+| [106](106-events-module-ui.md) | Events module UI (Growth tier) | V1.5 | P2 | 105 | After deps | Entity exists (`20260622000007`); `/events` page is a SHELL |
+| [107](107-team-members.md) | Team members block (Growth tier) | V1.5 | P3 | 105 | After deps | New table; `teamMemberLimit(tier)` — Growth 5, Premium unlimited |
+| [108](108-coupons-and-deals.md) | Coupons & deals (Premium tier) | V1.5 | P2 | 105 | After deps | Reveal counts are an intent signal, never labeled as confirmed revenue |
+| [109](109-booking-requests.md) | Booking & appointment requests (Premium tier) | V1.5 | P2 | 105 | After deps | Request-and-confirm only; unauthenticated write endpoint needs 104's abuse posture |
+| [110](110-multi-location-accounts.md) | Multi-location accounts (Premium tier) | V1.5 | P3 | 105, 078 | After deps | Up to 3 listings on one subscription; entitlement change, no new Stripe prices |
+| [111](111-category-exclusivity.md) | Category exclusivity (Premium tier) | V1.5 | P3 | 105, 077 | After deps | First-come-first-served, publicly visible; must not suppress competing listings |
+| [112](112-owner-spend-impact-panel.md) | Owner spend-impact panel (Premium tier) | V1.5 | P2 | 105 | After deps | Aggregates only, 5-consumer minimum cohort; the one Premium benefit a competitor cannot copy |

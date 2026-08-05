@@ -18,7 +18,13 @@ AI
 
 ## Context
 
-Infrastructure ticket establishing the Anthropic Claude API client and prompt management system used by all AI features (Tickets 080 and 081). No UI — purely server-side infrastructure. All AI calls are server-side only; the API key is never exposed to the client bundle. AI features are gated behind a feature flag so they can be disabled without a code deploy. Uses the `claude-opus-4-7` model (latest capable Claude model). Prompt templates are stored in version-controlled code files, not the database, at MVP.
+Infrastructure ticket establishing the Anthropic Claude API client and prompt management system used by all AI features (Tickets 080 and 081). No UI — purely server-side infrastructure. All AI calls are server-side only; the API key is never exposed to the client bundle. AI features are gated behind a feature flag so they can be disabled without a code deploy. Default model is **`claude-haiku-4-5-20251001`** (Claude Haiku 4.5); Sonnet 5 (`claude-sonnet-5`) is reserved for low-frequency admin and Premium-tier agents. Prompt templates are stored in version-controlled code files, not the database, at MVP.
+
+> **Model correction (2026-07-27).** This ticket previously specified `claude-opus-4-7`. That
+> contradicted the Haiku 4.5 decision recorded in `monetization/pricing-unit-economics.md` and
+> `production/production-roadmap.md` §3.4, and at roughly $15/$75 per 1M tokens would have been
+> ~15× the input and output cost the unit-economics model is built on. Shipping the old value would
+> have invalidated every margin figure in that doc. Default is now Haiku 4.5.
 
 ## User Story
 
@@ -47,6 +53,8 @@ As an engineer implementing AI features, I want a shared Anthropic client and pr
 
 - Depends on: Ticket 002 (Supabase env setup — establishes pattern for env var management)
 - Depends on: Ticket 001 (Next.js project init — package.json must exist)
+- **Blocked by: Ticket 104 (AI cost guardrails).** 104 must ship before `ANTHROPIC_API_KEY` is set in
+  any environment. This ticket builds the client that spends money; 104 builds the caps that bound it.
 
 ## UX Notes
 
@@ -63,9 +71,15 @@ No database tables required. AI responses are not persisted at MVP (suggestions 
 ## API Notes
 
 - No new API routes in this ticket
-- Model: `claude-opus-4-7`
+- Default model: `claude-haiku-4-5-20251001` — exported as `DEFAULT_MODEL` from `lib/ai/client.ts`,
+  never hardcoded at call sites, so the cost decision lives in exactly one place
+- Escalation model: `claude-sonnet-5` — permitted only for low-frequency admin agents and
+  Premium-tier consumer agents; every use is a deliberate per-agent choice, never a default
 - Max tokens: 1024 for suggestions, 512 for moderation flags
 - Temperature: 0.3 for structured outputs (consistency over creativity)
+- **Prompt caching:** all system prompts must be sent with `cache_control: { type: 'ephemeral' }`.
+  `production-roadmap.md` §3.4 assumes a 70%+ cache hit rate on repeated agent calls, and the
+  unit-economics model inherits that assumption — omitting it silently raises input cost.
 
 ## Implementation Notes
 
@@ -116,6 +130,11 @@ export type AIResult<T> = AIResponse<T> | AIError
 - [ ] `callClaude` handles Anthropic rate limit — retries once after 2s, then returns `AIError` with code `AI_RATE_LIMITED`
 - [ ] No AI code runs client-side — confirmed by bundle analysis
 - [ ] `lib/ai/prompts/` directory exists with an `index.ts` re-export
+- [ ] `DEFAULT_MODEL` is exported from `lib/ai/client.ts` and equals `claude-haiku-4-5-20251001`
+- [ ] No call site passes a model string literal — grep for `claude-` outside `lib/ai/client.ts`
+      returns no matches in `app/` or `lib/` (guards against a stale Opus/Sonnet default creeping back)
+- [ ] System prompts are sent with `cache_control: { type: 'ephemeral' }`
+- [ ] `callClaude` refuses to run when the ticket-104 limiter is absent — see Dependencies
 
 ## Failure States
 

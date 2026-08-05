@@ -362,7 +362,7 @@ Discovery + search + BLACQList Pages (business) + create/claim/manage + auth + s
 - Order confirmation emails to buyer + vendor
 - Vendor order management dashboard
 - Stripe Connect payout setup and onboarding
-- Platform transaction fee (8–12%)
+- Platform transaction fee (**8%** — see `monetization/monetization-spec.md` for the canonical rate)
 - Buyer order history
 - Refund and dispute resolution flow
 - Vendor analytics (sales, revenue, top products)

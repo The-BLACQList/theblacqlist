@@ -2,7 +2,7 @@
 
 **Trello-ready board covering everything left to build, from MVP public launch to the full "Future of Black Commerce" vision.**
 
-_Last updated: 2026-06-20 · Capacity assumed: Founder + Claude (AI-paced)_
+_Last updated: 2026-07-25 · Capacity assumed: Founder + Claude (AI-paced)_
 
 > **Re-baselined 2026-06-20.** The 2026-05-22 manual QA log (123/133 Pass across functional, security, a11y, performance, SEO, and cross-browser) showed the audits were **largely already executed and green** — not a multi-day to-do. That retires most of the MVP's audit-*execution* risk and collapses the audit cards to "finish the report + re-verify on production." Combined with **M4** (editorial collection) and **M9** (seed thresholds) cleared in staging, and **BRM-02** (icon-button labels) already compliant, the MVP pulls in ~1 week: **Jul 18 → ~Jul 11**. The binding constraint is now the **founder-/external-gated** items (legal copy review, production data review, DNS/domain), not engineering.
 
@@ -24,7 +24,9 @@ _Last updated: 2026-06-20 · Capacity assumed: Founder + Claude (AI-paced)_
 Mirror these into Trello's lists. The cards themselves carry the detail; this is the at-a-glance status.
 
 **🚧 In Progress**
-- _(open — pick the next card)_
+- `[V1] 🔴 P0` **Stripe subscriptions — finish local rehearsal (Step 4 → T7)** — branch `feat/stripe-subscriptions-v1` (uncommitted). Local test-mode dress rehearsal paused at Step 4. Founder runs `stripe listen --forward-to localhost:3000/api/stripe/webhook` (`whsec_`→`.env.local`, restart dev), signs up a test owner, claims "Big Dave's Cheesesteaks" (atlanta-ga), runs a Starter checkout with `4242 4242 4242 4242`, then walks T1–T8 _(script in plan `~/.claude/plans/we-re-in-the-middle-rippling-pumpkin.md` + memory `project_blacqlist_stripe_v1.md`)_. **Done when:** checkout → `subscriptions` row + `listings.tier` sync + `admin_audit_log` + `stripe_events_processed` idempotency verified locally; payment-failed grace (`past_due` keeps tier) + portal-cancel → free.
+- `[V1] 🔴 P0` **Stripe — isolated commit** (after rehearsal) — stage **only** Stripe files (plans/features, checkout + portal routes, webhook route + handlers, billing components, migrations `20260701000001/2`, `tests/migrations/*`, setup scripts); **do NOT** sweep the founder's unrelated meta/ops WIP. **Done when:** `git status` shows only Stripe files staged and the branch has one clean, reviewable commit.
+- `[V1] 🔴 P0` **Stripe — gated prod cutover G1 → G4** (runbooks `stripe-golive-{1..4}`) — G1 apply both migrations staging→prod (`db push`, prod ref `ytlrnczevdnsfdzjbeqg`; watch migration-ledger repair) **· GATE-DATA**; G2 `stripe:setup-products` live + `sync-price-ids` prod **· GATE-SPEND+GATE-DATA**; G3 Vercel env (**original "The BLACQList" account LIVE keys**, replacing TBL2's) + register webhook (4 events) + configure Customer Portal **· GATE-DEPLOY**; G4 merge to main + deploy + 30-min Sentry/Vercel/`failed_webhooks` watch. **Done when:** a live test subscription on prod syncs tier end-to-end. Each gate needs an explicit founder go.
 
 **🔍 In Review / QA**
 - `[MVP] 🔴 P0` Security audit (086) — _report written; GO with conditions (prod RLS re-verify · `next` bumped ✅)_
@@ -38,8 +40,8 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 > 👉 **Founder:** the ordered list of what *you* set up to unblock these — accounts, domain/DNS, data review, legal confirms, secrets handoff — is in **`docs/blacqlist/launch/founder-action-checklist.md`** (narrative) and **`founder-action-cards.md`** (paste-ready Trello cards F1–F10).
 - `[MVP] 🔴 P0` Production data: founder keep/edit/remove pass **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements → ATL 151 / HOU 51 / CHI 51); _remaining: image coverage + production import (093)_
 - `[MVP] 🟠 P1` Founder legal confirms: entity name + mailing address + DMCA agent
-- `[MVP] 🔴 P0` Supabase production project (091) — _🟢 **all 29 migrations + reference vocab + 254 listings live 2026-06-26** (schema, RLS, 3 buckets, search, attributes/faceting RPC, review-criteria — all verified); only **auth config + admin user** remain (admin needs the F9 cutover first), PITR at M7_
-- `[MVP] 🔴 P0` Vercel production deploy (092) + domain / DNS / SSL — _**F3 ✅** · **F9 "set-now" env ✅** · **`main` merged + prod build GREEN ✅ 2026-06-24** (PR #4 → `main` = `311dc45`; `theblacqlist.vercel.app` serves the full current product, ~79s build, 0 errors, against staging DB); **remaining:** F9 **Supabase cutover** → prod project (**now unblocked — prod DB launch-ready 2026-06-26**) · DNS/SSL (F4)_
+- `[MVP] ✅ P0` Supabase production project (091) — _🟢 **COMPLETE 2026-06-26** — all 29 migrations + reference vocab + 254 listings + RLS + 3 buckets + search/faceting RPC, **auth config** (Confirm email ON · Site URL + redirect allowlist → `theblacqlist.vercel.app`), **admin user** (UID `…528c`, email confirmed, `admin` role, `/admin` verified). Only **PITR** remains (M7 gate). → **move to Done in Trello**_
+- `[MVP] ✅ P0` Vercel production deploy (092) + domain / DNS / SSL — _**COMPLETE 2026-06-26** — F3 ✅ · F9 env+cutover ✅ · `main` GREEN ✅ · **F4 DNS go-live ✅**: `theblacqlist.com` resolves to Vercel + serves over valid HTTPS (apex A `216.150.1.1`, www→apex, MX/email preserved). → **move to Done in Trello**_
 - `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before F4 go-live_
 - `[MVP] ✅ P0` Production seed import (093) — _**DONE 2026-06-26**: prod DB seeded via `npx tsx scripts/seed-launch-listings.ts` → **ATL 151 / HOU 51 / CHI 52 = 254** published, 0 errors; details/FTS/faceting verified; Gorée corrected_
 
@@ -57,7 +59,9 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - 🙋🏾‍♀️ **Founder F2** — domain `theblacqlist.com` confirmed at Bluehost (active, auto-renew, exp Aug 17 2026) · 2026-06-21 _(⚠️ live WordPress site + Google Workspace email on it — F4 DNS cutover is a go-live step)_
 - 🙋🏾‍♀️ **Founder F5** — Resend email **wiring complete** · 2026-06-24 (sending subdomain `send.theblacqlist.com` verified · 2 `re_…` keys · custom SMTP on **both** Supabase projects · auth email sends from domain · DMARC added) _(deliverability warm-up before F4 is the only follow-up)_
 - 🙋🏾‍♀️ **Founder F6** — Sentry **wiring complete + verified** · 2026-06-24 (org `the-blacqlist`, prod+staging projects, auth token/org/project set → **source-map upload confirmed in the prod build**, `NEXT_PUBLIC_SENTRY_DSN` set both scopes) _(K5 prod-error test + alert rule + K7 uptime are post-deploy, on card 094)_
-- 🙋🏾‍♀️ **Founder F9 (partial)** — production env vars **"set-now" batch ✅** · 2026-06-24 (`NEXT_PUBLIC_APP_URL` confirmed + `NEXT_PUBLIC_SITE_URL` + `ADMIN_NOTIFICATION_EMAIL` + `SENTRY_TEST_TOKEN`; build green) _(remaining: the 3 Supabase vars at cutover — **now unblocked, prod DB ready 2026-06-26**; see `f9-production-env-handoff.md`)_
+- 🙋🏾‍♀️ **Founder F9 — COMPLETE** · 2026-06-26 — all production env vars set: the "set-now" batch (Jun 24) **+ the 3 Supabase vars repointed to `theblacqlist-production` (`ytlrnczevdnsfdzjbeqg`)** at cutover (Production→prod / Preview→staging split); redeploy GREEN (`dpl_BZfpeK97…`, build-cache off). **Prod app now reads the prod DB.**
+- ⚙️ **F9 Supabase cutover + 091 auth/admin — prod app LIVE on the prod DB** · 2026-06-26 — 3 Supabase env vars repointed to prod + redeploy GREEN; `/discover` verified **"Showing 24 of 254 results"** (254 real listings across ATL/HOU/CHI, Gorée present). 091 auth config done (Confirm email + Site URL/redirects → `theblacqlist.vercel.app`); admin user created (UID `fcd0e853…528c`, email confirmed via SQL, `admin` role row, `/admin` loads). **091 ✅ / 092 env ✅ / F9 ✅ — only DNS (F4) + PITR (M7) remain before launch.**
+- 🚀 **F4 DNS go-live + coming-soon gate — `theblacqlist.com` is LIVE** · 2026-06-26 — pointed the domain at Vercel (apex A → `216.150.1.1`, `www` → apex) over a valid HTTPS cert; **Google Workspace email (MX) + Resend records preserved** (verified). Shipped a flag-controlled **coming-soon gate** (commit `4e0cc36`): the public sees a branded "Find & Be Found. / Launching soon" page with email capture (new `launch_subscribers` table); founder + testers bypass via `?preview=<token>` or a session; the full directory stays hidden until `COMING_SOON_MODE=false`. **092 ✅ / F4 ✅ — remaining before fully public: M7 PITR, then flip the gate off.**
 - ⚙️ **093 — production DB seeded + launch-ready** · 2026-06-26 — all 29 migrations applied to prod `ytlrnczevdnsfdzjbeqg` (empty migration ledger handled via verify + direct-apply of m28/m29; ledger then repaired), reference vocab re-seeded, **254 real listings** loaded (ATL 151 / HOU 51 / CHI 52, 0 errors) via the JSON + `tsx` seed; verified counts + FTS + faceting RPC + Gorée + 0 test users. Runbook: `prod-db-readiness.md`.
 - ⚙️ **091 production DB foundation** — 21 migrations + reference data applied to the prod Supabase (38 tables · RLS · 3 buckets · search · states/cities/categories/plans · 0 listings) · 2026-06-21
 - BRM-01 / BRM-02 accessibility fixes
@@ -314,7 +318,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-**`[MVP] 🔴 P0` Supabase production project (091)** — _schema + reference data live (2026-06-21); auth-config + admin-user remain (need domain/deploy); PITR at M7_
+**`[MVP] ✅ P0` Supabase production project (091)** — _✅ **COMPLETE 2026-06-26** — schema + data + auth-config + admin-user all done; only **PITR** remains at the M7 launch gate_
 ⬛ Infra · 🟩 Backend · **Due Jul 2** · ~4–6h
 
 **Description.** Stands up the production database as a separate, hardened Supabase project — distinct from staging, on the Pro plan, with point-in-time recovery enabled *before* any data exists (PITR is our only recovery path for a bad migration). We enable connection pooling and the search extension, create the three storage buckets with correct privacy, apply every migration in order, load reference seed data, configure auth, and create the first admin. Every other production card depends on this foundation. Done when migrations are applied, RLS verified, buckets correct, and an admin can reach `/admin`.
@@ -326,21 +330,21 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 - ✅ 3 storage buckets created with correct privacy: `listing-media` (public), `verification-docs` (private), `receipt-uploads` (private) _(note: code path `createReceiptSubmission.ts` references bucket `receipts` — pre-existing naming mismatch to reconcile before receipts go live)_
 - ✅ Applied all **21 migrations** in order (incl. `20260620000000_collections_editorial.sql`) — **38 tables, RLS on all, 74 policies** · 2026-06-21
 - ✅ Reference seed loaded (`supabase/seed.sql`) — states **51** / cities **13** / categories **191** / plans **3**
-- Auth config: Site URL, redirect URLs, JWT 7d, branded email templates — _needs the prod domain/Vercel URL (092)_
-- Create admin user; verify `/admin` access; store creds in secrets manager — _do at deploy (needs founder admin email + the app live)_
+- ✅ Auth config · 2026-06-26 — **Confirm email ON**; **Site URL → `https://theblacqlist.com`** (switched at F4 go-live; `theblacqlist.vercel.app` + `https://*.vercel.app` kept in the redirect allowlist). _JWT-7d + branded templates = optional polish, deferred (not launch-blocking; refresh tokens keep sessions alive)._
+- ✅ Admin user created · 2026-06-26 — signed up on the live site (UID `fcd0e853-…-528c`), email confirmed via SQL, `insert into user_roles … 'admin'`, **`/admin` loads (verified)**; creds in the founder's password manager.
 
 ---
 
-**`[MVP] 🔴 P0` Vercel production deploy (092) + domain / DNS / SSL**
-⬛ Infra · **Due Jul 3** · ~2–3h + DNS lead · ⏳ Waiting-external (DNS)
+**`[MVP] ✅ P0` Vercel production deploy (092) + domain / DNS / SSL** — _COMPLETE 2026-06-26_
+⬛ Infra · **Due Jul 3** · ~2–3h + DNS lead · ✅ live on `theblacqlist.com`
 
 **Description.** Deploys the app to production on the real domain with every environment variable set correctly — the service-role key server-side only, never `NEXT_PUBLIC_*`. Includes registering `theblacqlist.com`, pointing DNS at Vercel, and confirming the auto-provisioned SSL; DNS propagation is the wall-clock dependency, so kick it off early. Done when the production build is live on the domain over HTTPS with `NEXT_PUBLIC_SITE_URL` pointing at it.
 
 **Checklist.**
-- All env vars in Vercel production scope (service-role server-only, not `NEXT_PUBLIC_*`)
-- Register `theblacqlist.com`; A `@` → Vercel IP; CNAME `www` → `cname.vercel-dns.com`
-- SSL auto-provisioned (green lock); `NEXT_PUBLIC_SITE_URL=https://theblacqlist.com`
-- Production build succeeds; domain resolves
+- ✅ All env vars in Vercel production scope · 2026-06-26 — Supabase cutover to `theblacqlist-production` done (service-role server-only, not `NEXT_PUBLIC_*`; Production→prod / Preview→staging split); prod app reads prod DB
+- ✅ `theblacqlist.com` pointed at Vercel · 2026-06-26 — A `@` → `216.150.1.1` (Vercel current apex IP); CNAME `www` → `cname.vercel-dns.com` → apex _(F4)_
+- ✅ SSL auto-provisioned (Let's Encrypt, valid); `NEXT_PUBLIC_SITE_URL=https://theblacqlist.com`; Supabase Auth Site URL → `theblacqlist.com`
+- ✅ Production build succeeds; `https://theblacqlist.com` resolves + serves the coming-soon gate
 - Pre-deploy: `git grep` finds no secrets; `.env*` gitignored
 
 ---
@@ -364,9 +368,9 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 **Description.** Runs the listing and collection seed scripts against the production database so the directory launches with content. The scripts are idempotent, so this is a safe, repeatable operation; the value is verifying the *production* published counts and image coverage actually meet the launch thresholds (not just staging). Done when the seeds run with zero errors and the per-city counts verify in production.
 
 **Checklist.**
-- Run `pnpm seed:launch` against production; verify ATL/HOU/CHI counts via SQL
-- Run `scripts/seed-collections.ts` against production
-- Errors: 0; idempotent re-run clean
+- ✅ Seeded production via `npx tsx scripts/seed-launch-listings.ts` (the `pnpm run` precheck aborts on ignored builds) — verified **ATL 151 / HOU 51 / CHI 52 = 254** via SQL · 2026-06-26
+- Run `scripts/seed-collections.ts` against production — _not yet run; editorial collections are a post-launch surface. Seed before F4 only if `/collections` must have content at launch (decide with founder)._
+- ✅ Errors: 0; idempotent re-run clean
 
 ---
 

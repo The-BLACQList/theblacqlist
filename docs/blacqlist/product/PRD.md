@@ -927,8 +927,12 @@ How The BLACQList generates revenue sustainably without compromising platform in
 
 **Marketplace fees (V2):**
 
-- Platform takes a percentage of each marketplace transaction (exact % TBD, target 8–12%)
+- Platform takes **8%** of each marketplace transaction — reconciled 2026-07-27 from the conflicting
+  8–12% here and 3–8% in `monetization/monetization-spec.md`; 8% is the overlap of both ranges.
+  Canonical definition and rationale live in `monetization/monetization-spec.md`.
 - Applied via Stripe Connect application fee
+- Stripe processing (2.9% + $0.30) is separate and additional — disclose the all-in cost, not just
+  the platform fee
 - Disclosed to vendors before onboarding
 
 **Job posting fees (V2):**

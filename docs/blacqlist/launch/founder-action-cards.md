@@ -92,14 +92,16 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ---
 
-## `🙋🏾‍♀️ F4 · 🔴` Set the **DNS records** (in Bluehost)
+## `🙋🏾‍♀️ F4 · ✅` Set the **DNS records** (in Bluehost) — _DONE 2026-06-26_
 ⬛ Infra · ⏳ founder-gated · _depends on F2 (domain) + values from F3 (Vercel) & F5 (Resend)_ · **Unblocks:** 092 + email
+
+> **✅ DONE + VERIFIED (2026-06-26).** `theblacqlist.com` now points at Vercel and serves the **coming-soon gate** over a valid HTTPS cert (Let's Encrypt). Apex `@` A → **`216.150.1.1`** (Vercel's CURRENT apex IP — they moved off `76.76.21.21`; use whatever Vercel's Domains screen shows). `www` CNAME → `cname.vercel-dns.com` → 308 → apex (apex set primary in Vercel). **Google Workspace MX + Resend records untouched** (re-verified by dig). If Vercel shows "Invalid Configuration," it's the verifier lagging DNS propagation → click **Refresh**; the records are correct (single apex A, no stray AAAA, propagated to Google/Cloudflare/OpenDNS) and the site already serves.
 
 **Description.** Point the domain at Vercel and authorize Resend, by editing two records in **Bluehost → Domains → `theblacqlist.com` → DNS (Advanced DNS Manager)**. **Do this at go-live, not now** — ⚠️ it **takes your current WordPress site offline** at theblacqlist.com (verify the new app on the Vercel preview URL first). The exact target values come from the Vercel + Resend dashboards. SSL auto-provisions once the records resolve. **Done when** Vercel shows "Valid Configuration" and Resend shows all email records green.
 
 **Checklist** (your current records, from the Bluehost DNS screenshot):
-- **Apex** — **edit** the existing `A  @  → 50.87.230.81` (Bluehost hosting) **→ `76.76.21.21`** (the Vercel IP shown in Vercel → Domains). Edit it, don't add a second `@`.
-- **www** — **edit** the existing `CNAME  www → theblacqlist.com` **→ `cname.vercel-dns.com`**.
+- ✅ **Apex** — edited `A  @  50.87.230.81` → **`216.150.1.1`** (Vercel's current apex IP; the old `76.76.21.21` also works). Single `@` record, no leftover.
+- ✅ **www** — edited `CNAME  www → theblacqlist.com` → **`cname.vercel-dns.com`** (308 redirect to apex).
 - **Email — DO NOT TOUCH:** leave all the **Google Workspace MX** records (`aspmx.l.google.com`, `alt1/2/3.aspmx.l.google.com`) exactly as they are.
 - **Resend** — add the DKIM/SPF/DMARC records Resend gives you (F5). You **already have a Google SPF** TXT — never add a second SPF: either **merge** Resend's `include:` into it (one `v=spf1 …` record), **or** (cleaner) use Resend's **sending subdomain** (e.g. `send.theblacqlist.com`) so its SPF/DKIM live on the subdomain and never touch your Google root SPF.
 - **Leave alone:** the Bluehost service A records (`cpanel`/`ftp`/`mail`/`webmail`/`whm`/`autoconfig`/…) and the `_acme-challenge` CNAME — harmless; Vercel issues its own SSL.
@@ -143,9 +145,9 @@ These are the **founder-owned** companions to the engineering cards on the main 
 ## `🙋🏾‍♀️ F6 · ✅` Set up **Sentry** (error monitoring) — _DONE 2026-06-24_
 ⬛ Infra · ⏳ founder-gated · **Unblocks:** 094 (monitoring & alerting)
 
-> **✅ DONE (2026-06-24).** Founder owns Sentry org **`the-blacqlist`** with projects **`theblacqlist-production`** + **`theblacqlist-staging`**. Org auth token + `SENTRY_ORG` + `SENTRY_PROJECT` set in Vercel → **source-map upload verified in the production build** (93 client + 1,034 server bundles uploaded; release `bee61fd…`). `NEXT_PUBLIC_SENTRY_DSN` set for Production + Preview → runtime errors report. _(We deliberately **skipped `@sentry/wizard`** — it would have overwritten the hardened, PII-scrubbed config; manual env wiring instead.)_ **Post-deploy remainder (rides launch, tracked on card 094):** K5 (fire `/api/_debug/sentry?token=` → confirm a `production`-tagged, source-mapped, PII-free event), the ≥5-errors/5-min alert rule, and 3 uptime monitors (K7).
+> **✅ DONE (2026-06-24).** Founder owns Sentry org **`the-blacqlist`** with projects **`theblacqlist-production`** + **`theblacqlist-staging`**. Org auth token + `SENTRY_ORG` + `SENTRY_PROJECT` set in Vercel → **source-map upload verified in the production build** (93 client + 1,034 server bundles uploaded; release `bee61fd…`). `NEXT_PUBLIC_SENTRY_DSN` set for Production + Preview → runtime errors report. _(We deliberately **skipped `@sentry/wizard`** — it would have overwritten the hardened, PII-scrubbed config; manual env wiring instead.)_ **Post-deploy remainder (rides launch, tracked on card 094):** K5 (fire `/api/debug/sentry?token=` → confirm a `production`-tagged, source-mapped, PII-free event), the ≥5-errors/5-min alert rule, and 3 uptime monitors (K7).
 
-> **✅ The code is already done + launch-safe.** `@sentry/nextjs` is fully wired (client/server/edge configs, production-only, 10% trace sampling), source-map upload is configured in `next.config.ts`, there's a health endpoint (`/api/health`), a guarded prod-error test route (`/api/_debug/sentry`), and a global error boundary. **PII scrubbing is enforced in code** — `lib/observability/sentry-scrub.ts` keeps only a user `id` (drops email/IP/name), deletes request bodies/cookies/auth headers, and redacts email+phone from messages — with **3 passing unit tests** (`tests/sentry-scrub.test.ts`). That satisfies the **K6** "no PII in events" audit at the code level. **F6 is therefore not a code task — it's account setup + env wiring (below).**
+> **✅ The code is already done + launch-safe.** `@sentry/nextjs` is fully wired (client/server/edge configs, production-only, 10% trace sampling), source-map upload is configured in `next.config.ts`, there's a health endpoint (`/api/health`), a guarded prod-error test route (`/api/debug/sentry`), and a global error boundary. **PII scrubbing is enforced in code** — `lib/observability/sentry-scrub.ts` keeps only a user `id` (drops email/IP/name), deletes request bodies/cookies/auth headers, and redacts email+phone from messages — with **3 passing unit tests** (`tests/sentry-scrub.test.ts`). That satisfies the **K6** "no PII in events" audit at the code level. **F6 is therefore not a code task — it's account setup + env wiring (below).**
 
 **Description.** Sentry tells us about production errors before users do. You create the Sentry account + projects and grab the DSNs and a build token; the app already knows what to do with them. Free tier is fine for our volume. **Done when** both DSNs + a build auth token (+ org/project slugs) are saved for **F9**, the env vars are set in Vercel, and one alert rule exists.
 
@@ -173,7 +175,7 @@ These are the **founder-owned** companions to the engineering cards on the main 
 - The 3 build-time vars are **Build scope, not Runtime** — they're only read during `next build`.
 
 **Post-deploy verification (094 / K5 / K7 — needs the live site):**
-- Hit `https://<prod>/api/_debug/sentry?token=<SENTRY_TEST_TOKEN>` → confirm the event lands in Sentry tagged `environment: production`, the stack trace shows real `.tsx` files (source maps), and there's **zero PII**. Remove/disable the test route after.
+- Hit `https://<prod>/api/debug/sentry?token=<SENTRY_TEST_TOKEN>` → confirm the event lands in Sentry tagged `environment: production`, the stack trace shows real `.tsx` files (source maps), and there's **zero PII**. Remove/disable the test route after.
 - Confirm `/api/health` returns `ok`; wire 3 uptime monitors (`/`, `/api/health`, `/discover`).
 
 **Links.** [Sentry](https://sentry.io) · [Auth Tokens](https://docs.sentry.io/account/auth-tokens/) · [Next.js setup guide](https://docs.sentry.io/platforms/javascript/guides/nextjs/) · authoritative var list: [environment-variable-checklist.md](./environment-variable-checklist.md)
@@ -212,10 +214,10 @@ These are the **founder-owned** companions to the engineering cards on the main 
 
 ---
 
-## `🙋🏾‍♀️ F9 · 🟡` Set the **production env vars** (in Vercel) — _partial 2026-06-24_
+## `🙋🏾‍♀️ F9 · ✅` Set the **production env vars** (in Vercel) — _COMPLETE 2026-06-26_
 ⬛ Infra · ⏳ founder-gated · _depends on F1, F5, F6_ · **Unblocks:** 092 (production deploy)
 
-> **🟡 PARTIAL (2026-06-24).** The 4 "set now" vars are in and the **build is green**: `NEXT_PUBLIC_APP_URL` (confirmed = `https://theblacqlist.com`), `NEXT_PUBLIC_SITE_URL`, `ADMIN_NOTIFICATION_EMAIL`, `SENTRY_TEST_TOKEN`. **Remaining = the Supabase production cutover** (the 3 `…SUPABASE…` vars), 🔴 **gated** on the production database being migrated + seeded (091 completion + 093). Full walk-through: **[f9-production-env-handoff.md](./f9-production-env-handoff.md)**.
+> **✅ COMPLETE (2026-06-26).** All production env vars are set. The "set-now" batch (Jun 24) **+ the Supabase production cutover**: the 3 `…SUPABASE…` vars were repointed from staging to `theblacqlist-production` (`ytlrnczevdnsfdzjbeqg`) with a Production→prod / Preview→staging split, then redeployed (build-cache off, `dpl_BZfpeK97…`) **GREEN**. Verified: `theblacqlist.vercel.app/discover` shows **"Showing 24 of 254 results"** — the prod app now reads the prod DB. Full walk-through: **[f9-production-env-handoff.md](./f9-production-env-handoff.md)**.
 
 **Description.** Set the Production-scope environment variables in **Vercel → Settings → Environment Variables** so the live site has its real configuration. _(Reframed 2026-06-24: you paste the values **directly into Vercel** — the old "share keys via a password manager" step is obsolete, since the env tooling has no API and secrets stay on your side regardless.)_ Rule of thumb: anything named `NEXT_PUBLIC_*` is safe to be public; everything else is a secret (the **service_role** key especially must never be public).
 
@@ -224,8 +226,8 @@ These are the **founder-owned** companions to the engineering cards on the main 
 - ✅ Sentry (DSN + org auth token + org/project slugs) — set in **F6**
 - ✅ `AUTH_SECRET` — set (Jun 13)
 - ✅ The 4 "set now" vars: `NEXT_PUBLIC_APP_URL` · `NEXT_PUBLIC_SITE_URL` · `ADMIN_NOTIFICATION_EMAIL` · `SENTRY_TEST_TOKEN`
-- 🔴 **At cutover (gated on 091/093):** `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` → repoint from staging to `theblacqlist-production` (`ytlrnczevdnsfdzjbeqg`), then redeploy
-- Confirm none of the secret keys are prefixed `NEXT_PUBLIC_`
+- ✅ **Supabase cutover done 2026-06-26:** `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` repointed to `theblacqlist-production` (`ytlrnczevdnsfdzjbeqg`) — Production→prod / Preview→staging split — redeploy GREEN; `/discover` shows the 254 real listings
+- ✅ Confirmed no secret key is prefixed `NEXT_PUBLIC_` (only URL + anon are public; service_role is server-only)
 
 **Links.** **[F9 production env handoff (detailed)](./f9-production-env-handoff.md)** · [authoritative variable list](./environment-variable-checklist.md)
 
@@ -252,7 +254,7 @@ These are the **founder-owned** companions to the engineering cards on the main 
 Done (long poles):       F7 (data review) ✅   F1 (Supabase) ✅   F2 (domain) ✅
 Then (need F2/F1):       F3 (Vercel)  F5 (Resend)  F6 (Sentry)
 Then (need values):      F4 (DNS — uses F3+F5 values)
-Then (need F1/F5/F6):    F9 (secrets handoff)
+Then (need F1/F5/F6):    F9 (env vars + Supabase cutover) ✅
 Anytime:                 F8 (legal details)
 Last:                    F10 (go-ahead)
 ```
