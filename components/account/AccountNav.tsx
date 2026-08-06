@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { signOutAction } from '@/lib/actions/auth/signOut'
 
 export interface AccountNavCounts {
   saved: number
@@ -58,12 +59,12 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
         { href: '/account/community-spend', label: 'Community spend' },
       ],
     },
+    ...(isOwner
+      ? [{ label: 'Your business', items: [{ href: '/dashboard', label: 'My business' }] }]
+      : []),
     {
       label: 'Account',
-      items: [
-        ...(isOwner ? [{ href: '/dashboard', label: 'My business' }] : []),
-        { href: '/account/settings', label: 'Settings' },
-      ],
+      items: [{ href: '/account/settings', label: 'Settings' }],
     },
   ]
 
@@ -115,7 +116,7 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
                       >
                         <span>{item.label}</span>
                         {item.badge ? (
-                          <span className="rounded-full bg-light-gold/60 text-brand-black text-[10.5px] font-bold px-1.5 py-px">
+                          <span className="rounded-full bg-light-gold/30 border border-amber/40 text-amber text-[10.5px] font-bold px-1.5 py-px">
                             {item.badge}
                           </span>
                         ) : item.count !== undefined && item.count > 0 ? (
@@ -130,13 +131,22 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
               </div>
             )
           )}
+
+          <form action={signOutAction} className="mt-1 border-t border-charcoal/10 pt-2">
+            <button
+              type="submit"
+              className="w-full text-left rounded-md px-2.5 py-2 font-subhead text-[13px] font-semibold text-red-800 hover:bg-red-50 transition-colors duration-150"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </nav>
 
       {/* Mobile horizontal scroll-nav */}
       <nav
         aria-label="Account"
-        className="lg:hidden -mx-4 px-4 border-b border-charcoal/10 bg-white sticky top-14 z-30"
+        className="lg:hidden -mx-4 px-4 border-b border-charcoal/10 bg-white sticky top-14 md:top-16 z-30"
       >
         <ul className="flex gap-1 overflow-x-auto py-1">
           {groups.flatMap((g) => g.items).map((item) => (
@@ -145,7 +155,7 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
                 href={item.href}
                 aria-current={isActive(item.href) ? 'page' : undefined}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-2.5 font-subhead text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors duration-150',
+                  'inline-flex items-center gap-1.5 min-h-11 px-3 font-subhead text-[13px] font-semibold whitespace-nowrap border-b-2 transition-colors duration-150',
                   isActive(item.href)
                     ? 'text-brand-black border-amber'
                     : 'text-charcoal border-transparent'
@@ -153,13 +163,23 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
               >
                 {item.label}
                 {item.badge ? (
-                  <span className="rounded-full bg-light-gold/60 text-brand-black text-[10px] font-bold px-1.5 py-px">
+                  <span className="rounded-full bg-light-gold/30 border border-amber/40 text-amber text-[10px] font-bold px-1.5 py-px">
                     {item.badge}
                   </span>
                 ) : null}
               </Link>
             </li>
           ))}
+          <li className="shrink-0 ml-auto">
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="inline-flex items-center min-h-11 px-3 font-subhead text-[13px] font-semibold whitespace-nowrap text-red-800 border-b-2 border-transparent"
+              >
+                Sign out
+              </button>
+            </form>
+          </li>
         </ul>
       </nav>
     </>

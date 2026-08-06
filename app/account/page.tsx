@@ -127,15 +127,21 @@ export default async function AccountOverviewPage() {
       : []),
   ]
 
+  // Account shell content-measure convention: list/overview pages max-w-[960px],
+  // form/detail pages max-w-[640px] (see saved/ vs settings/).
   return (
-    <main>
+    <main className="max-w-[960px]">
       <h1 className="font-headline text-[26px] md:text-[32px] text-brand-black mb-5">
         Welcome back, {displayName}
       </h1>
 
       {/* Stat strip */}
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div
+          className={`grid grid-cols-2 gap-3 mb-8 ${
+            stats.length === 4 ? 'sm:grid-cols-4' : stats.length === 3 ? 'sm:grid-cols-3' : ''
+          }`}
+        >
           {stats.map((stat) => (
             <Link
               key={stat.label}
