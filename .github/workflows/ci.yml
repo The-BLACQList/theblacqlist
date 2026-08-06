@@ -78,3 +78,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          # lib/stripe/client.ts asserts this at module load, and page-data
+          # collection imports it. Test-mode key only — never live in CI.
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
