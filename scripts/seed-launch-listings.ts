@@ -9,9 +9,11 @@
  * Idempotent: re-running does not create duplicates (ON CONFLICT DO NOTHING).
  * Logs "Inserted: N, Skipped: N, Errors: N" per city after completion.
  *
- * NOTE: The JSON files contain the 80 businesses from the SQL seed (40 ATL / 20 HOU / 20 CHI).
- * Launch requires 250+ listings (150 ATL / 50 HOU / 50 CHI).
- * Add more entries to the JSON files before running in production to meet launch thresholds.
+ * NOTE: The JSON files carry the full founder-reviewed launch corpus
+ * (151 ATL / 51 HOU / 52 CHI = 254 as of ticket 093) and are the single
+ * source for every environment. After the files change, re-run this seed
+ * against LOCAL too — a stale local corpus makes e2e/launch-gates.spec.ts
+ * (M9) fail even though production passes.
  */
 
 import { createClient } from '@supabase/supabase-js'
