@@ -33,7 +33,7 @@ export function TemplateServices({ entity }: Props) {
           heading="Services & packages"
           headingId="services-heading"
         />
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-8 mb-6">
           {[...groups.entries()].map(([group, items]) => (
             <div key={group}>
               <h3 className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-charcoal mb-3">
@@ -58,6 +58,13 @@ export function TemplateServices({ entity }: Props) {
             </div>
           ))}
         </div>
+        {/* Section-level conversion path — parity with the flat layout's feature CTA */}
+        <a
+          href={getCtaHref(entity)}
+          className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+        >
+          Request a service →
+        </a>
       </section>
     )
   }
