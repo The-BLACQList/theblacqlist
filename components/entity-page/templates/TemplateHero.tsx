@@ -126,14 +126,17 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         )}
 
         <div className="flex items-center gap-3 flex-wrap mt-6">
-          {/* id="hero-cta" is EntityQuickActionBar's IntersectionObserver target */}
-          <a
-            id="hero-cta"
-            href={ctaHref}
-            className="inline-flex items-center justify-center h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[140px]"
-          >
-            {ctaLabel}
-          </a>
+          {/* id="hero-cta" is EntityQuickActionBar's IntersectionObserver target;
+              the bar no-ops when the element is absent (no real CTA destination) */}
+          {ctaHref && (
+            <a
+              id="hero-cta"
+              href={ctaHref}
+              className="inline-flex items-center justify-center h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[140px]"
+            >
+              {ctaLabel}
+            </a>
+          )}
 
           {isCreative && entity.images.length > 0 && (
             <a

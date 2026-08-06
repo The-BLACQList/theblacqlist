@@ -59,12 +59,14 @@ export function TemplateServices({ entity }: Props) {
           ))}
         </div>
         {/* Section-level conversion path — parity with the flat layout's feature CTA */}
-        <a
-          href={getCtaHref(entity)}
-          className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
-        >
-          Request a service →
-        </a>
+        {getCtaHref(entity) && (
+          <a
+            href={getCtaHref(entity)!}
+            className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+          >
+            Request a service →
+          </a>
+        )}
       </section>
     )
   }
@@ -91,12 +93,14 @@ export function TemplateServices({ entity }: Props) {
           {feature.description && (
             <p className="font-body text-sm text-off-white/85 max-w-2xl">{feature.description}</p>
           )}
-          <a
-            href={ctaHref}
-            className="mt-2 self-start font-subhead text-sm font-bold text-white underline underline-offset-4 hover:text-gold transition-colors duration-150"
-          >
-            Request this service →
-          </a>
+          {ctaHref && (
+            <a
+              href={ctaHref}
+              className="mt-2 self-start font-subhead text-sm font-bold text-white underline underline-offset-4 hover:text-gold transition-colors duration-150"
+            >
+              Request this service →
+            </a>
+          )}
         </article>
 
         {rest.map((service) => (
