@@ -32,13 +32,24 @@ function metaFor(type: string): { label: string; Icon: LucideIcon } {
   return TYPE_META[type] ?? OTHER_META
 }
 
-export function EntityLinks({ entity }: { entity: EntityPageData }) {
+export function EntityLinks({
+  entity,
+  bare = false,
+}: {
+  entity: EntityPageData
+  /** true = render only the pill list, for nesting inside a template column
+      that already provides section width/padding (avoids double insets). */
+  bare?: boolean
+}) {
   const links = entity.links ?? []
   if (links.length === 0) return null
 
   return (
-    <section aria-labelledby="links-heading" className="bg-white pb-12 md:pb-16">
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+    <section
+      aria-labelledby="links-heading"
+      className={bare ? undefined : 'bg-white pb-12 md:pb-16'}
+    >
+      <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         <h2 id="links-heading" className="sr-only">
           Links
         </h2>
