@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { maybePromoteToCertified } from '@/lib/services/trust/certification'
 
 export type ModerateReviewState =
   | { success: true; reviewId: string; decision: 'published' | 'rejected' }
@@ -71,6 +72,22 @@ export async function moderateReviewAction(
     .eq('entity_id', reviewId)
     .eq('queue_type', 'review')
     .eq('status', 'pending')
+
+  // A newly published review may tip a Verified listing over the
+  // auto-certification thresholds (5 published reviews + 90 days tenure).
+  if (decision === 'published') {
+    const { promoted } = await maybePromoteToCertified(serviceClient, review.listing_id)
+    if (promoted) {
+      void writeAuditLog({
+        adminUserId: admin.user.id,
+        action: 'auto_certify_listing',
+        targetTable: 'listings',
+        targetId: review.listing_id,
+        beforeState: { trust_tier: 'verified' },
+        afterState: { trust_tier: 'certified' },
+      })
+    }
+  }
 
   // Revalidate the entity page when publishing
   if (decision === 'published') {

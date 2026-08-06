@@ -38,7 +38,7 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
   const { data: claims, count } = await serviceClient
     .from('claims')
     .select(
-      'id, status, role_at_business, submitted_at, created_at, claimant_user_id, listing_id, listings!claims_listing_id_fkey(name, entity_type)',
+      'id, status, role_at_business, verification_email, submitted_at, created_at, claimant_user_id, listing_id, listings!claims_listing_id_fkey(name, entity_type)',
       { count: 'exact' }
     )
     .eq('status', status)
@@ -130,9 +130,12 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-charcoal/5">
               {claims.map((claim) => {
                 const listing = claim.listings as { name: string; entity_type: string } | null
-                const claimantName = claim.claimant_user_id
-                  ? (profileMap[claim.claimant_user_id] ?? 'Unknown user')
-                  : 'Unknown user'
+                // Fall back to the claim's verification email when the
+                // claimant never set a display name (Finding 8).
+                const claimantName =
+                  (claim.claimant_user_id ? profileMap[claim.claimant_user_id] : null) ??
+                  claim.verification_email ??
+                  'Unknown user'
                 const dateStr = claim.submitted_at ?? claim.created_at
                 return (
                   <tr key={claim.id} className="hover:bg-[#f9f9fb] transition-colors">
