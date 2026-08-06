@@ -4,6 +4,7 @@ import './globals.css'
 import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
 import { ChromeGate } from '@/components/layout/chrome-gate'
+import { PreviewBanner } from '@/components/layout/PreviewBanner'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <PreviewBanner />
         {/* ChromeGate hides the public header/footer on standalone routes
             (the /coming-soon gate); every other route renders them as before. */}
         <ChromeGate header={<PublicHeader />} footer={<PublicFooter />}>
