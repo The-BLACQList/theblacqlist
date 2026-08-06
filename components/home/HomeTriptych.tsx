@@ -36,16 +36,9 @@ export function HomeTriptych() {
             className="group relative flex flex-col justify-end min-h-[180px] md:min-h-[260px] bg-deep-bg p-6 md:p-8 overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-gold"
           >
             <span
-              className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity duration-200"
+              className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
               aria-hidden="true"
-              style={{
-                backgroundImage: [
-                  'radial-gradient(circle at 22% 28%, var(--color-gold) 1.5px, transparent 2.4px)',
-                  'radial-gradient(circle at 74% 62%, var(--color-gold) 1.5px, transparent 2.4px)',
-                  'radial-gradient(circle at 46% 84%, var(--color-gold) 1.5px, transparent 2.4px)',
-                ].join(', '),
-                backgroundSize: '260px 260px',
-              }}
+              style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
             />
             <span className="relative font-subhead text-xs font-bold tracking-[0.16em] text-gold">
               {panel.index}

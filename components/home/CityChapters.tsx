@@ -39,15 +39,9 @@ export function CityChapters({ cities }: Props) {
               className="group relative flex flex-col justify-end min-h-[150px] rounded-xl bg-deep-bg p-5 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
             >
               <span
-                className="absolute inset-0 opacity-[0.22] group-hover:opacity-[0.35] transition-opacity duration-200"
+                className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
                 aria-hidden="true"
-                style={{
-                  backgroundImage: [
-                    'radial-gradient(circle at 20% 32%, var(--color-gold) 1.4px, transparent 2.3px)',
-                    'radial-gradient(circle at 72% 60%, var(--color-gold) 1.4px, transparent 2.3px)',
-                  ].join(', '),
-                  backgroundSize: '220px 220px',
-                }}
+                style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
               />
               <span className="relative font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
                 {city.name}

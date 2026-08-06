@@ -34,13 +34,9 @@ export function BlacqlightFeature({ article }: Props) {
         <div className="relative rounded-xl bg-deep-bg aspect-[4/3] md:aspect-[4/5] overflow-hidden">
           {/* TODO: article cover imagery once BLACQLight covers render platform-wide */}
           <span
-            className="absolute inset-0 opacity-25"
+            className="absolute inset-0"
             aria-hidden="true"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 28% 36%, var(--color-gold) 1.5px, transparent 2.5px), radial-gradient(circle at 70% 70%, var(--color-gold) 1.5px, transparent 2.5px)',
-              backgroundSize: '240px 240px',
-            }}
+            style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
           />
           <span className="absolute left-5 bottom-5 font-headline text-[42px] text-gold leading-none select-none" aria-hidden="true">
             &ldquo;

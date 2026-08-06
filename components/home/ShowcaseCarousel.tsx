@@ -33,7 +33,7 @@ const ADVANCE_MS = 6000
 export function ShowcaseCarousel({ items }: Props) {
   const reelRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
-  const interacted = useRef(false)
+  const interactedUntil = useRef(0)
 
   function scrollByCard(direction: 1 | -1, smooth = true) {
     const reel = reelRef.current
@@ -42,16 +42,17 @@ export function ShowcaseCarousel({ items }: Props) {
     const card = reel.querySelector<HTMLElement>('[data-showcase-card]')
     const step = card ? card.offsetWidth + 16 : reel.clientWidth * 0.6
     const atEnd = reel.scrollLeft + reel.clientWidth >= reel.scrollWidth - 8
-    reel.scrollTo({
-      left: direction === 1 && atEnd ? 0 : reel.scrollLeft + direction * step,
-      behavior: reduceMotion || !smooth ? 'auto' : 'smooth',
-    })
+    const atStart = reel.scrollLeft <= 8
+    let left = reel.scrollLeft + direction * step
+    if (direction === 1 && atEnd) left = 0
+    if (direction === -1 && atStart) left = reel.scrollWidth
+    reel.scrollTo({ left, behavior: reduceMotion || !smooth ? 'auto' : 'smooth' })
   }
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const timer = window.setInterval(() => {
-      if (!paused && !interacted.current) scrollByCard(1)
+      if (!paused && Date.now() > interactedUntil.current) scrollByCard(1)
     }, ADVANCE_MS)
     return () => window.clearInterval(timer)
   }, [paused])
@@ -71,14 +72,15 @@ export function ShowcaseCarousel({ items }: Props) {
         aria-label="Business page examples, horizontally scrollable"
         tabIndex={0}
         onPointerDown={() => {
-          interacted.current = true
+          interactedUntil.current = Date.now() + 15000
         }}
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-1 px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
       >
-        {items.map((item) => (
+        {items.map((item, i) => (
           <Link
             key={item.id}
             href={item.href}
+            aria-label={`${item.name} — page example ${i + 1} of ${items.length}`}
             data-showcase-card
             className="group shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] snap-start rounded-xl border border-charcoal/10 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >
@@ -94,13 +96,9 @@ export function ShowcaseCarousel({ items }: Props) {
                 />
               ) : (
                 <span
-                  className="absolute inset-0 opacity-25"
+                  className="absolute inset-0"
                   aria-hidden="true"
-                  style={{
-                    backgroundImage:
-                      'radial-gradient(circle at 30% 40%, var(--color-gold) 1.4px, transparent 2.3px), radial-gradient(circle at 72% 66%, var(--color-gold) 1.4px, transparent 2.3px)',
-                    backgroundSize: '200px 200px',
-                  }}
+                  style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
                 />
               )}
               <span
@@ -160,7 +158,7 @@ export function ShowcaseCarousel({ items }: Props) {
               type="button"
               aria-label={label}
               onClick={() => {
-                interacted.current = true
+                interactedUntil.current = Date.now() + 15000
                 scrollByCard(dir)
               }}
               className={cn(

@@ -33,7 +33,7 @@ export function MicrositeShowcase({ items }: Props) {
 
         <p className="font-subhead text-xs text-charcoal-soft mt-2.5">
           Real pages on the platform right now — menus, services, portfolios, reviews, and
-          verification, inside the Black commerce network.
+          verification, inside the Black commerce network. Swipe, use the arrows, or arrow keys.
         </p>
       </div>
     </section>
