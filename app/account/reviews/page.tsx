@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, Star, MessageSquare } from 'lucide-react'
+import { Star, MessageSquare } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
@@ -70,16 +70,8 @@ export default async function MyReviewsPage() {
   })
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
+    <main>
       <div className="max-w-[960px] mx-auto">
-        {/* Back nav */}
-        <Link
-          href="/account"
-          className="inline-flex items-center gap-1.5 font-subhead text-sm text-charcoal hover:text-brand-black mb-6"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to account
-        </Link>
 
         <h1 className="font-headline text-3xl text-brand-black mb-2">My reviews</h1>
         <p className="font-subhead text-sm text-charcoal-soft mb-8">
