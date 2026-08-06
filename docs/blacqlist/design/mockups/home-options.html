@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Homepage options · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-black: #000; --ground: #08080a; --charcoal: #595758; --charcoal-soft: #6b6b6b; --charcoal-faint: #737373;
+    --gold: #c4a065; --amber: #8f6600; --light-gold: #ffd867;
+    --off-white: #f4f4f7; --pale-lavender: #f2f0ee; --border: #e5e7eb; --success: #157347;
+    --headline: 'Jost','Century Gothic','Futura',system-ui,sans-serif;
+    --body: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --ph-1: linear-gradient(135deg,#4a3423 0%,#7a5535 45%,#33251a 100%);
+    --ph-2: linear-gradient(150deg,#5c4028 0%,#8a6a3f 52%,#2e2317 100%);
+    --ph-3: linear-gradient(120deg,#3d2e1e 0%,#6b4d2e 55%,#241a10 100%);
+    --ph-4: linear-gradient(160deg,#2e2c3a 0%,#5a4a63 55%,#1d1a24 100%);
+    --ph-5: linear-gradient(140deg,#23392e 0%,#3f6b52 55%,#14231b 100%);
+    --ph-6: linear-gradient(125deg,#39292b 0%,#6e4a50 55%,#221619 100%);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#101010; color:#efe7d8; font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3,h4 { font-family:var(--headline); letter-spacing:.02em; line-height:1.12; font-weight:500; margin:0; }
+  .wrap { max-width:1480px; margin-inline:auto; padding:28px clamp(16px,3vw,40px) 80px; }
+  .mast { border-bottom:1px solid #3a3128; padding-bottom:20px; margin-bottom:28px; }
+  .mast h1 { color:#fff; font-size:clamp(24px,3.5vw,38px); }
+  .mast h1 em { font-style:normal; color:var(--light-gold); }
+  .mast p { color:#b3a68f; max-width:84ch; margin:8px 0 0; }
+  .howto { display:inline-block; margin-top:12px; border:1px solid #6b4d00; background:#1d1607; color:var(--light-gold); padding:8px 14px; border-radius:6px; font-size:13px; }
+  .option { margin-top:46px; }
+  .opt-head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .tag { font-family:ui-monospace,monospace; font-weight:700; font-size:13px; color:var(--brand-black); background:var(--light-gold); padding:3px 10px; border-radius:5px; }
+  .opt-head h2 { color:#fff; font-size:22px; }
+  .opt-sub { color:#b3a68f; font-size:13px; margin:0 0 14px; max-width:90ch; }
+
+  .frame { border-radius:10px; overflow:hidden; border:1px solid #000; box-shadow:0 12px 40px rgba(0,0,0,.55); background:#fff; color:#221c12; font-size:12px; }
+  .m-nav { background:var(--ground); color:#f4ecdc; display:flex; align-items:center; gap:12px; padding:11px 20px; }
+  .m-nav .q { width:20px; height:20px; border-radius:50%; border:2px solid var(--gold); position:relative; flex:none; }
+  .m-nav .q::after { content:""; position:absolute; width:7px; height:2px; background:var(--gold); bottom:1px; right:-3px; transform:rotate(42deg); }
+  .m-nav b { font-family:var(--headline); letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .m-nav .sp { margin-left:auto; font-size:10px; color:#cbbfa8; }
+
+  .photo { position:relative; background:var(--ph-1); overflow:hidden; }
+  .photo.v2{background:var(--ph-2)} .photo.v3{background:var(--ph-3)} .photo.v4{background:var(--ph-4)} .photo.v5{background:var(--ph-5)} .photo.v6{background:var(--ph-6)}
+  .photo::before { content:""; position:absolute; inset:0; background:radial-gradient(110% 85% at 76% 24%, rgba(255,222,160,.22), transparent 55%); }
+  .shot { position:absolute; left:8px; top:8px; z-index:3; background:rgba(8,8,10,.72); color:var(--light-gold); font-size:9px; font-weight:500; padding:3px 8px; border-radius:999px; }
+  .shot::before { content:"📷 "; }
+  .scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(4,4,5,.85) 0%, rgba(4,4,5,.4) 45%, transparent 75%); }
+
+  .container { max-width:1000px; margin-inline:auto; padding-inline:22px; }
+  .kicker { font-size:9.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); margin:0 0 4px; }
+  .kicker.on-dark { color:var(--gold); }
+  .sec-h { font-size:19px; color:var(--brand-black); }
+  .sec-h.on-dark { color:#fff; }
+  .live { display:inline-block; background:#e2f2e8; color:var(--success); font-size:8.5px; font-weight:700; border-radius:999px; padding:1px 7px; vertical-align:middle; margin-left:6px; }
+  .dark .live { background:rgba(125,220,154,.15); color:#7ddc9a; }
+
+  .search { display:flex; align-items:center; gap:8px; background:#fff; border-radius:999px; padding:6px 8px 6px 16px; box-shadow:0 8px 30px rgba(0,0,0,.28); }
+  .search span.ph { color:var(--charcoal-soft); font-size:12px; flex:1; }
+  .search .go { background:var(--gold); color:var(--brand-black); font-weight:700; font-size:11px; border-radius:999px; padding:8px 18px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chips span { border:1px solid rgba(244,244,247,.4); color:#f4ecdc; font-size:9.5px; font-weight:600; border-radius:999px; padding:3px 10px; }
+
+  .btn { display:inline-block; border-radius:999px; font-weight:700; font-size:11px; padding:8px 18px; }
+  .btn.gold { background:var(--gold); color:var(--brand-black); }
+  .btn.ghost { border:1px solid rgba(244,244,247,.4); color:#fff; }
+  .btn.dark-outline { border:1.5px solid var(--brand-black); color:var(--brand-black); }
+
+  .card { background:#fff; border:1px solid rgba(89,87,88,.12); border-radius:10px; overflow:hidden; }
+  .card .photo { aspect-ratio:3/2; }
+  .card .cb { padding:8px 10px; }
+  .card .cb b { display:block; font-family:var(--headline); font-weight:500; font-size:12px; color:var(--brand-black); }
+  .card .cb span { font-size:9.5px; color:var(--charcoal-soft); }
+  .ochip { display:inline-block; background:var(--gold); color:var(--brand-black); font-size:8.5px; font-weight:700; border-radius:999px; padding:1.5px 7px; }
+
+  .notes { margin-top:14px; display:grid; gap:8px; max-width:92ch; }
+  .notes dt { font-family:var(--headline); font-size:12px; color:var(--light-gold); letter-spacing:.06em; text-transform:uppercase; }
+  .notes dd { margin:0; color:#b3a68f; font-size:13px; }
+  footer { margin-top:52px; border-top:1px solid #3a3128; padding-top:18px; color:#b3a68f; font-size:13px; max-width:95ch; }
+  footer b { color:var(--light-gold); font-family:ui-monospace,monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast">
+  <h1>Homepage — <em>three full-page treatments</em></h1>
+  <p>All three implement the Living Commerce Index section order on real data: search actually on the homepage, category tiles with live counts, a trending row from real saves, city chapters, the microsite showcase using our real new templates, the community-impact and BLACQLight sections wired to their LIVE features (no more "Coming Soon" on shipped things), and one owner CTA instead of three. <span style="color:var(--light-gold)">Green "live data" chips mark numbers that come from the database.</span> Photo zones are labeled placeholders for owned documentary photography.</p>
+  <div class="howto">Pick one: <b>HP-A · HP-B · HP-C</b> — hybrids welcome.</div>
+</header>
+
+<!-- ═════════════ HP-A — IMMERSIVE SEARCH ═════════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">HP-A</span><h2>Immersive Search</h2></div>
+  <p class="opt-sub">Tall photographic hero with the search bar living INSIDE it — the platform's core action is the first thing a visitor touches. Bento category grid, photo-panel triptych.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business · Sign Up</span></div>
+
+    <!-- 1. Hero with integrated search -->
+    <div class="photo" style="min-height:300px;display:flex;align-items:center">
+      <span class="shot">Hero: owner in their real environment — rotating by city/season/founder story</span>
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2;width:100%">
+        <h1 style="color:#fff;font-size:34px;max-width:16ch">Find &amp; Be Found.</h1>
+        <p style="color:rgba(244,244,247,.9);font-size:13px;max-width:46ch;margin:6px 0 14px">The national home of Black-owned business — discover, support, and connect in your city.</p>
+        <div class="search" style="max-width:520px"><span class="ph">Search businesses, food, services…</span><span class="go">Search</span></div>
+        <div class="chips" style="margin-top:10px"><span>Open now</span><span>Near you</span><span>Restaurants</span><span>Beauty</span><span>Professionals</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Triptych: photo panels -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:#000">
+      <div class="photo v2" style="aspect-ratio:3/4;display:flex;align-items:flex-end"><span class="shot">market aisles</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:14px"><span style="font-family:ui-monospace,monospace;color:var(--gold);font-size:9px">01</span><h3 style="color:#fff;font-size:17px">Discover</h3><p style="color:rgba(244,244,247,.85);font-size:9.5px;margin:2px 0 0">Every Black-owned business, one index.</p></div></div>
+      <div class="photo v3" style="aspect-ratio:3/4;display:flex;align-items:flex-end"><span class="shot">hands exchanging goods</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:14px"><span style="font-family:ui-monospace,monospace;color:var(--gold);font-size:9px">02</span><h3 style="color:#fff;font-size:17px">Support</h3><p style="color:rgba(244,244,247,.85);font-size:9.5px;margin:2px 0 0">Track the dollars you keep in community.</p></div></div>
+      <div class="photo v6" style="aspect-ratio:3/4;display:flex;align-items:flex-end"><span class="shot">block party crowd</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:14px"><span style="font-family:ui-monospace,monospace;color:var(--gold);font-size:9px">03</span><h3 style="color:#fff;font-size:17px">Connect</h3><p style="color:rgba(244,244,247,.85);font-size:9.5px;margin:2px 0 0">Owners, events, and the people behind them.</p></div></div>
+    </div>
+
+    <!-- 3. Bento category grid -->
+    <div style="background:var(--off-white);padding:22px 0">
+      <div class="container">
+        <p class="kicker">Explore by category</p>
+        <h2 class="sec-h">What are you looking for?<span class="live">live counts</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:64px;gap:6px;margin-top:12px">
+          <div class="photo" style="grid-column:span 2;grid-row:span 2;border-radius:8px;display:flex;align-items:flex-end"><span class="shot">plated dish</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:10px"><b style="color:#fff;font-family:var(--headline);font-size:14px">Food &amp; Drink</b><span style="display:block;color:var(--gold);font-size:9px">62 businesses</span></div></div>
+          <div class="photo v2" style="border-radius:8px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:8px"><b style="color:#fff;font-family:var(--headline);font-size:11px">Beauty</b><span style="display:block;color:var(--gold);font-size:8.5px">38</span></div></div>
+          <div class="photo v4" style="border-radius:8px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:8px"><b style="color:#fff;font-family:var(--headline);font-size:11px">Creatives</b><span style="display:block;color:var(--gold);font-size:8.5px">24</span></div></div>
+          <div class="photo v5" style="border-radius:8px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:8px"><b style="color:#fff;font-family:var(--headline);font-size:11px">Wellness</b><span style="display:block;color:var(--gold);font-size:8.5px">19</span></div></div>
+          <div class="photo v3" style="border-radius:8px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:8px"><b style="color:#fff;font-family:var(--headline);font-size:11px">Professionals</b><span style="display:block;color:var(--gold);font-size:8.5px">41</span></div></div>
+        </div>
+        <p style="font-size:9.5px;color:var(--charcoal-soft);margin:8px 0 0">+ 7 more categories → /discover</p>
+      </div>
+    </div>
+
+    <!-- 4. Trending -->
+    <div style="background:#fff;padding:22px 0">
+      <div class="container">
+        <p class="kicker">Trending near you</p>
+        <h2 class="sec-h">Most-saved this week<span class="live">real saves</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+          <div class="card"><div class="photo"><span class="shot">storefront</span></div><div class="cb"><span class="ochip">Black-Owned</span><b>Batter &amp; Berries</b><span>Restaurant · Chicago</span></div></div>
+          <div class="card"><div class="photo v2"></div><div class="cb"><span class="ochip">Black-Owned</span><b>Turner's Barbershop</b><span>Grooming · Atlanta</span></div></div>
+          <div class="card"><div class="photo v5"></div><div class="cb"><span class="ochip">Black-Owned</span><b>Stem &amp; Soul</b><span>Retail · Atlanta</span></div></div>
+          <div class="card"><div class="photo v4"></div><div class="cb"><span class="ochip">Black-Owned</span><b>Onyx Frame Studio</b><span>Creative · Chicago</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. City chapters -->
+    <div style="background:var(--off-white);padding:22px 0">
+      <div class="container">
+        <p class="kicker">City chapters</p>
+        <h2 class="sec-h">Your city's index<span class="live">live counts</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">
+          <div class="photo v3" style="aspect-ratio:16/9;border-radius:8px;display:flex;align-items:flex-end"><span class="shot">Auburn Ave</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:10px"><b style="color:#fff;font-family:var(--headline);font-size:14px">Atlanta</b><span style="display:block;color:var(--gold);font-size:9px">151 businesses</span></div></div>
+          <div class="photo v6" style="aspect-ratio:16/9;border-radius:8px;display:flex;align-items:flex-end"><span class="shot">Bronzeville</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:10px"><b style="color:#fff;font-family:var(--headline);font-size:14px">Chicago</b><span style="display:block;color:var(--gold);font-size:9px">52 businesses</span></div></div>
+          <div class="photo v2" style="aspect-ratio:16/9;border-radius:8px;display:flex;align-items:flex-end"><span class="shot">Third Ward</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:10px"><b style="color:#fff;font-family:var(--headline);font-size:14px">Houston</b><span style="display:block;color:var(--gold);font-size:9px">51 businesses</span></div></div>
+        </div>
+        <p style="font-size:9.5px;color:var(--charcoal-soft);margin:8px 0 0">Coming soon (quiet, typographic): DC · NYC · LA · Dallas · Memphis + 5 more</p>
+      </div>
+    </div>
+
+    <!-- 6. Microsite showcase — CAROUSEL of real page previews (design doc §7) -->
+    <div style="background:#fff;padding:22px 0">
+      <div class="container">
+        <p class="kicker">Your official page</p>
+        <h2 class="sec-h">More than a listing — your business's home</h2>
+        <p style="font-size:11px;color:var(--charcoal);margin:6px 0 12px">A carousel of REAL pages on the platform — swipe/arrow through the archetypes. Each card is a live mini-preview built from that listing's actual data, linking to the real page.</p>
+        <div style="display:flex;gap:10px;overflow:hidden;padding-bottom:4px">
+          <!-- Card 1: restaurant w/ menu -->
+          <div style="flex:0 0 44%;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+            <div class="photo v2" style="height:58px"><span class="shot">restaurant hero</span><div class="scrim"></div><b style="position:absolute;left:8px;bottom:6px;z-index:2;color:#fff;font-family:var(--headline);font-size:11px">Batter &amp; Berries</b></div>
+            <div style="padding:7px 9px;font-size:8.5px;color:var(--charcoal)">
+              <span style="color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:7.5px">Menu</span>
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:3px 0"><span>French Toast Flight</span><b style="color:var(--amber)">$16</b></div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Shrimp &amp; Grits</span><b style="color:var(--amber)">$19</b></div>
+            </div>
+          </div>
+          <!-- Card 2: consultant w/ packages -->
+          <div style="flex:0 0 44%;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+            <div class="photo v3" style="height:58px"><span class="shot">consultant hero</span><div class="scrim"></div><b style="position:absolute;left:8px;bottom:6px;z-index:2;color:#fff;font-family:var(--headline);font-size:11px">Carter &amp; Co. Consulting</b></div>
+            <div style="padding:7px 9px;font-size:8.5px;color:var(--charcoal)">
+              <span style="color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:7.5px">Services</span>
+              <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:3px 0"><span>Growth Strategy Sprint</span><b style="color:var(--amber)">from $2,400</b></div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0"><span>Fractional COO</span><b style="color:var(--amber)">retainer</b></div>
+            </div>
+          </div>
+          <!-- Card 3: creative w/ portfolio (peeking) -->
+          <div style="flex:0 0 44%;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.12)">
+            <div class="photo v4" style="height:58px"><span class="shot">portfolio cover</span><div class="scrim"></div><b style="position:absolute;left:8px;bottom:6px;z-index:2;color:#fff;font-family:var(--headline);font-size:11px">Onyx Frame Studio</b></div>
+            <div style="padding:7px 9px"><span style="color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:7.5px">Portfolio</span>
+              <div style="display:flex;gap:3px;margin-top:3px"><div class="photo v5" style="width:30%;aspect-ratio:1;border-radius:3px"></div><div class="photo" style="width:30%;aspect-ratio:1;border-radius:3px"></div><div class="photo v6" style="width:30%;aspect-ratio:1;border-radius:3px"></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <span style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--brand-black);display:grid;place-items:center;font-size:11px">←</span>
+          <span style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--brand-black);display:grid;place-items:center;font-size:11px">→</span>
+          <span style="font-size:9px;color:var(--charcoal-soft)">swipe · arrows · keyboard — auto-advance only when reduced-motion is off, pauses on hover/focus</span>
+          <span class="btn gold" style="margin-left:auto">Claim your page</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Impact band (dark, live) -->
+    <div class="dark" style="background:var(--ground);padding:24px 0">
+      <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center">
+        <div>
+          <p class="kicker on-dark">Community impact</p>
+          <h2 class="sec-h on-dark">Watch the dollars circulate<span class="live">live flow-map</span></h2>
+          <p style="color:#cbbfa8;font-size:11px;margin:6px 0 10px">Every tracked receipt keeps money moving through Black-owned business. See the network in motion.</p>
+          <span class="btn gold">Explore the flow map</span>
+        </div>
+        <div style="border:1px solid #3a3128;border-radius:8px;height:120px;position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;opacity:.5;background-image:radial-gradient(circle at 25% 40%, var(--gold) 2px, transparent 3px),radial-gradient(circle at 60% 65%, var(--gold) 2px, transparent 3px),radial-gradient(circle at 80% 30%, var(--gold) 2px, transparent 3px),radial-gradient(circle at 45% 20%, var(--gold) 1.5px, transparent 2.5px);background-size:200px 200px"></div>
+          <span style="position:absolute;left:10px;bottom:8px;color:#cbbfa8;font-size:9px">live node network · real spend totals</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. BLACQLight -->
+    <div style="background:var(--pale-lavender);padding:22px 0">
+      <div class="container" style="display:grid;grid-template-columns:2fr 3fr;gap:16px;align-items:center">
+        <div class="photo v6" style="aspect-ratio:4/5;border-radius:8px"><span class="shot">founder portrait — B&amp;W + selective gold</span></div>
+        <div>
+          <p class="kicker">BLACQLight · Founder stories<span class="live">real posts</span></p>
+          <h2 class="sec-h" style="font-size:17px">"The block raised this bakery."</h2>
+          <p style="font-size:11px;color:var(--charcoal);margin:6px 0 10px">Editorial features on the people behind the businesses — latest published story pulled live.</p>
+          <span class="btn dark-outline">Read BLACQLight</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Single owner CTA + footer -->
+    <div style="background:var(--ground);padding:20px 0;text-align:center">
+      <h2 style="color:#fff;font-size:18px">Ready to be found?</h2>
+      <p style="color:#cbbfa8;font-size:11px;margin:4px 0 10px">One owner CTA. One place. (Was three.)</p>
+      <span class="btn gold">Get your business on The BLACQList</span>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>The platform's core action — search — is IN the hero with quick-filter chips. Bento category grid encodes editorial hierarchy (big Food &amp; Drink, standard others). Most conventional-modern of the three; fastest to first action.</dd>
+    <dt>Tradeoff</dt><dd>Heaviest photography dependency above the fold; hero search + chips push the headline smaller.</dd>
+  </dl>
+</section>
+
+<!-- ═════════════ HP-B — EDITORIAL INDEX ═════════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">HP-B</span><h2>Editorial Index</h2></div>
+  <p class="opt-sub">Shorter hero with the search in a raised band BELOW it, then the design doc's "Find What You Need" split-screen module — indexed discovery paths (01–06) where hovering a path changes the photograph. The most "publication" of the three.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business · Sign Up</span></div>
+
+    <!-- 1. Hero, shorter -->
+    <div class="photo v2" style="min-height:210px;display:flex;align-items:flex-end">
+      <span class="shot">Hero: storefront at golden hour</span>
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2;width:100%;padding-bottom:26px">
+        <h1 style="color:#fff;font-size:30px">Find &amp; Be Found.</h1>
+        <p style="color:rgba(244,244,247,.9);font-size:12px;margin:4px 0 0">The living index of Black commerce.</p>
+      </div>
+    </div>
+    <!-- search band overlapping -->
+    <div style="background:transparent;margin-top:-18px;position:relative;z-index:4">
+      <div class="container"><div class="search" style="max-width:560px;margin-inline:0"><span class="ph">Search businesses, food, services…</span><span class="go">Search</span></div></div>
+    </div>
+
+    <!-- 2. Find What You Need split-screen -->
+    <div style="background:#fff;padding:24px 0 22px">
+      <div class="container" style="display:grid;grid-template-columns:5fr 6fr;gap:18px;align-items:stretch">
+        <div class="photo v5" style="border-radius:8px;min-height:180px"><span class="shot">image swaps on hover of index rows</span></div>
+        <div>
+          <p class="kicker">Find what you need</p>
+          <div style="display:grid;font-family:var(--headline)">
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:ui-monospace,monospace;color:var(--amber);font-size:9px">01</span><b style="font-size:14px;font-weight:500">Near you</b></div>
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border);color:var(--amber)"><span style="font-family:ui-monospace,monospace;font-size:9px">02</span><b style="font-size:14px;font-weight:500">Open now</b><span style="margin-left:auto;font-family:var(--body);font-size:9px;color:var(--charcoal-soft)">← hovered</span></div>
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:ui-monospace,monospace;color:var(--amber);font-size:9px">03</span><b style="font-size:14px;font-weight:500">Highly rated</b></div>
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:ui-monospace,monospace;color:var(--amber);font-size:9px">04</span><b style="font-size:14px;font-weight:500">Newly added</b></div>
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-family:ui-monospace,monospace;color:var(--amber);font-size:9px">05</span><b style="font-size:14px;font-weight:500">Women-owned</b></div>
+            <div style="display:flex;gap:10px;align-items:baseline;padding:7px 0"><span style="font-family:ui-monospace,monospace;color:var(--amber);font-size:9px">06</span><b style="font-size:14px;font-weight:500">Community favorites</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Triptych as editorial rows -->
+    <div style="background:var(--off-white);padding:20px 0">
+      <div class="container" style="display:grid;gap:8px">
+        <div style="display:grid;grid-template-columns:1fr 3fr;gap:12px;align-items:center;background:#fff;border-radius:8px;overflow:hidden"><div class="photo v3" style="height:64px"></div><div style="padding-right:10px"><b style="font-family:var(--headline);font-size:13px">Discover</b><span style="font-size:10px;color:var(--charcoal-soft)"> — every Black-owned business, one index.</span></div></div>
+        <div style="display:grid;grid-template-columns:1fr 3fr;gap:12px;align-items:center;background:#fff;border-radius:8px;overflow:hidden"><div class="photo v2" style="height:64px"></div><div style="padding-right:10px"><b style="font-family:var(--headline);font-size:13px">Support</b><span style="font-size:10px;color:var(--charcoal-soft)"> — track the dollars you keep in community.</span></div></div>
+        <div style="display:grid;grid-template-columns:1fr 3fr;gap:12px;align-items:center;background:#fff;border-radius:8px;overflow:hidden"><div class="photo v6" style="height:64px"></div><div style="padding-right:10px"><b style="font-family:var(--headline);font-size:13px">Connect</b><span style="font-size:10px;color:var(--charcoal-soft)"> — owners, events, and the people behind them.</span></div></div>
+      </div>
+    </div>
+
+    <!-- 4. Category grid: uniform photographic tiles -->
+    <div style="background:#fff;padding:20px 0">
+      <div class="container">
+        <p class="kicker">Explore by category</p>
+        <h2 class="sec-h">Twelve doors in<span class="live">live counts</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px">
+          <div class="photo" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Food</b><span style="display:block;color:var(--gold);font-size:8px">62</span></div></div>
+          <div class="photo v2" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Beauty</b><span style="display:block;color:var(--gold);font-size:8px">38</span></div></div>
+          <div class="photo v3" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Pro services</b><span style="display:block;color:var(--gold);font-size:8px">41</span></div></div>
+          <div class="photo v4" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Creatives</b><span style="display:block;color:var(--gold);font-size:8px">24</span></div></div>
+          <div class="photo v5" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Wellness</b><span style="display:block;color:var(--gold);font-size:8px">19</span></div></div>
+          <div class="photo v6" style="aspect-ratio:1;border-radius:6px;display:flex;align-items:flex-end"><div class="scrim"></div><div style="position:relative;z-index:2;padding:6px"><b style="color:#fff;font-family:var(--headline);font-size:9.5px">Retail</b><span style="display:block;color:var(--gold);font-size:8px">33</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Trending with editorial spotlight insert -->
+    <div style="background:var(--off-white);padding:20px 0">
+      <div class="container">
+        <p class="kicker">Trending near you</p>
+        <h2 class="sec-h">Most-saved this week<span class="live">real saves</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+          <div class="card"><div class="photo"><span class="shot">storefront</span></div><div class="cb"><span class="ochip">Black-Owned</span><b>Batter &amp; Berries</b><span>Restaurant · Chicago</span></div></div>
+          <div class="card"><div class="photo v2"></div><div class="cb"><span class="ochip">Black-Owned</span><b>Turner's Barbershop</b><span>Grooming · Atlanta</span></div></div>
+          <div style="background:var(--ground);border-radius:10px;padding:12px;display:flex;flex-direction:column;justify-content:flex-end"><span class="kicker on-dark">Spotlight</span><b style="color:#fff;font-family:var(--headline);font-size:13px">Nourish &amp; Bloom Market</b><span style="color:#cbbfa8;font-size:9.5px;margin-top:2px">The country's first Black-owned AI grocery →</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6-9 condensed: same sections as HP-A -->
+    <div style="background:#fff;padding:16px 0;border-top:1px solid var(--border)">
+      <div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:9.5px;color:var(--charcoal-soft)">
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">City chapters</b><br>photographic cards + counts (same as HP-A)</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">Microsite showcase</b><br>real template pages, angled previews</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">Impact + BLACQLight</b><br>live flow-map band · latest real story</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">One owner CTA</b><br>dark closing band</div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>Reads like a publication's front page: restrained hero, the raised search band as its own moment, and the split-screen index module (a signature interaction the design doc calls for — hover a path, the photo changes). Categories stay uniform and dense: "twelve doors," no hierarchy games.</dd>
+    <dt>Tradeoff</dt><dd>Search is one scroll-beat below the fold on small screens; the split-screen module needs a designed mobile collapse (stacked list + static image).</dd>
+  </dl>
+</section>
+
+<!-- ═════════════ HP-C — DARK OPENING ═════════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">HP-C</span><h2>Dark Opening</h2></div>
+  <p class="opt-sub">The boldest identity statement: a black editorial opening with gold display type and a photo mosaic — the "cultural index" speaking first, search immediately under the thesis. Below the fold it warms to cream/white and follows the same section order.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business · Sign Up</span></div>
+
+    <!-- 1. Dark hero -->
+    <div style="background:var(--ground);padding:26px 0 22px;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;opacity:.18;background-image:radial-gradient(circle at 15% 30%, var(--gold) 1.5px, transparent 2.5px),radial-gradient(circle at 75% 60%, var(--gold) 1.5px, transparent 2.5px),radial-gradient(circle at 45% 85%, var(--gold) 1.5px, transparent 2.5px);background-size:300px 300px"></div>
+      <div class="container" style="position:relative;display:grid;grid-template-columns:3fr 2fr;gap:18px;align-items:center">
+        <div>
+          <p class="kicker on-dark">The national index of Black commerce</p>
+          <h1 style="color:#fff;font-size:36px;line-height:1.05">Find <span style="color:var(--gold)">&amp;</span> Be Found.</h1>
+          <p style="color:#cbbfa8;font-size:12px;margin:8px 0 14px;max-width:44ch">414 Black-owned businesses across 3 cities — and growing. <span class="live" style="background:rgba(125,220,154,.15);color:#7ddc9a">live count</span></p>
+          <div class="search" style="max-width:480px;margin-inline:0"><span class="ph">Search businesses, food, services…</span><span class="go">Search</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+          <div class="photo" style="aspect-ratio:1;border-radius:6px"><span class="shot">chef</span></div>
+          <div class="photo v4" style="aspect-ratio:1;border-radius:6px;margin-top:14px"><span class="shot">stylist</span></div>
+          <div class="photo v5" style="aspect-ratio:1;border-radius:6px;margin-top:-14px"><span class="shot">maker</span></div>
+          <div class="photo v6" style="aspect-ratio:1;border-radius:6px"><span class="shot">owner</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Triptych: gold-rule editorial columns on cream -->
+    <div style="background:var(--pale-lavender);padding:20px 0">
+      <div class="container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <div style="border-top:3px solid var(--gold);padding-top:8px"><b style="font-family:var(--headline);font-size:14px">Discover</b><p style="font-size:10px;color:var(--charcoal);margin:3px 0 0">Every Black-owned business, one index.</p></div>
+        <div style="border-top:3px solid var(--gold);padding-top:8px"><b style="font-family:var(--headline);font-size:14px">Support</b><p style="font-size:10px;color:var(--charcoal);margin:3px 0 0">Track the dollars you keep in community.</p></div>
+        <div style="border-top:3px solid var(--gold);padding-top:8px"><b style="font-family:var(--headline);font-size:14px">Connect</b><p style="font-size:10px;color:var(--charcoal);margin:3px 0 0">Owners, events, and the people behind them.</p></div>
+      </div>
+    </div>
+
+    <!-- 3. Category index: typographic list + preview pane -->
+    <div style="background:#fff;padding:22px 0">
+      <div class="container" style="display:grid;grid-template-columns:6fr 5fr;gap:18px;align-items:stretch">
+        <div>
+          <p class="kicker">Explore by category</p>
+          <div style="font-family:var(--headline)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border);color:var(--amber)"><b style="font-size:15px;font-weight:500">Food &amp; Drink</b><span style="font-family:var(--body);font-size:9px">62 · hovered</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><b style="font-size:15px;font-weight:500">Professional services</b><span style="font-family:var(--body);font-size:9px;color:var(--charcoal-soft)">41</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><b style="font-size:15px;font-weight:500">Beauty &amp; Grooming</b><span style="font-family:var(--body);font-size:9px;color:var(--charcoal-soft)">38</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)"><b style="font-size:15px;font-weight:500">Retail &amp; Products</b><span style="font-family:var(--body);font-size:9px;color:var(--charcoal-soft)">33</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0"><b style="font-size:15px;font-weight:500">Creatives</b><span style="font-family:var(--body);font-size:9px;color:var(--charcoal-soft)">24</span></div>
+          </div>
+        </div>
+        <div class="photo" style="border-radius:8px;min-height:170px"><span class="shot">preview swaps per hovered category</span></div>
+      </div>
+    </div>
+
+    <!-- 4-9 condensed strip -->
+    <div style="background:var(--off-white);padding:16px 0;border-top:1px solid var(--border)">
+      <div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:9.5px;color:var(--charcoal-soft)">
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">Trending + spotlight</b><br>real-saves cards (as HP-A/B)</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">City chapters</b><br>photographic cards + counts</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">Showcase · Impact · BLACQLight</b><br>real templates · live flow-map · real story</div>
+        <div><b style="color:var(--brand-black);font-family:var(--headline);font-size:11px">One owner CTA</b><br>dark closing band</div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>Leads with identity, not imagery: black + gold type + node field, the live platform count as proof, a photo mosaic instead of one hero shot (works with fewer hero-grade photographs). The category index-with-preview echoes the split-screen language used in the templates.</dd>
+    <dt>Tradeoff</dt><dd>Least photography above the fold — the "photography carries emotion" formula starts one beat later. Boldest, most distinctive; also the biggest brand swing.</dd>
+  </dl>
+</section>
+
+<footer>
+  <p><b>Pick one:</b> HP-A · HP-B · HP-C (hybrids welcome — e.g. "C's dark hero with A's bento categories"). Common to all: search on the homepage, live counts, real trending row, city chapters, microsite showcase using our actual new templates, community-impact + BLACQLight wired to their LIVE features, one owner CTA. After your pick: full build on real queries → design-critic → Lighthouse before/after → staging preview → PR.</p>
+</footer>
+</div>
+</body>
+</html>
