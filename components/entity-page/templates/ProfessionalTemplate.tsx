@@ -6,9 +6,13 @@ import { TemplateServices } from '@/components/entity-page/templates/TemplateSer
 import { TemplateStory } from '@/components/entity-page/templates/TemplateStory'
 import { TemplateTrustPanel } from '@/components/entity-page/templates/TemplateTrustPanel'
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
+import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
+import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
+import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
+import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
 
@@ -58,6 +62,7 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
           <div className="flex flex-col gap-12 md:gap-14 min-w-0">
             <TemplateServices entity={entity} />
             <TemplateStory entity={entity} imageSide="left" />
+            <EntityAttributes attributes={entity.attributes} bare />
             <EntityLinks entity={entity} bare />
           </div>
 
@@ -73,6 +78,8 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
         </div>
       )}
 
+      <EntityVideoSection entity={entity} />
+
       <div id="reviews" className="scroll-mt-32">
         <EntityReviewsSection
           entity={entity}
@@ -82,6 +89,8 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
         />
       </div>
 
+      <EntityUpcomingEvents entity={entity} />
+
       {hasVisit && (
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} />
@@ -89,6 +98,7 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       )}
 
       <EntityFaqSection faqs={entity.faqs} />
+      <EntityPlatformActivity entity={entity} />
       <EntityRelatedDiscovery entity={entity} />
     </>
   )

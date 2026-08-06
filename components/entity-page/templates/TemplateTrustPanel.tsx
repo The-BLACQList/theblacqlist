@@ -64,6 +64,13 @@ export function TemplateTrustPanel({ entity }: Props) {
           </p>
         )}
         <p className="py-2.5 font-subhead text-xs text-charcoal-soft">
+          <a
+            href={`/corrections?listing=${entity.id}`}
+            className="hover:text-charcoal underline underline-offset-2 transition-colors duration-150"
+          >
+            Suggest a correction
+          </a>
+          {' · '}
           <Link
             href="/about/trust"
             className="hover:text-charcoal underline underline-offset-2 transition-colors duration-150"

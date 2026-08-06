@@ -9,8 +9,13 @@ import { TemplateStory } from '@/components/entity-page/templates/TemplateStory'
 import { TemplateTrustPanel } from '@/components/entity-page/templates/TemplateTrustPanel'
 import { TemplateInquiryBand } from '@/components/entity-page/templates/TemplateInquiryBand'
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
+import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
+import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
+import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
+import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
+import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
 
@@ -40,6 +45,7 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
     ...(hasPortfolio ? [{ id: 'portfolio', label: 'Portfolio' }] : []),
     ...(hasCapabilities ? [{ id: 'capabilities', label: 'Capabilities' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
+    ...(hasPortfolio ? [{ id: 'gallery', label: 'Gallery' }] : []),
     { id: 'reviews', label: 'Reviews' },
     ...(hasVisit ? [{ id: 'visit', label: 'Visit' }] : []),
   ]
@@ -66,6 +72,7 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
 
             <TemplateCapabilities entity={entity} />
             <TemplateStory entity={entity} imageSide="right" />
+            <EntityAttributes attributes={entity.attributes} bare />
             <EntityLinks entity={entity} bare />
           </div>
 
@@ -74,6 +81,15 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
           </aside>
         </div>
       </div>
+
+      {/* Full gallery + lightbox — the reel is the curated feature, this is the complete work */}
+      {hasPortfolio && (
+        <div id="gallery" className="scroll-mt-32">
+          <EntityMediaGallery entity={entity} images={entity.images} />
+        </div>
+      )}
+
+      <EntityVideoSection entity={entity} />
 
       <TemplateInquiryBand entity={entity} />
 
@@ -86,6 +102,8 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
         />
       </div>
 
+      <EntityUpcomingEvents entity={entity} />
+
       {hasVisit && (
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} />
@@ -93,6 +111,7 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
       )}
 
       <EntityFaqSection faqs={entity.faqs} />
+      <EntityPlatformActivity entity={entity} />
       <EntityRelatedDiscovery entity={entity} />
     </>
   )

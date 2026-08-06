@@ -16,6 +16,52 @@ export function TemplateServices({ entity }: Props) {
   const services = entity.details.services
   if (services.length === 0) return null
 
+  // Parity with the business offerings section: when the owner has grouped
+  // their services (group_label), render menu-style grouped headings instead
+  // of the flat feature-first layout.
+  const hasGroups = services.some((s) => s.group)
+  if (hasGroups) {
+    const groups = new Map<string, typeof services>()
+    for (const s of services) {
+      const key = s.group ?? 'More'
+      groups.set(key, [...(groups.get(key) ?? []), s])
+    }
+    return (
+      <section id="services" aria-labelledby="services-heading" className="scroll-mt-32">
+        <TemplateSectionHeading
+          kicker="What we offer"
+          heading="Services & packages"
+          headingId="services-heading"
+        />
+        <div className="flex flex-col gap-8">
+          {[...groups.entries()].map(([group, items]) => (
+            <div key={group}>
+              <h3 className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-charcoal mb-3">
+                {group}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {items.map((service) => (
+                  <article
+                    key={service.id}
+                    className="bg-pale-lavender rounded-xl p-5 flex flex-col gap-1.5"
+                  >
+                    <h4 className="font-headline text-[17px] text-brand-black">{service.name}</h4>
+                    {service.price && (
+                      <p className="font-subhead text-sm font-bold text-amber">{service.price}</p>
+                    )}
+                    {service.description && (
+                      <p className="font-body text-sm text-charcoal">{service.description}</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   const [feature, ...rest] = services
   if (!feature) return null
   const ctaHref = getCtaHref(entity)

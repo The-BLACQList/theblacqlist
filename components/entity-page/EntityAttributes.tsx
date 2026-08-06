@@ -2,18 +2,24 @@ import type { EntityAttributeGroup } from '@/types'
 
 interface Props {
   attributes: EntityAttributeGroup[]
+  /** true = render without the section band/container, for nesting inside a
+      template column that already provides width, padding, and background. */
+  bare?: boolean
 }
 
 /**
  * Renders a listing's grouped attributes (Identity & Ownership, Amenities,
  * Payment, …) as chip rows. Hidden when the listing has no attributes set.
  */
-export function EntityAttributes({ attributes }: Props) {
+export function EntityAttributes({ attributes, bare = false }: Props) {
   if (!attributes || attributes.length === 0) return null
 
   return (
-    <section aria-labelledby="attributes-heading" className="bg-cream py-12 md:py-16">
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+    <section
+      aria-labelledby="attributes-heading"
+      className={bare ? undefined : 'bg-cream py-12 md:py-16'}
+    >
+      <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         <h2
           id="attributes-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
