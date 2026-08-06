@@ -2,8 +2,11 @@ import type { EntityPageData } from '@/types'
 import { TemplateHero } from '@/components/entity-page/templates/TemplateHero'
 import { EntityAnchorTabs, type AnchorTab } from '@/components/entity-page/templates/EntityAnchorTabs'
 import { TemplateInfoRail } from '@/components/entity-page/templates/TemplateInfoRail'
+import { TemplateSectionHeading } from '@/components/entity-page/templates/TemplateSectionHeading'
 import { TemplateServices } from '@/components/entity-page/templates/TemplateServices'
 import { TemplateStory } from '@/components/entity-page/templates/TemplateStory'
+import { PortfolioReel } from '@/components/entity-page/templates/PortfolioReel'
+import { TemplateInquiryBand } from '@/components/entity-page/templates/TemplateInquiryBand'
 import { TemplateTrustPanel } from '@/components/entity-page/templates/TemplateTrustPanel'
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
@@ -62,6 +65,16 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
           <div className="flex flex-col gap-12 md:gap-14 min-w-0">
             <TemplateServices entity={entity} />
             <TemplateStory entity={entity} imageSide="left" />
+            {hasGallery && (
+              <section aria-labelledby="featured-work-heading">
+                <TemplateSectionHeading
+                  kicker="Featured work"
+                  heading="Recent work"
+                  headingId="featured-work-heading"
+                />
+                <PortfolioReel images={entity.images} />
+              </section>
+            )}
             <EntityAttributes attributes={entity.attributes} bare />
             <EntityLinks entity={entity} bare />
           </div>
@@ -79,6 +92,8 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       )}
 
       <EntityVideoSection entity={entity} />
+
+      <TemplateInquiryBand entity={entity} />
 
       <div id="reviews" className="scroll-mt-32">
         <EntityReviewsSection
