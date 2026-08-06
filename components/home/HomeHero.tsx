@@ -17,7 +17,7 @@ const QUICK_FILTERS = [
  */
 export function HomeHero() {
   return (
-    <section aria-label="Search The BLACQList" className="relative min-h-[420px] md:min-h-[62vh] flex items-center">
+    <section aria-label="Search The BLACQList" className="relative min-h-[480px] md:min-h-[72vh] flex items-center">
       <Image
         src="/images/hero-bg.jpg"
         alt=""
@@ -35,8 +35,8 @@ export function HomeHero() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-16">
-        <h1 className="font-headline text-[38px] md:text-[54px] lg:text-[62px] text-white leading-[1.05] text-balance max-w-[16ch]">
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-20">
+        <h1 className="font-headline text-[42px] md:text-[60px] lg:text-[68px] text-white leading-[1.05] text-balance max-w-[16ch]">
           Find &amp; Be Found.
         </h1>
         <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
