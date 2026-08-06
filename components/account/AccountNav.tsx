@@ -1,9 +1,22 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
+
+const NAV_PREF_KEY = 'blacq-account-nav'
+
+function subscribeToNavPref(callback: () => void) {
+  window.addEventListener('blacq-account-nav-change', callback)
+  window.addEventListener('storage', callback)
+  return () => {
+    window.removeEventListener('blacq-account-nav-change', callback)
+    window.removeEventListener('storage', callback)
+  }
+}
 
 export interface AccountNavCounts {
   saved: number
@@ -39,6 +52,18 @@ interface NavGroup {
  */
 export function AccountNav({ displayName, memberSince, counts, isOwner }: Props) {
   const pathname = usePathname()
+
+  // The sidebar is the user's choice: collapsed state persists across visits.
+  // useSyncExternalStore keeps SSR/hydration safe (server snapshot = expanded).
+  const collapsed = useSyncExternalStore(
+    subscribeToNavPref,
+    () => window.localStorage.getItem(NAV_PREF_KEY) === 'collapsed',
+    () => false
+  )
+  function toggleCollapsed() {
+    window.localStorage.setItem(NAV_PREF_KEY, collapsed ? 'expanded' : 'collapsed')
+    window.dispatchEvent(new Event('blacq-account-nav-change'))
+  }
 
   const groups: NavGroup[] = [
     {
@@ -84,8 +109,31 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <nav aria-label="Account" className="hidden lg:block w-[240px] shrink-0">
+      {/* Desktop sidebar — collapsible to a slim rail (the overview page is a
+          complete navigation surface on its own, so hiding the nav loses nothing) */}
+      <nav
+        aria-label="Account"
+        className={cn('hidden lg:block shrink-0', collapsed ? 'w-[56px]' : 'w-[240px]')}
+      >
+        {collapsed ? (
+          <div className="sticky top-24 bg-white rounded-xl border border-charcoal/10 p-2 flex flex-col items-center gap-3">
+            <span
+              className="flex size-9 items-center justify-center rounded-full bg-deep-bg text-gold font-headline text-sm border-2 border-gold"
+              aria-hidden="true"
+            >
+              {initial}
+            </span>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              aria-label="Show account navigation"
+              aria-expanded="false"
+              className="flex size-9 items-center justify-center rounded-md text-charcoal hover:text-brand-black hover:bg-pale-lavender transition-colors duration-150"
+            >
+              <PanelLeftOpen className="size-4.5" aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
         <div className="sticky top-24 bg-white rounded-xl border border-charcoal/10 p-4">
           <div className="flex items-center gap-3 pb-4 mb-3 border-b border-charcoal/10">
             <span
@@ -94,10 +142,19 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
             >
               {initial}
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-headline text-sm text-brand-black truncate">{displayName}</p>
               <p className="font-subhead text-[11px] text-charcoal-soft">Member since {memberSince}</p>
             </div>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              aria-label="Hide account navigation"
+              aria-expanded="true"
+              className="flex size-8 shrink-0 items-center justify-center rounded-md text-charcoal-faint hover:text-brand-black hover:bg-pale-lavender transition-colors duration-150"
+            >
+              <PanelLeftClose className="size-4" aria-hidden="true" />
+            </button>
           </div>
 
           {groups.map((group) =>
@@ -141,6 +198,7 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
             </button>
           </form>
         </div>
+        )}
       </nav>
 
       {/* Mobile horizontal scroll-nav */}
