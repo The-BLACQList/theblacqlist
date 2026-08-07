@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 export interface MapListing {
   id: string
   name: string
+  entityType: string
   href: string
   category: string | null
   categorySlug: string | null
@@ -57,6 +58,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [openNowOnly, setOpenNowOnly] = useState(false)
   const [trustOnly, setTrustOnly] = useState(false)
   const [categorySlug, setCategorySlug] = useState<string>('')
+  const [typeFilter, setTypeFilter] = useState<string>('')
   const [highlightId, setHighlightId] = useState<string | null>(null)
 
   const reduceMotion = useMemo(
@@ -92,15 +94,32 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [listings])
 
+  const TYPE_LABELS: Record<string, string> = {
+    business: 'Businesses',
+    restaurant: 'Restaurants',
+    service_provider: 'Services',
+    vendor: 'Vendors',
+    professional: 'Professionals',
+    creative: 'Creatives',
+    event: 'Events',
+  }
+  const presentTypes = useMemo(() => {
+    const seen = new Set<string>()
+    for (const l of listings) seen.add(l.entityType)
+    return [...seen].filter((t) => TYPE_LABELS[t]).sort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listings])
+
   const filtered = useMemo(
     () =>
       listings.filter((l) => {
         if (openNowOnly && !(l.hours && isOpenNow(l.hours).open)) return false
         if (trustOnly && l.trustTier !== 'verified' && l.trustTier !== 'certified') return false
         if (categorySlug && l.categorySlug !== categorySlug) return false
+        if (typeFilter && l.entityType !== typeFilter) return false
         return true
       }),
-    [listings, openNowOnly, trustOnly, categorySlug]
+    [listings, openNowOnly, trustOnly, categorySlug, typeFilter]
   )
 
   const geojson = useMemo(
@@ -372,6 +391,18 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             {view.label}
           </button>
         ))}
+        {presentTypes.length > 1 &&
+          presentTypes.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTypeFilter((v) => (v === t ? '' : t))}
+              className={filterChip(typeFilter === t)}
+              aria-pressed={typeFilter === t}
+            >
+              {TYPE_LABELS[t]}
+            </button>
+          ))}
         <button
           type="button"
           onClick={() => setOpenNowOnly((v) => !v)}

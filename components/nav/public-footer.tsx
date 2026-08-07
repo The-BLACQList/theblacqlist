@@ -79,6 +79,7 @@ const columns: FooterColumn[] = [
     heading: 'Platform',
     links: [
       { label: 'Discover', href: '/discover', active: true },
+      { label: 'Map', href: '/map', active: true },
       { label: 'Search', href: '/search', active: true },
       { label: 'Collections', href: '/collections', active: true },
       { label: 'Events', href: '/events', active: false },

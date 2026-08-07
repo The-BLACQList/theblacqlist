@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Map explore options · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-black:#000; --ground:#08080a; --charcoal:#595758; --charcoal-soft:#6b6b6b;
+    --gold:#c4a065; --amber:#8f6600; --light-gold:#ffd867;
+    --off-white:#f4f4f7; --pale-lavender:#f2f0ee; --border:#e5e7eb; --success:#157347;
+    --headline:'Jost','Century Gothic','Futura',system-ui,sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#101010; color:#efe7d8; font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:var(--headline); letter-spacing:.02em; line-height:1.12; font-weight:500; margin:0; }
+  .wrap { max-width:1480px; margin-inline:auto; padding:28px clamp(16px,3vw,40px) 80px; }
+  .mast { border-bottom:1px solid #3a3128; padding-bottom:20px; margin-bottom:28px; }
+  .mast h1 { color:#fff; font-size:clamp(24px,3.5vw,38px); }
+  .mast h1 em { font-style:normal; color:var(--light-gold); }
+  .mast p { color:#b3a68f; max-width:86ch; margin:8px 0 0; }
+  .howto { display:inline-block; margin-top:12px; border:1px solid #6b4d00; background:#1d1607; color:var(--light-gold); padding:8px 14px; border-radius:6px; font-size:13px; }
+  .option { margin-top:44px; }
+  .opt-head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .tag { font-family:ui-monospace,monospace; font-weight:700; font-size:13px; color:var(--brand-black); background:var(--light-gold); padding:3px 10px; border-radius:5px; }
+  .opt-head h2 { color:#fff; font-size:22px; }
+  .opt-sub { color:#b3a68f; font-size:13px; margin:0 0 14px; max-width:92ch; }
+  .frame { border-radius:10px; overflow:hidden; border:1px solid #000; box-shadow:0 12px 40px rgba(0,0,0,.55); background:#0b0a08; color:#efe7d8; font-size:12px; position:relative; }
+  .m-nav { background:var(--ground); color:#f4ecdc; display:flex; align-items:center; gap:12px; padding:11px 20px; border-bottom:1px solid #17140f; }
+  .m-nav .q { width:20px; height:20px; border-radius:50%; border:2px solid var(--gold); position:relative; flex:none; }
+  .m-nav .q::after { content:""; position:absolute; width:7px; height:2px; background:var(--gold); bottom:1px; right:-3px; transform:rotate(42deg); }
+  .m-nav b { font-family:var(--headline); letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .m-nav .sp { margin-left:auto; font-size:10px; color:#cbbfa8; }
+
+  /* Brand-dark basemap simulation */
+  .map { position:relative; background:#0d0c0a; overflow:hidden; }
+  .map::before { content:""; position:absolute; inset:0; opacity:.5;
+    background-image:
+      linear-gradient(115deg, transparent 47%, #1e1a13 47.5%, #1e1a13 48.5%, transparent 49%),
+      linear-gradient(25deg, transparent 30%, #1a1610 30.4%, #1a1610 31.2%, transparent 31.6%),
+      linear-gradient(80deg, transparent 62%, #221d14 62.4%, #221d14 63.4%, transparent 63.8%),
+      linear-gradient(150deg, transparent 71%, #191510 71.4%, #191510 72%, transparent 72.4%),
+      linear-gradient(60deg, transparent 18%, #17130d 18.5%, #17130d 19.2%, transparent 19.7%);
+  }
+  .map::after { content:""; position:absolute; inset:0;
+    background:radial-gradient(60% 50% at 55% 45%, rgba(196,160,101,.05), transparent 70%); }
+  .maplbl { position:absolute; right:10px; bottom:8px; z-index:5; font-size:8.5px; color:#8b7b5c; }
+
+  /* Pins */
+  .pin { position:absolute; z-index:4; }
+  .pin.cert { width:16px; height:16px; border-radius:50%; background:var(--gold); border:2.5px solid var(--light-gold); box-shadow:0 0 10px rgba(255,216,103,.5); }
+  .pin.ver { width:12px; height:12px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px rgba(196,160,101,.5); }
+  .pin.claim { width:8px; height:8px; border-radius:50%; background:var(--gold); opacity:.9; }
+  .pin.uncl { width:6px; height:6px; border-radius:50%; background:#7a6a4c; }
+  .cluster { position:absolute; z-index:4; min-width:26px; height:26px; padding:0 6px; border-radius:999px; background:rgba(196,160,101,.16); border:1.5px solid var(--gold); color:var(--light-gold); display:grid; place-items:center; font-family:var(--headline); font-size:11px; }
+
+  .searchpill { display:flex; align-items:center; gap:8px; background:#fff; color:#221c12; border-radius:999px; padding:7px 8px 7px 14px; box-shadow:0 8px 26px rgba(0,0,0,.5); font-size:11px; }
+  .searchpill .go { background:var(--gold); color:var(--brand-black); font-weight:700; font-size:10px; border-radius:999px; padding:6px 14px; }
+  .fchips { display:flex; gap:5px; flex-wrap:wrap; }
+  .fchips span { background:rgba(8,8,10,.8); border:1px solid #3a3128; color:#e8dcc2; font-size:9px; font-weight:600; border-radius:999px; padding:4px 10px; backdrop-filter:blur(4px); }
+  .fchips span.on { background:var(--gold); color:var(--brand-black); border-color:var(--gold); }
+
+  .rescard { background:#fff; color:#221c12; border-radius:9px; overflow:hidden; }
+  .rescard .ph { height:44px; background:linear-gradient(135deg,#4a3423,#7a5535); position:relative; }
+  .rescard .b { padding:6px 9px; }
+  .rescard b { display:block; font-family:var(--headline); font-weight:500; font-size:11px; }
+  .rescard span { font-size:8.5px; color:var(--charcoal-soft); }
+  .ochip { display:inline-block; background:var(--gold); color:var(--brand-black); font-size:7.5px; font-weight:700; border-radius:999px; padding:1px 6px; }
+  .open { color:var(--success); font-weight:700; font-size:8.5px; }
+
+  .popup { position:absolute; z-index:6; width:150px; background:#fff; color:#221c12; border-radius:9px; box-shadow:0 10px 30px rgba(0,0,0,.5); overflow:hidden; }
+  .popup::after { content:""; position:absolute; left:50%; bottom:-6px; width:12px; height:12px; background:#fff; transform:translateX(-50%) rotate(45deg); }
+
+  .legend { display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-top:10px; font-size:12px; color:#b3a68f; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .lgpin { display:inline-block; border-radius:50%; }
+
+  .notes { margin-top:14px; display:grid; gap:8px; max-width:92ch; }
+  .notes dt { font-family:var(--headline); font-size:12px; color:var(--light-gold); letter-spacing:.06em; text-transform:uppercase; }
+  .notes dd { margin:0; color:#b3a68f; font-size:13px; }
+  footer { margin-top:52px; border-top:1px solid #3a3128; padding-top:18px; color:#b3a68f; font-size:13px; max-width:96ch; }
+  footer b { color:var(--light-gold); font-family:ui-monospace,monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast">
+  <h1>Map explore — <em>three layouts on the brand-dark map</em></h1>
+  <p>The self-hosted Protomaps base map styled as a Gold Node Network surface: near-black ground, warm-toned streets, gold pins. All options share the tier-aware pin system (below), faceted filters, a click popup that links to the business page, clustering, and — non-negotiable — a parallel accessible results list so the map is an enhancement, never the only path. 272 staging listings are already geocoded and ready to render.</p>
+  <div class="legend">
+    <b style="color:#fff;font-family:var(--headline);font-size:12px">Pin system:</b>
+    <span><i class="lgpin" style="width:15px;height:15px;background:var(--gold);border:2.5px solid var(--light-gold)"></i> Certified</span>
+    <span><i class="lgpin" style="width:11px;height:11px;background:var(--gold)"></i> Verified</span>
+    <span><i class="lgpin" style="width:8px;height:8px;background:var(--gold);opacity:.9"></i> Claimed</span>
+    <span><i class="lgpin" style="width:6px;height:6px;background:#7a6a4c"></i> Unclaimed</span>
+    <span style="color:#8b7b5c">· prominence = trust, never pay — sponsored gets list priority + badge, not a bigger pin</span>
+  </div>
+  <div class="howto">Pick one: <b>MP-A · MP-B · MP-C</b> — hybrids welcome.</div>
+</header>
+
+<!-- ═════════ MP-A — FULL-BLEED EXPLORER ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">MP-A</span><h2>Full-Bleed Explorer</h2></div>
+  <p class="opt-sub">The map IS the page — edge to edge under the nav. Search and filters float on top; results live in a collapsible floating drawer. Mobile: full map with a swipe-up bottom sheet.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Map · Cities</span></div>
+    <div class="map" style="height:340px">
+      <span class="maplbl">© OpenStreetMap · Protomaps · self-hosted</span>
+      <!-- floating search + filters -->
+      <div style="position:absolute;top:12px;left:12px;right:12px;z-index:6;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="searchpill" style="width:280px"><span style="flex:1;color:var(--charcoal-soft)">Search this area…</span><span class="go">Search</span></div>
+        <div class="fchips"><span class="on">Atlanta</span><span class="on">Open now</span><span>Category</span><span>Trust level</span></div>
+      </div>
+      <!-- floating results drawer -->
+      <div style="position:absolute;left:12px;top:64px;bottom:12px;width:215px;z-index:5;background:rgba(10,9,7,.88);border:1px solid #2a241a;border-radius:10px;backdrop-filter:blur(6px);padding:8px;display:flex;flex-direction:column;gap:7px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-family:var(--headline);font-size:11px;color:#fff">87 in view</b><span style="font-size:9px;color:#8b7b5c">collapse ‹</span></div>
+        <div class="rescard"><div class="ph"></div><div class="b"><span class="ochip">Black-Owned</span> <b>Busy Bee Cafe</b><span>Soul food · <i class="open" style="font-style:normal">● Open</i> · 0.4 mi</span></div></div>
+        <div class="rescard"><div class="b" style="padding-top:8px"><span class="ochip">Black-Owned</span> <b>Turner's Barbershop</b><span>Grooming · <i class="open" style="font-style:normal">● Open</i> · 0.7 mi</span></div></div>
+        <div class="rescard"><div class="b" style="padding-top:8px"><span class="ochip">Black-Owned</span> <b>Stem &amp; Soul</b><span>Retail · closes 5pm · 1.1 mi</span></div></div>
+        <span style="font-size:8.5px;color:#8b7b5c;text-align:center">scroll for all — list mirrors every pin</span>
+      </div>
+      <!-- pins -->
+      <span class="pin cert" style="left:48%;top:38%"></span>
+      <span class="pin ver" style="left:60%;top:52%"></span>
+      <span class="pin ver" style="left:70%;top:30%"></span>
+      <span class="pin claim" style="left:55%;top:66%"></span>
+      <span class="pin claim" style="left:80%;top:58%"></span>
+      <span class="pin uncl" style="left:66%;top:44%"></span>
+      <span class="pin uncl" style="left:75%;top:70%"></span>
+      <span class="cluster" style="left:86%;top:22%">12</span>
+      <span class="cluster" style="left:40%;top:74%">8</span>
+      <!-- popup on the certified pin -->
+      <div class="popup" style="left:41%;top:8%">
+        <div class="ph" style="height:40px;background:linear-gradient(135deg,#4a3423,#7a5535)"></div>
+        <div class="b" style="padding:6px 8px">
+          <span class="ochip">Black-Owned</span> <span style="font-size:7px;font-weight:700;color:var(--amber)">★ CERTIFIED</span>
+          <b style="display:block;font-family:var(--headline);font-size:10.5px">Busy Bee Cafe</b>
+          <span style="font-size:8px;color:var(--charcoal-soft)">Soul food · <i class="open" style="font-style:normal">● Open</i></span>
+          <span style="display:block;font-size:8px;font-weight:700;color:var(--brand-black);margin-top:2px">View page →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>Maximum immersion — the dark gold map becomes a brand moment in itself. The drawer collapses to nothing, leaving pure map. Mobile gets the familiar swipe-up sheet over the full map.</dd>
+    <dt>Tradeoff</dt><dd>Results get the least room; long lists mean lots of drawer scrolling. Densest engineering (floating layers over the canvas).</dd>
+  </dl>
+</section>
+
+<!-- ═════════ MP-B — SPLIT INDEX ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">MP-B</span><h2>Split Index</h2></div>
+  <p class="opt-sub">The proven two-pane pattern: results list left (the same D-1 cards as Discover), map right. Hovering a card highlights its pin; clicking a pin scrolls to its card. Mobile: toggle between full list and full map.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Map · Cities</span></div>
+    <div style="display:grid;grid-template-columns:5fr 7fr;height:320px">
+      <!-- list pane -->
+      <div style="background:var(--off-white);color:#221c12;padding:10px;display:flex;flex-direction:column;gap:7px;overflow:hidden">
+        <div class="fchips" style="margin-bottom:2px"><span class="on" style="background:var(--brand-black);color:#fff;border-color:var(--brand-black)">Atlanta</span><span style="background:#fff;color:var(--charcoal);border-color:var(--border)">Open now</span><span style="background:#fff;color:var(--charcoal);border-color:var(--border)">Category</span></div>
+        <b style="font-family:var(--headline);font-size:11px">87 businesses on the map</b>
+        <div class="rescard" style="border:1.5px solid var(--gold);box-shadow:0 4px 14px rgba(196,160,101,.25)"><div class="ph"></div><div class="b"><span class="ochip">Black-Owned</span> <b>Busy Bee Cafe</b><span>Soul food · <i class="open" style="font-style:normal">● Open</i> · ★ 4.8 — <i style="font-style:normal;color:var(--amber);font-weight:700">hovered ↔ pin glows</i></span></div></div>
+        <div class="rescard" style="border:1px solid var(--border)"><div class="b" style="padding-top:8px"><span class="ochip">Black-Owned</span> <b>Turner's Barbershop</b><span>Grooming · ● Open · ★ 4.9</span></div></div>
+        <div class="rescard" style="border:1px solid var(--border)"><div class="b" style="padding-top:8px"><span class="ochip">Black-Owned</span> <b>Stem &amp; Soul Florals</b><span>Retail · closes 5pm</span></div></div>
+      </div>
+      <!-- map pane -->
+      <div class="map">
+        <span class="maplbl">© OpenStreetMap · Protomaps</span>
+        <span class="pin cert" style="left:38%;top:40%;box-shadow:0 0 16px rgba(255,216,103,.9)"></span>
+        <span class="pin ver" style="left:55%;top:28%"></span>
+        <span class="pin ver" style="left:62%;top:60%"></span>
+        <span class="pin claim" style="left:48%;top:70%"></span>
+        <span class="pin claim" style="left:72%;top:46%"></span>
+        <span class="pin uncl" style="left:57%;top:50%"></span>
+        <span class="cluster" style="left:80%;top:26%">9</span>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>The most usable for real searching: full-size cards with photos and open status beside the geography. List and map are equals — the accessible path is the primary path. Familiar from every serious local-search product, executed in our system.</dd>
+    <dt>Tradeoff</dt><dd>Least immersive; the map is a panel, not a world. Mobile needs the list/map toggle.</dd>
+  </dl>
+</section>
+
+<!-- ═════════ MP-C — CHAPTERS RAIL ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">MP-C</span><h2>Chapters Rail</h2></div>
+  <p class="opt-sub">Map-first with city-chapter navigation: big map, city chips fly you between chapters, and results ride a horizontal card rail over the bottom of the map — swiping the rail pans the map pin-to-pin.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Map · Cities</span></div>
+    <div class="map" style="height:330px">
+      <span class="maplbl">© OpenStreetMap · Protomaps</span>
+      <div style="position:absolute;top:12px;left:12px;right:12px;z-index:6;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div class="fchips"><span class="on">Atlanta · 151</span><span>Houston · 51</span><span>Chicago · 52</span></div>
+        <div class="fchips"><span>Open now</span><span>Category</span><span>Trust</span></div>
+      </div>
+      <span class="pin cert" style="left:44%;top:34%"></span>
+      <span class="pin ver" style="left:58%;top:46%"></span>
+      <span class="pin claim" style="left:66%;top:32%"></span>
+      <span class="pin claim" style="left:50%;top:55%"></span>
+      <span class="pin uncl" style="left:70%;top:52%"></span>
+      <span class="cluster" style="left:82%;top:38%">14</span>
+      <!-- bottom card rail -->
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:6;padding:10px 12px;background:linear-gradient(transparent, rgba(5,4,2,.9) 40%)">
+        <div style="display:flex;gap:8px;overflow:hidden">
+          <div class="rescard" style="flex:0 0 175px;border:1.5px solid var(--gold)"><div class="ph" style="height:38px"></div><div class="b"><span class="ochip">Black-Owned</span> <b>Busy Bee Cafe</b><span>Soul food · <i class="open" style="font-style:normal">● Open</i> — <i style="font-style:normal;color:var(--amber);font-weight:700">active ↔ map centers here</i></span></div></div>
+          <div class="rescard" style="flex:0 0 175px;opacity:.85"><div class="ph" style="height:38px;background:linear-gradient(135deg,#3d2e1e,#6b4d2e)"></div><div class="b"><span class="ochip">Black-Owned</span> <b>Turner's Barbershop</b><span>Grooming · ● Open</span></div></div>
+          <div class="rescard" style="flex:0 0 175px;opacity:.85"><div class="ph" style="height:38px;background:linear-gradient(150deg,#5c4028,#8a6a3f)"></div><div class="b"><span class="ochip">Black-Owned</span> <b>Stem &amp; Soul</b><span>Retail · closes 5pm</span></div></div>
+        </div>
+        <span style="display:block;font-size:8.5px;color:#8b7b5c;margin-top:5px">swipe rail ⟷ map follows · full accessible list one tap away ("List view")</span>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>The most "explore the culture" of the three — city chapters echo the homepage, the rail turns browsing into a guided drift through the neighborhood. Identical shell on mobile and desktop (rail is native to both).</dd>
+    <dt>Tradeoff</dt><dd>Rail shows ~3 cards at a time — weakest for compare-and-scan searching; the full list lives one tap behind "List view."</dd>
+  </dl>
+</section>
+
+<footer>
+  <p><b>Pick one:</b> MP-A · MP-B · MP-C (hybrids welcome — e.g. "B on desktop, A's bottom sheet on mobile"). Common to all: brand-dark self-hosted Protomaps tiles (no vendor, no keys), tier-aware pins (prominence = trust, never pay), clustering, faceted filters, popup → business page, reduced-motion (no fly-to animations), and a complete accessible results list. Tier ladder on the map: unclaimed = dot · claimed = full popup · verified/certified = photo popup + brighter pin · paid presentation extras come later with Product, tied to pricing. After your pick: tiles extract + build → critic → staging preview (272 pins ready) → PR → gates (incl. the production geocode backfill, GATE-DATA).</p>
+</footer>
+</div>
+</body>
+</html>

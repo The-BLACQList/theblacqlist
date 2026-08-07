@@ -58,6 +58,7 @@ export async function GET() {
         properties: {
           id: row.id,
           name: row.name,
+          entityType: row.entity_type,
           href: buildEntityUrl(row.entity_type, row.cities?.slug, row.slug),
           category: row.categories?.name ?? null,
           categorySlug: row.categories?.slug ?? null,
