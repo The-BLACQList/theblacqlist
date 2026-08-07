@@ -15,6 +15,7 @@ import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
 import { BlacqlightFeature, type FeaturedArticle } from '@/components/home/BlacqlightFeature'
 import { OwnerCta } from '@/components/home/OwnerCta'
+import { Reveal } from '@/components/motion/Reveal'
 
 export const revalidate = 1800
 
@@ -167,19 +168,37 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       <HomeHero />
-      <TheAvenues counts={avenueCounts} />
-      <HomeTriptych />
-      <HomeCategories categories={categories} />
-      <TrendingRow entities={trending} />
-      <CityChapters cities={cities} />
-      <MicrositeShowcase items={showcaseItems} />
-      <ImpactBand
-        totalAmountCents={totalAmountCents}
-        totalTransactions={spendRows.length}
-        uniqueBusinesses={uniqueBusinesses}
-      />
-      <BlacqlightFeature article={article} />
-      <OwnerCta />
+      <Reveal>
+        <TheAvenues counts={avenueCounts} />
+      </Reveal>
+      <Reveal>
+        <HomeTriptych />
+      </Reveal>
+      <Reveal>
+        <HomeCategories categories={categories} />
+      </Reveal>
+      <Reveal>
+        <TrendingRow entities={trending} />
+      </Reveal>
+      <Reveal>
+        <CityChapters cities={cities} />
+      </Reveal>
+      <Reveal>
+        <MicrositeShowcase items={showcaseItems} />
+      </Reveal>
+      <Reveal>
+        <ImpactBand
+          totalAmountCents={totalAmountCents}
+          totalTransactions={spendRows.length}
+          uniqueBusinesses={uniqueBusinesses}
+        />
+      </Reveal>
+      <Reveal>
+        <BlacqlightFeature article={article} />
+      </Reveal>
+      <Reveal>
+        <OwnerCta />
+      </Reveal>
     </main>
   )
 }

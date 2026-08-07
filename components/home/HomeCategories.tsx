@@ -33,7 +33,7 @@ export function HomeCategories({ categories }: Props) {
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[110px] md:auto-rows-[130px] gap-2.5 mt-6">
-          {[feature, ...rest.slice(0, 6)].map((category, i) => (
+          {[feature, ...rest.slice(0, 8)].map((category, i) => (
             <Link
               key={category.slug}
               href={`/discover?category=${category.slug}`}

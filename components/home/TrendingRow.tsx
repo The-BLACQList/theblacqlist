@@ -1,5 +1,6 @@
 import type { DiscoveryEntity } from '@/types'
 import { EntityCard } from '@/components/entities/EntityCard'
+import { CardCarousel } from '@/components/home/CardCarousel'
 
 interface Props {
   entities: DiscoveryEntity[]
@@ -19,20 +20,12 @@ export function TrendingRow({ entities }: Props) {
           Most-saved on The BLACQList
         </h2>
 
-        {/* Desktop grid */}
-        <div className="hidden md:grid md:grid-cols-4 gap-4 mt-6">
-          {entities.slice(0, 4).map((entity) => (
-            <EntityCard key={entity.id} entity={entity} />
-          ))}
-        </div>
-
-        {/* Mobile snap scroll */}
-        <div className="md:hidden flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 snap-x snap-mandatory mt-6">
-          {entities.slice(0, 6).map((entity) => (
-            <div key={entity.id} className="w-[280px] shrink-0 snap-start">
-              <EntityCard entity={entity} />
-            </div>
-          ))}
+        <div className="mt-6">
+          <CardCarousel ariaLabel="Trending listings, horizontally scrollable">
+            {entities.slice(0, 8).map((entity) => (
+              <EntityCard key={entity.id} entity={entity} />
+            ))}
+          </CardCarousel>
         </div>
       </div>
     </section>

@@ -20,9 +20,12 @@ export const OWNERSHIP_LABELS: { value: string; label: string }[] = [
   { value: 'ally', label: 'Ally' },
 ]
 
-export const ENTITY_TYPE_LABEL: Record<string, string> = Object.fromEntries(
-  ENTITY_TYPES.map((t) => [t.value, t.label])
-)
+export const ENTITY_TYPE_LABEL: Record<string, string> = {
+  ...Object.fromEntries(ENTITY_TYPES.map((t) => [t.value, t.label])),
+  // DB-only types outside the TS union — never show raw slugs in chips
+  restaurant: 'Restaurants',
+  service_provider: 'Services',
+}
 
 export const TRUST_TIER_LABEL: Record<string, string> = Object.fromEntries(
   TRUST_TIERS.map((t) => [t.value, t.label])
