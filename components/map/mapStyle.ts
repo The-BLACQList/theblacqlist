@@ -23,7 +23,11 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
     sources: {
       protomaps: {
         type: 'vector',
-        url: `pmtiles://${tilesUrl}`,
+        // Explicit tile template (not the TileJSON `url:` form): sidesteps a
+        // pmtiles/maplibre metadata handshake stall observed in the wild.
+        tiles: [`pmtiles://${tilesUrl}/{z}/{x}/{y}`],
+        minzoom: 0,
+        maxzoom: 14,
         attribution:
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
       },
