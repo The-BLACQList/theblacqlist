@@ -39,7 +39,7 @@ export interface ListingsResult {
   facets?: { groups: FacetGroupData[]; counts: FacetCounts }
 }
 
-type RawRow = {
+export type RawRow = {
   id: string
   slug: string
   name: string
@@ -61,7 +61,7 @@ type RawRow = {
   listing_details_business: { description: string | null } | null
 }
 
-const NESTED_SELECT = `
+export const NESTED_SELECT = `
   id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
@@ -73,7 +73,7 @@ const NESTED_SELECT = `
 
 const IDENTITY_GROUP_ID = 'a1000000-0000-0000-0000-000000000001'
 
-function mapRow(raw: RawRow): DiscoveryEntity {
+export function mapRow(raw: RawRow): DiscoveryEntity {
   return {
     id: raw.id,
     slug: raw.slug,
