@@ -22,6 +22,7 @@ export interface MapListing {
   cityName: string | null
   trustTier: 'unclaimed' | 'claimed' | 'verified' | 'certified'
   logoSrc: string | null
+  ownershipLabel: string
   avgRating: number | null
   reviewCount: number
   isFeatured: boolean
@@ -51,7 +52,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const highlightMarker = useRef<maplibregl.Marker | null>(null)
-  const logoMarkers = useRef<maplibregl.Marker[]>([])
+  const logoMarkers = useRef<Map<string, maplibregl.Marker>>(new Map())
   const [viewNonce, setViewNonce] = useState(0)
   const popupRef = useRef<maplibregl.Popup | null>(null)
 
@@ -325,37 +326,60 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     }
   }, [geojson, mapReady, refreshInView])
 
-  // Logo markers (map-presence ladder, MPP-B): at street zoom, claimed+
-  // listings render their logo in a ring (monogram fallback); certified gets
-  // the bright ring. Unclaimed stays a dot — identity is earned by claiming.
+  // Identity markers (map-presence ladder, MPP-B): at street zoom, claimed
+  // listings get a named pin; verified+ get their logo in a ring (monogram
+  // fallback) — certified brightest. Unclaimed stays a dot: identity is
+  // earned by trust. Markers are diffed by id so panning never flickers,
+  // and the viewport cap keeps the highest trust tiers first.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
-    for (const marker of logoMarkers.current) marker.remove()
-    logoMarkers.current = []
-    if (map.getZoom() < 14) return
+    const markers = logoMarkers.current
+
+    if (map.getZoom() < 14) {
+      for (const marker of markers.values()) marker.remove()
+      markers.clear()
+      return
+    }
 
     const bounds = map.getBounds()
+    const tierRank = { certified: 0, verified: 1, claimed: 2 } as const
     const visible = filtered
       .filter((l) => l.trustTier !== 'unclaimed' && bounds.contains([l.lng, l.lat]))
+      .sort(
+        (a, b) =>
+          tierRank[a.trustTier as keyof typeof tierRank] -
+          tierRank[b.trustTier as keyof typeof tierRank]
+      )
       .slice(0, 60)
+    const visibleIds = new Set(visible.map((l) => l.id))
+
+    for (const [id, marker] of markers) {
+      if (!visibleIds.has(id)) {
+        marker.remove()
+        markers.delete(id)
+      }
+    }
 
     for (const listing of visible) {
+      if (markers.has(listing.id)) continue
+      const logoTier = listing.trustTier === 'verified' || listing.trustTier === 'certified'
       const el = document.createElement('button')
       el.type = 'button'
       el.className = cn(
         'blacq-logo-marker',
+        !logoTier && 'blacq-logo-marker-claimed',
         listing.trustTier === 'certified' && 'blacq-logo-marker-certified'
       )
       el.setAttribute('aria-label', listing.name)
       const ring = document.createElement('span')
       ring.className = 'blacq-logo-marker-ring'
-      if (listing.logoSrc) {
+      if (logoTier && listing.logoSrc) {
         const img = document.createElement('img')
         img.src = listing.logoSrc
         img.alt = ''
         ring.appendChild(img)
-      } else {
+      } else if (logoTier) {
         const initials = listing.name
           .split(' ')
           .filter((w) => /^[A-Za-z]/.test(w))
@@ -372,17 +396,23 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       label.textContent = listing.name
       el.append(ring, tip, label)
       el.addEventListener('click', () => setHighlightId(listing.id))
-      logoMarkers.current.push(
+      markers.set(
+        listing.id,
         new maplibregl.Marker({ element: el, anchor: 'bottom' })
           .setLngLat([listing.lng, listing.lat])
           .addTo(map)
       )
     }
-    return () => {
-      for (const marker of logoMarkers.current) marker.remove()
-      logoMarkers.current = []
-    }
   }, [filtered, mapReady, viewNonce])
+
+  // Unmount-only teardown for the diffed marker set
+  useEffect(() => {
+    const markers = logoMarkers.current
+    return () => {
+      for (const marker of markers.values()) marker.remove()
+      markers.clear()
+    }
+  }, [])
 
   // Highlight marker: gold glow + grow/bounce on the selected pin, plus popup
   useEffect(() => {
@@ -412,14 +442,15 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             ? 'Claimed'
             : 'Unclaimed'
     // PP-1 photo-led preview: cover header w/ tier chip, facts, two actions
+    const ownershipLabel = listing.ownershipLabel === 'ally' ? 'Ally' : 'Black-Owned'
     const directionsHref = `https://maps.google.com/?q=${listing.lat},${listing.lng}`
     const popupEl = document.createElement('div')
     popupEl.className = 'blacq-map-popup'
     popupEl.innerHTML = `
       ${
         listing.coverSrc
-          ? `<div class="blacq-map-popup-photo" style="background-image:url('${listing.coverSrc}')"><span class="blacq-map-popup-chip">${tierLabel}</span><p class="blacq-map-popup-photoname"></p></div>`
-          : `<p class="blacq-map-popup-tier">${tierLabel}</p><p class="blacq-map-popup-name"></p>`
+          ? `<div class="blacq-map-popup-photo" style="background-image:url('${listing.coverSrc}')"><span class="blacq-map-popup-chips"><span class="blacq-map-popup-chip">${ownershipLabel}</span><span class="blacq-map-popup-chip">${tierLabel}</span></span><p class="blacq-map-popup-photoname"></p></div>`
+          : `<p class="blacq-map-popup-tier">${ownershipLabel} · ${tierLabel}</p><p class="blacq-map-popup-name"></p>`
       }
       <div class="blacq-map-popup-body">
         <p class="blacq-map-popup-meta"></p>
@@ -440,7 +471,12 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       .filter(Boolean)
       .join(' · ')
 
-    popupRef.current = new maplibregl.Popup({ offset: 18, closeButton: true, maxWidth: '260px' })
+    popupRef.current = new maplibregl.Popup({
+      offset: 18,
+      closeButton: true,
+      maxWidth: '260px',
+      className: 'blacq-map-popup-wrap',
+    })
       .setLngLat([listing.lng, listing.lat])
       .setDOMContent(popupEl)
       .addTo(map)

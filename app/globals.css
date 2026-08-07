@@ -213,6 +213,23 @@
   }
 }
 
+/* MapLibre popup close button: legible over the photo header */
+.blacq-map-popup-wrap .maplibregl-popup-close-button {
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(8, 8, 10, 0.72);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  z-index: 3;
+}
+.blacq-map-popup-wrap .maplibregl-popup-close-button:hover {
+  background: rgba(8, 8, 10, 0.9);
+}
+
 /* Logo markers (map-presence ladder: claimed+ at street zoom) */
 .blacq-logo-marker {
   display: flex;
@@ -221,7 +238,38 @@
   background: none;
   border: 0;
   padding: 0;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: flex-end;
   cursor: pointer;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-logo-marker {
+    animation: blacq-marker-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes blacq-marker-in {
+    from {
+      opacity: 0;
+      transform: scale(0.55);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+/* Claimed = named pin: identity dot + name, no logo ring (logo is a
+   verified+ perk on the presence ladder) */
+.blacq-logo-marker-claimed .blacq-logo-marker-ring {
+  width: 15px;
+  height: 15px;
+  border-width: 2px;
+  border-color: #fff;
+  background: var(--amber);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.blacq-logo-marker-claimed .blacq-logo-marker-tip {
+  background: var(--amber);
 }
 .blacq-logo-marker-ring {
   width: 38px;
@@ -299,11 +347,15 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent 55%);
   border-radius: 10px 10px 0 0;
 }
-.blacq-map-popup-chip {
+.blacq-map-popup-chips {
   position: absolute;
   top: 8px;
-  right: 8px;
+  left: 8px;
   z-index: 2;
+  display: flex;
+  gap: 5px;
+}
+.blacq-map-popup-chip {
   background: var(--ground);
   color: var(--gold);
   font-size: 9.5px;

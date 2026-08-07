@@ -12,6 +12,7 @@ interface Row {
   entity_type: string
   trust_tier: string
   logo_path: string | null
+  ownership_label: string
   avg_rating: number | null
   review_count: number
   is_featured: boolean
@@ -38,7 +39,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('listings')
     .select(
-      'id, name, slug, entity_type, trust_tier, logo_path, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name), listing_details_business(lat, lng, hours, price_range)'
+      'id, name, slug, entity_type, trust_tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name), listing_details_business(lat, lng, hours, price_range)'
     )
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -77,7 +78,8 @@ export async function GET() {
           cityName: row.cities?.name ?? null,
           trustTier: row.trust_tier,
           logoSrc,
-          avgRating: row.avg_rating,
+          ownershipLabel: row.ownership_label,
+        avgRating: row.avg_rating,
           reviewCount: row.review_count,
           isFeatured: row.is_featured,
           isSponsored: row.is_sponsored,
