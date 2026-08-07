@@ -27,6 +27,10 @@
   --color-amber: #8f6600; /* light-surface interactive */
   --color-light-gold: #ffd867; /* optional highlight/hover on dark */
 
+  /* Semantic status (open/closed etc.) — light-surface and dark-surface pair */
+  --color-success: #157347;
+  --color-success-on-dark: #7ddc9a;
+
   /* Category (functional disc markers only — never section fills) */
   --color-cat-brick: #b07a12;
   --color-cat-products: #c0256b;

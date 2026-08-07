@@ -24,6 +24,8 @@ import { EntityTrustSection } from '@/components/entity-page/EntityTrustSection'
 import { EntityCommunityConnection } from '@/components/entity-page/EntityCommunityConnection'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
+import { ProfessionalTemplate } from '@/components/entity-page/templates/ProfessionalTemplate'
+import { CreativeTemplate } from '@/components/entity-page/templates/CreativeTemplate'
 
 export const revalidate = 3600
 
@@ -154,6 +156,12 @@ export default async function EntityPage({ params }: PageProps) {
   if (!entity) notFound()
 
   const isEvent = entity.entity_type === 'event'
+  // Living Commerce Index templates (Service + Portfolio archetypes). The DB
+  // allows 'service_provider' even though the TS union omits it — compare as
+  // string so runtime rows route correctly.
+  const rawType = entity.entity_type as string
+  const isProfessional = rawType === 'professional' || rawType === 'service_provider'
+  const isCreative = rawType === 'creative'
   const jsonLd = isEvent ? buildEventJsonLd(entity, entityType) : buildJsonLd(entity, entityType)
 
   // Check current user state (saves, ownership, existing review)
@@ -207,14 +215,33 @@ export default async function EntityPage({ params }: PageProps) {
       {/* QuickActionBar — Client, appears on scroll */}
       <EntityQuickActionBar entity={entity} initialSaved={initialSaved} />
 
-      {/* Hero — bg-deep-bg, fills the max-w-7xl container, top corners rounded */}
-      <div className="max-w-7xl mx-auto w-full overflow-hidden rounded-t-xl bg-deep-bg">
-        <EntityPageHero entity={entity} initialSaved={initialSaved} />
-      </div>
+      {/* Living Commerce Index templates own their full page (immersive
+          full-bleed hero included); other types keep the shared hero. */}
+      {isProfessional || isCreative ? null : (
+        <div className="max-w-7xl mx-auto w-full overflow-hidden rounded-t-xl bg-deep-bg">
+          <EntityPageHero entity={entity} initialSaved={initialSaved} />
+        </div>
+      )}
 
       {/* Sections — each manages its own background and max-width */}
 
-      {isEvent ? (
+      {isProfessional ? (
+        <ProfessionalTemplate
+          entity={entity}
+          initialSaved={initialSaved}
+          userId={user?.id ?? null}
+          isOwner={isOwner}
+          hasReviewed={hasReviewed}
+        />
+      ) : isCreative ? (
+        <CreativeTemplate
+          entity={entity}
+          initialSaved={initialSaved}
+          userId={user?.id ?? null}
+          isOwner={isOwner}
+          hasReviewed={hasReviewed}
+        />
+      ) : isEvent ? (
         <>
           {/* Event details — When/Where, ticket CTA, organizer, about */}
           <EntityEventDetails entity={entity} />

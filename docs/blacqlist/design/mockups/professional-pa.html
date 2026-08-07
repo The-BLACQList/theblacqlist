@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Professional P-A “Immersive Microsite” · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Real brand tokens (app/globals.css) ─────────────────────────────── */
+  :root {
+    --brand-black: #000000;
+    --ground: #08080a;
+    --charcoal: #595758;
+    --charcoal-soft: #6b6b6b;
+    --charcoal-faint: #737373;
+    --gold: #c4a065;        /* dark-surface accent */
+    --amber: #8f6600;       /* light-surface interactive */
+    --light-gold: #ffd867;
+    --off-white: #f4f4f7;
+    --pale-lavender: #f2f0ee;
+    --border: #e5e7eb;
+    --headline: 'Jost', 'Century Gothic', 'Futura', system-ui, sans-serif;
+    --body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* warm documentary photo placeholder tones (photography grade is warm; UI stays cool) */
+    --ph-1: linear-gradient(135deg, #4a3423 0%, #7a5535 45%, #33251a 100%);
+    --ph-2: linear-gradient(150deg, #5c4028 0%, #8a6a3f 52%, #2e2317 100%);
+    --ph-3: linear-gradient(120deg, #3d2e1e 0%, #6b4d2e 55%, #241a10 100%);
+    /* semantic status */
+    --success: #157347; --success-on-dark: #7ddc9a;
+    /* motion tokens */
+    --t-fast: 150ms; --t-med: 240ms; --ease: cubic-bezier(.16,1,.3,1);
+    /* type scale (1.2 minor third on 16px): 13 / 16 / 19 / 23 / 28 / 34 */
+    --fs-xs: 13px; --fs-base: 16px; --fs-md: 19px; --fs-lg: 23px; --fs-xl: 28px; --fs-2xl: 34px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 118px; }
+  body { margin: 0; background: #fff; color: var(--brand-black); font-family: var(--body); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1,h2,h3,h4 { font-family: var(--headline); line-height: 1.15; letter-spacing: .02em; font-weight: 500; margin: 0; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .container { max-width: 1152px; margin-inline: auto; padding-inline: 20px; }
+  @media (min-width: 768px) { .container { padding-inline: 32px; } }
+  @media (min-width: 1024px) { .container { padding-inline: 40px; } }
+
+  /* ── Mockup banner ── */
+  .mock-note { background: var(--pale-lavender); border-bottom: 1px solid var(--border); font-size: 12px; color: var(--charcoal); padding: 8px 16px; text-align: center; }
+  .mock-note b { color: var(--amber); }
+
+  /* ── Nav (replica of PublicHeader) ── */
+  header.site { position: sticky; top: 0; z-index: 50; background: var(--ground); height: 64px; }
+  .nav { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .qmark { width: 32px; height: 32px; border-radius: 50%; border: 2.5px solid var(--gold); position: relative; flex: none; }
+  .qmark::after { content: ""; position: absolute; width: 11px; height: 2.5px; background: var(--gold); bottom: 2px; right: -5px; transform: rotate(42deg); border-radius: 2px; }
+  .brand span { font-family: var(--headline); font-weight: 500; letter-spacing: .14em; font-size: 18px; color: #fff; }
+  .nav-links { display: none; gap: 24px; list-style: none; margin: 0 0 0 32px; padding: 0; flex: 1; }
+  .nav-links a { font-size: 14px; color: var(--off-white); text-decoration: none; }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-right { display: none; align-items: center; gap: 12px; }
+  .nav-right .signin { font-size: 14px; color: var(--off-white); text-decoration: none; }
+  .nav-right .signup { font-size: 14px; font-weight: 700; background: var(--gold); color: var(--brand-black); border-radius: 6px; padding: 8px 16px; text-decoration: none; }
+  .hamb { display: flex; flex-direction: column; gap: 4px; background: none; border: 0; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; }
+  .hamb i { width: 20px; height: 2px; background: var(--off-white); border-radius: 2px; }
+  @media (min-width: 768px) { .nav-links, .nav-right { display: flex; } .hamb { display: none; } }
+
+  /* ── Photo placeholder atoms ── */
+  .photo { position: relative; background: var(--ph-1); overflow: hidden; }
+  .photo.v2 { background: var(--ph-2); } .photo.v3 { background: var(--ph-3); }
+  .photo::before { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(110% 85% at 76% 24%, rgba(255,222,160,.26), transparent 55%),
+                radial-gradient(85% 70% at 18% 88%, rgba(0,0,0,.42), transparent 60%); }
+  .shot { position: absolute; left: 12px; top: 12px; z-index: 3; background: rgba(8,8,10,.72); color: var(--light-gold); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 999px; letter-spacing: .02em; }
+  .shot::before { content: "📷 "; }
+
+  /* ── Hero (P-A) ── */
+  .hero { position: relative; min-height: 62vh; display: flex; align-items: flex-end; color: #fff; }
+  .hero .scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(4,4,5,.88) 0%, rgba(4,4,5,.45) 42%, rgba(4,4,5,.12) 70%, transparent 100%); }
+  .hero-inner { position: relative; z-index: 2; width: 100%; padding: 40px 0 36px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 4px 12px; }
+  .chip.owner { background: var(--gold); color: var(--brand-black); }
+  .chip.trust { background: rgba(244,244,247,.16); color: #fff; border: 1px solid rgba(244,244,247,.35); }
+  .chip.type  { background: transparent; color: var(--off-white); border: 1px solid rgba(244,244,247,.4); font-weight: 600; }
+  .hero h1 { font-size: clamp(34px, 5.5vw, 56px); color: #fff; text-wrap: balance; }
+  .hero .meta { margin: 8px 0 4px; font-size: 15px; color: var(--off-white); }
+  .hero .meta .open { color: var(--success-on-dark); font-weight: 600; }
+  .hero .tagline { max-width: 62ch; margin: 6px 0 0; font-size: 17px; color: rgba(244,244,247,.92); }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 26px; border-radius: 999px; font-family: var(--body); font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; border: 0; transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+  .btn.primary { background: var(--gold); color: var(--brand-black); }
+  .btn.primary:hover { background: var(--light-gold); }
+  .btn.ghost-dark { background: rgba(244,244,247,.12); color: #fff; border: 1px solid rgba(244,244,247,.4); }
+  .btn.ghost-dark[aria-pressed="true"] { background: var(--gold); color: var(--brand-black); border-color: var(--gold); }
+  .btn.outline { background: transparent; border: 1.5px solid var(--brand-black); color: var(--brand-black); }
+  .btn.outline:hover { background: var(--brand-black); color: #fff; }
+
+  /* ── Sticky tabs ── */
+  .tabs { position: sticky; top: 64px; z-index: 40; background: #fff; border-bottom: 1px solid var(--border); }
+  .tabs ul { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; overflow-x: auto; }
+  .tabs a { display: inline-block; padding: 14px 16px; font-size: 14px; font-weight: 600; color: var(--charcoal); text-decoration: none; border-bottom: 2.5px solid transparent; white-space: nowrap; }
+  .tabs a[aria-current="true"] { color: var(--brand-black); border-bottom-color: var(--amber); }
+  .tabs a:hover { color: var(--brand-black); }
+
+  /* ── Quick-info rail ── */
+  .rail { background: var(--off-white); border-bottom: 1px solid var(--border); }
+  .rail-inner { display: flex; gap: 20px; flex-wrap: wrap; padding: 12px 0; font-size: 13.5px; color: var(--charcoal); }
+  .rail-inner .item { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); flex: none; }
+  .rail-inner .open { color: var(--success); font-weight: 600; }
+
+  /* ── Layout: main + trust aside ── */
+  .page-grid { display: grid; grid-template-columns: 1fr; gap: 40px; padding: 40px 0 64px; }
+  @media (min-width: 1024px) { .page-grid { grid-template-columns: minmax(0,1fr) 320px; } }
+  section { scroll-margin-top: 120px; }
+  .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .sec-head .rule { width: 28px; height: 3px; background: var(--amber); border-radius: 2px; flex: none; }
+  .sec-head h2 { font-size: var(--fs-xl); }
+  .kicker { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+
+  /* Services */
+  .svc-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 640px) { .svc-grid { grid-template-columns: 1fr 1fr; } }
+  .svc { border: 0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px; background: var(--pale-lavender); }
+  .svc h3 { font-size: var(--fs-md); }
+  .svc .price { font-size: 14px; font-weight: 700; color: var(--amber); }
+  .svc p { margin: 0; font-size: 14px; color: var(--charcoal); }
+  .svc .svc-cta { margin-top: auto; padding-top: 10px; font-size: 14px; font-weight: 700; color: var(--brand-black); text-decoration: underline; text-underline-offset: 3px; transition: color var(--t-fast) var(--ease); }
+  .svc .svc-cta:hover { color: var(--amber); }
+  .svc.feature { grid-column: 1 / -1; background: var(--ground); color: #fff; border: 0; }
+  .svc.feature h3, .svc.feature .svc-cta { color: #fff; }
+  .svc.feature p { color: rgba(244,244,247,.8); }
+  .svc.feature .price { color: var(--gold); }
+
+  /* Story */
+  .story { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+  @media (min-width: 768px) { .story { grid-template-columns: 5fr 7fr; } }
+  .story .photo { border-radius: 12px; aspect-ratio: 4 / 5; }
+  .story p { margin: 0 0 14px; font-size: 15.5px; color: #26241f; max-width: 62ch; }
+  .pull { border-left: 3px solid var(--gold); padding-left: 18px; margin: 22px 0; font-family: var(--headline); font-size: var(--fs-lg); line-height: 1.35; color: var(--brand-black); }
+  .pull cite { display: block; margin-top: 8px; font-family: var(--body); font-size: 13px; font-style: normal; color: var(--charcoal-soft); }
+
+  /* Reviews */
+  .review { border: 0; border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0; padding: 18px 20px; margin-bottom: 14px; background: var(--off-white); }
+  .review .stars { color: var(--amber); font-size: 14px; letter-spacing: 2px; }
+  .review p { margin: 8px 0 6px; font-size: 14.5px; color: #26241f; }
+  .review .who { font-size: 12.5px; color: var(--charcoal-soft); }
+
+  /* Visit */
+  .visit { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 768px) { .visit { grid-template-columns: 1fr 1fr; } }
+  .map { border-radius: 12px; background: var(--pale-lavender); position: relative; min-height: 240px; overflow: hidden; }
+  .map::before { content: ""; position: absolute; inset: 0; opacity: .55;
+    background-image: linear-gradient(#c4a06522 1px, transparent 1px), linear-gradient(90deg, #c4a06522 1px, transparent 1px); background-size: 26px 26px; }
+  .map .pin { position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%); width: 16px; height: 16px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 6px rgba(143,102,0,.18); }
+  .map .maplbl { position: absolute; left: 12px; bottom: 12px; font-size: 11px; color: var(--charcoal); background: #fff; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+  .visit dl { margin: 0; font-size: 14.5px; }
+  .visit dt { font-weight: 700; margin-top: 14px; }
+  .visit dd { margin: 2px 0 0; color: var(--charcoal); }
+
+  /* Trust aside */
+  .trust { position: sticky; top: 128px; border: 0; border-top: 3px solid var(--gold); border-radius: 0 0 14px 14px; padding: 22px; background: var(--pale-lavender); }
+  .trust h2 { font-size: var(--fs-md); margin-bottom: 14px; }
+  .trust .row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--charcoal); }
+  .trust .row:first-of-type { border-top: 0; }
+  .trust .row b { color: var(--brand-black); }
+  .vbadge { display: inline-flex; align-items: center; gap: 6px; background: var(--ground); color: var(--gold); font-size: 12.5px; font-weight: 700; border-radius: 999px; padding: 5px 12px; }
+  .trust a.report { font-size: 12.5px; color: var(--amber); }
+
+  /* Related */
+  .related-band { background: var(--off-white); padding: 44px 0 56px; border-top: 1px solid var(--border); }
+  .rel-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 640px) { .rel-grid { grid-template-columns: repeat(3, 1fr); } }
+  .rel-card { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow var(--t-med) var(--ease); }
+  .rel-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+  .rel-card .card-link { position: absolute; inset: 0; z-index: 4; }
+  .rel-card .card-link:focus-visible { outline: 3px solid var(--amber); outline-offset: -3px; border-radius: 12px; }
+  .rel-card .photo { aspect-ratio: 3 / 2; }
+  .rel-card .body { padding: 12px 14px 16px; }
+  .rel-card h3 { font-size: var(--fs-base); }
+  .rel-card p { margin: 3px 0 0; font-size: 12.5px; color: var(--charcoal); }
+
+  /* Fallback hero variant strip */
+  .variant-divider { background: var(--brand-black); color: var(--light-gold); text-align: center; font-size: 13px; font-weight: 600; letter-spacing: .08em; padding: 12px 16px; text-transform: uppercase; }
+  .hero.fallback { background: var(--ground); min-height: 48vh; }
+  .hero.fallback .nodefield { position: absolute; inset: 0; opacity: .3;
+    background-image: radial-gradient(circle at 18% 32%, var(--gold) 1.5px, transparent 2.4px),
+                      radial-gradient(circle at 71% 58%, var(--gold) 1.5px, transparent 2.4px),
+                      radial-gradient(circle at 44% 82%, var(--gold) 1.5px, transparent 2.4px),
+                      radial-gradient(circle at 87% 22%, var(--gold) 1.5px, transparent 2.4px),
+                      radial-gradient(circle at 8% 75%, var(--gold) 1.5px, transparent 2.4px);
+    background-size: 340px 340px; }
+  .mono-ring { width: 88px; height: 88px; border-radius: 50%; border: 2.5px solid var(--gold); display: grid; place-items: center; font-family: var(--headline); font-size: 34px; color: var(--gold); margin-bottom: 18px; position: relative; }
+  .mono-ring::after { content: ""; position: absolute; width: 22px; height: 2.5px; background: var(--gold); bottom: 6px; right: -10px; transform: rotate(42deg); border-radius: 2px; }
+
+  footer.site { background: var(--ground); color: var(--off-white); padding: 36px 0; font-size: 13px; }
+  footer.site .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+
+<div class="mock-note"><b>MOCKUP · P-A “Immersive Microsite”</b> — Professional (Service archetype). Photo zones are labeled placeholders for owned documentary photography. Narrow the window to preview mobile (375px).</div>
+
+<header class="site">
+  <div class="container nav">
+    <a class="brand" href="#"><span class="qmark" aria-hidden="true"></span><span>THE BLACQLIST</span></a>
+    <ul class="nav-links"><li><a href="#">Discover</a></li><li><a href="#">Search</a></li><li><a href="#">Cities</a></li><li><a href="#">For Business</a></li></ul>
+    <div class="nav-right"><a class="signin" href="#">Sign In</a><a class="signup" href="#">Sign Up</a></div>
+    <button class="hamb" aria-label="Menu"><i></i><i></i><i></i></button>
+  </div>
+</header>
+
+<!-- ① Immersive hero -->
+<div class="hero photo">
+  <span class="shot">Hero: the consultant mid-working-session, client across the table — warm window light</span>
+  <div class="scrim" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <div class="badges">
+      <span class="chip owner">Black-Owned</span>
+      <span class="chip trust">✓ Verified</span>
+      <span class="chip type">Professional</span>
+    </div>
+    <h1>Carter &amp; Co. Consulting</h1>
+    <p class="meta">Business Strategy · Atlanta, GA · <span class="open">Open today until 6pm</span></p>
+    <p class="tagline">Growth strategy and fractional operations leadership for Black-owned enterprises ready to scale.</p>
+    <div class="hero-ctas">
+      <a class="btn primary" href="#services">Request a Consultation</a>
+      <button class="btn ghost-dark" type="button" aria-pressed="false">♡ Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ② Sticky internal nav (only tabs with content render) -->
+<nav class="tabs" aria-label="Page sections">
+  <div class="container">
+    <ul>
+      <li><a href="#overview" aria-current="true">Overview</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ③ Quick-info rail -->
+<div class="rail">
+  <div class="container rail-inner">
+    <span class="item"><span class="dot"></span><span class="open">Open now</span>&nbsp;· closes 6pm</span>
+    <span class="item"><span class="dot"></span>★ 4.9 · 32 reviews</span>
+    <span class="item"><span class="dot"></span>$$$</span>
+    <span class="item"><span class="dot"></span>Midtown, Atlanta</span>
+    <span class="item"><span class="dot"></span>Virtual available</span>
+  </div>
+</div>
+
+<main id="overview" class="container page-grid">
+  <div>
+    <!-- ④ Featured offerings FIRST -->
+    <section id="services">
+      <p class="kicker">What we offer</p>
+      <div class="sec-head"><span class="rule"></span><h2>Services &amp; packages</h2></div>
+      <div class="svc-grid">
+        <div class="svc feature">
+          <h3>Growth Strategy Sprint</h3>
+          <span class="price">from $2,400 · 3 weeks</span>
+          <p>A three-week deep dive into your operations, market, and margins — ending with a prioritized 12-month roadmap and a hiring plan you can act on Monday.</p>
+          <a class="svc-cta" href="#">Request this service →</a>
+        </div>
+        <div class="svc">
+          <h3>Fractional COO</h3>
+          <span class="price">monthly retainer</span>
+          <p>Senior operations leadership without the full-time hire. Weekly cadence, vendor management, and team systems.</p>
+          <a class="svc-cta" href="#">Inquire →</a>
+        </div>
+        <div class="svc">
+          <h3>Pitch &amp; Capital Readiness</h3>
+          <span class="price">$1,150</span>
+          <p>Deck, financial model, and two rehearsal sessions before you walk into the room.</p>
+          <a class="svc-cta" href="#">Inquire →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑤ Two-column editorial story -->
+    <section id="about" style="margin-top:56px">
+      <p class="kicker">The story</p>
+      <div class="sec-head"><span class="rule"></span><h2>About Carter &amp; Co.</h2></div>
+      <div class="story">
+        <div class="photo v2"><span class="shot">Founder portrait — environmental, office context, warm grade</span></div>
+        <div>
+          <p>Danielle Carter spent eleven years running operations for two of Atlanta's fastest-growing logistics firms before opening her own practice in 2019 — with one conviction: Black-owned businesses don't need more inspiration, they need infrastructure.</p>
+          <blockquote class="pull">“Our clients don't hire us to dream bigger. They hire us to build the systems their dream deserves.”<cite>— Danielle Carter, Founder &amp; Principal</cite></blockquote>
+          <p>Today the firm works with twenty-plus companies a year across food service, wellness, and professional trades — the same corridors you'll find on The BLACQList. Engagements start with the numbers and end with an operating rhythm the team actually keeps.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reviews -->
+    <section id="reviews" style="margin-top:56px">
+      <p class="kicker">From the community</p>
+      <div class="sec-head"><span class="rule"></span><h2>Reviews</h2></div>
+      <article class="review">
+        <span class="stars" aria-label="5 out of 5 stars">★★★★★</span>
+        <p>“The sprint paid for itself in the first quarter. We finally have a hiring plan that isn't a panic response.”</p>
+        <span class="who">Marcus T. · verified client · March 2026</span>
+      </article>
+      <article class="review">
+        <span class="stars" aria-label="5 out of 5 stars">★★★★★</span>
+        <p>“Danielle's team runs our ops reviews now. Calm, precise, and honest about trade-offs.”</p>
+        <span class="who">Aisha R. · verified client · January 2026</span>
+      </article>
+      <a href="#" style="font-size:14px;font-weight:700;color:var(--amber)">Read all 32 reviews →</a>
+    </section>
+
+    <!-- ⑨ Visit -->
+    <section id="visit" style="margin-top:56px">
+      <p class="kicker">Plan your visit</p>
+      <div class="sec-head"><span class="rule"></span><h2>Visit</h2></div>
+      <div class="visit">
+        <div class="map"><span class="pin"></span><span class="maplbl">Map — 1372 Peachtree St NE, Suite 410</span></div>
+        <div>
+          <dl>
+            <dt>Address</dt><dd>1372 Peachtree St NE, Suite 410 · Atlanta, GA 30309</dd>
+            <dt>Hours</dt><dd>Mon–Fri 9am–6pm · Sat by appointment</dd>
+            <dt>Contact</dt><dd>hello@carterandco.example · (404) 555-0114</dd>
+            <dt>Good to know</dt><dd>Street + garage parking · Elevator access · Virtual consultations available</dd>
+          </dl>
+          <p style="margin-top:18px"><a class="btn outline" href="#">Get directions</a></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ⑧ Trust panel aside -->
+  <aside aria-label="Trust and verification">
+    <div class="trust">
+      <h2>Trust on The BLACQList</h2>
+      <p style="margin:0 0 14px"><span class="vbadge">✓ Verified Business</span></p>
+      <div class="row"><span>Claimed by the owner · <b>Feb 2026</b></span></div>
+      <div class="row"><span>Ownership label: <b>Black-Owned</b> · reviewed at claim</span></div>
+      <div class="row"><span>Last updated by the business · <b>3 weeks ago</b></span></div>
+      <div class="row"><span><b>32 reviews</b> from the community · moderated for authenticity</span></div>
+      <div class="row"><a class="report" href="#">Report a correction</a>&nbsp;·&nbsp;<a class="report" href="#">How verification works</a></div>
+    </div>
+  </aside>
+</main>
+
+<!-- ⑩ Contextual related -->
+<div class="related-band">
+  <div class="container">
+    <p class="kicker">Keep exploring</p>
+    <div class="sec-head"><span class="rule"></span><h2>More professionals in Atlanta</h2></div>
+    <div class="rel-grid">
+      <article class="rel-card"><div class="photo v3"><span class="shot">accountant at desk</span></div><a class="card-link" href="#" aria-label="View Ledger and Light Accounting"></a><div class="body"><h3>Ledger &amp; Light Accounting</h3><p>Accounting · Atlanta</p></div></article>
+      <article class="rel-card"><div class="photo"><span class="shot">attorney, chambers portrait</span></div><a class="card-link" href="#" aria-label="View Whitfield Legal Group"></a><div class="body"><h3>Whitfield Legal Group</h3><p>Legal · Atlanta</p></div></article>
+      <article class="rel-card"><div class="photo v2"><span class="shot">brand studio working wall</span></div><a class="card-link" href="#" aria-label="View Meridian Brand Co."></a><div class="body"><h3>Meridian Brand Co.</h3><p>Marketing · Atlanta</p></div></article>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT: F-1 fallback hero (no photos yet) ═══ -->
+<div class="variant-divider">Variant · the same page when the professional has no photos — F-1 “Monogram + Node Field” hero</div>
+<div class="hero fallback">
+  <div class="nodefield" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <span class="mono-ring" aria-hidden="true">CC</span>
+    <div class="badges">
+      <span class="chip owner">Black-Owned</span>
+      <span class="chip trust">Claimed</span>
+      <span class="chip type">Professional</span>
+    </div>
+    <h1 style="color:#fff">Carter &amp; Co. Consulting</h1>
+    <p class="meta">Business Strategy · Atlanta, GA</p>
+    <div class="hero-ctas">
+      <a class="btn primary" href="#services">Request a Consultation</a>
+      <button class="btn ghost-dark" type="button" aria-pressed="false">♡ Save</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="container">
+    <a class="brand" href="#" style="text-decoration:none"><span class="qmark" aria-hidden="true" style="width:24px;height:24px;border-width:2px"></span><span style="font-size:14px">THE BLACQLIST</span></a>
+    <span>Mockup · not production code · docs/blacqlist/design/mockups/professional-pa.html</span>
+  </div>
+</footer>
+
+<script>
+  // Sticky-tab active state follows scroll (mockup-grade)
+  const links = [...document.querySelectorAll('.tabs a')];
+  const targets = links.map(a => document.querySelector(a.getAttribute('href')));
+  addEventListener('scroll', () => {
+    let current = 0;
+    targets.forEach((t, i) => { if (t && t.getBoundingClientRect().top < 160) current = i; });
+    links.forEach((a, i) => a.setAttribute('aria-current', i === current ? 'true' : 'false'));
+  }, { passive: true });
+</script>
+</body>
+</html>
