@@ -52,6 +52,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [listings, setListings] = useState<MapListing[]>([])
   const [loadError, setLoadError] = useState(false)
   const [mapReady, setMapReady] = useState(false)
+  const [tilesStalled, setTilesStalled] = useState(false)
   const [inView, setInView] = useState<MapListing[]>([])
   const [citySlug, setCitySlug] = useState<string>('atlanta-ga')
   const [openNowOnly, setOpenNowOnly] = useState(false)
@@ -141,14 +142,19 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     const protocol = new Protocol()
     maplibregl.addProtocol('pmtiles', protocol.tile)
 
+    // Same-origin tiles proxy by default (CORS-free); env URL is an override.
+    const resolvedTiles = tilesUrl || `${window.location.origin}/api/map/tiles`
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: buildMapStyle(tilesUrl),
+      style: buildMapStyle(resolvedTiles),
       center: CITY_VIEWS['atlanta-ga']!.center,
       zoom: CITY_VIEWS['atlanta-ga']!.zoom,
       attributionControl: { compact: true },
     })
     mapRef.current = map
+    const stallTimer = window.setTimeout(() => {
+      if (!map.loaded()) setTilesStalled(true)
+    }, 10000)
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
 
     map.on('load', () => {
@@ -251,12 +257,15 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       }
       map.on('moveend', () => setMapReady((r) => (r ? r : true)))
       setMapReady(true)
+      setTilesStalled(false)
     })
-    map.on('error', () => {
-      /* tile errors are non-fatal; the drawer list remains the reliable path */
+    map.on('error', (e) => {
+      // Surface, never swallow: the drawer list stays the reliable path.
+      console.warn('[map] style/tile error:', e?.error?.message ?? e)
     })
 
     return () => {
+      window.clearTimeout(stallTimer)
       map.remove()
       mapRef.current = null
       maplibregl.removeProtocol('pmtiles')
@@ -356,8 +365,8 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     )
 
   return (
-    <div className="relative h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)]">
-      <div ref={containerRef} className="absolute inset-0" aria-hidden="true" />
+    <div className="relative h-[calc(100dvh_-_3.5rem)] md:h-[calc(100dvh_-_4rem)]">
+      <div ref={containerRef} className="h-full w-full" aria-hidden="true" />
 
       {/* Floating filter bar */}
       <div className="absolute top-3 inset-x-3 z-20 flex gap-2 flex-wrap" role="group" aria-label="Map filters">
@@ -397,7 +406,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
           onChange={(e) => setCategorySlug(e.target.value)}
           className={cn(
             filterChip(Boolean(categorySlug)),
-            'appearance-none pr-8 cursor-pointer bg-no-repeat bg-[right_0.75rem_center]'
+            'appearance-none pr-8 cursor-pointer bg-no-repeat bg-[position:right_0.75rem_center]'
           )}
           style={{
             backgroundImage:
@@ -413,6 +422,14 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         </select>
       </div>
 
+      {tilesStalled && (
+        <p
+          role="status"
+          className="absolute top-16 right-3 z-20 max-w-[260px] rounded-lg bg-deep-bg/90 border border-off-white/20 px-3.5 py-2.5 font-subhead text-xs text-off-white backdrop-blur-sm"
+        >
+          Map imagery is taking a while — the list below is live.
+        </p>
+      )}
       <MapDrawer
         listings={inView}
         totalCount={filtered.length}

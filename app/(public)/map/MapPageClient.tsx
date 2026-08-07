@@ -10,7 +10,7 @@ const MapExplore = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] bg-pale-lavender flex items-center justify-center"
+        className="h-[calc(100dvh_-_3.5rem)] md:h-[calc(100dvh_-_4rem)] bg-pale-lavender flex items-center justify-center"
         role="status"
         aria-label="Loading the map"
       >
