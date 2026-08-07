@@ -43,7 +43,7 @@ export function TemplateServices({ entity }: Props) {
                 {items.map((service) => (
                   <article
                     key={service.id}
-                    className="bg-pale-lavender rounded-xl p-5 flex flex-col gap-1.5"
+                    className="bg-pale-lavender rounded-xl p-5 flex flex-col gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                   >
                     <h4 className="font-headline text-[17px] text-brand-black">{service.name}</h4>
                     {service.price && (
@@ -85,7 +85,7 @@ export function TemplateServices({ entity }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Feature service — dark editorial card */}
-        <article className="sm:col-span-2 bg-deep-bg text-white rounded-xl p-5 md:p-6 flex flex-col gap-2">
+        <article className="sm:col-span-2 bg-deep-bg text-white rounded-xl p-5 md:p-6 flex flex-col gap-2 transition-all duration-200 hover:shadow-[0_10px_34px_rgba(196,160,101,0.18)]">
           <h3 className="font-headline text-[19px] md:text-[23px] text-white">{feature.name}</h3>
           {feature.price && (
             <p className="font-subhead text-sm font-bold text-gold">{feature.price}</p>
@@ -106,7 +106,7 @@ export function TemplateServices({ entity }: Props) {
         {rest.map((service) => (
           <article
             key={service.id}
-            className="bg-pale-lavender rounded-xl p-5 flex flex-col gap-1.5"
+            className="bg-pale-lavender rounded-xl p-5 flex flex-col gap-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             <h3 className="font-headline text-[17px] text-brand-black">{service.name}</h3>
             {service.price && (

@@ -86,8 +86,8 @@ export function DiscoverBanner({ type }: Props) {
         }}
       />
       {/* TODO: commissioned documentary photograph per banner — brief: {banner.shot} */}
-      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-10 md:py-14">
-        <h1 className="font-headline text-[30px] md:text-[42px] text-white text-balance">
+      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-16 md:py-24 min-h-[220px] md:min-h-[300px] flex flex-col justify-end">
+        <h1 className="font-headline text-[34px] md:text-[52px] text-white text-balance">
           {banner.title}
         </h1>
         <p className="font-body text-[15px] text-off-white/90 mt-1.5 max-w-[52ch]">{banner.line}</p>

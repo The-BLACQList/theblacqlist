@@ -142,6 +142,31 @@
   }
 }
 
+/* ─── Template hero: animated gold rule under the name ─────────────────────── */
+.blacq-hero-rule {
+  display: block;
+  height: 3px;
+  width: 64px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-hero-rule {
+    transform-origin: left;
+    animation: blacq-rule-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
+  @keyframes blacq-rule-in {
+    from {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+    to {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+  }
+}
+
 /* ─── Gentle luxury entrance (components/motion/Reveal) ─────────────────────
    Motion styles live ONLY inside the no-preference media query: reduced-motion
    users get static, always-visible content with no JS involvement. */

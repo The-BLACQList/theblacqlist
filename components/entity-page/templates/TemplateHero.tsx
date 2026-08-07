@@ -95,6 +95,8 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           </p>
         )}
 
+        <span className="blacq-hero-rule mt-3" aria-hidden="true" />
+
         {entity.tagline && (
           <p className="font-body text-base md:text-[17px] text-off-white/90 max-w-2xl mt-2">
             {entity.tagline}

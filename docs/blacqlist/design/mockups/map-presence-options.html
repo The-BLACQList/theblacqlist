@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Map presence workshop · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-black:#000; --ground:#08080a; --charcoal:#595758; --charcoal-soft:#6b6b6b;
+    --gold:#c4a065; --amber:#8f6600; --light-gold:#ffd867;
+    --off-white:#f4f4f7; --pale-lavender:#f2f0ee; --border:#e5e7eb; --success:#157347;
+    --headline:'Jost','Century Gothic','Futura',system-ui,sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#101010; color:#efe7d8; font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:var(--headline); letter-spacing:.02em; line-height:1.12; font-weight:500; margin:0; }
+  .wrap { max-width:1480px; margin-inline:auto; padding:28px clamp(16px,3vw,40px) 80px; }
+  .mast { border-bottom:1px solid #3a3128; padding-bottom:20px; margin-bottom:28px; }
+  .mast h1 { color:#fff; font-size:clamp(24px,3.5vw,38px); }
+  .mast h1 em { font-style:normal; color:var(--light-gold); }
+  .mast p { color:#b3a68f; max-width:88ch; margin:8px 0 0; }
+  .howto { display:inline-block; margin-top:12px; border:1px solid #6b4d00; background:#1d1607; color:var(--light-gold); padding:8px 14px; border-radius:6px; font-size:13px; }
+  .option { margin-top:40px; }
+  .opt-head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .tag { font-family:ui-monospace,monospace; font-weight:700; font-size:13px; color:var(--brand-black); background:var(--light-gold); padding:3px 10px; border-radius:5px; }
+  .opt-head h2 { color:#fff; font-size:21px; }
+  .opt-sub { color:#b3a68f; font-size:13px; margin:0 0 14px; max-width:92ch; }
+  .shelf { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:20px; align-items:start; }
+  .board { background:#171310; border:1px solid #2a241a; border-radius:10px; overflow:hidden; }
+  .board-h { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; border-bottom:1px solid #2a241a; }
+  .board-h .name { font-family:var(--headline); font-size:14px; color:#fff; }
+  .mapzone { position:relative; height:210px; background:#f2f0ee; overflow:hidden; }
+  .mapzone::before { content:""; position:absolute; inset:0; opacity:.6;
+    background-image:
+      linear-gradient(105deg, transparent 46%, #ddd8ce 46.5%, #ddd8ce 48%, transparent 48.5%),
+      linear-gradient(15deg, transparent 30%, #e3ded4 30.4%, #e3ded4 31.6%, transparent 32%),
+      linear-gradient(75deg, transparent 64%, #d8d3c8 64.5%, #d8d3c8 66%, transparent 66.5%),
+      linear-gradient(160deg, transparent 74%, #e0dbd1 74.4%, #e0dbd1 75.4%, transparent 75.8%);
+  }
+  .street { position:absolute; font-size:8px; color:#9a917f; transform:rotate(-12deg); }
+  .notes { padding:12px 16px 16px; display:grid; gap:7px; }
+  .notes dt { font-family:var(--headline); font-size:11.5px; color:var(--light-gold); letter-spacing:.06em; text-transform:uppercase; }
+  .notes dd { margin:0; color:#b3a68f; font-size:12.5px; }
+  /* pin primitives */
+  .qpin { position:absolute; width:30px; height:38px; }
+  .qpin .head { width:30px; height:30px; border-radius:50%; background:var(--amber); border:2.5px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,.3); display:grid; place-items:center; color:var(--light-gold); font-family:var(--headline); font-size:13px; }
+  .qpin .tip { width:3px; height:9px; background:var(--amber); margin:-1px auto 0; border-radius:0 0 2px 2px; }
+  .namelabel { position:absolute; font-family:var(--body); font-size:9.5px; font-weight:700; color:#403a2e; text-shadow:0 1px 2px #fff, 0 -1px 2px #fff, 1px 0 2px #fff, -1px 0 2px #fff; white-space:nowrap; }
+  .logopin { position:absolute; width:36px; height:44px; }
+  .logopin .ring { width:36px; height:36px; border-radius:50%; border:2.5px solid var(--gold); background:#fff; box-shadow:0 3px 10px rgba(0,0,0,.28); display:grid; place-items:center; overflow:hidden; }
+  .logopin .ring span { font-family:var(--headline); font-size:12px; color:var(--brand-black); }
+  .logopin .tip { width:3px; height:9px; background:var(--gold); margin:-1px auto 0; }
+  footer { margin-top:48px; border-top:1px solid #3a3128; padding-top:18px; color:#b3a68f; font-size:13px; max-width:96ch; }
+  footer b { color:var(--light-gold); font-family:ui-monospace,monospace; }
+  table.ladder { border-collapse:collapse; margin-top:10px; font-size:12.5px; color:#d8cdb8; }
+  table.ladder th, table.ladder td { border:1px solid #2a241a; padding:8px 12px; text-align:left; }
+  table.ladder th { color:var(--light-gold); font-family:var(--headline); font-weight:500; letter-spacing:.04em; }
+  .popup-demo { background:#fff; color:#221c12; border-radius:12px; overflow:hidden; box-shadow:0 14px 40px rgba(0,0,0,.35); width:250px; }
+  .chip { display:inline-block; border-radius:999px; font-size:9px; font-weight:700; padding:2px 8px; }
+  .chip.gold { background:var(--gold); color:var(--brand-black); }
+  .chip.dark { background:var(--ground); color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast">
+  <h1>Map presence — <em>pins with identity, popups with pride</em></h1>
+  <p>Two picks + one structure decision. At street zoom, dots become identity; the popup becomes a real preview; and map presence becomes an <b style="color:var(--light-gold)">upgradeable feature</b> — your logo (maybe your pin) on the map of Black commerce. Standing rule stays: trust decides prominence, payment buys identity and richness, never size over trust.</p>
+  <div class="howto">Pick one pin option (<b>MPP-A/B/C</b>) + one popup option (<b>PP-1/2</b>) + bless or edit the ladder.</div>
+</header>
+
+<!-- ═══ PICK 1 — CLOSE-ZOOM PIN IDENTITY ═══ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">PICK 1</span><h2>Close-zoom pin identity (zoom ≥ ~14)</h2></div>
+  <p class="opt-sub">Far zoom keeps today's tier dots and clusters. These options define what pins BECOME when you're walking-distance close.</p>
+  <div class="shelf">
+    <div class="board">
+      <div class="board-h"><span class="tag">MPP-A</span><span class="name">Named Pins</span></div>
+      <div class="mapzone">
+        <span class="street" style="left:20px;top:70px">Auburn Ave NE</span>
+        <span class="street" style="left:190px;top:150px">Edgewood Ave</span>
+        <div class="qpin" style="left:70px;top:52px"><div class="head" style="width:14px;height:14px;border-width:2px"></div></div>
+        <span class="namelabel" style="left:60px;top:74px">Busy Bee Cafe</span>
+        <div class="qpin" style="left:200px;top:88px"><div class="head" style="width:14px;height:14px;border-width:2px;background:var(--gold)"></div></div>
+        <span class="namelabel" style="left:186px;top:110px">Turner's Barbershop</span>
+        <div class="qpin" style="left:135px;top:130px"><div class="head" style="width:11px;height:11px;border-width:1.5px;background:#8a7a5c"></div></div>
+        <span class="namelabel" style="left:118px;top:148px;color:#7d7466">Harold's (unclaimed)</span>
+      </div>
+      <div class="notes">
+        <dt>Attitude</dt><dd>POI-style: every close pin earns its name on the map, weighted by tier (claimed+ get bolder labels). Cheapest to build (symbol layer), scales to thousands.</dd>
+        <dt>Tradeoff</dt><dd>No visual brand identity per business — names only.</dd>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="board-h"><span class="tag">MPP-B</span><span class="name">Logo Markers</span></div>
+      <div class="mapzone">
+        <span class="street" style="left:20px;top:70px">Auburn Ave NE</span>
+        <div class="logopin" style="left:64px;top:40px"><div class="ring"><span>BB</span></div><div class="tip"></div></div>
+        <span class="namelabel" style="left:58px;top:88px">Busy Bee Cafe</span>
+        <div class="logopin" style="left:198px;top:80px"><div class="ring" style="border-color:var(--light-gold);box-shadow:0 0 0 3px rgba(255,216,103,.35), 0 3px 10px rgba(0,0,0,.28)"><span>T</span></div><div class="tip" style="background:var(--light-gold)"></div></div>
+        <span class="namelabel" style="left:190px;top:128px">Turner's ★</span>
+        <div class="qpin" style="left:135px;top:140px"><div class="head" style="width:11px;height:11px;border-width:1.5px;background:#8a7a5c"></div></div>
+      </div>
+      <div class="notes">
+        <dt>Attitude</dt><dd>The map becomes a gallery of Black-owned brands: logo-in-ring markers (real uploaded logos; monogram fallback), certified gets the bright ring. Unclaimed stays a dot — identity is earned/claimed.</dd>
+        <dt>Tradeoff</dt><dd>Requires marker rendering (heavier than symbol layers) + logo moderation; cap density per viewport.</dd>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="board-h"><span class="tag">MPP-C</span><span class="name">Q-Pin Silhouette</span></div>
+      <div class="mapzone">
+        <span class="street" style="left:20px;top:70px">Auburn Ave NE</span>
+        <div class="qpin" style="left:70px;top:44px"><div class="head">B</div><div class="tip"></div></div>
+        <div class="qpin" style="left:200px;top:82px"><div class="head" style="background:var(--gold);color:var(--brand-black)">T</div><div class="tip" style="background:var(--gold)"></div></div>
+        <span class="namelabel" style="left:62px;top:92px">Busy Bee Cafe</span>
+        <span class="namelabel" style="left:194px;top:130px">Turner's</span>
+      </div>
+      <div class="notes">
+        <dt>Attitude</dt><dd>A custom BLACQList pin shape (circle + tail echoing the Q mark) with the business initial — uniform, branded, unmistakably ours at any density.</dd>
+        <dt>Tradeoff</dt><dd>Initials, not logos — brand identity stays the platform's, not the business's.</dd>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PICK 2 — POPUP CARD ═══ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">PICK 2</span><h2>The popup card</h2></div>
+  <p class="opt-sub">What opens when you tap a pin. Mobile always also offers the drawer card; these define the on-map preview.</p>
+  <div class="shelf">
+    <div class="board">
+      <div class="board-h"><span class="tag">PP-1</span><span class="name">Photo-Led Preview</span></div>
+      <div style="padding:18px;display:grid;place-items:center;background:#efece6">
+        <div class="popup-demo">
+          <div style="height:96px;background:linear-gradient(135deg,#4a3423,#7a5535);position:relative">
+            <span style="position:absolute;left:8px;top:8px" class="chip gold">Black-Owned</span>
+            <span style="position:absolute;right:8px;top:8px" class="chip dark">★ Certified</span>
+            <div style="position:absolute;inset-x:0;bottom:0;height:55%;background:linear-gradient(transparent,rgba(0,0,0,.75))"></div>
+            <b style="position:absolute;left:10px;bottom:8px;color:#fff;font-family:var(--headline);font-size:15px">Busy Bee Cafe</b>
+          </div>
+          <div style="padding:9px 11px">
+            <span style="font-size:10.5px;color:var(--charcoal)">Soul food · <b style="color:var(--success)">● Open</b> · ★ 4.8 · $$</span>
+            <div style="display:flex;gap:6px;margin-top:7px">
+              <span style="flex:1;text-align:center;background:var(--brand-black);color:#fff;font-size:10.5px;font-weight:700;border-radius:999px;padding:6px 0">View page</span>
+              <span style="text-align:center;border:1.5px solid var(--brand-black);color:var(--brand-black);font-size:10.5px;font-weight:700;border-radius:999px;padding:6px 12px">Directions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes"><dt>Attitude</dt><dd>A mini discovery card on the map: photo, badges, open state, rating, two actions. Photo per the presence ladder (below).</dd></div>
+    </div>
+
+    <div class="board">
+      <div class="board-h"><span class="tag">PP-2</span><span class="name">Compact Rich Row</span></div>
+      <div style="padding:18px;display:grid;place-items:center;background:#efece6">
+        <div class="popup-demo" style="width:270px">
+          <div style="display:grid;grid-template-columns:64px 1fr;gap:0">
+            <div style="background:linear-gradient(135deg,#4a3423,#7a5535)"></div>
+            <div style="padding:9px 11px">
+              <span class="chip gold">Black-Owned</span> <span class="chip" style="background:var(--pale-lavender);color:var(--charcoal)">✓ Verified</span>
+              <b style="display:block;font-family:var(--headline);font-size:13.5px;margin-top:2px">Busy Bee Cafe</b>
+              <span style="font-size:10px;color:var(--charcoal)">Soul food · <b style="color:var(--success)">● Open</b> · 0.4 mi</span>
+              <span style="display:block;font-size:10.5px;font-weight:700;color:var(--amber);margin-top:4px">View page →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes"><dt>Attitude</dt><dd>Tighter and quicker — thumb-size photo, facts, one action. Least map occlusion; feels like a list row that floated up.</dd></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STRUCTURE — UPGRADEABLE PRESENCE LADDER ═══ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">STRUCTURE</span><h2>The upgradeable map-presence ladder</h2></div>
+  <p class="opt-sub">Proposed structure for "add your logo to the map" as a feature that grows with trust and tier. Bless it, edit it, or re-cut it — pricing wiring happens with the Product/pricing work later, not speculatively.</p>
+  <table class="ladder">
+    <tr><th>Level</th><th>Far zoom</th><th>Close zoom</th><th>Popup</th><th>How you get it</th></tr>
+    <tr><td>Unclaimed</td><td>small muted dot</td><td>small dot (name on tap only)</td><td>name + claim prompt</td><td>—</td></tr>
+    <tr><td>Claimed</td><td>gold dot</td><td>named pin</td><td>full facts + actions</td><td>free — claim your page</td></tr>
+    <tr><td>Verified / Certified</td><td>gold pin / ringed pin</td><td><b>logo marker</b> (monogram fallback)</td><td>photo-led preview</td><td>earned — verification</td></tr>
+    <tr><td>Presentation tier (paid, later)</td><td>same size as trust allows</td><td>logo marker + <b>brand-color ring or custom pin</b> (within brand guardrails)</td><td>photo preview + custom CTA</td><td>subscription add-on</td></tr>
+  </table>
+  <div class="notes" style="padding-left:0">
+    <dt>Honesty rails</dt><dd>Payment never buys size or rank over trust — a paid unverified listing still sits below a certified one in every sort and never outsizes it on the map. Paid buys IDENTITY (logo, colors, custom pin art) and RICHNESS (popup CTA), reviewed before display like any owner asset.</dd>
+  </div>
+</section>
+
+<footer>
+  <p><b>Reply with:</b> one of MPP-A/B/C + one of PP-1/2 + "ladder ok" (or edits). Already shipping without a pick: bigger discover banner, darker state lines on the map theme, and the listing-page pizzazz pass (hero gold-rule animation, staggered reveals, hover lifts).</p>
+</footer>
+</div>
+</body>
+</html>

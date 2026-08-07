@@ -14,6 +14,11 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
     ...namedFlavor('light'),
     background: '#f2f0ee', // pale-lavender ground
     earth: '#f4f4f7', // off-white
+    // Founder: state lines must read clearly — darken admin boundaries and
+    // state labels from the flavor's faint greys to legible warm charcoal.
+    boundaries: '#8a8175',
+    state_label: '#6b6255',
+    state_label_halo: '#f4f4f7',
   }
 
   return {

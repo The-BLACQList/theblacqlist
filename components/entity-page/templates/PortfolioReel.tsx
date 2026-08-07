@@ -43,14 +43,14 @@ export function PortfolioReel({ images }: Props) {
         {images.map((image, i) => (
           <figure
             key={image.id}
-            className="relative shrink-0 w-[78%] sm:w-[46%] snap-start rounded-xl overflow-hidden bg-deep-bg aspect-[16/10] m-0"
+            className="group relative shrink-0 w-[78%] sm:w-[46%] snap-start rounded-xl overflow-hidden bg-deep-bg aspect-[16/10] m-0 transition-shadow duration-200 hover:shadow-[0_12px_36px_rgba(0,0,0,0.28)]"
           >
             <Image
               src={image.src}
               alt={image.alt}
               fill
               sizes="(max-width: 640px) 78vw, 46vw"
-              className="object-cover"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               loading={i < 2 ? 'eager' : 'lazy'}
             />
             {image.alt && (
