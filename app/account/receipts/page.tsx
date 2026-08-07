@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptListRow } from '@/components/spend/ReceiptSubmissionForm'
@@ -51,16 +51,9 @@ export default async function MyReceiptsPage({
   }
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
+    <main>
       <div className="max-w-[640px] mx-auto space-y-6">
         <div>
-          <Link
-            href="/account"
-            className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
-          >
-            <ArrowLeft className="size-3.5" aria-hidden="true" />
-            Account
-          </Link>
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="font-headline text-2xl text-brand-black">My receipts</h1>

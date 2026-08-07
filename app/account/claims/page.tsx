@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ChevronLeft, FileCheck } from 'lucide-react'
+import { FileCheck } from 'lucide-react'
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
@@ -73,16 +73,8 @@ export default async function AccountClaimsPage() {
   }>
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
+    <main>
       <div className="max-w-[640px] mx-auto">
-        {/* Back nav */}
-        <Link
-          href="/account"
-          className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal mb-6"
-        >
-          <ChevronLeft className="size-3.5" aria-hidden="true" />
-          Back to account
-        </Link>
 
         {/* Header */}
         <div className="mb-8">

@@ -2,8 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
-import Link from 'next/link'
-import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
 
 import { updateProfileAction } from '@/lib/actions/account/updateProfile'
 import { cn } from '@/lib/utils'
@@ -38,16 +37,8 @@ export default function AccountSettingsPage() {
     state && 'error' in state && !('fieldErrors' in state && state.fieldErrors) ? state.error : null
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-12 px-4">
+    <main>
       <div className="max-w-[640px] mx-auto">
-        {/* Back nav */}
-        <Link
-          href="/account"
-          className="inline-flex items-center gap-1.5 font-subhead text-sm text-charcoal hover:text-brand-black mb-6"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to account
-        </Link>
 
         <h1 className="font-headline text-3xl text-brand-black mb-6">Account settings</h1>
 

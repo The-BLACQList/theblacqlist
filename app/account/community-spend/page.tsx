@@ -89,7 +89,7 @@ export default async function CommunitySpendPage() {
   const hasData = totalAmountCents > 0
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-16 px-4">
+    <main>
       <div className="max-w-[720px] mx-auto space-y-8">
         {/* Header */}
         <div>
