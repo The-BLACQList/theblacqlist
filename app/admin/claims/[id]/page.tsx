@@ -121,7 +121,10 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Claimant</h2>
             <dl>
-              <Row label="Name" value={claimantProfile?.display_name ?? 'Unknown'} />
+              <Row
+                label="Name"
+                value={claimantProfile?.display_name || claim.verification_email || 'Unknown'}
+              />
               <Row
                 label="User ID"
                 value={
