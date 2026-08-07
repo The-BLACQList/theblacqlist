@@ -14,12 +14,17 @@ import { cn } from '@/lib/utils'
 export interface MapListing {
   id: string
   name: string
+  entityType: string
   href: string
   category: string | null
   categorySlug: string | null
   citySlug: string | null
   cityName: string | null
   trustTier: 'unclaimed' | 'claimed' | 'verified' | 'certified'
+  logoSrc: string | null
+  ownershipLabel: string
+  avgRating: number | null
+  reviewCount: number
   isFeatured: boolean
   isSponsored: boolean
   priceRange: string | null
@@ -47,6 +52,8 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const highlightMarker = useRef<maplibregl.Marker | null>(null)
+  const logoMarkers = useRef<Map<string, maplibregl.Marker>>(new Map())
+  const [viewNonce, setViewNonce] = useState(0)
   const popupRef = useRef<maplibregl.Popup | null>(null)
 
   const [listings, setListings] = useState<MapListing[]>([])
@@ -58,6 +65,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [openNowOnly, setOpenNowOnly] = useState(false)
   const [trustOnly, setTrustOnly] = useState(false)
   const [categorySlug, setCategorySlug] = useState<string>('')
+  const [typeFilter, setTypeFilter] = useState<string>('')
   const [highlightId, setHighlightId] = useState<string | null>(null)
 
   const reduceMotion = useMemo(
@@ -93,15 +101,32 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [listings])
 
+  const TYPE_LABELS: Record<string, string> = {
+    business: 'Businesses',
+    restaurant: 'Restaurants',
+    service_provider: 'Services',
+    vendor: 'Vendors',
+    professional: 'Professionals',
+    creative: 'Creatives',
+    event: 'Events',
+  }
+  const presentTypes = useMemo(() => {
+    const seen = new Set<string>()
+    for (const l of listings) seen.add(l.entityType)
+    return [...seen].filter((t) => TYPE_LABELS[t]).sort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listings])
+
   const filtered = useMemo(
     () =>
       listings.filter((l) => {
         if (openNowOnly && !(l.hours && isOpenNow(l.hours).open)) return false
         if (trustOnly && l.trustTier !== 'verified' && l.trustTier !== 'certified') return false
         if (categorySlug && l.categorySlug !== categorySlug) return false
+        if (typeFilter && l.entityType !== typeFilter) return false
         return true
       }),
-    [listings, openNowOnly, trustOnly, categorySlug]
+    [listings, openNowOnly, trustOnly, categorySlug, typeFilter]
   )
 
   const geojson = useMemo(
@@ -163,7 +188,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         data: { type: 'FeatureCollection', features: [] },
         cluster: true,
         clusterRadius: 46,
-        clusterMaxZoom: 13,
+        clusterMaxZoom: 12,
         promoteId: 'id',
       })
       map.addLayer({
@@ -191,10 +216,24 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         paint: { 'text-color': '#5c4a1e' },
       })
       map.addLayer({
+        id: 'pins-unclaimed',
+        type: 'circle',
+        source: 'listings',
+        filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'trustTier'], 'unclaimed']],
+        paint: {
+          'circle-radius': 3.5,
+          'circle-color': '#6e5a3d',
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+        },
+      })
+      map.addLayer({
         id: 'pins',
         type: 'circle',
         source: 'listings',
-        filter: ['!', ['has', 'point_count']],
+        // Claimed+ circles hand over to logo markers at neighborhood zoom (>=13)
+        maxzoom: 13,
+        filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'trustTier'], 'unclaimed']],
         paint: {
           'circle-radius': [
             'match',
@@ -207,13 +246,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             TIER_RADIUS.claimed!,
             TIER_RADIUS.unclaimed!,
           ],
-          'circle-color': [
-            'match',
-            ['get', 'trustTier'],
-            'unclaimed',
-            '#6e5a3d',
-            '#8f6600',
-          ],
+          'circle-color': '#8f6600',
           // Tier ladder, visible: certified = thick light-gold ring, verified =
           // thin light-gold ring, claimed = white ring, unclaimed = small dark dot.
           'circle-stroke-color': [
@@ -247,15 +280,21 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
           else map.easeTo({ center: [lng, lat], zoom })
         })
       })
-      map.on('click', 'pins', (e: MapLayerMouseEvent) => {
-        const feature = e.features?.[0] as MapGeoJSONFeature | undefined
-        if (feature) setHighlightId(feature.properties.id as string)
-      })
-      for (const layer of ['pins', 'clusters']) {
+      for (const pinLayer of ['pins', 'pins-unclaimed']) {
+        map.on('click', pinLayer, (e: MapLayerMouseEvent) => {
+          const feature = e.features?.[0] as MapGeoJSONFeature | undefined
+          if (feature) setHighlightId(feature.properties.id as string)
+        })
+      }
+      for (const layer of ['pins', 'pins-unclaimed', 'clusters']) {
         map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = ''))
       }
-      map.on('moveend', () => setMapReady((r) => (r ? r : true)))
+      map.on('moveend', () => {
+        setMapReady((r) => (r ? r : true))
+        setViewNonce((n) => n + 1)
+      })
+      map.on('zoomend', () => setViewNonce((n) => n + 1))
       setMapReady(true)
       setTilesStalled(false)
     })
@@ -287,6 +326,94 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     }
   }, [geojson, mapReady, refreshInView])
 
+  // Identity markers (map-presence ladder, MPP-B): at street zoom, claimed
+  // listings get a named pin; verified+ get their logo in a ring (monogram
+  // fallback) — certified brightest. Unclaimed stays a dot: identity is
+  // earned by trust. Markers are diffed by id so panning never flickers,
+  // and the viewport cap keeps the highest trust tiers first.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return
+    const markers = logoMarkers.current
+
+    if (map.getZoom() < 13) {
+      for (const marker of markers.values()) marker.remove()
+      markers.clear()
+      return
+    }
+
+    const bounds = map.getBounds()
+    const tierRank = { certified: 0, verified: 1, claimed: 2 } as const
+    const visible = filtered
+      .filter((l) => l.trustTier !== 'unclaimed' && bounds.contains([l.lng, l.lat]))
+      .sort(
+        (a, b) =>
+          tierRank[a.trustTier as keyof typeof tierRank] -
+          tierRank[b.trustTier as keyof typeof tierRank]
+      )
+      .slice(0, 60)
+    const visibleIds = new Set(visible.map((l) => l.id))
+
+    for (const [id, marker] of markers) {
+      if (!visibleIds.has(id)) {
+        marker.remove()
+        markers.delete(id)
+      }
+    }
+
+    for (const listing of visible) {
+      if (markers.has(listing.id)) continue
+      const logoTier = listing.trustTier === 'verified' || listing.trustTier === 'certified'
+      const el = document.createElement('button')
+      el.type = 'button'
+      el.className = cn(
+        'blacq-logo-marker',
+        !logoTier && 'blacq-logo-marker-claimed',
+        listing.trustTier === 'certified' && 'blacq-logo-marker-certified'
+      )
+      el.setAttribute('aria-label', listing.name)
+      const ring = document.createElement('span')
+      ring.className = 'blacq-logo-marker-ring'
+      if (logoTier && listing.logoSrc) {
+        const img = document.createElement('img')
+        img.src = listing.logoSrc
+        img.alt = ''
+        ring.appendChild(img)
+      } else if (logoTier) {
+        const initials = listing.name
+          .split(' ')
+          .filter((w) => /^[A-Za-z]/.test(w))
+          .slice(0, 2)
+          .map((w) => w[0] ?? '')
+          .join('')
+          .toUpperCase()
+        ring.textContent = initials
+      }
+      const tip = document.createElement('span')
+      tip.className = 'blacq-logo-marker-tip'
+      const label = document.createElement('span')
+      label.className = 'blacq-logo-marker-label'
+      label.textContent = listing.name
+      el.append(ring, tip, label)
+      el.addEventListener('click', () => setHighlightId(listing.id))
+      markers.set(
+        listing.id,
+        new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([listing.lng, listing.lat])
+          .addTo(map)
+      )
+    }
+  }, [filtered, mapReady, viewNonce])
+
+  // Unmount-only teardown for the diffed marker set
+  useEffect(() => {
+    const markers = logoMarkers.current
+    return () => {
+      for (const marker of markers.values()) marker.remove()
+      markers.clear()
+    }
+  }, [])
+
   // Highlight marker: gold glow + grow/bounce on the selected pin, plus popup
   useEffect(() => {
     const map = mapRef.current
@@ -314,25 +441,42 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
           : listing.trustTier === 'claimed'
             ? 'Claimed'
             : 'Unclaimed'
+    // PP-1 photo-led preview: cover header w/ tier chip, facts, two actions
+    const ownershipLabel = listing.ownershipLabel === 'ally' ? 'Ally' : 'Black-Owned'
+    const directionsHref = `https://maps.google.com/?q=${listing.lat},${listing.lng}`
     const popupEl = document.createElement('div')
     popupEl.className = 'blacq-map-popup'
     popupEl.innerHTML = `
-      ${listing.coverSrc ? `<div class="blacq-map-popup-photo" style="background-image:url('${listing.coverSrc}')"></div>` : ''}
+      ${
+        listing.coverSrc
+          ? `<div class="blacq-map-popup-photo" style="background-image:url('${listing.coverSrc}')"><span class="blacq-map-popup-chips"><span class="blacq-map-popup-chip">${ownershipLabel}</span><span class="blacq-map-popup-chip">${tierLabel}</span></span><p class="blacq-map-popup-photoname"></p></div>`
+          : `<p class="blacq-map-popup-tier">${ownershipLabel} · ${tierLabel}</p><p class="blacq-map-popup-name"></p>`
+      }
       <div class="blacq-map-popup-body">
-        <p class="blacq-map-popup-tier">${tierLabel}</p>
-        <p class="blacq-map-popup-name"></p>
         <p class="blacq-map-popup-meta"></p>
-        <a class="blacq-map-popup-link" href="${listing.href}">View page →</a>
+        <div class="blacq-map-popup-actions">
+          <a class="blacq-map-popup-primary" href="${listing.href}">View page</a>
+          <a class="blacq-map-popup-secondary" href="${directionsHref}" target="_blank" rel="noopener noreferrer">Directions</a>
+        </div>
       </div>`
-    popupEl.querySelector('.blacq-map-popup-name')!.textContent = listing.name
+    const nameEl = popupEl.querySelector('.blacq-map-popup-photoname') ?? popupEl.querySelector('.blacq-map-popup-name')
+    if (nameEl) nameEl.textContent = listing.name
     popupEl.querySelector('.blacq-map-popup-meta')!.textContent = [
       listing.category,
       open ? open.label : null,
+      listing.avgRating !== null && listing.reviewCount > 0
+        ? `★ ${listing.avgRating.toFixed(1)} (${listing.reviewCount})`
+        : null,
     ]
       .filter(Boolean)
       .join(' · ')
 
-    popupRef.current = new maplibregl.Popup({ offset: 18, closeButton: true, maxWidth: '260px' })
+    popupRef.current = new maplibregl.Popup({
+      offset: 18,
+      closeButton: true,
+      maxWidth: '260px',
+      className: 'blacq-map-popup-wrap',
+    })
       .setLngLat([listing.lng, listing.lat])
       .setDOMContent(popupEl)
       .addTo(map)
@@ -381,6 +525,18 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             {view.label}
           </button>
         ))}
+        {presentTypes.length > 1 &&
+          presentTypes.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTypeFilter((v) => (v === t ? '' : t))}
+              className={filterChip(typeFilter === t)}
+              aria-pressed={typeFilter === t}
+            >
+              {TYPE_LABELS[t]}
+            </button>
+          ))}
         <button
           type="button"
           onClick={() => setOpenNowOnly((v) => !v)}

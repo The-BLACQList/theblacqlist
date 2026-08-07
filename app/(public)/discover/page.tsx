@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 
 import { Container } from '@/components/layout/container'
 import { SearchBar } from '@/components/discovery/SearchBar'
+import { DiscoverBanner } from '@/components/discovery/DiscoverBanner'
 import { FacetSidebar } from '@/components/discovery/FacetSidebar'
 import { MobileFilterSheet } from '@/components/discovery/MobileFilterSheet'
 import { SortDropdown } from '@/components/discovery/SortDropdown'
@@ -121,8 +122,12 @@ async function DiscoverContent({
 }
 
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
+  const params = await searchParams
   return (
     <>
+      {/* Avenue banner — swaps with the selected type */}
+      <DiscoverBanner type={typeof params.type === 'string' ? params.type : null} />
+
       {/* Search bar header */}
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-4">

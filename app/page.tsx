@@ -6,6 +6,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
+import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
 import { HomeCategories, type CategoryTile } from '@/components/home/HomeCategories'
 import { TrendingRow } from '@/components/home/TrendingRow'
 import { CityChapters, type CityChapter } from '@/components/home/CityChapters'
@@ -14,6 +15,7 @@ import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
 import { BlacqlightFeature, type FeaturedArticle } from '@/components/home/BlacqlightFeature'
 import { OwnerCta } from '@/components/home/OwnerCta'
+import { Reveal } from '@/components/motion/Reveal'
 
 export const revalidate = 1800
 
@@ -49,7 +51,7 @@ export default async function HomePage() {
         .order('display_order'),
       supabase
         .from('listings')
-        .select('category_id, city_id')
+        .select('category_id, city_id, entity_type')
         .eq('status', 'published')
         .is('deleted_at', null),
       supabase
@@ -90,10 +92,19 @@ export default async function HomePage() {
   // Live counts per category and city from one published-listings scan
   const categoryCounts = new Map<string, number>()
   const cityCounts = new Map<string, number>()
+  const typeCounts = new Map<string, number>()
   for (const row of listingFacetRes.data ?? []) {
     if (row.category_id)
       categoryCounts.set(row.category_id, (categoryCounts.get(row.category_id) ?? 0) + 1)
     if (row.city_id) cityCounts.set(row.city_id, (cityCounts.get(row.city_id) ?? 0) + 1)
+    typeCounts.set(row.entity_type, (typeCounts.get(row.entity_type) ?? 0) + 1)
+  }
+  const avenueCounts: AvenueCounts = {
+    brick: (typeCounts.get('business') ?? 0) + (typeCounts.get('restaurant') ?? 0),
+    products: (typeCounts.get('service_provider') ?? 0) + (typeCounts.get('vendor') ?? 0),
+    professionals: typeCounts.get('professional') ?? 0,
+    creatives: typeCounts.get('creative') ?? 0,
+    events: typeCounts.get('event') ?? 0,
   }
   const categories: CategoryTile[] = (categoriesRes.data ?? [])
     .map((c) => ({ name: c.name, slug: c.slug, count: categoryCounts.get(c.id) ?? 0 }))
@@ -157,18 +168,37 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       <HomeHero />
-      <HomeTriptych />
-      <HomeCategories categories={categories} />
-      <TrendingRow entities={trending} />
-      <CityChapters cities={cities} />
-      <MicrositeShowcase items={showcaseItems} />
-      <ImpactBand
-        totalAmountCents={totalAmountCents}
-        totalTransactions={spendRows.length}
-        uniqueBusinesses={uniqueBusinesses}
-      />
-      <BlacqlightFeature article={article} />
-      <OwnerCta />
+      <Reveal>
+        <TheAvenues counts={avenueCounts} />
+      </Reveal>
+      <Reveal>
+        <HomeTriptych />
+      </Reveal>
+      <Reveal>
+        <HomeCategories categories={categories} />
+      </Reveal>
+      <Reveal>
+        <TrendingRow entities={trending} />
+      </Reveal>
+      <Reveal>
+        <CityChapters cities={cities} />
+      </Reveal>
+      <Reveal>
+        <MicrositeShowcase items={showcaseItems} />
+      </Reveal>
+      <Reveal>
+        <ImpactBand
+          totalAmountCents={totalAmountCents}
+          totalTransactions={spendRows.length}
+          uniqueBusinesses={uniqueBusinesses}
+        />
+      </Reveal>
+      <Reveal>
+        <BlacqlightFeature article={article} />
+      </Reveal>
+      <Reveal>
+        <OwnerCta />
+      </Reveal>
     </main>
   )
 }

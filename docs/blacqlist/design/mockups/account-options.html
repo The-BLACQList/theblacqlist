@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — My Account options · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-black: #000000; --ground: #08080a; --charcoal: #595758; --charcoal-soft: #6b6b6b; --charcoal-faint: #737373;
+    --gold: #c4a065; --amber: #8f6600; --light-gold: #ffd867;
+    --off-white: #f4f4f7; --pale-lavender: #f2f0ee; --border: #e5e7eb;
+    --success: #157347;
+    --headline: 'Jost', 'Century Gothic', 'Futura', system-ui, sans-serif;
+    --body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --ph-1: linear-gradient(135deg, #4a3423 0%, #7a5535 45%, #33251a 100%);
+    --ph-2: linear-gradient(150deg, #5c4028 0%, #8a6a3f 52%, #2e2317 100%);
+    --ph-3: linear-gradient(120deg, #3d2e1e 0%, #6b4d2e 55%, #241a10 100%);
+    --t-fast: 150ms; --ease: cubic-bezier(.16,1,.3,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #101010; color: #efe7d8; font-family: var(--body); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  h1,h2,h3,h4 { font-family: var(--headline); letter-spacing: .02em; line-height: 1.15; font-weight: 500; margin: 0; }
+
+  .wrap { max-width: 1480px; margin-inline: auto; padding: 28px clamp(16px,3vw,40px) 80px; }
+  .mast { border-bottom: 1px solid #3a3128; padding-bottom: 20px; margin-bottom: 30px; }
+  .mast h1 { color: #fff; font-size: clamp(24px, 3.5vw, 38px); }
+  .mast h1 em { font-style: normal; color: var(--light-gold); }
+  .mast p { color: #b3a68f; max-width: 80ch; margin: 8px 0 0; }
+  .howto { display: inline-block; margin-top: 12px; border: 1px solid #6b4d00; background: #1d1607; color: var(--light-gold); padding: 8px 14px; border-radius: 6px; font-size: 13px; }
+
+  .option { margin-top: 44px; }
+  .opt-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .tag { font-family: ui-monospace, monospace; font-weight: 700; font-size: 13px; color: var(--brand-black); background: var(--light-gold); padding: 3px 10px; border-radius: 5px; }
+  .opt-head h2 { color: #fff; font-size: 22px; }
+
+  /* Browser frame */
+  .frame { border-radius: 10px; overflow: hidden; border: 1px solid #000; box-shadow: 0 12px 40px rgba(0,0,0,.55); background: var(--pale-lavender); color: #221c12; font-size: 13px; }
+  .m-nav { background: var(--ground); color: #f4ecdc; display: flex; align-items: center; gap: 12px; padding: 12px 20px; }
+  .m-nav .q { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--gold); position: relative; flex: none; }
+  .m-nav .q::after { content: ""; position: absolute; width: 8px; height: 2px; background: var(--gold); bottom: 1px; right: -3px; transform: rotate(42deg); }
+  .m-nav b { font-family: var(--headline); letter-spacing: .18em; font-size: 12px; font-weight: 600; }
+  .m-nav .sp { margin-left: auto; font-size: 11px; color: #cbbfa8; }
+
+  .chip { display: inline-flex; align-items: center; border-radius: 999px; font-size: 10.5px; font-weight: 700; padding: 2px 9px; }
+  .chip.gold { background: var(--gold); color: var(--brand-black); }
+  .chip.ok { background: #e2f2e8; color: var(--success); }
+  .chip.warn { background: #fdf1d8; color: #8a6303; }
+  .photo { position: relative; background: var(--ph-1); }
+  .photo.v2 { background: var(--ph-2); } .photo.v3 { background: var(--ph-3); }
+  .photo::before { content:""; position: absolute; inset:0; background: radial-gradient(110% 85% at 76% 24%, rgba(255,222,160,.22), transparent 55%); }
+
+  .stat { background: #fff; border-radius: 10px; padding: 12px 16px; }
+  .stat b { display: block; font-family: var(--headline); font-size: 22px; color: var(--brand-black); }
+  .stat span { font-size: 11px; color: var(--charcoal-soft); font-weight: 600; }
+
+  .mini-card { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid rgba(89,87,88,.1); }
+  .mini-card .photo { height: 64px; }
+  .mini-card .b { padding: 8px 10px; }
+  .mini-card .b b { display: block; font-family: var(--headline); font-size: 12.5px; color: var(--brand-black); font-weight: 500; }
+  .mini-card .b span { font-size: 10px; color: var(--charcoal-soft); }
+
+  .row-link { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 10px; padding: 11px 14px; font-size: 12.5px; font-weight: 600; color: var(--brand-black); }
+  .row-link .ico { width: 26px; height: 26px; border-radius: 50%; background: var(--pale-lavender); display: grid; place-items: center; color: var(--amber); font-size: 12px; flex: none; }
+  .row-link .meta { margin-left: auto; font-size: 11px; color: var(--charcoal-faint); font-weight: 500; }
+  .row-link .chev { color: var(--charcoal-faint); }
+
+  .sec-label { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); margin: 0 0 8px; display: flex; align-items: center; gap: 8px; }
+  .sec-label::after { content: ""; height: 1px; background: #ddd2c2; flex: 1; }
+
+  .notes { margin-top: 14px; display: grid; gap: 8px; max-width: 90ch; }
+  .notes dt { font-family: var(--headline); font-size: 12px; color: var(--light-gold); letter-spacing: .06em; text-transform: uppercase; }
+  .notes dd { margin: 0; color: #b3a68f; font-size: 13px; }
+
+  footer { margin-top: 52px; border-top: 1px solid #3a3128; padding-top: 18px; color: #b3a68f; font-size: 13px; max-width: 95ch; }
+  footer b { color: var(--light-gold); font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast">
+  <h1>My Account — <em>three layouts to choose from</em></h1>
+  <p>Replaces the nine-identical-buttons column. Every option is role-aware (owners get a business block; non-owners get a claim prompt instead of the dead "My listings" link), shows real counts and recent items, and keeps all nine existing destinations. Data shown (12 saved, 3 reviews, etc.) is illustrative of the real queries.</p>
+  <div class="howto">Pick one: <b>AC-A · AC-B · AC-C</b> — hybrids welcome.</div>
+</header>
+
+<!-- ═════════ OPTION A ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">AC-A</span><h2>Data-Rich Hub</h2></div>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business</span></div>
+    <div style="max-width:880px;margin-inline:auto;padding:28px 24px 36px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <h2 style="font-size:26px;color:var(--brand-black)">Welcome back, Chalece</h2>
+        <span style="font-size:11.5px;color:var(--charcoal-soft)">Member since Feb 2026</span>
+      </div>
+
+      <!-- Stat strip -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 26px">
+        <div class="stat"><b>12</b><span>Saved</span></div>
+        <div class="stat"><b>3</b><span>Reviews</span></div>
+        <div class="stat"><b>1</b><span>Claim <span class="chip warn" style="margin-left:4px">Pending</span></span></div>
+        <div class="stat"><b>$418</b><span>Community spend</span></div>
+      </div>
+
+      <!-- Your activity -->
+      <p class="sec-label">Your activity</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">
+        <div class="mini-card"><div class="photo"></div><div class="b"><b>Batter &amp; Berries</b><span>Saved · Restaurant</span></div></div>
+        <div class="mini-card"><div class="photo v2"></div><div class="b"><b>Turner's Barbershop</b><span>Saved · Grooming</span></div></div>
+        <div class="mini-card"><div class="photo v3"></div><div class="b"><b>Stem &amp; Soul</b><span>Viewed yesterday</span></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:24px">
+        <div class="row-link"><span class="ico">♡</span>All saved<span class="meta">12</span><span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">◷</span>Recently viewed<span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">✦</span>Recommended<span class="chev">›</span></div>
+      </div>
+
+      <!-- Contributions -->
+      <p class="sec-label">Your contributions</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px">
+        <div class="row-link"><span class="ico">✓</span>My claims<span class="meta">Turner's · <span class="chip warn">Pending review</span></span><span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">★</span>My reviews<span class="meta">3 published</span><span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">⌲</span>My receipts<span class="meta">2 this month</span><span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">↗</span>Community spend<span class="meta">$418 tracked</span><span class="chev">›</span></div>
+      </div>
+
+      <!-- Role-aware block: NON-OWNER state -->
+      <div style="background:var(--ground);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px">
+        <div>
+          <p style="margin:0;font-family:var(--headline);font-size:15px;color:#fff">Own a business?</p>
+          <p style="margin:2px 0 0;font-size:11.5px;color:#cbbfa8">Claim your page and get your official home on The BLACQList.</p>
+        </div>
+        <span style="margin-left:auto;background:var(--gold);color:var(--brand-black);font-weight:700;font-size:12px;border-radius:999px;padding:9px 18px">Claim your business</span>
+      </div>
+      <p style="font-size:10.5px;color:var(--charcoal-faint);margin:-16px 0 24px">↑ owners instead see: their listing mini-card + tier badge + "Manage my page" → /dashboard</p>
+
+      <!-- Quiet account footer -->
+      <p class="sec-label">Account</p>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--charcoal-soft)">
+        <span style="text-decoration:underline">Settings</span>
+        <span style="text-decoration:underline">Email preferences</span>
+        <span style="text-decoration:underline;color:#a33">Sign out</span>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>One scrolling page, but every block earns its place with data: stats up top, previews inline, destinations as compact rows with live counts, settings demoted to quiet links. Least structural change — no layout file needed.</dd>
+    <dt>Tradeoff</dt><dd>Sub-pages keep their own back-link navigation (no persistent shell).</dd>
+  </dl>
+</section>
+
+<!-- ═════════ OPTION B ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">AC-B</span><h2>Sidebar Shell</h2></div>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business</span></div>
+    <div style="display:grid;grid-template-columns:220px 1fr;min-height:420px">
+      <!-- Sidebar -->
+      <div style="background:#fff;border-right:1px solid var(--border);padding:20px 14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <span style="width:38px;height:38px;border-radius:50%;background:var(--ground);color:var(--gold);display:grid;place-items:center;font-family:var(--headline);font-size:15px;border:2px solid var(--gold)">C</span>
+          <div><b style="font-family:var(--headline);font-size:13px;font-weight:500">Chalece</b><br><span style="font-size:10px;color:var(--charcoal-soft)">Member since Feb 2026</span></div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Activity</p>
+        <div style="display:grid;gap:2px;font-size:12px;font-weight:600;margin-bottom:14px">
+          <div style="background:var(--pale-lavender);border-left:3px solid var(--amber);border-radius:6px;padding:7px 10px">Overview</div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Saved <span style="float:right;color:var(--charcoal-faint)">12</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Recently viewed</div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Recommended</div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Contributions</p>
+        <div style="display:grid;gap:2px;font-size:12px;font-weight:600;margin-bottom:14px">
+          <div style="padding:7px 10px;color:var(--charcoal)">Claims <span class="chip warn" style="float:right">1</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Reviews <span style="float:right;color:var(--charcoal-faint)">3</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Receipts</div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Community spend</div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Account</p>
+        <div style="font-size:12px;font-weight:600;color:var(--charcoal);padding:7px 10px">Settings</div>
+      </div>
+      <!-- Content -->
+      <div style="padding:24px 26px">
+        <h2 style="font-size:22px;color:var(--brand-black);margin-bottom:14px">Overview</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+          <div class="stat"><b>12</b><span>Saved</span></div>
+          <div class="stat"><b>3</b><span>Reviews</span></div>
+          <div class="stat"><b>1</b><span>Claim pending</span></div>
+          <div class="stat"><b>$418</b><span>Spend tracked</span></div>
+        </div>
+        <p class="sec-label">Recently saved</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+          <div class="mini-card"><div class="photo"></div><div class="b"><b>Batter &amp; Berries</b><span>Restaurant · Chicago</span></div></div>
+          <div class="mini-card"><div class="photo v2"></div><div class="b"><b>Turner's Barbershop</b><span>Grooming · Atlanta</span></div></div>
+          <div class="mini-card"><div class="photo v3"></div><div class="b"><b>Stem &amp; Soul</b><span>Retail · Atlanta</span></div></div>
+        </div>
+        <p class="sec-label">Needs your attention</p>
+        <div class="row-link" style="border:1px solid #eadfc8;background:#fdf9ef"><span class="ico">✓</span>Your claim on Turner's Barbershop is pending review<span class="meta"><span class="chip warn">Pending</span></span><span class="chev">›</span></div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>An app, not a page: persistent sidebar with grouped nav + live counts, content pane per section. Kills every back-link; matches the /dashboard mental model so owners moving between the two feel one system. Mobile: sidebar collapses to a top scroll-nav.</dd>
+    <dt>Tradeoff</dt><dd>Most structural work (new account layout + all 9 sub-pages adopt the shell). Feels more “tool” than “personal.”</dd>
+  </dl>
+</section>
+
+<!-- ═════════ OPTION C ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">AC-C</span><h2>Profile Band + Tabs</h2></div>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business</span></div>
+    <!-- Dark profile band -->
+    <div style="background:var(--ground);color:#fff;padding:26px 24px 0">
+      <div style="max-width:880px;margin-inline:auto">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="width:56px;height:56px;border-radius:50%;background:#1a150e;color:var(--gold);display:grid;place-items:center;font-family:var(--headline);font-size:22px;border:2px solid var(--gold)">C</span>
+          <div>
+            <h2 style="font-size:22px;color:#fff">Chalece</h2>
+            <span style="font-size:11.5px;color:#cbbfa8">Member since Feb 2026 · Atlanta</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:18px;text-align:center">
+            <div><b style="font-family:var(--headline);font-size:18px;color:var(--light-gold)">12</b><br><span style="font-size:10px;color:#cbbfa8">SAVED</span></div>
+            <div><b style="font-family:var(--headline);font-size:18px;color:var(--light-gold)">3</b><br><span style="font-size:10px;color:#cbbfa8">REVIEWS</span></div>
+            <div><b style="font-family:var(--headline);font-size:18px;color:var(--light-gold)">$418</b><br><span style="font-size:10px;color:#cbbfa8">SPEND</span></div>
+          </div>
+        </div>
+        <!-- Tabs on the band -->
+        <div style="display:flex;gap:2px;margin-top:18px;overflow-x:auto">
+          <span style="padding:10px 14px;font-size:12px;font-weight:700;color:#fff;border-bottom:2.5px solid var(--gold)">Overview</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Saved</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Claims</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Reviews</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Receipts</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Spend</span>
+          <span style="padding:10px 14px;font-size:12px;font-weight:600;color:#cbbfa8">Settings</span>
+        </div>
+      </div>
+    </div>
+    <!-- Overview content -->
+    <div style="max-width:880px;margin-inline:auto;padding:22px 24px 34px">
+      <p class="sec-label">Recently saved</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">
+        <div class="mini-card"><div class="photo"></div><div class="b"><b>Batter &amp; Berries</b><span>Restaurant · Chicago</span></div></div>
+        <div class="mini-card"><div class="photo v2"></div><div class="b"><b>Turner's Barbershop</b><span>Grooming · Atlanta</span></div></div>
+        <div class="mini-card"><div class="photo v3"></div><div class="b"><b>Stem &amp; Soul</b><span>Retail · Atlanta</span></div></div>
+      </div>
+      <p class="sec-label">For you</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="row-link"><span class="ico">✦</span>Recommended from your saves<span class="chev">›</span></div>
+        <div class="row-link"><span class="ico">✓</span>Claim status: Turner's<span class="meta"><span class="chip warn">Pending</span></span><span class="chev">›</span></div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>The most “personal-website” of the three — a dark identity band with the gold-ring avatar and inline stats, tabs riding the band (same pattern as the new business-page templates, so the whole platform shares one navigation language).</dd>
+    <dt>Tradeoff</dt><dd>Tabs get tight if the account grows many more sections; the profile band spends vertical space on identity.</dd>
+  </dl>
+</section>
+
+<!-- ═════════ OPTION AB (hybrid, founder-requested) ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">AC-AB</span><h2>Hybrid — Sidebar Shell × Data-Rich Hub</h2></div>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="sp">Discover · Search · Cities · For Business</span></div>
+    <div style="display:grid;grid-template-columns:220px 1fr;min-height:520px">
+      <!-- B's sidebar -->
+      <div style="background:#fff;border-right:1px solid var(--border);padding:20px 14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+          <span style="width:38px;height:38px;border-radius:50%;background:var(--ground);color:var(--gold);display:grid;place-items:center;font-family:var(--headline);font-size:15px;border:2px solid var(--gold)">C</span>
+          <div><b style="font-family:var(--headline);font-size:13px;font-weight:500">Chalece</b><br><span style="font-size:10px;color:var(--charcoal-soft)">Member since Feb 2026</span></div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Activity</p>
+        <div style="display:grid;gap:2px;font-size:12px;font-weight:600;margin-bottom:14px">
+          <div style="background:var(--pale-lavender);border-left:3px solid var(--amber);border-radius:6px;padding:7px 10px">Overview</div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Saved <span style="float:right;color:var(--charcoal-faint)">12</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Recently viewed</div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Recommended</div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Contributions</p>
+        <div style="display:grid;gap:2px;font-size:12px;font-weight:600;margin-bottom:14px">
+          <div style="padding:7px 10px;color:var(--charcoal)">Claims <span class="chip warn" style="float:right">1</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Reviews <span style="float:right;color:var(--charcoal-faint)">3</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Receipts <span style="float:right;color:var(--charcoal-faint)">2</span></div>
+          <div style="padding:7px 10px;color:var(--charcoal)">Community spend</div>
+        </div>
+        <p class="sec-label" style="font-size:9.5px">Account</p>
+        <div style="display:grid;gap:2px;font-size:12px;font-weight:600">
+          <div style="padding:7px 10px;color:var(--charcoal)">Settings</div>
+          <div style="padding:7px 10px;color:#a33">Sign out</div>
+        </div>
+      </div>
+
+      <!-- A's data-rich content as the overview pane -->
+      <div style="padding:24px 26px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <h2 style="font-size:24px;color:var(--brand-black)">Welcome back, Chalece</h2>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px">
+          <div class="stat" style="background:var(--pale-lavender)"><b>12</b><span>Saved</span></div>
+          <div class="stat" style="background:var(--pale-lavender)"><b>3</b><span>Reviews</span></div>
+          <div class="stat" style="background:var(--pale-lavender)"><b>1</b><span>Claim <span class="chip warn" style="margin-left:4px">Pending</span></span></div>
+          <div class="stat" style="background:var(--pale-lavender)"><b>$418</b><span>Community spend</span></div>
+        </div>
+
+        <p class="sec-label">Recently saved</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+          <div class="mini-card"><div class="photo"></div><div class="b"><b>Batter &amp; Berries</b><span>Restaurant · Chicago</span></div></div>
+          <div class="mini-card"><div class="photo v2"></div><div class="b"><b>Turner's Barbershop</b><span>Grooming · Atlanta</span></div></div>
+          <div class="mini-card"><div class="photo v3"></div><div class="b"><b>Stem &amp; Soul</b><span>Retail · Atlanta</span></div></div>
+        </div>
+
+        <p class="sec-label">Needs your attention</p>
+        <div class="row-link" style="border:1px solid #eadfc8;background:#fdf9ef;margin-bottom:20px"><span class="ico">✓</span>Your claim on Turner's Barbershop is pending review<span class="meta"><span class="chip warn">Pending</span></span><span class="chev">›</span></div>
+
+        <!-- Role-aware block (non-owner state shown) -->
+        <div style="background:var(--ground);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div>
+            <p style="margin:0;font-family:var(--headline);font-size:15px;color:#fff">Own a business?</p>
+            <p style="margin:2px 0 0;font-size:11.5px;color:#cbbfa8">Claim your page and get your official home on The BLACQList.</p>
+          </div>
+          <span style="margin-left:auto;background:var(--gold);color:var(--brand-black);font-weight:700;font-size:12px;border-radius:999px;padding:9px 18px">Claim your business</span>
+        </div>
+        <p style="font-size:10.5px;color:var(--charcoal-faint);margin:8px 0 0">↑ owners instead see: listing mini-card + tier badge + "Manage my page" → /dashboard; the sidebar also gains a "My business" group</p>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>B's app-like shell (persistent grouped sidebar with live counts, no back-links, /dashboard-consistent) carrying A's data-rich overview (stat strip, photo recents, attention row, role-aware claim/owner block). The sidebar handles navigation so the overview pane stops being a link list entirely — every block on it is content.</dd>
+    <dt>Tradeoff</dt><dd>The full structural work of B (account layout + all sub-pages adopt the shell). Mobile: sidebar collapses to a horizontal scroll-nav under the header; overview stacks.</dd>
+  </dl>
+</section>
+
+<footer>
+  <p><b>Pick one:</b> AC-A · AC-B · AC-C · AC-AB (further hybrids fine). All options: role-aware owner/non-owner blocks, live counts, recent items, no dead-end links, mobile-responsive. After your pick: build → design-critic → staging preview → PR. Next options rounds coming: Homepage, then Map explore.</p>
+</footer>
+</div>
+</body>
+</html>

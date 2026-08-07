@@ -11,6 +11,10 @@ interface Row {
   slug: string
   entity_type: string
   trust_tier: string
+  logo_path: string | null
+  ownership_label: string
+  avg_rating: number | null
+  review_count: number
   is_featured: boolean
   is_sponsored: boolean
   cover_image_path: string | null
@@ -35,7 +39,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('listings')
     .select(
-      'id, name, slug, entity_type, trust_tier, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name), listing_details_business(lat, lng, hours, price_range)'
+      'id, name, slug, entity_type, trust_tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name), listing_details_business(lat, lng, hours, price_range)'
     )
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -52,18 +56,31 @@ export async function GET() {
     .map((row) => {
       const d = row.listing_details_business!
       const showPhoto = row.trust_tier === 'verified' || row.trust_tier === 'certified'
+      // Logo markers are a claimed+ feature (map-presence ladder level 2+)
+      const showLogo = row.trust_tier !== 'unclaimed'
+      const logoSrc =
+        showLogo && row.logo_path
+          ? row.logo_path.startsWith('http')
+            ? row.logo_path
+            : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-media/${row.logo_path}`
+          : null
       return {
         type: 'Feature' as const,
         geometry: { type: 'Point' as const, coordinates: [d.lng!, d.lat!] },
         properties: {
           id: row.id,
           name: row.name,
+          entityType: row.entity_type,
           href: buildEntityUrl(row.entity_type, row.cities?.slug, row.slug),
           category: row.categories?.name ?? null,
           categorySlug: row.categories?.slug ?? null,
           citySlug: row.cities?.slug ?? null,
           cityName: row.cities?.name ?? null,
           trustTier: row.trust_tier,
+          logoSrc,
+          ownershipLabel: row.ownership_label,
+        avgRating: row.avg_rating,
+          reviewCount: row.review_count,
           isFeatured: row.is_featured,
           isSponsored: row.is_sponsored,
           priceRange: d.price_range,

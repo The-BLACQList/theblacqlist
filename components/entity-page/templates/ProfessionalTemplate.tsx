@@ -1,4 +1,5 @@
 import type { EntityPageData } from '@/types'
+import { Reveal } from '@/components/motion/Reveal'
 import { TemplateHero } from '@/components/entity-page/templates/TemplateHero'
 import { EntityAnchorTabs, type AnchorTab } from '@/components/entity-page/templates/EntityAnchorTabs'
 import { TemplateInfoRail } from '@/components/entity-page/templates/TemplateInfoRail'
@@ -60,6 +61,7 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       </div>
 
       {/* Main content + sticky trust aside */}
+      <Reveal>
       <div className="bg-white">
         <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10">
           <div className="flex flex-col gap-12 md:gap-14 min-w-0">
@@ -84,6 +86,7 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
           </aside>
         </div>
       </div>
+      </Reveal>
 
       {hasGallery && (
         <div id="gallery" className="scroll-mt-32">
@@ -93,8 +96,11 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
 
       <EntityVideoSection entity={entity} />
 
-      <TemplateInquiryBand entity={entity} />
+      <Reveal>
+        <TemplateInquiryBand entity={entity} />
+      </Reveal>
 
+      <Reveal>
       <div id="reviews" className="scroll-mt-32">
         <EntityReviewsSection
           entity={entity}
@@ -103,6 +109,7 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
           hasReviewed={hasReviewed}
         />
       </div>
+      </Reveal>
 
       <EntityUpcomingEvents entity={entity} />
 
@@ -112,9 +119,13 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
         </div>
       )}
 
-      <EntityFaqSection faqs={entity.faqs} />
+      <Reveal>
+        <EntityFaqSection faqs={entity.faqs} />
+      </Reveal>
       <EntityPlatformActivity entity={entity} />
-      <EntityRelatedDiscovery entity={entity} />
+      <Reveal>
+        <EntityRelatedDiscovery entity={entity} />
+      </Reveal>
     </>
   )
 }

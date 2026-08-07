@@ -19,6 +19,7 @@ import { signOutAction } from '@/lib/actions/auth/signOut'
 
 const navLinks = [
   { label: 'Discover', href: '/discover' },
+  { label: 'Map', href: '/map' },
   { label: 'Search', href: '/search' },
   { label: 'Cities', href: '/cities' },
   { label: 'For Business', href: '/for-business' },

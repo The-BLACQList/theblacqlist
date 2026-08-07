@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup — Breadth & wayfinding options · The BLACQList</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand-black:#000; --ground:#08080a; --charcoal:#595758; --charcoal-soft:#6b6b6b;
+    --gold:#c4a065; --amber:#8f6600; --light-gold:#ffd867;
+    --off-white:#f4f4f7; --pale-lavender:#f2f0ee; --border:#e5e7eb;
+    --headline:'Jost','Century Gothic','Futura',system-ui,sans-serif;
+    --body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --ph-1:linear-gradient(135deg,#4a3423 0%,#7a5535 45%,#33251a 100%);
+    --ph-2:linear-gradient(150deg,#5c4028 0%,#8a6a3f 52%,#2e2317 100%);
+    --ph-3:linear-gradient(120deg,#3d2e1e 0%,#6b4d2e 55%,#241a10 100%);
+    --ph-4:linear-gradient(160deg,#2e2c3a 0%,#5a4a63 55%,#1d1a24 100%);
+    --ph-5:linear-gradient(140deg,#23392e 0%,#3f6b52 55%,#14231b 100%);
+    --ph-6:linear-gradient(125deg,#39292b 0%,#6e4a50 55%,#221619 100%);
+    --ember:radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,.18), transparent 55%);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#101010; color:#efe7d8; font-family:var(--body); line-height:1.5; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:var(--headline); letter-spacing:.02em; line-height:1.12; font-weight:500; margin:0; }
+  .wrap { max-width:1480px; margin-inline:auto; padding:28px clamp(16px,3vw,40px) 80px; }
+  .mast { border-bottom:1px solid #3a3128; padding-bottom:20px; margin-bottom:28px; }
+  .mast h1 { color:#fff; font-size:clamp(24px,3.5vw,38px); }
+  .mast h1 em { font-style:normal; color:var(--light-gold); }
+  .mast p { color:#b3a68f; max-width:88ch; margin:8px 0 0; }
+  .howto { display:inline-block; margin-top:12px; border:1px solid #6b4d00; background:#1d1607; color:var(--light-gold); padding:8px 14px; border-radius:6px; font-size:13px; }
+  .option { margin-top:44px; }
+  .opt-head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .tag { font-family:ui-monospace,monospace; font-weight:700; font-size:13px; color:var(--brand-black); background:var(--light-gold); padding:3px 10px; border-radius:5px; }
+  .opt-head h2 { color:#fff; font-size:22px; }
+  .opt-sub { color:#b3a68f; font-size:13px; margin:0 0 14px; max-width:92ch; }
+  .frame { border-radius:10px; overflow:hidden; border:1px solid #000; box-shadow:0 12px 40px rgba(0,0,0,.55); background:#fff; color:#221c12; font-size:12px; }
+  .m-nav { background:var(--ground); color:#f4ecdc; display:flex; align-items:center; gap:14px; padding:11px 20px; }
+  .m-nav .q { width:20px; height:20px; border-radius:50%; border:2px solid var(--gold); position:relative; flex:none; }
+  .m-nav .q::after { content:""; position:absolute; width:7px; height:2px; background:var(--gold); bottom:1px; right:-3px; transform:rotate(42deg); }
+  .m-nav b { font-family:var(--headline); letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .m-nav .links { display:flex; gap:14px; font-size:10.5px; color:#cbbfa8; }
+  .m-nav .links .new { color:var(--light-gold); font-weight:700; }
+  .m-nav .sp { margin-left:auto; font-size:10px; color:#cbbfa8; }
+  .photo { position:relative; background:var(--ph-1); overflow:hidden; }
+  .photo.v2{background:var(--ph-2)} .photo.v3{background:var(--ph-3)} .photo.v4{background:var(--ph-4)} .photo.v5{background:var(--ph-5)} .photo.v6{background:var(--ph-6)}
+  .photo::before { content:""; position:absolute; inset:0; background:radial-gradient(110% 85% at 76% 24%, rgba(255,222,160,.22), transparent 55%); }
+  .scrim { position:absolute; inset:0; background:linear-gradient(to top, rgba(4,4,5,.85) 0%, rgba(4,4,5,.4) 45%, transparent 75%); }
+  .container { max-width:1000px; margin-inline:auto; padding-inline:22px; }
+  .kicker { font-size:9.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); margin:0 0 4px; }
+  .sec-h { font-size:19px; color:var(--brand-black); }
+  .soon { display:inline-block; font-size:8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--charcoal-soft); border:1px solid var(--border); border-radius:999px; padding:1px 6px; vertical-align:middle; }
+  .btn { display:inline-block; border-radius:999px; font-weight:700; font-size:11px; padding:8px 18px; }
+  .btn.gold { background:var(--gold); color:var(--brand-black); }
+  .notes { margin-top:14px; display:grid; gap:8px; max-width:92ch; }
+  .notes dt { font-family:var(--headline); font-size:12px; color:var(--light-gold); letter-spacing:.06em; text-transform:uppercase; }
+  .notes dd { margin:0; color:#b3a68f; font-size:13px; }
+  footer { margin-top:52px; border-top:1px solid #3a3128; padding-top:18px; color:#b3a68f; font-size:13px; max-width:96ch; }
+  footer b { color:var(--light-gold); font-family:ui-monospace,monospace; }
+  .ember { position:relative; background:var(--ground); }
+  .ember::before { content:""; position:absolute; inset:0; background:var(--ember); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast">
+  <h1>Breadth &amp; wayfinding — <em>"for every kind of Black business"</em></h1>
+  <p>Three ways to make the full spectrum unmistakable — brick &amp; mortar, products, services, professionals, creatives, events, and jobs (quiet "coming soon" until the Opportunity pages ship). Every option ALSO ships the common fixes: <b style="color:var(--light-gold)">Map joins the nav</b> (header, mobile, footer), the map gets type filter chips, and every "businesses"-only line of copy gets rewritten to carry the breadth.</p>
+  <div class="howto">Pick one: <b>BR-A · BR-B · BR-C</b> — hybrids welcome.</div>
+</header>
+
+<!-- ═════════ BR-A — SEVEN DOORS ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">BR-A</span><h2>Seven Doors</h2></div>
+  <p class="opt-sub">A dedicated entity-type band directly under the hero — the first thing after search is the seven kinds of listing, each a door. The hero subhead carries the breadth in words; the category grid stays category-based below it.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="links"><span>Discover</span><span class="new">Map</span><span>Cities</span><span>For Business</span></span><span class="sp">Sign Up</span></div>
+    <div class="photo" style="min-height:150px;display:flex;align-items:center">
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2">
+        <h2 style="color:#fff;font-size:26px">Find &amp; Be Found.</h2>
+        <p style="color:rgba(244,244,247,.92);font-size:11.5px;margin:4px 0 0;max-width:52ch">Every kind of Black-owned enterprise — storefronts and restaurants, services and pros, creatives, events, and more — one living index.</p>
+      </div>
+    </div>
+    <div style="background:var(--off-white);padding:16px 0 18px">
+      <div class="container">
+        <p class="kicker">One index, seven doors</p>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px">
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Brick &amp; Mortar</b><span style="position:relative;color:var(--gold);font-size:8px">shops &amp; storefronts</span></div>
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Restaurants</b><span style="position:relative;color:var(--gold);font-size:8px">plates &amp; pop-ups</span></div>
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Services</b><span style="position:relative;color:var(--gold);font-size:8px">book &amp; hire</span></div>
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Professionals</b><span style="position:relative;color:var(--gold);font-size:8px">consult &amp; advise</span></div>
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Creatives</b><span style="position:relative;color:var(--gold);font-size:8px">commission &amp; collect</span></div>
+          <div class="ember" style="border-radius:8px;padding:34px 8px 8px"><b style="position:relative;color:#fff;font-family:var(--headline);font-size:10.5px;display:block">Events</b><span style="position:relative;color:var(--gold);font-size:8px">pull up</span></div>
+          <div style="border-radius:8px;padding:34px 8px 8px;background:var(--pale-lavender);border:1px dashed #cbbfa8"><b style="color:var(--charcoal);font-family:var(--headline);font-size:10.5px;display:block">Jobs</b><span class="soon">Coming soon</span></div>
+        </div>
+        <p style="font-size:9px;color:var(--charcoal-soft);margin:8px 0 0">Each door → /discover pre-filtered by type · tiles become documentary photos when the commissioned set lands · live counts per door</p>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>The breadth is a first-class SECTION — nothing subtle. A visitor knows within one scroll that this isn't just restaurants; every audience sees their door by name.</dd>
+    <dt>Tradeoff</dt><dd>Adds a band to an already-full homepage (between hero and triptych); seven tiles are tight on mobile (becomes a 2-row grid / swipe row).</dd>
+  </dl>
+</section>
+
+<!-- ═════════ BR-B — WHO'S ON ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">BR-B</span><h2>Who's On The BLACQList</h2></div>
+  <p class="opt-sub">Audience-first: speak to each kind of owner directly. The hero tagline rotates the audience; a dedicated section gives each hustle its own card and CTA to list. Consumers get "from plates to portfolios" copy woven through existing sections instead of a new band.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="links"><span>Discover</span><span class="new">Map</span><span>Cities</span><span>For Business</span></span><span class="sp">Sign Up</span></div>
+    <div class="photo v2" style="min-height:130px;display:flex;align-items:center">
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2">
+        <h2 style="color:#fff;font-size:24px">Find &amp; Be Found.</h2>
+        <p style="color:var(--light-gold);font-size:12px;margin:4px 0 0;font-family:var(--headline)">Own a storefront? Book clients? Create? Host? <span style="color:rgba(244,244,247,.85);font-family:var(--body);font-size:10.5px">— rotating line, one audience at a time</span></p>
+      </div>
+    </div>
+    <div style="background:#fff;padding:16px 0 18px">
+      <div class="container">
+        <p class="kicker">Who's on The BLACQList</p>
+        <h3 class="sec-h" style="font-size:16px">Every hustle has a home here</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px">
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div class="photo" style="height:44px"></div><div style="padding:8px 10px"><b style="font-family:var(--headline);font-size:11px">The storefront</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">Your shop, hours, and menu — found by the neighborhood.</p><span style="font-size:8.5px;font-weight:700;color:var(--amber)">List your business →</span></div></div>
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div class="photo v3" style="height:44px"></div><div style="padding:8px 10px"><b style="font-family:var(--headline);font-size:11px">The service pro</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">Bookings, packages, and reviews that bring the next client.</p><span style="font-size:8.5px;font-weight:700;color:var(--amber)">List your services →</span></div></div>
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div class="photo v4" style="height:44px"></div><div style="padding:8px 10px"><b style="font-family:var(--headline);font-size:11px">The creative</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">A portfolio page that works while you create.</p><span style="font-size:8.5px;font-weight:700;color:var(--amber)">Show your work →</span></div></div>
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div class="photo v6" style="height:44px"></div><div style="padding:8px 10px"><b style="font-family:var(--headline);font-size:11px">The professional</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">Consultations and credibility, in one official home.</p><span style="font-size:8.5px;font-weight:700;color:var(--amber)">Claim your page →</span></div></div>
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden"><div class="photo v5" style="height:44px"></div><div style="padding:8px 10px"><b style="font-family:var(--headline);font-size:11px">The organizer</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">Events with tickets, maps, and the crowd that shows up.</p><span style="font-size:8.5px;font-weight:700;color:var(--amber)">Post your event →</span></div></div>
+          <div style="border:1px dashed #cbbfa8;border-radius:10px;background:var(--pale-lavender);padding:8px 10px;display:flex;flex-direction:column;justify-content:center"><b style="font-family:var(--headline);font-size:11px;color:var(--charcoal)">The employer</b><p style="font-size:8.5px;color:var(--charcoal-soft);margin:2px 0 4px">Post roles to the community.</p><span class="soon">Coming soon</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>Speaks to OWNERS in second person — six invitations, each in its own voice. The strongest recruitment story of the three; consumers feel the breadth through the mix.</dd>
+    <dt>Tradeoff</dt><dd>More copy to keep honest and current; the rotating hero tagline needs the reduced-motion static variant; consumer-side breadth is implied rather than structural.</dd>
+  </dl>
+</section>
+
+<!-- ═════════ BR-C — EXPLORE EVERYWHERE ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">BR-C</span><h2>Explore Everywhere</h2></div>
+  <p class="opt-sub">Wayfinding-first: no new homepage section — the breadth lives in the product's own navigation. "Discover" becomes an Explore menu, hero chips become TYPE chips, the trending row deliberately mixes types with the type pill emphasized, and the map gets a type filter row.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="links"><span class="new">Explore ▾</span><span class="new">Map</span><span>Cities</span><span>For Business</span></span><span class="sp">Sign Up</span></div>
+    <!-- Explore menu open -->
+    <div style="background:#fff;border-bottom:1px solid var(--border);padding:10px 0">
+      <div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;font-size:9.5px">
+        <div><b style="font-family:var(--headline);font-size:10.5px;color:var(--amber)">By type</b><div style="color:var(--charcoal);margin-top:3px;line-height:1.7">Brick &amp; Mortar<br>Restaurants<br>Services &amp; Pros<br>Creatives<br>Events<br><span style="color:var(--charcoal-soft)">Jobs <span class="soon">soon</span></span></div></div>
+        <div><b style="font-family:var(--headline);font-size:10.5px;color:var(--amber)">By category</b><div style="color:var(--charcoal);margin-top:3px;line-height:1.7">Food &amp; Dining<br>Beauty &amp; Grooming<br>Professional Services<br>All 12 →</div></div>
+        <div><b style="font-family:var(--headline);font-size:10.5px;color:var(--amber)">By city</b><div style="color:var(--charcoal);margin-top:3px;line-height:1.7">Atlanta · 151<br>Chicago · 52<br>Houston · 51</div></div>
+        <div><b style="font-family:var(--headline);font-size:10.5px;color:var(--amber)">On the map</b><div style="color:var(--charcoal);margin-top:3px;line-height:1.7">Explore your<br>neighborhood →<div style="width:56px;height:34px;border-radius:6px;background:var(--pale-lavender);border:1px solid var(--border);margin-top:4px;position:relative"><span style="position:absolute;left:18px;top:10px;width:8px;height:8px;border-radius:50%;background:var(--amber)"></span><span style="position:absolute;left:34px;top:18px;width:5px;height:5px;border-radius:50%;background:var(--gold)"></span></div></div></div>
+      </div>
+    </div>
+    <!-- hero with TYPE chips -->
+    <div class="photo v3" style="min-height:120px;display:flex;align-items:flex-end">
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2;padding-bottom:14px">
+        <h2 style="color:#fff;font-size:22px">Find &amp; Be Found.</h2>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Shops</span>
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Restaurants</span>
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Services</span>
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Pros</span>
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Creatives</span>
+          <span style="border:1px solid rgba(244,244,247,.4);color:#f4ecdc;font-size:9px;font-weight:600;border-radius:999px;padding:3px 10px">Events</span>
+        </div>
+      </div>
+    </div>
+    <!-- mixed trending strip -->
+    <div style="background:var(--off-white);padding:12px 0 14px">
+      <div class="container">
+        <p class="kicker">Trending — every kind, on purpose</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px">
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px"><span style="background:var(--ground);color:var(--gold);font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 7px">RESTAURANT</span><b style="display:block;font-family:var(--headline);font-size:10.5px;margin-top:3px">Batter &amp; Berries</b></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px"><span style="background:var(--ground);color:var(--gold);font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 7px">CREATIVE</span><b style="display:block;font-family:var(--headline);font-size:10.5px;margin-top:3px">Onyx Frame Studio</b></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px"><span style="background:var(--ground);color:var(--gold);font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 7px">PROFESSIONAL</span><b style="display:block;font-family:var(--headline);font-size:10.5px;margin-top:3px">Carter &amp; Co.</b></div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px"><span style="background:var(--ground);color:var(--gold);font-size:7.5px;font-weight:700;border-radius:999px;padding:1px 7px">EVENT</span><b style="display:block;font-family:var(--headline);font-size:10.5px;margin-top:3px">Portfolio Night</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>Attitude</dt><dd>Show, don't tell: the breadth is baked into how you move through the product — the Explore menu, type chips, and deliberately mixed rows make it impossible to think this is one kind of directory. Least new homepage weight.</dd>
+    <dt>Tradeoff</dt><dd>Subtlest recruitment message for owners (no direct "list your X" invitations); the nav menu is a new component with its own a11y work (keyboard menus).</dd>
+  </dl>
+</section>
+
+<!-- ═════════ BR-AB — THE SIX DOORS (corrected per founder) ═════════ -->
+<section class="option">
+  <div class="opt-head"><span class="tag">BR-AB</span><h2>The Avenues</h2></div>
+  <p class="opt-sub">Exactly your six categories in A's imagery-led door form, directly under the approved homepage hero. Nothing else added — no extra tiles, no rotating tagline, no second section. The hero subhead carries the breadth in one line; the doors make it navigable.</p>
+  <div class="frame">
+    <div class="m-nav"><span class="q"></span><b>THE BLACQLIST</b><span class="links"><span>Discover</span><span class="new">Map</span><span>Cities</span><span>For Business</span></span><span class="sp">Sign Up</span></div>
+
+    <!-- Approved HP-A hero, subhead rewritten for breadth -->
+    <div class="photo" style="min-height:150px;display:flex;align-items:center">
+      <div class="scrim"></div>
+      <div class="container" style="position:relative;z-index:2">
+        <h2 style="color:#fff;font-size:26px">Find &amp; Be Found.</h2>
+        <p style="color:rgba(244,244,247,.92);font-size:11.5px;margin:4px 0 0;max-width:54ch">Every kind of Black-owned enterprise — brick &amp; mortar, products &amp; services, professionals, creatives, events, and jobs — one living index.</p>
+      </div>
+    </div>
+
+    <!-- THE SIX DOORS -->
+    <div style="background:var(--off-white);padding:16px 0 18px">
+      <div class="container">
+        <p class="kicker">One index, six avenues</p>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:8px">
+          <div class="photo v2" style="border-radius:9px;min-height:104px;display:flex;flex-direction:column;justify-content:flex-end"><span class="shot" style="font-size:7.5px;left:6px;top:6px">storefront</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:9px"><b style="color:#fff;font-family:var(--headline);font-size:12px;display:block">Brick &amp; Mortar</b><span style="color:var(--gold);font-size:8.5px">shops &amp; storefronts · 214</span></div></div>
+          <div class="photo v3" style="border-radius:9px;min-height:104px;display:flex;flex-direction:column;justify-content:flex-end"><span class="shot" style="font-size:7.5px;left:6px;top:6px">maker’s hands</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:9px"><b style="color:#fff;font-family:var(--headline);font-size:12px;display:block">Products &amp; Services</b><span style="color:var(--gold);font-size:8.5px">shop &amp; book · 136</span></div></div>
+          <div class="photo v6" style="border-radius:9px;min-height:104px;display:flex;flex-direction:column;justify-content:flex-end"><span class="shot" style="font-size:7.5px;left:6px;top:6px">consult session</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:9px"><b style="color:#fff;font-family:var(--headline);font-size:12px;display:block">Professionals</b><span style="color:var(--gold);font-size:8.5px">consult &amp; advise · 41</span></div></div>
+          <div class="photo v4" style="border-radius:9px;min-height:104px;display:flex;flex-direction:column;justify-content:flex-end"><span class="shot" style="font-size:7.5px;left:6px;top:6px">studio</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:9px"><b style="color:#fff;font-family:var(--headline);font-size:12px;display:block">Creatives</b><span style="color:var(--gold);font-size:8.5px">commission &amp; collect · 24</span></div></div>
+          <div class="photo v5" style="border-radius:9px;min-height:104px;display:flex;flex-direction:column;justify-content:flex-end"><span class="shot" style="font-size:7.5px;left:6px;top:6px">crowd</span><div class="scrim"></div><div style="position:relative;z-index:2;padding:9px"><b style="color:#fff;font-family:var(--headline);font-size:12px;display:block">Events</b><span style="color:var(--gold);font-size:8.5px">pull up · 18</span></div></div>
+          <div style="border-radius:9px;min-height:104px;background:var(--pale-lavender);border:1px dashed #cbbfa8;display:flex;flex-direction:column;justify-content:flex-end;padding:9px"><b style="color:var(--charcoal);font-family:var(--headline);font-size:12px;display:block">Jobs</b><span class="soon" style="margin-top:3px;align-self:flex-start">Coming soon</span></div>
+        </div>
+        <p style="font-size:9px;color:var(--charcoal-soft);margin:8px 0 0">Avenues → /discover pre-filtered · counts live · documentary photos when the commissioned set lands (labeled placeholders until then) · mobile: 2×3 grid · the rest of the approved homepage continues unchanged below</p>
+      </div>
+    </div>
+  </div>
+  <dl class="notes">
+    <dt>What changed from my over-blend</dt><dd>Stripped: the 8th map tile, the rotating hero tagline, the per-tile owner invitation lines, and the down-page "Who’s On" section. Map wayfinding is handled by the new nav link alone. Just your six avenues.</dd>
+  </dl>
+</section>
+
+<footer>
+  <p><b>The Avenues (BR-AB, named) is at the bottom — a nod makes it the build spec.</b> Original options BR-A/B/C remain above for reference. Common to the build either way: <b>Map enters the header/mobile/footer nav</b>, the map gets type filter chips, and the copy audit rewrites every "businesses"-only line to carry storefronts · products · services · professionals · creatives · events, with jobs as a quiet coming-soon. Production note: the breadth becomes real when we retype real prod listings into their true types — that GATE-DATA rides along with this ship so the message and catalog match.</p>
+</footer>
+</div>
+</body>
+</html>
