@@ -68,7 +68,7 @@ export function MapDrawer({ listings, totalCount, loadError, highlightId, onHove
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Hide results list"
-          className="flex size-9 items-center justify-center rounded-md text-off-white/70 hover:text-white hover:bg-off-white/10 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+          className="flex size-11 items-center justify-center rounded-md text-off-white/70 hover:text-white hover:bg-off-white/10 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         >
           <PanelLeftClose className="size-4" aria-hidden="true" />
         </button>
@@ -105,7 +105,7 @@ export function MapDrawer({ listings, totalCount, loadError, highlightId, onHove
                 onFocus={() => onHover(listing.id)}
                 className={cn(
                   'w-full text-left rounded-lg bg-white text-brand-black px-3 py-2.5 transition-shadow duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold',
-                  active && 'ring-2 ring-gold shadow-[0_0_16px_rgba(255,216,103,0.45)]'
+                  active && 'ring-2 ring-amber shadow-[0_0_16px_rgba(143,102,0,0.35)]'
                 )}
               >
                 <span className="flex items-center gap-2 flex-wrap">

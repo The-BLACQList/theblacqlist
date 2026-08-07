@@ -56,6 +56,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [citySlug, setCitySlug] = useState<string>('atlanta-ga')
   const [openNowOnly, setOpenNowOnly] = useState(false)
   const [trustOnly, setTrustOnly] = useState(false)
+  const [categorySlug, setCategorySlug] = useState<string>('')
   const [highlightId, setHighlightId] = useState<string | null>(null)
 
   const reduceMotion = useMemo(
@@ -81,14 +82,25 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       .catch(() => setLoadError(true))
   }, [])
 
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>()
+    for (const l of listings) {
+      if (l.categorySlug && l.category) seen.set(l.categorySlug, l.category)
+    }
+    return [...seen.entries()]
+      .map(([slug, name]) => ({ slug, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [listings])
+
   const filtered = useMemo(
     () =>
       listings.filter((l) => {
         if (openNowOnly && !(l.hours && isOpenNow(l.hours).open)) return false
         if (trustOnly && l.trustTier !== 'verified' && l.trustTier !== 'certified') return false
+        if (categorySlug && l.categorySlug !== categorySlug) return false
         return true
       }),
-    [listings, openNowOnly, trustOnly]
+    [listings, openNowOnly, trustOnly, categorySlug]
   )
 
   const geojson = useMemo(
@@ -154,7 +166,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         source: 'listings',
         filter: ['has', 'point_count'],
         paint: {
-          'circle-color': 'rgba(196,160,101,0.28)',
+          'circle-color': 'rgba(143,102,0,0.20)',
           'circle-stroke-color': '#8f6600',
           'circle-stroke-width': 1.5,
           'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 30, 24],
@@ -193,17 +205,29 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             'match',
             ['get', 'trustTier'],
             'unclaimed',
-            '#a08d64',
+            '#6e5a3d',
             '#8f6600',
           ],
+          // Tier ladder, visible: certified = thick light-gold ring, verified =
+          // thin light-gold ring, claimed = white ring, unclaimed = small dark dot.
           'circle-stroke-color': [
             'match',
             ['get', 'trustTier'],
             'certified',
             '#ffd867',
+            'verified',
+            '#ffd867',
             '#ffffff',
           ],
-          'circle-stroke-width': ['match', ['get', 'trustTier'], 'certified', 2.5, 1.5],
+          'circle-stroke-width': [
+            'match',
+            ['get', 'trustTier'],
+            'certified',
+            2.5,
+            'verified',
+            1.75,
+            1.5,
+          ],
         },
       })
 
@@ -364,6 +388,29 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         >
           Verified+
         </button>
+        <label className="sr-only" htmlFor="map-category-filter">
+          Filter by category
+        </label>
+        <select
+          id="map-category-filter"
+          value={categorySlug}
+          onChange={(e) => setCategorySlug(e.target.value)}
+          className={cn(
+            filterChip(Boolean(categorySlug)),
+            'appearance-none pr-8 cursor-pointer bg-no-repeat bg-[right_0.75rem_center]'
+          )}
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23f4f4f7' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")",
+          }}
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <MapDrawer
