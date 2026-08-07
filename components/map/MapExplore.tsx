@@ -188,7 +188,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         data: { type: 'FeatureCollection', features: [] },
         cluster: true,
         clusterRadius: 46,
-        clusterMaxZoom: 13,
+        clusterMaxZoom: 12,
         promoteId: 'id',
       })
       map.addLayer({
@@ -231,8 +231,8 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         id: 'pins',
         type: 'circle',
         source: 'listings',
-        // Claimed+ circles hand over to logo markers at street zoom (>=14)
-        maxzoom: 14,
+        // Claimed+ circles hand over to logo markers at neighborhood zoom (>=13)
+        maxzoom: 13,
         filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'trustTier'], 'unclaimed']],
         paint: {
           'circle-radius': [
@@ -336,7 +336,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     if (!map || !mapReady) return
     const markers = logoMarkers.current
 
-    if (map.getZoom() < 14) {
+    if (map.getZoom() < 13) {
       for (const marker of markers.values()) marker.remove()
       markers.clear()
       return
