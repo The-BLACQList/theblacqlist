@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { geocodeAddress } from '@/lib/listings/geocode'
 
 export type UpdateEntityContentState =
   | { success: true; savedAt: string }
@@ -89,6 +90,18 @@ export async function updateEntityContentAction(
     detailsUpdate.website_url = websiteUrl || null
   }
   if (addressLine1 !== undefined) detailsUpdate.address_line_1 = addressLine1 || null
+  // Geocode on address change so the listing gets a map pin. Failure-tolerant:
+  // a null result just means no pin (see lib/listings/geocode.ts).
+  if (addressLine1 !== undefined) {
+    if (addressLine1) {
+      const geo = await geocodeAddress({ address: addressLine1, state, zip })
+      detailsUpdate.lat = geo?.lat ?? null
+      detailsUpdate.lng = geo?.lng ?? null
+    } else {
+      detailsUpdate.lat = null
+      detailsUpdate.lng = null
+    }
+  }
   if (addressLine2 !== undefined) detailsUpdate.address_line_2 = addressLine2 || null
   if (state !== undefined) detailsUpdate.state = state || null
   if (zip !== undefined) detailsUpdate.zip = zip || null
