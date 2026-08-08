@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 export interface CityChapter {
   name: string
@@ -41,7 +42,7 @@ export function CityChapters({ cities }: Props) {
               <span
                 className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
                 aria-hidden="true"
-                style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
+                style={{ background: EMBER_WASH }}
               />
               <span className="relative font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
                 {city.name}

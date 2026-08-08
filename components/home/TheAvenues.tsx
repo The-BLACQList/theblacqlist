@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 export interface AvenueCounts {
   brick: number
@@ -83,8 +84,7 @@ export function TheAvenues({ counts }: Props) {
                   className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
                   aria-hidden="true"
                   style={{
-                    background:
-                      'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)',
+                    background: EMBER_WASH,
                   }}
                 />
                 <span className="relative font-headline text-[17px] text-white leading-tight group-hover:text-light-gold transition-colors duration-150">

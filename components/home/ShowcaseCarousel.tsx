@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 export interface ShowcaseItem {
   id: string
@@ -98,7 +99,7 @@ export function ShowcaseCarousel({ items }: Props) {
                 <span
                   className="absolute inset-0"
                   aria-hidden="true"
-                  style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
+                  style={{ background: EMBER_WASH }}
                 />
               )}
               <span

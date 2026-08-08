@@ -12,6 +12,7 @@
   --color-charcoal: #595758; /* neutral-700 — unchanged (7.2:1 on white) */
   --color-charcoal-soft: #6b6b6b; /* AA-passing muted text (5.3:1) — replaces text-charcoal/50–70 */
   --color-charcoal-faint: #737373; /* AA-passing faint/hint text (4.7:1) — replaces text-charcoal/30–40 */
+  --color-ink-soft: #b5b5b7; /* dark-surface muted text (9.8:1 on ground) — the dark-side counterpart to charcoal-soft; replaces text-white/70 */
   --color-ground: #08080a; /* near-black ground */
   --color-deep-bg: #08080a; /* legacy name → ground */
   --color-off-white: #f4f4f7; /* light surface */
