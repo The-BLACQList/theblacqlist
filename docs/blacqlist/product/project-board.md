@@ -17,7 +17,7 @@ _Last reconciled against ops truth: **2026-08-08** · Capacity assumed: Founder 
 | 🚀 **Ready to serve customers** (MVP public launch) | ~~Sat Jul 11, 2026~~ **⚠️ PASSED — re-baseline required** | The directory works end-to-end in Atlanta, Houston, Chicago. People can discover, save, claim, and list businesses; admins moderate. |
 | 🏁 **Completely done** (full vision) | **~Q2–Q3 2027** (~12 months) — _derived from the passed MVP date; re-baseline with it_ | Marketplace + checkout + paid plans, events, jobs, AI agents, **BLACQ Web** (3D commerce-flow map), more cities, and a mobile app — all live. |
 
-> **⚠️ Dates below this line are stale as of 2026-08-05.** The Jul 11 MVP target and every wave window (Jun 20 – Jul 11) are in the past. **All milestone dates need re-baselining** — the board's own §5 item 3 already calls for re-baselining V1–V4 after MVP ships, and MVP has not shipped. The remaining MVP floor is **not build work**: it is **M9** (a content gap the repo cannot close) plus the founder-/attorney-gated items (legal copy sign-off, Resend deliverability warm-up). Engineering-side, the live near-term lane is the Stripe V1 cutover **G2 → G3 → G4** — tracked with dates and evidence in `docs/blacqlist/ops/next-actions.md`, not here.
+> **⚠️ Dates below this line are stale as of 2026-08-05.** The Jul 11 MVP target and every wave window (Jun 20 – Jul 11) are in the past. **All milestone dates need re-baselining** — the board's own §5 item 3 already calls for re-baselining V1–V4 after MVP ships, and MVP has not shipped. The remaining MVP floor is **not build work**. It is now down to **Resend deliverability warm-up + an explicit go/no-go** — M9 closed 2026-08-06, and attorney sign-off on the legal copy landed 2026-08-08 (the three founder-only `[CONFIRM]` blanks are a separate card and are still open). Engineering-side, the live near-term lane is the Stripe V1 cutover **G2 → G3 → G4** — tracked with dates and evidence in `docs/blacqlist/ops/next-actions.md`, not here.
 
 > Confidence was **high for the MVP date** (audits executed + green, only report-writing and a production re-verify remained), and **widens for V1–V4**: payments/compliance, real multi-city business data + consent, a production-grade 3D experience, AI agents, and an app-store mobile app each carry external lead times that AI-pacing accelerates on the *build* side but not on the *review/external* side. Re-baseline after each milestone ships.
 
@@ -37,10 +37,9 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🟠 P1` Accessibility audit (087) — _report written; GO with conditions (zero Critical)_
 - `[MVP] 🟠 P1` Performance optimization (088) + Lighthouse I1/I3/I4 — _local config + audits done (ISR fixed, images, GIN, `next` bump); only the production Lighthouse run remains_
 - `[MVP] 🟠 P1` Incident response + rollback runbook (095) + on-call — _runbook/rollback/support/monitoring docs complete; on-call names founder-gated_
-- `[MVP] 🔴 P0` Legal: Privacy & Terms compliance review + reconciliation — _copy reconciled; awaiting attorney sign-off_
 - `[MVP] 🟠 P1` Accessibility quick fixes (BRM-01, BRM-02, 098, 097) — _BRM-01/02 done; amber-as-text contrast now fixed; only the 097 save-UX product decision remains_
 
-**⛔ Blocked / Waiting** (founder decisions · attorney · deliverability warm-up)
+**⛔ Blocked / Waiting** (founder decisions · deliverability warm-up)
 > 👉 **Founder:** the ordered list of what *you* set up to unblock these — accounts, domain/DNS, data review, legal confirms, secrets handoff — is in **`docs/blacqlist/launch/founder-action-checklist.md`** (narrative) and **`founder-action-cards.md`** (paste-ready Trello cards F1–F10).
 > _091 (Supabase prod), 092 (Vercel + DNS), and 093 (seed import) were completed 2026-06-26 and have been **moved to ✅ Done** below — they are no longer blocked._
 > _**M9 is CLOSED** (decision-log 011, 2026-08-06) — the "content gap" was a stale-docs artifact, not a real deficit. `test:gates` 5/5 green (ATL 151/150 · HOU 51/50 · CHI 52/50) and the full e2e suite went **50/50** `[Measured — local Playwright, 2026-08-06]`. **Finding 2 is DECIDED** (wire `priority_placement`, 2026-08-08) — see the Sponsored placements card. Both have left this lane._
@@ -50,9 +49,10 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before the public flip_
 
 **🎯 Up Next** — _pipeline hardening is **done** (C3–C8 shipped in PRs #5–#8; the `main-protection` ruleset is machine-enforced, decision-log 008). The lane is now the **MVP launch floor** plus the V1 defect tail from the 2026-08-06 founder walk. (`ops/next-actions.md` 2026-08-08)_
-- `[V1] 🟠 P1` **Finding 6 — `/account/activity` renders empty on prod. Root cause found, fix built 2026-08-08.** The page code was never wrong: it reads `analytics_events` through the user-scoped client, and the only SELECT policy on that table is owner-scoped (`20260510000001:732`), so RLS default-deny returned zero rows for every visitor. Migration `20260808000000_analytics_events_self_read.sql` adds a narrow self-read policy (`user_id = auth.uid() AND event_name = 'page_view' AND entity_type = 'listing'`) plus a matching partial index. **Additive, no data touched, down-plan in-file. Applying to production is GATE-DATA — not yet approved.** Branch `fix/account-surfaces`.
+- `[V1] 🟠 P1` **Finding 6 — `/account/activity` renders empty on prod. Root cause found, fix built 2026-08-08.** The page code was never wrong: it reads `analytics_events` through the user-scoped client, and the only SELECT policy on that table is owner-scoped (`20260510000001:732`), so RLS default-deny returned zero rows for every visitor. Migration `20260808000000_analytics_events_self_read.sql` adds a narrow self-read policy (`user_id = auth.uid() AND event_name = 'page_view' AND entity_type = 'listing'`) plus a matching partial index. **Additive, no data touched, down-plan in-file. Applying to production is GATE-DATA — not yet approved.** Code merged as PR [#15](https://github.com/The-BLACQList/theblacqlist/pull/15) (`fe25193`) under GATE-DEPLOY 2026-08-08 and deployed (`dpl_3LPsYWnJVPQSQJpoRpKuWvfNqFVs`, READY) — **but the page stays empty on production until the migration is applied**, which is the separate gate.
 - `[V1] ⚪️` **Finding 7 — NOT A DEFECT. Reclassified 2026-08-08.** `/account/recommended` derives recommendations from the signed-in user's saves and short-circuits at `categoryIds.length === 0`, rendering a purpose-built "Save businesses to get recommendations" empty state with a CTA `[Observed — app/account/recommended/page.tsx:47]`. An account with zero saves seeing that screen is **correct behavior**. The real gap is the absence of a **cold-start fallback** — a product decision, not a bug. See the Supporter dashboard card for the proposed smallest version.
-- `[V1] 🟡 P2` **Finding 8 — admin surfaces rendered "Unknown" (and in two places a raw UUID) for real people. Fixed 2026-08-08.** `lib/admin/userLabel.ts` lifts the `display_name` → auth-email ladder into one batched helper, wired at 5 sites (claims list + detail, entity detail, reviews list + detail). `admin/users` deliberately untouched — it already holds emails from `listUsers()`. Code-only, no gate. Branch `fix/account-surfaces`.
+- `[V1] 🟡 P2` **Finding 8 — admin surfaces rendered "Unknown" (and in two places a raw UUID) for real people. Fixed 2026-08-08.** `lib/admin/userLabel.ts` lifts the `display_name` → auth-email ladder into one batched helper, wired at 5 sites (claims list + detail, entity detail, reviews list + detail). `admin/users` deliberately untouched — it already holds emails from `listUsers()`. Code-only. **Shipped** in PR [#15](https://github.com/The-BLACQList/theblacqlist/pull/15) (`fe25193`), deployed 2026-08-08.
+- `[V1] 🟠 P1` **Map: upgraded pins don't open a preview card / the card covers the pin** — PR [#16](https://github.com/The-BLACQList/theblacqlist/pull/16) `fix/map-pin-card` @ `6ffc8af`, green, awaiting merge under the 2026-08-08 GATE-DEPLOY. Four defects: a scalar popup offset burying the ~74px logo marker, two independent close paths nulling pin→pin selection, a 60-marker-cap × `maxzoom: 13` hole leaving the 61st claimed+ listing with no renderer, and `aria-hidden` wrapping focusable buttons. Geometry extracted to `lib/map/popupOffset.ts` with 11 tests — the map had zero coverage before. Code-only, no migration.
 - `[V1] 🟡 P2` **Finding 4-residual** (upload-cap TOCTOU) and **Finding 5** (local-only `next/image` private-IP tile) — prod-safe follow-up tickets.
 - `[MVP] 🟠 P1` Staging QA: account-deletion end-to-end walk-through — _needs an authed session_
 - `[MVP] 🟡 P2` SEO audit (090) — _GSC submission only, post-deploy_
@@ -63,13 +63,17 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Soft launch → Go/No-Go → Public announcement
 
 **✅ Done (this stretch)**
+- `[V1] 🟠 P1` **PR #15 `fix/account-surfaces` merged + deployed** · GATE-DEPLOY approved 2026-08-08 · squash `fe25193` → prod deploy `dpl_3LPsYWnJVPQSQJpoRpKuWvfNqFVs` READY; coming-soon gate re-verified intact (4 paths 307 → `/coming-soon`), runtime errors clean `[Measured — curl + Vercel API, 2026-08-08]`. Rollback target `dpl_HZXV9BiDCd6k5G9YaLheMFHDgcpM` (`main` @ `a0bac2b`). Finding 6's *migration* is still GATE-DATA · 2026-08-08
+- `[MVP] 🔴 P0` **Legal: Privacy & Terms compliance review + reconciliation — attorney sign-off RECEIVED** · founder-reported 2026-08-08. Legal comes off the launch floor. **Two things this does not close:** the three founder-only `[CONFIRM]` blanks (entity name · mailing address · DMCA agent) remain a separate open card, and the attorney's specific **§1981 / paid-tiers** answer is unrecorded, so `moderation-policy.md:48` keeps its `[Needs professional review]` tag and binds the Sponsored placements build as written · 2026-08-08
+- `[V1] 🔴 P0` **G4 done-when CLOSED — live test subscription executed on production** · founder-reported 2026-08-08. Live billing is transaction-verified, not just code-verified. The Stripe subscriptions card goes **4/4** · 2026-08-08
+- `[V1] 🟠 P1` **Trust-tier production walk COMPLETE** · founder-reported 2026-08-08 — closes the manual pass waived at the PR #14 merge (Decision 016). The T3 verification-email path moves from `[Unknown]` to delivery-verified · 2026-08-08
 - `[V1] 🟠 P1` **N7 — The Avenues breadth homepage · PR #13 (`c2fe3de`)** · 6 entity-type tiles with live counts, map wayfinding in all nav, identity markers, luxury motion. Squash-merged 2026-08-07 under branch protection; deploy `dpl_ENpqqznBvGWccj2ZBD9Pdbn8mT4X` is the **current production target**, READY, 30-min post-deploy watch closed clean at **0 runtime errors** `[Measured — Vercel API, 2026-08-07]`. design-critic verdict: SHIP, 0 Fail. Decision 014 (GATE-DEPLOY + GATE-DATA) · 2026-08-07
 - `[V1] 🟠 P1` **N7 — `/map` explore · PR #12 (`db8b1e5`)** · full-bleed explorer on self-hosted Protomaps tiles (`/api/map/tiles`), 3-level presence ladder (unclaimed dot → claimed amber pin → verified+ logo-in-gold-ring 48px, certified brighter+glow — **prominence earned by trust, never sold**), PP-1 photo-led preview popup. Verified: `/api/map/listings` → 200 / 189 features; tile range request → 206 over 550,419,649 bytes; coming-soon gate intact `[Measured — curl, 2026-08-07]` · 2026-08-07
 - `[V1] 🟠 P1` **N2 — HP-A homepage + showcase carousel · PR #11** · 9 real-data sections rebuilt on live queries (category/city counts, `save_count` trending, showcase carousel of real pages with scroll-snap/arrows/keyboard + reduced-motion-aware auto-advance, live spend aggregate with an honest zero-state, latest real BLACQLight story). Both "Coming Soon" mislabels killed. Critic round fixed one blocker: the gold node-dot motif was wallpapering 6/9 sections — now reserved for the impact band alone · 2026-08-06
 - `[V1] 🟠 P1` **N1 — account shell (AC-AB) · PR #10** · AccountNav (sidebar + mobile scroll-nav, live counts, pending-claim badge), account layout on 6 parallel count queries, data-rich overview (stats, recent saves, attention row, role-aware owner/claim block, "Your activity" + "Your contributions"), collapsible sidebar rail, 8 sub-pages de-chromed · 2026-08-06
 - `[V1] 🟡 P2` **Phase T — Living Commerce Index entity templates · PR #9** · the LCI template layer the Avenues homepage and account shell both build on · 2026-08-06
 - ⚙️ **GitHub Actions outage ridden out without a single ungated merge** · a major Actions outage exceeded the first 4h watcher; a round-2 watcher polled for recovery, retriggered all five PR branches (#7 #8 #9 #10 #11), and waited for clean mergeable states. Founder APPROVED (Decision 013); merged in order #7 → #8 → #9 → #11 → #10 · 2026-08-06
-- `[V1] 🔴 P0` **G4 — merged + deployed: Stripe V1 billing code LIVE in production** · GATE-DEPLOY CONDITIONAL APPROVE (decision-log 007; badge-order condition met at `7ce6681`) · merge `f88d93d` → prod build READY (`dpl_AnRoNREZeAd9W3uCqaCQMHZPHcTE`); webhook route live, `failed_webhooks` 0 `[Measured — Vercel API + curl + psql, 2026-08-05]` · behind the coming-soon gate; live subscription test still owed · 2026-08-05
+- `[V1] 🔴 P0` **G4 — merged + deployed: Stripe V1 billing code LIVE in production** · GATE-DEPLOY CONDITIONAL APPROVE (decision-log 007; badge-order condition met at `7ce6681`) · merge `f88d93d` → prod build READY (`dpl_AnRoNREZeAd9W3uCqaCQMHZPHcTE`); webhook route live, `failed_webhooks` 0 `[Measured — Vercel API + curl + psql, 2026-08-05]` · behind the coming-soon gate; **the live subscription test was executed on production 2026-08-08** · 2026-08-05
 - `[V1] 🔴 P0` **G3 — env + webhook + portal configured** (decision-log 006) · live webhook on 4 events, legacy WooCommerce webhooks disabled, live/test env split verified by `vercel env ls`, Customer Portal set · 2026-08-05
 - `[V1] 🔴 P0` **G2 — live Stripe catalog + price IDs synced** (decisions 004–005) · 3 products / 6 prices ($19/$182 · $49/$470 · $99/$950) on the original account; IDs verified in prod `plans` `[Measured — psql, 2026-08-05]` · 2026-08-05
 - ⚙️ **First-ever Vercel Preview deployment + staging rehearsal — G1 deviation CLOSED** · feature branch pushed → `target: preview` build against staging Supabase (first non-production deploy in project history); preview walk caught staging missing 15 migrations → all applied, ledger 35/35, **staging and prod schemas now identical** `[Measured — Supabase CLI + psql, 2026-08-05]` · the staging→prod pipeline exists and caught a real defect on its maiden run · 2026-08-05
@@ -117,7 +121,7 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 | ~~**M9 content gap**~~ | **CLOSED 2026-08-06 — decision-log 011.** Stale-docs artifact, not a content deficit: the launch JSON has held the full 254-listing corpus since ticket 093. `test:gates` 5/5 green (ATL 151/150 · HOU 51/50 · CHI 52/50); full e2e **50/50** for the first time `[Measured — local Playwright, 2026-08-06]` | No longer a launch blocker |
 | ~~**Finding 2** — `priority_placement` defined but unenforced~~ | **DECIDED 2026-08-08 — wire it.** Constraints recorded on the Sponsored placements card. Implementation is a **separate pass** (one risky change at a time; paid placement touches ranking) | Sponsored placements card, V1 · systemic form remains ticket **105** |
 | **8% marketplace fee** — decision-log 002 | **PROPOSED — no founder approval recorded** | Gates any marketplace revenue modeling downstream of V2 |
-| **Legal §1981 / paid-tiers review** — a paid tier, placement, or badge must not be contingent on the `Black-Owned` label; centering stays editorial ranking only | `[Needs professional review]` — attorney sign-off still outstanding | `.claude/rules/moderation-policy.md:48`; also holds the Privacy/Terms card in 🔍 In Review
+| **Legal §1981 / paid-tiers review** — a paid tier, placement, or badge must not be contingent on the `Black-Owned` label; centering stays editorial ranking only | `[Needs professional review]` — **still open.** The Privacy & Terms sign-off landed 2026-08-08, but the attorney's specific §1981 / paid-tiers answer was not recorded, so this question is unanswered and the constraint binds as written | `.claude/rules/moderation-policy.md:48`. The Privacy/Terms card it used to hold is now ✅ Done
 
 ---
 
@@ -174,8 +178,8 @@ Trello gives 10 label colors → use them for **Area** (the most useful filter).
 
 | Card | Due | Meaning |
 |---|---|---|
-| 🚀 **MVP Public Launch** | ~~Jul 11, 2026~~ **⚠️ PASSED — re-baseline** | Ready to serve customers — 3 cities, core flows. Still open: **M9** content gap, legal sign-off, Resend deliverability |
-| 🤝 **V1 — Trust & Grow** | ~~Sep 12, 2026~~ _(depends on MVP)_ | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities. _Stripe subscriptions is **in flight now** (G1 ✅ / G2 next) ahead of this milestone_ |
+| 🚀 **MVP Public Launch** | ~~Jul 11, 2026~~ **⚠️ PASSED — re-baseline** | Ready to serve customers — 3 cities, core flows. Still open: **Resend deliverability + go/no-go** (M9 closed 2026-08-06; legal sign-off received 2026-08-08) |
+| 🤝 **V1 — Trust & Grow** | ~~Sep 12, 2026~~ _(depends on MVP)_ | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities. _Two of these landed ahead of the milestone: **trust tiers** (PR #14, deployed 2026-08-08) and **Stripe subscriptions** (4/4, live test sub run 2026-08-08). **Supporter dashboard** is one gate out. Still unbuilt: sponsored placements, the three remaining page templates, +cities._ |
 | 🛒 **V2 — Commerce Layer** | ~~Dec 5, 2026~~ _(depends on MVP)_ | Marketplace + checkout, receipt OCR, spend dashboards, AI beta |
 | 🧠 **V3 — Intelligence (BLACQ Web + Agents)** | Mar 13, 2027 | 3D commerce-flow map, AI concierge/agents, sponsor campaigns, impact analytics |
 | 📱 **V4 — Scale** | mid-2027 (rolling) | Mobile app, 25+ cities, Spanish, partner API |
@@ -187,7 +191,7 @@ _Re-baselined 2026-06-20: audits collapse from "execute" to "finish report + re-
 
 > **⚠️ ALL FOUR WAVE WINDOWS HAVE PASSED (2026-08-05).** Jun 20 – Jul 11 is in the past and the MVP did not ship in it. Waves B and C largely **did** happen (Supabase prod, Vercel + DNS, prod seed import — see ✅ Done). What did not close is the founder-/external-gated floor Wave A carried, plus **M9** in production. **Read the wave list below as a checklist of remaining scope, not as a schedule** — re-baseline the dates when the remaining floor items have owners and durations. The live near-term lane is in `../ops/next-actions.md`.
 
-- **Wave A — Reports & founder-gated prep (~~Jun 20–28~~ ⚠️ passed):** a11y quick fixes ✅, finish audit reports (RLS matrix, OWASP, axe-to-all-37), **legal copy → attorney review ⏳ still open**, founder data review (`seed-review.csv`) ✅ applied, **Resend deliverability warm-up ⏳ still open**, domain ✅.
+- **Wave A — Reports & founder-gated prep (~~Jun 20–28~~ ⚠️ passed):** a11y quick fixes ✅, finish audit reports (RLS matrix, OWASP, axe-to-all-37), legal copy → attorney review ✅ signed off 2026-08-08, founder data review (`seed-review.csv`) ✅ applied, **Resend deliverability warm-up ⏳ still open**, domain ✅.
 - **Wave B — Production stand-up + seed (~~Jun 29 – Jul 5~~ ⚠️ passed):** Supabase prod ✅ (ticket 091), Vercel deploy + env ✅ (ticket 092), production data import ✅ (ticket 093), Sentry PII + monitoring ✅, PITR/backups ⏳.
 - **Wave C — Production-only gates & sign-off (~~Jul 6–9~~ ⚠️ passed):** post-deploy prod tests (analytics/Sentry/uptime/smoke), regression re-verify + Lighthouse on prod, gate sign-offs, runbooks — **not yet run against prod**.
 - **Wave D — Soft launch → public (~~Jul 10–11~~ ⚠️ passed):** soft launch, go/no-go, ship — **blocked on M9 in production + the two Wave A items above**.
@@ -220,8 +224,8 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-**`[MVP] 🔴 P0` Legal: Privacy & Terms compliance review + reconciliation** — _copy reconciled; awaiting attorney sign-off_
-🟥 Compliance · **Due Jun 27** · ⏳ Waiting-external (attorney sign-off + founder confirms)
+**`[MVP] 🔴 P0` Legal: Privacy & Terms compliance review + reconciliation** — ✅ **attorney sign-off received 2026-08-08** (founder-reported)
+🟥 Compliance · **Due Jun 27** · ✅ Done — one dependent card remains open (Card A, the three founder `[CONFIRM]` blanks)
 
 **Description.** Make the live `/privacy`, `/terms`, and `/cookies` pages accurate, defensible, and consistent with our *actual* data flows — what we collect, how it's used, who we share it with — and document user rights and our obligations. (The pages were already substantive, not placeholders, so this became a review + reconciliation rather than a from-scratch write.) Done when the copy is reconciled (done), the founder `[CONFIRM]` inputs are filled (Card A), and a legal counsel / product-owner sign-off is recorded.
 
@@ -233,9 +237,9 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 - ✅ Terms: account terms, content guidelines, IP/UGC, conduct, dispute resolution, liability — all 14 sections present
 - ✅ DMCA contact + takedown documented — DMCA notice block added to Terms §8 (`notice@theblacqlist.com`); USCO designated-agent registration tracked in ticket 102
 - ✅ Both pages live + correct title/meta, footer-linked, mobile-clean — M1, M2 (pages render at `/privacy` + `/terms` + `/cookies`)
-- Sign-off recorded (legal counsel or product owner), dated — _pending attorney review_
+- ✅ Sign-off recorded (legal counsel), dated — **2026-08-08**, founder-reported
 
-**Note:** Correction — the pages were **not** placeholders; they were already substantive. This card became a **compliance review + reconciliation**: the live pages were audited against actual data flows and corrected (IP-hashing accuracy, Stripe qualifier, deletion/portability wording, DMCA block, entity/address `[CONFIRM]` placeholders). Full risk-rated findings: `docs/blacqlist/legal/privacy-terms-compliance-review.md`. Remaining blockers: founder `[CONFIRM]` inputs (Card A) + attorney sign-off.
+**Note:** Correction — the pages were **not** placeholders; they were already substantive. This card became a **compliance review + reconciliation**: the live pages were audited against actual data flows and corrected (IP-hashing accuracy, Stripe qualifier, deletion/portability wording, DMCA block, entity/address `[CONFIRM]` placeholders). Full risk-rated findings: `docs/blacqlist/legal/privacy-terms-compliance-review.md`. Attorney sign-off received 2026-08-08; the one remaining blocker on the *live pages* is the founder `[CONFIRM]` inputs (Card A) — Terms cannot ship with `[CONFIRM]` in the body.
 
 ---
 
@@ -579,7 +583,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 **Correction (2026-08-08).** All three routes exist and ship — `app/account/saved`, `app/account/activity`, `app/account/recommended` — inside the account shell built in PR #10. The board carried this as 0/3 unbuilt. It is not. Two of the three appeared empty on the founder's 2026-08-06 walk. Investigation the same week split them:
 
-- **Finding 6 is a real defect** and the cause is RLS, not the page. `/account/activity` queries `analytics_events` through the user-scoped `createClient()`; the table's only SELECT policy grants reads to *business owners for listings they own* `[Observed — 20260510000001_mvp_rls_policies.sql:732]`. A visitor reading their own browsing history matches nothing, so default-deny returns zero rows silently. Fixed on `fix/account-surfaces` by a narrow, additive self-read policy + partial index (`20260808000000_analytics_events_self_read.sql`). Production application is **GATE-DATA, not yet approved**.
+- **Finding 6 is a real defect** and the cause is RLS, not the page. `/account/activity` queries `analytics_events` through the user-scoped `createClient()`; the table's only SELECT policy grants reads to *business owners for listings they own* `[Observed — 20260510000001_mvp_rls_policies.sql:732]`. A visitor reading their own browsing history matches nothing, so default-deny returns zero rows silently. Fixed on `fix/account-surfaces` by a narrow, additive self-read policy + partial index (`20260808000000_analytics_events_self_read.sql`), merged as PR #15 (`fe25193`) and deployed 2026-08-08. Production application of the *migration* is **GATE-DATA, not yet approved** — **this card closes when that gate lands**, not at merge, because the page stays empty until the policy exists on the production database.
 - **Finding 7 is not a defect.** `/account/recommended` builds recommendations from the user's saved businesses and short-circuits when they have none, rendering a deliberate empty state — heading, explanation, and a CTA into discovery `[Observed — app/account/recommended/page.tsx:47]`. A zero-saves account seeing that screen is the page working as designed. What's missing is a cold-start path, below.
 
 **Proposed (not built) — cold-start recommendations.** `[Recommendation]` When a user has no saves, show trending-in-their-city instead of the empty state, reusing the `save_count desc` ordering the page already runs and the city already on the profile. Smallest useful version: one fallback query, same card grid, a heading that says why ("Popular near you"). This is a **product decision for the founder**, not a defect fix — the current empty state is defensible and shipping it as-is costs nothing.
@@ -591,16 +595,20 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-**`[V1] 🔴 P0` Stripe subscriptions (Free / Standard / Premium)**
-🟩 Backend · 🩷 Product · **Due ~Sep 12, 2026** · ⏳ Waiting-external (Stripe)
+**`[V1] 🔴 P0` Stripe subscriptions (Free / Standard / Premium)** — ✅ **4/4 COMPLETE 2026-08-08**
+🟩 Backend · 🩷 Product · **Due ~Sep 12, 2026** · ✅ Done
 
 **Description.** Switches on the first revenue with three listing tiers and real billing — checkout, a billing portal, plan-based feature gating, and webhooks — replacing the placeholder Stripe price IDs. It's the P0 of V1 because monetization is the phase's reason for being, and it carries a Stripe account-approval/verification lead time. Done when a business can upgrade, the payment processes, and the plan's entitlements are enforced.
 
+**Closed 2026-08-08 (founder-reported).** The founder ran a **live test subscription on production** — the standing G4 done-when and the last open doubt on this card. Live billing is now transaction-verified, not merely code-verified. The `⏳ Waiting-external (Stripe)` marker is cleared: nothing on this card is waiting on Stripe.
+
 **Checklist.**
-- Stripe account approved + real price IDs
-- Checkout + billing portal
-- Plan-based feature gating
-- Webhooks (subscription lifecycle) verified
+- ✅ Stripe account approved + real price IDs — G2 synced the live catalog and real price IDs
+- ✅ Checkout + billing portal — G3 configured the portal; checkout exercised by the live test sub
+- ✅ Plan-based feature gating — `lib/stripe/features.ts`, shipped with the G4 billing code
+- ✅ Webhooks (subscription lifecycle) verified — G3 configured the endpoint; the live test sub drove a real lifecycle event through it
+
+> One entitlement in the gating table still delivers nothing: `priority_placement` (weight `2`) is enforced in no ranking code. That is not a defect on this card — it is the entire `[V1] P1 Sponsored placements` card below.
 
 ---
 
@@ -625,7 +633,7 @@ The flag currently appears in exactly one file — `lib/stripe/features.ts` (a t
 | Constraint | Why |
 |---|---|
 | **Search ranking only.** Must not touch the map presence ladder | *Prominence earned by trust, never sold* is the shipped N7 promise. Selling map prominence would break it on the surface where it is most visible |
-| **Must never key off the `Black-Owned` / `Ally` label** | `.claude/rules/moderation-policy.md:48` bars making a paid tier, placement, or badge contingent on the ownership label. Centering stays editorial ranking only. `[Needs professional review]` — the §1981 / paid-tiers question is still awaiting attorney sign-off |
+| **Must never key off the `Black-Owned` / `Ally` label** | `.claude/rules/moderation-policy.md:48` bars making a paid tier, placement, or badge contingent on the ownership label. Centering stays editorial ranking only. `[Needs professional review]` — the §1981 / paid-tiers question is **still unanswered**. Privacy & Terms were signed off 2026-08-08, but the attorney's specific answer on this question was not recorded, so the constraint binds exactly as written until it is |
 | **Sponsored results must be visibly labeled** | Trust is the product. An unmarked paid result is the thing a directory cannot come back from |
 
 Systemic form of the same defect = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. Wiring this one flag does not close 105.
@@ -851,7 +859,7 @@ Systemic form of the same defect = ticket **105** (enforce tier limits at call s
 
 1. **In Trello:** create the 8 lists (section 2), add the 10 color **Area** labels (section 1), then create cards using the title prefixes + due dates, pasting the **Description** into the card body and the **Checklist** as a Trello checklist. Filter by phase prefix (`[MVP]`, `[V1]`…) to focus one milestone at a time.
 2. **Start now:** the live near-term lane is **`../ops/next-actions.md`**, not this board. As of 2026-08-05 that lane is the Stripe V1 gated cutover — **G2 → G3 → G4**, in that fixed order (merging to `main` *is* the production deploy). This board carries the roadmap around it; ops carries what is moving this week, with dates and evidence tags.
-3. **Re-baseline** the milestone dates — **all of them are now stale.** MVP's Jul 11 target passed without launch, so V1–V4 shift with it. Re-baseline after the remaining MVP floor (M9 content, legal sign-off, Resend warm-up) has owners and durations; then re-baseline V1–V4 again after MVP actually ships, using real launch-sprint velocity.
+3. **Re-baseline** the milestone dates — **all of them are now stale.** MVP's Jul 11 target passed without launch, so V1–V4 shift with it. Re-baseline after the remaining MVP floor (now just Resend warm-up + go/no-go — M9 and legal sign-off both closed) has owners and durations; then re-baseline V1–V4 again after MVP actually ships, using real launch-sprint velocity.
 4. **Decompose** each V1–V4 epic into granular cards at that phase's kickoff (especially **BLACQ Web**, which warrants its own sub-board with the 3D planning/performance/accessibility rules).
 
 ## 6) Source of truth
