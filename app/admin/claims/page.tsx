@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { resolveUserLabels, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
@@ -47,21 +48,11 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
 
   const totalPages = Math.ceil((count ?? 0) / limit)
 
-  // Fetch claimant display names for the visible page
-  const claimantIds = (claims ?? [])
-    .map((c) => c.claimant_user_id)
-    .filter((id): id is string => id !== null)
-
-  const profileMap: Record<string, string> = {}
-  if (claimantIds.length > 0) {
-    const { data: profiles } = await serviceClient
-      .from('profiles')
-      .select('id, display_name')
-      .in('id', claimantIds)
-    for (const p of profiles ?? []) {
-      if (p.display_name) profileMap[p.id] = p.display_name
-    }
-  }
+  // Claimant labels for the visible page: display_name → auth email, batched.
+  const claimantLabels = await resolveUserLabels(
+    serviceClient,
+    (claims ?? []).map((c) => c.claimant_user_id)
+  )
 
   const STATUS_TABS = [
     { value: 'pending', label: 'Pending' },
@@ -130,12 +121,12 @@ export default async function AdminClaimsPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-charcoal/5">
               {claims.map((claim) => {
                 const listing = claim.listings as { name: string; entity_type: string } | null
-                // Fall back to the claim's verification email when the
-                // claimant never set a display name (Finding 8).
+                // display_name → auth email (shared ladder) → the email the
+                // claimant typed on the claim itself (Finding 8).
                 const claimantName =
-                  (claim.claimant_user_id ? profileMap[claim.claimant_user_id] : null) ??
+                  (claim.claimant_user_id ? claimantLabels[claim.claimant_user_id] : null) ??
                   claim.verification_email ??
-                  'Unknown user'
+                  UNKNOWN_USER_LABEL
                 const dateStr = claim.submitted_at ?? claim.created_at
                 return (
                   <tr key={claim.id} className="hover:bg-[#f9f9fb] transition-colors">

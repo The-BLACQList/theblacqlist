@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { resolveUserLabels, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { ClaimApprovalActions } from '@/components/admin/ClaimApprovalActions'
@@ -66,23 +67,15 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
 
   const category = listing?.categories as { name: string } | null
 
-  // Fetch claimant profile
-  const { data: claimantProfile } = claim.claimant_user_id
-    ? await serviceClient
-        .from('profiles')
-        .select('display_name')
-        .eq('id', claim.claimant_user_id)
-        .maybeSingle()
-    : { data: null }
-
-  // Fetch reviewer profile if claim has been reviewed
-  const { data: reviewerProfile } = claim.reviewed_by
-    ? await serviceClient
-        .from('profiles')
-        .select('display_name')
-        .eq('id', claim.reviewed_by)
-        .maybeSingle()
-    : { data: null }
+  // Claimant + reviewer labels: display_name → auth email, resolved together.
+  const userLabels = await resolveUserLabels(serviceClient, [
+    claim.claimant_user_id,
+    claim.reviewed_by,
+  ])
+  const claimantLabel = claim.claimant_user_id
+    ? (userLabels[claim.claimant_user_id] ?? null)
+    : null
+  const reviewerLabel = claim.reviewed_by ? (userLabels[claim.reviewed_by] ?? null) : null
 
   const submittedDate = claim.submitted_at ?? claim.created_at
   const isReviewable = claim.status === 'pending' || claim.status === 'under_review'
@@ -123,7 +116,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
             <dl>
               <Row
                 label="Name"
-                value={claimantProfile?.display_name || claim.verification_email || 'Unknown'}
+                value={claimantLabel ?? claim.verification_email ?? UNKNOWN_USER_LABEL}
               />
               <Row
                 label="User ID"
@@ -198,7 +191,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
               <dl>
                 <Row
                   label="Reviewed by"
-                  value={reviewerProfile?.display_name ?? claim.reviewed_by ?? '—'}
+                  value={reviewerLabel ?? '—'}
                 />
                 <Row
                   label="Reviewed at"
@@ -226,7 +219,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
             {isReviewable ? (
               <ClaimApprovalActions
                 claimId={claim.id}
-                claimantName={claimantProfile?.display_name ?? 'this user'}
+                claimantName={claimantLabel ?? claim.verification_email ?? 'this user'}
               />
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">

@@ -50,8 +50,9 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before the public flip_
 
 **🎯 Up Next** — _pipeline hardening is **done** (C3–C8 shipped in PRs #5–#8; the `main-protection` ruleset is machine-enforced, decision-log 008). The lane is now the **MVP launch floor** plus the V1 defect tail from the 2026-08-06 founder walk. (`ops/next-actions.md` 2026-08-08)_
-- `[V1] 🟠 P1` **Findings 6/7 — `/account/activity` + `/account/recommended` render empty on prod.** Both routes exist and ship; they are **defects on a built surface**, not missing features. See the Supporter dashboard card.
-- `[V1] 🟡 P2` **Finding 8** — admin claims list falls back to "unknown" for `display_name`.
+- `[V1] 🟠 P1` **Finding 6 — `/account/activity` renders empty on prod. Root cause found, fix built 2026-08-08.** The page code was never wrong: it reads `analytics_events` through the user-scoped client, and the only SELECT policy on that table is owner-scoped (`20260510000001:732`), so RLS default-deny returned zero rows for every visitor. Migration `20260808000000_analytics_events_self_read.sql` adds a narrow self-read policy (`user_id = auth.uid() AND event_name = 'page_view' AND entity_type = 'listing'`) plus a matching partial index. **Additive, no data touched, down-plan in-file. Applying to production is GATE-DATA — not yet approved.** Branch `fix/account-surfaces`.
+- `[V1] ⚪️` **Finding 7 — NOT A DEFECT. Reclassified 2026-08-08.** `/account/recommended` derives recommendations from the signed-in user's saves and short-circuits at `categoryIds.length === 0`, rendering a purpose-built "Save businesses to get recommendations" empty state with a CTA `[Observed — app/account/recommended/page.tsx:47]`. An account with zero saves seeing that screen is **correct behavior**. The real gap is the absence of a **cold-start fallback** — a product decision, not a bug. See the Supporter dashboard card for the proposed smallest version.
+- `[V1] 🟡 P2` **Finding 8 — admin surfaces rendered "Unknown" (and in two places a raw UUID) for real people. Fixed 2026-08-08.** `lib/admin/userLabel.ts` lifts the `display_name` → auth-email ladder into one batched helper, wired at 5 sites (claims list + detail, entity detail, reviews list + detail). `admin/users` deliberately untouched — it already holds emails from `listUsers()`. Code-only, no gate. Branch `fix/account-surfaces`.
 - `[V1] 🟡 P2` **Finding 4-residual** (upload-cap TOCTOU) and **Finding 5** (local-only `next/image` private-IP tile) — prod-safe follow-up tickets.
 - `[MVP] 🟠 P1` Staging QA: account-deletion end-to-end walk-through — _needs an authed session_
 - `[MVP] 🟡 P2` SEO audit (090) — _GSC submission only, post-deploy_
@@ -571,17 +572,22 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-**`[V1] 🟡 P2` Supporter dashboard** — ⚠️ **BUILT, TWO SURFACES BROKEN** _(was mis-tracked at 0/3 — this is a **defect card**, not greenfield)_
+**`[V1] 🟡 P2` Supporter dashboard** — ⚠️ **BUILT · ONE REAL DEFECT, FIX BUILT** _(was mis-tracked at 0/3 — this is a **defect card**, not greenfield)_
 🟦 Frontend · **Due ~Sep 12, 2026**
 
 **Description.** Gives the non-owner audience — the shoppers — their own home: saved lists, recently viewed, and suggested businesses, turning one-time visitors into return users. It's the supporter-side complement to the owner dashboard. Done when a supporter can manage saved lists and see relevant recommendations.
 
-**Correction (2026-08-08).** All three routes exist and ship — `app/account/saved`, `app/account/activity`, `app/account/recommended` — inside the account shell built in PR #10. The board carried this as 0/3 unbuilt. It is not. Two of the three **render empty on production**, which is findings 6 and 7 from the founder walk of 2026-08-06. Debug the queries behind two live surfaces; do not rebuild them.
+**Correction (2026-08-08).** All three routes exist and ship — `app/account/saved`, `app/account/activity`, `app/account/recommended` — inside the account shell built in PR #10. The board carried this as 0/3 unbuilt. It is not. Two of the three appeared empty on the founder's 2026-08-06 walk. Investigation the same week split them:
+
+- **Finding 6 is a real defect** and the cause is RLS, not the page. `/account/activity` queries `analytics_events` through the user-scoped `createClient()`; the table's only SELECT policy grants reads to *business owners for listings they own* `[Observed — 20260510000001_mvp_rls_policies.sql:732]`. A visitor reading their own browsing history matches nothing, so default-deny returns zero rows silently. Fixed on `fix/account-surfaces` by a narrow, additive self-read policy + partial index (`20260808000000_analytics_events_self_read.sql`). Production application is **GATE-DATA, not yet approved**.
+- **Finding 7 is not a defect.** `/account/recommended` builds recommendations from the user's saved businesses and short-circuits when they have none, rendering a deliberate empty state — heading, explanation, and a CTA into discovery `[Observed — app/account/recommended/page.tsx:47]`. A zero-saves account seeing that screen is the page working as designed. What's missing is a cold-start path, below.
+
+**Proposed (not built) — cold-start recommendations.** `[Recommendation]` When a user has no saves, show trending-in-their-city instead of the empty state, reusing the `save_count desc` ordering the page already runs and the city already on the profile. Smallest useful version: one fallback query, same card grid, a heading that says why ("Popular near you"). This is a **product decision for the founder**, not a defect fix — the current empty state is defensible and shipping it as-is costs nothing.
 
 **Checklist.**
 - ✅ Saved lists — `app/account/saved`, renders
-- ⚠️ Recently viewed — `app/account/activity` **exists but renders empty on prod** (Finding 6)
-- ⚠️ Suggested businesses — `app/account/recommended` **exists but renders empty on prod** (Finding 7)
+- 🛠 Recently viewed — `app/account/activity`; RLS root cause found, fix built, **awaiting GATE-DATA for prod** (Finding 6)
+- ✅ Suggested businesses — `app/account/recommended` behaves correctly; cold-start fallback is an open product decision (Finding 7, reclassified 2026-08-08)
 
 ---
 
