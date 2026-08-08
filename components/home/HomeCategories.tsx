@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 export interface CategoryTile {
   name: string
@@ -45,7 +46,7 @@ export function HomeCategories({ categories }: Props) {
               <span
                 className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
                 aria-hidden="true"
-                style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
+                style={{ background: EMBER_WASH }}
               />
               <span
                 className={cn(

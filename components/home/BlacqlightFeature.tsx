@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 export interface FeaturedArticle {
   title: string
@@ -36,7 +37,7 @@ export function BlacqlightFeature({ article }: Props) {
           <span
             className="absolute inset-0"
             aria-hidden="true"
-            style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
+            style={{ background: EMBER_WASH }}
           />
           <span className="absolute left-5 bottom-5 font-headline text-[42px] text-gold leading-none select-none" aria-hidden="true">
             &ldquo;

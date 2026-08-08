@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { EMBER_WASH } from '@/lib/design/surfaces'
 
 // TODO: replace the designed dark panels with commissioned documentary
 // photography (LCI direction) when owned imagery lands — the structure and
@@ -38,7 +39,7 @@ export function HomeTriptych() {
             <span
               className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
               aria-hidden="true"
-              style={{ background: 'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)' }}
+              style={{ background: EMBER_WASH }}
             />
             <span className="relative font-subhead text-xs font-bold tracking-[0.16em] text-gold">
               {panel.index}

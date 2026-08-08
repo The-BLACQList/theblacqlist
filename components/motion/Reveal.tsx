@@ -46,6 +46,11 @@ export function Reveal({ children, delay = 0, className }: Props) {
       className={cn('blacq-reveal', shown && 'blacq-reveal-shown', className)}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
+      {/* If JS never runs, the observer never fires and the content would stay at
+          opacity 0 — invisible links a keyboard user can still tab into. */}
+      <noscript>
+        <style>{`.blacq-reveal{opacity:1!important;transform:none!important}`}</style>
+      </noscript>
       {children}
     </div>
   )
