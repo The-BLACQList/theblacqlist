@@ -7,6 +7,7 @@ import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { buildMapStyle, CITY_VIEWS } from '@/components/map/mapStyle'
 import { MapDrawer } from '@/components/map/MapDrawer'
+import { buildPinsFilter, popupOffsetFor, TIER_RADIUS } from '@/lib/map/popupOffset'
 import { isOpenNow } from '@/lib/listings/openStatus'
 import type { WeeklyHours } from '@/types'
 import { cn } from '@/lib/utils'
@@ -39,8 +40,6 @@ interface GeoFeature {
   properties: Omit<MapListing, 'lng' | 'lat'>
 }
 
-const TIER_RADIUS: Record<string, number> = { certified: 9, verified: 7, claimed: 5, unclaimed: 3.5 }
-
 /**
  * MP-A "Full-Bleed Explorer" on the light basemap: the map fills the page,
  * search/filters float on top, results live in a collapsible drawer (bottom
@@ -66,7 +65,14 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [trustOnly, setTrustOnly] = useState(false)
   const [categorySlug, setCategorySlug] = useState<string>('')
   const [typeFilter, setTypeFilter] = useState<string>('')
-  const [highlightId, setHighlightId] = useState<string | null>(null)
+  // Hover and selection are separate states on purpose. Hover (drawer
+  // mouseenter/focus) only glows the pin; selection (clicking a pin or a
+  // drawer row) is the one thing that opens a card. Collapsing them meant a
+  // card was always open, which is what let a second pin click close the card
+  // it had just opened instead of moving it.
+  const [hoverId, setHoverId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const activeId = selectedId ?? hoverId
 
   const reduceMotion = useMemo(
     () =>
@@ -231,20 +237,22 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         id: 'pins',
         type: 'circle',
         source: 'listings',
-        // Claimed+ circles hand over to logo markers at neighborhood zoom (>=13)
-        maxzoom: 13,
-        filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'trustTier'], 'unclaimed']],
+        // No maxzoom: the circle layer stays live at every zoom and instead
+        // drops exactly the ids that got a DOM logo marker (see the marker
+        // effect). A blanket zoom cutoff left claimed+ listings past the
+        // 60-marker cap with no renderer at all.
+        filter: buildPinsFilter([]),
         paint: {
           'circle-radius': [
             'match',
             ['get', 'trustTier'],
             'certified',
-            TIER_RADIUS.certified!,
+            TIER_RADIUS.certified,
             'verified',
-            TIER_RADIUS.verified!,
+            TIER_RADIUS.verified,
             'claimed',
-            TIER_RADIUS.claimed!,
-            TIER_RADIUS.unclaimed!,
+            TIER_RADIUS.claimed,
+            TIER_RADIUS.unclaimed,
           ],
           'circle-color': '#8f6600',
           // Tier ladder, visible: certified = thick light-gold ring, verified =
@@ -283,9 +291,17 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       for (const pinLayer of ['pins', 'pins-unclaimed']) {
         map.on('click', pinLayer, (e: MapLayerMouseEvent) => {
           const feature = e.features?.[0] as MapGeoJSONFeature | undefined
-          if (feature) setHighlightId(feature.properties.id as string)
+          if (feature) setSelectedId(feature.properties.id as string)
         })
       }
+      // The popup runs with closeOnClick disabled so a pin-to-pin click can't
+      // tear down the card it just opened. Clicking bare map still dismisses.
+      map.on('click', (e) => {
+        const hits = map.queryRenderedFeatures(e.point, {
+          layers: ['pins', 'pins-unclaimed', 'clusters'],
+        })
+        if (hits.length === 0) setSelectedId(null)
+      })
       for (const layer of ['pins', 'pins-unclaimed', 'clusters']) {
         map.on('mouseenter', layer, () => (map.getCanvas().style.cursor = 'pointer'))
         map.on('mouseleave', layer, () => (map.getCanvas().style.cursor = ''))
@@ -336,9 +352,18 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     if (!map || !mapReady) return
     const markers = logoMarkers.current
 
+    // Whatever this effect decides, the circle layer takes the complement:
+    // every claimed+ listing ends up with exactly one renderer, never zero.
+    const syncPinsLayer = () => {
+      if (map.getLayer('pins')) {
+        map.setFilter('pins', buildPinsFilter([...markers.keys()]))
+      }
+    }
+
     if (map.getZoom() < 13) {
       for (const marker of markers.values()) marker.remove()
       markers.clear()
+      syncPinsLayer()
       return
     }
 
@@ -371,7 +396,11 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         !logoTier && 'blacq-logo-marker-claimed',
         listing.trustTier === 'certified' && 'blacq-logo-marker-certified'
       )
-      el.setAttribute('aria-label', listing.name)
+      // The map container is aria-hidden (the drawer list is the accessible
+      // parallel path), so these buttons must not be focusable — 60 unlabeled
+      // tab stops inside a hidden subtree is the violation, not the fix.
+      el.tabIndex = -1
+      el.setAttribute('aria-hidden', 'true')
       const ring = document.createElement('span')
       ring.className = 'blacq-logo-marker-ring'
       if (logoTier && listing.logoSrc) {
@@ -395,7 +424,12 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       label.className = 'blacq-logo-marker-label'
       label.textContent = listing.name
       el.append(ring, tip, label)
-      el.addEventListener('click', () => setHighlightId(listing.id))
+      el.addEventListener('click', (event) => {
+        // Marker clicks bubble to the canvas container and would fire a map
+        // `click`, closing the card this one is opening.
+        event.stopPropagation()
+        setSelectedId(listing.id)
+      })
       markers.set(
         listing.id,
         new maplibregl.Marker({ element: el, anchor: 'bottom' })
@@ -403,7 +437,12 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
           .addTo(map)
       )
     }
-  }, [filtered, mapReady, viewNonce])
+
+    for (const [id, marker] of markers) {
+      marker.getElement().classList.toggle('blacq-logo-marker-active', id === activeId)
+    }
+    syncPinsLayer()
+  }, [filtered, mapReady, viewNonce, activeId])
 
   // Unmount-only teardown for the diffed marker set
   useEffect(() => {
@@ -414,16 +453,16 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     }
   }, [])
 
-  // Highlight marker: gold glow + grow/bounce on the selected pin, plus popup
+  // Gold glow on the active pin — but only for GL circles. A DOM logo marker
+  // gets `blacq-logo-marker-active` instead: the glow marker is center-anchored
+  // and on a 74px-tall marker it landed on the name label, not the ring.
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     highlightMarker.current?.remove()
     highlightMarker.current = null
-    popupRef.current?.remove()
-    popupRef.current = null
-    if (!highlightId) return
-    const listing = filtered.find((l) => l.id === highlightId)
+    if (!activeId || logoMarkers.current.has(activeId)) return
+    const listing = filtered.find((l) => l.id === activeId)
     if (!listing) return
 
     const el = document.createElement('div')
@@ -431,6 +470,23 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     highlightMarker.current = new maplibregl.Marker({ element: el })
       .setLngLat([listing.lng, listing.lat])
       .addTo(map)
+  }, [activeId, filtered, reduceMotion, viewNonce])
+
+  // Preview card for the selected listing
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    // Null the ref *before* removing: Popup.remove() fires 'close' synchronously,
+    // and the guarded handler below must see a cleared ref or it would null the
+    // selection out from under the effect that is opening the next card.
+    const previous = popupRef.current
+    popupRef.current = null
+    previous?.remove()
+
+    if (!selectedId) return
+    const listing = filtered.find((l) => l.id === selectedId)
+    if (!listing) return
 
     const open = listing.hours ? isOpenNow(listing.hours) : null
     const tierLabel =
@@ -471,17 +527,38 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       .filter(Boolean)
       .join(' · ')
 
-    popupRef.current = new maplibregl.Popup({
-      offset: 18,
+    const popup = new maplibregl.Popup({
+      // Sized to the renderer actually on screen so the card points at the pin
+      // instead of covering it. A scalar offset here normalizes to a radius,
+      // which cleared a 3.5px dot fine and buried a 74px logo marker.
+      offset: popupOffsetFor(listing.trustTier, logoMarkers.current.has(listing.id)),
       closeButton: true,
+      closeOnClick: false,
       maxWidth: '260px',
       className: 'blacq-map-popup-wrap',
     })
       .setLngLat([listing.lng, listing.lat])
       .setDOMContent(popupEl)
       .addTo(map)
-    popupRef.current.on('close', () => setHighlightId(null))
-  }, [highlightId, filtered, reduceMotion])
+    popupRef.current = popup
+    // Guarded: only a genuine user close (× or a bare-map click) deselects.
+    popup.on('close', () => {
+      if (popupRef.current === popup) setSelectedId(null)
+    })
+  }, [selectedId, filtered])
+
+  // Crossing z13 swaps a listing between the circle layer and a DOM marker,
+  // which changes how much the card has to clear. Re-offset in place rather
+  // than rebuilding the popup, so panning never flashes the card.
+  useEffect(() => {
+    const popup = popupRef.current
+    if (!popup || !selectedId) return
+    const listing = filtered.find((l) => l.id === selectedId)
+    if (!listing) return
+    popup.setOffset(
+      popupOffsetFor(listing.trustTier, logoMarkers.current.has(listing.id))
+    )
+  }, [selectedId, filtered, viewNonce])
 
   function flyToCity(slug: string) {
     setCitySlug(slug)
@@ -493,7 +570,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   }
 
   function focusListing(listing: MapListing) {
-    setHighlightId(listing.id)
+    setSelectedId(listing.id)
     const map = mapRef.current
     if (!map) return
     if (reduceMotion) map.jumpTo({ center: [listing.lng, listing.lat], zoom: Math.max(map.getZoom(), 13) })
@@ -590,8 +667,8 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
         listings={inView}
         totalCount={filtered.length}
         loadError={loadError}
-        highlightId={highlightId}
-        onHover={(id) => setHighlightId(id)}
+        highlightId={activeId}
+        onHover={setHoverId}
         onSelect={focusListing}
       />
     </div>
