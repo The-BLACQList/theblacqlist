@@ -103,6 +103,8 @@ export function MapDrawer({ listings, totalCount, loadError, highlightId, onHove
                 onClick={() => onSelect(listing)}
                 onMouseEnter={() => onHover(listing.id)}
                 onFocus={() => onHover(listing.id)}
+                onMouseLeave={() => onHover(null)}
+                onBlur={() => onHover(null)}
                 className={cn(
                   'w-full text-left rounded-lg bg-white text-brand-black px-3 py-2.5 transition-shadow duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold',
                   active && 'ring-2 ring-amber shadow-[0_0_16px_rgba(143,102,0,0.35)]'
