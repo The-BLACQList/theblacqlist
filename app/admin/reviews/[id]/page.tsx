@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Star } from 'lucide-react'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { resolveUserLabels, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { ReviewModerationActions } from '@/components/admin/ReviewModerationActions'
@@ -91,29 +92,16 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
     cities: { slug: string } | null
   } | null
 
-  // Fetch reviewer profile — fall back to auth email if display_name is unset
-  const { data: reviewerProfile } = review.reviewer_user_id
-    ? await serviceClient
-        .from('profiles')
-        .select('display_name')
-        .eq('id', review.reviewer_user_id)
-        .maybeSingle()
-    : { data: null }
-
-  let reviewerLabel = reviewerProfile?.display_name ?? null
-  if (!reviewerLabel && review.reviewer_user_id) {
-    const { data: authUser } = await serviceClient.auth.admin.getUserById(review.reviewer_user_id)
-    reviewerLabel = authUser.user?.email ?? null
-  }
-
-  // Fetch admin reviewer profile if already decided
-  const { data: adminProfile } = review.reviewed_by
-    ? await serviceClient
-        .from('profiles')
-        .select('display_name')
-        .eq('id', review.reviewed_by)
-        .maybeSingle()
-    : { data: null }
+  // Reviewer + deciding-admin labels: display_name → auth email, resolved
+  // together. This page originated the fallback ladder; it now shares it.
+  const userLabels = await resolveUserLabels(serviceClient, [
+    review.reviewer_user_id,
+    review.reviewed_by,
+  ])
+  const reviewerLabel = review.reviewer_user_id
+    ? (userLabels[review.reviewer_user_id] ?? null)
+    : null
+  const adminLabel = review.reviewed_by ? (userLabels[review.reviewed_by] ?? null) : null
 
   const entityHref =
     listing?.slug && listing?.entity_type
@@ -223,7 +211,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">Reviewer</h2>
             <dl>
-              <Row label="Name" value={reviewerLabel ?? 'Unknown user'} />
+              <Row label="Name" value={reviewerLabel ?? UNKNOWN_USER_LABEL} />
               <Row
                 label="User ID"
                 value={
@@ -278,7 +266,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
               <dl>
                 <Row
                   label="Decided by"
-                  value={adminProfile?.display_name ?? review.reviewed_by ?? '—'}
+                  value={adminLabel ?? '—'}
                 />
                 <Row
                   label="Decided at"

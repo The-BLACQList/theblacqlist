@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Star } from 'lucide-react'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { resolveUserLabels, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 
@@ -56,21 +57,11 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
 
   const totalPages = Math.ceil((count ?? 0) / limit)
 
-  // Fetch reviewer display names for the visible page
-  const reviewerIds = (reviews ?? [])
-    .map((r) => r.reviewer_user_id)
-    .filter((id): id is string => id !== null)
-
-  const profileMap: Record<string, string> = {}
-  if (reviewerIds.length > 0) {
-    const { data: profiles } = await serviceClient
-      .from('profiles')
-      .select('id, display_name')
-      .in('id', reviewerIds)
-    for (const p of profiles ?? []) {
-      if (p.display_name) profileMap[p.id] = p.display_name
-    }
-  }
+  // Reviewer labels for the visible page: display_name → auth email, batched.
+  const reviewerLabels = await resolveUserLabels(
+    serviceClient,
+    (reviews ?? []).map((r) => r.reviewer_user_id)
+  )
 
   const STATUS_TABS = [
     { value: 'intake', label: 'Pending' },
@@ -145,7 +136,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
               {reviews.map((review) => {
                 const listing = review.listings as { name: string } | null
                 const reviewerName = review.reviewer_user_id
-                  ? (profileMap[review.reviewer_user_id] ?? 'Unknown user')
+                  ? (reviewerLabels[review.reviewer_user_id] ?? UNKNOWN_USER_LABEL)
                   : 'Anonymous'
                 const excerpt = review.title ?? review.body ?? ''
                 return (

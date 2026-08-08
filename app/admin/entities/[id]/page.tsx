@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { resolveUserLabel, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { EntityApprovalActions } from '@/components/admin/EntityApprovalActions'
@@ -59,14 +60,9 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
 
   const category = listing.categories as { name: string } | null
 
-  // Fetch submitter profile if available
-  const { data: submitterProfile } = listing.submitted_by
-    ? await serviceClient
-        .from('profiles')
-        .select('display_name')
-        .eq('id', listing.submitted_by)
-        .maybeSingle()
-    : { data: null }
+  // Submitter label: display_name → auth email. Never the raw UUID — that is
+  // what the "Submitted by" row used to render (Finding 8).
+  const submitterLabel = await resolveUserLabel(serviceClient, listing.submitted_by)
 
   return (
     <div className="space-y-6">
@@ -107,7 +103,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
               <Row label="Source" value={listing.source} />
               <Row
                 label="Submitted by"
-                value={submitterProfile?.display_name ?? listing.submitted_by ?? 'Unknown'}
+                value={submitterLabel ?? (listing.submitted_by ? UNKNOWN_USER_LABEL : null)}
               />
               <Row label="Submitted at" value={new Date(listing.created_at).toLocaleString()} />
               <Row
