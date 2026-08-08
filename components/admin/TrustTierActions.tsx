@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { updateTrustTier } from '@/lib/actions/admin/updateTrustTier'
 import type { UpdateTrustTierState } from '@/lib/actions/admin/updateTrustTier'
+import { MANUAL_TRUST_TIERS, TRUST_TIER_META } from '@/lib/constants/listing'
 
 interface Props {
   listingId: string
@@ -11,11 +12,13 @@ interface Props {
 
 const initial: UpdateTrustTierState = {}
 
-const TIERS = [
-  { value: 'unverified', label: 'Unverified' },
-  { value: 'verified', label: 'Verified' },
-  { value: 'certified', label: 'Certified' },
-] as const
+// Canonical ladder from lib/constants/listing.ts — do not redeclare. The old
+// local list offered 'Unverified', which is not a valid trust_tier: the DB
+// CHECK rejected it every time and the admin only saw "Please try again".
+const TIERS = MANUAL_TRUST_TIERS.map((value) => ({
+  value,
+  label: TRUST_TIER_META[value].label,
+}))
 
 export function TrustTierActions({ listingId, currentTier }: Props) {
   const [state, action, pending] = useActionState(updateTrustTier, initial)

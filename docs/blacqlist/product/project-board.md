@@ -2,7 +2,7 @@
 
 **Trello-ready board covering everything left to build, from MVP public launch to the full "Future of Black Commerce" vision.**
 
-_Last reconciled against ops truth: **2026-08-05** · Capacity assumed: Founder + Claude (AI-paced)_
+_Last reconciled against ops truth: **2026-08-08** · Capacity assumed: Founder + Claude (AI-paced)_
 
 > **Read this first.** The **order** of everything below is current. The **dates** are not — every milestone and wave window on this board has passed and needs re-baselining (flagged in place). For what is actually moving right now, dated and evidence-tagged, see [`../ops/next-actions.md`](../ops/next-actions.md) and [`../ops/status.md`](../ops/status.md). **When ops and this board disagree, ops wins.**
 
@@ -23,14 +23,14 @@ _Last reconciled against ops truth: **2026-08-05** · Capacity assumed: Founder 
 
 ---
 
-## 🚦 Board lane snapshot — 2026-08-05
+## 🚦 Board lane snapshot — 2026-08-08
 
 Mirror these into Trello's lists. The cards themselves carry the detail; this is the at-a-glance status.
 
 > **Live near-term truth lives in `docs/blacqlist/ops/`** (`status.md`, `next-actions.md`, `ops-log.md`, `decision-log.md`) — dated and evidence-tagged. This board is the **full roadmap, MVP → V4**. When the two disagree, ops wins for anything in flight; this snapshot is reconciled against it.
 
 **🚧 In Progress**
-- `[V1] 🔴 P0` **Stripe V1 post-deploy tail — watch + live proof** — the cutover itself is **COMPLETE (G1–G4, decisions 003–007)** and the billing code is **LIVE in production** behind the coming-soon gate (merge `f88d93d` → `dpl_AnRoNREZeAd9W3uCqaCQMHZPHcTE` READY `[Measured — Vercel API, 2026-08-05]`). Immediate checks all PASS: `/api/stripe/webhook` live (400 on unsigned, was 404), `failed_webhooks` unresolved = 0 `[Measured — curl + psql, 2026-08-05]`. Remaining on this card: the 30-min post-deploy watch close-out, and the **founder-run live test subscription** (real card on prod → tier syncs end-to-end → cancel/refund) — the G4 *done-when*. Rollback standing by: `dpl_9GvDU2Grgp6BQZAwpx1aMJS1bmCC`.
+- `[V1] 🟠 P1` **Trust-tier hardening** — branch `feat/trust-tier-hardening`, PR open, **not merged (GATE-DEPLOY)**. The trust-tier workflow was already built (see the V1 card, now 4/4); reading it closely surfaced five defects, all fixed on this branch: **T1** the admin tier control offered `unverified` (not a valid `trust_tier`) so every override failed at the DB CHECK, and `claimed`/`unclaimed` were unreachable — no manual demotion path existed · **T2** rejecting a *re-review* of an already-verified listing nulled `verified_at`/`verified_by`, silently erasing provenance · **T3** no email reached the owner or the founder at any point in the verification chain · **T4** the resubmit guard omitted `pending` — the status the submit action itself writes — so each resubmit stacked another `moderation_queue` row · **T5** the claimed→verified evidence bar was undocumented. Verification suite green: `typecheck` · `lint` · `test:unit` **13 files / 85 tests** · `build` `[Measured — local run, 2026-08-08]`.
 
 **🔍 In Review / QA**
 - `[MVP] 🔴 P0` Security audit (086) — _report written; GO with conditions (prod RLS re-verify · `next` bumped ✅)_
@@ -43,17 +43,16 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 **⛔ Blocked / Waiting** (founder decisions · attorney · deliverability warm-up)
 > 👉 **Founder:** the ordered list of what *you* set up to unblock these — accounts, domain/DNS, data review, legal confirms, secrets handoff — is in **`docs/blacqlist/launch/founder-action-checklist.md`** (narrative) and **`founder-action-cards.md`** (paste-ready Trello cards F1–F10).
 > _091 (Supabase prod), 092 (Vercel + DNS), and 093 (seed import) were completed 2026-06-26 and have been **moved to ✅ Done** below — they are no longer blocked._
-- `[MVP] 🔴 P0` **M9 content gap — the one G4 blocker that is not code.** Local `e2e/launch-gates.spec.ts:41` fails deterministically: `ATL=38/150, HOU=17/50, CHI=18/50` `[Measured — local Playwright, 2026-08-05]`. Roughly **112 more ATL / 33 HOU / 32 CHI** published listings needed. Not fixable in the repo (`supabase/seed.sql` excludes listings; the launch JSON holds 80 businesses vs. the 250+ required) — it is a **founder content decision**: import a supplier list, run an outreach push, or consciously launch below the threshold and lower the gate as a logged decision. The spec was **not** edited, lowered, or skipped. **Does not block G2 or G3.** (`ops/status.md`, `ops/next-actions.md`, `ops/ops-log.md` — all 2026-08-05)
-- `[MVP] 🔴 P0` **Finding 2 — `priority_placement` defined but unenforced.** Open **product decision** (wire it or drop it); prod-safe, does not block the cutover. Systemic form = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. (`ops/status.md` 2026-08-05)
+> _**M9 is CLOSED** (decision-log 011, 2026-08-06) — the "content gap" was a stale-docs artifact, not a real deficit. `test:gates` 5/5 green (ATL 151/150 · HOU 51/50 · CHI 52/50) and the full e2e suite went **50/50** `[Measured — local Playwright, 2026-08-06]`. **Finding 2 is DECIDED** (wire `priority_placement`, 2026-08-08) — see the Sponsored placements card. Both have left this lane._
 - `[MVP] 🟠 P1` Founder legal confirms: entity name + mailing address + DMCA agent
 - `[MVP] 🟠 P1` Production data: image coverage pass — _keep/edit/remove pass **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements) and the production import (093) is **done**; image coverage is the only piece still open_
+- `[MVP] 🟠 P1` **41 unmapped listings — manual address cleanup (founder).** The N7 prod geocode backfill landed `ok=189 / fail=41` `[Measured — script output, 2026-08-07]`, and the 41 are **0/41 recoverable by machine**: structured retry returned 41/41 `no_match`; free-form geocoding returned 2 unsafe city-centroids and 39 `no_match` `[Measured — Nominatim via diagnostic script, 2026-08-07]`. These are bad addresses in the source data, not a geocoder problem. Fix is human: correct each address in `/admin`, which re-geocodes on save. **Do not bulk-run a corrective script against prod** (GATE-DATA). Task doc: `ops/geocode/address-cleanup-task.md`.
 - `[MVP] 🔴 P0` Email: Resend — _**✅ wiring done 2026-06-24**: subdomain `send.theblacqlist.com` verified, custom SMTP routes Supabase Auth mail through Resend on **both** projects, sends from domain, DMARC added; **remaining:** deliverability warm-up (lands in spam today — normal for a new domain) → re-verify "inbox, not spam" before the public flip_
 
-**🎯 Up Next** — _the cutover shipped; the lane is now **pipeline hardening** (lock in the staging→prod flow proven today) then the MVP launch floor. (`ops/next-actions.md` 2026-08-05)_
-- `[MVP] 🔴 P0` **C3 — environment discriminator** · `lib/env.ts` reading `VERCEL_ENV`; Sentry `environment` from it (previews currently report as "production"); preview banner; retire dead `NEXT_PUBLIC_APP_ENV`.
-- `[MVP] 🔴 P0` **C4 — real CI** (`.github/workflows/ci.yml`) · typecheck / lint / `test:unit` / build on every PR + `main` push. **Never wire `pnpm test`** — it is a no-op `exit 0`.
-- `[MVP] 🔴 P0` **C5 — branch protection enforced** · require PR + the four checks, block force-push. The G4 push **bypassed** an existing GitHub ruleset ("PR required", "no merge commits") via admin rights `[Observed — push output, 2026-08-05]` — make it real once C4 exists.
-- `[MVP] 🟡 P2` **C6–C8** · `vercel.ts` config-as-code · migration-runbook polish (rehearse-on-staging is now proven practice) · delete the `develop`→staging fiction from `CLAUDE.md` + `deploy-safety.md`.
+**🎯 Up Next** — _pipeline hardening is **done** (C3–C8 shipped in PRs #5–#8; the `main-protection` ruleset is machine-enforced, decision-log 008). The lane is now the **MVP launch floor** plus the V1 defect tail from the 2026-08-06 founder walk. (`ops/next-actions.md` 2026-08-08)_
+- `[V1] 🟠 P1` **Findings 6/7 — `/account/activity` + `/account/recommended` render empty on prod.** Both routes exist and ship; they are **defects on a built surface**, not missing features. See the Supporter dashboard card.
+- `[V1] 🟡 P2` **Finding 8** — admin claims list falls back to "unknown" for `display_name`.
+- `[V1] 🟡 P2` **Finding 4-residual** (upload-cap TOCTOU) and **Finding 5** (local-only `next/image` private-IP tile) — prod-safe follow-up tickets.
 - `[MVP] 🟠 P1` Staging QA: account-deletion end-to-end walk-through — _needs an authed session_
 - `[MVP] 🟡 P2` SEO audit (090) — _GSC submission only, post-deploy_
 - `[MVP] 🔴 P0` Regression QA sign-off (089) — incl. TA-01–TA-25 + cross-browser L4–L12
@@ -63,6 +62,12 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🔴 P0` Soft launch → Go/No-Go → Public announcement
 
 **✅ Done (this stretch)**
+- `[V1] 🟠 P1` **N7 — The Avenues breadth homepage · PR #13 (`c2fe3de`)** · 6 entity-type tiles with live counts, map wayfinding in all nav, identity markers, luxury motion. Squash-merged 2026-08-07 under branch protection; deploy `dpl_ENpqqznBvGWccj2ZBD9Pdbn8mT4X` is the **current production target**, READY, 30-min post-deploy watch closed clean at **0 runtime errors** `[Measured — Vercel API, 2026-08-07]`. design-critic verdict: SHIP, 0 Fail. Decision 014 (GATE-DEPLOY + GATE-DATA) · 2026-08-07
+- `[V1] 🟠 P1` **N7 — `/map` explore · PR #12 (`db8b1e5`)** · full-bleed explorer on self-hosted Protomaps tiles (`/api/map/tiles`), 3-level presence ladder (unclaimed dot → claimed amber pin → verified+ logo-in-gold-ring 48px, certified brighter+glow — **prominence earned by trust, never sold**), PP-1 photo-led preview popup. Verified: `/api/map/listings` → 200 / 189 features; tile range request → 206 over 550,419,649 bytes; coming-soon gate intact `[Measured — curl, 2026-08-07]` · 2026-08-07
+- `[V1] 🟠 P1` **N2 — HP-A homepage + showcase carousel · PR #11** · 9 real-data sections rebuilt on live queries (category/city counts, `save_count` trending, showcase carousel of real pages with scroll-snap/arrows/keyboard + reduced-motion-aware auto-advance, live spend aggregate with an honest zero-state, latest real BLACQLight story). Both "Coming Soon" mislabels killed. Critic round fixed one blocker: the gold node-dot motif was wallpapering 6/9 sections — now reserved for the impact band alone · 2026-08-06
+- `[V1] 🟠 P1` **N1 — account shell (AC-AB) · PR #10** · AccountNav (sidebar + mobile scroll-nav, live counts, pending-claim badge), account layout on 6 parallel count queries, data-rich overview (stats, recent saves, attention row, role-aware owner/claim block, "Your activity" + "Your contributions"), collapsible sidebar rail, 8 sub-pages de-chromed · 2026-08-06
+- `[V1] 🟡 P2` **Phase T — Living Commerce Index entity templates · PR #9** · the LCI template layer the Avenues homepage and account shell both build on · 2026-08-06
+- ⚙️ **GitHub Actions outage ridden out without a single ungated merge** · a major Actions outage exceeded the first 4h watcher; a round-2 watcher polled for recovery, retriggered all five PR branches (#7 #8 #9 #10 #11), and waited for clean mergeable states. Founder APPROVED (Decision 013); merged in order #7 → #8 → #9 → #11 → #10 · 2026-08-06
 - `[V1] 🔴 P0` **G4 — merged + deployed: Stripe V1 billing code LIVE in production** · GATE-DEPLOY CONDITIONAL APPROVE (decision-log 007; badge-order condition met at `7ce6681`) · merge `f88d93d` → prod build READY (`dpl_AnRoNREZeAd9W3uCqaCQMHZPHcTE`); webhook route live, `failed_webhooks` 0 `[Measured — Vercel API + curl + psql, 2026-08-05]` · behind the coming-soon gate; live subscription test still owed · 2026-08-05
 - `[V1] 🔴 P0` **G3 — env + webhook + portal configured** (decision-log 006) · live webhook on 4 events, legacy WooCommerce webhooks disabled, live/test env split verified by `vercel env ls`, Customer Portal set · 2026-08-05
 - `[V1] 🔴 P0` **G2 — live Stripe catalog + price IDs synced** (decisions 004–005) · 3 products / 6 prices ($19/$182 · $49/$470 · $99/$950) on the original account; IDs verified in prod `plans` `[Measured — psql, 2026-08-05]` · 2026-08-05
@@ -70,7 +75,7 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 - `[MVP] 🟠 P1` **Card badge order** · ownership label (Black-Owned/Ally) → claimed/unclaimed → entity type (`f8d49a3` + `7ce6681`) · 2026-08-05
 - `[V1] 🔴 P0` **G1 — six migrations applied to production** · GATE-DATA approved (decision-log 003); `supabase db push --yes` against `ytlrnczevdnsfdzjbeqg`, no errors `[Observed]`; `migration list --linked` → **35/35 `local == remote`** `[Measured — Supabase CLI, 2026-08-05]`. Prod schema is now intentionally **ahead of** the deployed code — the code reading `ownership_label`, `stripe_events_processed`, `failed_webhooks`, and the 4-tier `plans` ships at G4 · 2026-08-05
 - `[V1] 🔴 P0` **G1 verification CLOSED — SQL spot-checks all PASS** `[Measured — psql against ytlrnczevdnsfdzjbeqg, 2026-08-05]` · `plans` = exactly 4 rows (free · starter · growth · premium), `launch_subscribers` exists, `listings.ownership_label` exists, all four trigger functions `prosecdef = t`, `stripe_events_processed` + `failed_webhooks` exist · 2026-08-05
-- `[MVP] 🔴 P0` **Playwright `e2e/` suite RUN — 49 passed / 1 failed (59.5s)** `[Measured — local Playwright, 2026-08-05]` · closes the `deploy-safety.md` "an unrun check counts as red" item. Green: M1, M2, M4, M8, all 16 a11y axe scans. **Sole failure = M9** (content gap, see ⛔ Blocked) · 2026-08-05
+- `[MVP] 🔴 P0` **Playwright `e2e/` suite RUN — 49 passed / 1 failed (59.5s)** `[Measured — local Playwright, 2026-08-05]` · closes the `deploy-safety.md` "an unrun check counts as red" item. Green: M1, M2, M4, M8, all 16 a11y axe scans. **Sole failure = M9** — since resolved: the suite went **50/50** the next day and M9 closed as a stale-docs artifact (decision-log 011, 2026-08-06) · 2026-08-05
 - `[MVP] 🟠 P1` **`ownership-label.spec.ts` proven — 5/5 on first attempt** · never run since it landed Jul 25; Terms §4 both definitions, About/Ally copy, Discover ownership filter, Black-Owned facet + badge, Ally facet URL `[Measured — local Playwright, 2026-08-05]` · 2026-08-05
 - `[MVP] 🟠 P1` **Jun-22 flaky focus-trap cases genuinely green** · J15a (mobile nav, Radix) and J15b (report-correction dialog) both passed on **attempt 1, no retries** — a retry-only pass would still be labeled flaky `[Measured — local Playwright, 2026-08-05]` · 2026-08-05
 - `[MVP] 🔴 P0` **Pre-deploy quality gates green** · `npx tsc --noEmit` exit 0 · `npx eslint app lib components` exit 0 · unit **65/65 across 11 files** · `pnpm build` exit 0 `[Measured — local, 2026-08-05]` · 2026-08-05
@@ -103,13 +108,13 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 
 > "Done" here means the build/doc work is complete; any production-gated re-verification still lives on the relevant card.
 
-**🧭 Open decisions the founder owns (2026-08-05)** — none of these are code problems; each is a call only the founder can make:
+**🧭 Open decisions the founder owns (2026-08-08)** — none of these are code problems; each is a call only the founder can make:
 
 | Decision | State | Where it bites |
 |---|---|---|
 | **Live test subscription on prod** — the G4 *done-when*: `?preview` in → upgrade a listing with a real card → tier syncs via the live webhook → cancel/refund in Stripe | Open — founder-run (billing code LIVE since 2026-08-05; 30-min watch clean) | Final proof of the money path; nothing else blocks on it |
-| **M9 content gap** — source ~112 ATL / 33 HOU / 32 CHI more published listings, or consciously launch below threshold and lower the gate as a logged decision | Open — not closable from the repo | Blocks the MVP public-launch gate M9 (`ops/status.md`, 2026-08-05) |
-| **Finding 2** — `priority_placement` is defined but unenforced: wire it or drop it | Open — product decision | Non-blocking for the cutover; it is the per-field form of the systemic V1.5 issue (ticket 105) (`ops/next-actions.md`, 2026-08-05) |
+| ~~**M9 content gap**~~ | **CLOSED 2026-08-06 — decision-log 011.** Stale-docs artifact, not a content deficit: the launch JSON has held the full 254-listing corpus since ticket 093. `test:gates` 5/5 green (ATL 151/150 · HOU 51/50 · CHI 52/50); full e2e **50/50** for the first time `[Measured — local Playwright, 2026-08-06]` | No longer a launch blocker |
+| ~~**Finding 2** — `priority_placement` defined but unenforced~~ | **DECIDED 2026-08-08 — wire it.** Constraints recorded on the Sponsored placements card. Implementation is a **separate pass** (one risky change at a time; paid placement touches ranking) | Sponsored placements card, V1 · systemic form remains ticket **105** |
 | **8% marketplace fee** — decision-log 002 | **PROPOSED — no founder approval recorded** | Gates any marketplace revenue modeling downstream of V2 |
 | **Legal §1981 / paid-tiers review** — a paid tier, placement, or badge must not be contingent on the `Black-Owned` label; centering stays editorial ranking only | `[Needs professional review]` — attorney sign-off still outstanding | `.claude/rules/moderation-policy.md:48`; also holds the Privacy/Terms card in 🔍 In Review
 
@@ -507,12 +512,16 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-### 🗂️ V1 — Trust & Grow (due ≤ Sep 12, 2026)
+### 🗂️ V1 — Trust & Grow (due ≤ Sep 19, 2026)
+
+> **Lane reconciliation, 2026-08-08.** This markdown board and Trello had drifted. The lane bound was `≤ Sep 12` here; Trello carries **Sponsored placements at Sep 19**, so the bound moves to Sep 19. Two cards in this lane were mis-tracked as open and are now marked complete (Reviews system, Trust tiers workflow), and one was mis-tracked as unbuilt and is now a defect card (Supporter dashboard).
+>
+> **What the screenshots did not settle:** the per-card due dates for the rest of V1, and the V2–V4 milestone dates, which the Milestones table already flags as stale and hanging off a **passed MVP date**. Those are not re-baselined here — a date nobody measured is not a date. `[Unknown]` until the MVP finish line is re-set with owners and durations.
 
 ---
 
-**`[V1] 🟠 P1` Reviews system** — _⏩ substantially **pulled forward** by Pillar B (2026-06-22)_
-🟦 Frontend · 🟩 Backend · **Due ~Aug 22, 2026**
+**`[V1] 🟠 P1` Reviews system** — ✅ **COMPLETE 4/4** _(⏩ pulled forward by Pillar B 2026-06-22; the last item closed with PR #7)_
+🟦 Frontend · 🟩 Backend · ~~**Due ~Aug 22, 2026**~~ **shipped 2026-08-06**
 
 **Description.** Reviews are the trust engine of a directory — they give supporters a reason to return and owners a reason to stay engaged. This adds star + text reviews (from logged-in users on claimed listings), a moderation queue to keep them safe and on-policy, public display on Pages, and the review-count signal that feeds auto-certification. Done when reviews can be submitted, moderated, and displayed on a Page.
 
@@ -520,22 +529,29 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 - ✅ Star + text review submission (logged-in) — live (intake→published); **+ B2a multi-criteria ratings + B2b moderated photos** built
 - ✅ Moderation queue (approve / reject / remove) — `/admin/reviews` + `moderateReview`; **photo approval rides review publish**
 - ✅ Public display on Pages with average rating — live; **+ per-criterion breakdown chips + category-average strip + photo thumbnails**
-- Review-count feeds the certification signal — _still open (the certification wiring is the remaining V1 piece)_
+- ✅ Review-count feeds the certification signal — **shipped PR #7 (`659c442`)**; `maybePromoteToCertified` reads published review count + claim tenure. `app/admin/reviews/` covers published / rejected / **removed**
 
-**Note (2026-06-22):** base reviews were already live; Pillar B's B2a + B2b extended them with multi-criteria ratings and moderated photos. What remains on this card is the **auto-certification signal wiring** (review-count/tenure → Certified tier), not the review UX itself.
+**Note (2026-06-22):** base reviews were already live; Pillar B's B2a + B2b extended them with multi-criteria ratings and moderated photos. The remaining item was the **auto-certification signal wiring** (review-count/tenure → Certified tier), not the review UX.
+
+**Note (2026-08-08):** that wiring shipped in PR #7 on 2026-08-06. The card sat at 2/4 on the board for two days after it was actually done — corrected here.
 
 ---
 
-**`[V1] 🟠 P1` Trust tiers workflow**
-🟦 Frontend · 🟩 Backend · **Due ~Aug 29, 2026**
+**`[V1] 🟠 P1` Trust tiers workflow** — ✅ **COMPLETE 4/4** _(was mis-tracked at 3/4; the last item shipped in PR #7)_
+🟦 Frontend · 🟩 Backend · ~~**Due ~Aug 29, 2026**~~ **shipped 2026-08-06**
 
 **Description.** Codifies how a listing earns credibility — Claimed (owner verified email) → Verified (documents reviewed) → Certified (verified + sustained activity) — with an admin verification queue and visible badges. This is what lets users tell a self-serve listing apart from a vetted one, and it's the backbone of the platform's trust promise. Done when all three tiers and the verification queue work end-to-end.
 
 **Checklist.**
-- Claimed → Verified (document review) → Certified transitions
-- Admin verification queue (review docs, approve/deny)
-- Tier badges on Pages + cards
-- Auto-certification rule wired to reviews + tenure
+- ✅ Claimed → Verified (document review) → Certified transitions
+- ✅ Admin verification queue (review docs, approve/deny) — `app/admin/verification/` list + detail
+- ✅ Tier badges on Pages + cards
+- ✅ Auto-certification rule wired to reviews + tenure — shipped **PR #7 (`659c442`)**: `lib/services/trust/certification.ts`, verified → certified at **5+ published reviews AND 90+ days** since claim approval; one-way, race-guarded, audited as `auto_certify_listing`
+
+**The chain, end to end** `[Observed — source, 2026-08-08]`:
+> owner uploads docs → `lib/actions/owner/submitVerificationRequest.ts` → `moderation_queue` row → `app/admin/verification/` → `VerificationDecisionForm` → `lib/actions/admin/updateVerificationStatus.ts` (promotes the tier, stamps `verified_at`/`verified_by`, resolves the queue row, writes an audit log) → auto-certify via `lib/services/trust/certification.ts`
+
+**Follow-on:** the workflow shipped with five defects (a broken admin control, silent provenance loss, no notifications at all, duplicate queue rows, an undocumented evidence bar). All five are fixed on `feat/trust-tier-hardening` — see the **Trust-tier hardening** card in 🚧 In Progress. The evidence bar for claimed→verified now lives in `.claude/rules/moderation-policy.md`.
 
 ---
 
@@ -555,15 +571,17 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 ---
 
-**`[V1] 🟡 P2` Supporter dashboard**
+**`[V1] 🟡 P2` Supporter dashboard** — ⚠️ **BUILT, TWO SURFACES BROKEN** _(was mis-tracked at 0/3 — this is a **defect card**, not greenfield)_
 🟦 Frontend · **Due ~Sep 12, 2026**
 
 **Description.** Gives the non-owner audience — the shoppers — their own home: saved lists, recently viewed, and suggested businesses, turning one-time visitors into return users. It's the supporter-side complement to the owner dashboard. Done when a supporter can manage saved lists and see relevant recommendations.
 
+**Correction (2026-08-08).** All three routes exist and ship — `app/account/saved`, `app/account/activity`, `app/account/recommended` — inside the account shell built in PR #10. The board carried this as 0/3 unbuilt. It is not. Two of the three **render empty on production**, which is findings 6 and 7 from the founder walk of 2026-08-06. Debug the queries behind two live surfaces; do not rebuild them.
+
 **Checklist.**
-- Saved lists (create / rename / organize)
-- Recently viewed
-- Suggested businesses
+- ✅ Saved lists — `app/account/saved`, renders
+- ⚠️ Recently viewed — `app/account/activity` **exists but renders empty on prod** (Finding 6)
+- ⚠️ Suggested businesses — `app/account/recommended` **exists but renders empty on prod** (Finding 7)
 
 ---
 
@@ -581,7 +599,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 ---
 
 **`[V1] 🟠 P1` Sponsored placements**
-🟩 Backend · 🟦 Frontend · **Due ~Sep 12, 2026**
+🟩 Backend · 🟦 Frontend · **Due ~Sep 19, 2026** _(was ~Sep 12 here; Trello reads Sep 19 `[Observed — board screenshots, 2026-08-08]`)_
 
 **Description.** Lets premium listings pay for top-of-search and category visibility — the second revenue lever after subscriptions — with admin controls and expiry. It must be visually honest (clearly marked) to protect trust. Done when sponsored slots render with the correct placement rules and at least a few are live.
 
@@ -589,6 +607,22 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 - Premium top-of-search + category placement
 - Placement rules + clear "Sponsored" labeling
 - Admin controls + expiry
+
+> **Trello shows 2/3 on this card. Source truth does not support that** `[Observed — board screenshots + repo read, 2026-08-08]`. `priority_placement` exists only as a tier flag in `lib/stripe/features.ts` and is enforced in no ranking code — no placement renders, is labeled, or expires anywhere in the app. Which two items were ticked is not recoverable from the screenshots, so nothing is marked complete here. **Treat this card as 0/3 until someone points at the code.** Re-tick from source, not from memory.
+
+**`[Decision — product, 2026-08-08]` Finding 2: wire `priority_placement`, don't drop it.**
+
+The flag currently appears in exactly one file — `lib/stripe/features.ts` (a tier-flag union member, weight `2`) — and is enforced in no ranking code. It is a paid entitlement customers could buy today and receive nothing for. This card is the answer to the wire-or-drop question: **wire it.**
+
+**Implementation is a separate pass.** Not built here — `deploy-safety.md` says one risky change at a time, and paid placement touches search ranking. Constraints, recorded now while they are fresh:
+
+| Constraint | Why |
+|---|---|
+| **Search ranking only.** Must not touch the map presence ladder | *Prominence earned by trust, never sold* is the shipped N7 promise. Selling map prominence would break it on the surface where it is most visible |
+| **Must never key off the `Black-Owned` / `Ally` label** | `.claude/rules/moderation-policy.md:48` bars making a paid tier, placement, or badge contingent on the ownership label. Centering stays editorial ranking only. `[Needs professional review]` — the §1981 / paid-tiers question is still awaiting attorney sign-off |
+| **Sponsored results must be visibly labeled** | Trust is the product. An unmarked paid result is the thing a directory cannot come back from |
+
+Systemic form of the same defect = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. Wiring this one flag does not close 105.
 
 ---
 
