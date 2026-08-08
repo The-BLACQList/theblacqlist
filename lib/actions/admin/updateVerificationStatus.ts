@@ -2,6 +2,9 @@
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
+import { sendEmail } from '@/lib/email/resend'
+import { VerificationApprovedEmail } from '@/lib/email/templates/verification-approved'
+import { VerificationRejectedEmail } from '@/lib/email/templates/verification-rejected'
 
 const VALID_DECISIONS = ['verified', 'rejected'] as const
 
@@ -33,7 +36,7 @@ export async function updateVerificationStatusAction(
 
   const { data: listing } = await serviceClient
     .from('listings')
-    .select('id, name, trust_tier, verification_status')
+    .select('id, name, trust_tier, verification_status, owner_user_id')
     .eq('id', listingId)
     .maybeSingle()
 
@@ -49,14 +52,19 @@ export async function updateVerificationStatusAction(
   const now = new Date().toISOString()
   const newTrustTier = decision === 'verified' ? 'verified' : listing.trust_tier
 
+  // Only a grant writes provenance. A rejection must NOT null verified_at /
+  // verified_by: rejecting a re-review of an already-verified listing would
+  // erase when and by whom it was originally verified, silently. The rejection
+  // is carried by verification_status + verification_notes. Revoking an
+  // existing verification is a deliberate act via TrustTierActions (demote to
+  // 'claimed'), which clears the stamp along with the tier.
   const { error: updateError } = await serviceClient
     .from('listings')
     .update({
       verification_status: decision,
       trust_tier: newTrustTier,
       verification_notes: notes,
-      verified_at: decision === 'verified' ? now : null,
-      verified_by: decision === 'verified' ? admin.user.id : null,
+      ...(decision === 'verified' && { verified_at: now, verified_by: admin.user.id }),
       last_admin_updated_at: now,
     })
     .eq('id', listingId)
@@ -81,6 +89,48 @@ export async function updateVerificationStatusAction(
     },
     afterState: { trust_tier: newTrustTier, verification_status: decision, notes },
   })
+
+  // ── Decision email to the owner (fire-and-forget) ───────────────────────────
+  // Wrapped so nothing in the notification path can reject the moderation
+  // decision that already committed above — the same posture writeAuditLog and
+  // maybePromoteToCertified use. An unclaimed listing has no owner to notify.
+  if (listing.owner_user_id) {
+    const ownerUserId = listing.owner_user_id
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://theblacqlist.com'
+
+    void (async () => {
+      try {
+        const { data: userData } = await serviceClient.auth.admin.getUserById(ownerUserId)
+        const ownerEmail = userData?.user?.email
+        if (!ownerEmail) return
+
+        if (decision === 'verified') {
+          await sendEmail({
+            to: ownerEmail,
+            subject: `${listing.name} is now Verified on The BLACQList`,
+            react: VerificationApprovedEmail({
+              listingName: listing.name,
+              listingId,
+              siteUrl,
+            }),
+          })
+        } else {
+          await sendEmail({
+            to: ownerEmail,
+            subject: `An update on your verification request for ${listing.name}`,
+            react: VerificationRejectedEmail({
+              listingName: listing.name,
+              listingId,
+              notes,
+              siteUrl,
+            }),
+          })
+        }
+      } catch (err) {
+        console.error('[updateVerificationStatus] decision email failed:', listingId, err)
+      }
+    })()
+  }
 
   return { success: true, listingId, decision }
 }

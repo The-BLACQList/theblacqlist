@@ -30,6 +30,28 @@ export const OWNERSHIP_LABEL_META: Record<
   ally: { label: 'Ally', shortLabel: 'Ally' },
 }
 
+// Trust ladder (listings.trust_tier CHECK, set by the initial schema
+// `20260510000000_initial_blacqlist_mvp_schema` and never superseded — verified
+// against every later migration that touches trust_tier). Order is meaningful:
+// it is the ladder, lowest to highest. Promotion unclaimed → claimed happens on
+// claim approval; claimed → verified is a founder-only grant; verified →
+// certified is automatic (see lib/services/trust/certification.ts).
+export const VALID_TRUST_TIERS = ['unclaimed', 'claimed', 'verified', 'certified'] as const
+
+export type TrustTier = (typeof VALID_TRUST_TIERS)[number]
+
+// Tiers an admin may set by hand. Every tier is reachable: demotion back down
+// the ladder is a legitimate corrective act (a bad claim, a revoked
+// verification), so the manual control must not silently omit the lower rungs.
+export const MANUAL_TRUST_TIERS = VALID_TRUST_TIERS
+
+export const TRUST_TIER_META: Record<TrustTier, { label: string }> = {
+  unclaimed: { label: 'Unclaimed' },
+  claimed: { label: 'Claimed' },
+  verified: { label: 'Verified' },
+  certified: { label: 'Certified' },
+}
+
 export const VALID_LOCATION_TYPES = [
   'physical',
   'virtual',
