@@ -1,84 +1,92 @@
-# 113 — City imagery (city tiles + city page hero)
+# 113 — City imagery (city tiles)
 
 | | |
 |---|---|
 | **Phase** | V1.5 |
 | **Priority** | P3 |
-| **Status** | Documented, not built — **needs decision** |
-| **Depends on** | — |
-| **Gates** | **GATE-DATA** (adds a column to `cities`), then GATE-DEPLOY |
+| **Status** | **Decided — buildable. Blocked only on the three photographs.** |
+| **Depends on** | Founder hands over 3 city photographs |
+| **Gates** | **GATE-DEPLOY** only |
 | **Written** | 2026-08-09 |
+| **Decided** | 2026-08-09 — decision-log 026 |
 
 ---
 
-## Why this is a ticket and not a change
+## The three decisions
 
-`photographic-style-direction.md` puts city tiles at **Priority 7** — the last slot in its own
-priority order — and already defers them. Three findings make building it now the wrong call:
+All three open questions are answered `[Decision — founder, 2026-08-09]`:
 
-1. **`cities` has no image column.** `cover_image_path` exists on `listings`, `collections`,
-   `editorial_articles`, and `guides`, but not on `cities`
-   `[Measured — psql prod, 2026-08-09]`. Adding it is a migration, and migrations against
-   production are **GATE-DATA**.
-2. **We have no city photography.** The twelve licensed photos in `public/images/editorial/` are
-   business-themed — a bookshop, a kitchen, a fitness studio — not skylines or streetscapes. None
-   of them can honestly stand in for Atlanta, Houston, or Chicago.
-3. **Thirteen cities, three of them live.** ATL / HOU / CHI carry essentially all published
-   listings; the other ten are near-empty. Sourcing thirteen city images before ten of those
-   cities have content is work ahead of its own demand.
+| Question | Answer |
+|---|---|
+| **How many cities?** | **Three** — Atlanta, Houston, Chicago. The other ten stay on the type-only treatment until they have listings. |
+| **Photography or the abstract treatment?** | **Licensed city photography.** The objection that ruled out stock on business cards (decision 023) does not reach here — a skyline depicts no individual business, so nothing is misrepresented. |
+| **Storage: `listing-media`, `city-media`, or something else?** | **Repo files, no DB column.** `public/images/cities/{slug}.webp` with a slug→file map in code. |
 
-Nothing is broken today: city surfaces render type and the existing layout, with no empty image
-slot waiting to be filled.
+### What the storage answer removes
+
+The prior draft of this ticket was built around `alter table cities add column cover_image_path text`, a bucket choice, a down-plan, and reuse of `resolveMediaPath`. **None of that is needed.**
+
+Three images that change roughly annually are not user content — they are site assets, the same category as `hero-bg.jpg`. Putting them in the repo means:
+
+- **No migration.** **GATE-DATA is no longer reached by this ticket at all.**
+- No bucket policy, no signed-URL path, no `resolveMediaPath` call — `next/image` loads `/images/cities/atlanta.webp` directly.
+- No admin UI needed to set a value, and no null-handling in the database layer.
+
+The cost is that adding a fourth city is a code change rather than a DB write. At three cities changing about once a year, that is the cheaper side of the trade.
 
 ---
 
-## Scope when this is picked up
+## Scope
 
-**Data (GATE-DATA).**
-
-```sql
-alter table cities add column cover_image_path text;
-```
-
-Additive, nullable, backward-compatible; the down-plan is a single `drop column`. Follow the same
-convention as the other four tables: store a **Supabase Storage path** (bucket `listing-media`, or
-a new `city-media` bucket if buckets are to be separated by content type — decide before the
-migration, not after), never a URL. `lib/listings/coverImage.ts` already exports `resolveMediaPath`,
-which turns a stored path into something `next/image` can load; reuse it rather than building a
-second rule.
-
-**Assets.** Thirteen images, or three if the scope is narrowed to the live cities — which is the
-recommendation. Requirements:
+### Assets — 3 photographs (founder sources)
 
 | | |
 |---|---|
-| Ratio | 3:2 (house ratio — `photographic-style-direction.md`, and every existing asset) |
-| Delivered | 1600px wide WebP, ≤150 KB — run `pnpm images:editorial` |
-| Content | Recognizably the city, not a generic urban stock skyline |
-| Licensing | Source / author / license / commercial-use recorded **before** the file is committed (`.claude/rules/3d-assets.md`); add rows to `docs/blacqlist/design/editorial-image-licenses.md` |
-| Alt text | Names the city — these are informative, not decorative, so `alt=""` is wrong here (unlike the `/about` editorial photos) |
+| Ratio | **3:2** — house ratio (`photographic-style-direction.md`; every existing asset) |
+| Delivered | **1600px wide WebP, ≤150 KB** — run `pnpm images:editorial` |
+| Content | Recognizably the city: skyline, neighborhood, or landmark. Not a generic urban stock skyline. |
+| Source | **Canva Pro is valid here.** No named business appears, so restriction 2 (implied endorsement) doesn't bite, and a city tile is not a brand mark, so restriction 3 doesn't either. See `docs/blacqlist/design/editorial-image-licenses.md`. |
+| Licensing | Source / author / license / commercial-use recorded **before** the file is committed (`.claude/rules/3d-assets.md`). Add three rows to `editorial-image-licenses.md`. |
+| Filenames | `atlanta.webp`, `houston.webp`, `chicago.webp` — the city slug, nothing else. Do **not** repeat the aspirational-business-name mistake documented in the license doc's Naming caution. |
 
-**Surfaces.** City tiles wherever cities are listed, and the `/[citySlug]` page hero. Every slot
-must degrade when `cover_image_path` is null — the ten quiet cities will have no image for a long
-time, and a half-filled grid of images and blanks looks worse than a grid with none.
+Files land in `public/images/cities/`.
+
+### Code — a lookup plus two components
+
+**The map.** One exported constant, keyed by city slug, returning a public path or `undefined`. Three entries. It belongs next to `lib/design/surfaces.ts` or in `lib/listings/coverImage.ts` — not inlined in a component, since two surfaces read it.
+
+**Surface 1 — `app/(public)/cities/page.tsx:141-190`.** The bento grid of live cities. Each tile is a dark `bg-deep-bg` card with an absolutely-positioned `EMBER_WASH` span behind relative-positioned text.
+
+**Surface 2 — `components/home/CityChapters.tsx:36-54`.** The homepage city chapters row. Structurally identical: same `bg-deep-bg` card, same absolute `EMBER_WASH` span, same relative text on top.
+
+Both take the same change:
+
+- **Photo present** → render a `next/image` `fill` `object-cover` beneath, then the legibility scrim `bg-gradient-to-t from-black/80 via-black/40 to-transparent` in place of the wash. Reuse that token; do not invent a new gradient.
+- **No photo** → keep `EMBER_WASH` exactly as it renders today.
+
+Ten of thirteen cities will have no photo for a long time. **That is the intended end state, not a gap** — an image only where there is real content keeps the grid honest about where the depth is. Do not fill the other ten to make the grid uniform.
+
+### Alt text
+
+**Names the city:** `alt="Atlanta skyline"`. These are informative, unlike the `/about` editorial photos where the adjacent heading supplies the context and `alt=""` is correct.
+
+The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is decoration.
 
 ---
 
-## Open decisions for the founder
+## Not in scope
 
-1. **Three cities or thirteen?** Recommendation: **three** (ATL / HOU / CHI). Ship images where
-   there is content; leave the rest on the type-only treatment.
-2. **Photography or the abstract treatment?** The same fork already settled for business covers
-   (`[Decision — 023, 2026-08-09]`) applies here — except the objection that killed stock on
-   business cards does **not** apply to cities. A photo of Atlanta misrepresents nobody. So
-   licensed city photography is legitimate here in a way it was not there.
-3. **Bucket:** reuse `listing-media`, or create `city-media`? Affects the migration, so decide first.
+**There is no city page hero.** The earlier draft listed "the `/[citySlug]` page hero" as a third surface. `app/(public)/discover/[citySlug]/page.tsx` has no hero — it opens on a search bar, filters, and the results grid `[Observed, 2026-08-09]`. Adding one is a separate design decision, not part of this ticket.
+
+---
 
 ## Definition of done
 
-- [ ] Founder answers the three decisions above
-- [ ] Migration written with a down-plan; applied to staging and verified; **GATE-DATA** for production
-- [ ] Assets licensed, recorded, optimized (≤150 KB, 3:2 WebP), committed
-- [ ] City tiles and the `/[citySlug]` hero read the column and degrade cleanly when null
-- [ ] Alt text names the city
-- [ ] Lighthouse LCP on `/[citySlug]` no worse than before
+- [ ] Three photographs sourced, licensed, and recorded in `editorial-image-licenses.md` **before** commit
+- [ ] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/`
+- [ ] Slug→path map exported from one place and read by both surfaces
+- [ ] Both surfaces render the photo + scrim when present and fall back to `EMBER_WASH` when absent
+- [ ] Alt text names the city on every photo tile
+- [ ] Lighthouse LCP on `/cities` and `/` no worse than before — these tiles are above the fold on `/cities`
+- [ ] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` green; 6/6 CI on the PR
+- [ ] **GATE-DEPLOY** to merge

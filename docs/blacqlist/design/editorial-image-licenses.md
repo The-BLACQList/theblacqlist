@@ -66,11 +66,11 @@ attribution is not required, so nothing turns on the gap. It is marked `[Unknown
 rather than left blank because that is the honest state, per
 `.claude/rules/no-fabrication.md`.
 
-**If these are Canva AI-generated images rather than Canva stock**, one cell
-changes: source becomes *Canva Magic Media*, and the "identifiable people"
-restriction below falls away (there is no model to release). Everything else —
-commercial use, no attribution, the standalone-redistribution ban — holds either
-way. Say the word and I'll correct the row; the merge does not wait on it.
+**Confirmed: these are Canva stock, not Magic Media**
+`[Decision — founder statement, 2026-08-09]`. The rows above stand as written, and
+the consequence is that **restriction 2 below — no implied endorsement by
+identifiable people — is in force**. It would have fallen away for AI-generated
+content, where there is no model to release. It does not fall away here.
 
 **"Unplaced — pool"** means the file is committed and optimized but rendered
 nowhere. It is available for guides and BLACQLight once editorial content exists
@@ -89,7 +89,7 @@ license, not style preferences.
 |---|---|---|---|
 | 1 | **No standalone redistribution.** The licensed file may be used *within* a design or product; it may not be offered as the file itself, resold, or made available for others to download as stock. | We may render these on pages. We may **not** ever hand one to a business owner as a cover image, seed one into `listings.cover_image_path`, or expose the pool through an "pick an image" picker in the owner dashboard. | ✅ Held — the owner-upload flywheel (Track 4) ships owners an *upload* path, never a library. |
 | 2 | **No implied endorsement by identifiable people.** Content depicting recognizable individuals may not be used to suggest that person endorses a product, business, or viewpoint, and may not be used in a sensitive context. | We may **not** place a photo containing a person beside a named business in a way that reads as *that business's* staff, owner, or customers. | ✅ Held — and this is the second, independent reason for the rule already stated under [Naming caution](#naming-caution). The brand reason and the license reason land in the same place. |
-| 3 | **No use as a trademark or logo.** Licensed content may not be registered or used as a brand mark. | We may **not** build one of these into the BLACQList wordmark, favicon, app icon, or default site-wide OG image — a default OG image is close enough to a brand mark to stay clear of. Per-page editorial OG images are fine. | ✅ Held — brand marks are the five SVGs in `public/images/`, all first-party. |
+| 3 | **No use as a trademark or logo.** Licensed content may not be registered or used as a brand mark. | We may **not** build one of these into the BLACQList wordmark, favicon, app icon, or default site-wide OG image — a default OG image is close enough to a brand mark to stay clear of. Per-page editorial OG images are fine. | ✅ Held — brand marks are the five SVGs in `public/brand/`, all first-party. |
 
 **Two standing conditions on the license itself:**
 
