@@ -53,8 +53,11 @@ test.describe('J. Accessibility — keyboard & focus', () => {
     await page.locator(RESULTS).waitFor()
 
     // Derive a query word from a real result so the search is guaranteed to match.
+    // Scoped to the card heading link on purpose: the results section also holds
+    // the "How ranking works" disclosure link (DiscoveryGrid), which precedes the
+    // cards in DOM order. A bare `${RESULTS} a` picks that up and searches "How".
     const firstName = await page
-      .locator(`${RESULTS} h3 a, ${RESULTS} a`)
+      .locator(`${RESULTS} article h3 a`)
       .first()
       .textContent()
     const queryWord = (firstName ?? 'a').trim().split(/\s+/).find((w) => w.length >= 3) ?? 'a'
@@ -72,11 +75,19 @@ test.describe('J. Accessibility — keyboard & focus', () => {
       `search for "${queryWord}" should return at least one result`
     ).toBeVisible()
 
-    // Tab to the first result link and activate it with Enter.
+    // Tab to the first result link and activate it with Enter. Must be a link
+    // inside a result card — the disclosure link sits in the same section and
+    // goes to /how-ranking-works, which would never match the listing URL below.
     const reachedResult = await tabUntil(page, () => {
       const el = document.activeElement
       const section = document.querySelector('section[aria-label="Discovery results"]')
-      return !!el && !!section && section.contains(el) && el.tagName.toLowerCase() === 'a'
+      return (
+        !!el &&
+        !!section &&
+        section.contains(el) &&
+        el.tagName.toLowerCase() === 'a' &&
+        !!el.closest('article')
+      )
     })
     expect(reachedResult, 'first result link should be keyboard-reachable').toBe(true)
     await page.keyboard.press('Enter')

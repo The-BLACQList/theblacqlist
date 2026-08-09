@@ -2,14 +2,23 @@ import { describe, expect, it } from 'vitest'
 
 import { computePageChecklist } from '@/lib/ai/checklist'
 
-const EMPTY_LISTING = {
+// Annotated, not inferred: without this the fields widen to the literal type
+// `null`, and `Partial<typeof EMPTY_LISTING>` then rejects every string path.
+type ChecklistListing = {
+  tagline: string | null
+  meta_title: string | null
+  meta_description: string | null
+  cover_image_path: string | null
+}
+
+const EMPTY_LISTING: ChecklistListing = {
   tagline: null,
   meta_title: null,
   meta_description: null,
   cover_image_path: null,
 }
 
-function coverItem(listing: Partial<typeof EMPTY_LISTING>, mediaCount = 0) {
+function coverItem(listing: Partial<ChecklistListing>, mediaCount = 0) {
   const result = computePageChecklist(
     { ...EMPTY_LISTING, ...listing },
     null,
