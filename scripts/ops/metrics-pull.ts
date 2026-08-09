@@ -134,6 +134,34 @@ async function main(): Promise<void> {
     return counts
   })
 
+  // Cover coverage. Real covers arrive only from owners (Decision 023 — the
+  // owner-upload flywheel), so this is the number that says whether the
+  // flywheel is turning. It is a post-launch target, not a launch gate.
+  const coverCoverage = await safe('listings.cover_image_path', async () => {
+    const base = () =>
+      supabase
+        .from('listings')
+        .select('id', { count: 'exact', head: true })
+        .is('deleted_at', null)
+        .eq('status', 'published')
+
+    const { count: total, error: totalErr } = await base()
+    if (totalErr) throw new Error(totalErr.message)
+
+    const { count: withCover, error: coverErr } = await base().not('cover_image_path', 'is', null)
+    if (coverErr) throw new Error(coverErr.message)
+
+    const published = total ?? 0
+    const covered = withCover ?? 0
+    return {
+      published,
+      with_cover: covered,
+      pct: published > 0 ? Math.round((covered / published) * 1000) / 10 : 0,
+      target_pct: 40,
+      note: 'Post-launch target on the owner-upload flywheel. Listings without a cover render the F-1 brand tile.',
+    }
+  })
+
   const aggregationHealth = await safe('analytics_job_log', async () => {
     const { data, error } = await supabase
       .from('analytics_job_log')
@@ -150,6 +178,7 @@ async function main(): Promise<void> {
     source: 'Supabase (service role)',
     external_unavailable: ['Vercel Web Vitals (dashboard only)', 'Stripe invoice detail (Stripe API only)'],
     aggregationHealth,
+    coverCoverage,
     engagement,
     topListings,
     topSearches,

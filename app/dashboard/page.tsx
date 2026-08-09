@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     .from('listings')
     .select(
       `
-      id, name, slug, status, entity_type, trust_tier, tagline, meta_title,
+      id, name, slug, status, entity_type, trust_tier, tagline, meta_title, cover_image_path,
       last_edited_by_owner_at, published_at,
       cities(slug, name),
       listing_details_business(description, phone, website_url, cta_type)
@@ -72,6 +72,11 @@ export default async function DashboardPage() {
             const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
 
             const completeness = [
+              // Cover leads the list deliberately: it is the one field that
+              // changes how the business appears everywhere else on the site,
+              // and the scored version of this check lives behind the Starter+
+              // AI Suggestions page, so free-tier owners only ever see it here.
+              { done: !!listing.cover_image_path, label: 'Cover photo' },
               { done: !!listing.tagline, label: 'Tagline' },
               { done: !!details?.description, label: 'Business description' },
               { done: !!details?.phone || !!details?.website_url, label: 'Contact info' },

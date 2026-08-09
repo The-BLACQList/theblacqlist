@@ -120,3 +120,4 @@
 | [110](110-multi-location-accounts.md) | Multi-location accounts (Premium tier) | V1.5 | P3 | 105, 078 | After deps | Up to 3 listings on one subscription; entitlement change, no new Stripe prices |
 | [111](111-category-exclusivity.md) | Category exclusivity (Premium tier) | V1.5 | P3 | 105, 077 | After deps | First-come-first-served, publicly visible; must not suppress competing listings |
 | [112](112-owner-spend-impact-panel.md) | Owner spend-impact panel (Premium tier) | V1.5 | P2 | 105 | After deps | Aggregates only, 5-consumer minimum cohort; the one Premium benefit a competitor cannot copy |
+| [113](113-city-imagery.md) | City imagery — city tiles + `/[citySlug]` hero | V1.5 | P3 | — | Needs decision | `cities` has **no image column** (GATE-DATA to add); no city photography exists; recommend narrowing to ATL/HOU/CHI |

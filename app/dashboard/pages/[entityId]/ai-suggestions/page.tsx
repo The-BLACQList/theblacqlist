@@ -47,7 +47,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
     .from('listings')
     .select(
       `
-      id, name, tier, tagline, meta_title, meta_description,
+      id, name, tier, tagline, meta_title, meta_description, cover_image_path,
       listing_details_business(
         description, phone, website_url,
         social_instagram, social_facebook, social_tiktok,
@@ -140,6 +140,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
       tagline: listing.tagline,
       meta_title: listing.meta_title,
       meta_description: listing.meta_description,
+      cover_image_path: listing.cover_image_path,
     },
     details,
     mediaCount,

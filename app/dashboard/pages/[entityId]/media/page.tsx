@@ -14,7 +14,7 @@ export default async function MediaPage({ params }: Props) {
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name')
+    .select('id, name, cover_image_path')
     .eq('id', entityId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -42,6 +42,7 @@ export default async function MediaPage({ params }: Props) {
         media={media ?? []}
         supabaseStorageUrl={supabaseStorageUrl}
         listingId={listing.id}
+        coverImagePath={listing.cover_image_path}
       />
     </div>
   )

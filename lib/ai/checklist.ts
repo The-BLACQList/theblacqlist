@@ -24,6 +24,13 @@ interface ListingFields {
   tagline: string | null
   meta_title: string | null
   meta_description: string | null
+  /**
+   * The cover is its own column, not the second row of media_attachments. This
+   * item used to pass on `mediaCount >= 2`, so a listing with two gallery shots
+   * and no cover scored the point — which made the one checklist row meant to
+   * drive cover uploads unable to see whether a cover exists.
+   */
+  cover_image_path: string | null
 }
 
 interface DetailsFields {
@@ -85,10 +92,10 @@ export function computePageChecklist(
     {
       id: 'cover',
       label: 'Cover image uploaded',
-      hint: 'Add a cover photo to make your page stand out in search results and collections.',
+      hint: 'Add a cover photo — 1200×800px or larger. Without one your page shows a brand tile instead of your business in search results and collections.',
       category: 'recommended',
       weight: 8,
-      passed: mediaCount >= 2,
+      passed: !!listing.cover_image_path?.trim(),
     },
     {
       id: 'gallery',
