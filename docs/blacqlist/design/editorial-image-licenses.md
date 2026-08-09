@@ -45,18 +45,18 @@ split or added to later.
 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
-| `afrofuturist-bookshop.webp` | 110 KB | `/about` hero | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `sable-fitness-collective.webp` | 95 KB | `/about` pull band | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `asha-osei-photography.webp` | 104 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `calabash-candles.webp` | 53 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `crown-and-coil-studio.webp` | 83 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `diaspora-creative-agency.webp` | 80 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `melanin-law-group.webp` | 40 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `peach-and-rye-kitchen.webp` | 88 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `rooted-tech-solutions.webp` | 96 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `soleil-kidswear.webp` | 37 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `ujima-construction.webp` | 83 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `zinga-interior-design.webp` | 147 KB | unplaced — pool | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `afrofuturist-bookshop.webp` | 110 KB | `/about` hero + category bento — `books-publishing` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `sable-fitness-collective.webp` | 95 KB | `/about` pull band + category bento — `wellness-health` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `asha-osei-photography.webp` | 104 KB | homepage triptych — 01 Discover | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `calabash-candles.webp` | 53 KB | category bento — `retail-gifts` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `crown-and-coil-studio.webp` | 83 KB | category bento — `beauty-grooming` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `diaspora-creative-agency.webp` | 80 KB | homepage triptych — 03 Connect | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `melanin-law-group.webp` | 40 KB | category bento — `legal-financial` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `peach-and-rye-kitchen.webp` | 88 KB | homepage triptych — 02 Support | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `rooted-tech-solutions.webp` | 96 KB | category bento — `technology` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `soleil-kidswear.webp` | 37 KB | category bento — `childcare-family` **only** | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `ujima-construction.webp` | 83 KB | category bento — `construction-trades` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `zinga-interior-design.webp` | 147 KB | category bento — `home-living` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 
 **On the `[Unknown]` author.** Canva does not surface the individual contributor's
 name on a Pro stock download, and the filenames here were assigned by us, not by
@@ -90,6 +90,16 @@ license, not style preferences.
 | 1 | **No standalone redistribution.** The licensed file may be used *within* a design or product; it may not be offered as the file itself, resold, or made available for others to download as stock. | We may render these on pages. We may **not** ever hand one to a business owner as a cover image, seed one into `listings.cover_image_path`, or expose the pool through an "pick an image" picker in the owner dashboard. | ✅ Held — the owner-upload flywheel (Track 4) ships owners an *upload* path, never a library. |
 | 2 | **No implied endorsement by identifiable people.** Content depicting recognizable individuals may not be used to suggest that person endorses a product, business, or viewpoint, and may not be used in a sensitive context. | We may **not** place a photo containing a person beside a named business in a way that reads as *that business's* staff, owner, or customers. | ✅ Held — and this is the second, independent reason for the rule already stated under [Naming caution](#naming-caution). The brand reason and the license reason land in the same place. |
 | 3 | **No use as a trademark or logo.** Licensed content may not be registered or used as a brand mark. | We may **not** build one of these into the BLACQList wordmark, favicon, app icon, or default site-wide OG image — a default OG image is close enough to a brand mark to stay clear of. Per-page editorial OG images are fine. | ✅ Held — brand marks are the five SVGs in `public/brand/`, all first-party. |
+
+### The one frame depicting a minor
+
+`soleil-kidswear.webp` shows a laughing child against a flat studio backdrop. It is licensed on the same terms as the other eleven, but it carries an extra placement rule that is ours, not Canva's.
+
+[Decision — 2026-08-09] It appears on **`childcare-family` in the category bento and nowhere else on the site.** Not the triptych, not a hero, not an OG image, not a collection, not a marketing asset.
+
+The reasoning: a child's likeness in a general brand slot invites the reading that the platform markets to or about children, which is a different product and a different regulatory posture (`data-privacy.md` flags anything touching under-18 users for COPPA). Confined to the one category the frame is literally about, it is descriptive rather than representative. Restriction 2 applies here with the same force as on the adult frames — it must never sit beside a named childcare business as that business's children.
+
+Anyone adding a placement for this file needs a new decision, not a judgement call.
 
 **Two standing conditions on the license itself:**
 
