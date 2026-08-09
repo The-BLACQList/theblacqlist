@@ -119,7 +119,7 @@ Mirror these into Trello's lists. The cards themselves carry the detail; this is
 |---|---|---|
 | **Live test subscription on prod** — the G4 *done-when*: `?preview` in → upgrade a listing with a real card → tier syncs via the live webhook → cancel/refund in Stripe | Open — founder-run (billing code LIVE since 2026-08-05; 30-min watch clean) | Final proof of the money path; nothing else blocks on it |
 | ~~**M9 content gap**~~ | **CLOSED 2026-08-06 — decision-log 011.** Stale-docs artifact, not a content deficit: the launch JSON has held the full 254-listing corpus since ticket 093. `test:gates` 5/5 green (ATL 151/150 · HOU 51/50 · CHI 52/50); full e2e **50/50** for the first time `[Measured — local Playwright, 2026-08-06]` | No longer a launch blocker |
-| ~~**Finding 2** — `priority_placement` defined but unenforced~~ | **DECIDED 2026-08-08 — wire it.** Constraints recorded on the Sponsored placements card. Implementation is a **separate pass** (one risky change at a time; paid placement touches ranking) | Sponsored placements card, V1 · systemic form remains ticket **105** |
+| ~~**Finding 2** — `priority_placement` defined but unenforced~~ | **SPECIFIED 2026-08-08** (decision-log 020): Growth+ · tiebreak within a relevance band · **search results only** · disclosed once site-wide. Implementation is a **separate pass** (one risky change at a time; paid placement touches ranking). Note it is a *different feature* from the manual placement engine, which is shipped 3/3 | Sponsored placements card, V1 · systemic form remains ticket **105** |
 | **8% marketplace fee** — decision-log 002 | **PROPOSED — no founder approval recorded** | Gates any marketplace revenue modeling downstream of V2 |
 | **Legal §1981 / paid-tiers review** — a paid tier, placement, or badge must not be contingent on the `Black-Owned` label; centering stays editorial ranking only | `[Needs professional review]` — **still open.** The Privacy & Terms sign-off landed 2026-08-08, but the attorney's specific §1981 / paid-tiers answer was not recorded, so this question is unanswered and the constraint binds as written | `.claude/rules/moderation-policy.md:48`. The Privacy/Terms card it used to hold is now ✅ Done
 
@@ -179,7 +179,7 @@ Trello gives 10 label colors → use them for **Area** (the most useful filter).
 | Card | Due | Meaning |
 |---|---|---|
 | 🚀 **MVP Public Launch** | ~~Jul 11, 2026~~ **⚠️ PASSED — re-baseline** | Ready to serve customers — 3 cities, core flows. Still open: **Resend deliverability + go/no-go** (M9 closed 2026-08-06; legal sign-off received 2026-08-08) |
-| 🤝 **V1 — Trust & Grow** | ~~Sep 12, 2026~~ _(depends on MVP)_ | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities. _Two of these landed ahead of the milestone: **trust tiers** (PR #14, deployed 2026-08-08) and **Stripe subscriptions** (4/4, live test sub run 2026-08-08). **Supporter dashboard** is one gate out. Still unbuilt: sponsored placements, the three remaining page templates, +cities._ |
+| 🤝 **V1 — Trust & Grow** | ~~Sep 12, 2026~~ _(depends on MVP)_ | Reviews, trust tiers, more Page templates, Stripe subscriptions, sponsored, supporter dashboard, +cities. _Two of these landed ahead of the milestone: **trust tiers** (PR #14, deployed 2026-08-08) and **Stripe subscriptions** (4/4, live test sub run 2026-08-08). **Supporter dashboard**'s gate cleared 2026-08-08 (migration applied to prod; one founder walk to confirm). **Sponsored placements** was found already shipped 3/3 on 2026-08-08 — the board had it at 0/3. Still unbuilt: the tier-derived `priority_placement` boost (a different feature, in progress), the three remaining page templates, +cities._ |
 | 🛒 **V2 — Commerce Layer** | ~~Dec 5, 2026~~ _(depends on MVP)_ | Marketplace + checkout, receipt OCR, spend dashboards, AI beta |
 | 🧠 **V3 — Intelligence (BLACQ Web + Agents)** | Mar 13, 2027 | 3D commerce-flow map, AI concierge/agents, sponsor campaigns, impact analytics |
 | 📱 **V4 — Scale** | mid-2027 (rolling) | Mobile app, 25+ cities, Spanish, partner API |
@@ -521,6 +521,8 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 > **Lane reconciliation, 2026-08-08.** This markdown board and Trello had drifted. The lane bound was `≤ Sep 12` here; Trello carries **Sponsored placements at Sep 19**, so the bound moves to Sep 19. Two cards in this lane were mis-tracked as open and are now marked complete (Reviews system, Trust tiers workflow), and one was mis-tracked as unbuilt and is now a defect card (Supporter dashboard).
 >
+> **Second pass, later the same day:** Sponsored placements — left at 0/3 pending a code read — turned out to be **3/3 shipped**. Three of the four corrections in this lane moved work *out* of the open column. The pattern is consistent enough to name: this board systematically under-reports shipped work, because cards are written when work is planned and rarely revisited when it lands. Trust the code and the ops-log over the card.
+>
 > **What the screenshots did not settle:** the per-card due dates for the rest of V1, and the V2–V4 milestone dates, which the Milestones table already flags as stale and hanging off a **passed MVP date**. Those are not re-baselined here — a date nobody measured is not a date. `[Unknown]` until the MVP finish line is re-set with owners and durations.
 
 ---
@@ -608,7 +610,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 - ✅ Plan-based feature gating — `lib/stripe/features.ts`, shipped with the G4 billing code
 - ✅ Webhooks (subscription lifecycle) verified — G3 configured the endpoint; the live test sub drove a real lifecycle event through it
 
-> One entitlement in the gating table still delivers nothing: `priority_placement` (weight `2`) is enforced in no ranking code. That is not a defect on this card — it is the entire `[V1] P1 Sponsored placements` card below.
+> One entitlement in the gating table still delivers nothing: `priority_placement` (weight `2`, `features.ts:77`) has **zero call sites repo-wide**. Not a defect on this card — its shape was specified 2026-08-08 (decision-log 020) and it is built as `20260809000000_search_tier_tiebreak.sql`. Note it is **not** the same thing as the `[V1] P1 Sponsored placements` card below, which is the *manual* placement engine and is fully shipped.
 
 ---
 
@@ -617,26 +619,42 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 
 **Description.** Lets premium listings pay for top-of-search and category visibility — the second revenue lever after subscriptions — with admin controls and expiry. It must be visually honest (clearly marked) to protect trust. Done when sponsored slots render with the correct placement rules and at least a few are live.
 
-**Checklist.**
-- Premium top-of-search + category placement
-- Placement rules + clear "Sponsored" labeling
-- Admin controls + expiry
+**Checklist — 3/3.**
+- ✅ Premium top-of-search + category placement — `lib/listings/query.ts:224-305`
+- ✅ Placement rules + clear "Sponsored" labeling — status + date window + `limit(3)` + deep-filter suppression (`query.ts:216-221`); "Sponsored" chips at `EntityCard.tsx:111` and `MapDrawer.tsx:115`
+- ✅ Admin controls + expiry — `app/admin/sponsored/` (list + 236-line create form under `requireAdmin`, Active/Scheduled/Ended states); expiry enforced by `.gt('ends_at', now)` on the read path
 
-> **Trello shows 2/3 on this card. Source truth does not support that** `[Observed — board screenshots + repo read, 2026-08-08]`. `priority_placement` exists only as a tier flag in `lib/stripe/features.ts` and is enforced in no ranking code — no placement renders, is labeled, or expires anywhere in the app. Which two items were ticked is not recoverable from the screenshots, so nothing is marked complete here. **Treat this card as 0/3 until someone points at the code.** Re-tick from source, not from memory.
+> **Corrected 2026-08-08 — this card was previously marked 0/3, and that was wrong** `[Observed — code read, 2026-08-08]`. All three items are built and shipped. The 0/3 came from the 2026-08-08 re-baseline, which found Trello's 2/3 unsupported by the docs and left the card low "until someone points at the code." Someone has now pointed at the code, and it found **more** shipped than Trello claimed. The card also contradicted the founder's own 2026-08-06 click-walk (`ops-log.md`), which recorded `/admin/sponsored` as a working placement engine — that entry was the better evidence all along. Worth remembering: the conservative default under-reported three real items.
 
-**`[Decision — product, 2026-08-08]` Finding 2: wire `priority_placement`, don't drop it.**
+**The card name was hiding two different features.**
 
-The flag currently appears in exactly one file — `lib/stripe/features.ts` (a tier-flag union member, weight `2`) — and is enforced in no ranking code. It is a paid entitlement customers could buy today and receive nothing for. This card is the answer to the wire-or-drop question: **wire it.**
+| | What it is | State |
+|---|---|---|
+| **Manual placement engine** | Admin schedules a listing into positions 1–3, scoped by city/category, with a start/end window and an always-visible "Sponsored" chip | **Shipped** — the 3/3 above |
+| **Tier-derived entitlement** `priority_placement` | An automatic ranking boost that comes with a subscription, no admin action | **Not built** — two lines in `lib/stripe/features.ts` (`:38` union member, `:77` weight `2`) and **zero call sites repo-wide** |
 
-**Implementation is a separate pass.** Not built here — `deploy-safety.md` says one risky change at a time, and paid placement touches search ranking. Constraints, recorded now while they are fresh:
+The second is the real gap: a paid feature sold in live public copy (`app/(public)/pricing/page.tsx`, `app/dashboard/upgrade/page.tsx`) that delivers nothing.
+
+**`[Decision — product, 2026-08-08]` Finding 2, specified.** Decision-log **015** said "wire it, don't drop it." Decision-log **020** says what wiring it means, after reading the RPC:
+
+| Dimension | Decision |
+|---|---|
+| **Threshold** | **Growth+.** `features.ts:77` weight `2` is authoritative; `monetization-spec.md:38` (Starter ✓) was stale and is corrected. Binary, not laddered — Premium gets no more ranking weight than Growth |
+| **Strength** | **A tiebreak within a relevance band.** A subscription never outranks a genuinely better match |
+| **Where** | **Search results only** — and only when `p_sort = 'relevance'`. Browse, city, and category pages keep today's ordering; an explicit sort by name or rating is never perturbed by money |
+| **Disclosure** | **Once, site-wide.** A persistent "How ranking works" link by the result count plus a plain-language page. **No per-card "Sponsored" label** on tier-boosted results — that chip stays reserved for the manual placement engine, where it means something different |
+
+**Why "search results only" is load-bearing, not a hedge.** `ts_rank` is hardcoded to `0` for every row when `p_q` is null or empty (`20260622000001_search_listings_faceted_rpc.sql:54-58`). In browse there is no relevance signal at all, so "a tiebreak within a band" would have made one band of the entire result set and split `/explore`, every city page, and every category page cleanly paid-above-free. That is not a near-tie nudge; it is selling the main discovery surface. Caught before build.
+
+**Implementation is a separate pass** — `deploy-safety.md` #6, one risky change at a time, and this touches search ranking. Migration `20260809000000_search_tier_tiebreak.sql`, `CREATE OR REPLACE` on the identical 12-arg signature so callers and the `GRANT` are untouched. Constraints, in the code as comments and not only here:
 
 | Constraint | Why |
 |---|---|
 | **Search ranking only.** Must not touch the map presence ladder | *Prominence earned by trust, never sold* is the shipped N7 promise. Selling map prominence would break it on the surface where it is most visible |
-| **Must never key off the `Black-Owned` / `Ally` label** | `.claude/rules/moderation-policy.md:48` bars making a paid tier, placement, or badge contingent on the ownership label. Centering stays editorial ranking only. `[Needs professional review]` — the §1981 / paid-tiers question is **still unanswered**. Privacy & Terms were signed off 2026-08-08, but the attorney's specific answer on this question was not recorded, so the constraint binds exactly as written until it is |
-| **Sponsored results must be visibly labeled** | Trust is the product. An unmarked paid result is the thing a directory cannot come back from |
+| **Must never key off the `Black-Owned` / `Ally` label** | `.claude/rules/moderation-policy.md:48`. `[Needs professional review]` — **narrowed 2026-08-08, not closed**: `lib/stripe/plans.ts:23-26` already sells every tier to every business at the same price regardless of label, with zero ownership checks on the checkout path, so post-pivot the fact pattern the rule guards against does not exist here. The rule still binds and nothing in this build reads `ownership_label`. The attorney's specific §1981 answer remains unrecorded |
+| **`c.is_featured DESC` stays the first sort key** | The manual placement engine's slot is editorial and labeled. The tier boost sorts *below* it, never displaces it |
 
-Systemic form of the same defect = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. Wiring this one flag does not close 105.
+Systemic form of the same defect = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. Wiring this one flag does not close 105 — 22 gates and 10 limits remain unwired.
 
 ---
 
@@ -928,9 +946,9 @@ Paste each block as the **first card in its phase / pinned cover card** (or onto
 
 **Goal.** Turn a discoverable directory into a *trusted* one — give owners reasons to stay active and switch on the first revenue.
 
-**What ships.** Reviews + moderation · trust tiers (Claimed → Verified → Certified) · Professional/Creative/Event/Job Page templates · supporter dashboard · Stripe subscriptions (Free/Standard/Premium) · sponsored placements · editorial expansion (BLACQLight + Guides) · 2–4 new cities.
+**What ships.** Reviews + moderation · trust tiers (Claimed → Verified → Certified) · Professional/Creative/Event/Job Page templates · supporter dashboard · Stripe subscriptions (Free/Starter/Growth/Premium) · sponsored placements · editorial expansion (BLACQLight + Guides) · 2–4 new cities.
 
-**Definition of Done.** Reviews live, moderated, and displaying on Pages · all 3 trust tiers working · **≥1 paying business** on a tier · sponsored placements live · each non-business template used by a real listing · new cities have city pages + minimum seed.
+**Definition of Done.** Reviews live, moderated, and displaying on Pages · all 3 trust tiers working · **≥1 paying business** on a tier · sponsored placements live ✅ _(manual placement engine shipped 3/3; the tier-derived `priority_placement` boost is a separate feature and is not part of this line)_ · each non-business template used by a real listing · new cities have city pages + minimum seed.
 
 **Entry criteria.** MVP launched and stable (no open P0s for 1 week) · Stripe account approved.
 **External dependencies ⏳.** Stripe account + verification · real business data for new cities.

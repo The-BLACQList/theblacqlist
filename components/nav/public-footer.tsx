@@ -242,6 +242,12 @@ export function PublicFooter() {
             >
               Cookie Policy
             </Link>
+            <Link
+              href="/how-ranking-works"
+              className="text-gray-400 hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              How Ranking Works
+            </Link>
           </div>
         </div>
       </Container>

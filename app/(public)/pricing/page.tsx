@@ -11,7 +11,7 @@ import { PricingPlans } from './PricingPlans'
 export const metadata: Metadata = {
   title: 'Pricing | The BLACQList',
   description:
-    'Getting listed is free forever. Upgrade to Standard or Premium for priority placement, analytics, and featured visibility.',
+    'Getting listed is free forever. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility.',
 }
 
 const FAQ_ITEMS = [
@@ -21,11 +21,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What do the paid plans add?',
-    a: 'Standard unlocks priority search placement, your analytics dashboard, a services list, and the ability to respond to reviews. Premium adds unlimited photos, featured placement, homepage spotlight eligibility, and priority support.',
+    a: 'Starter unlocks your verified badge, more photos and video, an FAQ section, review responses, and your analytics dashboard. Growth adds priority search placement, a products-and-services storefront, events and team members, featured collection and BLACQLight eligibility, full analytics, and priority support. Premium adds coupons, booking requests, up to three locations, homepage featured placement, category exclusivity in one city, and dedicated support.',
   },
   {
     q: 'How does annual billing work?',
-    a: 'Choose annual at checkout and you pay for ten months instead of twelve — two months free. You can switch between monthly and annual anytime from your billing portal.',
+    a: 'Choose annual at checkout and you save about 20% — a little more than two months free on every plan. You can switch between monthly and annual anytime from your billing portal.',
   },
   {
     q: 'What is a Sponsored Spotlight?',
@@ -52,7 +52,7 @@ export default function PricingPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Pricing"
-          subtitle="Getting listed is always free. Upgrade to Standard or Premium for priority placement, analytics, and featured visibility — pay monthly or save with annual billing."
+          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility — pay monthly or save with annual billing."
         />
       </Section>
 

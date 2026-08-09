@@ -81,12 +81,23 @@ export function DiscoveryGrid({
 
   return (
     <section aria-label="Discovery results">
-      {/* Result count */}
-      <p className="font-subhead text-sm text-charcoal mb-4">
-        {total === 1
-          ? '1 result'
-          : `Showing ${showing.toLocaleString()} of ${total.toLocaleString()} results`}
-      </p>
+      {/* Result count + the single site-wide ranking disclosure.
+          Persistent by design: one link, no per-card badge. The "Sponsored"
+          chip on EntityCard stays reserved for the manual placement engine,
+          where it means something materially different. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-4">
+        <p className="font-subhead text-sm text-charcoal">
+          {total === 1
+            ? '1 result'
+            : `Showing ${showing.toLocaleString()} of ${total.toLocaleString()} results`}
+        </p>
+        <Link
+          href="/how-ranking-works"
+          className="font-subhead text-sm text-amber hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+        >
+          How ranking works
+        </Link>
+      </div>
 
       <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
         {entities.map((entity, i) => (
