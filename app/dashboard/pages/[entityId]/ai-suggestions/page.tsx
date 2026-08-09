@@ -76,7 +76,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
             AI Suggestions is a paid feature
           </h2>
           <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
-            Upgrade to Standard or Premium to unlock your page optimization score, AI-generated copy
+            Upgrade to Starter or above to unlock your page optimization score, AI-generated copy
             suggestions, and SEO recommendations.
           </p>
           <Link

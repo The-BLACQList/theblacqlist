@@ -35,7 +35,7 @@ The BLACQList generates value for Black-owned businesses by surfacing them to in
 | Community reviews                          | ✓    | ✓                | ✓               | ✓                |
 | Basic analytics                            | ✓    | ✓                | ✓               | ✓                |
 | Verified badge                             | —    | ✓                | ✓               | ✓                |
-| Priority placement in search               | —    | ✓                | ✓               | ✓                |
+| Priority placement in search               | —    | —                | ✓               | ✓                |
 | Advanced analytics dashboard               | —    | ✓                | ✓               | ✓                |
 | Remove "Powered by BLACQList" badge        | —    | ✓                | ✓               | ✓                |
 | Featured collection placement              | —    | —                | ✓               | ✓                |

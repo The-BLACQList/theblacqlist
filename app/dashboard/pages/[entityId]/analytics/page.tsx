@@ -111,7 +111,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
             Analytics is a paid feature
           </h2>
           <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
-            Upgrade to Standard or Premium to see page views, CTA clicks, saves, shares, and your
+            Upgrade to Starter or above to see page views, CTA clicks, saves, shares, and your
             trend charts.
           </p>
           <Link

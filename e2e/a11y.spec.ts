@@ -30,6 +30,7 @@ const PUBLIC_SCREENS: { label: string; path: string }[] = [
   { label: 'Privacy (/privacy)', path: '/privacy' },
   { label: 'Terms (/terms)', path: '/terms' },
   { label: 'Cookies (/cookies)', path: '/cookies' },
+  { label: 'How ranking works (/how-ranking-works)', path: '/how-ranking-works' },
 ]
 
 test.describe('J. Accessibility — axe scans (no-login screens)', () => {
