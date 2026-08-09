@@ -1,9 +1,9 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { Section } from '@/components/layout/section'
 import { SectionHeading } from '@/components/ui/section-heading'
-import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
@@ -34,12 +34,42 @@ const PILLARS = [
 export default function AboutPage() {
   return (
     <>
-      <Section variant="pale-lavender">
-        <PageHeader
-          title="About The BLACQList"
-          subtitle="Atlanta-born. National from day one. Community-powered everywhere."
+      {/* Photographic hero — photographic-style-direction.md Priority 5. Mirrors
+          the shipped HomeHero pattern: fill image, dark-left gradient, text over.
+          alt="" because the h1 immediately beneath carries the context and the
+          photo is editorial, not a depiction of a specific business. */}
+      <section
+        aria-labelledby="about-heading"
+        className="relative min-h-[340px] md:min-h-[420px] flex items-end"
+      >
+        <Image
+          src="/images/editorial/afrofuturist-bookshop.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[70%_center]"
         />
-      </Section>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(4,4,5,0.88) 0%, rgba(4,4,5,0.66) 55%, rgba(4,4,5,0.34) 100%)',
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-14 md:py-16">
+          <h1
+            id="about-heading"
+            className="font-headline text-3xl md:text-5xl font-bold text-white leading-tight text-balance max-w-[18ch]"
+          >
+            About The BLACQList
+          </h1>
+          <p className="font-subhead text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
+            Atlanta-born. National from day one. Community-powered everywhere.
+          </p>
+        </div>
+      </section>
 
       <Section variant="white">
         <div className="max-w-2xl">
@@ -62,6 +92,19 @@ export default function AboutPage() {
           </div>
         </div>
       </Section>
+
+      {/* Inline pull photo — the second half of Priority 5. A full-bleed band
+          between the origin story and the principles; decorative, so alt="". */}
+      <div className="relative w-full aspect-[3/1] md:aspect-[4/1] bg-deep-bg">
+        <Image
+          src="/images/editorial/sable-fitness-collective.webp"
+          alt=""
+          fill
+          loading="lazy"
+          sizes="100vw"
+          className="object-cover object-[center_35%]"
+        />
+      </div>
 
       <Section variant="cream">
         <SectionHeading subtitle="Four principles guide every decision we make.">

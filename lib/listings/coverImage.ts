@@ -24,6 +24,19 @@ export interface ResolvedCover {
 }
 
 /**
+ * Turn a stored `cover_image_path` into something next/image can load: a value
+ * that is already an absolute URL passes through, anything else is treated as a
+ * key in the `listing-media` bucket. Shared by listing covers and by the
+ * editorial tables (`collections.cover_image_path`), which store the same shape.
+ */
+export function resolveMediaPath(path: string | null | undefined): string | null {
+  if (!path) return null
+  return path.startsWith('http')
+    ? path
+    : `${SUPABASE_URL}/storage/v1/object/public/listing-media/${path}`
+}
+
+/**
  * Resolve a listing's cover image for rendering. An owner-uploaded cover
  * resolves its Supabase Storage path to a public URL (or passes through a value
  * that is already a full URL). With no cover, src is null.
@@ -37,11 +50,5 @@ export function resolveCoverImage(
   _entityType: string | null | undefined,
   _listingId: string
 ): ResolvedCover {
-  if (!coverImagePath) return { src: null }
-
-  const src = coverImagePath.startsWith('http')
-    ? coverImagePath
-    : `${SUPABASE_URL}/storage/v1/object/public/listing-media/${coverImagePath}`
-
-  return { src }
+  return { src: resolveMediaPath(coverImagePath) }
 }
