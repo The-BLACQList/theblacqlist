@@ -69,6 +69,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       blurb,
       listings (
         id, name, slug, tagline, entity_type, trust_tier, cover_image_path,
+        categories ( name ),
         cities ( slug, name, states ( code ) )
       )
     `

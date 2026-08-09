@@ -8,6 +8,8 @@ interface Props {
   /** Listing name — used for the designed fallback monogram when src is null */
   name: string
   categoryName?: string | null
+  /** Stable per-record string (the listing id) — varies the fallback node field. */
+  seed?: string | null
   priority?: boolean
   sizes?: string
   /** Adaptive text scrim for content overlaid on the photo */
@@ -27,6 +29,7 @@ export function CoverImage({
   alt,
   name,
   categoryName,
+  seed,
   priority = false,
   sizes = '100vw',
   scrim = 'none',
@@ -45,7 +48,12 @@ export function CoverImage({
           className={cn('object-cover', className)}
         />
       ) : (
-        <ImageFallback name={name} categoryName={categoryName} size={fallbackSize} />
+        <ImageFallback
+          name={name}
+          categoryName={categoryName}
+          size={fallbackSize}
+          seed={seed}
+        />
       )}
 
       {scrim === 'bottom' && (

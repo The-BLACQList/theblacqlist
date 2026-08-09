@@ -1,7 +1,7 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { StatusBadge } from '@/components/ui/status-badge'
+import { CoverImage } from '@/components/media/CoverImage'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 
@@ -15,6 +15,8 @@ export interface CollectionListing {
   entity_type: string
   trust_tier: TrustTier
   cover_image_path: string | null
+  /** Named beneath the monogram when the listing has no cover of its own. */
+  categories: { name: string } | null
   cities: { slug: string; name: string; states: { code: string } | null } | null
 }
 
@@ -28,16 +30,6 @@ interface Props {
   position: number
 }
 
-function initialsOf(name: string): string {
-  return name
-    .split(' ')
-    .filter((w) => /^[A-Za-z]/.test(w))
-    .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-}
-
 export function CollectionBusinessCard({ listing, blurb, headline, position }: Props) {
   const city = listing.cities
   const location = city ? (city.states?.code ? `${city.name}, ${city.states.code}` : city.name) : null
@@ -47,28 +39,22 @@ export function CollectionBusinessCard({ listing, blurb, headline, position }: P
 
   return (
     <article className="group relative flex flex-col sm:flex-row gap-4 sm:gap-5 rounded-2xl border border-charcoal/10 bg-white p-4 sm:p-5 transition-colors hover:border-gold/40">
-      {/* Thumbnail: cover image or initials placeholder */}
+      {/* Thumbnail: cover image, or the designed F-1 fallback */}
       <Link
         href={href}
         aria-hidden="true"
         tabIndex={-1}
         className="relative shrink-0 h-40 sm:h-28 sm:w-28 w-full overflow-hidden rounded-xl bg-deep-bg"
       >
-        {cover.src ? (
-          <Image
-            src={cover.src}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, 112px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-charcoal/50 to-deep-bg">
-            <span className="font-headline text-2xl text-gold/60 select-none">
-              {initialsOf(listing.name)}
-            </span>
-          </div>
-        )}
+        <CoverImage
+          src={cover.src}
+          alt=""
+          name={listing.name}
+          categoryName={listing.categories?.name}
+          seed={listing.id}
+          sizes="(max-width: 640px) 100vw, 112px"
+          fallbackSize="card"
+        />
         {/* Position marker */}
         <span className="absolute top-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-deep-bg/80 font-subhead text-[11px] font-bold text-gold">
           {position}

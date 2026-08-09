@@ -235,7 +235,7 @@ PublicMobileNav ("use client")
 | `components/ui/loading-state.tsx`         | Server | Skeleton shimmer is CSS-only                      |
 | `components/ui/error-state.tsx`           | Client | `reset()` retry requires event handler            |
 | `components/ui/card-grid.tsx`             | Server | CSS Grid wrapper; no state                        |
-| `components/ui/entity-card.tsx`           | Server | Display only; save button extracted separately    |
+| `components/entities/EntityCard.tsx`      | Server | Display only; save button extracted separately    |
 
 ---
 
@@ -734,7 +734,13 @@ interface CardGridProps {
 
 ---
 
-### 14. `components/ui/entity-card.tsx`
+### 14. `components/entities/EntityCard.tsx`
+
+> **Superseded in part (2026-08-09).** The card shipped at `components/entities/EntityCard.tsx`, not
+> `components/ui/entity-card.tsx` — the latter was an unused early draft and has been deleted. The
+> live component takes a single `entity: DiscoveryEntity` prop rather than the flattened prop list
+> below, and its no-cover state is the designed `ImageFallback` (F-1 "Monogram + Node Field"), not a
+> bare-initials placeholder. Everything else in this section still describes the shipped card.
 
 **Type:** Server Component
 
