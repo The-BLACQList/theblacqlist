@@ -48,14 +48,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description = `${entity.tagline} — ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
-  // Owner cover → absolute Storage URL; type default → app-relative path made
-  // absolute for OG. Null (no default photo configured yet) → no OG image.
+  // An owner cover resolves to an absolute Storage URL, already OG-ready. With
+  // no cover there is no OG image — the F-1 fallback is a render-time CSS tile,
+  // not a file a social crawler could fetch.
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
-  const ogImage = cover.src
-    ? cover.isDefault
-      ? `${BASE_URL}${cover.src}`
-      : cover.src
-    : undefined
+  const ogImage = cover.src ?? undefined
 
   return {
     title: `${entity.name} — ${locationLabel}`,

@@ -1,81 +1,47 @@
-// Resolves the cover image shown for a listing. Owner-uploaded covers win;
-// when a listing has no cover we fall back to a type-based default photo so the
-// directory never renders a wall of initials placeholders.
-// See docs/blacqlist/design/default-covers-inventory.md for the photo sources.
+// Resolves the cover image shown for a listing. There is exactly one source of
+// a cover: the owner uploads it. When a listing has no cover, this returns
+// src=null and the caller renders the designed F-1 fallback
+// (components/media/ImageFallback.tsx) — a brand-abstract monogram tile, never
+// a photograph that could be mistaken for the business.
 //
-// DEFAULT_COVERS is keyed by the listing's entity_type. The keys cover every
-// value the DB CHECK constraint (listings_entity_type_check) allows —
-// 'restaurant' and 'service_provider' are real DB values even though they are
-// absent from the narrower TS `EntityType` union — so the param is typed
-// `string`. Unknown/unmapped types fall back to the `business` set.
+// This file previously held DEFAULT_COVERS, a per-entity_type set of stock
+// photos intended to fill empty covers. That strategy was declined
+// [Decision — 2026-08-09]: it contradicted living-commerce-index.md:63
+// ("Unclaimed card: never stock photography that could be mistaken for the
+// business") and photographic-style-direction.md:25 ("Specificity over stock").
+// It was also keyed on a dead axis — 254 of 257 listings are entity_type
+// 'business' [Measured — psql prod, 2026-08-09], so it produced one visual
+// bucket for the entire directory. The fallback is keyed on category instead,
+// and is generated in CSS rather than shipped as files.
 //
-// Files live under public/defaults/covers/<type>/. A type may carry several
-// photos; one is picked deterministically per listing id so the same type does
-// not render an identical image across the grid. While a type's array is empty,
-// resolveCoverImage returns src=null and callers show the initials placeholder
-// (no 404, no regression) — approved photos are then a pure data drop-in.
-
-const DEFAULT_COVERS: Record<string, string[]> = {
-  business: [],
-  restaurant: [],
-  service_provider: [],
-  professional: [],
-  creative: [],
-  vendor: [],
-  event: [],
-}
-
-const FALLBACK_TYPE = 'business'
-
-// FNV-1a string hash → stable non-negative int (no Math.random, so SSR and the
-// client agree). Used only to spread a type's default photos across its listings.
-function hashString(input: string): number {
-  let hash = 2166136261
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  return hash >>> 0
-}
-
-/**
- * The type-based default cover for a listing, chosen deterministically by id.
- * Returns null when no default photo is configured for the type yet.
- */
-export function defaultCoverFor(
-  entityType: string | null | undefined,
-  listingId: string
-): string | null {
-  const set = DEFAULT_COVERS[entityType ?? ''] ?? DEFAULT_COVERS[FALLBACK_TYPE] ?? []
-  if (set.length === 0) return null
-  if (set.length === 1) return set[0] ?? null
-  return set[hashString(listingId) % set.length] ?? null
-}
+// See docs/blacqlist/design/default-covers-inventory.md (superseded).
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 
 export interface ResolvedCover {
-  /** Image src to render, or null → the caller shows the initials placeholder. */
+  /** Image src to render, or null → the caller shows the F-1 ImageFallback. */
   src: string | null
-  /** True when src is a type default rather than the owner's uploaded cover. */
-  isDefault: boolean
 }
 
 /**
- * Resolve a listing's cover image for rendering. Owner-uploaded covers win,
- * resolving a Supabase Storage path to its public URL (or passing through a
- * value that is already a full URL). Otherwise returns the type default.
+ * Resolve a listing's cover image for rendering. An owner-uploaded cover
+ * resolves its Supabase Storage path to a public URL (or passes through a value
+ * that is already a full URL). With no cover, src is null.
+ *
+ * `entityType` and `listingId` are retained in the signature: callers pass a
+ * listing's identity here and the resolution rule is a likely place to grow
+ * again (per-tier or per-category cover sources), so the call sites stay stable.
  */
 export function resolveCoverImage(
   coverImagePath: string | null | undefined,
-  entityType: string | null | undefined,
-  listingId: string
+  _entityType: string | null | undefined,
+  _listingId: string
 ): ResolvedCover {
-  if (coverImagePath) {
-    const src = coverImagePath.startsWith('http')
-      ? coverImagePath
-      : `${SUPABASE_URL}/storage/v1/object/public/listing-media/${coverImagePath}`
-    return { src, isDefault: false }
-  }
-  return { src: defaultCoverFor(entityType, listingId), isDefault: true }
+  if (!coverImagePath) return { src: null }
+
+  const src = coverImagePath.startsWith('http')
+    ? coverImagePath
+    : `${SUPABASE_URL}/storage/v1/object/public/listing-media/${coverImagePath}`
+
+  return { src }
 }
