@@ -7,7 +7,7 @@ import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/motion/Reveal'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
-import { CITY_PHOTOS } from '@/lib/design/surfaces'
+import { CITY_PHOTOS, PHOTO_PLATE } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
@@ -138,7 +138,10 @@ export default async function CitiesPage() {
             />
           ) : (
             <Reveal>
-              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[132px] md:auto-rows-[156px] gap-3">
+              {/* Rows grew from 132/156 with the caption plate — it takes a
+                  fixed slice of every tile, so the old height left the picture
+                  a sliver. */}
+              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[184px] md:auto-rows-[208px] gap-3">
                 {live.map((city, i) => {
                   const stateCode = city.states?.code
                   const isFeature = i === 0
@@ -148,51 +151,57 @@ export default async function CitiesPage() {
                       key={city.slug}
                       href={`/discover/${city.slug}`}
                       className={cn(
-                        'group relative flex flex-col justify-end rounded-xl bg-deep-bg p-4 md:p-5 overflow-hidden',
+                        'group flex flex-col rounded-xl bg-deep-bg overflow-hidden',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
                         isFeature && 'col-span-2 row-span-2'
                       )}
                     >
-                      <PhotoPanelGround
-                        src={CITY_PHOTOS[city.slug]}
-                        // The feature tile spans two of three columns.
-                        sizes={
-                          isFeature
-                            ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
-                            : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
-                        }
-                        alt={`${city.name} skyline`}
-                      />
-                      {isFeature && (
-                        <span className="relative font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">
-                          Most active
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          // Tiles are fixed-height, so a long city name has to clamp
-                          // rather than push the count line out of the tile.
-                          'relative font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
-                          isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]'
+                      {/* `min-h-0` lets the picture shrink inside the fixed row
+                          instead of pushing the plate out of the tile. */}
+                      <span className="relative block grow min-h-0 overflow-hidden">
+                        <PhotoPanelGround
+                          src={CITY_PHOTOS[city.slug]}
+                          // The feature tile spans two of three columns.
+                          sizes={
+                            isFeature
+                              ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
+                              : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
+                          }
+                          alt={`${city.name} skyline`}
+                        />
+                      </span>
+                      <span className={cn('flex flex-col', PHOTO_PLATE, 'p-4 md:p-5')}>
+                        {isFeature && (
+                          <span className="font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">
+                            Most active
+                          </span>
                         )}
-                      >
-                        {city.name}
-                      </span>
-                      <span className="relative font-subhead text-xs font-semibold text-gold mt-1">
-                        {city.listingCount.toLocaleString()}{' '}
-                        {city.listingCount === 1 ? 'business' : 'businesses'}
-                        {stateCode ? (
-                          <>
-                            <span aria-hidden="true"> · </span>
-                            {stateCode}
-                          </>
-                        ) : null}
-                      </span>
-                      {isFeature && city.metro_area && (
-                        <span className="relative font-body text-[13px] text-ink-soft mt-1.5 truncate">
-                          {city.metro_area}
+                        <span
+                          className={cn(
+                            // Tiles are fixed-height, so a long city name has to clamp
+                            // rather than push the count line out of the tile.
+                            'font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
+                            isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]'
+                          )}
+                        >
+                          {city.name}
                         </span>
-                      )}
+                        <span className="font-subhead text-xs font-semibold text-gold mt-1">
+                          {city.listingCount.toLocaleString()}{' '}
+                          {city.listingCount === 1 ? 'business' : 'businesses'}
+                          {stateCode ? (
+                            <>
+                              <span aria-hidden="true"> · </span>
+                              {stateCode}
+                            </>
+                          ) : null}
+                        </span>
+                        {isFeature && city.metro_area && (
+                          <span className="font-body text-[13px] text-ink-soft mt-1.5 truncate">
+                            {city.metro_area}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   )
                 })}

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
-import { CITY_PHOTOS } from '@/lib/design/surfaces'
+import { CITY_PHOTOS, PHOTO_PLATE } from '@/lib/design/surfaces'
 
 export interface CityChapter {
   name: string
@@ -18,10 +18,11 @@ interface Props {
  * City chapters — live cities as dark chapter cards with real counts;
  * coming-soon cities stay quiet and typographic (LCI direction).
  *
- * Live tiles ground on a skyline where `CITY_PHOTOS` has one and on the ember
- * wash where it does not — `PhotoPanelGround` decides, so a city opening without
- * a photograph still renders correctly. Alt text names the city because the
- * photograph is informative here, not decorative.
+ * Each live tile is a 16:9 picture region over a caption plate. The picture is a
+ * skyline where `CITY_PHOTOS` has one and the ember wash where it does not —
+ * `PhotoPanelGround` decides, so a city opening without a photograph still
+ * renders in the same shape. Alt text names the city because the photograph is
+ * informative here, not decorative.
  */
 export function CityChapters({ cities }: Props) {
   const live = cities.filter((c) => c.isActive)
@@ -43,18 +44,22 @@ export function CityChapters({ cities }: Props) {
             <Link
               key={city.slug}
               href={`/discover/${city.slug}`}
-              className="group relative flex flex-col justify-end min-h-[150px] rounded-xl bg-deep-bg p-5 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+              className="group flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
             >
-              <PhotoPanelGround
-                src={CITY_PHOTOS[city.slug]}
-                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 400px"
-                alt={`${city.name} skyline`}
-              />
-              <span className="relative font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
-                {city.name}
+              <span className="relative block aspect-[16/9] overflow-hidden">
+                <PhotoPanelGround
+                  src={CITY_PHOTOS[city.slug]}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 400px"
+                  alt={`${city.name} skyline`}
+                />
               </span>
-              <span className="relative font-subhead text-xs font-semibold text-gold mt-0.5">
-                {city.count.toLocaleString()} businesses · {city.stateCode}
+              <span className={`flex grow flex-col ${PHOTO_PLATE} p-5`}>
+                <span className="font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
+                  {city.name}
+                </span>
+                <span className="font-subhead text-xs font-semibold text-gold mt-0.5">
+                  {city.count.toLocaleString()} businesses · {city.stateCode}
+                </span>
               </span>
             </Link>
           ))}

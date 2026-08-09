@@ -9,42 +9,69 @@ export const EMBER_WASH =
   'radial-gradient(120% 120% at 82% 18%, rgba(196,160,101,0.16), transparent 55%)'
 
 /**
- * Legibility scrim laid over a photographic panel ground. Heavier at the bottom
- * because every panel that uses one sets its text with `justify-end`.
+ * The picture region of a panel that has no photograph.
  *
- * This is the token named in photographic-style-direction.md — reuse it rather
- * than authoring a gradient per surface, or the panels drift apart the way the
- * ember wash did before it moved here.
+ * `EMBER_WASH` used to serve this too, and at 0.16 alpha over `deep-bg` it was
+ * right — because the scrim held near-black over the photographic tiles beside
+ * it, so an unphotographed tile matched its neighbours. Removing the scrim broke
+ * that match: the frames are now at full brightness and a 0.16 wash reads as a
+ * void punched into the row `[Observed — headless bento capture at 1280,
+ * 2026-08-09]`.
  *
- * **The stop positions matter more than the stop strengths.** An evenly-spaced
- * ramp puts its midpoint at 50% of the panel, but the text block runs from the
- * bottom padding up past halfway on a short panel — a triptych panel is only
- * 180px tall at 375 and carries three lines, so its gold index number lands
- * around 55–60% where an even ramp has already faded out. Holding the dark to
- * **68%** and only then falling away covers the whole text block while leaving
- * the top of the frame at 10% — visually the same photograph, legible type.
+ * So this is deliberately louder than the wash, and it is a **separate** token
+ * rather than a bump to `EMBER_WASH`, because the other three consumers
+ * (`TheAvenues`, `BlacqlightFeature`, `ShowcaseCarousel`) set gold and white
+ * text directly on the wash — raising its alpha there would cut their contrast
+ * to buy brightness on a surface that has no such problem. Here **nothing sits
+ * on this gradient**: the tile's name and count are on `PHOTO_PLATE` below it,
+ * so the region owes no ratio and is free to carry real color.
  *
- * Measured worst-case contrast, per text run, against the brightest pixel in
- * each run's bounding box with the scrim composited
- * `[Measured — headless capture at 375/768/1280, 2026-08-09]`:
- *
- * | Ramp | Worst gold | Worst white |
- * |---|---|---|
- * | `85/50 @50% /10` (previous) | **1.16:1** | **2.42:1** |
- * | `92/66 @50% /34` (even, heavier) | 2.12:1 | 4.48:1 |
- * | `95/85 @68% /10` (this) | **5.28:1** | **8.04:1** |
- *
- * The previous ramp failed everywhere it sat on a bright frame — the salon on
- * `beauty-grooming`, the commercial kitchen on the Support panel — and failed
- * worst on the triptych index numbers, which is what surfaced the shape
- * problem. Simply strengthening every stop does not fix those (an even ramp at
- * 92/66/34 still leaves the index at 2.12:1) and it flattens the photograph.
- *
- * The gold count line is `text-xs`, so it is small text and owes 4.5:1, not the
- * 3:1 large-text allowance the white headlines get. Gold is the binding
- * constraint on every surface — tune against it, not against the headline.
+ * The linear layer does the work — a graded charcoal ground so the tile has
+ * depth instead of being flat black — and the radial puts the brand's gold in
+ * the same top-right corner the wash uses, so a photo-less tile still reads as
+ * the same family as a photographed one. Nine of twenty-five categories are
+ * mapped, so this surface is permanent furniture, not a gap waiting to close.
  */
-export const PHOTO_SCRIM = 'bg-gradient-to-t from-black/95 via-black/85 via-68% to-black/10'
+export const PHOTO_ABSENT =
+  'radial-gradient(115% 115% at 78% 14%, rgba(196,160,101,0.34), rgba(196,160,101,0.06) 54%, transparent 78%), ' +
+  'linear-gradient(158deg, #191620 0%, #0e0d12 58%, #08080a 100%)'
+
+/**
+ * The caption plate — a solid band of brand ground that carries a photographic
+ * panel's text **beside** the photograph rather than on top of it.
+ *
+ * This replaces `PHOTO_SCRIM`, and the replacement is a direction change, not a
+ * tuning pass `[Decision — founder, 2026-08-09]`. Every scrim shape we tried
+ * was a trade between legibility and the frame: the panels are much wider than
+ * their 3:2 sources and set their text with `justify-end`, so the text block ran
+ * from the bottom padding up past halfway, and covering it meant holding
+ * near-black across two thirds of the picture. That cleared the floor — gold
+ * 5.12–7.46:1, white 10.07:1+ `[Measured — headless capture at 375/768/1280,
+ * 2026-08-09]` — at the cost of darkening every photograph in the product.
+ *
+ * **The constraint was never the photograph; it was small gold type on an
+ * unknown ground.** The count line is `text-xs`, so it is small text and owes
+ * 4.5:1, not the 3:1 large-text allowance the white headlines get — and no
+ * gradient can promise a ratio over a frame whose brightest pixel is unknown.
+ * Move that line onto `deep-bg` and the problem stops existing:
+ *
+ * | Foreground on `--color-deep-bg` (#08080a) | Ratio | Owes | Margin |
+ * |---|---|---|---|
+ * | gold `#c4a065` | **8.16:1** | 4.5:1 (small text) | 1.81× |
+ * | white | **20.01:1** | 3:1 (large text) | 6.67× |
+ * | ink-soft `#b5b5b7` | **9.78:1** | 4.5:1 (small text) | 2.17× |
+ *
+ * `[Measured — scripts/measure-panel-contrast.ts, 144 text spans across / and
+ * /cities at 375/768/1280, 2026-08-09]` — zero below floor, worst margin 1.81×.
+ * These hold at every width, on every tile, forever, because the ground is a
+ * constant instead of a photograph. The picture above the plate then carries
+ * **nothing**: no wash, no gradient, no tint.
+ *
+ * The border is the whole visual join. A crisp hairline reads as an editorial
+ * caption bar; a soft fade would just be a small scrim, which is the thing we
+ * removed. Consumers own their own padding — the token is the surface only.
+ */
+export const PHOTO_PLATE = 'bg-deep-bg border-t border-white/10'
 
 /**
  * Frame path → `object-position` class. Unlisted frames center normally.
@@ -55,19 +82,28 @@ export const PHOTO_SCRIM = 'bg-gradient-to-t from-black/95 via-black/85 via-68% 
  * so no consumer passes a focal point.
  *
  * **Why this exists.** Every source is 3:2 (the optimizer preserves it on
- * purpose so one file survives both a wide hero and a square card). The panels
- * that consume them are far wider — a bento tile is ~2.25:1, a city tile ~2.5:1.
- * `object-cover` against that discards ~33% of the frame's height, and at the
- * default `50% 50%` it takes half of that off the top, which is exactly where
- * faces are. Three of these frames have hair touching the very top edge of the
- * source `[Observed — frames read at full size, 2026-08-09]`; centered, they
- * crop through the top of the head.
+ * purpose so one file survives both a wide hero and a square card). The regions
+ * that consume them are wider, so `object-cover` throws away height, and at the
+ * default `50% 50%` it takes half of that off the top — exactly where faces are.
+ * Three of these frames have hair touching the very top edge of the source
+ * `[Observed — frames read at full size, 2026-08-09]`; centered, they crop
+ * through the top of the head.
+ *
+ * **The caption plate cut the severity roughly in half.** When the text sat on
+ * the picture, a panel had to be short and wide to stay legible — a bento tile
+ * was ~2.25:1 and a city tile ~2.5:1, a ~33–41% vertical cut. Now the plate
+ * carries the text and the picture is free to keep its own shape: the triptych
+ * and city photo regions are a fixed `aspect-[16/9]` (1.78:1, a **~16% cut**)
+ * and the bento's region takes whatever the fixed grid row leaves. So these
+ * values are all now applied to a gentler crop than they were tuned against,
+ * which errs safe in the one direction that matters — a value chosen to keep a
+ * head inside a 41% cut cannot push it out of a 16% one.
  *
  * **Lower percentage shows more of the top.** With a total cut fraction `c` and
  * position `P`, the visible band is `[c·P, 1 − c·(1−P)]` — so `10%` is the
  * strongest head-preserving value and `55%` biases toward the bottom of the
- * frame. The bottom is the cheap side to lose: `PHOTO_SCRIM` is heaviest there
- * to carry the text.
+ * frame. The bottom stays the cheap side to lose: it is the edge that meets the
+ * caption plate.
  *
  * Values are literal strings so Tailwind can see them in the class scan. Do not
  * build them dynamically — an interpolated class is a class that never ships.
@@ -92,8 +128,8 @@ export const PHOTO_SCRIM = 'bg-gradient-to-t from-black/95 via-black/85 via-68% 
  *
  * The city frames are here for the same reason with a different subject: a
  * skyline puts its tallest point near the top edge, so a centered crop takes the
- * tower tops off. City tiles are wider still (~2.5:1, a ~41% cut), which makes
- * the clipping worse than it is on the bento.
+ * tower tops off. Their values were set against the old ~41% cut and now run at
+ * ~16%, so every antenna sits further inside the band than it was tuned to.
  *
  * Precedent: `HomeHero.tsx` already does this inline with `object-[center_20%]`.
  */
@@ -102,7 +138,7 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // edge of the *source*, so some contact with the panel's top edge is in the
   // photograph rather than in the crop. 0% is the floor and is strictly better
   // than any higher value at every width — it spends the whole vertical cut on
-  // the bottom, which the scrim carries anyway.
+  // the bottom, which is the edge that meets the caption plate.
   '/images/editorial/asha-osei-photography.webp': 'object-[50%_0%]',
   // Hair at the top edge, face 12–33% — the most aggressive bias in the set.
   '/images/editorial/melanin-law-group.webp': 'object-[50%_10%]',
@@ -114,7 +150,7 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // Two people, the higher head at ~11%.
   '/images/editorial/diaspora-creative-agency.webp': 'object-[50%_30%]',
   '/images/editorial/crown-and-coil-studio.webp': 'object-[50%_32%]',
-  // Head at 17%; the pot below is scrimmed, so biasing up costs little.
+  // Head at 17%; the pot below sits nearest the plate, so biasing up costs little.
   '/images/editorial/peach-and-rye-kitchen.webp': 'object-[50%_40%]',
   // Hard hat at 16%.
   '/images/editorial/ujima-construction.webp': 'object-[50%_40%]',
@@ -127,9 +163,10 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // bottom; centered clips the raised hand that makes it read as drumming.
   '/images/editorial/hands-and-drums.webp': 'object-[50%_38%]',
 
-  // Skylines. A city tile is ~2.53:1 against a 3:2 source — a ~41% vertical
-  // cut, worse than the bento's ~33% — so centered lands at [20.5%, 79.5%] and
-  // takes the tower tops off. Each value is set from the highest structure.
+  // Skylines. Each value is set from the highest structure in the frame. They
+  // were tuned against the pre-plate city tile (~2.53:1, a ~41% cut, centered
+  // landing at [20.5%, 79.5%] and shearing the tower tops); the photo region is
+  // now 16/9, so the same values run at a ~16% cut with more headroom, not less.
   // Bank of America Plaza's spire sits at ~11%.
   '/images/cities/atlanta.webp': 'object-[50%_25%]',
   // Antenna at ~11%, the bronze-glass tower that carries the frame at ~14%.

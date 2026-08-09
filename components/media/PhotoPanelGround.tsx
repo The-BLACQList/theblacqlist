@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { EMBER_WASH, PHOTO_FOCAL, PHOTO_SCRIM } from '@/lib/design/surfaces'
+import { PHOTO_ABSENT, PHOTO_FOCAL } from '@/lib/design/surfaces'
 
 interface Props {
   /** Public path to the editorial photograph. Undefined → the ember wash. */
@@ -17,14 +17,23 @@ interface Props {
 }
 
 /**
- * The ground layer of a dark editorial panel — the thing that sits behind the
- * text on the triptych, the category bento, and the city tiles.
+ * The picture area of a dark editorial panel — the region above the caption
+ * plate on the triptych, the category bento, and the city tiles.
  *
  * Two states, and the fallback is a first-class outcome rather than a
- * degradation: with a photograph it renders `fill` + `object-cover` under the
- * shared legibility scrim; without one it renders the ember wash exactly as
- * those panels did before photography existed. Most categories and most cities
- * will never have a photograph, by design — see `CATEGORY_PHOTOS`.
+ * degradation: with a photograph it renders `fill` + `object-cover`; without one
+ * it renders `PHOTO_ABSENT`, a designed gold-and-charcoal panel. Most categories
+ * and most cities will never have a photograph, by design — see
+ * `CATEGORY_PHOTOS` — so the unphotographed tile has to hold a row on its own
+ * merits, not look like a frame that failed to load.
+ *
+ * **Nothing is laid over the photograph.** No scrim, no wash, no tint. It used
+ * to carry `PHOTO_SCRIM`, because the text sat on top of the frame and small
+ * gold type owes 4.5:1 against a ground the component cannot know. The text now
+ * lives on `PHOTO_PLATE` below this region instead, which removes the reason the
+ * scrim existed rather than tuning it — see that token for the measurements.
+ * Do not reintroduce an overlay here to solve a legibility problem: if type is
+ * hard to read on a panel, the type is in the wrong place.
  *
  * Decorative by default. The panel's own heading carries the meaning, so `alt`
  * is empty unless a caller says otherwise: a screen reader announcing a scene
@@ -37,42 +46,47 @@ interface Props {
  * is informative rather than decorative, and the filenames are plain place
  * names, so nothing has to be hidden. Default to empty; opt in.
  *
- * The parent must be `relative` and `overflow-hidden`, and must own the text
- * above this with `relative` so it stacks over the ground.
+ * The parent is the picture region, not the whole tile: it must be `relative`
+ * and `overflow-hidden`, and it must size itself — either a fixed
+ * `aspect-[16/9]` (triptych, city tiles) or `grow min-h-0` inside a
+ * fixed-height grid row (the bento). The caption plate is that region's sibling,
+ * not a layer above it.
  *
- * The crop is not the caller's problem. Panels are much wider than the 3:2
- * sources, so `object-cover` throws away a third of the frame's height, and
- * centered that lands on faces. `PHOTO_FOCAL` holds the per-frame correction and
- * this component applies it — a consumer that adds a new photographic surface
- * inherits the right crop without knowing the map exists.
+ * The crop is not the caller's problem. A picture region is wider than the 3:2
+ * source, so `object-cover` throws away height, and centered that lands on
+ * faces. `PHOTO_FOCAL` holds the per-frame correction and this component applies
+ * it — a consumer that adds a new photographic surface inherits the right crop
+ * without knowing the map exists.
  */
 export function PhotoPanelGround({ src, sizes, priority = false, alt = '' }: Props) {
   if (!src) {
     return (
+      // Full strength at rest. The old 0.7 base made sense when a scrim held
+      // the photographic tiles down to meet it; against undimmed frames it just
+      // reads faint. Hover lifts rather than reveals.
       <span
-        className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
+        className="absolute inset-0 motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]"
         aria-hidden="true"
-        style={{ background: EMBER_WASH }}
+        style={{ background: PHOTO_ABSENT }}
       />
     )
   }
 
   return (
-    <>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes={sizes}
-        priority={priority}
-        className={cn('object-cover', PHOTO_FOCAL[src])}
-      />
-      {/* Lightens on hover so the photograph steps forward — the same
-          affordance the ember wash gives, expressed through the scrim. */}
-      <span
-        className={`absolute inset-0 ${PHOTO_SCRIM} group-hover:opacity-90 transition-opacity duration-200`}
-        aria-hidden="true"
-      />
-    </>
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      priority={priority}
+      // A slow push-in on hover is the affordance the scrim used to give by
+      // lightening. It is `motion-safe:` only — under prefers-reduced-motion
+      // the frame is simply static, which is a real alternative rather than a
+      // disabled effect, and it is why headless captures read unscaled.
+      className={cn(
+        'object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.04]',
+        PHOTO_FOCAL[src]
+      )}
+    />
   )
 }

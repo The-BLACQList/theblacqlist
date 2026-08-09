@@ -269,31 +269,70 @@ Use these four overlay patterns consistently across the site. Never invent a new
 
 | Name              | CSS                                                             | Use for                                                     |
 | ----------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Dark full**     | `bg-gradient-to-t from-black/80 via-black/40 to-transparent`    | Text at bottom of photo: collection cards, city tiles       |
+| **Dark full**     | `bg-gradient-to-t from-black/80 via-black/40 to-transparent`    | Text at bottom of photo: collection cards                   |
 | **Dark left**     | `bg-gradient-to-r from-deep-bg/90 via-deep-bg/70 to-deep-bg/40` | Text left-aligned over wide photos: homepage hero           |
 | **Dark vignette** | `bg-gradient-to-br from-black/60 via-transparent to-black/60`   | Full-screen section heroes with centered text               |
 | **Subtle scrim**  | `bg-black/30`                                                   | Light tinting when photo is already dark; card hover states |
 
 All overlays use `aria-hidden="true"`. They are purely decorative.
 
-### The panel scrim — `PHOTO_SCRIM`
+### Grounded panels carry no overlay at all — `PHOTO_PLATE`
 
-Grounded panels (triptych, category bento, city tiles) use a fifth ramp defined
-once in `lib/design/surfaces.ts`, not one of the four above. It exists because
-those panels are **short and wide** — a triptych panel is 180px tall at 375 and
-carries three lines of type — so the text block runs from the bottom padding up
-past the halfway mark, while an evenly-spaced ramp has already faded out by then.
+**None of the four patterns above apply to a grounded panel.** The triptych, the
+category bento, and the city tiles put **nothing** over the photograph — no
+scrim, no wash, no tint. Their text sits *beside* the frame, on a solid band of
+`deep-bg` below it, defined once as `PHOTO_PLATE` in `lib/design/surfaces.ts`.
 
-`PHOTO_SCRIM` holds the dark to **68%** of the panel height and only then falls
-away, which covers the whole text block while leaving the top of the frame at 10%.
-The **stop positions matter more than the stop strengths**: simply darkening an
-even ramp flattens the photograph without fixing the top of the text block.
+This replaced a fifth ramp, `PHOTO_SCRIM`, and the replacement is a direction
+change rather than a tuning pass `[Decision — founder, 2026-08-09: "i hate the
+black overlay on every picture"]`. That ramp existed because grounded panels are
+short and wide, so their text block ran from the bottom padding up past halfway
+and covering it meant holding near-black across two thirds of every frame. It
+cleared the floor and darkened every photograph in the product to do it.
 
-The binding constraint is the **gold count line**, not the white headline. It is
-`text-xs`, so it is small text and owes **4.5:1**, where the 19–30px white headlines
-qualify for the 3:1 large-text allowance. Tune against the gold.
-`[Measured — headless capture at 375/768/1280, 2026-08-09]` — see the JSDoc on
-`PHOTO_SCRIM` for the full candidate sweep.
+**The constraint was never the photograph; it was small gold type on an unknown
+ground.** The count line is `text-xs`, so it owes **4.5:1** where the 19–40px
+white headlines get the 3:1 large-text allowance — and no gradient can promise a
+ratio over a frame whose brightest pixel is unknown. Moving that line onto
+`deep-bg` makes the ground a constant and the question stops being a tuning
+problem:
+
+| Foreground on `deep-bg` (#08080a) | Ratio | Owes | Margin |
+| --- | --- | --- | --- |
+| gold `#c4a065` | **8.16:1** | 4.5:1 | 1.81× |
+| white | **20.01:1** | 3:1 | 6.67× |
+| ink-soft `#b5b5b7` | **9.78:1** | 4.5:1 | 2.17× |
+
+`[Measured — scripts/measure-panel-contrast.ts, 144 text spans across / and
+/cities at 375/768/1280, 2026-08-09]` — zero below floor.
+
+Two consequences worth knowing before you touch a grounded panel:
+
+1. **The crop got gentler for free.** With text off the frame, the picture no
+   longer has to be short and wide to stay legible. Vertical cut fell from
+   33–41% to ~16%, so every `PHOTO_FOCAL` value below is now applied to a milder
+   crop than it was tuned against — which is the safe direction.
+2. **The picture must lead the plate.** The plate is content-height, so a
+   two-line name grows it; size fixed grid rows against the *worst* tile, not
+   the typical one. A caption taller than its photograph inverts the panel.
+
+**If type on a panel is hard to read, the type is in the wrong place.** Do not
+reintroduce an overlay to fix it.
+
+### Panels with no photograph — `PHOTO_ABSENT`
+
+Most categories and most cities will never have a frame, so the unphotographed
+tile is permanent furniture, not a gap. It renders `PHOTO_ABSENT`: a graded
+charcoal ground with the brand's gold lifted into the same top-right corner the
+ember wash uses, so it reads as the same family as a photographed tile.
+
+It is deliberately louder than `EMBER_WASH` and kept as a **separate** token.
+The wash's other three consumers (`TheAvenues`, `BlacqlightFeature`,
+`ShowcaseCarousel`) set gold and white text directly on it, so raising its alpha
+would cut their contrast to buy brightness on a surface that has no such problem.
+Nothing sits on `PHOTO_ABSENT`, so it owes no ratio and is free to carry color.
+`[Observed — the 0.16 wash read as a void once the scrim came off and the frames
+beside it went to full brightness, 2026-08-09]`
 
 ### Focal points — `PHOTO_FOCAL`
 

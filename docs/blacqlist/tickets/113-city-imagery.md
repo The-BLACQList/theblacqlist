@@ -65,13 +65,20 @@ Both take the same change:
 - **Photo present** → render a `next/image` `fill` `object-cover` beneath, then the legibility scrim `bg-gradient-to-t from-black/80 via-black/40 to-transparent` in place of the wash. Reuse that token; do not invent a new gradient.
 - **No photo** → keep `EMBER_WASH` exactly as it renders today.
 
+> **Superseded — 2026-08-09.** Both bullets describe an overlay-on-photo tile,
+> and that whole approach was reversed by the founder after review. Grounded
+> panels now put text on a caption plate beside the frame and lay nothing over
+> the photograph; the no-photo case renders `PHOTO_ABSENT` rather than the wash.
+> See the deviation table under **What shipped**, and
+> `photographic-style-direction.md` for the reasoning.
+
 Ten of thirteen cities will have no photo for a long time. **That is the intended end state, not a gap** — an image only where there is real content keeps the grid honest about where the depth is. Do not fill the other ten to make the grid uniform.
 
 ### Alt text
 
 **Names the city:** `alt="Atlanta skyline"`. These are informative, unlike the `/about` editorial photos where the adjacent heading supplies the context and `alt=""` is correct.
 
-The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is decoration.
+The no-photo span stays `aria-hidden="true"` — it is decoration.
 
 ---
 
@@ -83,23 +90,31 @@ The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is 
 
 ## What shipped — 2026-08-09, PR #23
 
-Two deviations from the spec above, both deliberate:
+Three deviations from the spec above, all deliberate:
 
 | Spec said | What shipped | Why |
 |---|---|---|
-| Scrim `from-black/80 via-black/40 to-transparent` | **`PHOTO_SCRIM`** — `from-black/95 via-black/85 via-68% to-black/10` | The ticket's ramp was written before the triptych measured its own legibility. On a short wide tile the text block runs past halfway, so an even ramp has faded out under the gold count line. Measured worst-case gold contrast on the city tiles under the ticket's ramp was **below the 4.5:1 small-text floor**; `PHOTO_SCRIM` clears it. `[Measured — headless capture at 375/768/1280, 2026-08-09]` |
+| Scrim over the photo, text on top | **No overlay at all.** Text moved onto `PHOTO_PLATE`, a solid `deep-bg` caption band beside the frame | `[Decision — founder, 2026-08-09: "i hate the black overlay on every picture"]`. The ticket's ramp assumed the text stays on the photograph, and every shape that made small gold type legible there meant holding near-black across two thirds of the frame. On a constant ground the ratios are exact and permanent — gold **8.16:1**, white **20.01:1**, ink-soft **9.78:1** `[Measured — scripts/measure-panel-contrast.ts, 144 spans across / and /cities at 375/768/1280, 2026-08-09]`, zero below floor. |
+| No-photo tiles keep `EMBER_WASH` | **`PHOTO_ABSENT`** — a graded charcoal ground with gold lifted top-right | With the scrim gone the frames render at full brightness, and a 0.16 wash beside them read as a void `[Observed — headless bento capture at 1280, 2026-08-09]`. A separate token, not a bump to `EMBER_WASH`, because that wash's three other consumers set text directly on it. |
 | Map "next to `lib/design/surfaces.ts` or in `lib/listings/coverImage.ts`" | **`CITY_PHOTOS` in `lib/design/surfaces.ts`** | Same file as `CATEGORY_PHOTOS`, so all photographic grounding maps sit together. |
 
 Both surfaces ground through the shared **`PhotoPanelGround`** component rather than
-each assembling its own `Image` + scrim, so a future frame or scrim change lands in
-one place. `PHOTO_FOCAL` supplies per-frame `object-position` — `chicago.webp`
-needed `15%` to keep the Hancock antenna in the crop.
+each assembling its own `Image`, so a future frame or treatment change lands in one
+place. `PHOTO_FOCAL` supplies per-frame `object-position` — `chicago.webp`
+needed `15%` to keep the Hancock antenna in the crop. Those values were tuned
+against a 33–41% vertical cut; the caption plate dropped the cut to ~16%, so each
+one now errs toward showing *more* of the frame's top, which is the safe direction.
+
+An intermediate `PHOTO_SCRIM` token shipped in the first pass of this PR and was
+removed in the same PR. It is named here only so the reversal is legible in the
+record — it exists nowhere in the tree, and its measured figures should not be
+cited.
 
 ## Definition of done
 
 - [x] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/` — Atlanta 137 KB, Houston 143 KB, Chicago 142 KB `[Measured — ls, 2026-08-09]`
 - [x] Slug→path map exported from one place and read by both surfaces — `CITY_PHOTOS`
-- [x] Both surfaces render the photo + scrim when present and fall back to `EMBER_WASH` when absent
+- [x] Both surfaces render the photo when present and fall back to a designed panel when absent — no overlay in either case; text is on `PHOTO_PLATE` beside the frame
 - [x] Alt text names the city on every photo tile — `alt="{name} skyline"`
 - [x] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` **51/51** `[Measured — local run, 2026-08-09]`
 - [x] **Three photographs licensed and recorded in `editorial-image-licenses.md`** — Canva Pro `[Decision — founder statement, 2026-08-09]`; three inventory rows added, and the three Canva restrictions bind them. Restriction 2 (implied endorsement) is moot — no identifiable people in any of the three skylines.
