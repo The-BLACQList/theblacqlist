@@ -219,6 +219,24 @@ This turns a flat text list into a magazine-grade editorial index.
 - **Phase A (now):** Keep the current white-box tiles. They work. Don't block launch on this.
 - **Phase B (V1):** Replace with photo tiles using the same overlay pattern as collections. Source 12 city photos from a paid stock library or through community submissions.
 
+#### ✅ Shipped — PR #23, 2026-08-09
+
+Phase B landed for **three of thirteen cities**, not twelve: Atlanta, Houston, and
+Chicago — the three with live listings. The other ten stay on the ember wash **by
+design, not by shortfall**, and `PhotoPanelGround` decides per tile by looking up
+`CITY_PHOTOS[city.slug]`, so a city opening later becomes photographic the moment a
+frame is added to the map and never before. A mixed grid is the intended end state
+here for the same reason it is on the category bento.
+
+Both consumers ground identically — `components/home/CityChapters.tsx` and
+`app/(public)/cities/page.tsx`.
+
+**Alt text names the city** (`alt="Atlanta skyline"`), which is the deliberate
+*opposite* of the editorial panels' `alt=""`. Those are empty because their
+filenames are invented aspirational business names that must never reach the
+accessibility tree (see [Naming caution](editorial-image-licenses.md#naming-caution));
+a skyline carries no such problem and the photograph is informative.
+
 ---
 
 ### Priority 6 — About Page
@@ -257,6 +275,50 @@ Use these four overlay patterns consistently across the site. Never invent a new
 | **Subtle scrim**  | `bg-black/30`                                                   | Light tinting when photo is already dark; card hover states |
 
 All overlays use `aria-hidden="true"`. They are purely decorative.
+
+### The panel scrim — `PHOTO_SCRIM`
+
+Grounded panels (triptych, category bento, city tiles) use a fifth ramp defined
+once in `lib/design/surfaces.ts`, not one of the four above. It exists because
+those panels are **short and wide** — a triptych panel is 180px tall at 375 and
+carries three lines of type — so the text block runs from the bottom padding up
+past the halfway mark, while an evenly-spaced ramp has already faded out by then.
+
+`PHOTO_SCRIM` holds the dark to **68%** of the panel height and only then falls
+away, which covers the whole text block while leaving the top of the frame at 10%.
+The **stop positions matter more than the stop strengths**: simply darkening an
+even ramp flattens the photograph without fixing the top of the text block.
+
+The binding constraint is the **gold count line**, not the white headline. It is
+`text-xs`, so it is small text and owes **4.5:1**, where the 19–30px white headlines
+qualify for the 3:1 large-text allowance. Tune against the gold.
+`[Measured — headless capture at 375/768/1280, 2026-08-09]` — see the JSDoc on
+`PHOTO_SCRIM` for the full candidate sweep.
+
+### Focal points — `PHOTO_FOCAL`
+
+`object-cover` centers by default, which is wrong for a short wide tile: a 3:2
+source in a 2.2:1 tile loses ~16% off the top, and that is exactly where faces sit.
+
+`PHOTO_FOCAL` in `lib/design/surfaces.ts` maps **frame path → `object-position`
+class**, and `PhotoPanelGround` looks it up itself. Keyed on the photograph rather
+than the surface, because a face sits in the same place wherever the frame is used
+— so one map correction fixes every surface at once and no call site changes.
+
+Two rules that are easy to get wrong:
+
+1. **Lower percentages preserve heads.** With a total vertical cut `c` and an
+   `object-position` y-fraction `P`, the visible band is `[c·P, 1 − c·(1−P)]`. A
+   lower `P` spends more of the cut on the bottom, which the scrim covers anyway.
+2. **Do not re-crop the source files.** The optimizer deliberately preserves the
+   native 3:2 so one file serves a wide hero and a square card
+   ([Aspect ratio](editorial-image-licenses.md#aspect-ratio)). The fix belongs at
+   render time.
+
+Values must be **literal strings** so Tailwind's class scan can see them — an
+interpolated class is a class that never ships. Set each value by reading the
+source frame, then verify it in a real render; the frame alone will mislead you by
+a few points of position.
 
 ---
 
@@ -411,7 +473,9 @@ The deep-bg on the "Your BLACQList Page" and final CTA sections is a deliberate 
 
 **Why the original reasoning didn't hold.** Row 1 argued photography would compete with the typography. In practice the trio's three panels were the largest dark voids on the homepage and read as unfinished — the typography wasn't competing with anything, it was carrying a blank ground alone. Row 2 argued photography would be too noisy at small tile sizes; the scrim resolves that, and the feature tile is not small.
 
-**The standing principle is unchanged.** "Specificity over stock" still governs: a photograph goes on a tile only where a real frame fits the subject. Nine of twenty-five top-level categories are mapped and the other sixteen keep the ember wash **permanently**. A mixed grid is the intended end state — do not fill the remainder for visual uniformity, and do not stretch a frame to fit a category it does not depict.
+**The standing principle is unchanged.** "Specificity over stock" still governs: a photograph goes on a tile only where a real frame fits the subject. Twelve of twenty-five top-level categories are mapped and the other thirteen keep the ember wash **permanently**. A mixed grid is the intended end state — do not fill the remainder for visual uniformity, and do not stretch a frame to fit a category it does not depict.
+
+**Amended 2026-08-09 (PR #23):** three more frames were added — `food-dining`, `fashion-apparel`, `arts-culture` — taking the *rendered* bento from 4 of 9 photographic to 7 of 9. **Two of the nine stay on the wash deliberately and should not be read as gaps to close:** `social-media-marketing` (nothing in the pool honestly depicts it) and `healthcare` (every candidate is either a head-at-top portrait that decapitates at 2.2:1 or a clinical frame whose cold whites fight `bg-deep-bg` and the gold type). All three new picks are people-free, which is what lets them survive a short wide tile.
 
 **Rows 3–6 stand.** Legal, dashboard/admin, auth, and footer remain photo-free for the reasons given.
 
@@ -429,7 +493,7 @@ The deep-bg on the "Your BLACQList Page" and final CTA sections is a deliberate 
 | 4        | Collections index cards         | Medium — collection card component                         | 1 photo per collection           |
 | 5        | About page                      | Low — add hero image + inline pull photo                   | 1–2 licensed or community photos |
 | 6        | For-business page               | Medium — add mockup/screenshot visual                      | Product screenshot or mockup     |
-| 7        | City tiles on homepage          | Low complexity, but needs 12 city photos                   | 12 city photos — defer to V1     |
+| 7        | City tiles on homepage          | ✅ Shipped PR #23 — `PhotoPanelGround` + `CITY_PHOTOS`      | 3 city photos (live cities only) |
 
 ---
 

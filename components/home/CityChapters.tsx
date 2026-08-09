@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { EMBER_WASH } from '@/lib/design/surfaces'
+import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
+import { CITY_PHOTOS } from '@/lib/design/surfaces'
 
 export interface CityChapter {
   name: string
@@ -16,6 +17,11 @@ interface Props {
 /**
  * City chapters — live cities as dark chapter cards with real counts;
  * coming-soon cities stay quiet and typographic (LCI direction).
+ *
+ * Live tiles ground on a skyline where `CITY_PHOTOS` has one and on the ember
+ * wash where it does not — `PhotoPanelGround` decides, so a city opening without
+ * a photograph still renders correctly. Alt text names the city because the
+ * photograph is informative here, not decorative.
  */
 export function CityChapters({ cities }: Props) {
   const live = cities.filter((c) => c.isActive)
@@ -39,10 +45,10 @@ export function CityChapters({ cities }: Props) {
               href={`/discover/${city.slug}`}
               className="group relative flex flex-col justify-end min-h-[150px] rounded-xl bg-deep-bg p-5 overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
             >
-              <span
-                className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
-                aria-hidden="true"
-                style={{ background: EMBER_WASH }}
+              <PhotoPanelGround
+                src={CITY_PHOTOS[city.slug]}
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 400px"
+                alt={`${city.name} skyline`}
               />
               <span className="relative font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
                 {city.name}

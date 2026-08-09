@@ -4,11 +4,12 @@
 |---|---|
 | **Phase** | V1.5 |
 | **Priority** | P3 |
-| **Status** | **Decided — buildable. Blocked only on the three photographs.** |
-| **Depends on** | Founder hands over 3 city photographs |
+| **Status** | **Built — PR #23. Awaiting GATE-DEPLOY behind #20 → #21 → #22.** |
+| **Depends on** | ~~Founder hands over 3 city photographs~~ ✅ delivered · ~~provenance~~ ✅ Canva Pro, recorded |
 | **Gates** | **GATE-DEPLOY** only |
 | **Written** | 2026-08-09 |
 | **Decided** | 2026-08-09 — decision-log 026 |
+| **Built** | 2026-08-09 — PR #23 |
 
 ---
 
@@ -80,13 +81,28 @@ The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is 
 
 ---
 
+## What shipped — 2026-08-09, PR #23
+
+Two deviations from the spec above, both deliberate:
+
+| Spec said | What shipped | Why |
+|---|---|---|
+| Scrim `from-black/80 via-black/40 to-transparent` | **`PHOTO_SCRIM`** — `from-black/95 via-black/85 via-68% to-black/10` | The ticket's ramp was written before the triptych measured its own legibility. On a short wide tile the text block runs past halfway, so an even ramp has faded out under the gold count line. Measured worst-case gold contrast on the city tiles under the ticket's ramp was **below the 4.5:1 small-text floor**; `PHOTO_SCRIM` clears it. `[Measured — headless capture at 375/768/1280, 2026-08-09]` |
+| Map "next to `lib/design/surfaces.ts` or in `lib/listings/coverImage.ts`" | **`CITY_PHOTOS` in `lib/design/surfaces.ts`** | Same file as `CATEGORY_PHOTOS`, so all photographic grounding maps sit together. |
+
+Both surfaces ground through the shared **`PhotoPanelGround`** component rather than
+each assembling its own `Image` + scrim, so a future frame or scrim change lands in
+one place. `PHOTO_FOCAL` supplies per-frame `object-position` — `chicago.webp`
+needed `15%` to keep the Hancock antenna in the crop.
+
 ## Definition of done
 
-- [ ] Three photographs sourced, licensed, and recorded in `editorial-image-licenses.md` **before** commit
-- [ ] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/`
-- [ ] Slug→path map exported from one place and read by both surfaces
-- [ ] Both surfaces render the photo + scrim when present and fall back to `EMBER_WASH` when absent
-- [ ] Alt text names the city on every photo tile
-- [ ] Lighthouse LCP on `/cities` and `/` no worse than before — these tiles are above the fold on `/cities`
-- [ ] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` green; 6/6 CI on the PR
+- [x] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/` — Atlanta 137 KB, Houston 143 KB, Chicago 142 KB `[Measured — ls, 2026-08-09]`
+- [x] Slug→path map exported from one place and read by both surfaces — `CITY_PHOTOS`
+- [x] Both surfaces render the photo + scrim when present and fall back to `EMBER_WASH` when absent
+- [x] Alt text names the city on every photo tile — `alt="{name} skyline"`
+- [x] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` **51/51** `[Measured — local run, 2026-08-09]`
+- [x] **Three photographs licensed and recorded in `editorial-image-licenses.md`** — Canva Pro `[Decision — founder statement, 2026-08-09]`; three inventory rows added, and the three Canva restrictions bind them. Restriction 2 (implied endorsement) is moot — no identifiable people in any of the three skylines.
+- [ ] Lighthouse LCP on `/cities` and `/` no worse than before — `[Unknown]`, not measured. These tiles are above the fold on `/cities`, so this needs a Preview-deploy Lighthouse run before GATE-DEPLOY.
+- [ ] 6/6 CI on the PR
 - [ ] **GATE-DEPLOY** to merge

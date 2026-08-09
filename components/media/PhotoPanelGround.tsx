@@ -1,5 +1,6 @@
 import Image from 'next/image'
-import { EMBER_WASH, PHOTO_SCRIM } from '@/lib/design/surfaces'
+import { cn } from '@/lib/utils'
+import { EMBER_WASH, PHOTO_FOCAL, PHOTO_SCRIM } from '@/lib/design/surfaces'
 
 interface Props {
   /** Public path to the editorial photograph. Undefined → the ember wash. */
@@ -7,6 +8,12 @@ interface Props {
   /** Responsive width hint for next/image. Required when `src` is set. */
   sizes?: string
   priority?: boolean
+  /**
+   * Defaults to `""` — decorative, which is right for every editorial frame.
+   * Pass a description only when the photograph carries meaning the panel's own
+   * text does not, as the city skylines do.
+   */
+  alt?: string
 }
 
 /**
@@ -19,16 +26,27 @@ interface Props {
  * those panels did before photography existed. Most categories and most cities
  * will never have a photograph, by design — see `CATEGORY_PHOTOS`.
  *
- * Always decorative. The panel's own heading carries the meaning, so `alt` is
- * empty on purpose: a screen reader announcing a scene description here would
- * duplicate the link text with noise. It is also the guard against the naming
- * caution in `editorial-image-licenses.md` — the filenames are aspirational
- * business names we invented and must never reach the accessibility tree.
+ * Decorative by default. The panel's own heading carries the meaning, so `alt`
+ * is empty unless a caller says otherwise: a screen reader announcing a scene
+ * description on an editorial frame would duplicate the link text with noise. It
+ * is also the guard against the naming caution in `editorial-image-licenses.md`
+ * — those filenames are aspirational business names we invented and must never
+ * reach the accessibility tree.
+ *
+ * The city tiles are the deliberate exception and pass a real `alt`. A skyline
+ * is informative rather than decorative, and the filenames are plain place
+ * names, so nothing has to be hidden. Default to empty; opt in.
  *
  * The parent must be `relative` and `overflow-hidden`, and must own the text
  * above this with `relative` so it stacks over the ground.
+ *
+ * The crop is not the caller's problem. Panels are much wider than the 3:2
+ * sources, so `object-cover` throws away a third of the frame's height, and
+ * centered that lands on faces. `PHOTO_FOCAL` holds the per-frame correction and
+ * this component applies it — a consumer that adds a new photographic surface
+ * inherits the right crop without knowing the map exists.
  */
-export function PhotoPanelGround({ src, sizes, priority = false }: Props) {
+export function PhotoPanelGround({ src, sizes, priority = false, alt = '' }: Props) {
   if (!src) {
     return (
       <span
@@ -43,11 +61,11 @@ export function PhotoPanelGround({ src, sizes, priority = false }: Props) {
     <>
       <Image
         src={src}
-        alt=""
+        alt={alt}
         fill
         sizes={sizes}
         priority={priority}
-        className="object-cover"
+        className={cn('object-cover', PHOTO_FOCAL[src])}
       />
       {/* Lightens on hover so the photograph steps forward — the same
           affordance the ember wash gives, expressed through the scrim. */}

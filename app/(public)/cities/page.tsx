@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/motion/Reveal'
 import { EmptyState } from '@/components/ui/empty-state'
-import { EMBER_WASH } from '@/lib/design/surfaces'
+import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
+import { CITY_PHOTOS } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
@@ -152,10 +153,15 @@ export default async function CitiesPage() {
                         isFeature && 'col-span-2 row-span-2'
                       )}
                     >
-                      <span
-                        className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
-                        aria-hidden="true"
-                        style={{ background: EMBER_WASH }}
+                      <PhotoPanelGround
+                        src={CITY_PHOTOS[city.slug]}
+                        // The feature tile spans two of three columns.
+                        sizes={
+                          isFeature
+                            ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
+                            : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
+                        }
+                        alt={`${city.name} skyline`}
                       />
                       {isFeature && (
                         <span className="relative font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">

@@ -1,15 +1,18 @@
 # Editorial image licenses
 
-**Status:** ✅ **Recorded — clears the merge block on the image PR.**
+**Status:** ✅ **Recorded.** All **eighteen** photographs are cleared — the original
+twelve plus the six added on 2026-08-09 in PR #23.
 **Last updated:** 2026-08-09
 
 `.claude/rules/3d-assets.md` requires a recorded license per asset before it enters
 the product: source, author, license name, and commercial-use confirmation.
 
-**Source of record:** all twelve photographs were obtained through the founder's
+**Source of record:** all eighteen photographs were obtained through the founder's
 **Canva Pro** subscription and are licensed under the **Canva Content License
-Agreement (Pro content)**
-`[Decision — founder statement, 2026-08-09]`.
+Agreement (Pro content)** `[Decision — founder statement, 2026-08-09]`. The
+statement was made twice: once about the original twelve, and again about the six
+staging-directory frames once they were selected — *"they still came from canva.
+All of them."*
 
 That license permits commercial use without attribution, and it carries three
 restrictions that bind how these files may be used here. They are written out in
@@ -20,7 +23,9 @@ read that section before placing any of these images on a new surface.
 
 ## The pool
 
-Twelve photographs, delivered as 3840×2560 JPEGs (~5.7 MB each) in
+**Eighteen photographs**, from two deliveries.
+
+**The original twelve** arrived as 3840×2560 JPEGs (~5.7 MB each) in
 `public/images/listings/`. They matched no live listing and were referenced by no
 file `[Measured — repo grep, 2026-08-09]`. Under
 [Decision 023](../../ops/decision-log.md), business cards get the generated F-1
@@ -32,16 +37,51 @@ They were optimized to 1600px-wide WebP in `public/images/editorial/` and the
 68 MB of originals were deleted in the same commit. `public/images` went from
 69 MB to 1.5 MB `[Measured — du, 2026-08-09]`.
 
+**The six added in PR #23** did not come from `public/images/listings/`. They were
+selected out of two staging directories the founder assembled separately —
+`public/images/city-images/` (7 PNGs) and `public/images/BL-image-sourcing/`
+(26 PNGs) — and are the same Canva Pro provenance as the twelve
+`[Decision — founder statement, 2026-08-09]`. Roughly twenty frames in those
+directories were **not** selected and remain available for a future category fill;
+they are archived outside the repo (see below), not deleted.
+
 Re-run with `pnpm images:editorial` if the pool changes.
+
+**Committed weight after PR #23: 2.3 MB** `[Measured — du, 2026-08-09]` —
+`editorial/` 1.4 MB, `cities/` 428 KB, `hero-bg.jpg` 452 KB. The six new frames
+cost ~830 KB.
+
+---
+
+## The staging archive
+
+The 33 unoptimized source PNGs — `BL-image-sourcing/` (26 frames, 123 MB) and
+`city-images/` (7 frames, 36 MB) — **were moved out of the repo on 2026-08-09**
+`[Decision — founder, 2026-08-09]` to `../blacqlist-image-archive/`, a sibling
+folder outside version control.
+
+They had been sitting inside `public/`, which meant that even though PR #23
+git-ignored them, they still uploaded into every Vercel build context and partly
+undid PR #20's 68 MB → 1.5 MB reduction. **`public/images` went 161 MB → 2.3 MB
+on the move** `[Measured — du, 2026-08-09]`, and nothing that ships changed —
+typecheck, lint, build, and the full test suite were re-run after the move to
+prove it.
+
+**Moved, not deleted.** Roughly twenty unselected frames are still good stock the
+founder paid for, and `healthcare` and `social-media-marketing` remain unphotographed
+in the category bento by design. If either is ever filled, the source is in the
+archive. The `.gitignore` entries stay in place as a standing guard in case a copy
+is dropped back into `public/` for another selection pass.
 
 ---
 
 ## Inventory
 
-All twelve share one provenance, so the license columns are uniform. They are
+All eighteen share one provenance, so the license columns are uniform. They are
 written per row anyway rather than collapsed into a note — `3d-assets.md` asks for
 a record **per asset**, and a table that stays row-complete survives the pool being
-split or added to later.
+split or added to later. That is exactly what happened: the six PR #23 rows below
+the rule slotted in without reshaping the table.
 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
@@ -57,6 +97,16 @@ split or added to later.
 | `soleil-kidswear.webp` | 37 KB | category bento — `childcare-family` **only** | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `ujima-construction.webp` | 83 KB | category bento — `construction-trades` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `zinga-interior-design.webp` | 147 KB | category bento — `home-living` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `bbq-plate.webp` | 137 KB | category bento — `food-dining` (feature tile) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `hands-and-drums.webp` | 140 KB | category bento — `arts-culture` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `leather-and-denim.webp` | 131 KB | category bento — `fashion-apparel` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/atlanta.webp` | 137 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/houston.webp` | 143 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/chicago.webp` | 142 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+
+The last six are the PR #23 additions. They live in `public/images/cities/` rather
+than `public/images/editorial/` where the path column says so; the other twelve are
+all `editorial/`. Sizes `[Measured — ls, 2026-08-09]`.
 
 **On the `[Unknown]` author.** Canva does not surface the individual contributor's
 name on a Pro stock download, and the filenames here were assigned by us, not by
@@ -75,6 +125,57 @@ content, where there is no model to release. It does not fall away here.
 **"Unplaced — pool"** means the file is committed and optimized but rendered
 nowhere. It is available for guides and BLACQLight once editorial content exists
 — both tables are at **0 rows** `[Measured — psql prod, 2026-08-09]`.
+
+---
+
+## The six new frames — PR #23
+
+**Status: ✅ resolved.** `[Decision — founder statement, 2026-08-09]` — *"they still
+came from canva. All of them."* The six inherit the whole record above, including
+all three restrictions. They are in the inventory table; this section stays for the
+source-frame mapping and the rejection note below, which live nowhere else.
+
+Six photographs were selected on 2026-08-09 — three city skylines and three
+category frames — from two staging directories the founder assembled outside the
+original pool: `public/images/city-images/` and `public/images/BL-image-sourcing/`.
+
+| File | Size | Source frame | Where used |
+|---|---|---|---|
+| `cities/atlanta.webp` | 137 KB | `city-images/atl1.png` | City chapters (home) + `/cities` |
+| `cities/houston.webp` | 143 KB | `city-images/hou2.png` | City chapters (home) + `/cities` |
+| `cities/chicago.webp` | 142 KB | `city-images/chi1.png` | City chapters (home) + `/cities` |
+| `editorial/bbq-plate.webp` | 137 KB | `BL-image-sourcing/food3.png` | Category bento — `food-dining` (feature tile) |
+| `editorial/leather-and-denim.webp` | 131 KB | `BL-image-sourcing/fashion4.png` | Category bento — `fashion-apparel` |
+| `editorial/hands-and-drums.webp` | 140 KB | `BL-image-sourcing/culture3.png` | Category bento — `arts-culture` |
+
+Sizes are `[Measured — ls, 2026-08-09]`; every file is under the 150 KB budget
+ticket 113 sets. The source PNGs are no longer in the repo — see
+[The staging archive](#the-staging-archive).
+
+**Restriction 2 has real teeth on this set.** All three category frames were chosen
+to be **people-free** — a plate of food, a flat-lay of boots and denim, hands on
+drums with no faces — so the identifiable-person restriction, which is now
+confirmed to bind them, cannot actually bite. The three skylines contain no
+identifiable people either. That is not luck: people-free frames are also the ones that survive a short
+wide tile without decapitating anybody, so the crop constraint and the license
+constraint select for the same photographs.
+
+### Rejected: `chi2.png` — Cloud Gate
+
+`city-images/chi2.png` is a photograph of **Cloud Gate** ("The Bean"), the sculpture
+by **Anish Kapoor** in Millennium Park. It was the strongest Chicago frame on
+composition and was **rejected on rights, not taste**.
+
+Cloud Gate is a copyrighted sculpture, and its commercial photography rights have
+been actively asserted — the artist has pursued commercial users of the work's
+image. US architectural freedom-of-panorama does **not** extend to sculpture, so a
+photograph of it used to promote a commercial platform is a different question from
+a photograph of a skyline. `chi1.png` — an aerial of the Gold Coast and the
+lakefront — carries no such encumbrance and was chosen instead.
+
+Recorded here so nobody swaps it back in on the grounds that it is the better
+picture. It is the better picture. `[Needs professional review]` if it is ever
+genuinely wanted.
 
 ---
 
