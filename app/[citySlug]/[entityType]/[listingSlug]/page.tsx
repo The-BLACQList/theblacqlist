@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
-import { resolveCoverImage } from '@/lib/listings/coverImage'
+import { resolveCoverImage, resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { EntityPageHero } from '@/components/entity-page/EntityPageHero'
@@ -76,6 +76,7 @@ function buildJsonLd(entity: Awaited<ReturnType<typeof getEntityPageFromDB>>, en
   if (!entity) return null
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
   const { details, city } = entity
+  const logoUrl = resolveMediaPath(entity.logo_path)
 
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -83,7 +84,10 @@ function buildJsonLd(entity: Awaited<ReturnType<typeof getEntityPageFromDB>>, en
     name: entity.name,
     description: details.description || entity.tagline,
     url: `${BASE_URL}${buildEntityUrl(entityType, city?.slug, entity.slug)}`,
-    ...(entity.logo_path && { logo: entity.logo_path }),
+    // schema.org logo must be a fetchable URL. logo_path is a Storage key, so
+    // emitting it raw hands crawlers a string like "logos/abc.png" — invalid,
+    // and Google drops the property. Resolve it the same way the cover is.
+    ...(logoUrl && { logo: logoUrl }),
     ...(entity.avg_rating && {
       aggregateRating: {
         '@type': 'AggregateRating',

@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { CTAButton } from '@/components/marketplace/CTAButton'
+import { resolveRemoteImage } from '@/lib/listings/coverImage'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -63,6 +64,9 @@ export default async function ProductDetailPage({ params }: Props) {
     ? formatPrice(product.compare_at_price_cents)
     : null
 
+  // See ProductCard: owner-supplied host, may not be optimizable.
+  const cover = resolveRemoteImage(product.cover_image_url)
+
   const shippingLabel: Record<string, string> = {
     shipping: 'Ships nationwide',
     pickup: 'Pickup only',
@@ -98,9 +102,10 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
           <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden relative">
-            {product.cover_image_url ? (
+            {cover ? (
               <Image
-                src={product.cover_image_url}
+                src={cover.src}
+                unoptimized={cover.unoptimized}
                 alt={product.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
