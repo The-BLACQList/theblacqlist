@@ -45,10 +45,16 @@ export function HomeCategories({ categories }: Props) {
         {/* Rows are set by the *worst* tile rather than the typical one. The
             caption is content-height, so a two-line name ("Social Media &
             Marketing") makes it ~110px where a one-line name makes it ~78px.
-            190/200 leaves the shortest picture ≥88px of open frame above the
+            190/200 left the shortest picture ≥88px of open frame above the
             band at every width. The feature tile spans two rows and clears
-            easily. */}
-        <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[190px] md:auto-rows-[200px] gap-2.5 mt-6">
+            easily.
+
+            210/232 is the one traded change in this pass rather than a free
+            one: these tiles are already far taller than the source's 3:2, so
+            the added height buys +36–49% open picture at the cost of a few more
+            points of width crop. Gated on looking at the render — if a
+            side-by-side subject loses a head, fall back to 200/216. */}
+        <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[210px] md:auto-rows-[232px] gap-2.5 mt-6">
           {[feature, ...rest.slice(0, 8)].map((category, i) => (
             <Link
               key={category.slug}
@@ -61,10 +67,15 @@ export function HomeCategories({ categories }: Props) {
               <PhotoPanelGround
                 src={CATEGORY_PHOTOS[category.slug]}
                 // The feature tile spans two of four columns; the rest take one.
+                //
+                // Every bento tile is far taller than the source's 3:2, so the
+                // frame scales by height and renders 1.5 × the row height wide
+                // — roughly double the tile's CSS width at mobile. The old
+                // hints described the box and shipped a soft image.
                 sizes={
                   i === 0
-                    ? '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px'
-                    : '(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 320px'
+                    ? '(max-width: 767px) 172vw, (max-width: 1023px) 93vw, (max-width: 1279px) 70vw, 720px'
+                    : '(max-width: 767px) 84vw, (max-width: 1023px) 46vw, (max-width: 1279px) 34vw, 350px'
                 }
               />
               {/* Spacer, not a wrapper — the frame fills the whole tile behind
@@ -81,7 +92,7 @@ export function HomeCategories({ categories }: Props) {
                 >
                   {category.name}
                 </span>
-                <span className="font-subhead text-xs font-semibold text-gold mt-0.5">
+                <span className="font-subhead text-xs font-semibold text-light-gold mt-0.5">
                   {category.count.toLocaleString()}{' '}
                   {category.count === 1 ? 'business' : 'businesses'}
                 </span>

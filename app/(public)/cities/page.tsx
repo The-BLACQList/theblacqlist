@@ -141,8 +141,16 @@ export default async function CitiesPage() {
             <Reveal>
               {/* Rows grew from 132/156 with the caption plate — it takes a
                   fixed slice of every tile, so the old height left the picture
-                  a sliver. */}
-              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[184px] md:auto-rows-[208px] gap-3">
+                  a sliver.
+
+                  This is the one surface still wider than the source's 3:2 at
+                  desktop, which means added height reclaims discarded picture
+                  instead of spending it: at 1280 a normal tile goes 208 → 248px
+                  and the height crop drops from 21.5% to 6.4%. The 1024 band
+                  pays for it — it sits at exactly 3:2 today. One `lg:` value,
+                  not a four-rung ladder; the extra quality point at 1024 is not
+                  worth two more magic numbers. */}
+              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[184px] md:auto-rows-[208px] lg:auto-rows-[248px] gap-3">
                 {live.map((city, i) => {
                   const stateCode = city.states?.code
                   const isFeature = i === 0
@@ -160,10 +168,17 @@ export default async function CitiesPage() {
                       <PhotoPanelGround
                         src={CITY_PHOTOS[city.slug]}
                         // The feature tile spans two of three columns.
+                        //
+                        // These are fixed-row tiles, and below xl every one of
+                        // them is taller than the source's 3:2 — so the frame
+                        // scales by height and renders 1.5 × the row height
+                        // wide, well past its own CSS width. The old hints
+                        // described the box, not the bitmap, and under-requested
+                        // by up to 50%. Over-requesting is the safe direction.
                         sizes={
                           isFeature
-                            ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
-                            : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
+                            ? '(max-width: 767px) 155vw, (max-width: 1279px) 84vw, 820px'
+                            : '(max-width: 767px) 75vw, (max-width: 1279px) 42vw, 400px'
                         }
                         alt={`${city.name} skyline`}
                       />
@@ -171,9 +186,9 @@ export default async function CitiesPage() {
                           behind it. `min-h-0` lets it shrink inside the fixed
                           row instead of pushing the caption out of the tile. */}
                       <span aria-hidden="true" className="block grow min-h-0" />
-                      <PhotoPanelCaption className="p-4 md:p-5">
+                      <PhotoPanelCaption className="p-4">
                         {isFeature && (
-                          <span className="font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">
+                          <span className="font-subhead text-[11px] font-bold uppercase tracking-[0.12em] leading-tight text-light-gold mb-2">
                             Most active
                           </span>
                         )}
@@ -187,7 +202,7 @@ export default async function CitiesPage() {
                         >
                           {city.name}
                         </span>
-                        <span className="font-subhead text-xs font-semibold text-gold mt-1">
+                        <span className="font-subhead text-xs font-semibold text-light-gold mt-1">
                           {city.listingCount.toLocaleString()}{' '}
                           {city.listingCount === 1 ? 'business' : 'businesses'}
                           {stateCode ? (
@@ -198,7 +213,7 @@ export default async function CitiesPage() {
                           ) : null}
                         </span>
                         {isFeature && city.metro_area && (
-                          <span className="font-body text-[13px] text-ink-soft mt-1.5 truncate">
+                          <span className="font-body text-[13px] leading-tight text-off-white mt-1.5 truncate">
                             {city.metro_area}
                           </span>
                         )}

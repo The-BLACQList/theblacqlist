@@ -53,9 +53,22 @@
  * band — so the answer is the lowest alpha that still clears every floor, not the
  * first one that passes.
  *
- * The gold count line is the binding constraint everywhere. It is `text-xs`,
- * which is small text owing **4.5:1** — not the 3:1 large-text allowance the
- * white headlines get. Tune `PHOTO_PLATE_TINT` against the gold rows.
+ * The binding constraint everywhere is a `text-xs` run — small text owing
+ * **4.5:1**, not the 3:1 large-text allowance the white headlines get. The
+ * summary column reports the worst run **on the 4.5:1 floor** rather than the
+ * worst *gold* run: an earlier version classified rows by comparing them to a
+ * hardcoded `#c4a065`, which went blind the instant the accent colour changed
+ * and is why no `#ffd867` figure in the record before 2026-08-10 was ever real.
+ * `floorFor()` decides pass/fail without reference to colour; the report now
+ * does too.
+ *
+ * ## What it measures that is not literally on screen
+ *
+ * The panel titles carry `group-hover:text-light-gold`, and hover is a real
+ * state owing a real floor. Driving a genuine hover would cost one screenshot
+ * per tile, so for every element carrying that class the collect pass emits a
+ * **second run over the identical rect** with the foreground resolved from
+ * `--color-light-gold`. Same geometry, known colour, no extra screenshots.
  *
  * Usage — against a dev server on :3000:
  *
@@ -69,26 +82,41 @@
  */
 import { chromium } from '@playwright/test'
 import sharp from 'sharp'
+import { PHOTO_PLATE_TINT } from '../lib/design/surfaces'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
 const ROUTES = ['/', '/cities']
-const WIDTHS = [375, 768, 1280]
 
-/** Descending, so the first entry is the shipped value and the last is the most
- *  transparent candidate. The exit code is decided by the shipped one.
+/** 640 is where `CityChapters` used to break to three columns and 1024 is where
+ *  the photographic grids break now; both are worst-case widths that the
+ *  original 375/768/1280 triple stepped straight over. */
+const WIDTHS = [375, 640, 768, 1024, 1280]
+
+/** Descending, so the first entry is the most opaque candidate. The exit code is
+ *  decided by the **shipped** alpha, which is read from `PHOTO_PLATE_TINT` — not
+ *  by whatever happens to be first here.
  *
  *  `PLATE_ALPHAS=0.82,0.80,0.78` narrows the sweep when the coarse pass has
  *  already bracketed the boundary — the run costs a full screenshot and scan per
  *  alpha per viewport, so bisecting beats widening. */
-const ALPHAS = (process.env.PLATE_ALPHAS ?? '0.82,0.80,0.78,0.76,0.70')
+const SWEEP = (process.env.PLATE_ALPHAS ?? '0.82,0.80,0.78,0.76,0.70')
   .split(',')
   .map((a) => Number(a.trim()))
 
-/** `--color-deep-bg`. The tint is this color at a swept alpha. */
-const TINT_RGB = '8,8,10'
+/** The single source of truth for both the tint color and the shipped alpha.
+ *  Hand-syncing either one against `surfaces.ts` is how a harness quietly starts
+ *  measuring a surface that no longer exists. */
+const TINT_MATCH = PHOTO_PLATE_TINT.match(
+  /rgba\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*\)/
+)
+if (!TINT_MATCH) {
+  throw new Error(`Could not parse PHOTO_PLATE_TINT: ${PHOTO_PLATE_TINT}`)
+}
+const TINT_RGB = `${TINT_MATCH[1]},${TINT_MATCH[2]},${TINT_MATCH[3]}`
+const SHIPPED_ALPHA = Number(TINT_MATCH[4])
 
-/** `--color-gold`, for picking the binding rows out of the results. */
-const GOLD: [number, number, number] = [196, 160, 101]
+/** The shipped value is always measured, whether or not the sweep names it. */
+const ALPHAS = SWEEP.includes(SHIPPED_ALPHA) ? SWEEP : [SHIPPED_ALPHA, ...SWEEP]
 
 interface Run {
   panel: string
@@ -141,6 +169,22 @@ const COLLECT = `(function () {
     return [b[0] / a, b[1] / a, b[2] / a, a]
   }
 
+  // The hover color, resolved once from the token rather than hardcoded, so the
+  // synthetic hover runs below track a brand change automatically.
+  var hoverRaw = getComputedStyle(document.documentElement)
+    .getPropertyValue('--color-light-gold')
+    .trim()
+  var hoverFg = hoverRaw ? resolve(hoverRaw) : null
+
+  // The Next.js dev-tools badge lives in a shadow root on a nextjs-portal element
+  // and is pinned to the bottom-left of the viewport. A full-page screenshot
+  // flattens fixed chrome into the bitmap at whatever y the viewport was sitting
+  // on, so the badge lands mid-page — over the /cities chicago caption at 640,
+  // where its white glyph read as a 1.00:1 failure that no veil could ever
+  // produce. Dev-server furniture, not page content; remove it before any read.
+  var portals = document.querySelectorAll('nextjs-portal')
+  for (var p = 0; p < portals.length; p++) portals[p].style.display = 'none'
+
   var runs = []
   var captions = document.querySelectorAll('[data-plate-caption]')
   for (var i = 0; i < captions.length; i++) {
@@ -150,26 +194,57 @@ const COLLECT = `(function () {
     var leaves = cap.querySelectorAll('span')
     for (var j = 0; j < leaves.length; j++) {
       var el = leaves[j]
-      if (el.querySelector('span')) continue
-      var txt = (el.textContent || '').trim()
+
+      // Own text, not leaf-ness. The previous test skipped any span containing a
+      // span, which silently dropped the /cities count line — it wraps an
+      // aria-hidden separator, so only the bare '·' glyph was ever measured and
+      // the brightest ground on the site went unsampled. Direct text nodes are
+      // what this element actually paints; the element's own rect is a
+      // conservative superset of where it paints them.
+      var own = ''
+      for (var k = 0; k < el.childNodes.length; k++) {
+        if (el.childNodes[k].nodeType === 3) own += el.childNodes[k].nodeValue
+      }
+      var txt = own.trim()
       if (!txt) continue
+
       var r = el.getBoundingClientRect()
       if (r.width < 2 || r.height < 2) continue
       var cs = getComputedStyle(el)
       var fg = resolve(cs.color)
       if (!fg) continue
-      runs.push({
-        panel: label,
-        text: txt.slice(0, 36),
-        css: cs.color,
-        fg: fg,
+      var rect = {
         fontPx: parseFloat(cs.fontSize),
         bold: parseInt(cs.fontWeight, 10) >= 700,
         x: Math.round(r.left + window.scrollX),
         y: Math.round(r.top + window.scrollY),
         w: Math.round(r.width),
         h: Math.round(r.height)
+      }
+      runs.push({
+        panel: label,
+        text: txt.slice(0, 36),
+        css: cs.color,
+        fg: fg,
+        fontPx: rect.fontPx,
+        bold: rect.bold,
+        x: rect.x, y: rect.y, w: rect.w, h: rect.h
       })
+
+      // Hover is a real state with a real floor, and driving it for every panel
+      // would mean one screenshot per tile. The color is known and the geometry
+      // is identical, so a second run over the same rect measures it exactly.
+      if (hoverFg && el.className.indexOf('group-hover:text-light-gold') !== -1) {
+        runs.push({
+          panel: label,
+          text: txt.slice(0, 30) + ' [hover]',
+          css: hoverRaw,
+          fg: hoverFg,
+          fontPx: rect.fontPx,
+          bold: rect.bold,
+          x: rect.x, y: rect.y, w: rect.w, h: rect.h
+        })
+      }
     }
     cap.style.visibility = 'hidden'
   }
@@ -197,12 +272,6 @@ function floorFor(fontPx: number, bold: boolean): number {
   return fontPx >= 24 || (bold && fontPx >= 18.66) ? 3 : 4.5
 }
 
-function isGold(fg: [number, number, number, number]): boolean {
-  return (
-    Math.abs(fg[0] - GOLD[0]) < 3 && Math.abs(fg[1] - GOLD[1]) < 3 && Math.abs(fg[2] - GOLD[2]) < 3
-  )
-}
-
 function label(r: Row): string {
   return `${r.panel} — ${r.text}`
 }
@@ -219,15 +288,38 @@ async function main() {
         reducedMotion: 'reduce',
       })
       await page.goto(BASE + route, { waitUntil: 'networkidle' })
+
       // Force every lazy frame to decode before anything is hidden — a frame
       // that has not painted measures as the panel's own `bg-deep-bg` and would
       // read as a comfortable pass it has not earned.
-      await page.evaluate(`(function () {
-        window.scrollTo(0, document.body.scrollHeight)
-      })()`)
-      await page.waitForTimeout(1200)
+      //
+      // Stepped, not one jump to the bottom. No caller passes `priority`, so
+      // every frame is `loading="lazy"` and only enters the viewport if the
+      // scroll actually passes through it; at tablet these pages are now several
+      // thousand pixels tall, and a single `scrollTo(bottom)` skips most of them.
+      const pageHeight = (await page.evaluate(`document.body.scrollHeight`)) as number
+      for (let y = 0; y < pageHeight; y += 800) {
+        await page.evaluate(`window.scrollTo(0, ${y})`)
+        await page.waitForTimeout(150)
+      }
+      await page.evaluate(`window.scrollTo(0, document.body.scrollHeight)`)
+      await page.waitForTimeout(600)
       await page.evaluate(`window.scrollTo(0, 0)`)
       await page.waitForTimeout(400)
+      // Belt and braces: nothing may still be decoding when the scan starts.
+      await page
+        .waitForFunction(
+          `(function () {
+            var imgs = document.querySelectorAll('img')
+            for (var i = 0; i < imgs.length; i++) { if (!imgs[i].complete) return false }
+            return true
+          })()`,
+          undefined,
+          { timeout: 15000 }
+        )
+        .catch(() => {
+          console.warn(`  ! ${route} @ ${width}: images still decoding after 15s`)
+        })
 
       const runs = (await page.evaluate(COLLECT)) as Run[]
 
@@ -292,7 +384,11 @@ async function main() {
   console.log(
     `\n${rows.length / ALPHAS.length} text runs × ${ALPHAS.length} alphas across ${ROUTES.length} routes × ${WIDTHS.length} widths\n`
   )
-  console.log('alpha  fails  worst gold  worst overall  worst run')
+  // "Worst 4.5:1 run" rather than "worst gold". Colour classification was a
+  // hardcoded RGB triple that went blind the moment the accent colour changed;
+  // the floor is what actually decides pass or fail, and `floorFor()` already
+  // knows it without looking at a colour at all.
+  console.log('alpha  fails  worst 4.5:1  worst overall  worst run')
   console.log('─'.repeat(96))
 
   const perAlpha = new Map<number, Row[]>()
@@ -300,12 +396,11 @@ async function main() {
     const set = rows.filter((r) => r.alpha === alpha).sort((a, b) => a.ratio - b.ratio)
     perAlpha.set(alpha, set)
     const fails = set.filter((r) => r.ratio < r.floor)
-    const gold = set.filter((r) => isGold(r.fg))
-    const worstGold = gold[0]
+    const worstSmall = set.filter((r) => r.floor === 4.5)[0]
     const worst = set[0]
     console.log(
       `${alpha.toFixed(2).padStart(5)}  ${String(fails.length).padStart(5)}  ` +
-        `${(worstGold ? worstGold.ratio.toFixed(2) + ':1' : '—').padStart(10)}  ` +
+        `${(worstSmall ? worstSmall.ratio.toFixed(2) + ':1' : '—').padStart(11)}  ` +
         `${(worst ? worst.ratio.toFixed(2) + ':1' : '—').padStart(13)}  ` +
         `${worst ? label(worst) : ''}`
     )
@@ -319,7 +414,8 @@ async function main() {
     `\nlowest alpha clearing every floor: ${cleanest !== undefined ? cleanest.toFixed(2) : 'none of the candidates'}`
   )
 
-  for (const alpha of [ALPHAS[0]!, ...(cleanest !== undefined && cleanest !== ALPHAS[0] ? [cleanest] : [])]) {
+  const detail = [SHIPPED_ALPHA, ...(cleanest !== undefined && cleanest !== SHIPPED_ALPHA ? [cleanest] : [])]
+  for (const alpha of detail) {
     console.log(`\n── worst 12 at alpha ${alpha.toFixed(2)} ──`)
     console.log('ratio   floor  px    w     panel / text')
     console.log('─'.repeat(96))
@@ -333,7 +429,10 @@ async function main() {
   }
 
   // The shipped alpha is what has to be green; the rest of the sweep is advice.
-  process.exitCode = perAlpha.get(ALPHAS[0]!)!.some((r) => r.ratio < r.floor) ? 1 : 0
+  // `SHIPPED_ALPHA` comes from `PHOTO_PLATE_TINT`, so an exploratory
+  // `PLATE_ALPHAS=` sweep can never move what the exit code is judging.
+  console.log(`\nshipped alpha (from PHOTO_PLATE_TINT): ${SHIPPED_ALPHA.toFixed(2)}`)
+  process.exitCode = perAlpha.get(SHIPPED_ALPHA)!.some((r) => r.ratio < r.floor) ? 1 : 0
 }
 
 void main()

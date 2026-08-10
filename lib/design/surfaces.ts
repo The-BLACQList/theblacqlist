@@ -57,35 +57,50 @@ export const PHOTO_ABSENT =
  * chosen one.
  *
  * **What sets the alpha.** The count line is `text-xs`, so it is small text and
- * owes 4.5:1, not the 3:1 large-text allowance the white headline gets. Gold
- * `#c4a065` clears 4.5:1 only against a composited ground at or below ~`#3c3c3c`
- * (relative luminance ≤ 0.045). Against the worst pixel any frame puts under the
- * count line, that fixes the floor for this number — it is arithmetic, not
- * taste. `scripts/measure-plate-contrast.ts` samples the real composited pixels
- * rather than assuming an opaque ancestor, and sweeps this alpha:
+ * owes 4.5:1, not the 3:1 large-text allowance the white headline gets. Against
+ * the worst pixel any frame puts under that line, the type's own color fixes the
+ * floor for this number — it is arithmetic, not taste.
+ * `scripts/measure-plate-contrast.ts` samples the real composited pixels rather
+ * than assuming an opaque ancestor, and sweeps this alpha.
  *
- * | alpha | runs below floor | worst gold |
- * |---|---|---|
- * | 0.88 | 0 | 6.16:1 |
- * | **0.82** | **0** | **5.00:1** |
- * | 0.80 | 0 | 4.70:1 |
- * | 0.78 | 3 | 4.35:1 ✗ |
- * | 0.76 | 8 | 4.03:1 ✗ |
+ * | alpha | runs below floor | worst 4.5:1 run | margin |
+ * |---|---|---|---|
+ * | 0.82 | 0 | 8.43:1 | 87% |
+ * | 0.70 | 0 | 5.68:1 | 26% |
+ * | 0.68 | 0 | 5.24:1 | 16% |
+ * | **0.67** | **0** | **5.08:1** | **13%** |
+ * | 0.66 | 0 | 4.85:1 | 8% |
+ * | 0.65 | 0 | 4.70:1 | 4% |
+ * | 0.64 | 10 | 4.50:1 ✗ | — |
+ * | 0.60 | 23 | 3.87:1 ✗ | — |
  *
- * `[Measured — scripts/measure-plate-contrast.ts, 123 runs × 2 routes × 375/768/
- * 1280, 2026-08-09]`. 0.80 also passes and 0.82 is chosen over it deliberately:
- * 0.80 clears the floor by 4%, which is inside the range a different image
- * decode or a browser's text antialiasing can move, while 0.82 clears it by 11%.
+ * `[Measured — scripts/measure-plate-contrast.ts, 310 runs × 2 routes × 375/640/
+ * 768/1024/1280, 2026-08-10]`. 0.65 and 0.66 also clear every floor and are
+ * rejected deliberately: a 4–8% margin is inside the range a different image
+ * decode or a browser's text antialiasing can move. 0.67 clears by 13%, which is
+ * the same discipline that previously chose 0.82 over 0.80 at 11%. **Never ship
+ * the boundary value** — the lowest passing alpha is not the shippable one.
  *
- * **The gold rows cluster, so this is a system answer rather than one frame's.**
- * At 0.82 the ten worst runs sit between 5.00:1 and 5.46:1, and dropping two
- * points fails eight of them at once. No single photograph is holding the alpha
- * up — `legal-financial` is merely first past the post, with `healthcare` (a
- * white coat under bright windows, the brightest ground in the set) 0.17 behind
- * it. Swapping a frame will not buy transparency here; only changing the type
- * color would, and `text-light-gold` `#ffd867` is the lever if it ever has to be
- * pulled — it needs roughly 0.64 where `text-gold` needs 0.79 over pure white.
- * That is a brand decision, not a contrast one, so it stays unpulled.
+ * **This number moved 0.82 → 0.67 because the type color moved, not because the
+ * bar did.** `[Decision — founder, 2026-08-10: "Make the opacity even a bit
+ * lighter … so the message of the image actually lands"]`. The old regime's
+ * binding run everywhere was `text-gold` `#c4a065` at 11–12px, which needs ~0.79
+ * over a pure-white ground pixel; the small accent runs are now
+ * `text-light-gold` `#ffd867`, which needs ~0.64, and the one grey metro line on
+ * `/cities` went `text-ink-soft` → `text-off-white` so it would not become the
+ * new binding constraint in gold's place. The lever this file reserved
+ * ("`text-light-gold` … is the lever if it ever has to be pulled … That is a
+ * brand decision, not a contrast one") has now been pulled, by the founder.
+ *
+ * **The binding rows cluster, so this is a system answer rather than one
+ * frame's.** At 0.67 the ten worst runs are the same `legal-financial` bento
+ * tile's hover name and count line across all five widths, with `healthcare` (a
+ * white coat under bright windows, the brightest ground in the set) just behind.
+ * Swapping a frame will not buy further transparency here.
+ *
+ * **The reserve lever, still unpulled.** If this has to go lower, raise the
+ * veil's `backdrop-blur-[6px]` to 8px and re-sweep. Blur is the second variable;
+ * never move it and the alpha in the same pass.
  *
  * **Why `backdrop-blur` is load-bearing and not decoration.** Blur collapses the
  * local neighbourhood into an average, so a busy ground behind the text stops
@@ -93,7 +108,7 @@ export const PHOTO_ABSENT =
  * be more transparent for the same measured ratio — and it makes the feather
  * read as depth of field instead of as a smudge.
  */
-export const PHOTO_PLATE_TINT = 'rgba(8,8,10,0.82)'
+export const PHOTO_PLATE_TINT = 'rgba(8,8,10,0.67)'
 
 /**
  * The veil element that paints `PHOTO_PLATE_TINT`.
