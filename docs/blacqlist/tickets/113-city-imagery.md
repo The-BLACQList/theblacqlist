@@ -119,5 +119,5 @@ cited.
 - [x] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` **51/51** `[Measured — local run, 2026-08-09]`
 - [x] **Three photographs licensed and recorded in `editorial-image-licenses.md`** — Canva Pro `[Decision — founder statement, 2026-08-09]`; three inventory rows added, and the three Canva restrictions bind them. Restriction 2 (implied endorsement) is moot — no identifiable people in any of the three skylines.
 - [ ] Lighthouse LCP on `/cities` and `/` no worse than before — `[Unknown]`, not measured. These tiles are above the fold on `/cities`, so this needs a Preview-deploy Lighthouse run before GATE-DEPLOY.
-- [ ] 6/6 CI on the PR
+- [x] 6/6 CI on the PR — typecheck · lint · unit · build · Vercel · Preview Comments, all green on `a4037ab` `[Measured — gh pr checks, run 31343181395, 2026-08-09]`
 - [ ] **GATE-DEPLOY** to merge
