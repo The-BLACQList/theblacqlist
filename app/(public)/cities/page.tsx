@@ -7,7 +7,8 @@ import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/motion/Reveal'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
-import { CITY_PHOTOS, PHOTO_PLATE } from '@/lib/design/surfaces'
+import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
+import { CITY_PHOTOS } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
@@ -151,26 +152,26 @@ export default async function CitiesPage() {
                       key={city.slug}
                       href={`/discover/${city.slug}`}
                       className={cn(
-                        'group flex flex-col rounded-xl bg-deep-bg overflow-hidden',
+                        'group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
                         isFeature && 'col-span-2 row-span-2'
                       )}
                     >
-                      {/* `min-h-0` lets the picture shrink inside the fixed row
-                          instead of pushing the plate out of the tile. */}
-                      <span className="relative block grow min-h-0 overflow-hidden">
-                        <PhotoPanelGround
-                          src={CITY_PHOTOS[city.slug]}
-                          // The feature tile spans two of three columns.
-                          sizes={
-                            isFeature
-                              ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
-                              : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
-                          }
-                          alt={`${city.name} skyline`}
-                        />
-                      </span>
-                      <span className={cn('flex flex-col', PHOTO_PLATE, 'p-4 md:p-5')}>
+                      <PhotoPanelGround
+                        src={CITY_PHOTOS[city.slug]}
+                        // The feature tile spans two of three columns.
+                        sizes={
+                          isFeature
+                            ? '(max-width: 768px) 100vw, (max-width: 1280px) 67vw, 800px'
+                            : '(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 400px'
+                        }
+                        alt={`${city.name} skyline`}
+                      />
+                      {/* Spacer, not a wrapper — the frame fills the whole tile
+                          behind it. `min-h-0` lets it shrink inside the fixed
+                          row instead of pushing the caption out of the tile. */}
+                      <span aria-hidden="true" className="block grow min-h-0" />
+                      <PhotoPanelCaption className="p-4 md:p-5">
                         {isFeature && (
                           <span className="font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">
                             Most active
@@ -201,7 +202,7 @@ export default async function CitiesPage() {
                             {city.metro_area}
                           </span>
                         )}
-                      </span>
+                      </PhotoPanelCaption>
                     </Link>
                   )
                 })}

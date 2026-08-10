@@ -17,23 +17,31 @@ interface Props {
 }
 
 /**
- * The picture area of a dark editorial panel — the region above the caption
- * plate on the triptych, the category bento, and the city tiles.
+ * The picture of a dark editorial panel — it fills the whole panel on the
+ * triptych, the category bento, and the city tiles, with the caption band
+ * veiling its bottom edge.
  *
  * Two states, and the fallback is a first-class outcome rather than a
  * degradation: with a photograph it renders `fill` + `object-cover`; without one
- * it renders `PHOTO_ABSENT`, a designed gold-and-charcoal panel. Most categories
- * and most cities will never have a photograph, by design — see
- * `CATEGORY_PHOTOS` — so the unphotographed tile has to hold a row on its own
- * merits, not look like a frame that failed to load.
+ * it renders `PHOTO_ABSENT`, a designed gold-and-charcoal panel. Every tile
+ * currently rendered has a photograph, but most of the twenty-five categories
+ * never will — see `CATEGORY_PHOTOS` — so the unphotographed tile has to hold a
+ * row on its own merits, not look like a frame that failed to load.
  *
- * **Nothing is laid over the photograph.** No scrim, no wash, no tint. It used
+ * **Nothing is laid across the photograph.** No scrim, no wash, no tint. It used
  * to carry `PHOTO_SCRIM`, because the text sat on top of the frame and small
- * gold type owes 4.5:1 against a ground the component cannot know. The text now
- * lives on `PHOTO_PLATE` below this region instead, which removes the reason the
- * scrim existed rather than tuning it — see that token for the measurements.
- * Do not reintroduce an overlay here to solve a legibility problem: if type is
- * hard to read on a panel, the type is in the wrong place.
+ * gold type owes 4.5:1 against a ground the component cannot know. The fix was
+ * to move the text off the picture and onto its own caption band, which removes
+ * the reason the scrim existed rather than tuning it.
+ *
+ * That band now overlaps the bottom of the frame at a part-transparent,
+ * feathered alpha (`PHOTO_PLATE_TINT` / `PHOTO_PLATE_VEIL`), so a strip of the
+ * photograph reads through it. **That is not a scrim returning.** The rule it
+ * replaced is still the rule: do not darken a picture to rescue type laid over
+ * it. A caption band whose alpha is set by measuring the pixels it actually
+ * covers is a different object from a gradient held across the whole frame on
+ * the hope that the ratio lands. If a new surface wants type on open picture,
+ * the answer is still to give it a band, not to tint the frame.
  *
  * Decorative by default. The panel's own heading carries the meaning, so `alt`
  * is empty unless a caller says otherwise: a screen reader announcing a scene
@@ -46,17 +54,18 @@ interface Props {
  * is informative rather than decorative, and the filenames are plain place
  * names, so nothing has to be hidden. Default to empty; opt in.
  *
- * The parent is the picture region, not the whole tile: it must be `relative`
- * and `overflow-hidden`, and it must size itself — either a fixed
- * `aspect-[16/9]` (triptych, city tiles) or `grow min-h-0` inside a
- * fixed-height grid row (the bento). The caption plate is that region's sibling,
- * not a layer above it.
+ * **The parent is the whole panel, not a sub-region.** It must be `relative` and
+ * `overflow-hidden`; the frame fills it edge to edge and the caption sits over
+ * the bottom of it via `PhotoPanelCaption`. Panels still size themselves the way
+ * they always did, but with an `aria-hidden` spacer rather than a wrapper — see
+ * that component for why the swap is what makes the crop better rather than
+ * worse.
  *
- * The crop is not the caller's problem. A picture region is wider than the 3:2
- * source, so `object-cover` throws away height, and centered that lands on
- * faces. `PHOTO_FOCAL` holds the per-frame correction and this component applies
- * it — a consumer that adds a new photographic surface inherits the right crop
- * without knowing the map exists.
+ * The crop is not the caller's problem. A panel is wider than the 3:2 source, so
+ * `object-cover` throws away height, and centered that lands on faces.
+ * `PHOTO_FOCAL` holds the per-frame correction and this component applies it — a
+ * consumer that adds a new photographic surface inherits the right crop without
+ * knowing the map exists.
  */
 export function PhotoPanelGround({ src, sizes, priority = false, alt = '' }: Props) {
   if (!src) {

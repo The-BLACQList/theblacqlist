@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
-import { CITY_PHOTOS, PHOTO_PLATE } from '@/lib/design/surfaces'
+import { CITY_PHOTOS } from '@/lib/design/surfaces'
 
 export interface CityChapter {
   name: string
@@ -18,8 +19,9 @@ interface Props {
  * City chapters — live cities as dark chapter cards with real counts;
  * coming-soon cities stay quiet and typographic (LCI direction).
  *
- * Each live tile is a 16:9 picture region over a caption plate. The picture is a
- * skyline where `CITY_PHOTOS` has one and the ember wash where it does not —
+ * Each live tile is a full-bleed frame with a feathered caption band across its
+ * bottom, holding 16:9 of open picture above it. The picture is a skyline where
+ * `CITY_PHOTOS` has one and the ember wash where it does not —
  * `PhotoPanelGround` decides, so a city opening without a photograph still
  * renders in the same shape. Alt text names the city because the photograph is
  * informative here, not decorative.
@@ -44,23 +46,25 @@ export function CityChapters({ cities }: Props) {
             <Link
               key={city.slug}
               href={`/discover/${city.slug}`}
-              className="group flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+              className="group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
             >
-              <span className="relative block aspect-[16/9] overflow-hidden">
-                <PhotoPanelGround
-                  src={CITY_PHOTOS[city.slug]}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 400px"
-                  alt={`${city.name} skyline`}
-                />
-              </span>
-              <span className={`flex grow flex-col ${PHOTO_PLATE} p-5`}>
+              <PhotoPanelGround
+                src={CITY_PHOTOS[city.slug]}
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 400px"
+                alt={`${city.name} skyline`}
+              />
+              {/* Spacer, not a wrapper — the frame fills the whole tile behind
+                  it; this only holds the open picture above the caption open.
+                  `grow` keeps the three tiles flush when one city name wraps. */}
+              <span aria-hidden="true" className="block grow min-h-0 aspect-[16/9]" />
+              <PhotoPanelCaption className="p-5">
                 <span className="font-headline text-[26px] text-white group-hover:text-light-gold transition-colors duration-150">
                   {city.name}
                 </span>
                 <span className="font-subhead text-xs font-semibold text-gold mt-0.5">
                   {city.count.toLocaleString()} businesses · {city.stateCode}
                 </span>
-              </span>
+              </PhotoPanelCaption>
             </Link>
           ))}
         </div>

@@ -2,12 +2,21 @@
  * Throwaway measurement harness for the caption-plate redesign.
  *
  * The panels used to set their text over a photograph, so measuring them meant
- * sampling pixels under the type and guessing at the worst case. They now set it
- * on `PHOTO_PLATE` — a solid `bg-deep-bg` band — so the ground is a computed
- * style, not a frame, and the ratio is exact rather than a band scan.
+ * sampling pixels under the type and guessing at the worst case. The redesign put
+ * it on `PHOTO_PLATE` — a solid `bg-deep-bg` band — so the ground became a
+ * computed style, not a frame, and the ratio exact rather than a band scan.
+ *
+ * **Superseded for the photographic panels.** `PHOTO_PLATE` is gone: the caption
+ * band is now part-transparent and feathered, so its ground is the photograph
+ * again and a computed style no longer describes it. Use
+ * `scripts/measure-plate-contrast.ts` for those surfaces — it composites the real
+ * pixels. This harness is kept because it is still the right tool for text on a
+ * genuinely opaque ground, and because the figures it produced (gold 8.16:1,
+ * white 20.01:1, ink-soft 9.78:1 on `#08080a`) are cited in the design docs and
+ * should stay reproducible.
  *
  * Run against a dev server already on :3000:
- *   pnpm exec tsx scripts/measure-panel-contrast.ts
+ *   npx --yes tsx scripts/measure-panel-contrast.ts
  *
  * `reducedMotion: 'reduce'` is mandatory, not tidiness: `components/motion/
  * Reveal.tsx` puts its hidden state inside `@media (prefers-reduced-motion:

@@ -1,6 +1,6 @@
 import Link from 'next/link'
+import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
-import { PHOTO_PLATE } from '@/lib/design/surfaces'
 
 // Each panel is grounded in a licensed editorial photograph [Decision —
 // 2026-08-09], which overrides row 1 of the placement table in
@@ -45,23 +45,33 @@ export function HomeTriptych() {
           <Link
             key={panel.index}
             href={panel.href}
-            className="group flex flex-col bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-gold"
+            className="group relative flex flex-col bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-gold"
           >
-            {/* 4:3 only in the md band. The three panels go side-by-side at
+            <PhotoPanelGround
+              src={panel.photo}
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+            {/* Spacer, not a wrapper — the frame fills the whole panel behind
+                it and the caption sits over its bottom edge. The aspect ratio
+                still sets how much open picture is held above the caption.
+
+                4:3 only in the md band. The three panels go side-by-side at
                 768px, so each is ~256px wide and a 16:9 picture is 144px tall
-                against a ~177px plate — the caption outweighing the photograph,
-                which inverts the panel. 4:3 puts the picture back on top at
-                192px, and by lg the panel is wide enough that 16:9 wins again.
-                `[Measured — headless, 375/768/1280, 2026-08-09]` */}
-            <span className="relative block aspect-[16/9] md:aspect-[4/3] lg:aspect-[16/9] overflow-hidden">
-              <PhotoPanelGround
-                src={panel.photo}
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
-            </span>
-            {/* `grow` keeps the three plates flush across the row when one
-                panel's body wraps to a second line and the others do not. */}
-            <span className={`flex grow flex-col ${PHOTO_PLATE} p-6 md:p-8`}>
+                against a ~177px caption — the caption outweighing the
+                photograph, which inverts the panel. 4:3 puts the picture back
+                on top at 192px, and by lg the panel is wide enough that 16:9
+                wins again. `[Measured — headless, 375/768/1280, 2026-08-09]`
+
+                `grow` keeps the three panels flush across the row when one
+                body wraps to a second line and the others do not; it lives on
+                the spacer now rather than the caption, because a caption that
+                grows would stretch the veil's solid zone away from the text it
+                is there to carry. */}
+            <span
+              aria-hidden="true"
+              className="block grow min-h-0 aspect-[16/9] md:aspect-[4/3] lg:aspect-[16/9]"
+            />
+            <PhotoPanelCaption className="p-6 md:p-8">
               <span className="font-subhead text-xs font-bold tracking-[0.16em] text-gold">
                 {panel.index}
               </span>
@@ -71,7 +81,7 @@ export function HomeTriptych() {
               <span className="font-body text-sm text-off-white/80 mt-1 max-w-[32ch]">
                 {panel.body}
               </span>
-            </span>
+            </PhotoPanelCaption>
           </Link>
         ))}
       </div>

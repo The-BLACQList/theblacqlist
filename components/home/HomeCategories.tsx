@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { CATEGORY_PHOTOS, PHOTO_PLATE } from '@/lib/design/surfaces'
+import { CATEGORY_PHOTOS } from '@/lib/design/surfaces'
+import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
 
 export interface CategoryTile {
@@ -17,9 +18,9 @@ interface Props {
  * Bento category grid with live counts — the biggest category earns the big
  * tile (editorial hierarchy, not decoration).
  *
- * Each tile is a picture region over a caption plate, so the name and count sit
- * on brand ground rather than on the frame. The picture is a licensed editorial
- * photograph where one exists
+ * Each tile is a full-bleed frame with a feathered caption band across its
+ * bottom, so the name and count sit on brand ground that the photograph still
+ * reads through. The picture is a licensed editorial photograph where one exists
  * [Decision — 2026-08-09], which overrides row 2 of the placement table in
  * photographic-style-direction.md ("categories grid stays text-only"). Only
  * nine of twenty-five top-level categories are mapped, so most days some tiles
@@ -41,38 +42,37 @@ export function HomeCategories({ categories }: Props) {
           What are you looking for?
         </h2>
 
-        {/* Rows grew from 110/130 with the caption plate, and the number is set
-            by the *worst* tile rather than the typical one. The plate is
-            content-height, so a two-line name ("Social Media & Marketing") makes
-            it ~110px where a one-line name makes it ~78px — at 160px rows that
-            left those tiles a 58px picture, a sliver `[Measured — headless, 375
-            and 768, 2026-08-09]`. 190/200 keeps the picture ≥88px on every tile
-            at every width. The feature tile spans two rows and clears easily. */}
+        {/* Rows are set by the *worst* tile rather than the typical one. The
+            caption is content-height, so a two-line name ("Social Media &
+            Marketing") makes it ~110px where a one-line name makes it ~78px.
+            190/200 leaves the shortest picture ≥88px of open frame above the
+            band at every width. The feature tile spans two rows and clears
+            easily. */}
         <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[190px] md:auto-rows-[200px] gap-2.5 mt-6">
           {[feature, ...rest.slice(0, 8)].map((category, i) => (
             <Link
               key={category.slug}
               href={`/discover?category=${category.slug}`}
               className={cn(
-                'group flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
+                'group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
                 i === 0 && 'col-span-2 row-span-2'
               )}
             >
-              {/* `min-h-0` is load-bearing: without it the flex item refuses to
-                  shrink below its content and the plate is pushed out of the
-                  fixed-height row. */}
-              <span className="relative block grow min-h-0 overflow-hidden">
-                <PhotoPanelGround
-                  src={CATEGORY_PHOTOS[category.slug]}
-                  // The feature tile spans two of four columns; the rest take one.
-                  sizes={
-                    i === 0
-                      ? '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px'
-                      : '(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 320px'
-                  }
-                />
-              </span>
-              <span className={`flex flex-col ${PHOTO_PLATE} p-4`}>
+              <PhotoPanelGround
+                src={CATEGORY_PHOTOS[category.slug]}
+                // The feature tile spans two of four columns; the rest take one.
+                sizes={
+                  i === 0
+                    ? '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px'
+                    : '(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 320px'
+                }
+              />
+              {/* Spacer, not a wrapper — the frame fills the whole tile behind
+                  it. `min-h-0` is load-bearing: without it the flex item refuses
+                  to shrink below its content and the caption is pushed out of
+                  the fixed-height row. */}
+              <span aria-hidden="true" className="block grow min-h-0" />
+              <PhotoPanelCaption className="p-4">
                 <span
                   className={cn(
                     'font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
@@ -85,7 +85,7 @@ export function HomeCategories({ categories }: Props) {
                   {category.count.toLocaleString()}{' '}
                   {category.count === 1 ? 'business' : 'businesses'}
                 </span>
-              </span>
+              </PhotoPanelCaption>
             </Link>
           ))}
         </div>

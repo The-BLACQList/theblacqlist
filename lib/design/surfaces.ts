@@ -23,8 +23,8 @@ export const EMBER_WASH =
  * (`TheAvenues`, `BlacqlightFeature`, `ShowcaseCarousel`) set gold and white
  * text directly on the wash — raising its alpha there would cut their contrast
  * to buy brightness on a surface that has no such problem. Here **nothing sits
- * on this gradient**: the tile's name and count are on `PHOTO_PLATE` below it,
- * so the region owes no ratio and is free to carry real color.
+ * on this gradient**: the tile's name and count ride the caption veil across the
+ * bottom, so the region owes no ratio and is free to carry real color.
  *
  * The linear layer does the work — a graded charcoal ground so the tile has
  * depth instead of being flat black — and the radial puts the brand's gold in
@@ -37,41 +37,99 @@ export const PHOTO_ABSENT =
   'linear-gradient(158deg, #191620 0%, #0e0d12 58%, #08080a 100%)'
 
 /**
- * The caption plate — a solid band of brand ground that carries a photographic
- * panel's text **beside** the photograph rather than on top of it.
+ * The caption plate's tint — brand ground at partial alpha, so the photograph
+ * reads **through** the band that carries the panel's text.
  *
- * This replaces `PHOTO_SCRIM`, and the replacement is a direction change, not a
- * tuning pass `[Decision — founder, 2026-08-09]`. Every scrim shape we tried
- * was a trade between legibility and the frame: the panels are much wider than
- * their 3:2 sources and set their text with `justify-end`, so the text block ran
- * from the bottom padding up past halfway, and covering it meant holding
- * near-black across two thirds of the picture. That cleared the floor — gold
- * 5.12–7.46:1, white 10.07:1+ `[Measured — headless capture at 375/768/1280,
- * 2026-08-09]` — at the cost of darkening every photograph in the product.
+ * `[Decision — founder, 2026-08-09: "what about if the current black area was an
+ * overlay with a light ombre opacity to separate the words just enough, but I
+ * can still see the picture through it"]`. This is the third state of this
+ * surface, and the distinction between the three matters:
  *
- * **The constraint was never the photograph; it was small gold type on an
- * unknown ground.** The count line is `text-xs`, so it is small text and owes
- * 4.5:1, not the 3:1 large-text allowance the white headlines get — and no
- * gradient can promise a ratio over a frame whose brightest pixel is unknown.
- * Move that line onto `deep-bg` and the problem stops existing:
+ * | | What it covered | Why it went |
+ * |---|---|---|
+ * | `PHOTO_SCRIM` | the **whole frame**, to hold text set over the picture | darkened every photograph in the product |
+ * | `PHOTO_PLATE` (solid) | a band **beside** the frame, opaque `deep-bg` | correct but flat — the picture stopped at a hard line |
+ * | this | a band **over the bottom of** the frame, part-transparent, feathered | current |
  *
- * | Foreground on `--color-deep-bg` (#08080a) | Ratio | Owes | Margin |
- * |---|---|---|---|
- * | gold `#c4a065` | **8.16:1** | 4.5:1 (small text) | 1.81× |
- * | white | **20.01:1** | 3:1 (large text) | 6.67× |
- * | ink-soft `#b5b5b7` | **9.78:1** | 4.5:1 (small text) | 2.17× |
+ * So the standing rule — *do not lay an overlay across a photograph to solve a
+ * legibility problem* — is intact. Nothing covers the picture. What is veiled is
+ * the caption band alone, and it is veiled to a **measured** alpha rather than a
+ * chosen one.
  *
- * `[Measured — scripts/measure-panel-contrast.ts, 144 text spans across / and
- * /cities at 375/768/1280, 2026-08-09]` — zero below floor, worst margin 1.81×.
- * These hold at every width, on every tile, forever, because the ground is a
- * constant instead of a photograph. The picture above the plate then carries
- * **nothing**: no wash, no gradient, no tint.
+ * **What sets the alpha.** The count line is `text-xs`, so it is small text and
+ * owes 4.5:1, not the 3:1 large-text allowance the white headline gets. Gold
+ * `#c4a065` clears 4.5:1 only against a composited ground at or below ~`#3c3c3c`
+ * (relative luminance ≤ 0.045). Against the worst pixel any frame puts under the
+ * count line, that fixes the floor for this number — it is arithmetic, not
+ * taste. `scripts/measure-plate-contrast.ts` samples the real composited pixels
+ * rather than assuming an opaque ancestor, and sweeps this alpha:
  *
- * The border is the whole visual join. A crisp hairline reads as an editorial
- * caption bar; a soft fade would just be a small scrim, which is the thing we
- * removed. Consumers own their own padding — the token is the surface only.
+ * | alpha | runs below floor | worst gold |
+ * |---|---|---|
+ * | 0.88 | 0 | 6.16:1 |
+ * | **0.82** | **0** | **5.00:1** |
+ * | 0.80 | 0 | 4.70:1 |
+ * | 0.78 | 3 | 4.35:1 ✗ |
+ * | 0.76 | 8 | 4.03:1 ✗ |
+ *
+ * `[Measured — scripts/measure-plate-contrast.ts, 123 runs × 2 routes × 375/768/
+ * 1280, 2026-08-09]`. 0.80 also passes and 0.82 is chosen over it deliberately:
+ * 0.80 clears the floor by 4%, which is inside the range a different image
+ * decode or a browser's text antialiasing can move, while 0.82 clears it by 11%.
+ *
+ * **The gold rows cluster, so this is a system answer rather than one frame's.**
+ * At 0.82 the ten worst runs sit between 5.00:1 and 5.46:1, and dropping two
+ * points fails eight of them at once. No single photograph is holding the alpha
+ * up — `legal-financial` is merely first past the post, with `healthcare` (a
+ * white coat under bright windows, the brightest ground in the set) 0.17 behind
+ * it. Swapping a frame will not buy transparency here; only changing the type
+ * color would, and `text-light-gold` `#ffd867` is the lever if it ever has to be
+ * pulled — it needs roughly 0.64 where `text-gold` needs 0.79 over pure white.
+ * That is a brand decision, not a contrast one, so it stays unpulled.
+ *
+ * **Why `backdrop-blur` is load-bearing and not decoration.** Blur collapses the
+ * local neighbourhood into an average, so a busy ground behind the text stops
+ * having a worst pixel far from its mean. It buys real alpha back — the veil can
+ * be more transparent for the same measured ratio — and it makes the feather
+ * read as depth of field instead of as a smudge.
  */
-export const PHOTO_PLATE = 'bg-deep-bg border-t border-white/10'
+export const PHOTO_PLATE_TINT = 'rgba(8,8,10,0.82)'
+
+/**
+ * The veil element that paints `PHOTO_PLATE_TINT`.
+ *
+ * Absolutely positioned, and it extends **above** its caption box (`-top-14`)
+ * into the picture, where the mask fades it out. That overhang is the ombre: the
+ * band is solid enough to hold type where the type is, and dissolves into the
+ * photograph above it with no edge to see.
+ *
+ * The ramp is a `mask-image` rather than a gradient background because the veil
+ * also carries `backdrop-blur`. A gradient background would fade the tint while
+ * the blur kept a hard rectangular top edge; the mask fades **both together**, so
+ * the tint, the blur, and the element all end at the same invisible place.
+ *
+ * **The ramp is anchored in pixels, not percentages, and that is a correctness
+ * fix rather than a preference.** It first ran as `#000 58%, transparent 100%`,
+ * which puts the feather at a fraction of the veil's own height — so the taller
+ * the caption, the further *down into the text* the fade reached. The cities
+ * feature tile has the tallest caption on the site (an eyebrow, a 40px name, a
+ * count, a metro line) and its "Most active" eyebrow landed a third of the way
+ * up the ramp at roughly 0.59 alpha, over a bright skyline: **3.87:1 against a
+ * 4.5:1 floor** `[Measured — scripts/measure-plate-contrast.ts, 1280px,
+ * 2026-08-09]`. `calc(100%-3.5rem)` is exactly the caption's top edge, because
+ * `-top-14` is exactly 3.5rem, so the tint is now at full strength across every
+ * pixel of text and the whole feather happens in the overhang above it. Caption
+ * height stops being a variable in the contrast.
+ *
+ * `-webkit-mask-image` is duplicated deliberately — Safari still ships the
+ * prefixed property for masks on composited layers.
+ *
+ * Consumers own the caption's padding; this token is the surface only.
+ */
+export const PHOTO_PLATE_VEIL =
+  'absolute inset-x-0 bottom-0 -top-14 pointer-events-none backdrop-blur-[6px] ' +
+  '[-webkit-mask-image:linear-gradient(to_top,#000_0%,#000_calc(100%-3.5rem),transparent_100%)] ' +
+  '[mask-image:linear-gradient(to_top,#000_0%,#000_calc(100%-3.5rem),transparent_100%)]'
 
 /**
  * Frame path → `object-position` class. Unlisted frames center normally.
@@ -120,10 +178,11 @@ export const PHOTO_PLATE = 'bg-deep-bg border-t border-white/10'
  * taller than it is wide there, so `object-cover` crops horizontally and the
  * full height of the frame survives regardless of what this map says.
  *
- * Four frames are deliberately absent: `soleil-kidswear` (subject sits at 24%
- * with clear space above), `zinga-interior-design` and `calabash-candles` (no
- * people), and `leather-and-denim` (a flat-lay whose objects spread evenly, so
- * every crop composes). Centered is correct for all four; an entry would only
+ * Five frames are deliberately absent: `soleil-kidswear` (subject sits at 24%
+ * with clear space above), `physician-portrait` (hair starts at 11%, clearing a
+ * centered crop by 5.5 points), `zinga-interior-design` and `calabash-candles`
+ * (no people), and `leather-and-denim` (a flat-lay whose objects spread evenly,
+ * so every crop composes). Centered is correct for all five; an entry would only
  * add noise.
  *
  * The city frames are here for the same reason with a different subject: a
@@ -150,6 +209,13 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // Two people, the higher head at ~11%.
   '/images/editorial/diaspora-creative-agency.webp': 'object-[50%_30%]',
   '/images/editorial/crown-and-coil-studio.webp': 'object-[50%_32%]',
+  // Locs top out at ~7%, the highest head in the set. At the bento's ~11% cut a
+  // centered crop puts the band top at 5.5% — inside by 1.5 points, which is
+  // exactly the margin the `chicago` mistake proved an eyeball estimate can
+  // swallow. 30% halves it to 3.3%. `physician-portrait` needs no entry for the
+  // same arithmetic run the other way: its hair starts at 11%, so centered
+  // clears by 5.5 points.
+  '/images/editorial/agency-desk.webp': 'object-[50%_30%]',
   // Head at 17%; the pot below sits nearest the plate, so biasing up costs little.
   '/images/editorial/peach-and-rye-kitchen.webp': 'object-[50%_40%]',
   // Hard hat at 16%.
@@ -204,17 +270,19 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
 /**
  * Category slug → editorial photograph.
  *
- * Deliberately partial. Twelve of the twenty-five top-level categories have a
- * photograph with real depth behind it; the other thirteen render the ember wash
+ * Deliberately partial. Fourteen of the twenty-five top-level categories have a
+ * photograph with real depth behind it; the other eleven render the ember wash
  * and are *supposed to*. Do not fill the rest for uniformity — an unmatched
  * photo is worse than an honest designed tile
  * (`photographic-style-direction.md` §"Specificity over stock").
  *
  * The bento renders the top nine categories by live listing count, so which of
  * these appear changes with the data. That is the point: the map is keyed on
- * category, not on position, so it degrades on its own. Today seven of the nine
- * rendered tiles are photographic `[Observed — local render against prod-shaped
- * seed, 2026-08-09]`; the rest are the wash.
+ * category, not on position, so it degrades on its own. Today all nine rendered
+ * tiles are photographic `[Observed — local render against prod-shaped seed,
+ * 2026-08-09]`, which is a fact about the current data rather than a target —
+ * the tenth-ranked category tomorrow may well have no frame, and that tile is
+ * not broken when it arrives.
  *
  * `melanin-law-group` is keyed to `legal-financial` rather than the broader
  * `professional-services`: the frame is a man reading documents in an office,
@@ -236,12 +304,21 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
  * `childcare-family` is the single permitted placement of the frame depicting a
  * minor [Decision — 2026-08-09]. It does not go anywhere else on the site.
  *
- * Two of the nine rendered tiles stay on the wash on purpose, and neither is a
- * gap waiting to be closed. Nothing in the pool honestly depicts
- * `social-media-marketing`. Every `healthcare` candidate fails on its own terms:
- * the four portraits put a head at the top edge against cold clinical white that
- * fights `bg-deep-bg` and the gold type, and the fifth is a dental procedure —
- * unpleasant at homepage scale and off-brand teal.
+ * `healthcare` and `social-media-marketing` were the last two rendered tiles on
+ * the wash, and they are now filled from the archive rather than the existing
+ * pool [Decision — founder, 2026-08-09: "I also want the two images back in the
+ * bento area"]. The note that used to sit here argued against filling them, and
+ * the objection it raised is real rather than obsolete: `physician-portrait` is
+ * a head near the top edge over a white coat and bright windows, which is the
+ * brightest ground under the gold count line anywhere in the set. It is the
+ * frame most likely to fail the caption band's contrast floor, so it is the one
+ * to check first whenever `PHOTO_PLATE_TINT` moves. `agency-desk` is the
+ * honest read of a marketing professional at work; it is deliberately not
+ * `diaspora-creative-agency`, which fits the category conceptually but already
+ * carries triptych panel 03 in the same scroll.
+ *
+ * Both are named for what they show rather than for a business, like the three
+ * frames above them and unlike the older nine.
  *
  * The three triptych photographs are intentionally absent — both components
  * render on the homepage inside one scroll, and a repeated frame reads as a bug.
@@ -259,4 +336,6 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   'childcare-family': '/images/editorial/soleil-kidswear.webp',
   'wellness-health': '/images/editorial/sable-fitness-collective.webp',
   'books-publishing': '/images/editorial/afrofuturist-bookshop.webp',
+  healthcare: '/images/editorial/physician-portrait.webp',
+  'social-media-marketing': '/images/editorial/agency-desk.webp',
 }

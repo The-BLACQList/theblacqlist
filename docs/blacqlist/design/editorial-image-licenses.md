@@ -1,18 +1,20 @@
 # Editorial image licenses
 
-**Status:** ✅ **Recorded.** All **eighteen** photographs are cleared — the original
-twelve plus the six added on 2026-08-09 in PR #23.
+**Status:** ✅ **Recorded.** All **twenty** photographs are cleared — the original
+twelve, the six added on 2026-08-09 in PR #23, and the two added later the same day
+to fill the last empty bento tiles.
 **Last updated:** 2026-08-09
 
 `.claude/rules/3d-assets.md` requires a recorded license per asset before it enters
 the product: source, author, license name, and commercial-use confirmation.
 
-**Source of record:** all eighteen photographs were obtained through the founder's
+**Source of record:** all twenty photographs were obtained through the founder's
 **Canva Pro** subscription and are licensed under the **Canva Content License
 Agreement (Pro content)** `[Decision — founder statement, 2026-08-09]`. The
-statement was made twice: once about the original twelve, and again about the six
+statement was made twice: once about the original twelve, and again about the
 staging-directory frames once they were selected — *"they still came from canva.
-All of them."*
+All of them."* The two later additions come out of the same staging directory and
+are covered by the same statement.
 
 That license permits commercial use without attribution, and it carries three
 restrictions that bind how these files may be used here. They are written out in
@@ -23,7 +25,7 @@ read that section before placing any of these images on a new surface.
 
 ## The pool
 
-**Eighteen photographs**, from two deliveries.
+**Twenty photographs**, from three selections.
 
 **The original twelve** arrived as 3840×2560 JPEGs (~5.7 MB each) in
 `public/images/listings/`. They matched no live listing and were referenced by no
@@ -41,15 +43,20 @@ They were optimized to 1600px-wide WebP in `public/images/editorial/` and the
 selected out of two staging directories the founder assembled separately —
 `public/images/city-images/` (7 PNGs) and `public/images/BL-image-sourcing/`
 (26 PNGs) — and are the same Canva Pro provenance as the twelve
-`[Decision — founder statement, 2026-08-09]`. Roughly twenty frames in those
-directories were **not** selected and remain available for a future category fill;
-they are archived outside the repo (see below), not deleted.
+`[Decision — founder statement, 2026-08-09]`.
+
+**The two added after them** — `physician-portrait.webp` and `agency-desk.webp` —
+came out of the same `BL-image-sourcing/` staging set, on the founder's later
+instruction to fill the two photo-less bento tiles
+`[Decision — founder, 2026-08-09: "I also want the two images back in the bento
+area"]`. Roughly eighteen frames in those directories remain unselected and
+available; they are archived outside the repo (see below), not deleted.
 
 Re-run with `pnpm images:editorial` if the pool changes.
 
-**Committed weight after PR #23: 2.3 MB** `[Measured — du, 2026-08-09]` —
-`editorial/` 1.4 MB, `cities/` 428 KB, `hero-bg.jpg` 452 KB. The six new frames
-cost ~830 KB.
+**Committed weight: 2.4 MB** `[Measured — du, 2026-08-09]` — `editorial/` 1.6 MB,
+`cities/` 428 KB, `hero-bg.jpg` 452 KB. The six PR #23 frames cost ~830 KB; the two
+bento frames add 144 KB.
 
 ---
 
@@ -67,21 +74,23 @@ on the move** `[Measured — du, 2026-08-09]`, and nothing that ships changed �
 typecheck, lint, build, and the full test suite were re-run after the move to
 prove it.
 
-**Moved, not deleted.** Roughly twenty unselected frames are still good stock the
-founder paid for, and `healthcare` and `social-media-marketing` remain unphotographed
-in the category bento by design. If either is ever filled, the source is in the
-archive. The `.gitignore` entries stay in place as a standing guard in case a copy
-is dropped back into `public/` for another selection pass.
+**Moved, not deleted — and the archive immediately earned its keep.** The two
+remaining photo-less bento tiles, `healthcare` and `social-media-marketing`, were
+filled later the same day from `BL-image-sourcing/health_professional2.png` and
+`professional2.png`, both pulled straight out of the archive. Roughly eighteen
+unselected frames are still there. The `.gitignore` entries stay in place as a
+standing guard in case a copy is dropped back into `public/` for another selection
+pass.
 
 ---
 
 ## Inventory
 
-All eighteen share one provenance, so the license columns are uniform. They are
+All twenty share one provenance, so the license columns are uniform. They are
 written per row anyway rather than collapsed into a note — `3d-assets.md` asks for
 a record **per asset**, and a table that stays row-complete survives the pool being
-split or added to later. That is exactly what happened: the six PR #23 rows below
-the rule slotted in without reshaping the table.
+split or added to later. That is exactly what happened, twice: the six PR #23 rows
+and then the two bento rows both slotted in without reshaping the table.
 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
@@ -103,10 +112,17 @@ the rule slotted in without reshaping the table.
 | `cities/atlanta.webp` | 137 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `cities/houston.webp` | 143 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `cities/chicago.webp` | 142 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `physician-portrait.webp` | 74 KB | category bento — `healthcare` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `agency-desk.webp` | 69 KB | category bento — `social-media-marketing` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 
-The last six are the PR #23 additions. They live in `public/images/cities/` rather
-than `public/images/editorial/` where the path column says so; the other twelve are
-all `editorial/`. Sizes `[Measured — ls, 2026-08-09]`.
+Rows 13–18 are the PR #23 additions and the last two are the bento fill. Only the
+three `cities/` files live outside `public/images/editorial/`; the path column says
+so where it applies. Sizes `[Measured — ls, 2026-08-09]`.
+
+**Both bento-fill frames depict people** — a physician in a white coat, and a
+person working at a desk in an agency office. Unlike the six PR #23 frames, which
+were deliberately people-free, restriction 2 bites on these two. See
+[Restriction 2 and the two bento portraits](#restriction-2-and-the-two-bento-portraits).
 
 **On the `[Unknown]` author.** Canva does not surface the individual contributor's
 name on a Pro stock download, and the filenames here were assigned by us, not by
@@ -179,6 +195,59 @@ genuinely wanted.
 
 ---
 
+## The two bento frames — `healthcare` and `social-media-marketing`
+
+**Status: ✅ recorded.** Same Canva Pro provenance, same license, same three
+restrictions `[Decision — founder statement, 2026-08-09]`.
+
+These two tiles had been left on the `PHOTO_ABSENT` designed ground on the
+`CATEGORY_PHOTOS` guard's own logic — *an unmatched photo is worse than an honest
+designed tile*. The founder reversed that for these two specifically
+`[Decision — founder, 2026-08-09: "I also want the two images back in the bento
+area"]`, and the archive had matching frames, so the guard's condition was met
+rather than overridden.
+
+| File | Size | Source frame | Where used |
+|---|---|---|---|
+| `editorial/physician-portrait.webp` | 74 KB | `BL-image-sourcing/health_professional2.png` | Category bento — `healthcare` |
+| `editorial/agency-desk.webp` | 69 KB | `BL-image-sourcing/professional2.png` | Category bento — `social-media-marketing` |
+
+Sizes `[Measured — ls, 2026-08-09]`; both are well under the 150 KB budget ticket
+113 sets. `agency-desk.webp` carries a `PHOTO_FOCAL` entry of `object-[50%_30%]`
+to keep the subject's head inside the bento crop; `physician-portrait.webp` needs
+none at the default.
+
+The category bento is now **9 of 9 photographic**. There is no unphotographed tile
+left, so `PHOTO_ABSENT` currently renders nowhere — it stays in `surfaces.ts`
+because a new category, or a category whose frame is ever withdrawn, falls back to
+it, and a fallback that only exists once it is needed is a fallback that does not
+work.
+
+### Restriction 2 and the two bento portraits
+
+`physician-portrait.webp` shows a physician; `agency-desk.webp` shows a person at
+a desk. Both are identifiable, so **restriction 2 — no implied endorsement by
+recognizable individuals — is live on these two in a way it was not on the six
+people-free PR #23 frames.**
+
+What that rules out here, concretely:
+
+- Neither may be placed beside a **named** business, practice, or agency in a way
+  that reads as that business's staff, owner, or clinician. This is the same rule
+  [Naming caution](#naming-caution) already imposes for brand reasons; the license
+  reaches it independently.
+- A category tile is a safe placement precisely because it names a **category**,
+  not a business — "Healthcare · 11 businesses" makes no claim about who the person
+  is. Moving either file to a surface that names an entity is a new decision, not a
+  reuse.
+- Neither belongs in a sensitive context — the healthcare frame in particular must
+  not illustrate anything implying a medical condition, outcome, or claim.
+
+Anyone adding a second placement for either file needs a recorded decision, on the
+same footing as `soleil-kidswear.webp` below.
+
+---
+
 ## Canva Pro restrictions that bind us
 
 The Canva Content License is permissive on the two things we needed — **commercial
@@ -189,7 +258,7 @@ license, not style preferences.
 | # | Restriction | What it rules out here | Status |
 |---|---|---|---|
 | 1 | **No standalone redistribution.** The licensed file may be used *within* a design or product; it may not be offered as the file itself, resold, or made available for others to download as stock. | We may render these on pages. We may **not** ever hand one to a business owner as a cover image, seed one into `listings.cover_image_path`, or expose the pool through an "pick an image" picker in the owner dashboard. | ✅ Held — the owner-upload flywheel (Track 4) ships owners an *upload* path, never a library. |
-| 2 | **No implied endorsement by identifiable people.** Content depicting recognizable individuals may not be used to suggest that person endorses a product, business, or viewpoint, and may not be used in a sensitive context. | We may **not** place a photo containing a person beside a named business in a way that reads as *that business's* staff, owner, or customers. | ✅ Held — and this is the second, independent reason for the rule already stated under [Naming caution](#naming-caution). The brand reason and the license reason land in the same place. |
+| 2 | **No implied endorsement by identifiable people.** Content depicting recognizable individuals may not be used to suggest that person endorses a product, business, or viewpoint, and may not be used in a sensitive context. | We may **not** place a photo containing a person beside a named business in a way that reads as *that business's* staff, owner, or customers. | ✅ Held — and this is the second, independent reason for the rule already stated under [Naming caution](#naming-caution). The brand reason and the license reason land in the same place. The two frames where this restriction actually bites are the bento portraits — see [Restriction 2 and the two bento portraits](#restriction-2-and-the-two-bento-portraits). |
 | 3 | **No use as a trademark or logo.** Licensed content may not be registered or used as a brand mark. | We may **not** build one of these into the BLACQList wordmark, favicon, app icon, or default site-wide OG image — a default OG image is close enough to a brand mark to stay clear of. Per-page editorial OG images are fine. | ✅ Held — brand marks are the five SVGs in `public/brand/`, all first-party. |
 
 ### The one frame depicting a minor
@@ -234,9 +303,12 @@ Two consequences that hold regardless of what the license record says:
    F-1 tile instead. Restriction 2 above reaches the same rule from the license
    side, so this holds on two independent grounds.
 2. **These filenames must not leak into user-visible text** — no alt text, no
-   caption, no `title` attribute derived from the filename. Both placed images
-   carry `alt=""` because the adjacent heading supplies the context and the photo
-   is editorial, not documentary (`photographic-style-direction.md` §3).
+   caption, no `title` attribute derived from the filename. Every editorial frame
+   is placed with `alt=""` — `PhotoPanelGround` defaults to it — because the
+   adjacent heading supplies the context and the photo is editorial, not
+   documentary (`photographic-style-direction.md` §3). The city skylines are the
+   one exception and pass an explicit `alt`, because there the photograph is
+   informative and its subject is a real named place.
 
 ---
 
@@ -257,7 +329,7 @@ Homepage hero (Priority 1) was already done before this work —
 ## Aspect ratio
 
 The optimizer preserves the native **3:2** rather than cropping to the plan's
-literal 16:9. All twelve sources are 3:2, which is already the house ratio:
+literal 16:9. All twelve original sources are 3:2, which is already the house ratio:
 `photographic-style-direction.md` specifies *"Photo-first cards at 3:2 ratio"*,
 and the shipped `hero-bg.jpg` is 3:2 at 1920×1280. Slots needing another shape
 crop with CSS `object-cover` at render time, so one file serves a wide hero and a
