@@ -98,6 +98,20 @@ export const PHOTO_ABSENT =
  * white coat under bright windows, the brightest ground in the set) just behind.
  * Swapping a frame will not buy further transparency here.
  *
+ * **And the worst case is alpha-determined, not image-determined — which is why
+ * adding a bright frame is safe.** Those binding runs sit on a *saturated* ground:
+ * the worst pixel under the caption box is already pure `#ffffff`, which the veil
+ * composites to `rgb(90,90,91)` (`255 − 247 × 0.67`). No photograph can be
+ * brighter than white, so any frame with a blown highlight anywhere in its caption
+ * band lands on exactly this floor and no frame lands below it. Computing that
+ * bound directly over the source pixels — ignoring `backdrop-blur`, so it is
+ * strictly conservative — gives **5.05:1** for `suit-and-ledger`,
+ * `physician-portrait`, and `agency-desk` alike, against the harness's in-situ
+ * **5.08:1** `[Measured — worst-pixel bound over the source WebPs + scripts/
+ * measure-plate-contrast.ts, 2026-08-10]`. Two independent methods, one answer.
+ * The practical rule: a new frame cannot regress this, but **lowering the alpha
+ * moves every one of these rows at once.**
+ *
  * **The reserve lever, still unpulled.** If this has to go lower, raise the
  * veil's `backdrop-blur-[6px]` to 8px and re-sweep. Blur is the second variable;
  * never move it and the alpha in the same pass.
@@ -285,8 +299,8 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
 /**
  * Category slug → editorial photograph.
  *
- * Deliberately partial. Fourteen of the twenty-five top-level categories have a
- * photograph with real depth behind it; the other eleven render the ember wash
+ * Deliberately partial. Fifteen of the twenty-five top-level categories have a
+ * photograph with real depth behind it; the other ten render the ember wash
  * and are *supposed to*. Do not fill the rest for uniformity — an unmatched
  * photo is worse than an honest designed tile
  * (`photographic-style-direction.md` §"Specificity over stock").
@@ -304,6 +318,31 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
  * which is specifically legal/financial rather than the catch-all. It is mapped
  * once, not to both — two slugs pointing at one file duplicates the frame in a
  * single grid the day both categories rank.
+ *
+ * `professional-services` therefore gets its own frame, `suit-and-ledger`
+ * [Decision — founder, 2026-08-10]. The archive offered five candidates and four
+ * were rejected for reading as a *specific* profession rather than the catch-all:
+ * a dentist with a patient (that is `healthcare`, already held by
+ * `physician-portrait`), a man against a wall of bound legal volumes (that is
+ * `legal-financial`, already held), and a man beside a FOR SALE sign (real
+ * estate, which is not this category). The two survivors are the same shoot one
+ * step apart; the tighter of the two was taken, because every bento tile is far
+ * taller than the source's 3:2 and the crop comes off the *width* — a subject
+ * that fills more of the frame is the one that survives it.
+ *
+ * It is a bright frame — blown-out windows behind the subject and a glass desk
+ * under him — which puts it in the same hazard class as `physician-portrait`
+ * below. It was measured before it shipped rather than after — see the figure in
+ * `PHOTO_PLATE_TINT`'s note.
+ *
+ * One property of this row that is worth writing down before someone reads it as
+ * a defect: "Professional Services" is long enough to wrap to two lines under
+ * `line-clamp-2` at 375 and 768, which grows the caption box, lifts the veil, and
+ * covers more of the frame than its single-line neighbours. That is the label's
+ * length, not the frame's fault, and it is already the shipped behaviour of
+ * `social-media-marketing` ("Social Media & Marketing") on the same grid
+ * `[Observed — local dev render at 375, 2026-08-10]`. It needs no special
+ * handling here; it is only surprising if you meet it on this tile first.
  *
  * The three newest frames — `bbq-plate`, `leather-and-denim`, `hands-and-drums`
  * — are named for what they show rather than for a business, because none of
@@ -353,4 +392,5 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   'books-publishing': '/images/editorial/afrofuturist-bookshop.webp',
   healthcare: '/images/editorial/physician-portrait.webp',
   'social-media-marketing': '/images/editorial/agency-desk.webp',
+  'professional-services': '/images/editorial/suit-and-ledger.webp',
 }
