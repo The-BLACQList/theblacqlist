@@ -234,6 +234,24 @@ export type Database = {
         }
         Relationships: []
       }
+      launch_subscribe_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
       launch_subscribers: {
         Row: {
           created_at: string

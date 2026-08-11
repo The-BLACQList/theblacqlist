@@ -13,3 +13,13 @@ export const APP_ENV: AppEnv = (process.env.VERCEL_ENV ??
 
 export const IS_PRODUCTION = APP_ENV === 'production'
 export const IS_PREVIEW = APP_ENV === 'preview'
+
+// Salt for the pseudonymized client IP written by the coming-soon rate limiter
+// (lib/actions/subscribers/subscribeLaunch.ts). A bare sha256 of an IP is
+// trivially reversible — the whole IPv4 space is 4 billion hashes — so the salt
+// is what makes the stored digest actually non-identifying.
+//
+// If it is unset the limiter still enforces its limit, using an unsalted hash.
+// Degrading pseudonymization strength is acceptable; silently dropping the
+// protection is not.
+export const SUBSCRIBE_RATE_LIMIT_SALT = process.env.SUBSCRIBE_RATE_LIMIT_SALT ?? ''
