@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Briefcase, Globe, MapPin, Plane } from 'lucide-react'
 import { CTAButton } from './CTAButton'
+import { resolveRemoteImage } from '@/lib/listings/coverImage'
 
 interface ServiceCardProps {
   service: {
@@ -55,13 +56,17 @@ export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
   const ctaLabel = service.booking_url ? 'Book Now' : 'Request Quote'
   const DeliveryIcon = DELIVERY_ICONS[service.delivery_mode] ?? Briefcase
 
+  // See ProductCard: owner-supplied host, may not be optimizable.
+  const cover = resolveRemoteImage(service.cover_image_url)
+
   return (
     <article className="rounded-xl border border-charcoal/10 bg-white overflow-hidden flex flex-col">
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
-        {service.cover_image_url ? (
+        {cover ? (
           <Image
-            src={service.cover_image_url}
+            src={cover.src}
+            unoptimized={cover.unoptimized}
             alt={service.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

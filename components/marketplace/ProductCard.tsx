@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Package } from 'lucide-react'
 import { CTAButton } from './CTAButton'
+import { resolveRemoteImage } from '@/lib/listings/coverImage'
 
 interface ProductCardProps {
   product: {
@@ -41,13 +42,19 @@ export function ProductCard({ product, showVendor = false }: ProductCardProps) {
 
   const ctaType = product.external_purchase_url ? 'shop-now' : 'visit-website'
 
+  // cover_image_url holds an arbitrary owner-supplied host, which the next/image
+  // optimizer rejects with a 400. The resolver decides per-URL whether it can be
+  // optimized or has to pass through unoptimized.
+  const cover = resolveRemoteImage(product.cover_image_url)
+
   return (
     <article className="rounded-xl border border-charcoal/10 bg-white overflow-hidden flex flex-col">
       {/* Cover image */}
       <div className="aspect-[4/3] bg-pale-lavender relative overflow-hidden">
-        {product.cover_image_url ? (
+        {cover ? (
           <Image
-            src={product.cover_image_url}
+            src={cover.src}
+            unoptimized={cover.unoptimized}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

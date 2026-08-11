@@ -24,6 +24,26 @@ const inter = Inter({
   display: 'swap',
 })
 
+/**
+ * Site-wide fallback share card. First-party brand artwork, generated from the
+ * SVG masters by `pnpm brand:assets` — never a licensed photograph, which Canva
+ * restriction 3 forbids on anything this close to a brand mark
+ * (docs/blacqlist/design/editorial-image-licenses.md).
+ *
+ * Routes with their own imagery override this: a listing page builds its card
+ * from the owner-uploaded cover in generateMetadata. This is what every other
+ * route gets, and before it existed they got a blank card.
+ *
+ * The path is relative on purpose — `metadataBase` below resolves it to an
+ * absolute URL, which is what crawlers require.
+ */
+const OG_IMAGE = {
+  url: '/og-default.png',
+  width: 1200,
+  height: 630,
+  alt: 'The BLACQList',
+}
+
 export const metadata: Metadata = {
   title: {
     default: 'The BLACQList',
@@ -37,11 +57,13 @@ export const metadata: Metadata = {
     title: 'The BLACQList — Discover Black-Owned Businesses',
     description: 'Find, save, and support Black-owned businesses near you.',
     url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com',
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'The BLACQList',
     description: 'Discover and support Black-owned businesses.',
+    images: [OG_IMAGE],
   },
 }
 
