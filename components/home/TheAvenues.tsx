@@ -1,4 +1,13 @@
 import Link from 'next/link'
+import {
+  Briefcase,
+  CalendarDays,
+  Handshake,
+  Palette,
+  ShoppingBag,
+  Store,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EMBER_WASH } from '@/lib/design/surfaces'
 
@@ -19,26 +28,36 @@ interface Avenue {
   label: string
   verb: string
   href: string
+  icon: LucideIcon
   comingSoon?: boolean
 }
 
 // The founder's six categories, verbatim. Composite avenues pass their primary
 // type to /discover; counts sum every underlying entity type they cover.
 const AVENUES: Avenue[] = [
-  { key: 'brick', label: 'Brick & Mortar', verb: 'shops & storefronts', href: '/discover?type=business' },
-  { key: 'products', label: 'Products & Services', verb: 'shop & book', href: '/discover?type=service_provider' },
-  { key: 'professionals', label: 'Professionals', verb: 'consult & advise', href: '/discover?type=professional' },
-  { key: 'creatives', label: 'Creatives', verb: 'commission & collect', href: '/discover?type=creative' },
-  { key: 'events', label: 'Events', verb: 'pull up', href: '/discover?type=event' },
-  { key: 'jobs', label: 'Jobs', verb: 'find your next role', href: '#', comingSoon: true },
+  { key: 'brick', label: 'Brick & Mortar', verb: 'shops & storefronts', href: '/discover?type=business', icon: Store },
+  { key: 'products', label: 'Products & Services', verb: 'shop & book', href: '/discover?type=service_provider', icon: ShoppingBag },
+  { key: 'professionals', label: 'Professionals', verb: 'consult & advise', href: '/discover?type=professional', icon: Briefcase },
+  { key: 'creatives', label: 'Creatives', verb: 'commission & collect', href: '/discover?type=creative', icon: Palette },
+  { key: 'events', label: 'Events', verb: 'pull up', href: '/discover?type=event', icon: CalendarDays },
+  { key: 'jobs', label: 'Jobs', verb: 'find your next role', href: '#', icon: Handshake, comingSoon: true },
 ]
 
 /**
  * The Avenues — one index, six avenues (Living Commerce Index breadth
  * section, named for the historic Black business districts). Sits directly
  * under the hero: every kind of Black enterprise gets a named way in.
- * TODO: tiles become commissioned documentary photographs when the set
- * lands — ember-glow grounds until then (never stock as real businesses).
+ *
+ * Tiles carry an icon, not a photograph [Decision — founder, 2026-08-09].
+ * This supersedes the earlier plan to commission documentary photography for
+ * this row: the homepage already carries nine photographic surfaces across the
+ * triptych and the bento inside one scroll, and six more frames here would
+ * flatten the hierarchy rather than sharpen it. The icon does the one job the
+ * row needs — six tiles reading as six distinct things at a glance — without
+ * adding weight. Do not reintroduce photography here.
+ *
+ * Icons are `aria-hidden`: every tile already carries a visible text label, so
+ * announcing the glyph would only duplicate it.
  */
 export function TheAvenues({ counts }: Props) {
   return (
@@ -54,6 +73,7 @@ export function TheAvenues({ counts }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-3">
           {AVENUES.map((avenue) => {
             const count = avenue.key === 'jobs' ? 0 : counts[avenue.key]
+            const Icon = avenue.icon
 
             if (avenue.comingSoon) {
               return (
@@ -61,6 +81,12 @@ export function TheAvenues({ counts }: Props) {
                   key={avenue.key}
                   className="flex flex-col justify-end min-h-[120px] rounded-xl bg-pale-lavender border border-dashed border-charcoal/30 p-4"
                 >
+                  <Icon
+                    size={20}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                    className="mb-auto text-charcoal-soft"
+                  />
                   <span className="font-headline text-[17px] text-charcoal leading-tight">
                     {avenue.label}
                   </span>
@@ -86,6 +112,12 @@ export function TheAvenues({ counts }: Props) {
                   style={{
                     background: EMBER_WASH,
                   }}
+                />
+                <Icon
+                  size={20}
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                  className="relative mb-auto text-gold/80 group-hover:text-light-gold transition-colors duration-150"
                 />
                 <span className="relative font-headline text-[17px] text-white leading-tight group-hover:text-light-gold transition-colors duration-150">
                   {avenue.label}

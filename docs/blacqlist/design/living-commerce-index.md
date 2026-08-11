@@ -42,7 +42,9 @@ business pages. The photography reads as belonging to the hero, not the brand.
    node index, hover darken, arrow) — not white cards
 3. Curated category image grid (8–12 documentary tiles, mixed proportions, count + node per tile)
 4. Featured-business editorial spotlights (every 6th–8th listing becomes a large feature)
-5. Trending near you
+5. **Fresh Finds** — the newest listings in the index, ungated by tier. Replaced "Trending near
+   you" (most-saved) [Decision — 2026-08-09]: `save_count` ordering on a thin engagement set
+   surfaced the same handful every render and made a business that joined today invisible.
 6. **City chapters** — photographic city cards (neighborhood imagery, counts, featured category,
    local BLACQLight story); coming-soon cities stay quiet/typographic
 7. **"Your BLACQList Page" microsite showcase** — carousel of real page previews (restaurant w/
@@ -54,8 +56,19 @@ business pages. The photography reads as belonging to the hero, not the brand.
 10. Business-owner CTA · photographic footer transition
 
 "Find What You Need" becomes a split-screen module: changing photograph left; indexed discovery
-paths right (01 Near You · 02 Open Now · 03 Highly Rated · 04 Newly Added · 05 Women-Owned ·
+paths right (01 Near You · 02 Open Now · 03 Highly Rated · 04 Newly Added · 05 Black-Woman-Owned ·
 06 Community Favorites); hover changes the image.
+
+**Tile 05 reads "Black-Woman-Owned," not "Women-Owned"** [Decision — founder, 2026-08-09]. That is
+the actual facet — `/discover?attrs=black-woman-owned`, seeded at `supabase/seed.sql:630`. The
+broader label would promise a set the filter does not return.
+
+**Tile 01 "Near You" has no filter behind it** — `/discover` has no `lat`/`lng`/`radius` param, no
+`distance` sort key, and no geolocation prompt `[Observed, 2026-08-09]`. Listings do carry lat/lng
+from the N7 geocode pass, so the data exists, but the filter is a feature to build rather than a
+link to write. Open founder call, tracked in `ops/next-actions.md`: build the radius filter, drop
+to a five-tile module, or swap the tile for something that exists. **The module is not buildable
+until that is settled.**
 
 ### Discovery / search
 - **Claimed card:** 4:3 or 3:2 photograph · logo · name · category+city · verification ·

@@ -4,11 +4,12 @@
 |---|---|
 | **Phase** | V1.5 |
 | **Priority** | P3 |
-| **Status** | **Decided — buildable. Blocked only on the three photographs.** |
-| **Depends on** | Founder hands over 3 city photographs |
+| **Status** | **Built — PR #23. Awaiting GATE-DEPLOY behind #20 → #21 → #22.** |
+| **Depends on** | ~~Founder hands over 3 city photographs~~ ✅ delivered · ~~provenance~~ ✅ Canva Pro, recorded |
 | **Gates** | **GATE-DEPLOY** only |
 | **Written** | 2026-08-09 |
 | **Decided** | 2026-08-09 — decision-log 026 |
+| **Built** | 2026-08-09 — PR #23 |
 
 ---
 
@@ -64,13 +65,20 @@ Both take the same change:
 - **Photo present** → render a `next/image` `fill` `object-cover` beneath, then the legibility scrim `bg-gradient-to-t from-black/80 via-black/40 to-transparent` in place of the wash. Reuse that token; do not invent a new gradient.
 - **No photo** → keep `EMBER_WASH` exactly as it renders today.
 
+> **Superseded — 2026-08-09.** Both bullets describe an overlay-on-photo tile,
+> and that whole approach was reversed by the founder after review. Grounded
+> panels now put text on a caption plate beside the frame and lay nothing over
+> the photograph; the no-photo case renders `PHOTO_ABSENT` rather than the wash.
+> See the deviation table under **What shipped**, and
+> `photographic-style-direction.md` for the reasoning.
+
 Ten of thirteen cities will have no photo for a long time. **That is the intended end state, not a gap** — an image only where there is real content keeps the grid honest about where the depth is. Do not fill the other ten to make the grid uniform.
 
 ### Alt text
 
 **Names the city:** `alt="Atlanta skyline"`. These are informative, unlike the `/about` editorial photos where the adjacent heading supplies the context and `alt=""` is correct.
 
-The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is decoration.
+The no-photo span stays `aria-hidden="true"` — it is decoration.
 
 ---
 
@@ -80,13 +88,41 @@ The `EMBER_WASH` span stays `aria-hidden="true"` in the no-photo case — it is 
 
 ---
 
+## What shipped — 2026-08-09, PR #23
+
+Three deviations from the spec above, all deliberate:
+
+| Spec said | What shipped | Why |
+|---|---|---|
+| Scrim over the photo, text on top | **No full-frame overlay.** Text moved off the picture onto a caption band, which then went from opaque to a feathered part-transparent veil — `PHOTO_PLATE_TINT` + `PHOTO_PLATE_VEIL` | Two founder calls, in order. First `[Decision — founder, 2026-08-09: "i hate the black overlay on every picture"]`: the ticket's ramp assumed text stays on the photograph, and every shape that made small gold type legible there meant holding near-black across two thirds of the frame, so the text moved to a solid `deep-bg` plate — gold **8.16:1**, white **20.01:1**, ink-soft **9.78:1** `[Measured — scripts/measure-panel-contrast.ts, 144 spans across / and /cities at 375/768/1280, 2026-08-09]`. Then `[Decision — founder, 2026-08-09: "a light ombre opacity to separate the words just enough, but I can still see the picture through it"]`: the plate became a `rgba(8,8,10,0.82)` band over the bottom of the frame, feathered upward into the picture by a mask and backed by `backdrop-blur-[6px]`. The alpha is measured, not chosen — `scripts/measure-plate-contrast.ts` composites the real pixels behind each glyph and sweeps it. 0.78 fails 3 runs, 0.80 passes at 4.70:1, 0.82 passes at 5.00:1 `[Measured — 123 text runs × 2 routes × 375/768/1280, 2026-08-09]`; 0.82 ships for the wider margin. |
+| No-photo tiles keep `EMBER_WASH` | **`PHOTO_ABSENT`** — a graded charcoal ground with gold lifted top-right | With the scrim gone the frames render at full brightness, and a 0.16 wash beside them read as a void `[Observed — headless bento capture at 1280, 2026-08-09]`. A separate token, not a bump to `EMBER_WASH`, because that wash's three other consumers set text directly on it. |
+| Map "next to `lib/design/surfaces.ts` or in `lib/listings/coverImage.ts`" | **`CITY_PHOTOS` in `lib/design/surfaces.ts`** | Same file as `CATEGORY_PHOTOS`, so all photographic grounding maps sit together. |
+
+Both surfaces ground through the shared **`PhotoPanelGround`** component rather than
+each assembling its own `Image`, so a future frame or treatment change lands in one
+place. `PHOTO_FOCAL` supplies per-frame `object-position` — `chicago.webp`
+needed `15%` to keep the Hancock antenna in the crop. Those values were tuned
+against a 33–41% vertical cut, and the cut has since eased twice: the caption
+plate took it to ~16%, and moving the frame from a wrapper to the whole panel
+(with an `aria-hidden` spacer holding the picture's proportion open) took the
+bento's to ~11% `[Measured — headless capture at 1280, 2026-08-09]`. Every value
+therefore errs toward showing *more* of the frame's top, which is the safe
+direction — a position chosen to keep a head inside a 47% cut cannot push it out
+of an 11% one.
+
+An intermediate `PHOTO_SCRIM` token shipped in the first pass of this PR and was
+removed in the same PR. It is named here only so the reversal is legible in the
+record — it exists nowhere in the tree, and its measured figures should not be
+cited.
+
 ## Definition of done
 
-- [ ] Three photographs sourced, licensed, and recorded in `editorial-image-licenses.md` **before** commit
-- [ ] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/`
-- [ ] Slug→path map exported from one place and read by both surfaces
-- [ ] Both surfaces render the photo + scrim when present and fall back to `EMBER_WASH` when absent
-- [ ] Alt text names the city on every photo tile
-- [ ] Lighthouse LCP on `/cities` and `/` no worse than before — these tiles are above the fold on `/cities`
-- [ ] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` green; 6/6 CI on the PR
+- [x] Optimized to 3:2 / 1600px / ≤150 KB WebP; committed to `public/images/cities/` — Atlanta 137 KB, Houston 143 KB, Chicago 142 KB `[Measured — ls, 2026-08-09]`
+- [x] Slug→path map exported from one place and read by both surfaces — `CITY_PHOTOS`
+- [x] Both surfaces render the photo when present and fall back to a designed panel when absent — no full-frame overlay in either case; text rides a feathered `PHOTO_PLATE_TINT` band across the bottom of the frame at a measured `0.82` alpha
+- [x] Alt text names the city on every photo tile — `alt="{name} skyline"`
+- [x] `pnpm typecheck lint test:unit build` green; Playwright `e2e/` **51/51** `[Measured — local run, 2026-08-09]`
+- [x] **Three photographs licensed and recorded in `editorial-image-licenses.md`** — Canva Pro `[Decision — founder statement, 2026-08-09]`; three inventory rows added, and the three Canva restrictions bind them. Restriction 2 (implied endorsement) is moot — no identifiable people in any of the three skylines.
+- [ ] Lighthouse LCP on `/cities` and `/` no worse than before — `[Unknown]`, not measured. These tiles are above the fold on `/cities`, so this needs a Preview-deploy Lighthouse run before GATE-DEPLOY.
+- [x] 6/6 CI on the PR — typecheck · lint · unit · build · Vercel · Preview Comments, all green on `a4037ab` `[Measured — gh pr checks, run 31343181395, 2026-08-09]`
 - [ ] **GATE-DEPLOY** to merge

@@ -1,9 +1,16 @@
 /**
  * Optimize editorial photography for the repo.
  *
- *   pnpm images:editorial        (or: npx tsx scripts/optimize-editorial-images.ts)
+ *   pnpm images:editorial                    listings/ → editorial/
+ *   pnpm images:editorial <src> <out>        any pair of directories
  *
- * Reads every JPEG in SRC_DIR, resizes to TARGET_WIDTH preserving the source
+ * The directory pair is an optional argument so a second batch — the city
+ * photographs in `public/images/cities/` — runs through the same encoder and the
+ * same 150 KB budget instead of being hand-converted. Both paths are resolved
+ * relative to the repo root. Defaults are unchanged, so the bare command and the
+ * `images:editorial` script keep working exactly as before.
+ *
+ * Reads every JPEG/PNG in the source, resizes to TARGET_WIDTH preserving the
  * aspect ratio, and writes WebP into OUT_DIR. Run it once when photos are added;
  * the optimized output is what gets committed, and the originals do not enter
  * the repo.
@@ -27,8 +34,9 @@ import path from 'node:path'
 import sharp from 'sharp'
 
 const ROOT = process.cwd()
-const SRC_DIR = path.join(ROOT, 'public/images/listings')
-const OUT_DIR = path.join(ROOT, 'public/images/editorial')
+const [srcArg, outArg] = process.argv.slice(2)
+const SRC_DIR = path.resolve(ROOT, srcArg ?? 'public/images/listings')
+const OUT_DIR = path.resolve(ROOT, outArg ?? 'public/images/editorial')
 
 /** Wide enough for a full-bleed hero on a 2x laptop without going 4K. */
 const TARGET_WIDTH = 1600

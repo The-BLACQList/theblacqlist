@@ -61,3 +61,15 @@ supabase/.temp/
 
 # Local-only test fixtures used during manual QA drives.
 testassets/
+
+# Unoptimized source frames staged for selection (~159 MB of PNGs). The chosen
+# frames ship as optimized WebP under public/images/{cities,editorial}/; these
+# originals must never enter the repo or the Vercel build context — everything
+# under public/ is uploaded on every build, and committing them would undo the
+# 68 MB → 1.5 MB reduction from PR #20.
+# Both directories were moved out of the repo on 2026-08-09 to
+# ../blacqlist-image-archive/ (founder go-ahead), so nothing matches these paths
+# today. The entries stay as a standing guard: if a copy is ever dropped back
+# into public/ for a second selection pass, it cannot be committed by accident.
+public/images/BL-image-sourcing/
+public/images/city-images/

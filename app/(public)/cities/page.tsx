@@ -6,7 +6,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/motion/Reveal'
 import { EmptyState } from '@/components/ui/empty-state'
-import { EMBER_WASH } from '@/lib/design/surfaces'
+import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
+import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
+import { CITY_PHOTOS } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
@@ -137,7 +139,18 @@ export default async function CitiesPage() {
             />
           ) : (
             <Reveal>
-              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[132px] md:auto-rows-[156px] gap-3">
+              {/* Rows grew from 132/156 with the caption plate — it takes a
+                  fixed slice of every tile, so the old height left the picture
+                  a sliver.
+
+                  This is the one surface still wider than the source's 3:2 at
+                  desktop, which means added height reclaims discarded picture
+                  instead of spending it: at 1280 a normal tile goes 208 → 248px
+                  and the height crop drops from 21.5% to 6.4%. The 1024 band
+                  pays for it — it sits at exactly 3:2 today. One `lg:` value,
+                  not a four-rung ladder; the extra quality point at 1024 is not
+                  worth two more magic numbers. */}
+              <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-[184px] md:auto-rows-[208px] lg:auto-rows-[248px] gap-3">
                 {live.map((city, i) => {
                   const stateCode = city.states?.code
                   const isFeature = i === 0
@@ -147,46 +160,64 @@ export default async function CitiesPage() {
                       key={city.slug}
                       href={`/discover/${city.slug}`}
                       className={cn(
-                        'group relative flex flex-col justify-end rounded-xl bg-deep-bg p-4 md:p-5 overflow-hidden',
+                        'group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
                         isFeature && 'col-span-2 row-span-2'
                       )}
                     >
-                      <span
-                        className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
-                        aria-hidden="true"
-                        style={{ background: EMBER_WASH }}
+                      <PhotoPanelGround
+                        src={CITY_PHOTOS[city.slug]}
+                        // The feature tile spans two of three columns.
+                        //
+                        // These are fixed-row tiles, and below xl every one of
+                        // them is taller than the source's 3:2 — so the frame
+                        // scales by height and renders 1.5 × the row height
+                        // wide, well past its own CSS width. The old hints
+                        // described the box, not the bitmap, and under-requested
+                        // by up to 50%. Over-requesting is the safe direction.
+                        sizes={
+                          isFeature
+                            ? '(max-width: 767px) 155vw, (max-width: 1279px) 84vw, 820px'
+                            : '(max-width: 767px) 75vw, (max-width: 1279px) 42vw, 400px'
+                        }
+                        alt={`${city.name} skyline`}
                       />
-                      {isFeature && (
-                        <span className="relative font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-gold mb-2">
-                          Most active
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          // Tiles are fixed-height, so a long city name has to clamp
-                          // rather than push the count line out of the tile.
-                          'relative font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
-                          isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]'
+                      {/* Spacer, not a wrapper — the frame fills the whole tile
+                          behind it. `min-h-0` lets it shrink inside the fixed
+                          row instead of pushing the caption out of the tile. */}
+                      <span aria-hidden="true" className="block grow min-h-0" />
+                      <PhotoPanelCaption className="p-4">
+                        {isFeature && (
+                          <span className="font-subhead text-[11px] font-bold uppercase tracking-[0.12em] leading-tight text-light-gold mb-2">
+                            Most active
+                          </span>
                         )}
-                      >
-                        {city.name}
-                      </span>
-                      <span className="relative font-subhead text-xs font-semibold text-gold mt-1">
-                        {city.listingCount.toLocaleString()}{' '}
-                        {city.listingCount === 1 ? 'business' : 'businesses'}
-                        {stateCode ? (
-                          <>
-                            <span aria-hidden="true"> · </span>
-                            {stateCode}
-                          </>
-                        ) : null}
-                      </span>
-                      {isFeature && city.metro_area && (
-                        <span className="relative font-body text-[13px] text-ink-soft mt-1.5 truncate">
-                          {city.metro_area}
+                        <span
+                          className={cn(
+                            // Tiles are fixed-height, so a long city name has to clamp
+                            // rather than push the count line out of the tile.
+                            'font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
+                            isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]'
+                          )}
+                        >
+                          {city.name}
                         </span>
-                      )}
+                        <span className="font-subhead text-xs font-semibold text-light-gold mt-1">
+                          {city.listingCount.toLocaleString()}{' '}
+                          {city.listingCount === 1 ? 'business' : 'businesses'}
+                          {stateCode ? (
+                            <>
+                              <span aria-hidden="true"> · </span>
+                              {stateCode}
+                            </>
+                          ) : null}
+                        </span>
+                        {isFeature && city.metro_area && (
+                          <span className="font-body text-[13px] leading-tight text-off-white mt-1.5 truncate">
+                            {city.metro_area}
+                          </span>
+                        )}
+                      </PhotoPanelCaption>
                     </Link>
                   )
                 })}

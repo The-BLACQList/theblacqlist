@@ -219,6 +219,24 @@ This turns a flat text list into a magazine-grade editorial index.
 - **Phase A (now):** Keep the current white-box tiles. They work. Don't block launch on this.
 - **Phase B (V1):** Replace with photo tiles using the same overlay pattern as collections. Source 12 city photos from a paid stock library or through community submissions.
 
+#### ✅ Shipped — PR #23, 2026-08-09
+
+Phase B landed for **three of thirteen cities**, not twelve: Atlanta, Houston, and
+Chicago — the three with live listings. The other ten stay on the ember wash **by
+design, not by shortfall**, and `PhotoPanelGround` decides per tile by looking up
+`CITY_PHOTOS[city.slug]`, so a city opening later becomes photographic the moment a
+frame is added to the map and never before. A mixed grid is the intended end state
+here for the same reason it is on the category bento.
+
+Both consumers ground identically — `components/home/CityChapters.tsx` and
+`app/(public)/cities/page.tsx`.
+
+**Alt text names the city** (`alt="Atlanta skyline"`), which is the deliberate
+*opposite* of the editorial panels' `alt=""`. Those are empty because their
+filenames are invented aspirational business names that must never reach the
+accessibility tree (see [Naming caution](editorial-image-licenses.md#naming-caution));
+a skyline carries no such problem and the photograph is informative.
+
 ---
 
 ### Priority 6 — About Page
@@ -251,12 +269,141 @@ Use these four overlay patterns consistently across the site. Never invent a new
 
 | Name              | CSS                                                             | Use for                                                     |
 | ----------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Dark full**     | `bg-gradient-to-t from-black/80 via-black/40 to-transparent`    | Text at bottom of photo: collection cards, city tiles       |
+| **Dark full**     | `bg-gradient-to-t from-black/80 via-black/40 to-transparent`    | Text at bottom of photo: collection cards                   |
 | **Dark left**     | `bg-gradient-to-r from-deep-bg/90 via-deep-bg/70 to-deep-bg/40` | Text left-aligned over wide photos: homepage hero           |
 | **Dark vignette** | `bg-gradient-to-br from-black/60 via-transparent to-black/60`   | Full-screen section heroes with centered text               |
 | **Subtle scrim**  | `bg-black/30`                                                   | Light tinting when photo is already dark; card hover states |
 
 All overlays use `aria-hidden="true"`. They are purely decorative.
+
+### Grounded panels carry a feathered caption band — `PHOTO_PLATE_TINT` / `PHOTO_PLATE_VEIL`
+
+**None of the four patterns above apply to a grounded panel.** The triptych, the
+category bento, and the city tiles leave the picture itself untouched. Their text
+rides a band across the bottom of the frame that is part-transparent and fades
+upward into the photograph — `PHOTO_PLATE_TINT` (the color) and
+`PHOTO_PLATE_VEIL` (the geometry and ramp) in `lib/design/surfaces.ts`, assembled
+by `components/media/PhotoPanelCaption.tsx`.
+
+This surface has been through three states in one day and the differences are the
+whole point:
+
+| | What it covered | Why it moved on |
+| --- | --- | --- |
+| `PHOTO_SCRIM` | the **whole frame**, to hold text set over the picture | darkened every photograph in the product |
+| `PHOTO_PLATE` (solid) | a band **beside** the frame, opaque `deep-bg` | correct, but flat — the picture stopped at a hard line |
+| `PHOTO_PLATE_TINT` + `_VEIL` | a band **over the bottom of** the frame, part-transparent, feathered | current |
+
+The first move was a direction change rather than a tuning pass `[Decision —
+founder, 2026-08-09: "i hate the black overlay on every picture"]`. `PHOTO_SCRIM`
+existed because grounded panels are short and wide, so their text block ran from
+the bottom padding up past halfway and covering it meant holding near-black
+across two thirds of every frame. It cleared the floor and darkened every
+photograph in the product to do it.
+
+The second move recovered the picture the solid plate was hiding `[Decision —
+founder, 2026-08-09: "what about if the current black area was an overlay with a
+light ombre opacity to separate the words just enough, but I can still see the
+picture through it"]`. **The standing rule survives it intact** — nothing is laid
+across a photograph to solve a legibility problem. What is veiled is the caption
+band alone, and it is veiled to a measured alpha rather than a chosen one.
+
+**The constraint was never the photograph; it was small gold type on an unknown
+ground.** The count line is `text-xs`, so it owes **4.5:1** where the 19–40px
+white headlines get the 3:1 large-text allowance. The solid plate answered that
+by making the ground a constant — gold **8.16:1**, white **20.01:1**, ink-soft
+**9.78:1** on `deep-bg` `[Measured — scripts/measure-panel-contrast.ts, 144 text
+spans, 2026-08-09]`. A translucent band gives that constant back up, so the ratio
+returns to being per-frame and has to be measured as pixels rather than derived
+from a token.
+
+`scripts/measure-plate-contrast.ts` does that: it hides only the caption text,
+leaves the veil and its blur painted, screenshots at 1:1, and composites each
+run's own color over **every** pixel under it, keeping the worst. It sweeps the
+alpha in the same pass:
+
+| `PHOTO_PLATE_TINT` alpha | runs below floor | worst gold |
+| --- | --- | --- |
+| 0.88 | 0 | 6.16:1 |
+| **0.82 (shipped)** | **0** | **5.00:1** |
+| 0.80 | 0 | 4.70:1 |
+| 0.78 | 3 | 4.35:1 ✗ |
+| 0.76 | 8 | 4.03:1 ✗ |
+
+`[Measured — scripts/measure-plate-contrast.ts, 123 text runs × 2 routes ×
+375/768/1280, 2026-08-09]`. 0.80 passes too and was not taken: it clears by 4%,
+inside the range a different image decode or text antialiasing can move, where
+0.82 clears by 11%.
+
+Four consequences worth knowing before you touch a grounded panel:
+
+1. **The crop got gentler twice.** Text off the frame dropped the vertical cut
+   from 33–41% to ~16%; filling the whole panel behind the caption dropped the
+   bento's from ~47% to ~11%. Every `PHOTO_FOCAL` value below is applied to a
+   milder crop than it was tuned against — the safe direction.
+2. **The ramp is anchored in pixels, not percentages.** Anchored at 58% of the
+   veil's own height, a tall caption pushed the fade down into its own first
+   line: the cities feature tile's "Most active" eyebrow measured **3.87:1** over
+   a bright skyline `[Measured — 1280px, 2026-08-09]`. `calc(100%-3.5rem)` is the
+   caption's exact top edge, so caption height stops being a variable.
+3. **`backdrop-blur` is load-bearing.** It collapses the local neighbourhood into
+   an average, so a busy ground stops having a worst pixel far from its mean.
+   That buys real alpha back for the same measured ratio. Removing it is a
+   contrast change, not a style change.
+4. **The picture must lead the caption.** The band is content-height, so a
+   two-line name grows it; size fixed grid rows against the *worst* tile, not the
+   typical one.
+
+**If type on a panel is hard to read, do not reach for more alpha first.**
+Re-measure, check the ramp anchor, and only then consider the type — swapping the
+count line to `text-light-gold` `#ffd867` buys about 15 points of transparency
+and is the lever of last resort.
+
+### Panels with no photograph — `PHOTO_ABSENT`
+
+Most categories and most cities will never have a frame, so the unphotographed
+tile is permanent furniture, not a gap. It renders `PHOTO_ABSENT`: a graded
+charcoal ground with the brand's gold lifted into the same top-right corner the
+ember wash uses, so it reads as the same family as a photographed tile.
+
+**As of 2026-08-09 it renders nowhere** — the category bento is 9 of 9
+photographic and every live city has a skyline. It stays in `surfaces.ts` anyway:
+the next category added, or any frame withdrawn on a rights question, falls
+straight onto it, and a fallback written only once it is needed is a fallback that
+does not work.
+
+It is deliberately louder than `EMBER_WASH` and kept as a **separate** token.
+The wash's other three consumers (`TheAvenues`, `BlacqlightFeature`,
+`ShowcaseCarousel`) set gold and white text directly on it, so raising its alpha
+would cut their contrast to buy brightness on a surface that has no such problem.
+Nothing sits on `PHOTO_ABSENT`, so it owes no ratio and is free to carry color.
+`[Observed — the 0.16 wash read as a void once the scrim came off and the frames
+beside it went to full brightness, 2026-08-09]`
+
+### Focal points — `PHOTO_FOCAL`
+
+`object-cover` centers by default, which is wrong for a short wide tile: a 3:2
+source in a 2.2:1 tile loses ~16% off the top, and that is exactly where faces sit.
+
+`PHOTO_FOCAL` in `lib/design/surfaces.ts` maps **frame path → `object-position`
+class**, and `PhotoPanelGround` looks it up itself. Keyed on the photograph rather
+than the surface, because a face sits in the same place wherever the frame is used
+— so one map correction fixes every surface at once and no call site changes.
+
+Two rules that are easy to get wrong:
+
+1. **Lower percentages preserve heads.** With a total vertical cut `c` and an
+   `object-position` y-fraction `P`, the visible band is `[c·P, 1 − c·(1−P)]`. A
+   lower `P` spends more of the cut on the bottom, which the scrim covers anyway.
+2. **Do not re-crop the source files.** The optimizer deliberately preserves the
+   native 3:2 so one file serves a wide hero and a square card
+   ([Aspect ratio](editorial-image-licenses.md#aspect-ratio)). The fix belongs at
+   render time.
+
+Values must be **literal strings** so Tailwind's class scan can see them — an
+interpolated class is a class that never ships. Set each value by reading the
+source frame, then verify it in a real render; the frame alone will mislead you by
+a few points of position.
 
 ---
 
@@ -407,15 +554,19 @@ The deep-bg on the "Your BLACQList Page" and final CTA sections is a deliberate 
 
 ### Amendment — 2026-08-09: the trio and the bento take photography
 
-[Decision — 2026-08-09] Rows 1 and 2 above are overridden. Both surfaces now render a licensed editorial photograph under the shared legibility scrim, via `PhotoPanelGround`.
+[Decision — 2026-08-09] Rows 1 and 2 above are overridden. Both surfaces now render a licensed editorial photograph via `PhotoPanelGround`, with the panel's text on the feathered caption band rather than over the picture.
 
-**Why the original reasoning didn't hold.** Row 1 argued photography would compete with the typography. In practice the trio's three panels were the largest dark voids on the homepage and read as unfinished — the typography wasn't competing with anything, it was carrying a blank ground alone. Row 2 argued photography would be too noisy at small tile sizes; the scrim resolves that, and the feature tile is not small.
+**Why the original reasoning didn't hold.** Row 1 argued photography would compete with the typography. In practice the trio's three panels were the largest dark voids on the homepage and read as unfinished — the typography wasn't competing with anything, it was carrying a blank ground alone. Row 2 argued photography would be too noisy at small tile sizes; moving the text off the picture resolves that, and the feature tile is not small.
 
-**The standing principle is unchanged.** "Specificity over stock" still governs: a photograph goes on a tile only where a real frame fits the subject. Nine of twenty-five top-level categories are mapped and the other sixteen keep the ember wash **permanently**. A mixed grid is the intended end state — do not fill the remainder for visual uniformity, and do not stretch a frame to fit a category it does not depict.
+**The standing principle is unchanged.** "Specificity over stock" still governs: a photograph goes on a tile only where a real frame fits the subject. Fourteen of twenty-five top-level categories are mapped and the other eleven keep the ember wash **permanently**. A mixed grid is still the intended end state for the full category list — do not fill the remainder for visual uniformity, and do not stretch a frame to fit a category it does not depict.
+
+**Amended 2026-08-09 (PR #23):** three more frames were added — `food-dining`, `fashion-apparel`, `arts-culture` — taking the *rendered* bento from 4 of 9 photographic to 7 of 9. All three picks are people-free, which is what lets them survive a short wide tile.
+
+**Amended again, same day:** `healthcare` and `social-media-marketing` were filled from the staging archive `[Decision — founder, 2026-08-09: "I also want the two images back in the bento area"]`, taking the rendered bento to **9 of 9**. The note that previously sat here argued both should stay on the wash, and its objection was sound rather than obsolete — every healthcare candidate was a head-at-top portrait or a cold clinical frame, and nothing in the *pool* depicted marketing honestly. What changed is the source: `physician-portrait` and `agency-desk` came out of the archive, not the pool, and the crop got gentler (~11% cut, down from ~47%) once the frame filled the whole panel. `physician-portrait` is still the brightest ground under the gold count line anywhere in the set — check it first whenever `PHOTO_PLATE_TINT` moves. Both depict identifiable people, so restriction 2 of the Canva license is live on them; see `editorial-image-licenses.md`.
 
 **Rows 3–6 stand.** Legal, dashboard/admin, auth, and footer remain photo-free for the reasons given.
 
-**Where the map lives:** `CATEGORY_PHOTOS` in `lib/design/surfaces.ts`. Alt text is empty on every editorial photo in both surfaces — the panel heading carries the meaning, and empty alt is also what keeps the invented filenames out of the accessibility tree (see the naming caution in `editorial-image-licenses.md`).
+**Where the map lives:** `CATEGORY_PHOTOS` in `lib/design/surfaces.ts`. Alt text is empty on every editorial photo in both surfaces — the panel heading carries the meaning, and empty alt is also what keeps the invented filenames out of the accessibility tree (see the naming caution in `editorial-image-licenses.md`). The city skylines are the exception: they pass an explicit `alt` because there the photograph is informative and names a real place.
 
 ---
 
@@ -429,7 +580,7 @@ The deep-bg on the "Your BLACQList Page" and final CTA sections is a deliberate 
 | 4        | Collections index cards         | Medium — collection card component                         | 1 photo per collection           |
 | 5        | About page                      | Low — add hero image + inline pull photo                   | 1–2 licensed or community photos |
 | 6        | For-business page               | Medium — add mockup/screenshot visual                      | Product screenshot or mockup     |
-| 7        | City tiles on homepage          | Low complexity, but needs 12 city photos                   | 12 city photos — defer to V1     |
+| 7        | City tiles on homepage          | ✅ Shipped PR #23 — `PhotoPanelGround` + `CITY_PHOTOS`      | 3 city photos (live cities only) |
 
 ---
 
