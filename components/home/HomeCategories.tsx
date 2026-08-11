@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { EMBER_WASH } from '@/lib/design/surfaces'
+import { CATEGORY_PHOTOS } from '@/lib/design/surfaces'
+import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
 
 export interface CategoryTile {
   name: string
@@ -14,9 +15,14 @@ interface Props {
 
 /**
  * Bento category grid with live counts — the biggest category earns the big
- * tile (editorial hierarchy, not decoration). Designed dark/gold surfaces
- * until commissioned category photography lands (LCI phase: photography is
- * the founder's sourcing lane; we never substitute stock).
+ * tile (editorial hierarchy, not decoration).
+ *
+ * Tiles are grounded in a licensed editorial photograph where one exists
+ * [Decision — 2026-08-09], which overrides row 2 of the placement table in
+ * photographic-style-direction.md ("categories grid stays text-only"). Only
+ * nine of twenty-five top-level categories are mapped, so most days some tiles
+ * are photographic and some are the ember wash — that mix is the intended end
+ * state, not a gap to close. See `CATEGORY_PHOTOS`.
  */
 export function HomeCategories({ categories }: Props) {
   if (categories.length === 0) return null
@@ -43,10 +49,14 @@ export function HomeCategories({ categories }: Props) {
                 i === 0 && 'col-span-2 row-span-2'
               )}
             >
-              <span
-                className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-200"
-                aria-hidden="true"
-                style={{ background: EMBER_WASH }}
+              <PhotoPanelGround
+                src={CATEGORY_PHOTOS[category.slug]}
+                // The feature tile spans two of four columns; the rest take one.
+                sizes={
+                  i === 0
+                    ? '(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 640px'
+                    : '(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 320px'
+                }
               />
               <span
                 className={cn(

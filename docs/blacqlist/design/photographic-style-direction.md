@@ -393,14 +393,29 @@ Not every section should have photography. These sections intentionally remain c
 
 | Section                                              | Why                                                                      |
 | ---------------------------------------------------- | ------------------------------------------------------------------------ |
-| Homepage feature trio (Discover / Support / Connect) | The accent dots and typography are the design; photography would compete |
-| Categories grid                                      | Text-only tiles; photography would be too noisy at small tile sizes      |
+| ~~Homepage feature trio (Discover / Support / Connect)~~ | **Amended 2026-08-09 — see below. Now photographic.**                |
+| ~~Categories grid~~                                  | **Amended 2026-08-09 — see below. Now photographic where mapped.**       |
+| The Avenues band                                     | 120px tall across six columns — a photo at that size is texture, not an image, and two photographic bands stacked flattens the hierarchy the triptych above it owns |
 | Legal pages (Privacy, Terms, Cookies)                | Documents — clean white background is correct                            |
 | Dashboard and admin                                  | Application UI — photography adds cognitive load to functional screens   |
 | Auth pages (sign-in, sign-up)                        | Focused task completion; photography is a distraction here               |
 | Footer                                               | Dark solid background; photography would undermine legibility            |
 
-The deep-bg (`#19191E`) on the "Your BLACQList Page" and final CTA sections is a deliberate choice — the brand's cinematic authority comes from the dark surface itself, not from a photo. Do not add photography to those sections.
+The deep-bg on the "Your BLACQList Page" and final CTA sections is a deliberate choice — the brand's cinematic authority comes from the dark surface itself, not from a photo. Do not add photography to those sections.
+
+> **Note on the token:** this document elsewhere calls deep-bg `#19191E`. The value that actually ships is **`#08080a`** (`--color-deep-bg`, `app/globals.css:17`). The hex here predates the token; the token is authoritative.
+
+### Amendment — 2026-08-09: the trio and the bento take photography
+
+[Decision — 2026-08-09] Rows 1 and 2 above are overridden. Both surfaces now render a licensed editorial photograph under the shared legibility scrim, via `PhotoPanelGround`.
+
+**Why the original reasoning didn't hold.** Row 1 argued photography would compete with the typography. In practice the trio's three panels were the largest dark voids on the homepage and read as unfinished — the typography wasn't competing with anything, it was carrying a blank ground alone. Row 2 argued photography would be too noisy at small tile sizes; the scrim resolves that, and the feature tile is not small.
+
+**The standing principle is unchanged.** "Specificity over stock" still governs: a photograph goes on a tile only where a real frame fits the subject. Nine of twenty-five top-level categories are mapped and the other sixteen keep the ember wash **permanently**. A mixed grid is the intended end state — do not fill the remainder for visual uniformity, and do not stretch a frame to fit a category it does not depict.
+
+**Rows 3–6 stand.** Legal, dashboard/admin, auth, and footer remain photo-free for the reasons given.
+
+**Where the map lives:** `CATEGORY_PHOTOS` in `lib/design/surfaces.ts`. Alt text is empty on every editorial photo in both surfaces — the panel heading carries the meaning, and empty alt is also what keeps the invented filenames out of the accessibility tree (see the naming caution in `editorial-image-licenses.md`).
 
 ---
 
