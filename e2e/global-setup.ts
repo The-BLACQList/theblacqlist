@@ -2,9 +2,14 @@ import { createClient } from '@supabase/supabase-js'
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers/auth'
 
 /**
- * Provisions (idempotently) the admin account used by the J5 /admin/claims
- * accessibility scan. Uses the Supabase service-role client so it bypasses RLS
- * and can write to user_roles. Safe to run repeatedly against a local DB.
+ * Provisions (idempotently) the admin account the e2e suite signs in as. Uses
+ * the Supabase service-role client so it bypasses RLS and can write to
+ * user_roles.
+ *
+ * Idempotent means *reconciled*, not merely *present*: the account's password
+ * and confirmation state are set on every run, so a database that outlives a
+ * single run (staging, in CI) cannot drift out from under the credentials in
+ * helpers/auth.ts.
  *
  * The user_roles UNIQUE (user_id, role, listing_id) constraint treats NULL
  * listing_id values as distinct, so we check for an existing admin row before
@@ -45,6 +50,24 @@ async function globalSetup() {
       throw new Error(`global-setup: createUser failed — ${createError?.message}`)
     }
     userId = created.user.id
+  } else {
+    // Reconcile the password on every run. Until 2026-08-11 this branch did
+    // nothing, which held only against a throwaway local database: on a
+    // long-lived project the account survives from an earlier run with an
+    // earlier password, so setup printed "admin ready" while every UI sign-in
+    // failed. That is exactly how the first CI e2e run failed — the sign-in
+    // server action answered 200 with {"error":"Incorrect email or password."}
+    // and loginAsAdmin() timed out waiting for a redirect that was never coming.
+    //
+    // ADMIN_EMAIL is a test fixture (a11y-admin@test.local, unroutable TLD), so
+    // this only ever rewrites an account this setup owns.
+    const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+      password: ADMIN_PASSWORD,
+      email_confirm: true,
+    })
+    if (updateError) {
+      throw new Error(`global-setup: updateUserById failed — ${updateError.message}`)
+    }
   }
 
   // 2. Ensure a platform-wide admin role row exists (listing_id IS NULL).
