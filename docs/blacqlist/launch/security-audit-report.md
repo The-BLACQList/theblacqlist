@@ -8,6 +8,40 @@
 
 ---
 
+## Amendment — 2026-08-11
+
+**A05 was wrong when this report was signed, and the way it was wrong is worth
+recording.** The row asserted that HSTS, `X-Frame-Options`,
+`X-Content-Type-Options` and `Referrer-Policy` were all active. A `curl -sI`
+against production found **one** of the four — HSTS — and that one is a Vercel
+platform default, not something this project configures. It also found an
+unlisted `x-powered-by: Next.js`.
+
+The source of the error is in the Method line above: this was *"a documentation
+audit of already-executed and statically-verifiable controls."* For response
+headers, the document it audited against
+(`security-and-privacy-plan.md` §15) described a `headers()` function in
+`next.config.ts` that did not exist. Auditing a plan against a plan agrees with
+itself. **A control that is asserted in prose and never observed on the wire has
+not been audited** — and a signed document asserting protections the build does
+not have is worse than no document, because it stops anyone from looking again.
+
+Fixed in the same change that produced this amendment: the three missing headers
+are now set in `next.config.ts` from `lib/security/headers.ts`, and
+`poweredByHeader: false` removes the leak. A05 below is rewritten. `curl -sI`
+against production after deploy is the verification, not the build passing.
+
+**Still open, deliberately:** no CSP (V4, needs a report-only soak) and no
+`Permissions-Policy` (unmeasured interaction with two `capture="environment"`
+file inputs — see `security-and-privacy-plan.md` §15). Neither is claimed as
+present anywhere.
+
+Any future re-audit of this report should treat every remaining "active" or
+"enforced" claim as unverified until something observes it from outside the
+codebase.
+
+---
+
 ## Summary
 
 | Category | Findings | Critical | High | Medium | Low |
@@ -94,7 +128,7 @@ Direct-API IDOR probes (substituted user IDs, param injection) passed in the 202
 | A02 | Cryptographic Failures | HTTPS/TLS enforced; Supabase Auth bcrypt; secrets server-only (§5); analytics IP stored SHA-256-hashed only | — | PASS |
 | A03 | Injection | Supabase parameterized queries throughout; zod validation at boundaries; no string-built SQL | — | PASS |
 | A04 | Insecure Design | sign-up → email-verify → onboarding; tokens single-use via Supabase; draft/submitted/reviewed lifecycle in service layer | — | PASS |
-| A05 | Security Misconfiguration | **No CSP header at MVP** (other security headers active: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) | Medium | **Accepted (MVP)** — ticket-tracked; CSP pre-V2 |
+| A05 | Security Misconfiguration | **Corrected 2026-08-11 — this row was wrong when it was signed.** It asserted four headers active; production served **one**, HSTS, and that one is a Vercel platform default rather than project config. `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy` were absent, and an unlisted `x-powered-by: Next.js` was being served. Now: all three set in `next.config.ts` from `lib/security/headers.ts`, `x-powered-by` removed, **still no CSP**, `Permissions-Policy` still unset (see `security-and-privacy-plan.md` §15) | Medium | **Was: Accepted (MVP).** Now: headers shipped; CSP deferred to V4 behind a report-only soak |
 | A06 | Vulnerable & Outdated Components | `pnpm audit`: 6 vulns (1 high `@babel/core`, 4 moderate incl. **`next` <16.2.6**, 1 low) — **all transitive build-chain** (Sentry plugins, styled-jsx, postcss), none runtime-exposed | Low–Medium | **Action:** bump `next` ≥16.2.6 + refresh build-chain (`pnpm update`) before launch |
 | A07 | Auth Failures | Session in httpOnly cookies; 7-day JWT with refresh; middleware refresh verified; email verification required | — | PASS |
 | A08 | Data Integrity | No CSP (see A05); third-party scripts limited to Vercel Analytics/Speed Insights + Sentry (first-party-ish, no ad tech) | Low | Accepted (MVP) |

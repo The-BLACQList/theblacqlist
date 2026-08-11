@@ -72,13 +72,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      # Scoped deliberately. The full e2e suite (51 tests, a11y + contrast +
+      # Scoped deliberately. The full e2e suite (a11y + contrast +
       # cross-browser) is not CI-ready — browser-rendering assertions against a
       # dev server flake, and a job that gets muted after its third false red is
-      # worse than no job. This runs the one spec that guards a defect a green
-      # build already shipped once: the owner dashboard's Saves and Shares.
-      # Widen the path list as other specs are proven stable in CI.
-      - run: pnpm exec playwright test e2e/analytics-emission.spec.ts
+      # worse than no job. This runs the specs that guard defects a green build
+      # already shipped once:
+      #   analytics-emission — the owner dashboard's Saves and Shares.
+      #   security-headers   — response headers a signed audit claimed were
+      #                        active while production served one of four.
+      # Both assert on data rather than on rendering, so neither has a flake
+      # surface. Widen the path list as other specs are proven stable in CI.
+      - run: pnpm exec playwright test e2e/analytics-emission.spec.ts e2e/security-headers.spec.ts
         env:
           # Same STAGING project the build job uses. The spec creates and then
           # deletes its own throwaway listing, so it never depends on — or
