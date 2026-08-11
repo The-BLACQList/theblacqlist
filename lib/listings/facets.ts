@@ -62,6 +62,41 @@ export interface RawFacetParams {
   open_now?: boolean
 }
 
+/**
+ * Slugs the caller asked to filter by that do not exist.
+ *
+ * This type exists because "not asked for" and "asked for, but no such thing"
+ * both used to collapse to `null` in ResolvedFacetParams — and `null` means
+ * "apply no filter" in search_listings_faceted. So `?city=not-a-real-city`
+ * silently dropped the city filter and returned the entire index, which reads
+ * to a caller as "every listing is in that city." Keeping the misses separate
+ * is what lets a caller answer 400 instead of 200-with-wrong-data.
+ */
+export interface UnresolvedFacets {
+  city?: string
+  category?: string
+  attrs?: string[]
+}
+
+/**
+ * The result of resolution: RPC args plus whatever failed to resolve.
+ *
+ * Deliberately a wrapper rather than extra keys on ResolvedFacetParams —
+ * searchFacetedIds and getFacetCounts spread that object straight into the RPC
+ * call, and PostgREST rejects an unknown parameter. A wrapper makes that
+ * mistake unrepresentable instead of relying on every future RPC wrapper
+ * remembering to strip a field.
+ */
+export interface FacetResolution {
+  params: ResolvedFacetParams
+  unresolved: UnresolvedFacets
+}
+
+/** True when any requested slug failed to resolve. */
+export function hasUnresolved(u: UnresolvedFacets): boolean {
+  return !!(u.city || u.category || (u.attrs && u.attrs.length > 0))
+}
+
 /** Resolved RPC arguments (ids instead of slugs). */
 export interface ResolvedFacetParams {
   p_q: string | null
@@ -136,11 +171,17 @@ export async function loadAttributeGroups(
     .filter((g) => g.values.length > 0)
 }
 
-/** Resolves category/city/attribute slugs to ids and assembles the RPC args. */
+/**
+ * Resolves category/city/attribute slugs to ids and assembles the RPC args,
+ * reporting alongside them any requested slug that does not exist.
+ *
+ * Callers that serve a public contract (app/api/search) should reject on
+ * `unresolved` rather than run the query — see UnresolvedFacets.
+ */
 export async function resolveFacetParams(
   supabase: AnyClient,
   raw: RawFacetParams
-): Promise<ResolvedFacetParams> {
+): Promise<FacetResolution> {
   const [categoryRes, cityRes, attrRes] = await Promise.all([
     raw.category
       ? supabase.from('categories').select('id').eq('slug', raw.category).maybeSingle()
@@ -149,27 +190,42 @@ export async function resolveFacetParams(
       ? supabase.from('cities').select('id').eq('slug', raw.city).maybeSingle()
       : Promise.resolve({ data: null }),
     raw.attrs && raw.attrs.length > 0
-      ? supabase.from('attribute_values').select('id').in('slug', raw.attrs)
+      ? // `slug` is selected as well as `id` so a miss can be named back to the
+        // caller — .in() returns only the rows that matched, never the gaps.
+        supabase.from('attribute_values').select('id, slug').in('slug', raw.attrs)
       : Promise.resolve({ data: [] }),
   ])
 
   const categoryId = (categoryRes.data as { id: string } | null)?.id ?? null
   const cityId = (cityRes.data as { id: string } | null)?.id ?? null
-  const attrIds = ((attrRes.data as { id: string }[] | null) ?? []).map((r) => r.id)
+  const attrRows = (attrRes.data as { id: string; slug: string }[] | null) ?? []
+  const attrIds = attrRows.map((r) => r.id)
+
+  const unresolved: UnresolvedFacets = {}
+  if (raw.category && !categoryId) unresolved.category = raw.category
+  if (raw.city && !cityId) unresolved.city = raw.city
+  if (raw.attrs && raw.attrs.length > 0) {
+    const found = new Set(attrRows.map((r) => r.slug))
+    const missing = raw.attrs.filter((s) => !found.has(s))
+    if (missing.length > 0) unresolved.attrs = missing
+  }
 
   const price = raw.price?.filter((p): p is PriceRange => (PRICE_RANGES as string[]).includes(p)) ?? []
 
   return {
-    p_q: raw.q?.trim() || null,
-    p_category_id: categoryId,
-    p_city_id: cityId,
-    p_entity_type: raw.type || null,
-    p_trust_tier: raw.trust_tier || null,
-    p_location_type: raw.location_type || null,
-    p_ownership_label: raw.ownership || null,
-    p_price_ranges: price.length > 0 ? price : null,
-    p_attribute_values: attrIds.length > 0 ? attrIds : null,
-    p_open_now: raw.open_now ? true : null,
+    params: {
+      p_q: raw.q?.trim() || null,
+      p_category_id: categoryId,
+      p_city_id: cityId,
+      p_entity_type: raw.type || null,
+      p_trust_tier: raw.trust_tier || null,
+      p_location_type: raw.location_type || null,
+      p_ownership_label: raw.ownership || null,
+      p_price_ranges: price.length > 0 ? price : null,
+      p_attribute_values: attrIds.length > 0 ? attrIds : null,
+      p_open_now: raw.open_now ? true : null,
+    },
+    unresolved,
   }
 }
 

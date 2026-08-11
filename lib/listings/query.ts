@@ -6,6 +6,7 @@ import {
   legacyFacetedIds,
   getFacetCounts,
   loadAttributeGroups,
+  hasUnresolved,
   SORT_KEYS,
   type SortKey,
   type FacetGroupData,
@@ -199,7 +200,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       ? (params.sort as SortKey)
       : 'relevance'
 
-  const resolved = await resolveFacetParams(supabase, {
+  const { params: resolved, unresolved } = await resolveFacetParams(supabase, {
     q: params.q,
     category: params.category,
     city: params.city,
@@ -212,6 +213,24 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     open_now: params.open_now,
   })
 
+  const wantFacets = !!params.withFacets
+
+  // A slug that does not exist is not "no filter" — it is a filter nothing can
+  // satisfy. Falling through here would run the query with the bad filter simply
+  // dropped, which tells the visitor every listing in the directory is in a city
+  // that does not exist. Zero results plus the existing empty state is honest.
+  // The sidebar groups still load so the page keeps its filter controls.
+  if (hasUnresolved(unresolved)) {
+    const groups = wantFacets ? await loadAttributeGroups(supabase, params.type) : null
+    return {
+      entities: [],
+      total: 0,
+      page,
+      pageSize: LISTINGS_PAGE_SIZE,
+      facets: groups ? { groups, counts: { attribute: {}, price: {}, openNow: 0 } } : undefined,
+    }
+  }
+
   // When the user is actively faceting (attributes / price / open-now), suppress
   // sponsored injection so off-filter sponsored listings don't appear.
   const deepFilter = !!(
@@ -219,7 +238,6 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     resolved.p_price_ranges ||
     resolved.p_open_now
   )
-  const wantFacets = !!params.withFacets
 
   // Build the sponsored query (page 1, no deep filter) so it runs in parallel.
   let spQueryPromise: Promise<{ data: unknown[] | null }> | null = null

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { searchSchema } from '@/lib/validations/search'
-import { searchListings } from '@/lib/services/search'
+import { searchListings, UnknownFilterValueError } from '@/lib/services/search'
 
 const ANON_LIMIT = 60
 const AUTH_LIMIT = 120
@@ -72,7 +72,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         limit: parsed.data.limit,
       },
     })
-  } catch {
+  } catch (err) {
+    // A filter slug that doesn't exist is the caller's mistake, not an outage.
+    // Answering 200 with the unfiltered index (the old behavior) is worse than
+    // any error: it looks like a valid result set.
+    if (err instanceof UnknownFilterValueError) {
+      return NextResponse.json(
+        { error: err.message, code: 'UNKNOWN_FILTER_VALUE', fields: err.fields },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { error: 'Search is temporarily unavailable.', code: 'INTERNAL_ERROR' },
       { status: 500 }
