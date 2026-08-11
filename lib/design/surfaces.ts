@@ -132,10 +132,32 @@ export const PHOTO_PLATE_TINT = 'rgba(8,8,10,0.67)'
  * band is solid enough to hold type where the type is, and dissolves into the
  * photograph above it with no edge to see.
  *
- * The ramp is a `mask-image` rather than a gradient background because the veil
- * also carries `backdrop-blur`. A gradient background would fade the tint while
- * the blur kept a hard rectangular top edge; the mask fades **both together**, so
- * the tint, the blur, and the element all end at the same invisible place.
+ * The ramp is a `mask-image` rather than a gradient background. That was
+ * originally forced: the veil carried `backdrop-blur`, and a gradient background
+ * would have faded the tint while the blur kept a hard rectangular top edge,
+ * where the mask fades **both together**. The blur is gone now (below), so the
+ * two approaches would be equivalent — the mask stays because it is already
+ * correct and because it is what lets a blur come back without a rewrite.
+ *
+ * **There is no `backdrop-blur` on this veil, and its removal is the fix for a
+ * real defect rather than a taste call.** It shipped at `backdrop-blur-[6px]`.
+ * That is invisible on a soft, large subject — a plate of food, a portrait — and
+ * it is *destructive* on a skyline, which is nothing but thin towers and window
+ * grids. High-frequency detail is exactly what a blur removes, so on the three
+ * city frames the band stopped reading as a photograph seen through a veil and
+ * started reading as an opaque bar. The founder's report was that the city
+ * panels "didn't get the same opacity treatment as the bento area" — the alpha,
+ * the mask and the blur were in fact byte-identical on both surfaces
+ * `[Measured — computed styles on / at 375/768/1280, 2026-08-10]`; it was the
+ * blur's *effect* that was not identical, because the subjects are not
+ * `[Observed — blur sweep at 0/2/3/4/6px over atlanta.webp, 2026-08-10]`.
+ *
+ * Removing it spends what this file previously held in reserve as the lever for
+ * pushing the alpha lower, so the reserve is now the alpha itself. It cost
+ * almost nothing to spend: the in-situ measurement *with* blur was 5.08:1 and
+ * the worst-pixel bound computed over the source pixels *ignoring* blur was
+ * 5.05:1, so the blur was carrying ~0.03:1 of the margin — and the harness
+ * re-run after removal confirms it directly (see `PHOTO_PLATE_TINT`).
  *
  * **The ramp is anchored in pixels, not percentages, and that is a correctness
  * fix rather than a preference.** It first ran as `#000 58%, transparent 100%`,
@@ -156,7 +178,7 @@ export const PHOTO_PLATE_TINT = 'rgba(8,8,10,0.67)'
  * Consumers own the caption's padding; this token is the surface only.
  */
 export const PHOTO_PLATE_VEIL =
-  'absolute inset-x-0 bottom-0 -top-14 pointer-events-none backdrop-blur-[6px] ' +
+  'absolute inset-x-0 bottom-0 -top-14 pointer-events-none ' +
   '[-webkit-mask-image:linear-gradient(to_top,#000_0%,#000_calc(100%-3.5rem),transparent_100%)] ' +
   '[mask-image:linear-gradient(to_top,#000_0%,#000_calc(100%-3.5rem),transparent_100%)]'
 
