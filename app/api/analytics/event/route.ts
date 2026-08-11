@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import type { Json } from '@/lib/supabase/types'
+import { createClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
 import { VALID_EVENT_NAMES } from '@/lib/analytics/constants'
 
 const MAX_PROPERTIES_BYTES = 5 * 1024 // 5 KB
@@ -88,15 +88,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // anonymous events are valid
   }
 
-  const serviceClient = createServiceClient()
-
-  void serviceClient.from('analytics_events').insert({
+  // This was `void serviceClient.from('analytics_events').insert({...})` until
+  // 2026-08-11, which inserted nothing. A PostgREST query builder is lazy — it
+  // only issues its request when something calls .then() on it. `void` does not,
+  // so the statement built a request object and discarded it. Every client-side
+  // event this endpoint has ever accepted was dropped, and it returned 200 each
+  // time, so nothing anywhere reported a failure.
+  //
+  // trackServerEvent awaits the insert inside after(), which both fires it and
+  // keeps it off the response path. Same three server actions still carry the
+  // original `void` pattern — checkpoint 1.15.
+  trackServerEvent({
     event_name,
     entity_id: (entity_id as string | null | undefined) ?? null,
     entity_type: (entity_type as string | null | undefined) ?? null,
     user_id: userId,
     session_id: (session_id as string | null | undefined) ?? null,
-    properties: (properties ?? {}) as Json,
+    properties: (properties ?? {}) as Record<string, unknown>,
   })
 
   return NextResponse.json({ data: { success: true } })

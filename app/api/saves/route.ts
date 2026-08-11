@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 
 function isUUID(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
@@ -59,6 +61,18 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Owner-dashboard "Saves" reads this event. Nothing emitted it before
+  // 2026-08-11, so the metric was structurally zero for every paying owner.
+  // entity_type must be 'listing' and action must be 'save' — the nightly
+  // rollup filters on both (20260515000000_analytics_aggregation.sql).
+  trackServerEvent({
+    event_name: ANALYTICS_EVENTS.SAVE_TOGGLED,
+    entity_type: 'listing',
+    entity_id: listingId,
+    user_id: user.id,
+    properties: { action: 'save', source: 'entity_page' },
+  })
+
   return NextResponse.json({ data: { saved: true, listing_id: listingId } }, { status: 201 })
 }
 
@@ -84,6 +98,16 @@ export async function DELETE(request: NextRequest) {
   }
 
   await supabase.from('saves').delete().eq('user_id', user.id).eq('listing_id', listingId)
+
+  // Unsaves are recorded but excluded from the Saves metric by the action
+  // filter — they exist so the owner dashboard can show a net figure later.
+  trackServerEvent({
+    event_name: ANALYTICS_EVENTS.SAVE_TOGGLED,
+    entity_type: 'listing',
+    entity_id: listingId,
+    user_id: user.id,
+    properties: { action: 'unsave', source: 'entity_page' },
+  })
 
   return new NextResponse(null, { status: 204 })
 }

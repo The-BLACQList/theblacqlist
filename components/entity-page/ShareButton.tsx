@@ -3,34 +3,45 @@
 import { useState } from 'react'
 import { Share2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { track } from '@/lib/analytics/client'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 
 interface Props {
   listingName: string
   listingId: string
   className?: string
+  /** Sizes the icon so a caller can match its own button scale exactly. */
+  iconClassName?: string
   tabIndex?: number
 }
 
-export function ShareButton({ listingName, listingId, className, tabIndex }: Props) {
+export function ShareButton({
+  listingName,
+  listingId,
+  className,
+  iconClassName,
+  tabIndex,
+}: Props) {
   const [copied, setCopied] = useState(false)
 
   async function handleShare() {
     const url = window.location.href
     const title = `${listingName} | The BLACQList`
+    const canNativeShare = typeof navigator !== 'undefined' && 'share' in navigator
 
-    // Fire analytics event (fire-and-forget)
-    void fetch('/api/analytics/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: 'listing_shared',
-        entity_type: 'listing',
-        entity_id: listingId,
-        properties: { source: 'entity_page' },
-      }),
-    }).catch(() => {})
+    // Fire-and-forget. Goes through track() so it carries a session_id and uses
+    // sendBeacon — which matters here because navigator.share can navigate away
+    // before a plain fetch resolves. The hand-rolled fetch this replaced posted
+    // 'listing_shared', which is not in ANALYTICS_EVENTS, so the route rejected
+    // every share with a 400 and the owner dashboard's Shares was always zero.
+    track({
+      event_name: ANALYTICS_EVENTS.SHARE_INITIATED,
+      entity_type: 'listing',
+      entity_id: listingId,
+      properties: { source: 'entity_page', method: canNativeShare ? 'native_share' : 'copy_link' },
+    })
 
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+    if (canNativeShare) {
       try {
         await navigator.share({ title, url })
         return
@@ -61,9 +72,9 @@ export function ShareButton({ listingName, listingId, className, tabIndex }: Pro
       )}
     >
       {copied ? (
-        <Check className="size-4" aria-hidden="true" />
+        <Check className={cn('size-4', iconClassName)} aria-hidden="true" />
       ) : (
-        <Share2 className="size-4" aria-hidden="true" />
+        <Share2 className={cn('size-4', iconClassName)} aria-hidden="true" />
       )}
     </button>
   )

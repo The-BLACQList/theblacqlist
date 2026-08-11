@@ -18,5 +18,26 @@ export async function loginAsAdmin(page: Page) {
   // confirms both authentication and the admin role.
   // Match on pathname only — a glob/regex would otherwise match the
   // `?next=/admin/claims` query param while still on /sign-in.
-  await page.waitForURL((url) => url.pathname === '/admin/claims', { timeout: 30_000 })
+  try {
+    await page.waitForURL((url) => url.pathname === '/admin/claims', { timeout: 30_000 })
+  } catch (error) {
+    // A rejected credential is not a navigation problem: the server action
+    // answers 200 with an error state and the page simply stays put, so the
+    // only symptom is a 30s timeout that reads like a slow app. The sign-in
+    // page renders that state in a role="alert" (app/(auth)/sign-in/page.tsx:62)
+    // — surface it, so the next reader gets the reason instead of a trace dig.
+    const alerts = await page
+      .getByRole('alert')
+      .allTextContents()
+      .catch(() => [] as string[])
+    const rendered = alerts.map((t) => t.trim()).filter(Boolean)
+    if (rendered.length > 0) {
+      throw new Error(
+        `loginAsAdmin: sign-in was rejected for ${ADMIN_EMAIL} — ${rendered.join(' / ')}. ` +
+          'global-setup provisions this account and reconciles its password on every run, ' +
+          'so this usually means it ran against a different Supabase project than the test.'
+      )
+    }
+    throw error
+  }
 }

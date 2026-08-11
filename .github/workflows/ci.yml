@@ -53,8 +53,51 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Deliberately test:unit, never the top-level `test` script.
+      # Deliberately test:unit here, never the top-level `test` script — the
+      # Playwright half runs in the `e2e` job below, which needs a browser,
+      # a dev server, and database credentials this job has no reason to hold.
       - run: pnpm test:unit
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Scoped deliberately. The full e2e suite (51 tests, a11y + contrast +
+      # cross-browser) is not CI-ready — browser-rendering assertions against a
+      # dev server flake, and a job that gets muted after its third false red is
+      # worse than no job. This runs the one spec that guards a defect a green
+      # build already shipped once: the owner dashboard's Saves and Shares.
+      # Widen the path list as other specs are proven stable in CI.
+      - run: pnpm exec playwright test e2e/analytics-emission.spec.ts
+        env:
+          # Same STAGING project the build job uses. The spec creates and then
+          # deletes its own throwaway listing, so it never depends on — or
+          # disturbs — seeded staging data. Production is never touched.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          # Without this every route 307s to /coming-soon and the spec cannot
+          # reach a listing page at all.
+          COMING_SOON_MODE: 'false'
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
   build:
     name: build
