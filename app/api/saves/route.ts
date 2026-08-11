@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   // Owner-dashboard "Saves" reads this event. Nothing emitted it before
   // 2026-08-11, so the metric was structurally zero for every paying owner.
   // entity_type must be 'listing' and action must be 'save' — the nightly
-  // rollup filters on both (20260515000000_entity_analytics_daily.sql).
+  // rollup filters on both (20260515000000_analytics_aggregation.sql).
   trackServerEvent({
     event_name: ANALYTICS_EVENTS.SAVE_TOGGLED,
     entity_type: 'listing',

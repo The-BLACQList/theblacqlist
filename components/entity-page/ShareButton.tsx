@@ -10,10 +10,18 @@ interface Props {
   listingName: string
   listingId: string
   className?: string
+  /** Sizes the icon so a caller can match its own button scale exactly. */
+  iconClassName?: string
   tabIndex?: number
 }
 
-export function ShareButton({ listingName, listingId, className, tabIndex }: Props) {
+export function ShareButton({
+  listingName,
+  listingId,
+  className,
+  iconClassName,
+  tabIndex,
+}: Props) {
   const [copied, setCopied] = useState(false)
 
   async function handleShare() {
@@ -64,9 +72,9 @@ export function ShareButton({ listingName, listingId, className, tabIndex }: Pro
       )}
     >
       {copied ? (
-        <Check className="size-4" aria-hidden="true" />
+        <Check className={cn('size-4', iconClassName)} aria-hidden="true" />
       ) : (
-        <Share2 className="size-4" aria-hidden="true" />
+        <Share2 className={cn('size-4', iconClassName)} aria-hidden="true" />
       )}
     </button>
   )

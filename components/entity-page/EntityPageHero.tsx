@@ -1,7 +1,8 @@
-import { Share2, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
+import { ShareButton } from '@/components/entity-page/ShareButton'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
@@ -125,14 +126,12 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
             className="size-11 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
           />
 
-          {/* Share — placeholder */}
-          <button
-            type="button"
-            aria-label="Share this listing"
-            className="inline-flex items-center justify-center size-11 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-colors"
-          >
-            <Share2 className="size-5" aria-hidden="true" />
-          </button>
+          <ShareButton
+            listingName={entity.name}
+            listingId={entity.id}
+            className="size-11 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+            iconClassName="size-5"
+          />
         </div>
       </div>
     </div>

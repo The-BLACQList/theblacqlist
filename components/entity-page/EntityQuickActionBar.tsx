@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Share2, Phone, MapPin } from 'lucide-react'
+import { Phone, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
 import { SaveButton } from '@/components/entity-page/SaveButton'
+import { ShareButton } from '@/components/entity-page/ShareButton'
 import type { EntityPageData } from '@/types'
 
 interface Props {
@@ -78,14 +79,12 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             tabIndex={visible ? 0 : -1}
             className="flex-shrink-0 size-10 bg-white/10 hover:bg-white/20 text-white"
           />
-          <button
-            type="button"
+          <ShareButton
+            listingName={entity.name}
+            listingId={entity.id}
             tabIndex={visible ? 0 : -1}
-            aria-label="Share this listing"
-            className="flex-shrink-0 inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-          >
-            <Share2 className="size-4" aria-hidden="true" />
-          </button>
+            className="flex-shrink-0 size-10 bg-white/10 hover:bg-white/20 text-white"
+          />
         </div>
       </div>
 
@@ -144,14 +143,12 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             className="size-9 bg-white/10 hover:bg-white/20 text-white"
           />
 
-          <button
-            type="button"
+          <ShareButton
+            listingName={entity.name}
+            listingId={entity.id}
             tabIndex={visible ? 0 : -1}
-            aria-label="Share this listing"
-            className="inline-flex items-center justify-center size-9 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-          >
-            <Share2 className="size-4" aria-hidden="true" />
-          </button>
+            className="size-9 bg-white/10 hover:bg-white/20 text-white"
+          />
         </div>
       </div>
     </>

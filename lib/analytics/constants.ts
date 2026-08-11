@@ -61,6 +61,11 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            share_initiated, claim_submitted, listing_submitted
  *            + the three SERVER_ONLY_EVENTS above.
  *
+ *   share_initiated is emitted by components/entity-page/ShareButton.tsx, which
+ *   until 2026-08-11 was defined but mounted nowhere — all three share
+ *   affordances (hero + both quick-action bars) were placeholder buttons with
+ *   no onClick. Wiring them is what made this line true.
+ *
  *   Declared, nothing emits them yet: filter_applied, collection_viewed,
  *            guide_viewed, hero_cta_click, action_bar_cta_click,
  *            marketplace_product_viewed, marketplace_cta_click,
@@ -99,7 +104,7 @@ export interface CtaClickProperties {
 
 export interface SaveToggledProperties {
   // Must stay 'save' | 'unsave' — the nightly rollup filters on
-  // (properties->>'action') = 'save' (20260515000000_entity_analytics_daily.sql).
+  // (properties->>'action') = 'save' (20260515000000_analytics_aggregation.sql).
   // These were 'saved'/'unsaved' until 2026-08-11, which meant any correct
   // emitter would still have rolled up zero saves.
   action?: 'save' | 'unsave'
