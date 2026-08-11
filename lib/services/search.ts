@@ -1,7 +1,39 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import {
+  resolveFacetParams,
+  searchFacetedIds,
+  hasUnresolved,
+  SORT_KEYS,
+  type SortKey,
+  type UnresolvedFacets,
+} from '@/lib/listings/facets'
 import type { Json } from '@/lib/supabase/types'
 import type { SearchQueryParams } from '@/lib/validations/search'
+
+/**
+ * Thrown when the caller filtered by a slug that does not exist.
+ *
+ * The alternative — dropping the filter and answering 200 — is what
+ * `?city=not-a-real-city` used to do, and it returned the entire directory. A
+ * caller cannot tell that apart from "every listing really is in that city," so
+ * this is a client error and the route turns it into a 400 (api.md).
+ */
+export class UnknownFilterValueError extends Error {
+  readonly fields: Record<string, string>
+
+  constructor(unresolved: UnresolvedFacets) {
+    super('Unknown filter value')
+    this.name = 'UnknownFilterValueError'
+    const fields: Record<string, string> = {}
+    if (unresolved.city) fields.city = `No city with slug "${unresolved.city}".`
+    if (unresolved.category) fields.category = `No category with slug "${unresolved.category}".`
+    if (unresolved.attrs?.length) {
+      fields.attrs = `No attribute with slug ${unresolved.attrs.map((s) => `"${s}"`).join(', ')}.`
+    }
+    this.fields = fields
+  }
+}
 
 export interface SearchResult {
   id: string
@@ -78,24 +110,55 @@ export async function searchListings(
   const limit = params.limit
   const offset = (params.page - 1) * limit
 
-  const [cityResult, categoryResult] = await Promise.all([
-    params.city
-      ? supabase
-          .from('cities')
-          .select('id')
-          .eq('slug', params.city)
-          .eq('is_active', true)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    params.category
-      ? supabase
-          .from('categories')
-          .select('id')
-          .eq('slug', params.category)
-          .eq('is_active', true)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ])
+  // One resolution pass shared by both paths below. This replaces the two
+  // hand-rolled slug lookups this function used to do, so `city`, `category`,
+  // and `attrs` now resolve exactly the way /discover resolves them.
+  const { params: resolved, unresolved } = await resolveFacetParams(supabase, {
+    q,
+    category: params.category,
+    city: params.city,
+    type: params.type,
+    trust_tier: params.trust_tier,
+    location_type: params.location_type,
+    price: params.price,
+    attrs: params.attrs,
+    open_now: params.open_now,
+  })
+
+  if (hasUnresolved(unresolved)) throw new UnknownFilterValueError(unresolved)
+
+  const cityId = resolved.p_city_id
+  const categoryId = resolved.p_category_id
+
+  // Deep facets (attributes / price / open-now) are implemented only in
+  // search_listings_faceted — PostgREST cannot express them against this table.
+  // Requests that use one go through the RPC; every other request keeps the
+  // exact code path it had before, including the pg_trgm fallback the typeahead
+  // depends on.
+  if (resolved.p_attribute_values || resolved.p_price_ranges || resolved.p_open_now) {
+    const sort: SortKey =
+      params.sort && (SORT_KEYS as string[]).includes(params.sort)
+        ? (params.sort as SortKey)
+        : 'relevance'
+
+    const faceted = await searchFacetedIds(supabase, resolved, sort, limit, offset)
+    // No legacyFacetedIds fallback here on purpose: that path honors only the
+    // scalar filters, so falling back would silently drop the very facets the
+    // caller asked for — the defect this checkpoint exists to fix.
+    if (faceted.error) throw new Error('Faceted search RPC unavailable')
+
+    let results: SearchResult[] = []
+    if (faceted.ids.length > 0) {
+      const { data: facetRows } = await supabase.from('listings').select(SELECT).in('id', faceted.ids)
+      const byId = new Map<string, SearchResult>()
+      for (const raw of (facetRows as unknown as RawSearchRow[]) ?? []) byId.set(raw.id, mapRow(raw))
+      // .in() does not preserve order — restore the RPC's ranking.
+      results = faceted.ids.map((id) => byId.get(id)).filter((r): r is SearchResult => !!r)
+    }
+
+    void logSearchEvent(q, faceted.total, cityId, categoryId)
+    return { results, total: faceted.total }
+  }
 
   let query = supabase
     .from('listings')
@@ -104,8 +167,8 @@ export async function searchListings(
     .is('deleted_at', null)
     .eq('flag_status', 'none')
 
-  if (cityResult.data?.id) query = query.eq('city_id', cityResult.data.id)
-  if (categoryResult.data?.id) query = query.eq('category_id', categoryResult.data.id)
+  if (cityId) query = query.eq('city_id', cityId)
+  if (categoryId) query = query.eq('category_id', categoryId)
   if (params.type) query = query.eq('entity_type', params.type)
   if (params.trust_tier) query = query.eq('trust_tier', params.trust_tier)
   if (params.location_type) query = query.eq('location_type', params.location_type)
@@ -183,11 +246,11 @@ export async function searchListings(
     }
 
     const combined = [...ftsResults, ...fallbackResults]
-    void logSearchEvent(q, combined.length, cityResult.data?.id, categoryResult.data?.id)
+    void logSearchEvent(q, combined.length, cityId, categoryId)
     return { results: combined, total: Math.max(ftsTotal, combined.length) }
   }
 
-  void logSearchEvent(q, ftsTotal, cityResult.data?.id, categoryResult.data?.id)
+  void logSearchEvent(q, ftsTotal, cityId, categoryId)
   return { results: ftsResults, total: ftsTotal }
 }
 
