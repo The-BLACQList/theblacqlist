@@ -38,7 +38,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
 
   const { data: listing } = await serviceClient
     .from('listings')
-    .select('id, name, slug, tagline, trust_tier, cities(name, state_abbr), categories(name)')
+    .select('id, name, slug, tagline, trust_tier, cities(name, states(code)), categories(name)')
     .eq('slug', slug)
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -46,9 +46,14 @@ export default async function VendorStorefrontPage({ params }: Props) {
 
   if (!listing) notFound()
 
-  type CityRef = { name: string; state_abbr: string } | null
+  // `cities` has no state_abbr column — it carries state_id and joins out to
+  // states.code. Asking PostgREST for cities(name, state_abbr) errored the whole
+  // select, so `listing` came back null and notFound() fired above for every
+  // vendor. Shape and mapping mirror lib/listings/query.ts:95-103.
+  type CityRef = { name: string; states: { code: string } | null } | null
   type CategoryRef = { name: string } | null
-  const city = listing.cities as CityRef
+  const cityRef = listing.cities as CityRef
+  const city = cityRef ? { name: cityRef.name, state_abbr: cityRef.states?.code ?? '' } : null
   const category = listing.categories as CategoryRef
 
   const [{ data: productRows }, { data: serviceRows }] = await Promise.all([
