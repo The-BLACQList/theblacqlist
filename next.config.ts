@@ -1,12 +1,20 @@
 import type { NextConfig } from 'next'
 import { withSentryConfig } from '@sentry/nextjs'
 
+import { SECURITY_HEADERS } from './lib/security/headers'
+
 const nextConfig: NextConfig = {
   // typedRoutes: true — re-enable when auth routes (/sign-in, /sign-up), city pages, and legal pages are built
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+  },
+  // Removes `x-powered-by: Next.js`. It names the framework and its version
+  // surface for anyone probing, and nothing in the app reads it.
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: [...SECURITY_HEADERS] }]
   },
   images: {
     remotePatterns: [

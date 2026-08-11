@@ -722,17 +722,42 @@ P0 content — illegal material, personally identifiable information posted with
 
 ### Security Headers
 
-The following security headers are configured in `next.config.ts` via the `headers()` function:
+> **Corrected 2026-08-11.** Everything under this heading previously described a
+> plan as if it were the build. It claimed five headers configured in
+> `next.config.ts` via `headers()`; the file had no `headers()` function and set
+> none of them. Four of the five were simply absent in production, and the fifth
+> was right by accident. The table below is what is actually served.
 
-| Header                      | Value                                      | Purpose                                                            |
-| --------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`      | Enforce HTTPS for 1 year; include subdomains                       |
-| `X-Frame-Options`           | `DENY`                                     | Prevent clickjacking via iframe embedding                          |
-| `X-Content-Type-Options`    | `nosniff`                                  | Prevent MIME type sniffing                                         |
-| `Referrer-Policy`           | `strict-origin-when-cross-origin`          | Limit referrer information in cross-origin requests                |
-| `Permissions-Policy`        | `camera=(), microphone=(), geolocation=()` | Restrict browser feature access (adjusted at V2 for camera upload) |
+| Header                      | Value                                                 | Set by                                            | Purpose                                             |
+| --------------------------- | ----------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------- |
+| `Strict-Transport-Security` | `max-age=63072000`                                    | **Vercel platform default — not project config**  | Enforce HTTPS for 2 years                           |
+| `X-Frame-Options`           | `DENY`                                                | `lib/security/headers.ts` → `next.config.ts`      | Prevent clickjacking via iframe embedding           |
+| `X-Content-Type-Options`    | `nosniff`                                             | `lib/security/headers.ts` → `next.config.ts`      | Prevent MIME type sniffing                          |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`                     | `lib/security/headers.ts` → `next.config.ts`      | Limit referrer information in cross-origin requests |
+| `X-Powered-By`              | *removed* (`poweredByHeader: false`)                  | `next.config.ts`                                  | Stop advertising the framework to anyone probing    |
 
-These headers are active from MVP launch.
+Two things about that table are load-bearing:
+
+- **HSTS is inherited, not owned.** Vercel serves it on this project; nothing in
+  the repo asks for it, and it survives only as long as that default does. Its
+  `max-age` is two years — longer than the one year this document used to
+  propose — and it carries **no** `includeSubDomains`. Adding that directive
+  ourselves would bind every present and future subdomain to HTTPS for two
+  years, which is hard to reverse and buys nothing on the apex, so it was
+  deliberately left alone `[Decision — 2026-08-11]`.
+- **`Permissions-Policy` is still not set.** The value this document used to
+  claim — `camera=(), microphone=(), geolocation=()` — is unsafe to ship as
+  written, because two shipped surfaces use `capture="environment"` file inputs
+  (`components/dashboard/MediaGrid.tsx`, `components/spend/ReceiptSubmissionForm.tsx`)
+  and whether `camera=()` blocks a capture-hinted file input — as opposed to
+  `getUserMedia`, which the app never calls — is unmeasured. Receipt upload is
+  the input the entire spend pipeline depends on. Tracked as its own checkpoint
+  rather than guessed at here.
+
+The three project-set headers are applied by `next.config.ts` `headers()` on
+`/:path*`. That layer reaches middleware redirects as well as rendered routes,
+which matters while `COMING_SOON_MODE` 307s every public path
+`[Measured — curl against a local production build, 2026-08-11]`.
 
 ### Content Security Policy
 
@@ -795,7 +820,8 @@ This section documents security capabilities that are intentionally deferred bey
 | ----------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------ |
 | No CAPTCHA on claim/review submission     | Medium                                       | Rate limiting (3/day) + email verification required                                | V1                                   |
 | No virus scanning on file uploads         | Medium                                       | MIME type allowlist + size limits block most vectors; no executable types accepted | V1 (ClamAV via Edge Function)        |
-| No Content Security Policy header         | Medium                                       | `X-Frame-Options`, `X-Content-Type-Options`, and `nosniff` headers active at MVP   | V1                                   |
+| No Content Security Policy header         | Medium                                       | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` — live since 2026-08-11, **not** at MVP as this row previously claimed | V4 (needs a report-only soak first)  |
+| `Permissions-Policy` not set              | Low                                          | The app calls no `getUserMedia` and no `getCurrentPosition`; the only camera surfaces are `capture="environment"` file inputs | Next — needs a measurement, not a guess (see Section 15) |
 | No formal penetration test                | High (before marketplace)                    | Internal security review of auth flows and RLS policies before launch              | Pre-V2 (before marketplace launch)   |
 | No bug bounty program                     | Low (at MVP scale)                           | Internal responsible disclosure contact email in Security Policy                   | V2                                   |
 | No SOC 2 compliance                       | Not applicable at MVP scale                  | Reassess at V2 when marketplace introduces financial transaction handling          | V2+ (pending legal review)           |
