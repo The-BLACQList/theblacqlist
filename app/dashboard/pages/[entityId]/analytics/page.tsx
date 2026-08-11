@@ -158,11 +158,16 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         .eq('event_name', ANALYTICS_EVENTS.SHARE_INITIATED)
         .gte('created_at', sinceIso),
 
+      // The action filter is required, not optional: save_toggled covers both
+      // directions, and without it an unsave would read as a save. It also keeps
+      // this live count consistent with the nightly rollup, which filters the
+      // same way (20260515000000_entity_analytics_daily.sql).
       supabase
         .from('analytics_events')
         .select('id', { count: 'exact', head: true })
         .eq('entity_id', entityId)
         .eq('event_name', ANALYTICS_EVENTS.SAVE_TOGGLED)
+        .eq('properties->>action', 'save')
         .gte('created_at', sinceIso),
 
       supabase

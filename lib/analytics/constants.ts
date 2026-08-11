@@ -28,12 +28,46 @@ export const ANALYTICS_EVENTS = {
   RECEIPT_SUBMITTED: 'receipt_submitted',
 } as const
 
+/**
+ * Event names written straight to `analytics_events` by trusted server actions,
+ * which bypass the HTTP route and therefore bypass VALID_EVENT_NAMES entirely.
+ * They are declared here so this file describes what is actually in the table,
+ * but deliberately kept OUT of VALID_EVENT_NAMES — the public endpoint should
+ * not let a browser forge a draft-created or product-created event.
+ *
+ * Emitters: createListing.ts:314, createProduct.ts:164, createService.ts:144.
+ */
+export const SERVER_ONLY_EVENTS = {
+  LISTING_DRAFT_CREATED: 'listing_draft_created',
+  PRODUCT_CREATED: 'product_created',
+  SERVICE_CREATED: 'service_created',
+} as const
+
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS]
+export type ServerOnlyEventName = (typeof SERVER_ONLY_EVENTS)[keyof typeof SERVER_ONLY_EVENTS]
 
 // Used by the route handler to validate incoming event_name values.
+// Intentionally excludes SERVER_ONLY_EVENTS — see the note above.
 export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
   Object.values(ANALYTICS_EVENTS)
 )
+
+/**
+ * Emission status as of 2026-08-11. Kept honest because the owner-facing
+ * dashboard is a paid feature — a declared-but-unemitted name renders as a
+ * confident zero, which is worse than an absent metric.
+ *
+ *   Emitted: page_view, search_performed, cta_click, save_toggled,
+ *            share_initiated, claim_submitted, listing_submitted
+ *            + the three SERVER_ONLY_EVENTS above.
+ *
+ *   Declared, nothing emits them yet: filter_applied, collection_viewed,
+ *            guide_viewed, hero_cta_click, action_bar_cta_click,
+ *            marketplace_product_viewed, marketplace_cta_click,
+ *            review_submitted, claim_started, receipt_submitted.
+ *
+ * Wire an emitter before surfacing any of the second group in a UI.
+ */
 
 // ── Properties ───────────────────────────────────────────────────────────────
 // Allowed metadata per event. All shapes are optional at the transport layer;
@@ -64,7 +98,11 @@ export interface CtaClickProperties {
 }
 
 export interface SaveToggledProperties {
-  action?: 'saved' | 'unsaved'
+  // Must stay 'save' | 'unsave' — the nightly rollup filters on
+  // (properties->>'action') = 'save' (20260515000000_entity_analytics_daily.sql).
+  // These were 'saved'/'unsaved' until 2026-08-11, which meant any correct
+  // emitter would still have rolled up zero saves.
+  action?: 'save' | 'unsave'
   source?: string // 'entity_page' | 'search_result' | 'collection'
 }
 
