@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { CTAButton } from '@/components/marketplace/CTAButton'
+import { resolveRemoteImage } from '@/lib/listings/coverImage'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -79,6 +80,9 @@ export default async function ServiceDetailPage({ params }: Props) {
   const ctaLabel = svc.booking_url ? 'Book Now' : 'Request Quote'
   const DeliveryIcon = DELIVERY_ICONS[svc.delivery_mode] ?? Briefcase
 
+  // See ProductCard: owner-supplied host, may not be optimizable.
+  const cover = resolveRemoteImage(svc.cover_image_url)
+
   return (
     <div className="min-h-screen bg-cream">
       <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-8">
@@ -106,9 +110,10 @@ export default async function ServiceDetailPage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image */}
           <div className="aspect-square rounded-xl bg-pale-lavender overflow-hidden relative">
-            {svc.cover_image_url ? (
+            {cover ? (
               <Image
-                src={svc.cover_image_url}
+                src={cover.src}
+                unoptimized={cover.unoptimized}
                 alt={svc.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"

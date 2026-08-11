@@ -30,13 +30,20 @@ export async function deleteMediaAction(
   // Verify ownership: this attachment must belong to a listing owned by the user
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, city_id, cities(slug)')
+    .select('id, slug, status, entity_type, city_id, cover_image_path, cities(slug)')
     .eq('id', media.entity_id)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) return { error: 'You do not have permission to delete this media.' }
+
+  // If this photo is the cover, drop the cover with it. Leaving the column
+  // pointing at a removed storage object renders a broken image instead of
+  // falling back to the brand tile.
+  if (listing.cover_image_path && listing.cover_image_path === media.file_path) {
+    await supabase.from('listings').update({ cover_image_path: null }).eq('id', listing.id)
+  }
 
   // Delete DB row first
   const { error: dbError } = await supabase.from('media_attachments').delete().eq('id', mediaId)

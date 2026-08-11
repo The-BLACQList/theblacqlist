@@ -1,8 +1,8 @@
-import Image from 'next/image'
 import { Share2, Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
+import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
@@ -11,21 +11,6 @@ import { resolveCoverImage } from '@/lib/listings/coverImage'
 interface Props {
   entity: EntityPageData
   initialSaved?: boolean
-}
-
-function CoverPlaceholder({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .filter((w) => /^[A-Za-z]/.test(w))
-    .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-  return (
-    <div className="absolute inset-0 bg-gradient-to-br from-charcoal/60 to-brand-black flex items-center justify-center">
-      <span className="font-headline text-6xl text-white/20 select-none">{initials}</span>
-    </div>
-  )
 }
 
 export function EntityPageHero({ entity, initialSaved = false }: Props) {
@@ -49,19 +34,17 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
         isPremium && 'md:h-[560px]'
       )}
     >
-      {/* Cover image or placeholder */}
-      {cover.src ? (
-        <Image
-          src={cover.src}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-      ) : (
-        <CoverPlaceholder name={entity.name} />
-      )}
+      {/* Cover image, or the designed F-1 fallback */}
+      <CoverImage
+        src={cover.src}
+        alt=""
+        name={entity.name}
+        categoryName={entity.category.name}
+        seed={entity.id}
+        priority
+        sizes="100vw"
+        fallbackSize="hero"
+      />
 
       {/* Gradient overlay: transparent top → dark bottom */}
       <div

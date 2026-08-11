@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
 import { CollectionCard } from '@/components/editorial/CollectionCard'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
 
 export const metadata: Metadata = {
   title: 'Collections | The BLACQList',
@@ -15,7 +16,7 @@ export default async function CollectionsPage() {
 
   const { data: collections } = await supabase
     .from('collections')
-    .select('id, title, slug, description')
+    .select('id, title, slug, description, cover_image_path')
     .eq('is_active', true)
     .order('display_order', { ascending: true })
 
@@ -64,6 +65,7 @@ export default async function CollectionsPage() {
                   title={c.title}
                   slug={c.slug}
                   description={c.description}
+                  coverSrc={resolveMediaPath(c.cover_image_path)}
                   listingCount={countMap[c.id] ?? 0}
                 />
               ))}

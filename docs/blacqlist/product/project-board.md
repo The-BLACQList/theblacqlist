@@ -360,7 +360,7 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
 **`[MVP] 🔴 P0` Production data: founder review + expand to thresholds + images**
 🟧 Content/Data · **Due Jul 4** · multi-day · ⏳ founder-gated (sets the MVP floor)
 
-**Description.** A directory is only credible if its listings are real, current, and the businesses are genuinely Black-owned — so before going public the founder reviews the researched seed data for accuracy, closures, and ownership, and we top each city up to threshold with image coverage. This is content work with a real human floor (review + sourcing), and it's P0 because an empty or inaccurate directory destroys trust on day one. Done when ATL ≥150 / HOU ≥50 / CHI ≥50 are published, founder-reviewed, ≥40% with images, and every category has ≥3 listings per city.
+**Description.** A directory is only credible if its listings are real, current, and the businesses are genuinely Black-owned — so before going public the founder reviews the researched seed data for accuracy, closures, and ownership, and we top each city up to threshold. This is content work with a real human floor, and it's P0 because an empty or inaccurate directory destroys trust on day one. Done when ATL ≥150 / HOU ≥50 / CHI ≥50 are published, founder-reviewed, and every category has ≥3 listings per city. **Cover-image coverage is no longer part of this card's done-when** — see the restatement below.
 
 **Checklist.**
 - Review researched businesses for accuracy / closures / "is it still Black-owned" / consent — **review sheet ready: `docs/blacqlist/data/seed-review.csv`** (265 rows, flagged-first: 130 carry a metro-area / no-website / no-address / duplicate flag; each row has a 1-click Google Maps verify link; README lists per-city category gaps below the ≥3/city threshold) — _founder's manual keep/edit/remove pass still pending (Blocked/Waiting)_
@@ -368,8 +368,21 @@ Each card below carries **Labels · Priority · Due**, a **Description** (paste 
   - ✅ **Production:** ATL 151 / HOU 51 / CHI 52 = 254 `[Measured — SQL on prod, 2026-06-26, ticket 093]`
   - ❌ **Local dev DB:** ATL 38 / HOU 17 / CHI 18 `[Measured — local Playwright, 2026-08-05]` — needs ~112 / 33 / 32 more
   - ⚠️ The original "staging: ATL 251 / HOU 84 / CHI 83" claim is `[Unknown]` — never verified; do not cite it
-- ≥40% with a cover image · every category ≥3 listings/city · descriptions ≥100 chars · CTA non-null
+- ~~≥40% with a cover image~~ → **moved out of this card, see below** · every category ≥3 listings/city · descriptions ≥100 chars · CTA non-null
 - Run preflight validation SQL; zero gaps
+
+**Cover images — restated as a post-launch target `[Decision — 023, 2026-08-09]`.**
+Measured coverage is **0 / 257 published listings (0.0%)** `[Measured — psql prod, 2026-08-09]`; Supabase Storage held **one** object platform-wide, and it was the PMTiles map file. The ≥40% figure was never approached, and the only two ways to reach it were bulk stock photography or founder-sourced shoots. Stock is ruled out — `living-commerce-index.md:63` prohibits imagery on an unclaimed card that could be mistaken for the business — so the founder chose the **owner-upload flywheel**: covers arrive from the business owners themselves.
+
+That makes ≥40% a lagging metric, not a gate a launch can hold on. Restated:
+
+| | |
+|---|---|
+| Launch requirement | **None.** Every listing without a cover renders the F-1 "Monogram + Node Field" brand tile, which is a designed state, not a hole. |
+| Post-launch target | **≥40% of published listings with an owner-uploaded cover.** No date — it moves at the rate owners claim and upload. |
+| Baseline | 0 / 257 (0.0%) `[Measured — psql prod, 2026-08-09]` |
+| Tracked by | `coverCoverage` in `scripts/ops/metrics-pull.ts` → the weekly ops report |
+| Flywheel levers shipped | Post-creation cover path (`Set as cover` on any uploaded photo — previously **no owner could set a cover at all** after a listing existed); cover-first prompt on the media page; `1200×800px` spec in the upload UI; `Cover photo` leading the free-tier completeness list; the scored "Cover image uploaded" checklist row fixed to read `cover_image_path` instead of gallery count |
 
 **Note (2026-08-05):** the founder review sheet is generated and regenerable (`scripts/build-seed-review.ts`); the keep/edit/remove pass was **✅ applied** (15 closed removed · 87 enriched · 11 verified replacements) and the **production import ✅ ran** (card 093). Still pending: image coverage, and closing the **local** M9 gap so `e2e/launch-gates.spec.ts` runs green in CI/dev.
 
@@ -929,7 +942,7 @@ Paste each block as the **first card in its phase / pinned cover card** (or onto
 **Definition of Done (all true).**
 - All launch gates pass **in production** (M1–M10)
 - Security + accessibility + performance + SEO audits passed; **zero open P0 bugs**
-- 150 ATL / 50 HOU / 50 CHI published listings, **founder-reviewed**, ≥40% with images
+- 150 ATL / 50 HOU / 50 CHI published listings, **founder-reviewed** (cover-image coverage removed from launch DoD — post-launch target on the owner-upload flywheel, `[Decision — 023, 2026-08-09]`)
 - Privacy & Terms reviewed (no placeholder copy)
 - Soft launch clean; Tech + Product + Legal **go/no-go signed**
 - Live on `theblacqlist.com` with PITR, Sentry, uptime monitors, on-call rotation

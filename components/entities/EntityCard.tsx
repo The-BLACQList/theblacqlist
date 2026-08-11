@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import type { Route } from 'next'
 import { Calendar } from 'lucide-react'
 
@@ -8,6 +7,7 @@ import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SaveIconButton } from '@/components/ui/save-icon-button'
+import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity } from '@/types'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -50,21 +50,6 @@ function formatEventDate(iso: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-function CoverPlaceholder({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .filter((w) => /^[A-Za-z]/.test(w))
-    .slice(0, 2)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .toUpperCase()
-  return (
-    <div className="w-full h-full bg-deep-bg flex items-center justify-center" aria-hidden="true">
-      <span className="font-headline text-4xl text-gold select-none">{initials}</span>
-    </div>
-  )
-}
-
 export function EntityCard({ entity, className, isPriority = false }: EntityCardProps) {
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
@@ -79,18 +64,17 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
     >
       {/* Cover image — 3:2 aspect ratio */}
       <div className="relative w-full aspect-[3/2] bg-deep-bg overflow-hidden shrink-0">
-        {cover.src ? (
-          <Image
-            src={cover.src}
-            alt=""
-            fill
-            priority={isPriority}
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          />
-        ) : (
-          <CoverPlaceholder name={entity.name} />
-        )}
+        <CoverImage
+          src={cover.src}
+          alt=""
+          name={entity.name}
+          categoryName={entity.category.name}
+          seed={entity.id}
+          priority={isPriority}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          fallbackSize="card"
+          className="group-hover:scale-105 transition-transform duration-300"
+        />
 
         {/* Save / bookmark — real button (handles auth: anon click → sign-in) */}
         <SaveIconButton

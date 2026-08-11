@@ -12,9 +12,11 @@ import {
   Pencil,
   X,
   ImagePlus,
+  Star,
 } from 'lucide-react'
 import { deleteMediaAction } from '@/lib/actions/dashboard/deleteMedia'
 import { updateMediaAltTextAction } from '@/lib/actions/dashboard/updateMediaAltText'
+import { setCoverImageAction } from '@/lib/actions/dashboard/setCoverImage'
 
 interface MediaItem {
   id: string
@@ -28,6 +30,8 @@ interface Props {
   media: MediaItem[]
   supabaseStorageUrl: string
   listingId: string
+  /** `listings.cover_image_path` — the file path of the photo currently used as the cover. */
+  coverImagePath: string | null
 }
 
 function AltTextForm({ item }: { item: MediaItem }) {
@@ -95,12 +99,27 @@ function AltTextForm({ item }: { item: MediaItem }) {
   )
 }
 
-function MediaCard({ item, supabaseStorageUrl }: { item: MediaItem; supabaseStorageUrl: string }) {
+function MediaCard({
+  item,
+  supabaseStorageUrl,
+  listingId,
+  isCover,
+}: {
+  item: MediaItem
+  supabaseStorageUrl: string
+  listingId: string
+  isCover: boolean
+}) {
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteMediaAction, null)
+  const [coverState, coverAction, isSettingCover] = useActionState(setCoverImageAction, null)
   const imageUrl = `${supabaseStorageUrl}/listing-media/${item.file_path}`
 
   return (
-    <li className="rounded-lg border border-charcoal/10 bg-white overflow-hidden">
+    <li
+      className={`rounded-lg border bg-white overflow-hidden ${
+        isCover ? 'border-amber-gold ring-1 ring-amber-gold/40' : 'border-charcoal/10'
+      }`}
+    >
       <div className="relative aspect-square bg-charcoal/5">
         <Image
           src={imageUrl}
@@ -109,6 +128,11 @@ function MediaCard({ item, supabaseStorageUrl }: { item: MediaItem; supabaseStor
           className="object-cover"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
+        {isCover && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-gold text-brand-black font-subhead text-[11px] font-bold">
+            <Star className="size-3 fill-current" aria-hidden="true" /> Cover
+          </span>
+        )}
         <form action={deleteAction} className="absolute top-2 right-2">
           <input type="hidden" name="media_id" value={item.id} />
           <button
@@ -130,13 +154,39 @@ function MediaCard({ item, supabaseStorageUrl }: { item: MediaItem; supabaseStor
           </button>
         </form>
       </div>
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 space-y-1.5">
         <AltTextForm item={item} />
-        {deleteState && 'error' in deleteState && (
-          <div role="alert" className="flex items-center gap-1 mt-1">
-            <AlertCircle className="size-3 text-red-500 shrink-0" aria-hidden="true" />
-            <p className="font-body text-xs text-red-600">{deleteState.error}</p>
-          </div>
+
+        <form action={coverAction}>
+          <input type="hidden" name="listing_id" value={listingId} />
+          {!isCover && <input type="hidden" name="media_id" value={item.id} />}
+          <button
+            type="submit"
+            disabled={isSettingCover}
+            className={`w-full inline-flex items-center justify-center gap-1 h-7 rounded font-subhead text-xs font-semibold disabled:opacity-50 transition-colors ${
+              isCover
+                ? 'text-charcoal-soft hover:bg-charcoal/5'
+                : 'text-brand-black bg-pale-lavender hover:bg-amber-gold'
+            }`}
+          >
+            {isSettingCover ? (
+              <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+            ) : (
+              <Star className="size-3" aria-hidden="true" />
+            )}
+            {isCover ? 'Remove as cover' : 'Set as cover'}
+          </button>
+        </form>
+
+        {[deleteState, coverState].map(
+          (s, i) =>
+            s &&
+            'error' in s && (
+              <div key={i} role="alert" className="flex items-center gap-1">
+                <AlertCircle className="size-3 text-red-500 shrink-0" aria-hidden="true" />
+                <p className="font-body text-xs text-red-600">{s.error}</p>
+              </div>
+            )
         )}
       </div>
     </li>
@@ -318,21 +368,44 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
   )
 }
 
-export function MediaGrid({ media, supabaseStorageUrl, listingId }: Props) {
+export function MediaGrid({ media, supabaseStorageUrl, listingId, coverImagePath }: Props) {
+  const hasCover = !!coverImagePath
+
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Photos</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Add photos to showcase your business. Use descriptive alt text to improve accessibility
-          and SEO.
+          and SEO. Upload at <strong className="font-semibold">1200×800px or larger</strong> for
+          best quality.
         </p>
       </div>
       <div className="px-5 py-4 space-y-4">
+        {!hasCover && (
+          <div className="rounded-lg border border-amber-gold/40 bg-amber-gold/10 px-4 py-3">
+            <p className="font-subhead text-sm font-bold text-brand-black">
+              {media.length === 0
+                ? 'Start with your cover photo'
+                : 'Pick one photo as your cover'}
+            </p>
+            <p className="font-body text-xs text-charcoal-soft mt-0.5">
+              {media.length === 0
+                ? 'Upload a photo below, then choose “Set as cover.” Until you do, your business shows a brand tile in search results and collections instead of your own photo.'
+                : 'Choose “Set as cover” on the photo that best represents your business. Until you do, it shows a brand tile in search results and collections.'}
+            </p>
+          </div>
+        )}
         {media.length > 0 && (
           <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {media.map((item) => (
-              <MediaCard key={item.id} item={item} supabaseStorageUrl={supabaseStorageUrl} />
+              <MediaCard
+                key={item.id}
+                item={item}
+                supabaseStorageUrl={supabaseStorageUrl}
+                listingId={listingId}
+                isCover={item.file_path === coverImagePath}
+              />
             ))}
           </ul>
         )}

@@ -51,6 +51,7 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         alt=""
         name={entity.name}
         categoryName={entity.category?.name}
+        seed={entity.id}
         priority
         scrim={cover.src ? 'bottom' : 'none'}
         fallbackSize="hero"

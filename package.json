@@ -19,6 +19,8 @@
     "test:infra": "playwright test e2e/infra.spec.ts",
     "test:cross-browser": "playwright test e2e/cross-browser.spec.ts",
     "test:gates": "playwright test e2e/launch-gates.spec.ts",
+    "images:editorial": "npx tsx scripts/optimize-editorial-images.ts",
+    "brand:assets": "npx tsx scripts/generate-brand-assets.ts",
     "seed:launch": "npx tsx scripts/seed-launch-listings.ts",
     "test:seed-idempotent": "bash scripts/check-seed-idempotent.sh",
     "stripe:setup-products": "npx tsx scripts/stripe/setup-products.ts",
@@ -72,6 +74,7 @@
     "husky": "^9.1.7",
     "pg": "^8.22.0",
     "prettier": "^3.8.3",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"
@@ -83,7 +86,8 @@
       "unrs-resolver"
     ],
     "approvedBuilds": [
-      "@sentry/cli"
+      "@sentry/cli",
+      "sharp"
     ]
   }
 }

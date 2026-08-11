@@ -8,7 +8,7 @@ import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
 import { HomeCategories, type CategoryTile } from '@/components/home/HomeCategories'
-import { TrendingRow } from '@/components/home/TrendingRow'
+import { FreshFinds } from '@/components/home/FreshFinds'
 import { CityChapters, type CityChapter } from '@/components/home/CityChapters'
 import { MicrositeShowcase } from '@/components/home/MicrositeShowcase'
 import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
@@ -41,7 +41,7 @@ export default async function HomePage() {
   const supabase = await createClient()
   const service = createServiceClient()
 
-  const [categoriesRes, listingFacetRes, citiesRes, trendingRes, showcaseRes, spendRes, articleRes] =
+  const [categoriesRes, listingFacetRes, citiesRes, freshRes, showcaseRes, spendRes, articleRes] =
     await Promise.all([
       supabase
         .from('categories')
@@ -58,14 +58,17 @@ export default async function HomePage() {
         .from('cities')
         .select('id, name, slug, is_active, states!cities_state_id_fkey(code)')
         .order('name'),
+      // Fresh Finds: newest first, no tier or is_featured gating. `published_at`
+      // is nullable, so `created_at` (NOT NULL DEFAULT now()) is the tiebreak
+      // floor — same definition of "newest" the search RPC already uses.
       supabase
         .from('listings')
         .select(NESTED_SELECT)
         .eq('status', 'published')
         .is('deleted_at', null)
-        .order('save_count', { ascending: false })
-        .order('review_count', { ascending: false })
-        .limit(6),
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(15),
       supabase
         .from('listings')
         .select(
@@ -119,7 +122,7 @@ export default async function HomePage() {
     isActive: c.is_active,
   }))
 
-  const trending = ((trendingRes.data ?? []) as unknown as RawRow[]).map(mapRow)
+  const freshFinds = ((freshRes.data ?? []) as unknown as RawRow[]).map(mapRow)
 
   // Showcase carousel: real pages, preferring distinct entity types with covers
   const showcaseRaw = (showcaseRes.data ?? []) as unknown as ShowcaseRaw[]
@@ -178,7 +181,7 @@ export default async function HomePage() {
         <HomeCategories categories={categories} />
       </Reveal>
       <Reveal>
-        <TrendingRow entities={trending} />
+        <FreshFinds entities={freshFinds} />
       </Reveal>
       <Reveal>
         <CityChapters cities={cities} />

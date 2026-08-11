@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 import {
   CollectionBusinessCard,
@@ -69,6 +70,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       blurb,
       listings (
         id, name, slug, tagline, entity_type, trust_tier, cover_image_path,
+        categories ( name ),
         cities ( slug, name, states ( code ) )
       )
     `
@@ -86,15 +88,18 @@ export default async function CollectionDetailPage({ params }: Props) {
     .order('display_order', { ascending: true })
 
   const entries = ((items ?? []) as unknown as CollectionItemRow[]).filter((i) => i.listings)
-  const hasCover = Boolean(collection.cover_image_path)
+  // The column stores a Supabase Storage key, not a URL — the same shape as
+  // listings.cover_image_path — so it has to go through the shared resolver.
+  // Passing the raw key to next/image renders broken.
+  const coverSrc = resolveMediaPath(collection.cover_image_path)
 
   return (
     <main className="min-h-screen bg-pale-lavender">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      {hasCover ? (
+      {coverSrc ? (
         <section className="relative w-full h-[280px] md:h-[420px] overflow-hidden bg-deep-bg">
           <Image
-            src={collection.cover_image_path as string}
+            src={coverSrc}
             alt=""
             fill
             priority
@@ -147,7 +152,7 @@ export default async function CollectionDetailPage({ params }: Props) {
       {/* ── Body: intro + businesses + sections ──────────────────────────── */}
       <section className="bg-white px-4 py-10 md:py-14">
         <div className="max-w-[960px] mx-auto">
-          {hasCover && (
+          {coverSrc && (
             <Link
               href="/collections"
               className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-8 transition-colors"

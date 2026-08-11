@@ -1,10 +1,42 @@
-import { cn } from '@/lib/utils'
+import { cn, hashString } from '@/lib/utils'
 
 interface Props {
   name: string
   categoryName?: string | null
   size?: 'hero' | 'card'
+  /**
+   * Stable per-record string (use the listing id) that varies the node field so
+   * a grid of fallbacks does not read as repeated wallpaper. Omit for a fixed
+   * arrangement — the layout is identical either way, only node placement moves.
+   */
+  seed?: string | null
   className?: string
+}
+
+/**
+ * Five zones the node field draws from. Fixed zones keep the field balanced and
+ * sparse whatever the seed is, and keep every node clear of the centre where the
+ * monogram and category label sit. The seed only jitters within a zone.
+ */
+const NODE_ZONES: ReadonlyArray<{ x: [number, number]; y: [number, number] }> = [
+  { x: [8, 30], y: [16, 38] },
+  { x: [68, 92], y: [10, 32] },
+  { x: [6, 26], y: [64, 86] },
+  { x: [70, 92], y: [58, 84] },
+  { x: [38, 60], y: [78, 92] },
+]
+
+/** Deterministic value in [min, max] from a seed and an axis label. */
+function jitter(seed: string, key: string, [min, max]: [number, number]): number {
+  return min + (hashString(`${seed}:${key}`) % (max - min + 1))
+}
+
+function nodeGradients(seed: string | null | undefined): string {
+  return NODE_ZONES.map((zone, i) => {
+    const x = seed ? jitter(seed, `x${i}`, zone.x) : Math.round((zone.x[0] + zone.x[1]) / 2)
+    const y = seed ? jitter(seed, `y${i}`, zone.y) : Math.round((zone.y[0] + zone.y[1]) / 2)
+    return `radial-gradient(circle at ${x}% ${y}%, var(--color-gold) 1.5px, transparent 2.4px)`
+  }).join(', ')
 }
 
 /**
@@ -14,7 +46,7 @@ interface Props {
  * and the category named beneath so unclaimed covers still carry identity.
  * Never renders stock photography that could be mistaken for the business.
  */
-export function ImageFallback({ name, categoryName, size = 'hero', className }: Props) {
+export function ImageFallback({ name, categoryName, size = 'hero', seed, className }: Props) {
   const initials = name
     .split(' ')
     .filter((w) => /^[A-Za-z]/.test(w))
@@ -34,13 +66,7 @@ export function ImageFallback({ name, categoryName, size = 'hero', className }: 
       <div
         className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: [
-            'radial-gradient(circle at 18% 32%, var(--color-gold) 1.5px, transparent 2.4px)',
-            'radial-gradient(circle at 71% 58%, var(--color-gold) 1.5px, transparent 2.4px)',
-            'radial-gradient(circle at 44% 82%, var(--color-gold) 1.5px, transparent 2.4px)',
-            'radial-gradient(circle at 87% 22%, var(--color-gold) 1.5px, transparent 2.4px)',
-            'radial-gradient(circle at 8% 75%, var(--color-gold) 1.5px, transparent 2.4px)',
-          ].join(', '),
+          backgroundImage: nodeGradients(seed),
           backgroundSize: isHero ? '340px 340px' : '210px 210px',
         }}
       />

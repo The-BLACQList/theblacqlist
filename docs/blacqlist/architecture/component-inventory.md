@@ -23,7 +23,7 @@
 | 11  | LoadingState (skeletons) | `components/ui/loading-state.tsx`      | Server         | Skeleton            | Matches loaded content dimensions                      |
 | 12  | ErrorState               | `components/ui/error-state.tsx`        | Client         | Button              | `flex flex-col items-center text-center py-16`         |
 | 13  | CardGrid                 | `components/ui/card-grid.tsx`          | Server         | none                | `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4` |
-| 14  | EntityCard               | `components/ui/entity-card.tsx`        | Server         | Card                | `rounded-lg border overflow-hidden hover:shadow-md`    |
+| 14  | EntityCard               | `components/entities/EntityCard.tsx`   | Server         | Card                | `rounded-lg border overflow-hidden hover:shadow-md`    |
 
 ---
 
