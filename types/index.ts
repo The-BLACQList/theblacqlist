@@ -1,6 +1,20 @@
 // ─── Discovery / Listing Types ───────────────────────────────────────────────
 
-export type EntityType = 'business' | 'professional' | 'creative' | 'event' | 'job' | 'vendor'
+/**
+ * The live `listings.entity_type` CHECK — see lib/constants/listing.ts:VALID_ENTITY_TYPES,
+ * which this must mirror exactly. Until 2026-08-13 this union carried 'job' (which the DB
+ * rejected) and omitted 'restaurant' / 'service_provider' (which the DB served); the drift
+ * forced an `as string` cast in the entity-page renderer. Both ends now agree.
+ */
+export type EntityType =
+  | 'business'
+  | 'restaurant'
+  | 'service_provider'
+  | 'professional'
+  | 'creative'
+  | 'vendor'
+  | 'event'
+  | 'job'
 
 export type LocationType =
   | 'physical'
@@ -231,6 +245,25 @@ export interface EventDetails {
   organizer: { name: string; url: string } | null
 }
 
+export interface JobDetails {
+  description: string
+  employment_type: string
+  workplace_type: string
+  salary_min: number | null
+  salary_max: number | null
+  /** Required by a DB CHECK whenever either salary bound is set. */
+  salary_period: string | null
+  salary_currency: string
+  apply_url: string | null
+  apply_email: string | null
+  posted_at: string
+  closes_at: string | null
+  cta_type: string
+  cta_url: string | null
+  /** The company doing the hiring, when the owner linked one of their listings. */
+  hiring: { name: string; url: string } | null
+}
+
 export interface EntityPageData {
   id: string
   entity_type: EntityType
@@ -253,6 +286,7 @@ export interface EntityPageData {
   owner_user_id: string | null
   details: BusinessDetails
   event: EventDetails | null
+  job: JobDetails | null
   organizerEvents: OrganizerEvent[]
   attributes: EntityAttributeGroup[]
   links: EntityLink[]

@@ -115,6 +115,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     professional: 'Professionals',
     creative: 'Creatives',
     event: 'Events',
+    job: 'Jobs',
   }
   const presentTypes = useMemo(() => {
     const seen = new Set<string>()

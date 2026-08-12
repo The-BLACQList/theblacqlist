@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { LocationType } from '@/types'
+import type { EntityType, LocationType } from '@/types'
 
 /** Splits a comma-separated query param into a trimmed, de-duplicated array. */
 const csvArray = z
@@ -20,7 +20,21 @@ export const searchSchema = z.object({
   q: z.string().max(200).trim().optional(),
   city: z.string().optional(),
   category: z.string().optional(),
-  type: z.enum(['business', 'professional', 'creative', 'event', 'job', 'vendor']).optional(),
+  // `satisfies` keeps this in lockstep with EntityType — a value the DB serves but zod
+  // rejects is a silent 400 on a legitimate URL, which is exactly how 'service_provider'
+  // was broken from May until 2026-08-13.
+  type: z
+    .enum([
+      'business',
+      'restaurant',
+      'service_provider',
+      'professional',
+      'creative',
+      'vendor',
+      'event',
+      'job',
+    ] satisfies [EntityType, ...EntityType[]])
+    .optional(),
   trust_tier: z.enum(['claimed', 'verified', 'certified']).optional(),
   location_type: z
     .enum(['physical', 'online', 'hybrid', 'virtual-services', 'ships-nationwide'] satisfies [

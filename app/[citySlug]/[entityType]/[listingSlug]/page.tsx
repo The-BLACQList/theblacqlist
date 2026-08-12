@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
 import { resolveCoverImage, resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
@@ -12,6 +13,7 @@ import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickAction
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
 import { EntityEventDetails } from '@/components/entity-page/EntityEventDetails'
+import { EntityJobDetails } from '@/components/entity-page/EntityJobDetails'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
 import { EntityStorySection } from '@/components/entity-page/EntityStorySection'
 import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferingsSection'
@@ -157,13 +159,16 @@ export default async function EntityPage({ params }: PageProps) {
   if (!entity) notFound()
 
   const isEvent = entity.entity_type === 'event'
-  // Living Commerce Index templates (Service + Portfolio archetypes). The DB
-  // allows 'service_provider' even though the TS union omits it — compare as
-  // string so runtime rows route correctly.
-  const rawType = entity.entity_type as string
-  const isProfessional = rawType === 'professional' || rawType === 'service_provider'
-  const isCreative = rawType === 'creative'
-  const jsonLd = isEvent ? buildEventJsonLd(entity, entityType) : buildJsonLd(entity, entityType)
+  const isJob = entity.entity_type === 'job'
+  // Living Commerce Index templates (Service + Portfolio archetypes).
+  const isProfessional =
+    entity.entity_type === 'professional' || entity.entity_type === 'service_provider'
+  const isCreative = entity.entity_type === 'creative'
+  const jsonLd = isEvent
+    ? buildEventJsonLd(entity, entityType)
+    : isJob
+      ? buildJobPostingJsonLd(entity, entityType)
+      : buildJsonLd(entity, entityType)
 
   // Check current user state (saves, ownership, existing review)
   const supabase = await createClient()
@@ -246,6 +251,17 @@ export default async function EntityPage({ params }: PageProps) {
         <>
           {/* Event details — When/Where, ticket CTA, organizer, about */}
           <EntityEventDetails entity={entity} />
+
+          {/* Media Gallery — bg-deep-bg; hidden if no images */}
+          <EntityMediaGallery entity={entity} images={entity.images} />
+
+          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
+          <EntityRelatedDiscovery entity={entity} />
+        </>
+      ) : isJob ? (
+        <>
+          {/* Job details — type/where/pay/closing, apply CTA, hiring company, about */}
+          <EntityJobDetails entity={entity} />
 
           {/* Media Gallery — bg-deep-bg; hidden if no images */}
           <EntityMediaGallery entity={entity} images={entity.images} />

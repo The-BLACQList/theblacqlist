@@ -52,6 +52,12 @@ const BANNERS: Record<string, BannerContent> = {
     shot: 'crowd at dusk, stage glow',
     tone: 'linear-gradient(140deg, #23392e 0%, #3f6b52 55%, #14231b 100%)',
   },
+  job: {
+    title: 'Jobs',
+    line: 'Work that builds something. Roles open right now.',
+    shot: 'team mid-shift, hands and faces at work',
+    tone: 'linear-gradient(145deg, #1f2b3a 0%, #3d5570 55%, #141c26 100%)',
+  },
   default: {
     title: 'Discover',
     line: 'Every kind of Black-owned enterprise, one living index.',

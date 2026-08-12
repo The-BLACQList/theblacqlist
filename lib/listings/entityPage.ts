@@ -7,6 +7,7 @@ import type {
   EntityLink,
   EntityFaq,
   EventDetails,
+  JobDetails,
   OrganizerEvent,
   BusinessDetails,
   WeeklyHours,
@@ -476,6 +477,78 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     }
   }
 
+  // Job detail — fetched only for job listings. Same fail-soft contract as the event
+  // block above: an unmigrated listing_details_job yields a null job and the page degrades
+  // rather than throwing.
+  let job: JobDetails | null = null
+  if (raw.entity_type === 'job') {
+    const { data: jb } = await sb
+      .from('listing_details_job')
+      .select(
+        'description, employment_type, workplace_type, salary_min, salary_max, salary_period, salary_currency, apply_url, apply_email, posted_at, closes_at, cta_type, cta_url, hiring_listing_id'
+      )
+      .eq('listing_id', raw.id)
+      .maybeSingle()
+    if (jb) {
+      const j = jb as {
+        description: string | null
+        employment_type: string
+        workplace_type: string
+        salary_min: number | string | null
+        salary_max: number | string | null
+        salary_period: string | null
+        salary_currency: string
+        apply_url: string | null
+        apply_email: string | null
+        posted_at: string
+        closes_at: string | null
+        cta_type: string
+        cta_url: string | null
+        hiring_listing_id: string | null
+      }
+      let hiring: { name: string; url: string } | null = null
+      if (j.hiring_listing_id) {
+        const { data: co } = await supabase
+          .from('listings')
+          .select('name, slug, entity_type, cities(slug)')
+          .eq('id', j.hiring_listing_id)
+          .eq('status', 'published')
+          .is('deleted_at', null)
+          .maybeSingle()
+        if (co) {
+          hiring = {
+            name: co.name,
+            url: buildEntityUrl(
+              co.entity_type,
+              (co.cities as { slug: string } | null)?.slug,
+              co.slug
+            ),
+          }
+        }
+      }
+      // Postgres `numeric` arrives as a string over PostgREST — coerce here so the
+      // renderer and the JSON-LD builder both get real numbers.
+      const num = (v: number | string | null): number | null =>
+        v === null || v === '' ? null : Number(v)
+      job = {
+        description: j.description ?? '',
+        employment_type: j.employment_type,
+        workplace_type: j.workplace_type,
+        salary_min: num(j.salary_min),
+        salary_max: num(j.salary_max),
+        salary_period: j.salary_period,
+        salary_currency: j.salary_currency,
+        apply_url: j.apply_url,
+        apply_email: j.apply_email,
+        posted_at: j.posted_at,
+        closes_at: j.closes_at,
+        cta_type: j.cta_type,
+        cta_url: j.cta_url,
+        hiring,
+      }
+    }
+  }
+
   // Upcoming events this listing organizes — surfaced on business pages. Fail-soft:
   // if listing_details_event isn't migrated yet this stays empty.
   let organizerEvents: OrganizerEvent[] = []
@@ -574,6 +647,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       : null,
     details,
     event,
+    job,
     organizerEvents,
     attributes,
     links,
