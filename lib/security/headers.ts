@@ -68,9 +68,20 @@ export const SECURITY_HEADERS = [
     // through the native file picker, not the Camera API, so
     // Permissions-Policy `camera` should not gate them — but that is spec
     // reasoning, not a measurement, and receipt upload is the input the whole
-    // spend pipeline depends on. Both are verified on a real device against
-    // this PR's preview before it merges; if either breaks, drop `camera=()`
-    // and keep the rest.
+    // spend pipeline depends on.
+    //
+    // Settled on hardware: the native sheet offered a camera option, the
+    // capture completed, and the receipt submitted on **iOS Safari (WebKit) and
+    // Android Chrome (Blink)** `[Measured — founder, real devices, 2026-08-12]`.
+    // `camera=()` does not suppress a `capture` file input on either engine.
+    // Two corrections to what this comment used to claim: the measurement ran
+    // against **production after the merge**, not against the PR preview before
+    // it; and only the **receipt** input was exercised — `MediaGrid.tsx:330` is
+    // covered by inference (same attribute, same header, same engines), not by
+    // measurement. If camera capture ever misbehaves in the media grid, that
+    // inference is the first thing to re-open; the fix is to drop `camera=()`
+    // and keep the rest. See
+    // `docs/blacqlist/ops/runbooks/device-test-camera-capture.md`.
     //
     // `geolocation=(self)` deliberately, NOT `geolocation=()` as
     // security-and-privacy-plan.md proposed. The C3 "Near You" radius filter
