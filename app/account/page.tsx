@@ -108,7 +108,10 @@ export default async function AccountOverviewPage() {
         .from('receipt_uploads')
         .select('amount_cents, status')
         .eq('user_id', user.id)
-        .neq('status', 'rejected'),
+        // Approved only. `.neq('status','rejected')` also counted pending receipts,
+        // so this number disagreed with /account/receipts and the flow-map's
+        // personal-impact block, which both count approved.
+        .eq('status', 'approved'),
       supabase
         .from('listings')
         .select('id, name, slug, entity_type, trust_tier, cover_image_path, cities!listings_city_id_fkey(slug)')
