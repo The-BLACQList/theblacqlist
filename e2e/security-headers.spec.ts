@@ -18,7 +18,9 @@ test.describe('Security response headers', () => {
   // middleware redirect — a header the public never receives is not a
   // protection, and while the gate is on, the 307 IS what the public receives.
   for (const path of ['/', '/coming-soon']) {
-    test(`${path} carries all three security headers`, async ({ request }) => {
+    // Counted from the array rather than written out, so adding a header
+    // cannot leave a test name asserting a number that is no longer true.
+    test(`${path} carries all ${SECURITY_HEADERS.length} security headers`, async ({ request }) => {
       const res = await request.get(path, { maxRedirects: 0 })
       const headers = res.headers() // Playwright lower-cases the keys
 
