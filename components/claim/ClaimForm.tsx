@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle, AlertCircle, Loader2, Upload, FileText } from 'lucide-react'
 import { createClaimAction } from '@/lib/actions/claims/createClaim'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 
 interface Props {
   listingId: string
@@ -303,6 +304,8 @@ export function ClaimForm({ listingId, listingName }: Props) {
           }}
         />
       </div>
+
+      <TurnstileWidget />
 
       {/* Submit */}
       <button

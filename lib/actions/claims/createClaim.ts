@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
 import { ClaimSubmittedEmail } from '@/lib/email/templates/claim-submitted'
 import { ClaimAdminNotificationEmail } from '@/lib/email/templates/claim-admin-notification'
@@ -37,6 +38,12 @@ export async function createClaimAction(
 
   if (!user) {
     return { error: 'You must be signed in to claim a listing.' }
+  }
+
+  // CAPTCHA is a layer on top of the 3-per-24h quota below, not a replacement.
+  // Runs after auth so an unauthenticated caller never burns a token.
+  if (!(await verifyTurnstileFormData(formData))) {
+    return { error: TURNSTILE_ERROR }
   }
 
   // ── Parse fields ────────────────────────────────────────────────────────────

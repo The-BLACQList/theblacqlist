@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 
 const REVIEW_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const REVIEW_PHOTO_MAX_BYTES = 5 * 1024 * 1024
@@ -21,6 +22,13 @@ export async function createReviewAction(
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { error: 'You must be signed in to submit a review.' }
+
+  // Reviews had the weakest protection of the three surfaces — a per-user
+  // per-listing duplicate guard and nothing else. Runs after auth so an
+  // unauthenticated caller never burns a token.
+  if (!(await verifyTurnstileFormData(formData))) {
+    return { error: TURNSTILE_ERROR }
+  }
 
   const listingId = formData.get('listing_id')?.toString().trim() ?? ''
   const ratingRaw = formData.get('rating')?.toString().trim() ?? ''

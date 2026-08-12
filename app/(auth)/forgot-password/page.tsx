@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Loader2, Mail } from 'lucide-react'
 
 import { forgotPasswordAction } from '@/lib/actions/auth/forgotPassword'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import { cn } from '@/lib/utils'
 
 function SubmitButton() {
@@ -97,6 +98,8 @@ function ForgotPasswordContent() {
             </p>
           )}
         </div>
+
+        <TurnstileWidget className="mt-2" />
 
         <div className="mt-2">
           <SubmitButton />

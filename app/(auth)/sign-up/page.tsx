@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Loader2, Mail } from 'lucide-react'
 
 import { signUpAction } from '@/lib/actions/auth/signUp'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import { cn } from '@/lib/utils'
 
 const ROLE_OPTIONS = [
@@ -311,6 +312,8 @@ function SignUpContent() {
           </Link>
           .
         </p>
+
+        <TurnstileWidget className="mt-1" />
 
         <div className="mt-1">
           <SubmitButton />
