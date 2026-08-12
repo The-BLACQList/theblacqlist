@@ -69,6 +69,10 @@ export async function createGuideAction(
     return { error: 'Failed to create guide. Please try again.' }
   }
 
+  // The homepage editorial rail carries published guides and sits on
+  // `export const revalidate = 1800` — without this it would be up to 30
+  // minutes stale after a publish, with no way to force it.
+  revalidatePath('/')
   revalidatePath('/guides')
   revalidatePath('/admin/guides')
   return { success: true, id: data.id, slug: data.slug }
@@ -132,6 +136,7 @@ export async function updateGuideAction(
     return { error: 'Failed to update guide. Please try again.' }
   }
 
+  revalidatePath('/')
   revalidatePath('/guides')
   revalidatePath(`/guides/${slug}`)
   revalidatePath('/admin/guides')
@@ -154,6 +159,7 @@ export async function deleteGuideAction(
 
   if (error) return { error: 'Failed to delete guide. Please try again.' }
 
+  revalidatePath('/')
   revalidatePath('/guides')
   revalidatePath('/admin/guides')
   return { success: true }
@@ -182,6 +188,10 @@ export async function createGuideSectionAction(
 
   if (error) return { error: 'Failed to add section. Please try again.' }
 
+  // Section count is rendered on the guide cards on both `/guides` and the
+  // homepage rail, so adding or removing a section changes public output.
+  revalidatePath('/')
+  revalidatePath('/guides')
   revalidatePath(`/admin/guides/${guideId}/edit`)
   return { success: true }
 }
@@ -229,6 +239,8 @@ export async function deleteGuideSectionAction(
 
   if (error) return { error: 'Failed to delete section. Please try again.' }
 
+  revalidatePath('/')
+  revalidatePath('/guides')
   revalidatePath('/admin/guides')
   return { success: true }
 }

@@ -7,9 +7,22 @@ interface Props {
   subtitle?: string | null
   city?: string | null
   sectionCount?: number
+  /**
+   * The card's title element. Defaults to `h2` for the `/guides` index, where
+   * the page title is the `h1`. The homepage rail passes `h3` because its own
+   * section heading is already an `h2`.
+   */
+  headingLevel?: 'h2' | 'h3'
 }
 
-export function GuideCard({ title, slug, subtitle, city, sectionCount }: Props) {
+export function GuideCard({
+  title,
+  slug,
+  subtitle,
+  city,
+  sectionCount,
+  headingLevel: Heading = 'h2',
+}: Props) {
   return (
     <Link
       href={`/guides/${slug}`}
@@ -26,9 +39,9 @@ export function GuideCard({ title, slug, subtitle, city, sectionCount }: Props) 
         )}
       </div>
       <div>
-        <h2 className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
+        <Heading className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
           {title}
-        </h2>
+        </Heading>
         {subtitle && (
           <p className="font-body text-sm text-charcoal-soft leading-relaxed mt-1 line-clamp-2">
             {subtitle}

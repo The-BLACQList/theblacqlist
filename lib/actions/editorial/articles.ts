@@ -75,6 +75,10 @@ export async function createArticleAction(
     return { error: 'Failed to create article. Please try again.' }
   }
 
+  // The homepage carries the featured-article hero and the editorial rail, and
+  // sits on `export const revalidate = 1800` — without this it would be up to
+  // 30 minutes stale after a publish, with no way to force it.
+  revalidatePath('/')
   revalidatePath('/blacqlight')
   revalidatePath('/admin/blacqlight')
   return { success: true, id: data.id, slug: data.slug }
@@ -147,6 +151,7 @@ export async function updateArticleAction(
     return { error: 'Failed to update article. Please try again.' }
   }
 
+  revalidatePath('/')
   revalidatePath('/blacqlight')
   revalidatePath(`/blacqlight/${slug}`)
   revalidatePath('/admin/blacqlight')
@@ -169,6 +174,7 @@ export async function deleteArticleAction(
 
   if (error) return { error: 'Failed to delete article. Please try again.' }
 
+  revalidatePath('/')
   revalidatePath('/blacqlight')
   revalidatePath('/admin/blacqlight')
   return { success: true }
