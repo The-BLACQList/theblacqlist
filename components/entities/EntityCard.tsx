@@ -19,13 +19,18 @@ interface EntityCardProps {
   isPriority?: boolean
 }
 
+// Exhaustive over EntityType by design — a missing key renders an empty badge.
+// 'restaurant' and 'service_provider' were absent until 2026-08-13 because the TS
+// union omitted them while the DB served them.
 const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
   business: 'Business',
+  restaurant: 'Restaurant',
+  service_provider: 'Service',
   professional: 'Professional',
   creative: 'Creative',
+  vendor: 'Vendor',
   event: 'Event',
   job: 'Job',
-  vendor: 'Vendor',
 }
 
 function getLocationString(entity: DiscoveryEntity): string {

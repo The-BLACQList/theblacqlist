@@ -1,7 +1,8 @@
 // Canonical value sets — these MUST match the LIVE DB CHECK constraints, which
 // are set by migration `20260524000001_fix_entity_location_cta_constraints`
-// (+ `20260622000007` re-adding 'event' to entity_type). NOTE: these differ from
-// the original `20260510000000` schema — that earlier constraint was superseded.
+// (+ `20260622000007` re-adding 'event' and `20260813000000` re-adding 'job' to
+// entity_type). NOTE: these differ from the original `20260510000000` schema —
+// that earlier constraint was superseded.
 // Do not "reconcile" against the initial schema; 20260524000001 is the truth.
 export const VALID_ENTITY_TYPES = [
   'business',
@@ -11,6 +12,7 @@ export const VALID_ENTITY_TYPES = [
   'professional',
   'vendor',
   'event',
+  'job',
 ] as const
 
 // Authoritative business ownership label (listings.ownership_label CHECK, set by
@@ -80,6 +82,63 @@ export const VALID_CTA_TYPES = [
   'apply',
   'buy-now',
 ] as const
+
+// ─── Job posting value sets ──────────────────────────────────────────────────
+// These MUST match the CHECK constraints on `listing_details_job`, set by
+// migration `20260813000000_job_entity`. Like LINK_TYPES below, they live in
+// this plain module — NOT in a 'use server' action — because client forms import
+// them to render <select> options.
+
+export const JOB_EMPLOYMENT_TYPES = [
+  'full-time',
+  'part-time',
+  'contract',
+  'temporary',
+  'internship',
+  'volunteer',
+] as const
+
+export type JobEmploymentType = (typeof JOB_EMPLOYMENT_TYPES)[number]
+
+export const JOB_EMPLOYMENT_TYPE_META: Record<JobEmploymentType, { label: string }> = {
+  'full-time': { label: 'Full-time' },
+  'part-time': { label: 'Part-time' },
+  contract: { label: 'Contract' },
+  temporary: { label: 'Temporary' },
+  internship: { label: 'Internship' },
+  volunteer: { label: 'Volunteer' },
+}
+
+export const JOB_WORKPLACE_TYPES = ['on-site', 'hybrid', 'remote'] as const
+
+export type JobWorkplaceType = (typeof JOB_WORKPLACE_TYPES)[number]
+
+export const JOB_WORKPLACE_TYPE_META: Record<JobWorkplaceType, { label: string }> = {
+  'on-site': { label: 'On-site' },
+  hybrid: { label: 'Hybrid' },
+  remote: { label: 'Remote' },
+}
+
+export const JOB_SALARY_PERIODS = ['hour', 'day', 'week', 'month', 'year'] as const
+
+export type JobSalaryPeriod = (typeof JOB_SALARY_PERIODS)[number]
+
+// Suffix used when rendering a pay range ("$25/hr", "$65,000/yr"). Kept separate
+// from the schema.org unitText mapping in the entity page, which needs HOUR/DAY/
+// WEEK/MONTH/YEAR instead.
+export const JOB_SALARY_PERIOD_META: Record<JobSalaryPeriod, { label: string; suffix: string }> = {
+  hour: { label: 'Per hour', suffix: '/hr' },
+  day: { label: 'Per day', suffix: '/day' },
+  week: { label: 'Per week', suffix: '/wk' },
+  month: { label: 'Per month', suffix: '/mo' },
+  year: { label: 'Per year', suffix: '/yr' },
+}
+
+// The four CTA types a job listing may use — a subset of VALID_CTA_TYPES, and
+// the same set as the listing_details_job.cta_type CHECK.
+export const JOB_CTA_TYPES = ['apply', 'learn-more', 'visit', 'contact'] as const
+
+export type JobCtaType = (typeof JOB_CTA_TYPES)[number]
 
 // Owner-managed flexible link types (listing_links.link_type). Lives here (a
 // plain module) — NOT in the 'use server' action — because client components

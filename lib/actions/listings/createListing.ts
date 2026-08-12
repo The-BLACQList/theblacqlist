@@ -7,6 +7,9 @@ import {
   VALID_LOCATION_TYPES,
   VALID_CTA_TYPES,
   VALID_OWNERSHIP_LABELS,
+  JOB_EMPLOYMENT_TYPES,
+  JOB_WORKPLACE_TYPES,
+  JOB_SALARY_PERIODS,
 } from '@/lib/constants/listing'
 
 type FieldErrors = Partial<Record<string, string>>
@@ -91,6 +94,17 @@ export async function createListingAction(
   const ticketUrl = formData.get('ticket_url')?.toString().trim() || null
   const priceText = formData.get('price_text')?.toString().trim() || null
 
+  // Job-only fields (read regardless; used only when entityType === 'job').
+  const isJob = entityType === 'job'
+  const employmentType = formData.get('employment_type')?.toString().trim() ?? ''
+  const workplaceType = formData.get('workplace_type')?.toString().trim() ?? ''
+  const salaryMinRaw = formData.get('salary_min')?.toString().trim() || ''
+  const salaryMaxRaw = formData.get('salary_max')?.toString().trim() || ''
+  const salaryPeriod = formData.get('salary_period')?.toString().trim() || ''
+  const applyUrl = formData.get('apply_url')?.toString().trim() || null
+  const applyEmail = formData.get('apply_email')?.toString().trim() || null
+  const closesAtRaw = formData.get('closes_at')?.toString().trim() || ''
+
   const fieldErrors: FieldErrors = {}
 
   if (!VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number])) {
@@ -123,9 +137,20 @@ export async function createListingAction(
     fieldErrors.description = 'Description must be 2000 characters or fewer.'
   }
 
-  // Events derive their location_type from the online toggle; everything else
-  // submits an explicit location_type.
-  const effectiveLocationType = isEvent ? (isOnline ? 'virtual' : 'physical') : locationType
+  // Events derive their location_type from the online toggle, and jobs from the
+  // workplace type — a remote role is 'virtual', hybrid is 'hybrid', on-site is
+  // 'physical'. Everything else submits an explicit location_type.
+  const effectiveLocationType = isEvent
+    ? isOnline
+      ? 'virtual'
+      : 'physical'
+    : isJob
+      ? workplaceType === 'remote'
+        ? 'virtual'
+        : workplaceType === 'hybrid'
+          ? 'hybrid'
+          : 'physical'
+      : locationType
   if (
     !VALID_LOCATION_TYPES.includes(effectiveLocationType as (typeof VALID_LOCATION_TYPES)[number])
   ) {
@@ -158,6 +183,61 @@ export async function createListingAction(
     }
     if (!isOnline && !venueName) {
       fieldErrors.venue_name = 'Add a venue name, or mark the event online.'
+    }
+  } else if (isJob) {
+    if (!JOB_EMPLOYMENT_TYPES.includes(employmentType as (typeof JOB_EMPLOYMENT_TYPES)[number])) {
+      fieldErrors.employment_type = 'Select an employment type.'
+    }
+    if (!JOB_WORKPLACE_TYPES.includes(workplaceType as (typeof JOB_WORKPLACE_TYPES)[number])) {
+      fieldErrors.workplace_type = 'Select where the work happens.'
+    }
+
+    // Salary is optional, but the DB CHECKs require a period whenever either
+    // bound is set, and max >= min. Mirror both here so the failure is a field
+    // message rather than a raw constraint violation.
+    if (salaryMinRaw && (isNaN(Number(salaryMinRaw)) || Number(salaryMinRaw) < 0)) {
+      fieldErrors.salary_min = 'Enter a number, or leave pay blank.'
+    }
+    if (salaryMaxRaw && (isNaN(Number(salaryMaxRaw)) || Number(salaryMaxRaw) < 0)) {
+      fieldErrors.salary_max = 'Enter a number, or leave pay blank.'
+    }
+    if (
+      salaryMinRaw &&
+      salaryMaxRaw &&
+      !fieldErrors.salary_min &&
+      !fieldErrors.salary_max &&
+      Number(salaryMaxRaw) < Number(salaryMinRaw)
+    ) {
+      fieldErrors.salary_max = 'Maximum pay must be at least the minimum.'
+    }
+    if ((salaryMinRaw || salaryMaxRaw) && !salaryPeriod) {
+      fieldErrors.salary_period = 'Choose a pay period (per hour, per year, …).'
+    }
+    if (
+      salaryPeriod &&
+      !JOB_SALARY_PERIODS.includes(salaryPeriod as (typeof JOB_SALARY_PERIODS)[number])
+    ) {
+      fieldErrors.salary_period = 'Choose a valid pay period.'
+    }
+
+    // A posting nobody can respond to is not a posting.
+    if (!applyUrl && !applyEmail) {
+      fieldErrors.apply_url = 'Add an application link or an email to apply to.'
+    }
+    if (applyUrl && !isValidUrl(applyUrl)) {
+      fieldErrors.apply_url = 'Application link must start with https://'
+    }
+    if (applyEmail && !isValidEmail(applyEmail)) {
+      fieldErrors.apply_email = 'Enter a valid email address.'
+    }
+
+    if (closesAtRaw) {
+      const closes = new Date(closesAtRaw)
+      if (isNaN(closes.getTime())) {
+        fieldErrors.closes_at = 'Enter a valid closing date.'
+      } else if (closes.getTime() < Date.now()) {
+        fieldErrors.closes_at = 'The closing date must be in the future.'
+      }
     }
   } else {
     if (!VALID_CTA_TYPES.includes(ctaType as (typeof VALID_CTA_TYPES)[number])) {
@@ -261,7 +341,26 @@ export async function createListingAction(
     return { error: 'Something went wrong creating your listing. Please try again.' }
   }
 
-  const detailsError = isEvent
+  const detailsError = isJob
+    ? (
+        await (supabase as unknown as SupabaseClient).from('listing_details_job').insert({
+          listing_id: listing.id,
+          description,
+          employment_type: employmentType,
+          workplace_type: workplaceType,
+          salary_min: salaryMinRaw ? Number(salaryMinRaw) : null,
+          salary_max: salaryMaxRaw ? Number(salaryMaxRaw) : null,
+          // Nulled when no bound was given — the DB CHECK only requires a period
+          // alongside an amount, and a lone period would render as nothing.
+          salary_period: salaryMinRaw || salaryMaxRaw ? salaryPeriod : null,
+          apply_url: applyUrl,
+          apply_email: applyEmail,
+          closes_at: closesAtRaw ? new Date(closesAtRaw).toISOString() : null,
+          cta_type: 'apply',
+          cta_url: applyUrl,
+        })
+      ).error
+    : isEvent
     ? (
         await (supabase as unknown as SupabaseClient).from('listing_details_event').insert({
           listing_id: listing.id,
@@ -303,9 +402,11 @@ export async function createListingAction(
   if (detailsError) {
     await supabase.from('listings').delete().eq('id', listing.id)
     return {
-      error: isEvent
-        ? 'Failed to save your event details. Please try again.'
-        : 'Failed to save your business details. Please try again.',
+      error: isJob
+        ? 'Failed to save your job details. Please try again.'
+        : isEvent
+          ? 'Failed to save your event details. Please try again.'
+          : 'Failed to save your business details. Please try again.',
     }
   }
 
