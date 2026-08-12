@@ -222,7 +222,7 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
                       lists={pickerLists}
                       memberOf={memberOf}
                     />
-                    <SaveButton listingId={l.listingId} initialSaved={true} />
+                    <SaveButton listingId={l.listingId} initialSaved={true} refreshOnToggle />
                   </div>
                 </li>
               )
