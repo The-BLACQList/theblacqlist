@@ -18,17 +18,20 @@
  * `includeSubDomains` — a two-year, hard-to-reverse commitment binding every
  * present and future subdomain to HTTPS, for no gain on the apex.
  *
+ * That was the reasoning; it is now a measurement. `mail.theblacqlist.com`
+ * resolves to 50.87.230.81 (Bluehost) and its TLS certificate does not match
+ * the hostname — `curl` fails with "no alternative certificate subject name
+ * matches target host name" `[Measured — dig + curl + openssl, 2026-08-12]`.
+ * Under `includeSubDomains` that becomes a hard browser block with no
+ * click-through, for two years, on a DNS record we did not audit first. So the
+ * header stays exactly as Vercel serves it. Revisit only after the stale
+ * Bluehost records are removed and every remaining subdomain is confirmed on
+ * valid HTTPS; `preload` is a separate, effectively irreversible decision after
+ * that.
+ *
  * `Content-Security-Policy` — a real project, not a header. It needs a
  * report-only soak before it can be enforced without breaking Stripe, Sentry,
  * Supabase and the map tiles. Scheduled at V4.
- *
- * `Permissions-Policy` — the architecture doc proposes
- * `camera=(), microphone=(), geolocation=()`, but two shipped surfaces use
- * `capture="environment"` file inputs (`components/dashboard/MediaGrid.tsx`,
- * `components/spend/ReceiptSubmissionForm.tsx`). Whether `camera=()` blocks a
- * capture-hinted file input, as opposed to `getUserMedia`, is unmeasured — and
- * receipt upload is the input the whole spend pipeline depends on. Blocking it
- * on an assumption is not a trade worth making inside this checkpoint.
  */
 export const SECURITY_HEADERS = [
   {
@@ -49,5 +52,36 @@ export const SECURITY_HEADERS = [
     // at; they should not travel to third parties in a Referer header.
     key: 'Referrer-Policy',
     value: 'strict-origin-when-cross-origin',
+  },
+  {
+    // Deny the two powerful features nothing on the site uses, and pin the
+    // one it is about to.
+    //
+    // `camera=()` / `microphone=()`: there is no `getUserMedia`,
+    // `mediaDevices`, or `MediaRecorder` call anywhere under app/, components/,
+    // or lib/ `[Measured — repo grep, 2026-08-12]`. Denying them costs nothing
+    // today and means an injected script cannot reach either device.
+    //
+    // The open question was the two `capture="environment"` file inputs
+    // (`components/dashboard/MediaGrid.tsx:330`,
+    // `components/spend/ReceiptSubmissionForm.tsx:168`). Per spec those go
+    // through the native file picker, not the Camera API, so
+    // Permissions-Policy `camera` should not gate them — but that is spec
+    // reasoning, not a measurement, and receipt upload is the input the whole
+    // spend pipeline depends on. Both are verified on a real device against
+    // this PR's preview before it merges; if either breaks, drop `camera=()`
+    // and keep the rest.
+    //
+    // `geolocation=(self)` deliberately, NOT `geolocation=()` as
+    // security-and-privacy-plan.md proposed. The C3 "Near You" radius filter
+    // needs `navigator.geolocation` on our own origin, so `()` would ship a
+    // header that breaks a feature already approved and in flight. `(self)`
+    // matches the current default explicitly and denies it to embedded
+    // third parties — the video iframe in
+    // `components/entity-page/EntityVideoSection.tsx:47` is the only one, and
+    // it asks for `encrypted-media; picture-in-picture`, neither of which is
+    // touched here.
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(self)',
   },
 ] as const
