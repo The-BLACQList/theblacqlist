@@ -12,6 +12,22 @@ function isUUID(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 }
 
+// Must stay in sync with the receipt-uploads bucket's allowed_mime_types
+// (supabase/migrations/20260524000000_storage_buckets.sql +
+// 20260813010000_receipt_bucket_heic.sql). Checking here means a rejected file
+// produces a message the user can act on instead of an opaque storage error.
+const RECEIPT_MIME_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'application/pdf': 'pdf',
+}
+
+const RECEIPT_BUCKET = 'receipt-uploads'
+const MAX_RECEIPT_BYTES = 10 * 1024 * 1024
+
 export async function createReceiptSubmissionAction(
   _prev: ReceiptSubmissionState,
   formData: FormData
@@ -58,46 +74,52 @@ export async function createReceiptSubmissionAction(
 
   const amountCents = Math.round(amountFloat * 100)
 
+  const serviceClient = createServiceClient()
+
   // Handle optional file upload
   let filePath: string | null = null
   if (fileField instanceof File && fileField.size > 0) {
-    if (!fileField.type.startsWith('image/')) {
+    const ext = RECEIPT_MIME_TYPES[fileField.type]
+    if (!ext) {
       return {
-        error: 'Receipt file must be an image (JPEG, PNG, HEIC, etc.).',
-        fieldErrors: { receipt_file: 'File must be an image.' },
+        error: 'Receipt file must be a JPEG, PNG, WebP, HEIC image or a PDF.',
+        fieldErrors: { receipt_file: 'Unsupported file type.' },
       }
     }
-    if (fileField.size > 10 * 1024 * 1024) {
+    if (fileField.size > MAX_RECEIPT_BYTES) {
       return {
         error: 'Receipt file must be under 10 MB.',
         fieldErrors: { receipt_file: 'File must be under 10 MB.' },
       }
     }
 
-    const ext = fileField.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    const timestamp = Date.now()
-    const storagePath = `receipts/${user.id}/${timestamp}-${crypto.randomUUID()}.${ext}`
+    // Path is bucket-relative — the bucket itself is the `receipt-uploads`
+    // namespace, so prefixing it again would nest a redundant folder.
+    const storagePath = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`
 
-    const serviceClient = createServiceClient()
     const { error: uploadError } = await serviceClient.storage
-      .from('receipts')
+      .from(RECEIPT_BUCKET)
       .upload(storagePath, fileField, { contentType: fileField.type, upsert: false })
 
+    // An upload failure is surfaced, never swallowed. Saving the receipt while
+    // silently dropping the photo tells the user their image is stored when it
+    // is not — worse than refusing the submission.
     if (uploadError) {
-      // If bucket not found, proceed without file — storage setup may be pending
-      if (
-        !uploadError.message?.includes('Bucket not found') &&
-        !uploadError.message?.includes('not found')
-      ) {
-        return { error: 'Failed to upload receipt image. Please try again.' }
+      console.error('[createReceiptSubmission] upload failed:', {
+        userId: user.id,
+        bucket: RECEIPT_BUCKET,
+        contentType: fileField.type,
+        message: uploadError.message,
+      })
+      return {
+        error: 'We could not save your receipt photo. Please try again.',
+        fieldErrors: { receipt_file: 'Upload failed.' },
       }
-      // Bucket not yet set up — allow submission without file path
-    } else {
-      filePath = storagePath
     }
+
+    filePath = storagePath
   }
 
-  const serviceClient = createServiceClient()
   const { data, error } = await serviceClient
     .from('receipt_uploads')
     .insert({
@@ -119,6 +141,18 @@ export async function createReceiptSubmissionAction(
     if (error.code === '23505') {
       return { error: 'This receipt has already been submitted.' }
     }
+    // A handled `return { error }` never reaches Vercel's runtime-error table,
+    // so without this the generic message below is the only evidence that
+    // anything went wrong. IDs and Postgres fields only — no user-entered text.
+    console.error('[createReceiptSubmission] insert failed:', {
+      userId: user.id,
+      hasListingId: listingId !== null,
+      hasFilePath: filePath !== null,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    })
     return { error: 'Failed to submit receipt. Please try again.' }
   }
 

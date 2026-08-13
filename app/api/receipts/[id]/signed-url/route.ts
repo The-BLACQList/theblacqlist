@@ -63,7 +63,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   }
 
   const { data: signedUrl, error: signError } = await serviceClient.storage
-    .from('receipts')
+    .from('receipt-uploads')
     .createSignedUrl(receipt.file_path, 60 * 15) // 15 minutes
 
   if (signError || !signedUrl) {
