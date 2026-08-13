@@ -232,13 +232,26 @@ export function ReceiptListRow({
 }: ReceiptRowProps) {
   const businessLabel = listingName ?? rawBusinessName ?? 'Unknown business'
 
+  // A null listingName means the receipt was never bound to a listing, so
+  // approveReceipt writes no flow node for it and it can never reach the
+  // community-spend breakdowns. Say so here rather than letting the user work
+  // it out from an empty panel on another page.
+  const isUnmatched = listingName === null
+
   return (
     <div className="py-4 flex items-center justify-between gap-4">
       <div className="flex-1 min-w-0">
         <p className="font-subhead text-sm font-semibold text-brand-black truncate">
           {businessLabel}
         </p>
-        <p className="font-body text-xs text-charcoal-soft mt-0.5">{purchaseDate}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <p className="font-body text-xs text-charcoal-soft">{purchaseDate}</p>
+          {isUnmatched && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-charcoal/5 text-charcoal-soft shrink-0">
+              Not matched to a listing
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">

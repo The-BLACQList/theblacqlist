@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ArrowUpRight, TrendingUp, Building2, MapPin, Tag } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export const metadata: Metadata = {
   title: 'Community Spend | The BLACQList',
@@ -27,8 +28,11 @@ function formatDollars(cents: number) {
 export default async function CommunitySpendPage() {
   const supabase = await createClient()
 
-  // Total spend (excluding opt-outs) — RLS on spend_events restricts per-user rows;
-  // community aggregate is sourced from flow_nodes which has a public-read policy.
+  // Total spend (excluding opt-outs). spend_events carries no PII and is
+  // public-read by policy (`spend_events_public_select` in
+  // 20260511000001_receipt_community_spend.sql) — same as flow_nodes. Mutations
+  // are service-role only. So every figure on this page is a community
+  // aggregate, not the signed-in user's own rows.
   const { data: spendRows } = await supabase
     .from('spend_events')
     .select('amount_cents, listing_id')
@@ -139,6 +143,14 @@ export default async function CommunitySpendPage() {
 
   const hasData = totalAmountCents > 0
 
+  // A receipt only feeds the breakdowns when it was matched to a listing at
+  // submission: approveReceipt creates flow nodes `if (spendEvent &&
+  // receipt.listing_id)`, and the category rollup above needs the same id.
+  // Money can therefore be counted in the total while every panel is empty —
+  // which reads as a broken page unless we say so.
+  const hasBreakdowns =
+    topBusinesses.length > 0 || topCities.length > 0 || topCategories.length > 0
+
   return (
     <main>
       <div className="max-w-[720px] mx-auto space-y-8">
@@ -187,7 +199,20 @@ export default async function CommunitySpendPage() {
           </div>
         </div>
 
-        {hasData && (
+        {hasData && !hasBreakdowns && (
+          <div className="rounded-xl bg-white border border-charcoal/10">
+            <EmptyState
+              icon={Building2}
+              iconClassName="text-charcoal-faint"
+              heading="No breakdowns yet"
+              body="Spend breaks down by business, city, and category once an approved receipt is matched to a business on The BLACQList. A receipt that wasn't matched still counts toward the total above."
+              action={{ label: 'View your receipts', href: '/account/receipts' }}
+              className="py-10"
+            />
+          </div>
+        )}
+
+        {hasData && hasBreakdowns && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Top businesses */}
             {topBusinesses.length > 0 && (
