@@ -116,11 +116,11 @@ export async function deleteAccountAction(
   }
 
   // 4) Best-effort storage cleanup + session clear — never blocks the redirect.
-  //    Receipt bucket naming is inconsistent in older code paths ('receipts' vs
-  //    'receipt-uploads'), so clear from both; the avatar bucket may not exist yet.
+  //    'receipt-uploads' is the only receipt bucket that has ever existed; the
+  //    old 'receipts' name was a write path pointing at nothing. The avatar
+  //    bucket may not exist yet.
   try {
     if (receiptPaths.length > 0) {
-      await service.storage.from('receipts').remove(receiptPaths)
       await service.storage.from('receipt-uploads').remove(receiptPaths)
     }
     if (avatarPath) {
