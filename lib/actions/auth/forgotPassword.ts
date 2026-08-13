@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/env'
 import { TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
 
 export type ForgotPasswordState =
@@ -15,7 +16,7 @@ export async function forgotPasswordAction(
   const email = formData.get('email')?.toString().trim() ?? ''
   if (!email) return { error: 'Email is required.', field: 'email' }
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback?next=/reset-password`
+  const redirectTo = `${getAppUrl()}/auth/callback?next=/reset-password`
 
   // Required once project-level CAPTCHA is enabled in Supabase — the recovery
   // endpoint enforces it alongside signup and password sign-in.

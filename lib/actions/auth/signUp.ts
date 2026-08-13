@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/env'
 import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
 import { WelcomeEmail } from '@/lib/email/templates/welcome'
@@ -32,7 +33,7 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
 
   const supabase = await createClient()
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback`
+  const redirectTo = `${getAppUrl()}/auth/callback`
 
   // Supabase verifies this token itself (Authentication → Attack Protection).
   // We do NOT also call siteverify — a Turnstile token is single-use, so a
