@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu } from 'lucide-react'
+import { Menu, ShieldCheck } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -27,9 +27,11 @@ const navLinks = [
 
 interface Props {
   isSignedIn: boolean
+  /** Resolved server-side in PublicHeader. Gates the link only — /admin still guards itself. */
+  isAdmin: boolean
 }
 
-export function MobileNav({ isSignedIn }: Props) {
+export function MobileNav({ isSignedIn, isAdmin }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -110,6 +112,18 @@ export function MobileNav({ isSignedIn }: Props) {
           <div className="flex flex-col gap-3">
             {isSignedIn ? (
               <>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 border-amber-gold/50 text-gold bg-transparent hover:bg-amber-gold/10 hover:text-gold font-subhead"
+                    asChild
+                  >
+                    <Link href="/admin" onClick={() => setIsOpen(false)}>
+                      <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"

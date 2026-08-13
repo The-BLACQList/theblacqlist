@@ -37,6 +37,7 @@ export default async function AdminOverviewPage() {
     { count: pendingClaims },
     { count: pendingVerifications },
     { count: pendingReports },
+    { count: pendingReceipts },
     { data: recentQueue },
   ] = await Promise.all([
     serviceClient
@@ -57,6 +58,14 @@ export default async function AdminOverviewPage() {
       .select('id', { count: 'exact', head: true })
       .in('queue_type', ['correction', 'review', 'flagged_listing'])
       .eq('status', 'pending'),
+    // Receipts never enter moderation_queue, so they are invisible to the
+    // "Recent queue activity" table below and need their own count. The status
+    // value is `pending_review` — the one /admin/receipts filters its default
+    // tab on — not `pending` like the queue rows above.
+    serviceClient
+      .from('receipt_uploads')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending_review'),
     serviceClient
       .from('moderation_queue')
       .select('id, queue_type, entity_id, entity_type, created_at, status')
@@ -79,7 +88,7 @@ export default async function AdminOverviewPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <AdminStatCard
           label="Pending entities"
           count={pendingEntities ?? 0}
@@ -98,6 +107,12 @@ export default async function AdminOverviewPage() {
           href="/admin/verification"
         />
         <AdminStatCard label="Reports & flags" count={pendingReports ?? 0} href="/admin/reports" />
+        <AdminStatCard
+          label="Pending receipts"
+          count={pendingReceipts ?? 0}
+          href="/admin/receipts"
+          urgent
+        />
       </div>
 
       {/* Recent queue */}
@@ -178,6 +193,7 @@ export default async function AdminOverviewPage() {
             { href: '/admin/claims', label: 'Review pending claims' },
             { href: '/admin/verification', label: 'Verification queue' },
             { href: '/admin/reviews', label: 'Review moderation' },
+            { href: '/admin/receipts', label: 'Receipt approvals' },
             { href: '/admin/reports', label: 'Reports & corrections' },
             { href: '/admin/analytics', label: 'Platform analytics' },
           ].map(({ href, label }) => (

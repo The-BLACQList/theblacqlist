@@ -130,7 +130,7 @@ export default async function MyReceiptsPage({
                     amountCents={receipt.amount_cents}
                     purchaseDate={receipt.purchase_date}
                     status={receipt.status}
-                    hasFile={!!receipt.file_path}
+                    filePath={receipt.file_path}
                   />
                 )
               })}
