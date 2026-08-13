@@ -47,6 +47,48 @@ async function upsertFlowNode(
   return created?.id ?? null
 }
 
+/**
+ * Accumulate one transaction onto the business -> city edge.
+ *
+ * business -> city is the ONLY edge the shipped schema can express: flow_nodes'
+ * CHECK permits 'business' | 'city' and nothing else. Same select-then-write
+ * shape as upsertFlowNode, and deliberately NOT the SQL from ticket 067 — the
+ * shipped flow_edges has five columns only (no last_transaction_at, no
+ * created_at/updated_at), so that INSERT would fail on a column that
+ * doesn't exist.
+ */
+async function upsertFlowEdge(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  sourceNodeId: string,
+  targetNodeId: string,
+  amountCents: number
+): Promise<void> {
+  const { data: existing } = await serviceClient
+    .from('flow_edges')
+    .select('id, total_amount_cents, transaction_count')
+    .eq('source_node_id', sourceNodeId)
+    .eq('target_node_id', targetNodeId)
+    .maybeSingle()
+
+  if (existing) {
+    await serviceClient
+      .from('flow_edges')
+      .update({
+        total_amount_cents: existing.total_amount_cents + amountCents,
+        transaction_count: existing.transaction_count + 1,
+      })
+      .eq('id', existing.id)
+    return
+  }
+
+  await serviceClient.from('flow_edges').insert({
+    source_node_id: sourceNodeId,
+    target_node_id: targetNodeId,
+    total_amount_cents: amountCents,
+    transaction_count: 1,
+  })
+}
+
 export async function approveReceiptAction(
   _prev: ApproveReceiptState,
   formData: FormData
@@ -81,12 +123,25 @@ export async function approveReceiptAction(
 
   if (updateError) return { error: 'Failed to approve receipt. Please try again.' }
 
-  // 2. Insert spend_event
+  // 2. Resolve the listing's city so the spend can be aggregated geographically.
+  //    Only on the approval path, and only when a listing is actually linked.
+  let cityId: string | null = null
+  if (receipt.listing_id) {
+    const { data: listing } = await serviceClient
+      .from('listings')
+      .select('city_id')
+      .eq('id', receipt.listing_id)
+      .maybeSingle()
+    cityId = listing?.city_id ?? null
+  }
+
+  // 3. Insert spend_event
   const { data: spendEvent } = await serviceClient
     .from('spend_events')
     .insert({
       receipt_upload_id: receiptId,
       listing_id: receipt.listing_id ?? null,
+      city_id: cityId,
       amount_cents: receipt.amount_cents,
       purchase_date: receipt.purchase_date,
       aggregate_opt_out: receipt.aggregate_opt_out,
@@ -95,12 +150,26 @@ export async function approveReceiptAction(
     .select('id')
     .single()
 
-  // 3. Update flow_nodes/edges if listing is linked
+  // 4. Accumulate the flow graph: a business node, a city node when the listing
+  //    has one, and the business -> city edge between them. All three feed
+  //    /account/community-spend and /api/flow-map/summary.
   if (spendEvent && receipt.listing_id) {
-    await upsertFlowNode(serviceClient, 'business', receipt.listing_id, receipt.amount_cents)
+    const businessNodeId = await upsertFlowNode(
+      serviceClient,
+      'business',
+      receipt.listing_id,
+      receipt.amount_cents
+    )
+
+    if (cityId) {
+      const cityNodeId = await upsertFlowNode(serviceClient, 'city', cityId, receipt.amount_cents)
+      if (businessNodeId && cityNodeId) {
+        await upsertFlowEdge(serviceClient, businessNodeId, cityNodeId, receipt.amount_cents)
+      }
+    }
   }
 
-  // 4. Audit log
+  // 5. Audit log
   await writeAuditLog({
     adminUserId: session.user.id,
     action: 'receipt_approved',
