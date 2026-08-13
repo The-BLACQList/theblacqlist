@@ -6,6 +6,7 @@ import { Loader2, AlertCircle, Upload, Info } from 'lucide-react'
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
+import { ListingCombobox } from './ListingCombobox'
 
 const inputCls =
   'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
@@ -79,15 +80,12 @@ export function ReceiptSubmissionForm() {
       <Field
         id="raw_business_name"
         label="Business name"
-        hint="Enter the name of the Black-owned business you spent money at."
+        hint="Start typing — we'll match it to a business on The BLACQList. Not there yet? Type the name anyway."
         error={fieldErrors.raw_business_name}
       >
-        <input
+        <ListingCombobox
           id="raw_business_name"
-          name="raw_business_name"
-          type="text"
-          maxLength={200}
-          placeholder="e.g. The Brown Sugar Bakery"
+          invalid={Boolean(fieldErrors.raw_business_name)}
           className={inputCls}
         />
       </Field>
