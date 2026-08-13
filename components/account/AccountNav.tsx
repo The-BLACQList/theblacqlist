@@ -31,6 +31,8 @@ interface Props {
   memberSince: string
   counts: AccountNavCounts
   isOwner: boolean
+  /** Resolved server-side in the account layout. Gates the group only — /admin still guards itself. */
+  isAdmin: boolean
 }
 
 interface NavItem {
@@ -50,7 +52,7 @@ interface NavGroup {
  * (identity block, live counts, no back-links anywhere), horizontal
  * scroll-nav on mobile.
  */
-export function AccountNav({ displayName, memberSince, counts, isOwner }: Props) {
+export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin }: Props) {
   const pathname = usePathname()
 
   // The sidebar is the user's choice: collapsed state persists across visits.
@@ -91,6 +93,12 @@ export function AccountNav({ displayName, memberSince, counts, isOwner }: Props)
       label: 'Account',
       items: [{ href: '/account/settings', label: 'Settings' }],
     },
+    // Same gating pattern as 'Your business' above. On mobile the groups are
+    // flattened, so this shows up inline in the scroll-nav — same as
+    // 'My business' already does.
+    ...(isAdmin
+      ? [{ label: 'Admin', items: [{ href: '/admin', label: 'Admin dashboard' }] }]
+      : []),
   ]
 
   const initial = displayName.charAt(0).toUpperCase() || 'B'

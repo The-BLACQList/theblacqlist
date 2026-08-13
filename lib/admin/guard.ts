@@ -13,6 +13,26 @@ export interface AdminSession {
 
 // ─── Role check ───────────────────────────────────────────────────────────────
 
+/**
+ * The role lookup on its own, for callers that already hold an authenticated
+ * user id and shouldn't pay for a second `auth.getUser()` round-trip.
+ *
+ * PublicHeader is the reason this is exported: it renders on every page and has
+ * already resolved the user, so calling getAdminSession() there would double the
+ * auth calls sitewide to answer one question. Returns null for non-admins.
+ */
+export async function getAdminRole(userId: string): Promise<AdminRole | null> {
+  const serviceClient = createServiceClient()
+  const { data: roleRow } = await serviceClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .in('role', ['admin', 'super_admin'])
+    .maybeSingle()
+
+  return roleRow ? (roleRow.role as AdminRole) : null
+}
+
 // For Server Components and layouts — redirects on failure.
 // Never call from inside a server action.
 export async function requireAdmin(): Promise<AdminSession> {
@@ -23,19 +43,12 @@ export async function requireAdmin(): Promise<AdminSession> {
 
   if (!user) redirect('/sign-in?next=/admin')
 
-  const serviceClient = createServiceClient()
-  const { data: roleRow } = await serviceClient
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .in('role', ['admin', 'super_admin'])
-    .maybeSingle()
-
-  if (!roleRow) redirect('/')
+  const role = await getAdminRole(user.id)
+  if (!role) redirect('/')
 
   return {
     user: { id: user.id, email: user.email },
-    role: roleRow.role as AdminRole,
+    role,
   }
 }
 
@@ -48,19 +61,12 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   if (!user) return null
 
-  const serviceClient = createServiceClient()
-  const { data: roleRow } = await serviceClient
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .in('role', ['admin', 'super_admin'])
-    .maybeSingle()
-
-  if (!roleRow) return null
+  const role = await getAdminRole(user.id)
+  if (!role) return null
 
   return {
     user: { id: user.id, email: user.email },
-    role: roleRow.role as AdminRole,
+    role,
   }
 }
 

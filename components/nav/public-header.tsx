@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { Search, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
 import { BrandMark } from '@/components/ui/brand-mark'
 import { createClient } from '@/lib/supabase/server'
+import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 
 const desktopNavLinks = [
@@ -20,6 +21,11 @@ export async function PublicHeader() {
     data: { user },
   } = await supabase.auth.getUser()
   const isSignedIn = !!user
+
+  // One indexed single-row lookup, and only for signed-in visitors. The header
+  // is already dynamic because of getUser(), so this adds a query, not a
+  // rendering-strategy change. Admins had no way into /admin except typing it.
+  const isAdmin = user ? (await getAdminRole(user.id)) !== null : false
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-deep-bg h-14 md:h-16">
@@ -66,6 +72,15 @@ export async function PublicHeader() {
 
             {isSignedIn ? (
               <>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1.5 font-subhead text-sm text-gold hover:text-amber-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
+                  >
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/account"
                   className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
@@ -108,7 +123,7 @@ export async function PublicHeader() {
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
-            <MobileNav isSignedIn={isSignedIn} />
+            <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} />
           </div>
         </nav>
       </Container>

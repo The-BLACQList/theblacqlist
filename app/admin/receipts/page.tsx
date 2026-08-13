@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { approveReceiptAction } from '@/lib/actions/spend/approveReceipt'
 import { rejectReceiptAction } from '@/lib/actions/spend/rejectReceipt'
 import { ReceiptStatusBadge } from '@/components/spend/ReceiptStatusBadge'
+import { ReceiptImageButton } from '@/components/spend/ReceiptImageButton'
 
 export const metadata: Metadata = { title: 'Receipts — Admin' }
 
@@ -122,9 +123,21 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                 <div key={receipt.id} className="p-5 space-y-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="font-subhead text-sm font-semibold text-brand-black truncate">
-                        {businessLabel}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-subhead text-sm font-semibold text-brand-black truncate">
+                          {businessLabel}
+                        </p>
+                        {/* businessLabel falls back to the typed-in name, so a
+                            matched and an unmatched receipt look identical
+                            above. An unmatched one contributes nothing to the
+                            community breakdowns — say so before approval, not
+                            after. */}
+                        {!listing && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-charcoal/5 text-charcoal-soft shrink-0">
+                            Not matched to a listing
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="font-subhead text-xs text-charcoal-soft">
                           {formatDollars(receipt.amount_cents)}
@@ -149,9 +162,13 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                         </p>
                       )}
                       {receipt.file_path && (
-                        <p className="font-body text-xs text-charcoal-faint mt-1">
-                          Receipt image attached
-                        </p>
+                        <div className="mt-2">
+                          <ReceiptImageButton
+                            receiptId={receipt.id}
+                            filePath={receipt.file_path}
+                            businessLabel={businessLabel}
+                          />
+                        </div>
                       )}
                     </div>
                     <ReceiptStatusBadge status={receipt.status} />

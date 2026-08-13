@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAdminRole } from '@/lib/admin/guard'
 import { AccountNav, type AccountNavCounts } from '@/components/account/AccountNav'
 
 /**
@@ -21,7 +22,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
     ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : '—'
 
-  const [saved, reviews, claims, claimsPending, receipts, owned] = await Promise.all([
+  const [saved, reviews, claims, claimsPending, receipts, owned, adminRole] = await Promise.all([
     supabase.from('saves').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase
       .from('reviews')
@@ -45,6 +46,9 @@ export default async function AccountLayout({ children }: { children: React.Reac
       .select('id', { count: 'exact', head: true })
       .eq('owner_user_id', user.id)
       .is('deleted_at', null),
+    // Gates the Admin group in the sidebar only — /admin still guards itself.
+    // Folded into the existing Promise.all so it costs no extra round-trip.
+    getAdminRole(user.id),
   ])
 
   const counts: AccountNavCounts = {
@@ -63,6 +67,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
           memberSince={memberSince}
           counts={counts}
           isOwner={(owned.count ?? 0) > 0}
+          isAdmin={adminRole !== null}
         />
         <div className="min-w-0 flex-1 py-6 lg:py-0">{children}</div>
       </div>

@@ -7,6 +7,7 @@ import { Loader2, AlertCircle, Upload, Info } from 'lucide-react'
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
 import { ListingCombobox } from './ListingCombobox'
+import { ReceiptImageButton } from './ReceiptImageButton'
 
 const inputCls =
   'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
@@ -220,15 +221,22 @@ interface ReceiptRowProps {
   amountCents: number
   purchaseDate: string
   status: string
-  hasFile: boolean
+  /**
+   * Storage path, not a URL — ReceiptImageButton mints its own signed URL and
+   * needs the extension to tell a photo from a PDF. This replaces the old
+   * `hasFile: boolean`, which the row declared and then never used.
+   */
+  filePath: string | null
 }
 
 export function ReceiptListRow({
+  id,
   rawBusinessName,
   listingName,
   amountCents,
   purchaseDate,
   status,
+  filePath,
 }: ReceiptRowProps) {
   const businessLabel = listingName ?? rawBusinessName ?? 'Unknown business'
 
@@ -239,7 +247,7 @@ export function ReceiptListRow({
   const isUnmatched = listingName === null
 
   return (
-    <div className="py-4 flex items-center justify-between gap-4">
+    <div className="py-4 flex items-start justify-between gap-4">
       <div className="flex-1 min-w-0">
         <p className="font-subhead text-sm font-semibold text-brand-black truncate">
           {businessLabel}
@@ -252,6 +260,15 @@ export function ReceiptListRow({
             </span>
           )}
         </div>
+        {filePath && (
+          <div className="mt-2">
+            <ReceiptImageButton
+              receiptId={id}
+              filePath={filePath}
+              businessLabel={businessLabel}
+            />
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">
