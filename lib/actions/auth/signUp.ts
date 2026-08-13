@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/env'
+import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
 import { WelcomeEmail } from '@/lib/email/templates/welcome'
 
@@ -31,12 +33,20 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
 
   const supabase = await createClient()
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/auth/callback`
+  const redirectTo = `${getAppUrl()}/auth/callback`
+
+  // Supabase verifies this token itself (Authentication → Attack Protection).
+  // We do NOT also call siteverify — a Turnstile token is single-use, so a
+  // second verification would fail. Enforcing at the auth endpoint is the whole
+  // point: /auth/v1/signup is reachable directly with the public anon key, so a
+  // check living only in this server action would protect nothing.
+  const captchaToken = formData.get(TURNSTILE_TOKEN_FIELD)?.toString() || undefined
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      captchaToken,
       emailRedirectTo: redirectTo,
       data: {
         display_name: displayName,
@@ -58,6 +68,9 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
         error: 'That email is already registered. Sign in instead.',
         field: 'email',
       }
+    }
+    if (error.message.toLowerCase().includes('captcha')) {
+      return { error: TURNSTILE_ERROR, field: 'general' }
     }
     return { error: 'Something went wrong. Please try again.', field: 'general' }
   }

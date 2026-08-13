@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { Loader2, Star, ImagePlus, X } from 'lucide-react'
 import { createReviewAction } from '@/lib/actions/reviews/createReview'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import type { ReviewCriterion } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -250,6 +251,8 @@ export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
           {state.error}
         </p>
       )}
+
+      <TurnstileWidget />
 
       <div className="flex justify-end">
         <button

@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 import { signInAction } from '@/lib/actions/auth/signIn'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import { cn } from '@/lib/utils'
 
 function SubmitButton() {
@@ -154,6 +155,8 @@ function SignInContent() {
             </Link>
           </div>
         </div>
+
+        <TurnstileWidget className="mt-2" />
 
         <div className="mt-2">
           <SubmitButton />
