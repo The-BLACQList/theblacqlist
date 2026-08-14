@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getAppUrl } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import type { BillingCycle, PlanSlug } from '@/lib/stripe/plans'
@@ -76,7 +77,10 @@ export async function POST(request: Request) {
     )
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  // getAppUrl() falls through explicit ?? VERCEL_URL ?? localhost, so a Preview
+  // deployment resolves its own origin instead of sending Stripe's redirect to
+  // the tester's machine.
+  const baseUrl = getAppUrl()
 
   // Shared metadata: read by the webhook to sync the subscription + tier, and
   // by the audit log. billing_cycle lets us record monthly vs. annual.
