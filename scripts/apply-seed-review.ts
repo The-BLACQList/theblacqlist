@@ -293,7 +293,11 @@ for (const [city, file] of Object.entries(CITY_FILES)) {
   }
 
   const cleaned = listings.filter((l) => !removeNames.has(l.name))
-  writeFileSync(path, JSON.stringify(cleaned, null, 2))
+  // Trailing newline: `JSON.stringify` does not emit one, so writing without it
+  // strips the newline the corpus files ship with and makes an all-Keep apply —
+  // a run that changes no data at all — show up as a five-file diff. A no-op
+  // that looks like a change is how real changes get skimmed past in review.
+  writeFileSync(path, JSON.stringify(cleaned, null, 2) + '\n')
   summary[city] = { before, removed: removeNames.size, edited, confirmed, after: cleaned.length }
 }
 
