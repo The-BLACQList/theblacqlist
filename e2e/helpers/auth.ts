@@ -4,6 +4,39 @@ export const ADMIN_EMAIL = process.env.A11Y_ADMIN_EMAIL ?? 'a11y-admin@test.loca
 export const ADMIN_PASSWORD = process.env.A11Y_ADMIN_PASSWORD ?? 'A11yTest1234!'
 
 /**
+ * Blocks until Cloudflare has solved the Turnstile challenge and written its
+ * token into the form, but only when the widget is actually enabled.
+ *
+ * Why this has to exist: when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set, the widget
+ * loads its script lazily and renders on a 200ms poll
+ * (components/security/TurnstileWidget.tsx:70-72), so the hidden
+ * `cf-turnstile-response` input does not exist at first paint. Submitting
+ * before it lands sends no token, and Supabase — which verifies the token
+ * itself when project-level CAPTCHA is on — rejects the sign-in with a captcha
+ * error that surfaces as the generic TURNSTILE_ERROR alert. That failure looks
+ * exactly like a bad password, which is what made it expensive to diagnose the
+ * first time — it went red on a comment-only PR that could not have caused it.
+ *
+ * Gated on the env var rather than on a DOM probe: a `count() > 0` check races
+ * the same lazy script it is trying to wait for, and would silently pass
+ * straight through on a slow load. Unset key -> no widget -> no-op, which keeps
+ * a credential-free local run behaving exactly as it does today.
+ */
+async function waitForTurnstileToken(page: Page) {
+  if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) return
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector<HTMLInputElement>(
+        'input[name="cf-turnstile-response"]'
+      )
+      return Boolean(el?.value)
+    },
+    undefined,
+    { timeout: 30_000 }
+  )
+}
+
+/**
  * Signs in through the real sign-in form (cookie-based @supabase/ssr session)
  * as the admin user provisioned in global-setup, then lands on /admin/claims.
  * Using the UI login produces the exact cookie set the app's requireAdmin()
@@ -13,6 +46,7 @@ export async function loginAsAdmin(page: Page) {
   await page.goto('/sign-in?next=/admin/claims')
   await page.fill('#email', ADMIN_EMAIL)
   await page.fill('#password', ADMIN_PASSWORD)
+  await waitForTurnstileToken(page)
   await page.getByRole('button', { name: 'Sign in' }).click()
   // requireAdmin() redirects non-admins to '/', so reaching /admin/claims
   // confirms both authentication and the admin role.
