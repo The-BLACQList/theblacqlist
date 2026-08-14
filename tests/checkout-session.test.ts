@@ -117,4 +117,24 @@ describe('POST /api/stripe/create-checkout-session', () => {
     const args = h.createSession.mock.calls[0]![0]
     expect(args.payment_method_types).toBeUndefined()
   })
+
+  it('resolves Stripe redirect URLs from VERCEL_URL when NEXT_PUBLIC_APP_URL is unset', async () => {
+    // The Preview scenario: no explicit app URL, only Vercel's injected host.
+    // Before this route used getAppUrl(), its inline fallback sent the
+    // checkout success/cancel redirect to http://localhost:3000 — the tester's
+    // own machine. This is the test that would have caught that.
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', '')
+    vi.stubEnv('VERCEL_URL', 'preview-abc123.vercel.app')
+    try {
+      const res = await POST(req({ planSlug: 'starter', listingId: 'l1' }))
+      expect(res.status).toBe(200)
+      const args = h.createSession.mock.calls[0]![0]
+      expect(args.success_url).toBe(
+        'https://preview-abc123.vercel.app/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}'
+      )
+      expect(args.cancel_url).toBe('https://preview-abc123.vercel.app/dashboard/upgrade')
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
 })

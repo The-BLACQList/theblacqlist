@@ -1,5 +1,6 @@
 'use server'
 
+import { getAppUrl } from '@/lib/env'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
@@ -96,7 +97,9 @@ export async function updateVerificationStatusAction(
   // maybePromoteToCertified use. An unclaimed listing has no owner to notify.
   if (listing.owner_user_id) {
     const ownerUserId = listing.owner_user_id
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://theblacqlist.com'
+    // getAppUrl() resolves the deployment's own origin, so decision emails sent
+    // from a Preview link back to that Preview rather than to production.
+    const siteUrl = getAppUrl()
 
     void (async () => {
       try {

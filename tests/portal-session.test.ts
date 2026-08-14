@@ -76,4 +76,22 @@ describe('createPortalSession', () => {
     const res = await createPortalSession()
     expect(res).toMatchObject({ ok: false, code: 'SERVER_ERROR' })
   })
+
+  it('resolves the portal return_url from VERCEL_URL when NEXT_PUBLIC_APP_URL is unset', async () => {
+    // The Preview scenario: no explicit app URL, only Vercel's injected host.
+    // Before this action used getAppUrl(), its inline fallback pointed the
+    // billing-portal return_url at http://localhost:3000.
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', '')
+    vi.stubEnv('VERCEL_URL', 'preview-abc123.vercel.app')
+    try {
+      const res = await createPortalSession({ listingId: 'l1' })
+      expect(res.ok).toBe(true)
+      expect(h.createPortal).toHaveBeenCalledWith({
+        customer: 'cus_123',
+        return_url: 'https://preview-abc123.vercel.app/dashboard/upgrade',
+      })
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
 })

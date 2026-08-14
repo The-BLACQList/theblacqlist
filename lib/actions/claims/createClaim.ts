@@ -1,5 +1,6 @@
 'use server'
 
+import { getAppUrl } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
@@ -177,7 +178,10 @@ export async function createClaimAction(
     },
   })
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://theblacqlist.com'
+  // getAppUrl() resolves the deployment's own origin, so a claim submitted on a
+  // Preview gets email links to that Preview — not to production, where the
+  // claim does not exist.
+  const siteUrl = getAppUrl()
 
   // ── Confirmation email to claimant (fire-and-forget) ────────────────────────
   if (user.email) {

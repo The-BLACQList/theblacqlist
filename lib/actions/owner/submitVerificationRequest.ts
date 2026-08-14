@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getAppUrl } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { sendEmail } from '@/lib/email/resend'
@@ -88,7 +89,10 @@ export async function submitVerificationRequest(
   // Non-blocking by design: sendEmail already swallows Resend failures, and the
   // request is durably recorded above. A mail hiccup must never turn a
   // successful submission into an error the owner has to retry.
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://theblacqlist.com'
+  // getAppUrl() resolves the deployment's own origin, so a Preview submission's
+  // email links land on that Preview — not on production, where the record
+  // being linked to does not exist.
+  const siteUrl = getAppUrl()
 
   if (session.user.email) {
     void sendEmail({

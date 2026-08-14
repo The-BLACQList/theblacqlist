@@ -1,5 +1,6 @@
 'use server'
 
+import { getAppUrl } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { stripe } from '@/lib/stripe/client'
@@ -58,7 +59,9 @@ export async function createPortalSession(input?: {
     }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  // getAppUrl() resolves the deployment's own origin on Preview (VERCEL_URL
+  // fallback), so the portal's return_url never points at localhost.
+  const baseUrl = getAppUrl()
 
   try {
     const portal = await stripe.billingPortal.sessions.create({
