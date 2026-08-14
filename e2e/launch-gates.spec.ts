@@ -38,12 +38,18 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
     expect(count ?? 0, 'No published collection — publish one via /admin/collections/new').toBeGreaterThanOrEqual(1)
   })
 
-  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50)', async () => {
+  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50 / LA·DC·NOLA 40)', async () => {
     const supabase = serviceClient()
+    // The threshold is a *published* count, not a row count: the seeder forces
+    // `status: 'draft'` on any row marked temp-closed, so a city can carry 42
+    // rows and still fail at 39. Expansion cities launch at 40.
     const cities = [
       { slug: 'atlanta-ga', label: 'ATL', min: 150 },
       { slug: 'houston-tx', label: 'HOU', min: 50 },
       { slug: 'chicago-il', label: 'CHI', min: 50 },
+      { slug: 'los-angeles-ca', label: 'LA', min: 40 },
+      { slug: 'washington-dc', label: 'DC', min: 40 },
+      { slug: 'new-orleans-la', label: 'NOLA', min: 40 },
     ]
 
     const results: Array<{ label: string; min: number; count: number }> = []

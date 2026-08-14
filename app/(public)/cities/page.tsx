@@ -15,7 +15,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
 
 const title = 'Cities | The BLACQList'
 const description =
-  'Explore Black-owned businesses city by city — Atlanta, Houston, Chicago, and more. Find and support your local community.'
+  'Explore Black-owned businesses city by city — Atlanta, Houston, Chicago, Los Angeles, Washington DC, New Orleans, and more. Support your local community.'
 
 export const metadata: Metadata = {
   title,

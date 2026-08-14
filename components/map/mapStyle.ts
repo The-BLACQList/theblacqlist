@@ -41,10 +41,25 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
   }
 }
 
-/** City fly-to targets (matches cities.latitude/longitude seeds). */
+/**
+ * City fly-to targets (matches cities.latitude/longitude seeds).
+ *
+ * Centers are copied verbatim from `supabase/seed.sql` so the map lands where
+ * the database says the city is. Zooms are set against the *measured* bounding
+ * box of each city's seeded listings — see the geocode dry-run report in
+ * `docs/blacqlist/data/` — rather than guessed from the city's nominal size, so
+ * a tight corpus isn't framed as if it filled the metro.
+ *
+ * Los Angeles is the case where those two disagree: its seeded center is
+ * downtown, but the listings cluster southwest (Leimert Park, Crenshaw, Baldwin
+ * Hills). 10.2 covers the whole 0.143° × 0.159° span from that offset center.
+ */
 export const CITY_VIEWS: Record<string, { center: [number, number]; zoom: number; label: string }> =
   {
     'atlanta-ga': { center: [-84.388, 33.749], zoom: 11, label: 'Atlanta' },
     'houston-tx': { center: [-95.3698, 29.7604], zoom: 10.6, label: 'Houston' },
     'chicago-il': { center: [-87.6298, 41.8781], zoom: 10.8, label: 'Chicago' },
+    'los-angeles-ca': { center: [-118.243683, 34.052235], zoom: 10.2, label: 'Los Angeles' },
+    'washington-dc': { center: [-77.036873, 38.907192], zoom: 11.2, label: 'Washington DC' },
+    'new-orleans-la': { center: [-90.071533, 29.951065], zoom: 10.9, label: 'New Orleans' },
   }
