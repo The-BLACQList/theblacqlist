@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -11,50 +12,27 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
-  const serviceClient = createServiceClient()
-  const { data } = await serviceClient
-    .from('listings')
-    .select('name, tagline')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (!data) return { title: 'Vendor | BLACQList Marketplace' }
-
-  return {
-    title: `${data.name} | BLACQList Marketplace`,
-    description: data.tagline ?? `Shop products and services from ${data.name} on BLACQList.`,
-  }
-}
-
-export const revalidate = 1800
-
-export default async function VendorStorefrontPage({ params }: Props) {
-  const { slug } = await params
+// A "storefront" is not strictly entity_type = 'vendor'. createProduct.ts and
+// createService.ts attach marketplace rows to ANY listing the caller owns, and
+// product/service pages link "Sold by" to /vendors/<owner slug> regardless of
+// the owner's entity_type. So the resolution rule is: the listing is
+// vendor-typed OR it actually sells something. Everything else — which before
+// this filter meant every published listing on the site — is notFound().
+// cache() dedupes the queries between generateMetadata and the page render.
+const getStorefront = cache(async (slug: string) => {
   const serviceClient = createServiceClient()
 
   const { data: listing } = await serviceClient
     .from('listings')
-    .select('id, name, slug, tagline, trust_tier, cities(name, states(code)), categories(name)')
+    .select(
+      'id, name, slug, tagline, trust_tier, entity_type, cities(name, states(code)), categories(name)'
+    )
     .eq('slug', slug)
     .eq('status', 'published')
     .is('deleted_at', null)
     .maybeSingle()
 
-  if (!listing) notFound()
-
-  // `cities` has no state_abbr column — it carries state_id and joins out to
-  // states.code. Asking PostgREST for cities(name, state_abbr) errored the whole
-  // select, so `listing` came back null and notFound() fired above for every
-  // vendor. Shape and mapping mirror lib/listings/query.ts:95-103.
-  type CityRef = { name: string; states: { code: string } | null } | null
-  type CategoryRef = { name: string } | null
-  const cityRef = listing.cities as CityRef
-  const city = cityRef ? { name: cityRef.name, state_abbr: cityRef.states?.code ?? '' } : null
-  const category = listing.categories as CategoryRef
+  if (!listing) return null
 
   const [{ data: productRows }, { data: serviceRows }] = await Promise.all([
     serviceClient
@@ -77,13 +55,57 @@ export default async function VendorStorefrontPage({ params }: Props) {
       .limit(24),
   ])
 
-  const products = (productRows ?? []).map((p) => ({
+  const products = productRows ?? []
+  const services = serviceRows ?? []
+
+  if (listing.entity_type !== 'vendor' && products.length === 0 && services.length === 0) {
+    return null
+  }
+
+  return { listing, products, services }
+})
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const storefront = await getStorefront(slug)
+
+  if (!storefront) return { title: 'Vendor | BLACQList Marketplace' }
+
+  const { listing } = storefront
+  return {
+    title: `${listing.name} | BLACQList Marketplace`,
+    description:
+      listing.tagline ?? `Shop products and services from ${listing.name} on BLACQList.`,
+  }
+}
+
+export const revalidate = 1800
+
+export default async function VendorStorefrontPage({ params }: Props) {
+  const { slug } = await params
+  const storefront = await getStorefront(slug)
+
+  if (!storefront) notFound()
+
+  const { listing } = storefront
+
+  // `cities` has no state_abbr column — it carries state_id and joins out to
+  // states.code. Asking PostgREST for cities(name, state_abbr) errored the whole
+  // select, so `listing` came back null and notFound() fired above for every
+  // vendor. Shape and mapping mirror lib/listings/query.ts:95-103.
+  type CityRef = { name: string; states: { code: string } | null } | null
+  type CategoryRef = { name: string } | null
+  const cityRef = listing.cities as CityRef
+  const city = cityRef ? { name: cityRef.name, state_abbr: cityRef.states?.code ?? '' } : null
+  const category = listing.categories as CategoryRef
+
+  const products = storefront.products.map((p) => ({
     ...p,
     vendor_name: undefined,
     vendor_slug: undefined,
   }))
 
-  const services = (serviceRows ?? []).map((s) => ({
+  const services = storefront.services.map((s) => ({
     ...s,
     vendor_name: undefined,
     vendor_slug: undefined,
