@@ -99,6 +99,21 @@ jobs:
           COMING_SOON_MODE: 'false'
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          # Cloudflare's published always-pass TEST site key — not a credential,
+          # safe in the clear (.env.example:117-119). It pairs with the matching
+          # test SECRET configured on the STAGING Supabase project's Attack
+          # Protection page; the two only work as a pair.
+          #
+          # Required, not optional: staging enforces project-level CAPTCHA on
+          # /auth/v1/*, so without a rendered widget there is no
+          # cf-turnstile-response token to send and every UI sign-in is rejected
+          # — which is exactly how the whole e2e job went red on a comment-only
+          # PR. e2e/helpers/auth.ts documents the matching wait this requires.
+          #
+          # Deliberately NOT setting TURNSTILE_SECRET_KEY: the app-side check
+          # (lib/security/turnstile.ts) stays disabled here, matching production,
+          # where the auth routes are guarded by Supabase rather than by the app.
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
