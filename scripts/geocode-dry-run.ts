@@ -12,7 +12,11 @@
  * and cannot be batched.
  *
  * Usage:
- *   npx tsx scripts/geocode-dry-run.ts [--city los-angeles-ca] [--no-network]
+ *   npx tsx scripts/geocode-dry-run.ts [--city <slug>[,<slug>...]] [--no-network]
+ *
+ *   --city takes one slug or a comma-separated set; `--city x` and `--city=x`
+ *   are equivalent. Omit it to run all six. The resolved scope is echoed before
+ *   the first request and carried in the report filename.
  *
  * Runtime: ~1.1s per addressed row (Nominatim's published rate limit, which the
  * shared User-Agent identifies us under). ~150 rows ≈ 3 minutes.
@@ -55,7 +59,10 @@ interface Row {
   address_line_1: string | null
   location_type: string
   category_slug: string
+  /** Fields the drafter could not source. Present ⇒ the row is not seedable yet. */
   _unverified?: string[]
+  /** Provenance stamp written when the row was checked against live sources. */
+  _verified?: { on: string; verdict: string; sources: string[]; note: string }
 }
 
 type Bucket = 'ok' | 'fail' | 'skipOnline' | 'gapPhysical'
@@ -69,18 +76,72 @@ interface Result {
 // ── CLI ────────────────────────────────────────────────────────────────────────
 
 const argv = process.argv.slice(2)
-const cityArg = argv.includes('--city') ? argv[argv.indexOf('--city') + 1] : null
-/** Static checks only — useful for a fast re-run after editing addresses. */
-const noNetwork = argv.includes('--no-network')
 
-const cities: SeedCity[] = cityArg
-  ? SEED_CITIES.filter((c) => c.slug === cityArg)
+const KNOWN_FLAGS = new Set(['--city', '--no-network'])
+
+/**
+ * Both `--city foo` and `--city=foo` are accepted, and anything else starting
+ * with `--` is a hard error.
+ *
+ * Not pedantry — a real miss. This script was first run as `--city=a,b,c`,
+ * which the space-only parser did not recognise; `cityArg` stayed null, the run
+ * silently widened to all six cities, and the verdict came back FAIL on legacy
+ * debt that the requested scope does not contain. A gate that quietly evaluates
+ * a different set than the one asked for is worse than a gate that refuses to
+ * start: the founder reads a verdict whose subject is not what they approved.
+ */
+function readFlag(name: string): string | null {
+  const i = argv.indexOf(name)
+  if (i !== -1) return argv[i + 1] ?? null
+  const inline = argv.find((a) => a.startsWith(`${name}=`))
+  return inline ? inline.slice(name.length + 1) : null
+}
+
+const unknownFlags = argv.filter((a) => a.startsWith('--') && !KNOWN_FLAGS.has(a.split('=')[0]!))
+if (unknownFlags.length) {
+  console.error(
+    `Unknown flag(s): ${unknownFlags.join(', ')}. Known: ${[...KNOWN_FLAGS].join(', ')}`
+  )
+  process.exit(1)
+}
+
+const cityArg = readFlag('--city')
+/** Static checks only — useful for a fast re-run after editing addresses. */
+const noNetwork = argv.some((a) => a === '--no-network' || a.startsWith('--no-network='))
+
+/**
+ * Comma-separated, because a gate run covers the set of cities being seeded —
+ * usually more than one and rarely all six. Running once per city would split
+ * one verdict across three reports, and a gate you have to assemble by hand is
+ * a gate that gets eyeballed instead of read.
+ */
+const wanted = cityArg ? cityArg.split(',').map((s) => s.trim()).filter(Boolean) : null
+
+const cities: SeedCity[] = wanted
+  ? SEED_CITIES.filter((c) => wanted.includes(c.slug))
   : [...SEED_CITIES]
+
+if (wanted) {
+  const unknown = wanted.filter((w) => !SEED_CITIES.some((c) => c.slug === w))
+  if (unknown.length) {
+    console.error(
+      `Unknown city slug(s): ${unknown.join(', ')}. Known: ${SEED_CITIES.map((c) => c.slug).join(', ')}`
+    )
+    process.exit(1)
+  }
+}
 
 if (cities.length === 0) {
   console.error(`No city matches "${cityArg}". Known: ${SEED_CITIES.map((c) => c.slug).join(', ')}`)
   process.exit(1)
 }
+
+// State the subject before doing the work. The verdict at the end is only
+// meaningful against a named scope, and the scope is the thing that silently
+// went wrong once already.
+console.log(
+  `Scope: ${cities.map((c) => c.slug).join(', ')}${wanted ? '' : '  (all cities — no --city given)'}`
+)
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -148,6 +209,22 @@ function runStaticChecks(city: SeedCity, rows: Row[]): void {
     // confirmed is the whole thing this gate exists to prevent, so it is hard.
     if (r._unverified?.length) {
       at('unverified', r._unverified.join(', '))
+    }
+
+    // Coverage, not flag-presence. The first version of this check only tested
+    // for `_unverified`, so a row carrying NEITHER key — no flag and no
+    // provenance record — passed silently. Thirteen rows were in exactly that
+    // state. An unflagged row is not a verified row; it is an unexamined one.
+    //
+    // Soft for the legacy corpora, which predate the convention and are already
+    // in production — see `provenanceRequired` in scripts/data/cities.ts. Soft
+    // still counts and prints; it does not vanish.
+    if (!r._unverified?.length && !r._verified) {
+      at(
+        'no-provenance',
+        'no _verified stamp and no _unverified flag — never checked',
+        city.provenanceRequired
+      )
     }
   }
 
@@ -237,148 +314,164 @@ interface CityReport {
   gaps: string[]
 }
 
-const reports: CityReport[] = []
+/**
+ * Wrapped in a main() rather than run at the top level: esbuild transforms this
+ * file to CJS, where top-level await is a hard error.
+ */
+async function main(): Promise<void> {
+  const reports: CityReport[] = []
 
-for (const city of cities) {
-  const rows = JSON.parse(readFileSync(join(dataDir, city.file), 'utf8')) as Row[]
-  runStaticChecks(city, rows)
+  for (const city of cities) {
+    const rows = JSON.parse(readFileSync(join(dataDir, city.file), 'utf8')) as Row[]
+    runStaticChecks(city, rows)
 
-  console.log(`\n${city.label} — ${rows.length} rows`)
-  const results = await geocodeCity(city, rows)
+    console.log(`\n${city.label} — ${rows.length} rows`)
+    const results = await geocodeCity(city, rows)
 
-  const ok = results.filter((r) => r.bucket === 'ok')
-  const fail = results.filter((r) => r.bucket === 'fail')
-  const skipOnline = results.filter((r) => r.bucket === 'skipOnline')
-  const gapPhysical = results.filter((r) => r.bucket === 'gapPhysical')
+    const ok = results.filter((r) => r.bucket === 'ok')
+    const fail = results.filter((r) => r.bucket === 'fail')
+    const skipOnline = results.filter((r) => r.bucket === 'skipOnline')
+    const gapPhysical = results.filter((r) => r.bucket === 'gapPhysical')
 
-  const coords = ok.map((r) => r.coords).filter((c): c is { lat: number; lng: number } => !!c)
-  const bbox = coords.length
-    ? {
-        minLng: Math.min(...coords.map((c) => c.lng)),
-        minLat: Math.min(...coords.map((c) => c.lat)),
-        maxLng: Math.max(...coords.map((c) => c.lng)),
-        maxLat: Math.max(...coords.map((c) => c.lat)),
-      }
-    : null
+    const coords = ok.map((r) => r.coords).filter((c): c is { lat: number; lng: number } => !!c)
+    const bbox = coords.length
+      ? {
+          minLng: Math.min(...coords.map((c) => c.lng)),
+          minLat: Math.min(...coords.map((c) => c.lat)),
+          maxLng: Math.max(...coords.map((c) => c.lng)),
+          maxLat: Math.max(...coords.map((c) => c.lat)),
+        }
+      : null
 
-  const denom = ok.length + fail.length
-  reports.push({
-    city,
-    total: rows.length,
-    ok: ok.length,
-    fail: fail.length,
-    skipOnline: skipOnline.length,
-    gapPhysical: gapPhysical.length,
-    rate: denom ? ok.length / denom : 1,
-    bbox,
-    failures: fail.map((r) => `${r.row.name} — ${r.row.address_line_1}, ${r.row.zip ?? '?'}`),
-    gaps: gapPhysical.map((r) => `${r.row.name} (location_type: ${r.row.location_type})`),
-  })
-}
-
-// ── Verdict ────────────────────────────────────────────────────────────────────
-
-const hardIssues = staticIssues.filter((i) => i.hard)
-const softIssues = staticIssues.filter((i) => !i.hard)
-const totalGaps = reports.reduce((n, r) => n + r.gapPhysical, 0)
-const totalOk = reports.reduce((n, r) => n + r.ok, 0)
-const totalFail = reports.reduce((n, r) => n + r.fail, 0)
-const overallRate = totalOk + totalFail ? totalOk / (totalOk + totalFail) : 1
-
-const passRate = overallRate >= PASS_RATE
-const passGaps = totalGaps === 0
-const passStatic = hardIssues.length === 0
-const pass = passRate && passGaps && passStatic && !noNetwork
-
-const pct = (n: number) => `${(n * 100).toFixed(1)}%`
-const date = new Date().toISOString().slice(0, 10)
-
-const lines: string[] = [
-  '# Geocode Dry Run',
-  '',
-  `Generated by \`scripts/geocode-dry-run.ts\` on ${date}.`,
-  noNetwork
-    ? '\n> **Static checks only** (`--no-network`). Geocode results are not measured in this run and it cannot pass.\n'
-    : '',
-  `**Verdict: ${pass ? '✅ PASS' : '❌ FAIL'}**`,
-  '',
-  '| Gate | Required | Actual | |',
-  '|---|---|---|---|',
-  `| Geocode rate | ≥${pct(PASS_RATE)} | ${pct(overallRate)} | ${passRate ? '✅' : '❌'} |`,
-  `| Physical rows with no address | 0 | ${totalGaps} | ${passGaps ? '✅' : '❌'} |`,
-  `| Hard static failures | 0 | ${hardIssues.length} | ${passStatic ? '✅' : '❌'} |`,
-  '',
-  '## Per city',
-  '',
-  '| City | Rows | Geocoded | Failed | Rate | No address (OK) | No address (physical) |',
-  '|---|---|---|---|---|---|---|',
-  ...reports.map(
-    (r) =>
-      `| ${r.city.label} | ${r.total} | ${r.ok} | ${r.fail} | ${pct(r.rate)} | ${r.skipOnline} | ${r.gapPhysical} |`
-  ),
-  '',
-  '## Bounding boxes',
-  '',
-  'Measured from successful geocodes. These set the `CITY_VIEWS` zoom in',
-  '`components/map/mapStyle.ts` by measurement rather than by guess.',
-  '',
-  '| City | SW (lng, lat) | NE (lng, lat) | Span (° lng × ° lat) |',
-  '|---|---|---|---|',
-  ...reports.map((r) =>
-    r.bbox
-      ? `| ${r.city.label} | ${r.bbox.minLng.toFixed(4)}, ${r.bbox.minLat.toFixed(4)} | ${r.bbox.maxLng.toFixed(4)}, ${r.bbox.maxLat.toFixed(4)} | ${(r.bbox.maxLng - r.bbox.minLng).toFixed(3)} × ${(r.bbox.maxLat - r.bbox.minLat).toFixed(3)} |`
-      : `| ${r.city.label} | — | — | no successful geocodes |`
-  ),
-  '',
-]
-
-for (const r of reports) {
-  if (r.gaps.length) {
-    lines.push(
-      `## ${r.city.label} — physical rows with no address (${r.gaps.length})`,
-      '',
-      'Each is a storefront missing its address, not an online business. Supply the',
-      'address or correct `location_type`; do not carry them forward.',
-      '',
-      ...r.gaps.map((g) => `- ${g}`),
-      ''
-    )
+    const denom = ok.length + fail.length
+    reports.push({
+      city,
+      total: rows.length,
+      ok: ok.length,
+      fail: fail.length,
+      skipOnline: skipOnline.length,
+      gapPhysical: gapPhysical.length,
+      rate: denom ? ok.length / denom : 1,
+      bbox,
+      failures: fail.map((r) => `${r.row.name} — ${r.row.address_line_1}, ${r.row.zip ?? '?'}`),
+      gaps: gapPhysical.map((r) => `${r.row.name} (location_type: ${r.row.location_type})`),
+    })
   }
-  if (r.failures.length) {
-    lines.push(
-      `## ${r.city.label} — geocode failures (${r.failures.length})`,
-      '',
-      ...r.failures.map((f) => `- ${f}`),
-      ''
-    )
+
+  // ── Verdict ────────────────────────────────────────────────────────────────────
+
+  const hardIssues = staticIssues.filter((i) => i.hard)
+  const softIssues = staticIssues.filter((i) => !i.hard)
+  const totalGaps = reports.reduce((n, r) => n + r.gapPhysical, 0)
+  const totalOk = reports.reduce((n, r) => n + r.ok, 0)
+  const totalFail = reports.reduce((n, r) => n + r.fail, 0)
+  const overallRate = totalOk + totalFail ? totalOk / (totalOk + totalFail) : 1
+
+  const passRate = overallRate >= PASS_RATE
+  const passGaps = totalGaps === 0
+  const passStatic = hardIssues.length === 0
+  const pass = passRate && passGaps && passStatic && !noNetwork
+
+  const pct = (n: number) => `${(n * 100).toFixed(1)}%`
+  const date = new Date().toISOString().slice(0, 10)
+
+  const lines: string[] = [
+    '# Geocode Dry Run',
+    '',
+    `Generated by \`scripts/geocode-dry-run.ts\` on ${date}.`,
+    noNetwork
+      ? '\n> **Static checks only** (`--no-network`). Geocode results are not measured in this run and it cannot pass.\n'
+      : '',
+    `**Verdict: ${pass ? '✅ PASS' : '❌ FAIL'}**`,
+    '',
+    '| Gate | Required | Actual | |',
+    '|---|---|---|---|',
+    `| Geocode rate | ≥${pct(PASS_RATE)} | ${pct(overallRate)} | ${passRate ? '✅' : '❌'} |`,
+    `| Physical rows with no address | 0 | ${totalGaps} | ${passGaps ? '✅' : '❌'} |`,
+    `| Hard static failures | 0 | ${hardIssues.length} | ${passStatic ? '✅' : '❌'} |`,
+    '',
+    '## Per city',
+    '',
+    '| City | Rows | Geocoded | Failed | Rate | No address (OK) | No address (physical) |',
+    '|---|---|---|---|---|---|---|',
+    ...reports.map(
+      (r) =>
+        `| ${r.city.label} | ${r.total} | ${r.ok} | ${r.fail} | ${pct(r.rate)} | ${r.skipOnline} | ${r.gapPhysical} |`
+    ),
+    '',
+    '## Bounding boxes',
+    '',
+    'Measured from successful geocodes. These set the `CITY_VIEWS` zoom in',
+    '`components/map/mapStyle.ts` by measurement rather than by guess.',
+    '',
+    '| City | SW (lng, lat) | NE (lng, lat) | Span (° lng × ° lat) |',
+    '|---|---|---|---|',
+    ...reports.map((r) =>
+      r.bbox
+        ? `| ${r.city.label} | ${r.bbox.minLng.toFixed(4)}, ${r.bbox.minLat.toFixed(4)} | ${r.bbox.maxLng.toFixed(4)}, ${r.bbox.maxLat.toFixed(4)} | ${(r.bbox.maxLng - r.bbox.minLng).toFixed(3)} × ${(r.bbox.maxLat - r.bbox.minLat).toFixed(3)} |`
+        : `| ${r.city.label} | — | — | no successful geocodes |`
+    ),
+    '',
+  ]
+
+  for (const r of reports) {
+    if (r.gaps.length) {
+      lines.push(
+        `## ${r.city.label} — physical rows with no address (${r.gaps.length})`,
+        '',
+        'Each is a storefront missing its address, not an online business. Supply the',
+        'address or correct `location_type`; do not carry them forward.',
+        '',
+        ...r.gaps.map((g) => `- ${g}`),
+        ''
+      )
+    }
+    if (r.failures.length) {
+      lines.push(
+        `## ${r.city.label} — geocode failures (${r.failures.length})`,
+        '',
+        ...r.failures.map((f) => `- ${f}`),
+        ''
+      )
+    }
   }
+
+  if (hardIssues.length) {
+    lines.push(`## Hard static failures (${hardIssues.length})`, '')
+    lines.push('| City | Listing | Check | Detail |', '|---|---|---|---|')
+    lines.push(...hardIssues.map((i) => `| ${i.city} | ${i.name} | \`${i.check}\` | ${i.detail} |`))
+    lines.push('')
+  }
+
+  if (softIssues.length) {
+    lines.push(`## Warnings — confirm, don't block (${softIssues.length})`, '')
+    lines.push('| City | Listing | Check | Detail |', '|---|---|---|---|')
+    lines.push(...softIssues.map((i) => `| ${i.city} | ${i.name} | \`${i.check}\` | ${i.detail} |`))
+    lines.push('')
+  }
+
+  mkdirSync(outDir, { recursive: true })
+  // Scope goes in the filename. A three-city gate run and an all-six audit run
+  // on the same day are different documents, and the founder approves against
+  // one of them by name — silently overwriting one with the other is how a
+  // gate ends up citing evidence that no longer says what it said.
+  const scope = wanted ? `-${cities.map((c) => c.slug).join('+')}` : ''
+  const outPath = join(outDir, `geocode-dry-run-${date}${scope}.md`)
+  writeFileSync(outPath, lines.filter((l) => l !== '').join('\n') + '\n')
+
+  console.log(`\n${'─'.repeat(60)}`)
+  console.log(`Geocode rate:        ${pct(overallRate)} (need ≥${pct(PASS_RATE)})`)
+  console.log(`Physical, no address: ${totalGaps} (need 0)`)
+  console.log(`Hard static failures: ${hardIssues.length} (need 0)`)
+  console.log(`Warnings:             ${softIssues.length}`)
+  console.log(`Report:               ${outPath.replace(root + '/', '')}`)
+  console.log(`\nVerdict: ${pass ? '✅ PASS' : '❌ FAIL'}`)
+  console.log('─'.repeat(60))
+
+  process.exit(pass ? 0 : 1)
 }
 
-if (hardIssues.length) {
-  lines.push(`## Hard static failures (${hardIssues.length})`, '')
-  lines.push('| City | Listing | Check | Detail |', '|---|---|---|---|')
-  lines.push(...hardIssues.map((i) => `| ${i.city} | ${i.name} | \`${i.check}\` | ${i.detail} |`))
-  lines.push('')
-}
-
-if (softIssues.length) {
-  lines.push(`## Warnings — confirm, don't block (${softIssues.length})`, '')
-  lines.push('| City | Listing | Check | Detail |', '|---|---|---|---|')
-  lines.push(...softIssues.map((i) => `| ${i.city} | ${i.name} | \`${i.check}\` | ${i.detail} |`))
-  lines.push('')
-}
-
-mkdirSync(outDir, { recursive: true })
-const outPath = join(outDir, `geocode-dry-run-${date}.md`)
-writeFileSync(outPath, lines.filter((l) => l !== '').join('\n') + '\n')
-
-console.log(`\n${'─'.repeat(60)}`)
-console.log(`Geocode rate:        ${pct(overallRate)} (need ≥${pct(PASS_RATE)})`)
-console.log(`Physical, no address: ${totalGaps} (need 0)`)
-console.log(`Hard static failures: ${hardIssues.length} (need 0)`)
-console.log(`Warnings:             ${softIssues.length}`)
-console.log(`Report:               ${outPath.replace(root + '/', '')}`)
-console.log(`\nVerdict: ${pass ? '✅ PASS' : '❌ FAIL'}`)
-console.log('─'.repeat(60))
-
-process.exit(pass ? 0 : 1)
+main().catch((err) => {
+  console.error('Fatal error:', err)
+  process.exit(1)
+})

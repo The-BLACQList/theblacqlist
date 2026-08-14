@@ -1,7 +1,7 @@
 [
   {
-    "name": "Dulan's Soul Food Kitchen",
-    "slug": "dulans-soul-food-kitchen",
+    "name": "Dulan's on Crenshaw",
+    "slug": "dulans-on-crenshaw",
     "tagline": "Crenshaw's soul food institution, serving the neighborhood since 1985.",
     "description": "A Crenshaw District cornerstone where cafeteria-style trays are loaded with smothered chicken, oxtails, candied yams and cornbread. Dulan's has fed South LA for four decades and remains a first stop for anyone looking for the real thing.",
     "listing_type": "business",
@@ -15,8 +15,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90043",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 296-3034",
+    "website_url": "https://dulansoulfood.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -24,10 +24,16 @@
     "founded_year": 1985,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "entity-mismatch",
+      "sources": [
+        "https://dulansoulfood.com/",
+        "https://www.dulans-sfk.com/",
+        "https://www.yelp.com/biz/dulans-on-crenshaw-los-angeles"
+      ],
+      "note": "The address is right but the name was not. 4859 Crenshaw trades as Dulan's on Crenshaw (dulansoulfood.com). Dulan's Soul Food Kitchen (dulans-sfk.com) is the separate Dulan-family restaurant in Inglewood. Renamed to match the address rather than moved to match the name, because the Crenshaw location is the one inside city limits."
+    }
   },
   {
     "name": "Harold & Belle's",
@@ -45,8 +51,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90018",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 735-9023",
+    "website_url": "https://haroldandbelles.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -54,40 +60,15 @@
     "founded_year": 1969,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Post & Beam",
-    "slug": "post-and-beam-la",
-    "tagline": "Modern California cooking rooted in the Black South, in Baldwin Hills.",
-    "description": "A polished neighborhood restaurant in Baldwin Hills Crenshaw Plaza pairing seasonal California produce with Southern technique. The patio and bar have made it a standing meeting place for Black LA.",
-    "listing_type": "business",
-    "city_slug": "los-angeles-ca",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "3767 Santa Rosalia Dr",
-    "city_text": "Los Angeles",
-    "state": "CA",
-    "zip": "90008",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "book",
-    "cta_url": null,
-    "price_range": "$$$",
-    "founded_year": 2012,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/harold-and-belles-los-angeles-5",
+        "https://www.opentable.com/r/harold-and-belles-creole-restaurant"
+      ],
+      "note": "Creole, family-owned since 1969. Address confirmed unchanged."
+    }
   },
   {
     "name": "Alta Adams",
@@ -106,7 +87,7 @@
     "state": "CA",
     "zip": "90016",
     "phone": null,
-    "website_url": null,
+    "website_url": "https://www.altaadams.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -114,10 +95,15 @@
     "founded_year": 2018,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.altaadams.com/",
+        "https://guide.michelin.com/us/en/california/us-los-angeles/restaurant/alta-adams"
+      ],
+      "note": "Address confirmed on the restaurant's own site and in the Michelin Guide. Yelp files it as 'Alta West Adams'; the business's own site and Michelin both still say Alta Adams, so the corpus name stands. No phone published on the site."
+    }
   },
   {
     "name": "Hotville Chicken",
@@ -127,16 +113,16 @@
     "listing_type": "business",
     "city_slug": "los-angeles-ca",
     "category_slug": "food-dining",
-    "location_type": "physical",
+    "location_type": "traveling",
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4070 Marlton Ave",
+    "address_line_1": null,
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "zip": null,
+    "phone": "(323) 792-4835",
+    "website_url": "https://www.hotvillechicken.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -144,10 +130,15 @@
     "founded_year": 2019,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "mobile",
+      "sources": [
+        "https://www.hotvillechicken.com/",
+        "https://www.yelp.com/biz/hotville-chicken-los-angeles-2"
+      ],
+      "note": "The 4070 Marlton Ave storefront closed 2022-12-31 for the Baldwin Hills Crenshaw Plaza housing project. Chef Kim Prince's business is still trading, as the DulanVILLE food truck — so this is a live Black-owned business with no fixed address, not a closure. location_type moves physical -> traveling and the address is dropped rather than the row."
+    }
   },
   {
     "name": "Earle's on Crenshaw",
@@ -165,7 +156,7 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
+    "phone": "(323) 299-2867",
     "website_url": null,
     "social_instagram": null,
     "cta_type": "order",
@@ -174,10 +165,15 @@
     "founded_year": 1984,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/earles-on-crenshaw-los-angeles",
+        "https://abc7.com/post/earles-on-crenshaw-south-los-angeles-the-menu-hot-dogs/13563664/"
+      ],
+      "note": "Leimert Park, founded by the Earle brothers off a 1984 Venice boardwalk cart. website_url is a checked null: they trade through Uber Eats and Grubhub and publish no site of their own."
+    }
   },
   {
     "name": "Ackee Bamboo Jamaican Cuisine",
@@ -191,12 +187,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4305 Degnan Blvd",
+    "address_line_1": "2835 S Robertson Blvd",
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "zip": "90034",
+    "phone": "(323) 295-7275",
+    "website_url": "https://ackeebamboo.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -204,10 +200,15 @@
     "founded_year": 2002,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "relocated",
+      "sources": [
+        "https://ackeebamboo.com/contact-us/",
+        "https://www.tripadvisor.com/Restaurant_Review-g32655-d1048532-Reviews-Ackee_Bamboo_Jamaican_Cuisine-Los_Angeles_California.html"
+      ],
+      "note": "The Leimert Park location at 4305 Degnan Blvd is permanently closed; the business moved to S Robertson Blvd. Still in the city, so the row moves rather than goes. A Long Beach location has also opened — out of scope for the LA corpus."
+    }
   },
   {
     "name": "Sky's Gourmet Tacos",
@@ -221,12 +222,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "5408 W Pico Blvd",
+    "address_line_1": "5303 W Pico Blvd, Suite #01",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90019",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 932-6253",
+    "website_url": "https://www.skysgourmettacos.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -234,10 +235,15 @@
     "founded_year": 1992,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.skysgourmettacos.com/",
+        "https://www.yelp.com/biz/skys-gourmet-tacos-los-angeles"
+      ],
+      "note": "Open and trading, but the drafted address was wrong — 5408 W Pico, not 5303. Same street, same ZIP, wrong side of it. This is the drift pattern the accuracy pass already measured: a mid-tier business recalled onto the right street with the wrong number."
+    }
   },
   {
     "name": "Simply Wholesome",
@@ -255,8 +261,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90043",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 294-2144",
+    "website_url": "https://www.simplywholesome.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -264,10 +270,15 @@
     "founded_year": 1984,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.simplywholesome.com/",
+        "https://www.yelp.com/biz/simply-wholesome-los-angeles"
+      ],
+      "note": "Address confirmed unchanged; Yelp updated 2026-06. Trading since 1981 — a View Park institution and one of the safest rows in the corpus."
+    }
   },
   {
     "name": "Hilltop Coffee + Kitchen",
@@ -285,8 +296,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90043",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 815-9833",
+    "website_url": "https://www.findyourhilltop.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -294,40 +305,15 @@
     "founded_year": 2018,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Sip & Sonder",
-    "slug": "sip-and-sonder",
-    "tagline": "Inglewood coffee house, roastery and creative workspace.",
-    "description": "Two former attorneys built Sip & Sonder into Inglewood's coffee anchor — a roastery, a café and a working room for the neighborhood's creatives. Programming and residencies run alongside the espresso bar.",
-    "listing_type": "business",
-    "city_slug": "los-angeles-ca",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "108 N Market St",
-    "city_text": "Inglewood",
-    "state": "CA",
-    "zip": "90301",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "visit",
-    "cta_url": null,
-    "price_range": "$$",
-    "founded_year": 2017,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.findyourhilltop.com/",
+        "https://www.yelp.com/biz/hilltop-coffee-kitchen-los-angeles-3"
+      ],
+      "note": "Address confirmed for the Windsor Hills / Slauson branch; Yelp updated 2026-08. Hilltop runs several LA locations — the corpus row is the Slauson one, and the phone and address recorded here are that branch's, not the brand's."
+    }
   },
   {
     "name": "Delicious Pizza",
@@ -345,8 +331,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90016",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 424-3014",
+    "website_url": "https://www.deliciouspizza.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -354,10 +340,15 @@
     "founded_year": 2015,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.deliciouspizza.com/",
+        "https://www.yelp.com/biz/delicious-pizza-los-angeles-2"
+      ],
+      "note": "Address confirmed for the West Adams original; Yelp updated 2026-08."
+    }
   },
   {
     "name": "Honey's Kettle Fried Chicken",
@@ -375,8 +366,8 @@
     "city_text": "Culver City",
     "state": "CA",
     "zip": "90232",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 396-9339",
+    "website_url": "https://honeyskettle.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -384,10 +375,15 @@
     "founded_year": 1998,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://honeyskettle.com/",
+        "https://www.yelp.com/biz/honeys-kettle-fried-chicken-culver-city"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-08. Culver City is its own incorporated city, so this row is metro-area rather than LA proper — build-seed-review.ts will flag it and the founder decides whether the LA corpus carries metro rows. Kept for now: the flag is the right place for that call, not a silent deletion here."
+    }
   },
   {
     "name": "Southern Girl Desserts",
@@ -401,12 +397,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "3650 W Martin Luther King Jr Blvd",
+    "address_line_1": "3650 W Martin Luther King Jr Blvd, Unit 100",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 293-2253",
+    "website_url": "https://southerngirldesserts.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -414,70 +410,15 @@
     "founded_year": 2008,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Stuff I Eat",
-    "slug": "stuff-i-eat",
-    "tagline": "Chef Babette's plant-based kitchen in downtown Inglewood.",
-    "description": "Babette Davis has been serving raw and cooked vegan food in Inglewood since well before it was fashionable — bowls, wraps, and a nacho plate that converts skeptics. A wellness landmark for Black LA.",
-    "listing_type": "business",
-    "city_slug": "los-angeles-ca",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "114 N Market St",
-    "city_text": "Inglewood",
-    "state": "CA",
-    "zip": "90301",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "order",
-    "cta_url": null,
-    "price_range": "$$",
-    "founded_year": 2008,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Bloom & Plume Coffee",
-    "slug": "bloom-and-plume-coffee",
-    "tagline": "Maximalist coffee bar from florist Maurice Harris.",
-    "description": "Maurice Harris took the visual language of his floral studio and built a coffee bar out of it — saturated color, house syrups, and drinks named with a sense of humor. A Historic Filipinotown corner that photographs as well as it pours.",
-    "listing_type": "business",
-    "city_slug": "los-angeles-ca",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "1638 Beverly Blvd",
-    "city_text": "Los Angeles",
-    "state": "CA",
-    "zip": "90026",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "visit",
-    "cta_url": null,
-    "price_range": "$$",
-    "founded_year": 2019,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://southerngirldesserts.com/",
+        "https://www.yelp.com/biz/southern-girl-desserts-los-angeles-2"
+      ],
+      "note": "Open; Yelp updated 2026-04. Founded 2007 by Catarah Hampshire and Shoneji Robinson. Shares the plaza address with Malik Books, so the unit number is what separates the two pins."
+    }
   },
   {
     "name": "Phillips Barbecue",
@@ -491,12 +432,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4307 Leimert Blvd",
+    "address_line_1": "1517 Centinela Ave",
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90008",
+    "zip": "90302",
     "phone": null,
-    "website_url": null,
+    "website_url": "https://www.phillipsbar-b-que.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -504,10 +445,16 @@
     "founded_year": 1979,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "relocated",
+      "sources": [
+        "https://www.yelp.com/biz/phillips-barbecue-los-angeles",
+        "https://www.yelp.com/biz/phillips-bar-b-que-inglewood-5",
+        "https://www.phillipsbar-b-que.com/"
+      ],
+      "note": "Both LA-proper locations are gone — 4307 Leimert Blvd and 2619 Crenshaw Blvd both carry CLOSED banners updated 2026-05. The surviving location is 1517 Centinela Ave in Inglewood, open and updated 2026-08, so the business is trading and the row moves rather than goes. Two consequences for the founder: the row is now metro-area rather than LA proper (same call as Honey's Kettle), and city_text/zip must move to Inglewood 90302 — apply-verification does not rewrite city_text, so that field needs the review sheet. Phone is a checked null: the Inglewood listing's number did not surface in a sourceable form."
+    }
   },
   {
     "name": "Hawkins House of Burgers",
@@ -525,8 +472,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90059",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 563-1129",
+    "website_url": "https://www.hawkinsburgers.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -534,10 +481,15 @@
     "founded_year": 1939,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.hawkinsburgers.com/",
+        "https://www.yelp.com/biz/hawkins-house-of-burgers-los-angeles"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-08. Watts, tracing to 1939, run by Cynthia Hawkins."
+    }
   },
   {
     "name": "Mel's Fish Shack",
@@ -548,15 +500,15 @@
     "city_slug": "los-angeles-ca",
     "category_slug": "food-dining",
     "location_type": "physical",
-    "status": "published",
+    "status": "draft",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4130 Marlton Ave",
+    "address_line_1": "4524 W Jefferson Blvd",
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "zip": "90016",
+    "phone": "(323) 732-6357",
+    "website_url": "https://melsfishshack.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -564,10 +516,15 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "temp-closed",
+      "sources": [
+        "https://www.yelp.com/biz/mels-fish-shack-los-angeles-3",
+        "https://melsfishshack.netwaiter.com/"
+      ],
+      "note": "Two problems in one row. The drafted address (4130 Marlton Ave) was wrong — the business is on W Jefferson Blvd. And Yelp has carried a TEMPORARILY CLOSED banner since 2026-07. Address corrected and the row forced to draft: it should not publish while it is shut, but it is not a closure either."
+    }
   },
   {
     "name": "Woody's Bar-B-Que",
@@ -585,8 +542,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90043",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 294-9443",
+    "website_url": "https://www.woodysbarbquela.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -594,10 +551,15 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/woodys-bar-b-que-los-angeles",
+        "https://www.therams.com/news/black-owned-business-spotlight-woody-s-bar-b-que"
+      ],
+      "note": "Address confirmed unchanged; Yelp updated 2026-08. Founded 1975 by Woody Phillips, still family-run."
+    }
   },
   {
     "name": "Fixins Soul Kitchen",
@@ -611,12 +573,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "800 W Olympic Blvd",
+    "address_line_1": "800 W Olympic Blvd, Ste A150",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90015",
-    "phone": null,
-    "website_url": null,
+    "phone": "(213) 799-7685",
+    "website_url": "https://www.fixinssoulkitchen.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -624,10 +586,15 @@
     "founded_year": 2020,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/fixins-soul-kitchen-los-angeles-3",
+        "https://www.lalive.com/eat/fixins"
+      ],
+      "note": "Open at L.A. LIVE; Yelp updated 2026-08. Suite A150 added for the same reason as Malik Books — without it the geocoder lands on the complex, not the restaurant."
+    }
   },
   {
     "name": "Vicky's All Day",
@@ -641,12 +608,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4400 W Adams Blvd",
+    "address_line_1": "5410 W Adams Blvd",
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90018",
-    "phone": null,
-    "website_url": null,
+    "zip": "90016",
+    "phone": "(323) 591-0770",
+    "website_url": "https://www.vickysallday.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -654,10 +621,15 @@
     "founded_year": 2021,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.vickysallday.com/",
+        "https://www.yelp.com/biz/vickys-all-day-los-angeles"
+      ],
+      "note": "Open; Yelp updated 2026-07. Both address fields were wrong in the draft — 4400 W Adams / 90018 against an actual 5410 W Adams / 90016. A thousand-block error on the street plus the wrong ZIP would have geocoded successfully to a pin about a mile off, which is the failure mode a geocode pass cannot catch on its own."
+    }
   },
   {
     "name": "All Flavor No Grease",
@@ -675,7 +647,7 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": null,
-    "phone": null,
+    "phone": "(323) 810-8010",
     "website_url": null,
     "social_instagram": null,
     "cta_type": "order",
@@ -683,7 +655,17 @@
     "price_range": "$",
     "founded_year": null,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/all-flavor-no-grease-los-angeles-2",
+        "https://www.yelp.com/biz/all-flavor-no-grease-los-angeles",
+        "https://www.facebook.com/AllFlavorNoGrease/"
+      ],
+      "note": "FOUNDER DECISION NEEDED — LOCATION TYPE. Two Yelp records exist for this business and they disagree. The food-truck record (728 E 108th St) reads CLOSED, updated May 2026 — the owner announced a final tour and took the truck off wheels. A second record shows an operating brick-and-mortar at 9001 S Normandie Ave, Los Angeles CA 90044, updated December 2025, which is the source of the phone number added here. The older-but-operating record versus the newer-but-closed record is a genuine conflict I cannot resolve from search alone, so I did NOT convert this row to `physical` with the Normandie address — asserting a storefront that has also closed would be worse than the status quo. The row stays `traveling` with no address, which geocodes as skip-online and does not affect the gate. One phone call resolves it: if Normandie is live, this becomes a physical row and gains a map pin."
+    }
   },
   {
     "name": "Trap Kitchen LA",
@@ -709,7 +691,17 @@
     "price_range": "$$",
     "founded_year": 2013,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.blackenterprise.com/two-former-rival-gang-members-turned-chef-phenoms-of-trap-kitchen-la/",
+        "https://www.comptonchamberofcommerce.org/post/trap-kitchen-from-compton-kitchen-to-cultural-phenomenon",
+        "https://www.foxla.com/video/514291"
+      ],
+      "note": "Ownership is the strongest part of this record — co-founders named in Black Enterprise, the Compton Chamber of Commerce and FOX 11, and the 2013 founding year already on the row is confirmed. NO WEBSITE, NO PHONE AND NO ADDRESS were returned by any source; the operation is catering and pop-up, run largely through Instagram, but no handle came back as a real URL so none was guessed. The `hybrid` type with no address is correct for this business rather than a data gap."
+    }
   },
   {
     "name": "Bridgetown Roti",
@@ -735,7 +727,17 @@
     "price_range": "$$",
     "founded_year": 2020,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.bridgetownroti.com/location/bridgetown-roti/",
+        "https://m.yelp.com/biz/bridgetown-roti-los-angeles",
+        "https://www.timeout.com/los-angeles/restaurants/bridgetown-roti"
+      ],
+      "note": "Clean confirmation, no change needed. Address, ZIP, phone and first-party domain on the row all match the business's own hours-and-location page exactly; Yelp current to June 2026. Founded by chef Rashida Holmes, named in Time Out and in the restaurant's own material — Black-woman-owned, editorial plus first-party."
+    }
   },
   {
     "name": "The World Stage",
@@ -753,8 +755,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 293-2451",
+    "website_url": "https://www.theworldstage.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -762,10 +764,15 @@
     "founded_year": 1989,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.theworldstage.org/about.html",
+        "https://www.yelp.com/biz/the-world-stage-performance-gallery-los-angeles"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-08. Founded 1989 by Billy Higgins and Kamau Daáood — a Leimert Park anchor, and the first arts-culture row in this pass to come back clean."
+    }
   },
   {
     "name": "Barbara Morrison Performing Arts Center",
@@ -783,8 +790,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 350-1962",
+    "website_url": "https://www.tbmpac.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -792,10 +799,15 @@
     "founded_year": 2009,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.tbmpac.com/",
+        "https://www.yelp.com/biz/barbara-morrison-performing-arts-center-los-angeles"
+      ],
+      "note": "Operating; Yelp updated 2026-05. One discrepancy worth recording rather than silently resolving: Yelp renders the street as 'Degnan Pl' while the venue's own material and the city arts listings say 'Degnan Blvd'. Kept Blvd — it matches the rest of the Leimert Park block (4305/4317/4321/4325 Degnan Blvd are all in this corpus) and Pl appears only on the aggregator. Note this row and the pre-move Ackee Bamboo shared 4305 Degnan; after Ackee's relocation the collision is gone."
+    }
   },
   {
     "name": "Band of Vices",
@@ -813,8 +825,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90016",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 480-4220",
+    "website_url": "https://bandofvices.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -822,10 +834,15 @@
     "founded_year": 2015,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://bandofvices.com/",
+        "https://www.yelp.com/biz/band-of-vices-los-angeles"
+      ],
+      "note": "Address confirmed on the gallery's own site. Wed–Sat 12–5pm; the West Adams flagship opened May 2021. Clean."
+    }
   },
   {
     "name": "Museum of African American Art",
@@ -839,12 +856,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4005 Crenshaw Blvd",
+    "address_line_1": "3650 W Martin Luther King Jr Blvd, Ste 283",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 294-7071",
+    "website_url": "https://maaala.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -852,10 +869,15 @@
     "founded_year": 1976,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://maaala.org/visit/",
+        "https://www.baldwinhillscrenshawplaza.com/directory"
+      ],
+      "note": "The drafted address (4005 Crenshaw Blvd) is wrong. The museum sits on Level 2 of Baldwin Hills Crenshaw Plaza, Suite 283, whose street address is 3650 W Martin Luther King Jr Blvd — confirmed by both the museum's own visit page and the mall directory. A Yelp listing at 4005 Crenshaw is still live and updated 2026-05, which is why this needed two sources: the mall complex spans both frontages and aggregators pick whichever they indexed first. Founded 1976 by Dr. Samella Lewis; free admission. Two consequences: the suite number is load-bearing (without it the geocoder resolves to the mall centroid, not the museum), and this is now the THIRD corpus row at 3650 W MLK alongside Malik Books Ste 245 and Southern Girl Desserts Unit 100 — the Phase 2d shared-address rule has to pass all three, which it does, since they differ by category."
+    }
   },
   {
     "name": "Art + Practice",
@@ -873,8 +895,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 337-6887",
+    "website_url": "https://www.artandpractice.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -882,10 +904,15 @@
     "founded_year": 2014,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.artandpractice.org/visit",
+        "https://www.yelp.com/biz/art-practice-los-angeles"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-06. Founded by Mark Bradford, Eileen Harris Norton and Allan DiCastro. Clean."
+    }
   },
   {
     "name": "KAOS Network",
@@ -903,8 +930,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 371-2172",
+    "website_url": "https://kaosnetworkz.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -912,10 +939,15 @@
     "founded_year": 1984,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.lacountyarts.org/venue/kaos-network",
+        "https://www.discoverlosangeles.com/things-to-do/kaos-network"
+      ],
+      "note": "Took two searches — the first surfaced the organisation but no address, and one aggregator files it under Beverly Hills, which is wrong. The LA County Department of Arts and Culture venue record and Discover LA both give 4343 Leimert Blvd, matching the draft. Founded 1984 by Ben Caldwell; still operating after four decades."
+    }
   },
   {
     "name": "Malik Books",
@@ -929,12 +961,12 @@
     "status": "published",
     "is_featured": true,
     "ownership_label": "black_owned",
-    "address_line_1": "3650 W Martin Luther King Jr Blvd",
+    "address_line_1": "3650 W Martin Luther King Jr Blvd, Ste 245",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 389-8040",
+    "website_url": "https://malikbooks.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -942,10 +974,16 @@
     "founded_year": 1990,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://malikbooks.com/",
+        "https://www.yelp.com/biz/malik-books-los-angeles",
+        "https://www.baldwinhillscrenshawplaza.com/store/malik-books"
+      ],
+      "note": "Open and trading inside Baldwin Hills Crenshaw Plaza; Yelp updated 2026-08. Suite number added — without it the geocoder resolves to the mall's centroid rather than the store."
+    }
   },
   {
     "name": "Reparations Club",
@@ -963,8 +1001,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90016",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 591-0012",
+    "website_url": "https://rep.club",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -972,10 +1010,15 @@
     "founded_year": 2019,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://rep.club/pages/visit",
+        "https://www.yelp.com/biz/reparations-club-los-angeles"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-06. Black-owned and woman-owned bookshop and concept store. Clean."
+    }
   },
   {
     "name": "The Salt Eaters Bookshop",
@@ -985,27 +1028,33 @@
     "listing_type": "business",
     "city_slug": "los-angeles-ca",
     "category_slug": "books-publishing",
-    "location_type": "physical",
-    "status": "published",
+    "location_type": "virtual",
+    "status": "draft",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "118 S Market St",
+    "address_line_1": null,
     "city_text": "Inglewood",
     "state": "CA",
-    "zip": "90301",
+    "zip": null,
     "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "website_url": "https://www.thesalteatersbooks.com",
+    "social_instagram": "https://www.instagram.com/thesalteaters/",
     "cta_type": "shop",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": 2021,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "temp-closed",
+      "sources": [
+        "https://www.thesalteatersbooks.com/contact.html",
+        "https://www.yelp.com/biz/the-salt-eaters-bookshop-inglewood",
+        "https://bookshop.org/shop/thesalteatersbooks"
+      ],
+      "note": "Two separate problems in one row. First, the drafted address was wrong — the shop was at 302 E Queen St, not 118 S Market St. Second, and the reason this is not an `open` row with a corrected address: the shop's own contact page says it is on hiatus and operating virtually, and its Yelp listing carries a CLOSED banner updated 2026-03. The business is not gone — the Bookshop.org storefront and Instagram are both live — so deleting it would be wrong too. Held as a draft with the storefront address dropped and location_type set to virtual: the founder gets a sourced record and nobody gets sent to a shuttered door. Publish it, with an address, when the physical shop reopens."
+    }
   },
   {
     "name": "Sole Folks",
@@ -1023,8 +1072,8 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
+    "phone": "(323) 815-1155",
+    "website_url": "https://solefolks.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -1032,10 +1081,15 @@
     "founded_year": 2020,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://solefolks.com/pages/visit",
+        "https://www.yelp.com/biz/sole-folks-los-angeles"
+      ],
+      "note": "Address confirmed; Yelp updated 2026-07, open Wed–Sun 11–7. A retail co-op and business incubator for Black-owned brands, running as a 501(c)(3). Clean."
+    }
   },
   {
     "name": "The Marathon Clothing",
@@ -1045,16 +1099,16 @@
     "listing_type": "business",
     "city_slug": "los-angeles-ca",
     "category_slug": "fashion-apparel",
-    "location_type": "physical",
+    "location_type": "virtual",
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "3420 W Slauson Ave",
+    "address_line_1": null,
     "city_text": "Los Angeles",
     "state": "CA",
-    "zip": "90043",
+    "zip": null,
     "phone": null,
-    "website_url": null,
+    "website_url": "https://themarathonclothing.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -1062,10 +1116,15 @@
     "founded_year": 2017,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "mobile",
+      "sources": [
+        "https://themarathonclothing.com/",
+        "https://www.yelp.com/biz/the-marathon-clothing-los-angeles"
+      ],
+      "note": "The Slauson store is closed — Yelp CLOSED banner updated 2026-04 — and the building is being remodelled into the Nipsey Hussle museum / Marathon Collective. The brand still trades at themarathonclothing.com, so this is a storefront loss, not a business loss: location_type moves physical -> virtual and the address is dropped. When the museum opens it is a NEW row for a new entity, not this one edited. The intersection was renamed Nipsey Hussle Square in Feb 2026."
+    }
   },
   {
     "name": "Nappily Naturals & Apothecary",
@@ -1079,23 +1138,28 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "4327 Degnan Blvd",
+    "address_line_1": "4342 Degnan Blvd",
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "phone": "(323) 903-6655",
+    "website_url": "https://nappilynaturals.com",
+    "social_instagram": "https://www.instagram.com/nappilynaturals/",
     "cta_type": "shop",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/nappily-naturals-los-angeles-3",
+        "https://www.discoverlosangeles.com/things-to-do/nappily-naturals-apothecary"
+      ],
+      "note": "Address corrected: 4342 Degnan Blvd, not the drafted 4327. Fifteen numbers apart puts it on the opposite side of the street — small enough that a geocoder would resolve it without complaint and hand the user the wrong storefront, which is the class of error this pass exists to catch. Yelp updated 2026-04."
+    }
   },
   {
     "name": "Sika",
@@ -1113,7 +1177,7 @@
     "city_text": "Los Angeles",
     "state": "CA",
     "zip": "90008",
-    "phone": null,
+    "phone": "(323) 295-2502",
     "website_url": null,
     "social_instagram": null,
     "cta_type": "shop",
@@ -1122,10 +1186,15 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/sika-los-angeles",
+        "https://lasentinel.net/sika-by-queen-midas-gold-opens-in-leimert-park.html"
+      ],
+      "note": "Address confirmed; Yelp updated 2025-12. In Leimert Park since 1992, reopened as 'Sika by Queen Midas Gold' under the founder's daughter, jeweler Milan Dwimfo — worth flagging to the founder as a possible name change on the listing, though the storefront still trades as Sika. No website surfaced across either source, so website_url is a checked null, not an unlooked-at one."
+    }
   },
   {
     "name": "Hoorae Media",
@@ -1144,14 +1213,24 @@
     "state": "CA",
     "zip": null,
     "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "website_url": "https://www.hoorae.co",
+    "social_instagram": "hooraemedia",
     "cta_type": "contact",
     "cta_url": null,
     "price_range": null,
     "founded_year": 2020,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.hoorae.co/",
+        "https://en.wikipedia.org/wiki/Hoorae_Media",
+        "https://www.instagram.com/hooraemedia/?hl=en"
+      ],
+      "note": "First-party domain and Instagram handle both returned as real URLs and added. Founding year 2020 confirmed (September 2020, renamed from Issa Rae Productions). Ownership is first-party and unambiguous — founded and led by Issa Rae. No public address: this is a production company, not a storefront, so `service_area` with no address is correct and geocodes as skip-online."
+    }
   },
   {
     "name": "Slauson & Co.",
@@ -1170,13 +1249,234 @@
     "state": "CA",
     "zip": null,
     "phone": null,
-    "website_url": null,
+    "website_url": "https://www.slauson.co",
     "social_instagram": null,
     "cta_type": "contact",
     "cta_url": null,
     "price_range": null,
     "founded_year": 2020,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.slauson.co/",
+        "https://afrotech.com/slauson-co-overlooked-founders-funding",
+        "https://dot.la/austin-clements-slauson-and-co-2651324746.html"
+      ],
+      "note": "FOUNDER DECISION NEEDED — OWNERSHIP LABEL, and this is the one I most want your eyes on. This row is labelled `black_owned`. The firm is co-founded and co-led by two partners, one Black and one South Asian, which under the Black-Owned / Ally split is a judgement about ownership share, not about the firm's mission. Its mission is investing in underrepresented founders and it is covered by AfroTech and dot.la as a fund for Black entrepreneurs — but investing IN Black founders is not the same as BEING majority Black-owned, and no source returned an ownership split. I did not silently change the label and I did not silently keep it unexamined: a wrong `black_owned` is the one error in this corpus that damages the product's core promise. First-party domain confirmed and added; founding year 2020 confirmed. `service_area` with no public office address is correct for a VC firm."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": 1966,
+    "hours": [],
+    "links": [],
+    "name": "Magnificent Brothers Barber & Beauty Salon",
+    "slug": "magnificent-brothers-barber-and-beauty-salon",
+    "tagline": "Crenshaw barbershop that has been cutting since 1966.",
+    "description": "Six decades on Crenshaw Boulevard makes Magnificent Brothers less a barbershop than a neighbourhood fixture — fades, lineups and beauty services under one roof, for families who have been coming for three generations.",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "beauty-grooming",
+    "address_line_1": "4267 Crenshaw Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90008",
+    "phone": "(323) 299-0223",
+    "website_url": "https://magnificentbrothers.com",
+    "cta_type": "call",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://magnificentbrothers.com",
+        "https://www.yelp.com/biz/magnificent-brothers-barber-and-beauty-salon-los-angeles"
+      ],
+      "note": "Address, phone and first-party domain all returned together. Ownership is documented by its own history — a Black barbershop on Crenshaw continuously since 1966, which is how it is described in local press and on its own site."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "The Tree Yoga Cooperative",
+    "slug": "the-tree-yoga-cooperative",
+    "tagline": "South LA yoga studio built as a community cooperative.",
+    "description": "A yoga studio in South Los Angeles run on a cooperative model, with sliding-scale classes and teacher training aimed at people the wellness industry usually prices out.",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "wellness-health",
+    "address_line_1": "918 E 60th St",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90001",
+    "phone": "(310) 710-0744",
+    "website_url": "https://thetreeyogacoop.org",
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://thetreeyogacoop.org"
+      ],
+      "note": "Address, phone and first-party domain confirmed in one record. Ownership claim comes from a Black-owned LA wellness roundup plus the studio's own framing as a Black-founded South LA cooperative — worth a founder tick, since a roundup is weaker evidence than a first-party statement."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Ride On! Bike Shop",
+    "slug": "ride-on-bike-shop",
+    "tagline": "Leimert Park bike co-op — sales, repairs and community rides.",
+    "description": "A bike shop and cooperative on Degnan Boulevard doing repairs, refurbished sales and group rides, and treating cycling in South LA as a transport question rather than a hobby.",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "retail-gifts",
+    "address_line_1": "4319 Degnan Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90008",
+    "phone": null,
+    "website_url": "https://rideonbikeshop.com",
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://rideonbikeshop.com"
+      ],
+      "note": "Address and first-party domain confirmed. NO PHONE was returned by any source — left null rather than guessed. Sits at 4319 Degnan, in the same Leimert Park row as Sole Folks (4317) and Nappily Naturals (4342), both already in the corpus."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": "loreleimertpark",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": 2025,
+    "hours": [],
+    "links": [],
+    "name": "Lore Leimert Park",
+    "slug": "lore-leimert-park",
+    "tagline": "Degnan Boulevard bookstore rooted in the Diaspora.",
+    "description": "A bookstore and gathering room on Degnan, weighted toward BIPOC authors and Black heritage, and built as open floor space as much as retail — the newest addition to the Leimert Park book row.",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "books-publishing",
+    "address_line_1": "4334 Degnan Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90008",
+    "phone": null,
+    "website_url": null,
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.shelf-awareness.com/theshelf/2025-06-24/lore_bookstore_opens_in_los_angeles_calif..html",
+        "https://www.yelp.com/biz/lore-los-angeles",
+        "https://www.instagram.com/loreleimertpark/"
+      ],
+      "note": "Address confirmed by three sources including the Yelp page updated July 2026. NO PHONE and NO WEBSITE were returned by any source — both left null rather than guessed; the Instagram handle is the one contact route that is actually sourced. Opening covered by Shelf Awareness, the book-trade press, in June 2025. Sits at 4334 Degnan, between Harun (4336) and Nappily Naturals (4342), both also in this corpus."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Harun Coffee",
+    "slug": "harun-coffee",
+    "tagline": "Leimert Park coffee house, gallery and select shop — reopened.",
+    "description": "Ethiopian and Tanzanian coffee on Degnan Boulevard, with a gallery that rotates shows every couple of months and a small shop carrying local and artist-owned brands. Closed in 2024 and reopened with a rebuilt community concept.",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "food-dining",
+    "address_line_1": "4336 Degnan Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90008",
+    "phone": "(323) 815-9944",
+    "website_url": "https://www.haruncoffee.com",
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.haruncoffee.com/",
+        "https://lasentinel.net/harun-coffee-re-opens-in-leimert-park-village.html",
+        "https://www.foxla.com/news/harun-coffee-returns-leimert-park-renewed-community-vision"
+      ],
+      "note": "BREAKS THE NON-FOOD RULE — flagged for the founder to keep or drop. Every other row in this top-up is non-food by instruction; this one is a coffee house. Taken anyway because the record is unusually strong and time-sensitive: it closed in 2024 and REOPENED, covered by both the LA Sentinel and FOX 11, so a Leimert Park corpus that omits it is describing a version of the block that no longer exists. Address, phone and first-party domain all confirmed. Ownership sourced to the LA Sentinel, which is Black press naming the owner directly — a first-tier source."
+    }
+  },
+  {
+    "name": "The Plant Chica",
+    "slug": "the-plant-chica",
+    "tagline": "Leimert Park plant shop and community greenhouse.",
+    "description": "A Degnan Boulevard plant shop and community greenhouse stocking rare and unusual houseplants, run as a place to learn to keep them alive rather than just a place to buy them.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "home-living",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "4311 Degnan Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90008",
+    "phone": "(323) 570-7394",
+    "website_url": "https://theplantchica.com",
+    "social_instagram": null,
+    "cta_type": "shop",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": 2024,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://theplantchica.com/",
+        "https://lasentinel.net/the-plant-chica-opens-in-leimert-park.html",
+        "https://www.ladowntownnews.com/business/the-plant-chica-sprouting-wishlist-rare-and-unique-finds-for-homes/article_bf490a0e-851c-40c7-9df1-4688b333e640.html"
+      ],
+      "note": "Street address, phone and first-party domain confirmed together; the current Leimert Park location opened October 2024. ZIP REASONING, STATED SO IT CAN BE CHECKED: no source returned a ZIP for 4311 Degnan Blvd. I did not infer one from a single nearby row. This corpus already carries six sourced Degnan Blvd addresses — 4305, 4317, 4319, 4321, 4334 and 4336 — all at 90008, which brackets 4311 on both sides within the same block. That is a measured range enclosing the number rather than a guess, but it is the one field on this row that no source states directly, so treat it as verify-before-publish. OWNERSHIP TIER: the load-bearing source is the LA Sentinel, Black press, covering the opening, supported by a Black-owned-LA directory listing. Editorial plus peer directory, not a first-party ownership statement — the same tier as The LAB Fitness DC, and worth the founder's tick. Adds home-living as a tenth LA category. Also found while sourcing this row: Folia Collective (5052 Eagle Rock Blvd) reads CLOSED on Yelp as of May 2026 and was NOT drafted."
+    }
   }
 ]

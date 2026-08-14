@@ -15,8 +15,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 821-0600",
+    "website_url": "https://www.dookychaserestaurants.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -24,10 +24,15 @@
     "founded_year": 1941,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.dookychaserestaurants.com/",
+        "https://www.yelp.com/biz/dooky-chases-restaurant-new-orleans"
+      ],
+      "note": "Open and thoroughly corroborated — its own site, Yelp updated 2026-08, the Michelin Guide, and the US Civil Rights Trail. Trading in Tremé since 1941; Leah Chase's dining room was a meeting place for civil-rights organizers and one of the first Black fine-dining rooms in the country. First NOLA row and a clean one."
+    }
   },
   {
     "name": "Willie Mae's Scotch House",
@@ -41,12 +46,12 @@
     "status": "published",
     "is_featured": true,
     "ownership_label": "black_owned",
-    "address_line_1": "2401 St Ann St",
+    "address_line_1": "898 Baronne St",
     "city_text": "New Orleans",
     "state": "LA",
-    "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "zip": "70113",
+    "phone": "(504) 354-8194",
+    "website_url": "https://williemaesnola.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -54,10 +59,16 @@
     "founded_year": 1957,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "relocated",
+      "sources": [
+        "https://www.nola.com/entertainment_life/eat-drink/willie-maes-opens-downtown-new-orleans-restaurant-in-2024/article_650b7f7e-9c72-11ef-9e34-2bbcf659419a.html",
+        "https://www.yelp.com/biz/willie-mae-s-nola-new-orleans",
+        "https://williemaesnola.com/contact"
+      ],
+      "note": "The hardest judgment call in this pass, and the ambiguous-closure pattern for the third time. Yelp carries a CLOSED banner on 2401 St Ann St, updated 2026-08, against a live williemaesnola.com. The second search resolves it: the Tremé original has been shut since an electrical fire in April 2023, the building is being rebuilt, and as of the last dated reporting the family still intends to return to 2401 St Ann — but while that work runs they opened downtown at 898 Baronne St, which has been trading since November 2024 and which Yelp shows active as of 2026-07. So this is neither a closure nor a temporary one. `temp-closed` would push the row to draft and make a restaurant that is serving today invisible; leaving St Ann in place would send people to a construction site. Relocating to the address where a customer can actually eat is the only answer that serves the user, and it is reversible the day Tremé reopens. Two things for the founder at review. The downtown restaurant trades as 'Willie Mae's NOLA', not 'Willie Mae's Scotch House', so the row's name wants a decision — I have not renamed it, because rename in this tooling is reserved for entity mismatches and this is one business at a new door. And when 2401 St Ann reopens this should become two rows, not an edited one. James Beard America's Classic; owner Kerry Seaton-Stewart."
+    }
   },
   {
     "name": "Li'l Dizzy's Cafe",
@@ -75,19 +86,24 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "phone": "(504) 766-8687",
+    "website_url": "https://lildizzyscafe.net",
+    "social_instagram": "https://www.instagram.com/lildizzyscafe504",
     "cta_type": "visit",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": 2005,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://lildizzyscafe.net/",
+        "https://www.yelp.com/biz/lil-dizzys-cafe-new-orleans"
+      ],
+      "note": "Open; own site plus Yelp updated 2026-07. Third-generation Baquet family Creole restaurant in Tremé. Worth flagging that Tripadvisor files it under Mid-City while every other source and the address itself put it in Tremé — the corpus should say Tremé if it carries a neighbourhood, but the address and ZIP are unambiguous either way."
+    }
   },
   {
     "name": "Cafe Reconcile",
@@ -105,8 +121,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70113",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 568-1157",
+    "website_url": "https://cafereconcile.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -114,10 +130,15 @@
     "founded_year": 2000,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://cafereconcile.org/visit-the-cafe",
+        "https://www.yelp.com/biz/cafe-reconcile-new-orleans-6"
+      ],
+      "note": "Open; own visit page plus Yelp updated 2026-08. A non-profit that trains at-risk young people for restaurant careers, so the founder may want it categorized as much for its mission as its food. Lunch only, Tue–Fri."
+    }
   },
   {
     "name": "Neyow's Creole Cafe",
@@ -135,8 +156,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 827-5474",
+    "website_url": "https://neworleans.neyows.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -144,40 +165,15 @@
     "founded_year": 2008,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Dunbar's Creole Cooking",
-    "slug": "dunbars-creole-cooking",
-    "tagline": "Tina Dunbar's red beans and fried chicken, back after the storm.",
-    "description": "Dunbar's built its name on red beans and fried chicken before Katrina destroyed the original location. It came back and is again a working-class Creole lunch standard on Earhart.",
-    "listing_type": "business",
-    "city_slug": "new-orleans-la",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "7834 Earhart Blvd",
-    "city_text": "New Orleans",
-    "state": "LA",
-    "zip": "70125",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "visit",
-    "cta_url": null,
-    "price_range": "$$",
-    "founded_year": 1984,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://neworleans.neyows.com/",
+        "https://www.yelp.com/biz/neyows-creole-cafe-new-orleans-3"
+      ],
+      "note": "Open; Yelp updated 2026-07 and independently listed as Black-owned on EatOkra. Recorded the New Orleans subdomain rather than the bare apex because that is the page the business's own listings point at — a subdomain that resolves is not a guess, and stripping it to a root that may redirect somewhere else would be."
+    }
   },
   {
     "name": "Heard Dat Kitchen",
@@ -195,15 +191,25 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70113",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 510-4248",
+    "website_url": "https://www.hearddatkitchen.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
     "price_range": "$$",
-    "founded_year": 2016,
+    "founded_year": 2015,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.hearddatkitchen.com/",
+        "https://wgno.com/news/chef-jeff-at-heard-dat-kitchen-wants-you-to-listen-up-as-to-how-to-help-black-owned-businesses/",
+        "https://www.nola.com/entertainment_life/eat-drink/article_0d147043-d76e-5bdd-abf3-27518555c042.html"
+      ],
+      "note": "Street address on the row confirmed; phone and first-party domain added. Ownership is first-party and explicit — the business describes itself as Black owned and operated, and WGNO covered the owner on exactly that point. FOUNDED YEAR CORRECTED 2016 → 2015: nola.com reports he opened at Felicity and Magnolia in 2015, and the 2016 on the row had no source. ZIP NOT RETURNED by any source — the 70113 already on the row is unchanged and unconfirmed. It is consistent with Central City, but treat it as the one unverified field here."
+    }
   },
   {
     "name": "Compère Lapin",
@@ -221,8 +227,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70130",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 599-2119",
+    "website_url": "http://comperelapin.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -230,40 +236,15 @@
     "founded_year": 2015,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Bywater American Bistro",
-    "slug": "bywater-american-bistro",
-    "tagline": "Nina Compton's neighborhood room in the Bywater.",
-    "description": "The looser, more local counterpart to Compère Lapin, set in a converted rice mill building. Seasonal plates, an open kitchen, and a menu that changes more often than the sign suggests.",
-    "listing_type": "business",
-    "city_slug": "new-orleans-la",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "2900 Chartres St",
-    "city_text": "New Orleans",
-    "state": "LA",
-    "zip": "70117",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "book",
-    "cta_url": null,
-    "price_range": "$$$",
-    "founded_year": 2018,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "http://comperelapin.com/",
+        "https://www.yelp.com/biz/comp%C3%A8re-lapin-new-orleans-4"
+      ],
+      "note": "Open; own site, Yelp updated 2026-06, and a current Michelin Guide entry. Chef Nina Compton's Caribbean-Creole room in the Warehouse Arts District, open more than a decade. Same hotel caveat as Dōgon in DC: it sits inside The Old No. 77 Hotel & Chandlery, so the pin is correct but lands on a hotel frontage — worth a line in the listing description rather than a data change. Site is http, recorded as found."
+    }
   },
   {
     "name": "Sweet Soulfood",
@@ -289,7 +270,16 @@
     "price_range": "$",
     "founded_year": 2014,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/sweet-soulfood-new-orleans",
+        "https://sweetvegansoulfood.com/"
+      ],
+      "note": "Open at 1025 N Broad St; Yelp updated 2026-07 and Axios covered it in November 2025. Recording the near-miss because it argues for the whole method: the restaurant did move from 1016 N Broad to 1025 N Broad, nine digits along the same street with the same ZIP in the same neighbourhood, and several aggregators still carry the old number. The corpus already holds 1025 — this row was corrected during the Phase 1a+ address pass and carries no `_unverified` marker — so the check confirms rather than fixes it, and adds a sourced phone and website it did not have. Vegan Creole soul food; the vegan angle is the listing's differentiator and the category should reflect it."
+    }
   },
   {
     "name": "Café Dauphine",
@@ -300,15 +290,15 @@
     "city_slug": "new-orleans-la",
     "category_slug": "food-dining",
     "location_type": "physical",
-    "status": "published",
+    "status": "draft",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": "5229 Dauphine St",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70117",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 309-6391",
+    "website_url": "https://cafedauphine.wixsite.com/cafedauphine",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -316,10 +306,16 @@
     "founded_year": 2012,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "temp-closed",
+      "sources": [
+        "https://www.yelp.com/biz/cafe-dauphine-new-orleans",
+        "https://www.nola.com/entertainment_life/eat-drink/what-s-next-for-these-new-orleans-restaurants-bars-closed-since-the-pandemic/article_2424f47c-d074-11eb-97ff-7722d1d046f8.html",
+        "https://www.facebook.com/CafeDauphine/"
+      ],
+      "note": "Held as a draft, and the founder should look at this one directly. The Holy Cross dining room at 5229 Dauphine is shut — Yelp carries CLOSED updated 2026-08, and the Times-Picayune filed it among restaurants closed since the pandemic. But Chef Tia Henry has not folded the business: she cooked as a vendor at the November 2025 Gumbo Festival and the reporting describes a planned return to the Holy Cross room. What I cannot source is a date, and I will not write one. `temp-closed` is the honest verdict for exactly that state — the row keeps its sourced record and stops counting toward M9 rather than putting a locked door in front of a user. Two things the founder should weigh at review. A closure that has run since 2021 is only nominally temporary, so if no reopening is confirmed by the time the sheet comes back, this should be retyped `closed` and removed. And if the festival-vendor pattern turns out to be the ongoing business rather than a bridge, the right shape is `traveling`, the way Hotville Chicken was handled in LA. Address, phone and site are all confirmed and recorded either way, so whichever way it goes the row is ready."
+    }
   },
   {
     "name": "Addis NOLA",
@@ -337,8 +333,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 218-5321",
+    "website_url": "https://www.addisnola.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -346,10 +342,16 @@
     "founded_year": 2014,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.addisnola.com/",
+        "https://guide.michelin.com/us/en/louisiana/new-orleans_2906000/restaurant/addis-nola",
+        "https://www.yelp.com/biz/addis-nola-new-orleans-3"
+      ],
+      "note": "Open; own site, Michelin Guide entry, Yelp updated 2026-07. Moved to Bayou Road in November 2022 — the corpus already carried that address, so this confirms rather than corrects. One trap worth naming: a second domain, addisnolarestaurant.com, ranks alongside the real one and is an online-ordering storefront, not the restaurant's site. Recording it would have been the third time in this pass an order host nearly got written into website_url, after Puddin' and Cane. Bayou Road is the city's oldest passage and a dense Black-business corridor, which makes it a good anchor when the founder opens a neighbourhood view."
+    }
   },
   {
     "name": "Melba's Old School Poboys",
@@ -367,8 +369,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70117",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 267-7765",
+    "website_url": "https://melbas.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -376,10 +378,16 @@
     "founded_year": 2012,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://melbas.com/",
+        "https://www.yelp.com/biz/melbas-new-orleans-3",
+        "https://www.neworleans.com/listing/melbas-poboys/46110/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-08, official tourism listing. Trades 24 hours a day, which is the one case where omitting hours from the corpus actively costs the user something — a 3am po-boy is the whole point of this business — so it belongs in the listing description even though the corpus carries no hours field. The brand now runs several locations (melbas.com/locations); this row is the Elysian Fields flagship, the corner rebuilt out of Katrina rubble, and the multi-location shape is worth flagging so a future row for a second store is added as its own listing rather than edited over this one."
+    }
   },
   {
     "name": "Loretta's Authentic Pralines",
@@ -398,7 +406,7 @@
     "state": "LA",
     "zip": "70116",
     "phone": null,
-    "website_url": null,
+    "website_url": "https://lorettaspralines.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -406,10 +414,15 @@
     "founded_year": 1984,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://lorettaspralines.com/",
+        "https://www.yelp.com/biz/lorettas-authentic-pralines-new-orleans-2"
+      ],
+      "note": "Open, and this is the row that vindicated reading the corpus before searching instead of after. Loretta Harrison's business trades from three addresses — 13 French Market Pl, 1100 N Peters St, and 2101 N Rampart St — each with its own live Yelp page. My search returned the French Market shop and its phone, (504) 944-7068, and had I written from that result I would have moved a correctly-drafted row to a different store and attached a phone that rings a different counter. The corpus holds N Rampart; Yelp confirms it live as of 2026-08; the address stands unchanged. phone stays an explicit null because no source ties a number specifically to Rampart, and a phone that reaches the wrong location of the right business is a subtler failure than no phone at all. Website is brand-wide and safe. Founder may want the other two as their own rows later — three shops, three listings, never one row edited between them."
+    }
   },
   {
     "name": "Bennachin Restaurant",
@@ -427,8 +440,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 522-1230",
+    "website_url": "https://bennachinrestaurant.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -436,10 +449,16 @@
     "founded_year": 1992,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://bennachinrestaurant.com/",
+        "https://www.yelp.com/biz/bennachin-restaurant-new-orleans",
+        "https://www.eatokra.com/businesses/bennachin-restaurant-la"
+      ],
+      "note": "Open; own site, Yelp updated 2026-08, EatOkra. Gambian and Cameroonian cooking in the French Quarter since 1992 — one of the longest-running West African restaurants in the city and a good counterweight to a corpus that skews Creole and soul food. Two phone numbers circulate, (504) 522-1230 and (504) 296-2154; I recorded the first because it is the one on the restaurant's own site, and recording the aggregator number instead is how a directory ends up routing calls to a line the owner does not answer."
+    }
   },
   {
     "name": "Barrow's Catfish",
@@ -450,15 +469,15 @@
     "city_slug": "new-orleans-la",
     "category_slug": "food-dining",
     "location_type": "physical",
-    "status": "published",
+    "status": "draft",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": "8300 Earhart Blvd",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70118",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 265-8995",
+    "website_url": "https://barrowscatfish.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -466,10 +485,16 @@
     "founded_year": 1943,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "temp-closed",
+      "sources": [
+        "https://barrowscatfish.com/locations/",
+        "https://www.yelp.com/biz/barrows-catfish-restaurant-new-orleans-new-orleans",
+        "https://www.nola.com/gambit/food_drink/restaurant_reviews/restaurant-review-catfish-is-king-at-a-revived-barrows-on-earhart-boulevard/article_06f8ba17-db3e-5bc9-b4f0-5fef963c2f38.html"
+      ],
+      "note": "Held as a draft. The brand is unambiguously alive — own site, a locations page, an iOS ordering app — but the specific room this row points at is not currently serving: Yelp shows 8300 Earhart CLOSED updated 2026-07, and the reporting says Earhart shut in order to reopen in the former Helm's Paint building as a larger restaurant. I could not source that new address, so I am not writing one. Of the three addresses the brand lists, the downtown one at 1200 Poydras also carries a CLOSED banner (updated 2026-02, described as maintenance) and the third, 1700 Lapalco Blvd, is in Harvey — across the river, outside Orleans Parish, and therefore outside a New Orleans city corpus regardless of its status. So there is currently no confirmed-open Barrow's address that belongs in this file, which is precisely the situation `temp-closed` exists for. One inconsistency recorded rather than resolved: the suite is given as Ste 10 in one source and Ste 103 in the Toast ordering link. I left the suite off entirely. On a published row that would matter — a missing suite geocodes to the complex centroid, the way Malik Books and Letena did — but this row is drafted, and inventing the right one of two conflicting suites is worse than omitting both. Barrow's has closed and come back before; it was shut from Katrina until the Earhart revival, so a return here is likely and the founder should re-check at review."
+    }
   },
   {
     "name": "Two Sisters Kitchen",
@@ -483,11 +508,11 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "223 N Derbigny St",
+    "address_line_1": "1610 Basin St",
     "city_text": "New Orleans",
     "state": "LA",
-    "zip": "70112",
-    "phone": null,
+    "zip": "70116",
+    "phone": "(504) 524-0056",
     "website_url": null,
     "social_instagram": null,
     "cta_type": "visit",
@@ -496,10 +521,17 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "relocated",
+      "sources": [
+        "https://www.nola.com/entertainment_life/eat-drink/with-gravy-and-roux-an-old-school-new-orleans-soul-food-joint-finds-a-new/article_199190d1-70c6-4a28-a48d-aef8fb1d81d3.html",
+        "https://www.bizapedia.com/la/2-sisters-soul-food-restaurant-in-treme-llc.html",
+        "https://www.yelp.com/biz/two-sisters-kitchen-new-orleans",
+        "https://www.xome.com/realestate/LA/New-Orleans/70116/Basin"
+      ],
+      "note": "Moved to Tremé. The Derbigny Street room the corpus drafted is closed (Yelp CLOSED updated 2026-06), and so is the New Orleans East location the family ran in between (Two Sistas 'N Da East, 9901 Chef Menteur Hwy, also CLOSED) — the lineage runs Derbigny to the East to Tremé, and a corpus drafted from recall naturally landed on the oldest of the three. The Times-Picayune covered the Tremé reopening, the street address comes from the family's own posts, and Louisiana's entity register carries '2 Sisters Soul Food Restaurant in Treme, LLC', which is the corroboration that makes a Facebook-sourced address usable rather than hearsay. Note deliberately what is NOT in the fields object: `zip`. Basin Street runs along the 70112/70116 boundary and I could not source which side 1610 falls on, so the ZIP stays on this row's `_unverified` list and the founder resolves it at review. That is the field-by-field clearing in stampVerified doing its job — collapsing this row to a single verified/unverified boolean would have forced a choice between discarding a sourced street address and inventing a ZIP, and a wrong ZIP is the quiet kind of error that geocodes without complaint. It also means the row will hold the dry run until it is settled, which is correct: better a blocked gate than a pin on the wrong block. Founded 1972 by Dorothy and Ledell Finister; more than fifty years in business. Phone carried over from the Derbigny listing and should be reconfirmed with the ZIP.\n\nSETTLED, same day: 1610 Basin St is 70116 per property records, not the 70112 the corpus drafted. The drafted value was inherited from the old Derbigny Street address and travelled with the row through the relocation, which is precisely the failure mode the flag was holding for. Worth reading alongside Sweet Lorraine's and the Munch Factory, both settled the same way within minutes: all three of the ZIPs I refused to guess turned out to be wrong, three for three. That is not a coincidence and it is the single most useful measurement in this pass — a drafted ZIP on a relocated or boundary-street row is not a weak value, it is reliably a stale one, and the honest default for any future relocation is to null the ZIP rather than carry it."
+    }
   },
   {
     "name": "Vaucresson's Creole Cafe & Deli",
@@ -517,19 +549,25 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "phone": "(504) 267-3850",
+    "website_url": "https://www.vaucressonsausage.com",
+    "social_instagram": "vaucressoncreolecafeanddeli",
     "cta_type": "visit",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": 1899,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.vaucressonsausage.com/about-vaucresson-sausage",
+        "https://www.yelp.com/biz/vaucressons-sausage-company-new-orleans",
+        "https://www.instagram.com/vaucressoncreolecafeanddeli/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-08, an active Instagram, and a Wikipedia entry. Address and ZIP confirm the draft exactly. Two naming details the founder should see. Yelp files this address under 'Vaucresson's Sausage Company' while the cafe trades as 'Vaucresson's Creole Cafe & Deli' — one business, two names, and the aggregator picked the older one; the corpus name is the current trading name and stays. And the website is the sausage company's domain rather than a cafe-specific site, which is correct rather than a compromise: it is the family's own domain and where the business sells. First sourced Instagram handle in the New Orleans pass — most rows here have come back with no social presence I could confirm, which is itself worth reporting to the founder as a data-completeness finding rather than a gap to fill by guessing. Fourth-generation Creole sausage makers; the hot sausage predates most of the corpus."
+    }
   },
   {
     "name": "McHardy's Chicken & Fixin'",
@@ -547,8 +585,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 949-0000",
+    "website_url": "https://mchardyschickennola.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -556,10 +594,16 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://mchardyschickennola.com/",
+        "https://www.yelp.com/biz/mchardys-chicken-and-fixin-new-orleans",
+        "https://www.eatokra.com/businesses/mchardy-s-chicken-fixin"
+      ],
+      "note": "Open; own site, Yelp updated 2026-03, EatOkra, and the state tourism listing. Address, ZIP and neighbourhood all confirm the draft. Seventh Ward fried chicken counter, takeout-only, which is worth a line in the listing description — a user who arrives expecting to sit down has had a bad experience even though every field in the row is correct. Same class of expectation-mismatch note as the hotel-tenancy ones on Dōgon, Step Afrika and Compère Lapin, and it is starting to look like a small standing category the founder may want as a structured field later rather than prose."
+    }
   },
   {
     "name": "Sammy's Food Service & Deli",
@@ -577,8 +621,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70122",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 947-0675",
+    "website_url": "https://sammysfood.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -586,10 +630,16 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://sammysfood.com/contact/",
+        "https://www.yelp.com/biz/sammys-food-service-and-deli-new-orleans",
+        "https://www.explorelouisiana.com/restaurants/sammys-food-service-deli"
+      ],
+      "note": "Open; own contact page, Yelp updated 2026-08, and the state tourism restaurant register. Address, ZIP, phone and site all confirm the draft with nothing to correct — the third clean row in a row after Baldwin & Co and Kermit's, which is worth noting because the New Orleans pass had been running heavy on closures and this is the first stretch where the corpus is simply right. St Roch, po-boys and plate lunches, closed Sundays."
+    }
   },
   {
     "name": "The Munch Factory",
@@ -603,12 +653,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "6325 Elysian Fields Ave",
+    "address_line_1": "4141 Bienville St Ste 110",
     "city_text": "New Orleans",
     "state": "LA",
-    "zip": "70122",
-    "phone": null,
-    "website_url": null,
+    "zip": "70119",
+    "phone": "(504) 324-5372",
+    "website_url": "https://themunchfactory.net",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -616,10 +666,19 @@
     "founded_year": 2011,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "relocated",
+      "sources": [
+        "https://www.nola.com/gambit/food_drink/chef-jordan-and-alexis-ruiz-move-the-munch-factory-to-bigger-spot-in-mid-city/article_33d8dbd0-eda5-4bd9-aa19-89665e84b00c.html",
+        "https://www.tripadvisor.com/Restaurant_Review-g60864-d2700559-Reviews-The_Munch_Factory-New_Orleans_Louisiana.html",
+        "https://www.yelp.com/biz/the-munch-factory-new-orleans",
+        "https://themunchfactory.net/",
+        "https://www.loopnet.com/Listing/4141-Bienville-St-New-Orleans-LA/4233247/",
+        "https://www.toasttab.com/local/order/the-munch-factory-6514-congress-dr"
+      ],
+      "note": "Moved to Mid-City, and this row needed the second search for the opposite reason to the usual: the CLOSED banner my first search returned was not on the address the corpus holds. Yelp's closed page is 1901 Sophie Wright Pl in the Lower Garden District; the corpus drafted 6325 Elysian Fields, the Joseph Bartholomew Golf Course clubhouse in Gentilly. Two different rooms, and reading the aggregator result as if it applied to the corpus row would have closed a listing on evidence about a different address — the mirror image of the Loretta's near-miss, where the search returned a live location that was not the drafted one. Jordan and Alexis Ruiz have moved the restaurant four times across its life (Franklin Ave, Elysian Fields, Lower Garden District, now Mid-City) and Gambit's headline is explicit that the Bienville Street opening is a move rather than a second room, which is what makes this `relocated` instead of a new row. Phone is the brand number and has carried across every move. Note deliberately what is NOT in the fields object: `zip`. The row still holds 70122, which belonged to Elysian Fields and is wrong for Bienville Street — I could not source the Mid-City ZIP and will not infer one from a neighbouring row, so it stays on `_unverified` and the dry run will block until the founder settles it. Read the retained 70122 as stale, not as a value: it is the one field on this row that is now actively incorrect, and that is exactly why the flag is on it.\n\nSETTLED, same day, and the second search returned more than the ZIP: 4141 Bienville St is 70119, and it is a multi-tenant Mid-City building — a dermatology practice, a mechanical contractor, and two salon operators all address mail there. The restaurant is Suite 110, per its own order host, so the address gains the suite for the same reason Stella Jones and Malik Books did: without it the pin lands on a shared commercial building's footprint rather than the restaurant's door. So the stale 70122 is gone and the row is now stronger than it was drafted, not merely repaired. Note what settled it — a property record and the restaurant's own ordering page, neither of which is a directory. When the aggregators are the thing being checked, the land records and the business's own transactional pages are the sources that actually resolve a question."
+    }
   },
   {
     "name": "Chef Ron's Gumbo Stop",
@@ -645,7 +704,17 @@
     "price_range": "$$",
     "founded_year": null,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/chef-rons-gumbo-stop-metairie",
+        "https://www.neworleansrestaurants.com/Gumbo-Stop/",
+        "https://www.nola.com/gambit/food_drink/what-s-in-store-chef-ron-s-gumbo-stop/article_9124a8bb-5dee-5fc8-8e56-b133ffc4a7b8.html"
+      ],
+      "note": "Open, and this row was never on the _unverified list — it is one of the nine address-less `physical` rows repaired in the first phase of this pass, and I re-checked it precisely because a repaired address is a drafted address. Every field matches what the repair wrote: 2309 N Causeway Blvd, 70001, (504) 835-2022, gumbostop.com, with Yelp updated 2026-07 and a Gambit feature behind it. That is worth stating as a measurement rather than a shrug — three of three Phase 1a repairs re-confirm exactly, which says the repair pass sourced properly rather than guessing plausibly. One thing the founder should see: this address is in Metairie, ZIP 70001, not Orleans Parish. It is a legitimate metro-area row of the same kind Houston already carries for Pearland and Sugar Land, and the review sheet will flag it as metro rather than city — that flag is correct and should be confirmed, not cleared."
+    }
   },
   {
     "name": "Fritai",
@@ -671,7 +740,17 @@
     "price_range": "$$",
     "founded_year": 2018,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://fritai.com/",
+        "https://www.yelp.com/biz/fritai-new-orleans",
+        "https://www.neworleans.com/coolinary/listing/fritai/54460/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-08, and the official tourism listing. Second of the three Phase 1a address repairs re-checked, and it confirms field for field. Chef Charly Pierre's Haitian room — the only Haitian listing in the corpus, which makes it the sort of row a category-thin city needs more of, and an argument that the breadth top-up should look past the obvious cuisines. Note two lookalike domains surfaced in the results (`fritai.goto-where.com`, `fritai.hey-restaurants.com`) that are scraped rehosts rather than the restaurant's own site; fritai.com is the first-party one and is what the corpus holds. Worth naming because those rehosts are the exact trap the no-guessing rule on website_url exists to avoid — they look canonical in a result list."
+    }
   },
   {
     "name": "Queen Trini Lisa",
@@ -689,8 +768,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 345-2058",
+    "website_url": "https://www.queentrinilisa.com",
     "social_instagram": null,
     "cta_type": "order",
     "cta_url": null,
@@ -698,40 +777,16 @@
     "founded_year": 2019,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
-  },
-  {
-    "name": "Praline Connection",
-    "slug": "praline-connection",
-    "tagline": "Frenchmen Street soul food and Creole classics since 1990.",
-    "description": "Fried chicken, smothered pork chops, stewed okra and file gumbo on Frenchmen Street, served by a staff in white shirts and black fedoras. A pre-show stop for decades of music crowds.",
-    "listing_type": "business",
-    "city_slug": "new-orleans-la",
-    "category_slug": "food-dining",
-    "location_type": "physical",
-    "status": "published",
-    "is_featured": false,
-    "ownership_label": "black_owned",
-    "address_line_1": "542 Frenchmen St",
-    "city_text": "New Orleans",
-    "state": "LA",
-    "zip": "70116",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
-    "cta_type": "visit",
-    "cta_url": null,
-    "price_range": "$$",
-    "founded_year": 1990,
-    "hours": [],
-    "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.queentrinilisa.com/",
+        "https://www.yelp.com/biz/queen-trini-lisa-new-orleans-4",
+        "https://www.neworleans.com/listing/queen-trini-lisa/37001/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-05, official tourism listing. Address, ZIP, phone and site confirm. The apostrophe in D'Hemecourt is worth a deliberate word since it is the kind of character that quietly breaks things: the corpus carries it, the business's own site carries it, and several aggregators strip it to 'D Hemecourt'. It stays. Nominatim resolves both forms, so this is not a geocoding risk, but a search index that treats the two as different strings would split the row from its own name — one for the founder's eventual search-normalization work rather than a data fix here. Trinidadian food in Mid-City; Toast, Grubhub, Seamless and ezCater all rank above the restaurant's own domain, and none of them is the website."
+    }
   },
   {
     "name": "Boswell's Jamaican Grill",
@@ -749,19 +804,26 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
+    "phone": "(504) 482-6600",
     "website_url": null,
-    "social_instagram": null,
+    "social_instagram": "boswelljamaicagrill",
     "cta_type": "order",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/boswells-jamaican-grill-new-orleans-3",
+        "https://www.instagram.com/boswelljamaicagrill/",
+        "https://www.neworleans.com/listing/boswells-jamaican-grill/36251/",
+        "https://www.eatokra.com/businesses/boswell-s-jamaican-grill"
+      ],
+      "note": "Open; Yelp updated 2026-04, official tourism listing, and EatOkra — which is itself a Black-owned-business directory and therefore a peer source rather than a neutral one, worth noting since the founder will recognise it as a competitor. Address, ZIP and phone confirm the draft. website_url is an explicit null and that is a decision rather than a gap: a domain surfaced in the search engine's own summary text but no first-party site appeared among the actual results, and an unconfirmed domain is the one field where guessing does real damage — it either routes a user nowhere or, worse, somewhere else. The founder can add it in one call. Third sourced Instagram handle in the New Orleans pass, and the handle is worth reading carefully because it is not the obvious one: 'boswelljamaicagrill', singular Boswell and no possessive, where the business name is 'Boswell's Jamaican Grill'. Deriving handles from names would have produced a dead link here."
+    }
   },
   {
     "name": "Ashé Cultural Arts Center",
@@ -779,8 +841,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70113",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 569-9070",
+    "website_url": "https://www.ashenola.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -788,10 +850,16 @@
     "founded_year": 1998,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.ashenola.org/contact",
+        "https://www.yelp.com/biz/ashe-cultural-arts-center-new-orleans",
+        "https://www.neworleanschamber.org/list/member/ash%C3%A9-cultural-arts-center-efforts-of-grace-inc-55"
+      ],
+      "note": "Open; own contact page, Yelp updated 2026-05, Chamber of Commerce membership. Address and ZIP confirm the draft exactly. Founded 1998 by Carol Bebelle and Douglas Redd, operating as Efforts of Grace, Inc. — a nonprofit, which is a distinction the corpus has no field for and the founder may eventually want, since a user's expectations of a nonprofit cultural center differ from a shop. Same block as Café Reconcile at 1631 Oretha Castle Haley, already verified in this pass: two rows, different categories, several hundred feet apart, so no shared-address interaction. Central City's arts corridor is now the second cluster in the New Orleans corpus after Bayou Road, which is a good sign for the map view — the pins will read as neighbourhoods rather than scatter."
+    }
   },
   {
     "name": "Studio Be",
@@ -810,7 +878,7 @@
     "state": "LA",
     "zip": "70117",
     "phone": null,
-    "website_url": null,
+    "website_url": "https://studiobenola.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -818,10 +886,16 @@
     "founded_year": 2016,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://studiobenola.com/",
+        "https://www.yelp.com/biz/studiobe-new-orleans-3",
+        "https://www.neworleans.com/listing/studiobe/36371/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-05, official tourism listing. Address and ZIP confirm the draft. Brandan 'BMike' Odums' 36,000 sq ft Bywater warehouse, established 2016. phone is not in the fields object — Yelp shows a number but did not surface it in a form I could read, and the artist's own site routes contact through a form rather than a listed line. So `phone` stays on this row's `_unverified` list rather than being filled from an aggregator I could not open. Second row in this pass to clear address but not phone, after Two Sisters, and both will hold the dry run until the founder settles them. That is the intended behaviour and worth saying once plainly: the unverified marker is a brake, and a brake that never engages is not a safety feature."
+    }
   },
   {
     "name": "Le Musée de f.p.c.",
@@ -839,8 +913,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 323-5074",
+    "website_url": "https://www.lemuseedefpc.com",
     "social_instagram": null,
     "cta_type": "book",
     "cta_url": null,
@@ -848,10 +922,16 @@
     "founded_year": 2014,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.lemuseedefpc.com/contact",
+        "https://www.yelp.com/biz/le-mus%C3%A9e-de-fpc-new-orleans",
+        "https://www.explorelouisiana.com/african-american-heritage-trail/le-mus%C3%A9e-de-fpc"
+      ],
+      "note": "Open; own contact page, Yelp updated 2026-08, and a place on the state's African American Heritage Trail. Address and ZIP confirm the draft. A historic house museum on free people of colour, shown by guided tour only — so a visitor cannot simply walk in, which is a real expectation-mismatch and belongs in the description alongside the takeout-only and hotel-tenancy notes accumulating in this pass. Esplanade Ridge puts it near Neyow's and Addis NOLA, tightening the Bayou Road cluster further."
+    }
   },
   {
     "name": "New Orleans African American Museum",
@@ -869,8 +949,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 218-8254",
+    "website_url": "https://www.noaam.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -878,10 +958,16 @@
     "founded_year": 1996,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.noaam.org/visit-noaam",
+        "https://www.yelp.com/biz/new-orleans-african-american-museum-new-orleans-3",
+        "https://en.wikipedia.org/wiki/New_Orleans_African_American_Museum"
+      ],
+      "note": "Open; own visit page, Yelp updated 2026-06, Wikipedia. Address and ZIP confirm the draft. One aggregator quirk recorded rather than copied: Yelp files the museum as '1417 - 1418 Governor Nicholls St' because the campus spans both sides of the street number. The corpus holds 1418, which is the visitor entrance and the address the museum publishes itself, and a hyphenated range is not a valid address_line_1 for a geocoder — so 1418 stands. Treme, the oldest surviving Black community in the United States; open Thursday to Saturday only, which is worth a description line for the same reason Le Musee's tours-by-appointment is. Third Treme row in this pass alongside Backstreet and Two Sisters."
+    }
   },
   {
     "name": "Stella Jones Gallery",
@@ -895,12 +981,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "201 St Charles Ave",
+    "address_line_1": "201 St Charles Ave #132",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70170",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 568-9050",
+    "website_url": "https://stellajonesgallery.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -908,10 +994,16 @@
     "founded_year": 1996,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://stellajonesgallery.com/contact/",
+        "https://www.yelp.com/biz/stella-jones-gallery-new-orleans",
+        "https://www.artsdistrictneworleans.com/galleries/stella-jones-gallery"
+      ],
+      "note": "Open; own contact page, Yelp updated 2026-04, and the Arts District New Orleans gallery register. The address gains a suite: the corpus drafted a bare '201 St Charles Ave', which is Place St. Charles, a fifty-three storey office tower — geocoding that bare would have dropped the pin on the tower footprint rather than the gallery, the same failure mode as Malik Books and Letena in LA. #132 is the unit the gallery publishes. Recorded and not fixed, because it is a wayfinding problem rather than a data one: the gallery's entrance is on Common Street, not on St Charles, so a user standing at the address on the pin will be looking at the wrong facade. That belongs in the listing description. ZIP 70170 confirms — it is the tower's own ZIP, which is why it looks wrong next to the 701xx rows around it and is correct anyway."
+    }
   },
   {
     "name": "Backstreet Cultural Museum",
@@ -929,8 +1021,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 657-6700",
+    "website_url": "https://www.backstreetmuseum.org",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -938,10 +1030,16 @@
     "founded_year": 1999,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.backstreetmuseum.org/",
+        "https://www.yelp.com/biz/backstreet-cultural-museum-new-orleans-2",
+        "https://en.wikipedia.org/wiki/Backstreet_Cultural_Museum"
+      ],
+      "note": "Open; own site, Yelp updated 2026-07, Wikipedia, state tourism. This is the relocation that did not need catching: the museum moved from its longtime St Claude Avenue home to 1531 St Philip in July 2022, and the corpus was drafted with the new address already. Worth recording as the counter-example to Two Sisters and Loyalty Bookstores — a recall-drafted corpus is not uniformly stale, and the pass is finding both directions. Mardi Gras Indian suits, jazz funerals, and social aid and pleasure club material; admission is by donation, which is the kind of detail that belongs in the listing description because a user who expects a ticket price will read a blank as missing data."
+    }
   },
   {
     "name": "Kermit's Tremé Mother-in-Law Lounge",
@@ -959,19 +1057,25 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70116",
-    "phone": null,
-    "website_url": null,
-    "social_instagram": null,
+    "phone": "(504) 435-8763",
+    "website_url": "https://www.kermitslounge.com",
+    "social_instagram": "kermitsmotherinlawlounge",
     "cta_type": "visit",
     "cta_url": null,
     "price_range": "$",
     "founded_year": 1994,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.kermitslounge.com/",
+        "https://www.yelp.com/biz/kermits-treme-mother-in-law-lounge-new-orleans-3",
+        "https://www.neworleans.com/listing/kermits-treme-mother-in-law-lounge/32588/"
+      ],
+      "note": "Open; own site, Yelp updated 2026-07, official tourism listing. Address, ZIP, phone and site all confirm. Second sourced Instagram handle in the New Orleans pass after Vaucresson's — two out of twenty-two rows, which is now a firm enough pattern to report to the founder as a finding rather than a coincidence: the New Orleans corpus is close to socially invisible at the handle level, and the fix is founder outreach, not more searching. Kermit Ruffins reopened the room in 2014 after Katrina closed it; Ernie K-Doe's original lounge, so the row carries a lineage a visitor will care about. Fourth Treme-adjacent row."
+    }
   },
   {
     "name": "Sweet Lorraine's Jazz Club",
@@ -988,9 +1092,9 @@
     "address_line_1": "1931 St Claude Ave",
     "city_text": "New Orleans",
     "state": "LA",
-    "zip": "70117",
-    "phone": null,
-    "website_url": null,
+    "zip": "70116",
+    "phone": "(504) 945-9654",
+    "website_url": "https://www.sweetlorrainesjazzclub.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -998,10 +1102,18 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.sweetlorrainesjazzclub.com/",
+        "https://www.yelp.com/biz/sweet-lorraines-new-orleans",
+        "https://www.wwoz.org/organizations/sweet-lorraines",
+        "https://www.loopnet.com/property/1931-saint-claude-ave-new-orleans-la-70116/22071-37W103624/",
+        "https://www.xome.com/realestate/1931-saint-claude-ave-new-orleans-la-70116-54932727"
+      ],
+      "note": "Open; own site, Yelp updated 2026-04, and WWOZ's venue directory carries it as Active — WWOZ is the community radio station and its listings are maintained by people who book and attend these rooms, which makes it a stronger liveness signal for a music venue than any aggregator banner. Street address, phone and site all confirm. `zip` is deliberately not in the fields object: the corpus drafted 70117 and the sources returned 70116, and 1931 St Claude sits close to where St Claude Avenue crosses between the two — Marigny on one side, Bywater on the other. One unconfirmed assertion is not enough to overwrite a drafted value, and it is more than enough to stop me trusting it, so the flag stays and the founder settles it. Same shape as Two Sisters and the Munch Factory: three rows now holding on a ZIP, all of them on boundary streets, which is a pattern worth naming rather than three coincidences. Also selected as a Prospect.6 venue, so it carries an art-triennial association a listing description could use.\n\nSETTLED, same day: 70116, per two independent property records for 1931 Saint Claude Ave. The corpus's 70117 was wrong, which retires the pattern the paragraph above only suspected — all three held ZIPs resolved against the drafted value, three for three. The boundary is real (3231 St Claude is genuinely 70117) and 1931 falls on the Marigny side of it. Recording the reason the aggregators disagreed: they did not — the sources I could read simply did not carry a ZIP at all, and the 70117 came from the draft, not from anywhere. A field nobody sourced looks identical to a field everybody agreed on once it is sitting in a JSON file, and that is the entire argument for the _unverified marker existing."
+    }
   },
   {
     "name": "Zulu Social Aid & Pleasure Club",
@@ -1015,12 +1127,12 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "722 N Broad St",
+    "address_line_1": "732 N Broad St",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 827-1661",
+    "website_url": "https://www.kreweofzulu.com",
     "social_instagram": null,
     "cta_type": "visit",
     "cta_url": null,
@@ -1028,10 +1140,16 @@
     "founded_year": 1909,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.kreweofzulu.com/contact",
+        "https://www.yelp.com/biz/zulu-social-aid-and-pleasure-club-new-orleans-3",
+        "https://www.nola.com/news/business/zulu-building-renovation-mardi-gras/article_515b2de8-5f2e-11ef-9f6c-a7fa4cbf9638.html"
+      ],
+      "note": "Open, with a street-number correction: 722 → 732. This is the dangerous class of error — ten numbers off, on the same block, so it geocodes cleanly and lands a pin a few doors from the door, the same failure as Vicky's All Day and Sweet Soulfood. The confusion has a real source rather than being a slip: 722 N Broad is a property the club bought in 1986 and it still circulates in older references, while 732 is the headquarters the club publishes today and the building nola.com covered being lifted and renovated against flooding. Two phone numbers circulate as well — Yelp carries (504) 827-9551, the club's own contact page (504) 827-1661 — and I recorded the club's, applying the same rule Bennachin set: the number on the business's own site wins over the aggregator's. Founded 1909; the Zulu memorabilia shop across the street at 807 N Broad is a separate storefront the founder may want as its own row rather than folded into this one."
+    }
   },
   {
     "name": "Sportsman's Corner",
@@ -1045,23 +1163,30 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "1600 Second St",
+    "address_line_1": "2433 Dryades St",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70113",
     "phone": null,
     "website_url": null,
-    "social_instagram": null,
+    "social_instagram": "sportsmanscorneruptown",
     "cta_type": "visit",
     "cta_url": null,
     "price_range": "$",
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/sportsmans-corner-bar-and-daiquiri-shop-new-orleans",
+        "https://www.instagram.com/sportsmanscorneruptown/",
+        "https://www.neworleans.com/listing/sportsman-corner/37710/",
+        "https://www.vianolavie.org/2012/10/30/sportsmans-corner/"
+      ],
+      "note": "Open, with an address change that is not a correction so much as a choice of frontage. The corpus drafted 1600 Second St; every source addresses the bar at 2433 Dryades St. Both are true — it is a corner building at Second and Dryades, which the neighbourhood calls 'Second and D' and the bar's own Instagram handle abbreviates the same way. I took the Dryades address because it is the one the business is listed under everywhere and therefore the one a geocoder and a user's map app will both resolve; a corner row indexed on the street nobody addresses it by is findable only by accident. ZIP 70113 unchanged. phone is an explicit null — no source carried one, which for a Central City neighbourhood bar is unremarkable rather than a gap. Fourth sourced Instagram handle, and again not derivable from the name. ViaNolaVie has a 2012 feature on it as a neighbourhood cornerstone if the founder wants editorial material."
+    }
   },
   {
     "name": "Bullet's Sports Bar",
@@ -1075,11 +1200,11 @@
     "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
-    "address_line_1": "2441 AP Tureaud Ave",
+    "address_line_1": "2441 A P Tureaud Ave",
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
+    "phone": "(504) 948-4003",
     "website_url": null,
     "social_instagram": null,
     "cta_type": "visit",
@@ -1088,10 +1213,17 @@
     "founded_year": null,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.wwoz.org/organizations/bullets-sports-bar",
+        "https://www.neworleans.com/listing/bullets-sports-bar/33532/",
+        "https://www.eatokra.com/businesses/bullet-s-sports-bar",
+        "https://www.axios.com/local/new-orleans/2025/06/11/bullets-sports-bar-music-new-orleans-7th-ward"
+      ],
+      "note": "Open; WWOZ, the official tourism listing, EatOkra, and Axios New Orleans. Address, ZIP and phone confirm the draft. website_url is an explicit null — no first-party site exists for this room and that is the honest state, not a missing lookup. One thing the founder should see rather than have buried: Axios reported in June 2025 that the owner was looking to sell. That is not a closure and does not change the verdict, but it is a live risk on a row that will publish, and it is the sort of fact that turns into a stale listing six months later without anyone noticing a banner change. Worth a re-check before the city goes active. Seventh Ward, live music several nights a week — this and Kermit's are the two neighbourhood music rooms in the corpus and they are three quarters of a mile apart, which is a genuinely useful pairing for a guide."
+    }
   },
   {
     "name": "Community Book Center",
@@ -1109,15 +1241,25 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70119",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 948-7323",
+    "website_url": "https://www.cbcreads.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
     "price_range": "$$",
     "founded_year": 1983,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.cbcreads.com/",
+        "https://veritenews.org/2023/10/03/qa-from-the-trunk-of-her-car-to-bayou-road-community-book-center-founder-celebrates-40-years-in-business/",
+        "https://www.yelp.com/biz/community-book-center"
+      ],
+      "note": "The best-sourced row of the thirteen. Address, ZIP and the 1983 founding year on the row are all confirmed; phone and first-party domain added; Yelp current to May 2026. Ownership is first-party and explicit — the store's own site titles itself a Black independent bookseller, and Verite News covered its fortieth anniversary as the oldest Black-owned bookstore in the New Orleans area. This is the tier every row in the corpus should aspire to: the business states its own ownership and local Black press independently corroborates it."
+    }
   },
   {
     "name": "Baldwin & Co.",
@@ -1135,8 +1277,8 @@
     "city_text": "New Orleans",
     "state": "LA",
     "zip": "70117",
-    "phone": null,
-    "website_url": null,
+    "phone": "(504) 354-1741",
+    "website_url": "https://www.baldwinandcobooks.com",
     "social_instagram": null,
     "cta_type": "shop",
     "cta_url": null,
@@ -1144,10 +1286,16 @@
     "founded_year": 2021,
     "hours": [],
     "links": [],
-    "_unverified": [
-      "address_line_1",
-      "zip"
-    ]
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.baldwinandcobooks.com/visit",
+        "https://www.yelp.com/biz/baldwin-and-co-new-orleans-2",
+        "https://bizneworleans.com/baldwin-co-where-coffee-books-and-community-converge/"
+      ],
+      "note": "Open; own visit page, Yelp updated 2026-08 — the freshest banner in the New Orleans pass — plus Biz New Orleans trade coverage. Address, ZIP, phone and site all confirm the draft. Black-owned bookstore and coffee shop founded 2021 by DJ Johnson, named for James Baldwin, open seven days a week. Worth flagging to the founder as a category question rather than a data one: the row sits in the corpus as a bookstore, but it trades equally as a coffee shop and an event space, and a user searching coffee in the Marigny will not find it. That is the same one-business-two-categories problem as Vaucresson's cafe-and-sausage-company, and both are arguments for the taxonomy carrying a secondary category rather than for editing either row."
+    }
   },
   {
     "name": "Deelightful Roux School of Cooking",
@@ -1167,12 +1315,197 @@
     "zip": "70113",
     "phone": "(504) 655-1195",
     "website_url": "https://www.chefdeelavigne.com",
-    "social_instagram": null,
+    "social_instagram": "deelightfulroux",
     "cta_type": "book",
     "cta_url": "https://www.chefdeelavigne.com",
     "price_range": "$$$",
     "founded_year": 2020,
     "hours": [],
-    "links": []
+    "links": [],
+    "_verified": {
+      "on": "2026-08-13",
+      "verdict": "open",
+      "sources": [
+        "https://www.chefdeelavigne.com/",
+        "https://www.yelp.com/biz/deelightful-roux-school-of-cooking-new-orleans",
+        "https://www.neworleans.com/listing/deelightful-roux-school-of-cooking/42696/",
+        "https://www.instagram.com/deelightfulroux/"
+      ],
+      "note": "Open; third and last of the Phase 1a repairs re-checked, confirming field for field. Chef Dwynesha 'Dee' Lavigne's school runs inside the Southern Food & Beverage Museum at 1504 Oretha Castle Haley — a tenancy note of the same class as Dōgon in the Salamander and Step Afrika! at the Atlas, and the fifth or sixth row in this pass where the listing's address is somebody else's building. That is now frequent enough to be a schema question rather than a description quirk. Fifth sourced Instagram handle in the New Orleans pass, and this address puts a third row on the Oretha Castle Haley corridor alongside Ashé and Sportsman's Corner nearby — Central City is quietly the densest cluster in the corpus after Tremé."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Terrance Osborne Gallery",
+    "slug": "terrance-osborne-gallery",
+    "tagline": "Magazine Street gallery of the painter who colours New Orleans.",
+    "description": "Terrance Osborne's own Magazine Street gallery, hung with the saturated shotgun houses, second lines and post-Katrina rooftops that made him one of the most recognisable painters working in the city.",
+    "city_slug": "new-orleans-la",
+    "category_slug": "arts-culture",
+    "address_line_1": "3029 Magazine St",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70115",
+    "phone": "(504) 232-7530",
+    "website_url": null,
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.yelp.com/biz/terrance-osborne-gallery-new-orleans"
+      ],
+      "note": "Address and phone confirmed. NO WEBSITE was returned by the search that produced this record — left null rather than assuming the artist's personal domain also serves the gallery. Artist-owned, so ownership is not in question."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Magnolia Yoga Studio",
+    "slug": "magnolia-yoga-studio",
+    "tagline": "Treme yoga studio a block from Congo Square.",
+    "description": "A small Basin Street studio on the edge of Treme running vinyasa, restorative and community classes, with a deliberate focus on making a yoga room feel like it belongs to the neighbourhood it sits in.",
+    "city_slug": "new-orleans-la",
+    "category_slug": "wellness-health",
+    "address_line_1": "301 Basin St Ste 2",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70112",
+    "phone": "(504) 302-2304",
+    "website_url": "https://magnoliayogastudio.com",
+    "cta_type": "visit",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://magnoliayogastudio.com"
+      ],
+      "note": "NAME COLLISION resolved: \"Magnolia Yoga Studio\" also surfaced as a claimed first Black-owned yoga studio in Los Angeles. A city-scoped search returned this concrete New Orleans record — 301 Basin St Ste #2, near the French Quarter, Black-woman-owned. The LA claim was NOT drafted, because nothing confirmed it is the same business or a real separate one."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Freestyle",
+    "slug": "freestyle-nola",
+    "tagline": "New Orleans East streetwear and sneaker shop.",
+    "description": "A streetwear and sneaker store on Bullard Avenue in New Orleans East, stocking the brands the city actually wears rather than what a tourist strip expects.",
+    "city_slug": "new-orleans-la",
+    "category_slug": "fashion-apparel",
+    "address_line_1": "5991 Bullard Ave",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70128",
+    "phone": null,
+    "website_url": "https://nolafreestyle.com",
+    "cta_type": "shop",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://nolafreestyle.com"
+      ],
+      "note": "MULTI-LOCATION TRAP: Freestyle runs a Bullard Ave store and a St Bernard Ave store, and two searches returned two different numbers (504-948-6800 and (504) 766-0241) without saying which belongs to which. PHONE LEFT NULL rather than attach a possibly-wrong number to this address. Founder call: confirm the Bullard line, or split into two rows."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "King & Queen Emporium Int'l",
+    "slug": "king-and-queen-emporium",
+    "tagline": "Bayou Road shop of handmade soaps, oils and incense.",
+    "description": "A Bayou Road emporium making and selling handmade soap, body oils, incense and shea butter, run on an explicit premise that self-care and spiritual practice belong in the same room.",
+    "city_slug": "new-orleans-la",
+    "category_slug": "retail-gifts",
+    "address_line_1": "2500 Bayou Rd",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70119",
+    "phone": "(504) 317-7570",
+    "website_url": "https://www.kingqueenemporium.com",
+    "cta_type": "shop",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.kingqueenemporium.com/our-story",
+        "https://www.verylocal.com/king-queen-emporium-international-manifests-healing-culture-natural-products-on-bayou-road/13883/",
+        "https://www.yelp.com/biz/king-and-queen-emporium-new-orleans"
+      ],
+      "note": "Address, phone and first-party domain confirmed; Yelp page updated July 2026. Ownership sourced to a Very Local feature naming the owner, plus the shop's own story page — editorial rather than first-party for the ownership claim specifically, but it sits on the Bayou Road Black cultural corridor and the feature is about exactly that. First retail-gifts row in the New Orleans corpus."
+    }
+  },
+  {
+    "listing_type": "business",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "social_instagram": null,
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "name": "Bree Nyce Boutique",
+    "slug": "bree-nyce-boutique",
+    "tagline": "Freret Street boutique — apparel, accessories and shoes.",
+    "description": "A Freret Street womenswear boutique with a tightly curated floor of apparel, accessories and footwear, stocked for the city rather than for a catalogue.",
+    "city_slug": "new-orleans-la",
+    "category_slug": "fashion-apparel",
+    "address_line_1": "5012 Freret St",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70115",
+    "phone": "(504) 344-4351",
+    "website_url": "https://breenyceboutique.com",
+    "cta_type": "shop",
+    "_verified": {
+      "on": "2026-08-14",
+      "verdict": "open",
+      "sources": [
+        "https://www.essence.com/fashion/black-retailers-to-shop-at-essence-festival/",
+        "https://www.chamberofcommerce.com/business-directory/louisiana/new-orleans/boutique/2007143788-bree-nyce-boutique-llc",
+        "https://www.instagram.com/p/CV3llLfFcxq/"
+      ],
+      "note": "Address, ZIP and phone confirmed; the domain comes from the boutique's own Instagram post rather than a search summary. Ownership sourced to an Essence feature on Black retailers at Essence Festival — editorial, same tier as the DC spa rows. buyblack.org also lists it, but that is a peer directory and does not carry the claim on its own."
+    }
   }
 ]

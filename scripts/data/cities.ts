@@ -51,6 +51,20 @@ export interface SeedCity {
    * runs. Flip this in the same PR that flips `is_active`.
    */
   activeInProd: boolean
+  /**
+   * Whether every row in this corpus must carry a provenance record — either a
+   * `_verified` stamp (checked against live sources) or an `_unverified` flag
+   * (drafted, awaiting founder review). `geocode-dry-run.ts` fails rows with
+   * neither.
+   *
+   * False for Atlanta/Houston/Chicago: those 254 rows were seeded before the
+   * convention existed and are already live in production. That is **debt, not
+   * an exemption** — retro-stamping them is real verification work (one search
+   * per business), not a tooling change, and it belongs in its own pass. The
+   * dry run counts and prints the unstamped legacy rows so the number stays
+   * visible instead of disappearing behind a flag.
+   */
+  provenanceRequired: boolean
 }
 
 export const SEED_CITIES: SeedCity[] = [
@@ -63,6 +77,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 150,
     center: [-84.387352, 33.748752],
     activeInProd: true,
+    provenanceRequired: false,
   },
   {
     slug: 'houston-tx',
@@ -73,6 +88,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 50,
     center: [-95.369803, 29.760427],
     activeInProd: true,
+    provenanceRequired: false,
   },
   {
     slug: 'chicago-il',
@@ -83,6 +99,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 50,
     center: [-87.629799, 41.878113],
     activeInProd: true,
+    provenanceRequired: false,
   },
   {
     slug: 'los-angeles-ca',
@@ -93,6 +110,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 40,
     center: [-118.243683, 34.052235],
     activeInProd: false,
+    provenanceRequired: true,
   },
   {
     slug: 'washington-dc',
@@ -103,6 +121,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 40,
     center: [-77.036873, 38.907192],
     activeInProd: false,
+    provenanceRequired: true,
   },
   {
     slug: 'new-orleans-la',
@@ -113,6 +132,7 @@ export const SEED_CITIES: SeedCity[] = [
     minPublished: 40,
     center: [-90.071533, 29.951065],
     activeInProd: false,
+    provenanceRequired: true,
   },
 ]
 

@@ -37,11 +37,11 @@ Measured, not guessed. Twelve drafted addresses were checked against live source
 | Atlanta | 151 | 0 | 19 | 6 | 15 | 0 |
 | Houston | 51 | 0 | 3 | 1 | 4 | 0 |
 | Chicago | 52 | 0 | 0 | 2 | 5 | 0 |
-| Los Angeles | 40 | 35 | 5 | 39 | 4 | 0 |
-| Washington DC | 33 | 27 | 0 | 31 | 1 | 0 |
-| New Orleans | 40 | 34 | 1 | 36 | 0 | 0 |
+| Los Angeles | 42 | 0 | 3 | 4 | 7 | 0 |
+| Washington DC | 41 | 0 | 0 | 10 | 1 | 0 |
+| New Orleans | 42 | 0 | 1 | 3 | 0 | 0 |
 
-**Total listings:** 367 · **rows with at least one flag:** 161 · **rows with unsourced fields:** 96
+**Total listings:** 379 · **rows with at least one flag:** 78 · **rows with unsourced fields:** 0
 
 ## Category coverage (launch gate: ≥ 3 per city)
 
@@ -50,8 +50,8 @@ Categories below the threshold need more listings (or a decision to merge/drop t
 - **Atlanta** — 21 categories present; below 3: `automotive` (1), `education-tutoring` (1), `events-entertainment` (1), `nonprofits-community-orgs` (1), `home-living` (2), `real-estate` (2)
 - **Houston** — 14 categories present; below 3: `arts-culture` (1), `construction-trades` (1), `events-entertainment` (1), `retail-gifts` (1), `technology` (1), `books-publishing` (2), `fashion-apparel` (2), `healthcare` (2)
 - **Chicago** — 19 categories present; below 3: `construction-trades` (1), `education-tutoring` (1), `fashion-apparel` (1), `legal-financial` (1), `photography-videography` (1), `professional-services` (1), `real-estate` (1), `technology` (1), `creative-media` (2), `events-entertainment` (2), `home-living` (2)
-- **Los Angeles** — 8 categories present; below 3: `beauty-grooming` (1), `creative-media` (1), `legal-financial` (1), `retail-gifts` (1), `fashion-apparel` (2)
-- **Washington DC** — 7 categories present; below 3: `events-entertainment` (1), `fashion-apparel` (1), `retail-gifts` (1), `wellness-health` (1)
-- **New Orleans** — 6 categories present; below 3: `education-tutoring` (1), `spiritual-community` (1), `books-publishing` (2)
+- **Los Angeles** — 10 categories present; below 3: `creative-media` (1), `home-living` (1), `legal-financial` (1), `wellness-health` (1), `beauty-grooming` (2), `fashion-apparel` (2), `retail-gifts` (2)
+- **Washington DC** — 8 categories present; below 3: `retail-gifts` (1), `books-publishing` (2), `events-entertainment` (2), `fashion-apparel` (2)
+- **New Orleans** — 9 categories present; below 3: `education-tutoring` (1), `retail-gifts` (1), `spiritual-community` (1), `wellness-health` (1), `books-publishing` (2), `fashion-apparel` (2)
 
 > The flags only surface rows that *need a closer look* — an unflagged row still needs a yes/no on "real, current, Black-owned, OK to list," it's just lower-risk. The sheet makes that judgment fast; the judgment itself is yours.
