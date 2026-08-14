@@ -38,12 +38,18 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
     expect(count ?? 0, 'No published collection — publish one via /admin/collections/new').toBeGreaterThanOrEqual(1)
   })
 
-  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50)', async () => {
+  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50 / LA·DC·NOLA 40)', async () => {
     const supabase = serviceClient()
+    // The threshold is a *published* count, not a row count: the seeder forces
+    // `status: 'draft'` on any row marked temp-closed, so a city can carry 42
+    // rows and still fail at 39. Expansion cities launch at 40.
     const cities = [
       { slug: 'atlanta-ga', label: 'ATL', min: 150 },
       { slug: 'houston-tx', label: 'HOU', min: 50 },
       { slug: 'chicago-il', label: 'CHI', min: 50 },
+      { slug: 'los-angeles-ca', label: 'LA', min: 40 },
+      { slug: 'washington-dc', label: 'DC', min: 40 },
+      { slug: 'new-orleans-la', label: 'NOLA', min: 40 },
     ]
 
     const results: Array<{ label: string; min: number; count: number }> = []
@@ -51,10 +57,17 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
       const { data: city } = await supabase.from('cities').select('id').eq('slug', c.slug).maybeSingle()
       let count = 0
       if (city) {
+        // `deleted_at IS NULL` is not optional here: the public RLS policy is
+        // `status = 'published' AND deleted_at IS NULL` (20260510000001:302), and
+        // every reader matches it — the map API (api/map/listings/route.ts:44-45)
+        // and the cities page (cities/page.tsx:56). Counting on status alone let
+        // soft-deleted rows hold the gate up, so M9 could read 40 while the site
+        // showed fewer. The gate now counts what a visitor can actually see.
         const res = await supabase
           .from('listings')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'published')
+          .is('deleted_at', null)
           .eq('city_id', city.id)
         count = res.count ?? 0
       }

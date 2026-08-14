@@ -2,7 +2,8 @@
  * apply-seed-review.ts
  *
  * Applies the founder's completed QA pass (docs/blacqlist/data/seed-review-complete.csv)
- * to the launch dataset (scripts/data/listings-{atlanta,houston,chicago}.json):
+ * to the launch dataset — one JSON file per city in SEED_CITIES
+ * (scripts/data/cities.ts), which is also where per-city M9 thresholds live:
  *
  *   - Remove  → drop the matched listing from its city file
  *   - Edit    → best-effort apply the founder note: URLs routed by domain to
@@ -21,21 +22,30 @@
 
 import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import { SEED_CITIES, cityByLabel } from './data/cities'
 
 const ROOT = join(__dirname, '..')
 const CSV_PATH = join(ROOT, 'docs/blacqlist/data/seed-review-complete.csv')
 const DATA_DIR = join(ROOT, 'scripts/data')
 const REPORT_PATH = join(ROOT, 'docs/blacqlist/data/seed-review-apply-report.md')
 
-const CITY_FILES: Record<string, string> = {
-  Atlanta: 'listings-atlanta.json',
-  Houston: 'listings-houston.json',
-  Chicago: 'listings-chicago.json',
-}
+// Derived from the registry so this file cannot drift from the seeder, the
+// review-sheet builder, or the M9 gate — which is exactly what happened before:
+// CITY_FILES listed six cities while THRESHOLDS listed three, and the missing
+// lookups rendered "SHORT by NaN" into a founder-facing report.
+const CITY_FILES: Record<string, string> = Object.fromEntries(
+  SEED_CITIES.map((c) => [c.label, c.file])
+)
 
 interface Listing {
   name: string
   slug: string
+  /**
+   * Fields drafted rather than sourced, awaiting founder confirmation.
+   * `scripts/geocode-dry-run.ts` hard-blocks the seed while any row still
+   * carries one, so a decision here is what unblocks the corpus.
+   */
+  _unverified?: string[]
   location_type: string
   address_line_1: string | null
   city_text: string | null
@@ -216,7 +226,10 @@ const DEC = 'Keep / Edit / Remove'
 const NOTES = 'Founder notes'
 
 const reportLines: string[] = []
-const summary: Record<string, { before: number; removed: number; edited: number; after: number }> = {}
+const summary: Record<
+  string,
+  { before: number; removed: number; edited: number; confirmed: number; after: number }
+> = {}
 const removedLog: string[] = []
 const editedLog: string[] = []
 const manualLog: string[] = []
@@ -228,6 +241,7 @@ for (const [city, file] of Object.entries(CITY_FILES)) {
   const before = listings.length
   const removeNames = new Set<string>()
   let edited = 0
+  let confirmed = 0
 
   for (const row of rows) {
     if ((row['City'] || '').trim() !== city) continue
@@ -243,6 +257,15 @@ for (const [city, file] of Object.entries(CITY_FILES)) {
       } else {
         removedLog.push(`- **${city}** — ${name} _(NOT FOUND in JSON — skipped)_`)
       }
+    } else if (dec === 'keep') {
+      // "Keep" was an unhandled decision — it fell through to the else below and
+      // did nothing, so a fully-reviewed corpus still carried every _unverified
+      // marker and could never clear the dry-run block. Keep means the founder
+      // looked at the drafted values and they are right; that is a confirmation.
+      if (listing?._unverified?.length) {
+        delete listing._unverified
+        confirmed++
+      }
     } else if (dec === 'edit') {
       if (!listing) {
         manualLog.push(`- **${city}** — ${name} _(NOT FOUND in JSON — skipped)_`)
@@ -250,6 +273,14 @@ for (const [city, file] of Object.entries(CITY_FILES)) {
       }
       const r = applyEdit(listing, row[NOTES] || '')
       if (r.changed.length > 0) edited++
+      // A value the founder supplied is sourced by definition; drop any marker
+      // for the fields they touched, and the whole marker once none remain.
+      if (listing._unverified?.length && r.changed.length) {
+        const left = listing._unverified.filter((f) => !r.changed.includes(f))
+        if (left.length) listing._unverified = left
+        else delete listing._unverified
+        confirmed++
+      }
       const parts: string[] = []
       if (r.changed.length) parts.push(`changed: ${r.changed.join(', ')}`)
       if (r.flags.length) parts.push(`⚠ ${r.flags.join('; ')}`)
@@ -262,21 +293,29 @@ for (const [city, file] of Object.entries(CITY_FILES)) {
   }
 
   const cleaned = listings.filter((l) => !removeNames.has(l.name))
-  writeFileSync(path, JSON.stringify(cleaned, null, 2))
-  summary[city] = { before, removed: removeNames.size, edited, after: cleaned.length }
+  // Trailing newline: `JSON.stringify` does not emit one, so writing without it
+  // strips the newline the corpus files ship with and makes an all-Keep apply —
+  // a run that changes no data at all — show up as a five-file diff. A no-op
+  // that looks like a change is how real changes get skimmed past in review.
+  writeFileSync(path, JSON.stringify(cleaned, null, 2) + '\n')
+  summary[city] = { before, removed: removeNames.size, edited, confirmed, after: cleaned.length }
 }
 
 // ── Build report ───────────────────────────────────────────────────────────────
-const THRESHOLDS: Record<string, number> = { Atlanta: 150, Houston: 50, Chicago: 50 }
+function thresholdFor(label: string): number {
+  return cityByLabel(label).minPublished
+}
 reportLines.push('# Seed Review — Apply Report', '')
 reportLines.push(`Generated by \`scripts/apply-seed-review.ts\` from \`seed-review-complete.csv\`.`, '')
 reportLines.push('## Per-city counts', '')
-reportLines.push('| City | Before | Removed | Edited | After | M9 threshold | Status |')
-reportLines.push('|---|---|---|---|---|---|---|')
+reportLines.push('| City | Before | Removed | Edited | Confirmed | After | M9 threshold | Status |')
+reportLines.push('|---|---|---|---|---|---|---|---|')
 for (const [city, s] of Object.entries(summary)) {
-  const t = THRESHOLDS[city]!
+  const t = thresholdFor(city)
   const status = s.after >= t ? '✅ meets' : `⚠️ SHORT by ${t - s.after}`
-  reportLines.push(`| ${city} | ${s.before} | ${s.removed} | ${s.edited} | **${s.after}** | ≥${t} | ${status} |`)
+  reportLines.push(
+    `| ${city} | ${s.before} | ${s.removed} | ${s.edited} | ${s.confirmed} | **${s.after}** | ≥${t} | ${status} |`
+  )
 }
 reportLines.push('')
 reportLines.push(`## Removed (${removedLog.length})`, '', ...removedLog, '')
@@ -299,9 +338,11 @@ writeFileSync(REPORT_PATH, reportLines.join('\n') + '\n')
 // ── Console summary ──────────────────────────────────────────────────────────────
 console.log('Seed review applied:')
 for (const [city, s] of Object.entries(summary)) {
-  const t = THRESHOLDS[city]!
+  const t = thresholdFor(city)
   const flag = s.after >= t ? 'OK' : `SHORT by ${t - s.after}`
-  console.log(`  ${city}: ${s.before} → ${s.after} (removed ${s.removed}, edited ${s.edited}) [≥${t}: ${flag}]`)
+  console.log(
+    `  ${city}: ${s.before} → ${s.after} (removed ${s.removed}, edited ${s.edited}, confirmed ${s.confirmed}) [≥${t}: ${flag}]`
+  )
 }
 console.log(`  Manual-review edits: ${manualLog.length}`)
 console.log(`  Report: docs/blacqlist/data/seed-review-apply-report.md`)

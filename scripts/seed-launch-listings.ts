@@ -4,22 +4,31 @@
  * Usage:
  *   SUPABASE_URL=https://xxx.supabase.co \
  *   SUPABASE_SERVICE_ROLE_KEY=... \
- *   npx tsx scripts/seed-launch-listings.ts
+ *   npx tsx scripts/seed-launch-listings.ts [--yes]
  *
  * Idempotent: re-running does not create duplicates (ON CONFLICT DO NOTHING).
  * Logs "Inserted: N, Skipped: N, Errors: N" per city after completion.
  *
- * NOTE: The JSON files carry the full founder-reviewed launch corpus
- * (151 ATL / 51 HOU / 52 CHI = 254 as of ticket 093) and are the single
- * source for every environment. After the files change, re-run this seed
- * against LOCAL too — a stale local corpus makes e2e/launch-gates.spec.ts
- * (M9) fail even though production passes.
+ * The cities seeded and their corpus files come from scripts/data/cities.ts —
+ * add a city there, not here. Per-city launch thresholds live on the same
+ * registry and are asserted by e2e/launch-gates.spec.ts (M9).
+ *
+ * The JSON files are the single source of corpus truth for every environment.
+ * After they change, re-run this seed against LOCAL too — a stale local corpus
+ * makes the M9 gate fail locally even though production passes.
+ *
+ * TARGET SAFETY: there is no dotenv and no --env flag here. The database is
+ * chosen entirely by the exported SUPABASE_URL, so a mistyped host silently
+ * seeds the wrong project. The script prints the resolved project ref before
+ * writing and requires --yes for any non-local host.
  */
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { SEED_CITIES } from './data/cities'
+import { VALID_OWNERSHIP_LABELS, type OwnershipLabel } from '../lib/constants/listing'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -30,6 +39,78 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
   process.exit(1)
 }
+
+/**
+ * Confirm the operator meant this database.
+ *
+ * Local hosts run unattended. Anything else — staging or production — is a
+ * consequential write behind GATE-DATA, so it must be named out loud with
+ * --yes. The project ref is printed either way; it is the only signal that
+ * distinguishes staging from production at the command line.
+ */
+function assertTargetConfirmed(url: string): void {
+  const host = new URL(url).hostname
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
+  const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
+
+  console.log(`Target: ${isLocal ? 'LOCAL' : 'REMOTE'} — project ref "${ref}" (${host})`)
+
+  if (isLocal || process.argv.includes('--yes')) return
+
+  console.error(
+    `\nRefusing to seed remote project "${ref}" without confirmation.\n` +
+      `Check the ref above against the project you intend to write to, then re-run with --yes.\n` +
+      `Remote seeds are a GATE-DATA action — confirm the gate before passing it.`
+  )
+  process.exit(1)
+}
+
+/**
+ * Restrict the run to named cities: `--only=los-angeles-ca,washington-dc`.
+ *
+ * Without it the seeder walks every entry in SEED_CITIES, which means a run
+ * intended to launch three new cities also writes to the three already-live
+ * ones. That is how staging picked up 11 unplanned rows in Atlanta and Houston
+ * on 2026-08-14. The inserts are additive and slug-idempotent, so nothing was
+ * damaged — but a production write should be bounded to the cities the change
+ * is actually about, and the operator should be able to say in advance exactly
+ * which rows it can touch.
+ *
+ * Unknown slugs are a hard error rather than a silent no-op: a typo'd --only
+ * that quietly seeds nothing looks identical to a clean run in the output.
+ */
+function resolveCitiesToSeed(): typeof SEED_CITIES {
+  const flag = process.argv.find((a) => a.startsWith('--only='))
+  if (!flag) return SEED_CITIES
+
+  const wanted = flag
+    .slice('--only='.length)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  const known = new Set(SEED_CITIES.map((c) => c.slug))
+  const unknown = wanted.filter((s) => !known.has(s))
+  if (wanted.length === 0 || unknown.length > 0) {
+    console.error(
+      `\n--only did not name a seedable city: ${unknown.join(', ') || '(empty)'}\n` +
+        `Known slugs: ${[...known].join(', ')}`
+    )
+    process.exit(1)
+  }
+
+  const scoped = SEED_CITIES.filter((c) => wanted.includes(c.slug))
+  console.log(`Scoped by --only to ${scoped.length} of ${SEED_CITIES.length} cities: ${wanted.join(', ')}`)
+  return scoped
+}
+
+assertTargetConfirmed(SUPABASE_URL)
+
+/**
+ * Resolved before any network call: a bad --only must fail on the spot, not
+ * after a round trip that makes the error look like a connectivity problem.
+ */
+const CITIES_TO_SEED = resolveCitiesToSeed()
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
@@ -81,9 +162,22 @@ interface ListingInput {
   listing_type: string
   city_slug: string
   category_slug: string
-  location_type: 'physical' | 'online' | 'hybrid'
+  // Mirrors the listings_location_type_check constraint added in migration
+  // 20260524000001. The old union here read 'physical' | 'online' | 'hybrid',
+  // which was wrong in both directions — 'online' is not a valid column value
+  // and the Atlanta corpus has always used 'virtual'. Nothing caught it because
+  // the JSON is cast rather than parsed (see loadCorpus below).
+  location_type: 'physical' | 'virtual' | 'hybrid' | 'service_area' | 'national' | 'traveling'
   status: 'published' | 'draft'
   is_featured: boolean
+  /**
+   * Optional: the three original corpus files predate migration
+   * 20260707000000, which added the column with a 'black_owned' default. Rows
+   * without it fall back to that same default rather than being re-labelled
+   * here — relabelling an existing listing is founder verification work, not a
+   * seeder concern.
+   */
+  ownership_label?: OwnershipLabel
   address_line_1: string | null
   city_text: string
   state: string
@@ -128,7 +222,19 @@ async function seedCity(
 
   try {
     const raw = readFileSync(filePath, 'utf8')
+    // `as ListingInput[]` is a cast, not a check — TypeScript never sees the
+    // file contents. Validate the two fields that carry a DB CHECK constraint,
+    // so a bad value fails here with the row name rather than as an opaque
+    // PostgREST error partway through a production seed.
     listings = JSON.parse(raw) as ListingInput[]
+    for (const l of listings) {
+      if (l.ownership_label && !VALID_OWNERSHIP_LABELS.includes(l.ownership_label)) {
+        throw new Error(
+          `"${l.name}" has ownership_label "${l.ownership_label}"; ` +
+            `expected one of ${VALID_OWNERSHIP_LABELS.join(', ')}`
+        )
+      }
+    }
   } catch (err) {
     console.error(`[${cityLabel}] Failed to read ${cityFile}:`, err)
     return
@@ -169,6 +275,7 @@ async function seedCity(
           tier: 'free',
           trust_tier: 'unclaimed',
           is_featured: listing.is_featured,
+          ownership_label: listing.ownership_label ?? 'black_owned',
           save_count: 0,
           review_count: 0,
           source: 'admin',
@@ -272,14 +379,15 @@ async function main() {
     `Found ${Object.keys(lookups.cities).length} cities, ${Object.keys(lookups.categories).length} categories`
   )
 
-  await seedCity('listings-atlanta.json', 'Atlanta', lookups)
-  await seedCity('listings-houston.json', 'Houston', lookups)
-  await seedCity('listings-chicago.json', 'Chicago', lookups)
+  for (const city of CITIES_TO_SEED) {
+    await seedCity(city.file, city.label, lookups)
+  }
 
   console.log('\nSeed complete.')
   console.log(
-    'NOTE: Launch requires 150+ Atlanta / 50+ Houston / 50+ Chicago listings.',
-    'Add more entries to the JSON files and re-run if counts are below threshold.'
+    'NOTE: per-city launch thresholds live on SEED_CITIES in scripts/data/cities.ts',
+    'and are asserted by e2e/launch-gates.spec.ts (M9). If a count is short, add',
+    'entries to that city’s JSON file and re-run — against LOCAL as well as remote.'
   )
 }
 

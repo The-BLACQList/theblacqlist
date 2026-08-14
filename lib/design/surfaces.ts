@@ -303,11 +303,13 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
  * what `cities.slug` holds (`supabase/seed.sql:87`) and what both consumers
  * already have in hand.
  *
- * Three of the thirteen seeded cities are mapped, and they are exactly the three
- * with `is_active = true` — the launch chapters (`supabase/seed.sql:85-101`).
- * The other ten are `launch_phase = 'v1'` and do not render a tile until they go
- * live, so there is nothing to photograph for them yet. When one opens, it gets
- * a frame or it gets the wash; do not stretch one of these three across it.
+ * The mapped set is exactly the cities we have licensed skyline photography for
+ * — nothing more. It used to coincide with the `is_active = true` set, but that
+ * was a coincidence and never a rule: activating a city does not give it a
+ * photograph, and Los Angeles, Washington DC, and New Orleans went live on the
+ * wash. A city gets a frame when its photo is licensed and art-directed into
+ * `PHOTO_FOCAL`; until then the wash is the finished look, not a gap.
+ * Do not stretch one of these three across another city.
  *
  * Unlike the editorial frames these are informative, so consumers pass a real
  * `alt` — see `PhotoPanelGround`.

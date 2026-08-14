@@ -54,7 +54,7 @@ export default async function GuidesPage() {
                 City guides coming soon
               </p>
               <p className="font-body text-sm text-charcoal-soft">
-                Starting with Atlanta — curated city guides are on the way.
+                Curated guides for the cities we&rsquo;re live in are on the way.
               </p>
               <Link
                 href="/discover"
