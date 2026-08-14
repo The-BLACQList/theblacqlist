@@ -57,10 +57,17 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
       const { data: city } = await supabase.from('cities').select('id').eq('slug', c.slug).maybeSingle()
       let count = 0
       if (city) {
+        // `deleted_at IS NULL` is not optional here: the public RLS policy is
+        // `status = 'published' AND deleted_at IS NULL` (20260510000001:302), and
+        // every reader matches it — the map API (api/map/listings/route.ts:44-45)
+        // and the cities page (cities/page.tsx:56). Counting on status alone let
+        // soft-deleted rows hold the gate up, so M9 could read 40 while the site
+        // showed fewer. The gate now counts what a visitor can actually see.
         const res = await supabase
           .from('listings')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'published')
+          .is('deleted_at', null)
           .eq('city_id', city.id)
         count = res.count ?? 0
       }
