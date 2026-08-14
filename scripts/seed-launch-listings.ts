@@ -65,7 +65,52 @@ function assertTargetConfirmed(url: string): void {
   process.exit(1)
 }
 
+/**
+ * Restrict the run to named cities: `--only=los-angeles-ca,washington-dc`.
+ *
+ * Without it the seeder walks every entry in SEED_CITIES, which means a run
+ * intended to launch three new cities also writes to the three already-live
+ * ones. That is how staging picked up 11 unplanned rows in Atlanta and Houston
+ * on 2026-08-14. The inserts are additive and slug-idempotent, so nothing was
+ * damaged — but a production write should be bounded to the cities the change
+ * is actually about, and the operator should be able to say in advance exactly
+ * which rows it can touch.
+ *
+ * Unknown slugs are a hard error rather than a silent no-op: a typo'd --only
+ * that quietly seeds nothing looks identical to a clean run in the output.
+ */
+function resolveCitiesToSeed(): typeof SEED_CITIES {
+  const flag = process.argv.find((a) => a.startsWith('--only='))
+  if (!flag) return SEED_CITIES
+
+  const wanted = flag
+    .slice('--only='.length)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  const known = new Set(SEED_CITIES.map((c) => c.slug))
+  const unknown = wanted.filter((s) => !known.has(s))
+  if (wanted.length === 0 || unknown.length > 0) {
+    console.error(
+      `\n--only did not name a seedable city: ${unknown.join(', ') || '(empty)'}\n` +
+        `Known slugs: ${[...known].join(', ')}`
+    )
+    process.exit(1)
+  }
+
+  const scoped = SEED_CITIES.filter((c) => wanted.includes(c.slug))
+  console.log(`Scoped by --only to ${scoped.length} of ${SEED_CITIES.length} cities: ${wanted.join(', ')}`)
+  return scoped
+}
+
 assertTargetConfirmed(SUPABASE_URL)
+
+/**
+ * Resolved before any network call: a bad --only must fail on the spot, not
+ * after a round trip that makes the error look like a connectivity problem.
+ */
+const CITIES_TO_SEED = resolveCitiesToSeed()
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
@@ -334,7 +379,7 @@ async function main() {
     `Found ${Object.keys(lookups.cities).length} cities, ${Object.keys(lookups.categories).length} categories`
   )
 
-  for (const city of SEED_CITIES) {
+  for (const city of CITIES_TO_SEED) {
     await seedCity(city.file, city.label, lookups)
   }
 
