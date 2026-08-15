@@ -156,6 +156,35 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     expect(edgeBlock).toContain(".gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)")
   })
 
+  // The threshold is only worth what the table underneath it enforces. These
+  // three tables are granted `TO anon, authenticated USING (true)` by
+  // 20260511000001_receipt_community_spend.sql, so today anyone can query them
+  // directly through PostgREST with the publishable key that ships in every page
+  // bundle — unfiltered, including sub-threshold rows and rows whose owner set
+  // aggregate_opt_out. Closing that grant is a migration and its own gate.
+  //
+  // What this test pins is the prerequisite: no surface may read these tables
+  // with the user-scoped client. While one does, dropping the policy silently
+  // empties that page instead of hardening it, and the migration cannot ship.
+  it('every read of the three aggregate tables goes through the service client', () => {
+    const AGGREGATE_TABLES = ['spend_events', 'flow_nodes', 'flow_edges']
+
+    for (const file of [...SURFACES, 'app/page.tsx']) {
+      const src = source(file)
+      for (const table of AGGREGATE_TABLES) {
+        // Walk backwards from each .from('<table>') to the client it hangs off.
+        // A user-scoped read reads `await supabase\n  .from('flow_nodes')`.
+        const pattern = new RegExp(`(\\w+)\\s*\\n?\\s*\\.from\\('${table}'\\)`, 'g')
+        for (const [, receiver] of src.matchAll(pattern)) {
+          expect(
+            receiver,
+            `${file} reads ${table} via "${receiver}" — must be the service client`
+          ).toMatch(/service/i)
+        }
+      }
+    }
+  })
+
   it('community-wide totals stay ungated — suppressing them adds no privacy', () => {
     // spend_events is summed across the whole corpus and names no entity. If a
     // future change gates it too, the headline figures go to zero for no gain,

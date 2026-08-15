@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ArrowUpRight, TrendingUp, Building2, MapPin, Tag } from 'lucide-react'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
@@ -29,12 +29,28 @@ function formatDollars(cents: number) {
 export default async function CommunitySpendPage() {
   const supabase = await createClient()
 
-  // Total spend (excluding opt-outs). spend_events carries no PII and is
-  // public-read by policy (`spend_events_public_select` in
-  // 20260511000001_receipt_community_spend.sql) — same as flow_nodes. Mutations
-  // are service-role only. So every figure on this page is a community
-  // aggregate, not the signed-in user's own rows.
-  const { data: spendRows } = await supabase
+  // The three aggregate tables (spend_events, flow_nodes, flow_edges) are read
+  // through the SERVICE client on every surface, this one included.
+  //
+  // They used to be read here with the user-scoped client, which worked because
+  // the migration grants `TO anon, authenticated USING (true)` on all three. That
+  // policy is the hole: it lets anyone query the same rows directly through
+  // PostgREST with the publishable key that ships in every page bundle —
+  // unfiltered, including rows below the aggregate threshold and rows whose
+  // owner set aggregate_opt_out. An app-layer .gte() cannot fence a table anyone
+  // can read around it.
+  //
+  // Reading through the service client on every surface is what makes those
+  // policies removable. Once no user-scoped client depends on them, the grants
+  // can be dropped and these tables become server-only, with the threshold and
+  // the opt-out enforced in the one place they are actually applied. The policy
+  // change is a migration and its own GATE-DATA; this is the step that has to
+  // land first, because doing it in the other order silently empties this page.
+  //
+  // Every figure below is a community aggregate, not the signed-in user's rows.
+  const serviceClient = createServiceClient()
+
+  const { data: spendRows } = await serviceClient
     .from('spend_events')
     .select('amount_cents, listing_id')
     .eq('aggregate_opt_out', false)
@@ -45,7 +61,7 @@ export default async function CommunitySpendPage() {
   // Top businesses. Gated at the same threshold /flow-map publishes — this page
   // names a business next to its exact dollar total, which is the disclosure the
   // threshold exists to prevent below the bar.
-  const { data: topBusinessNodes } = await supabase
+  const { data: topBusinessNodes } = await serviceClient
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
@@ -73,7 +89,7 @@ export default async function CommunitySpendPage() {
   }))
 
   // Top cities
-  const { data: topCityNodes } = await supabase
+  const { data: topCityNodes } = await serviceClient
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'city')
