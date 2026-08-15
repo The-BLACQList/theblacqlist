@@ -157,18 +157,21 @@ Trello gives 10 label colors → use them for **Area** (the most useful filter).
 
 ## 2) Columns (lists)
 
+> **Re-baselined 2026-08-15 to match the live board.** The 8 workflow lists this section originally specified (Milestones · Backlog · Up Next · In Progress · In Review/QA · Blocked/Waiting · Done · Shipped) were never adopted. The live board uses **5 time-horizon lists**, with the milestone marker cards pinned inside them rather than in a separate list `[Observed — founder confirmation, 2026-08-12]`.
+
 | # | List | Holds |
 |---|---|---|
-| 1 | **📍 Milestones** | Marker cards only — the dated finish lines. Pinned far left. |
-| 2 | **🗂️ Backlog** | Everything not in the active window (mostly V1–V4). |
-| 3 | **🎯 Up Next** | The current wave's cards. |
-| 4 | **🚧 In Progress** | Actively being worked. |
-| 5 | **🔍 In Review / QA** | Built, awaiting verification/sign-off. |
-| 6 | **⛔ Blocked / Waiting** | Stuck on an external dependency. |
-| 7 | **✅ Done** | Complete this phase. |
-| 8 | **🚀 Shipped to Production** | Released to users. |
+| 1 | **In Progress** | The MVP launch-gate and soft-launch cards, plus `F10 - 🔴 Give the go-ahead` (defined in `docs/blacqlist/launch/founder-action-cards.md`) |
+| 2 | **This Week** | The V1 tail |
+| 3 | **This Month** | V2 — Commerce Layer |
+| 4 | **Next Month** | V3 — Intelligence Layer |
+| 5 | **This Year** | V4 — Scale |
 
-> Use Trello's **filter by label / title** to view one phase at a time. The Milestones list shows the dated ladder.
+**30 cards total: 22 work cards, 6 milestone markers, 2 list-cover cards** `[Observed — founder confirmation, 2026-08-12]`.
+
+> ⚠️ **The board is an inventory, not a complete work list.** Roughly 30 in-flight ledger work items — the Phase 1 integrity wave, the "Near You" radius work, security hardening, the feature-flag layer — have no Trello card at all. A board at 100% would not mean a launchable product.
+
+> Use Trello's **filter by label / title** to view one phase at a time.
 
 ---
 
@@ -580,33 +583,35 @@ That makes ≥40% a lagging metric, not a gate a launch can hold on. Restated:
 
 **Description.** MVP ships only the Business template; V1 adds the other entity types the data model already anticipates — Professional, Creative, Event (with auto-expiry), and Job — so the platform fits more of the community than just brick-and-mortar businesses. Done when each template renders correctly and is used by at least one real listing.
 
-**Checklist.**
-- Professional template
-- Creative template
+**Checklist — 4/5** _(live board state, founder ticked 2026-08-14)_.
+- ✅ Professional template — built and in production
+- ✅ Creative template — built and in production
 - ✅ **Event template — DONE (Pillar B B6):** `event` entity type + `listing_details_event` table, `/add-event` create flow, event page (When/Where + ticket CTA + organizer + Event JSON-LD), dashboard editor, Events discovery filter, organizer "Upcoming events". _Auto-expiry not built — events are time-filtered (`starts_at >= now`) in the organizer list; a hard auto-archive job is deferred._
-- Job template
-- Each used by ≥1 real listing
+- ✅ Job template — shipped via PR #34 (`257951f`) + PR #35 (`de390a8`); founder ticked 2026-08-14
+- Each used by ≥1 real listing — **the sole open item, and it is content, not code**: professional 1 ✅ · creative 1 ✅ · event 0 · job 0 `[Measured — production SQL, 2026-08-14]`. One real event + one real job closes the card (GATE-PUBLISH).
 
-**Note (2026-06-22):** the Event template is now a fully shipped first-class entity (the heaviest of the four). Remaining on this card: Professional, Creative, and Job templates, plus an optional event auto-expiry/archive job.
+**Note (updated 2026-08-15; original 2026-06-22).** All four templates are now built and shipped — the 2026-06-22 note listing Professional/Creative/Job as remaining is superseded. The optional event auto-expiry/archive job remains deferred.
 
 ---
 
-**`[V1] 🟡 P2` Supporter dashboard** — ⚠️ **BUILT · ONE REAL DEFECT, FIX BUILT** _(was mis-tracked at 0/3 — this is a **defect card**, not greenfield)_
+**`[V1] 🟡 P2` Supporter dashboard** — ✅ **CLOSED 3/3, founder ticked 2026-08-14** _(was mis-tracked at 0/3, then carried as a defect card; both states are history now)_
 🟦 Frontend · **Due ~Sep 12, 2026**
 
 **Description.** Gives the non-owner audience — the shoppers — their own home: saved lists, recently viewed, and suggested businesses, turning one-time visitors into return users. It's the supporter-side complement to the owner dashboard. Done when a supporter can manage saved lists and see relevant recommendations.
 
 **Correction (2026-08-08).** All three routes exist and ship — `app/account/saved`, `app/account/activity`, `app/account/recommended` — inside the account shell built in PR #10. The board carried this as 0/3 unbuilt. It is not. Two of the three appeared empty on the founder's 2026-08-06 walk. Investigation the same week split them:
 
-- **Finding 6 is a real defect** and the cause is RLS, not the page. `/account/activity` queries `analytics_events` through the user-scoped `createClient()`; the table's only SELECT policy grants reads to *business owners for listings they own* `[Observed — 20260510000001_mvp_rls_policies.sql:732]`. A visitor reading their own browsing history matches nothing, so default-deny returns zero rows silently. Fixed on `fix/account-surfaces` by a narrow, additive self-read policy + partial index (`20260808000000_analytics_events_self_read.sql`), merged as PR #15 (`fe25193`) and deployed 2026-08-08. Production application of the *migration* is **GATE-DATA, not yet approved** — **this card closes when that gate lands**, not at merge, because the page stays empty until the policy exists on the production database.
+- **Finding 6 is a real defect** and the cause is RLS, not the page. `/account/activity` queries `analytics_events` through the user-scoped `createClient()`; the table's only SELECT policy granted reads to *business owners for listings they own* `[Observed — 20260510000001_mvp_rls_policies.sql:732]`. A visitor reading their own browsing history matched nothing, so default-deny returned zero rows silently. Fixed by a narrow, additive self-read policy + partial index (`20260808000000_analytics_events_self_read.sql`), merged as PR #15 (`fe25193`) and **applied to production 2026-08-08 (GATE-DATA cleared, decision-log 019)**. Resolved.
 - **Finding 7 is not a defect.** `/account/recommended` builds recommendations from the user's saved businesses and short-circuits when they have none, rendering a deliberate empty state — heading, explanation, and a CTA into discovery `[Observed — app/account/recommended/page.tsx:47]`. A zero-saves account seeing that screen is the page working as designed. What's missing is a cold-start path, below.
 
 **Proposed (not built) — cold-start recommendations.** `[Recommendation]` When a user has no saves, show trending-in-their-city instead of the empty state, reusing the `save_count desc` ordering the page already runs and the city already on the profile. Smallest useful version: one fallback query, same card grid, a heading that says why ("Popular near you"). This is a **product decision for the founder**, not a defect fix — the current empty state is defensible and shipping it as-is costs nothing.
 
-**Checklist.**
-- ✅ Saved lists — `app/account/saved`, renders
-- 🛠 Recently viewed — `app/account/activity`; RLS root cause found, fix built, **awaiting GATE-DATA for prod** (Finding 6)
-- ✅ Suggested businesses — `app/account/recommended` behaves correctly; cold-start fallback is an open product decision (Finding 7, reclassified 2026-08-08)
+**Checklist — 3/3** _(founder ticked 2026-08-14)_.
+- ✅ Saved lists (create / rename / organize) — the full feature shipped via `a527f7e` + PR #33 (`fc30b16`), beyond the original render-only state
+- ✅ Recently viewed — `app/account/activity`; the Finding 6 RLS migration was applied to production 2026-08-08 (decision-log 019)
+- ✅ Suggested businesses — `app/account/recommended` behaves correctly; the cold-start fallback (Finding 7) remains an open `[Recommendation]`, not a defect
+
+_A founder verification walk of `/account/activity` on production (behind `?preview`) is still open as its own item; it does not gate this card._
 
 ---
 
@@ -669,6 +674,13 @@ The second is the real gap: a paid feature sold in live public copy (`app/(publi
 
 Systemic form of the same defect = ticket **105** (enforce tier limits at call sites), which gates all of V1.5. Wiring this one flag does not close 105 — 22 gates and 10 limits remain unwired.
 
+**Open work beneath the closed card (2026-08-15).** The ✅ 3/3 above is honest — every listed item shipped. But two work streams sit under this card with **no checklist item covering them**:
+
+1. **Delivery reporting** — per-placement impressions/clicks. Today there is no way to hand a sponsor who paid for a placement a delivery report.
+2. **Expire/cancel handling** — expiry exists only as the read-path filter `.gt('ends_at', now)`; there is no lifecycle handling (cancel a running placement, notify on expiry, reclaim the slot).
+
+`[Recommendation]` Add a **new checklist item** to the Trello card covering both (e.g. "Delivery reporting + placement lifecycle") rather than un-ticking anything — the existing ticks are correct. Both streams are queued as the next build item in the active plan.
+
 ---
 
 **`[V1] 🟡 P2` Editorial CMS expansion**
@@ -676,10 +688,10 @@ Systemic form of the same defect = ticket **105** (enforce tier limits at call s
 
 **Description.** Builds out the editorial surfaces beyond Collections (already hero-grade) — BLACQLight articles, Guides, and a homepage editorial carousel — so the platform feels alive and curated rather than a raw database. Editorial is a key retention and SEO surface. Done when articles and guides can be authored and published and the homepage features them.
 
-**Checklist.**
-- BLACQLight articles (author + publish)
-- Guides (sectioned, city-scoped)
-- Homepage editorial carousel
+**Checklist — 2/3** _(live board state)_.
+- ✅ BLACQLight articles (author + publish) — built; ticked on the live board
+- ✅ Guides (sectioned, city-scoped) — built; ticked on the live board
+- Homepage editorial carousel — code half sits in draft PR #36 (`6d28592`), deliberately parked: it renders nothing until real articles/guides exist (production has 0 of each `[Measured — production SQL, 2026-08-14]`). Unparks with the content push (GATE-PUBLISH → GATE-DEPLOY).
 
 ---
 
@@ -688,10 +700,10 @@ Systemic form of the same defect = ticket **105** (enforce tier limits at call s
 
 **Description.** Extends beyond the three launch cities to 2–4 more (lighter coverage than Atlanta), and — more importantly — establishes the repeatable city-onboarding playbook (source → seed → activate) that V4's scale phase will lean on. Done when the new cities have working city pages and minimum seed data.
 
-**Checklist.**
-- City-onboarding playbook documented
-- Seed data per new city (lighter threshold)
-- Activate city pages + categories
+**Checklist — ✅ CLOSED 3/3, founder ticked 2026-08-14.**
+- ✅ City-onboarding playbook documented
+- ✅ Seed data per new city (lighter threshold)
+- ✅ Activate city pages + categories — ⚠️ accurate on the *pages* half only. **There is no per-city category schema — no `city_categories` table exists in any migration.** The tick stands; the gap is carried as tracked debt. Do not cite this tick later as evidence that per-city categories exist.
 
 ---
 
@@ -888,7 +900,7 @@ Systemic form of the same defect = ticket **105** (enforce tier limits at call s
 
 ## 5) How to use this board
 
-1. **In Trello:** create the 8 lists (section 2), add the 10 color **Area** labels (section 1), then create cards using the title prefixes + due dates, pasting the **Description** into the card body and the **Checklist** as a Trello checklist. Filter by phase prefix (`[MVP]`, `[V1]`…) to focus one milestone at a time.
+1. **In Trello:** the board exists and uses the 5 time-horizon lists in section 2 (re-baselined 2026-08-15) — do not create the original 8 workflow lists. Cards use the title prefixes + due dates, with the **Description** in the card body and the **Checklist** as a Trello checklist. Filter by phase prefix (`[MVP]`, `[V1]`…) to focus one milestone at a time.
 2. **Start now:** the live near-term lane is **`../ops/next-actions.md`**, not this board. As of 2026-08-05 that lane is the Stripe V1 gated cutover — **G2 → G3 → G4**, in that fixed order (merging to `main` *is* the production deploy). This board carries the roadmap around it; ops carries what is moving this week, with dates and evidence tags.
 3. **Re-baseline** the milestone dates — **all of them are now stale.** MVP's Jul 11 target passed without launch, so V1–V4 shift with it. Re-baseline after the remaining MVP floor (now just Resend warm-up + go/no-go — M9 and legal sign-off both closed) has owners and durations; then re-baseline V1–V4 again after MVP actually ships, using real launch-sprint velocity.
 4. **Decompose** each V1–V4 epic into granular cards at that phase's kickoff (especially **BLACQ Web**, which warrants its own sub-board with the 3D planning/performance/accessibility rules).
