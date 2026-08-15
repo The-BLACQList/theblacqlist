@@ -4,6 +4,7 @@ import { ArrowUpRight, TrendingUp, Building2, MapPin, Tag } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
+import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 export const metadata: Metadata = {
   title: 'Community Spend | The BLACQList',
@@ -41,11 +42,14 @@ export default async function CommunitySpendPage() {
   const totalAmountCents = (spendRows ?? []).reduce((sum, r) => sum + r.amount_cents, 0)
   const totalTransactions = spendRows?.length ?? 0
 
-  // Top businesses
+  // Top businesses. Gated at the same threshold /flow-map publishes — this page
+  // names a business next to its exact dollar total, which is the disclosure the
+  // threshold exists to prevent below the bar.
   const { data: topBusinessNodes } = await supabase
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(8)
 
@@ -73,6 +77,7 @@ export default async function CommunitySpendPage() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'city')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(8)
 
@@ -147,7 +152,10 @@ export default async function CommunitySpendPage() {
   // submission: approveReceipt creates flow nodes `if (spendEvent &&
   // receipt.listing_id)`, and the category rollup above needs the same id.
   // Money can therefore be counted in the total while every panel is empty —
-  // which reads as a broken page unless we say so.
+  // which reads as a broken page unless we say so. The aggregate threshold is a
+  // second, independent reason for the same outcome: a matched business under
+  // AGGREGATE_MIN_TRANSACTIONS is withheld, not missing. The empty-state body
+  // names both causes.
   const hasBreakdowns =
     topBusinesses.length > 0 || topCities.length > 0 || topCategories.length > 0
 
@@ -205,7 +213,7 @@ export default async function CommunitySpendPage() {
               icon={Building2}
               iconClassName="text-charcoal-faint"
               heading="No breakdowns yet"
-              body="Spend breaks down by business, city, and category once an approved receipt is matched to a business on The BLACQList. A receipt that wasn't matched still counts toward the total above."
+              body={`Spend breaks down by business, city, and category once an approved receipt is matched to a business on The BLACQList, and once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind that business or city. A receipt that wasn't matched, or that sits below the threshold, still counts toward the total above.`}
               action={{ label: 'View your receipts', href: '/account/receipts' }}
               className="py-10"
             />
