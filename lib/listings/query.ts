@@ -26,6 +26,10 @@ export interface ListingsParams {
   price?: string[]
   attrs?: string[]
   open_now?: boolean
+  /** "Near You" — all three or none. Validated upstream (searchSchema). */
+  lat?: number
+  lng?: number
+  radius?: number
   sort?: string
   page?: number
   /** When true, also load attribute groups + facet counts for the sidebar. */
@@ -38,6 +42,13 @@ export interface ListingsResult {
   page: number
   pageSize: number
   facets?: { groups: FacetGroupData[]; counts: FacetCounts }
+  /**
+   * True only when a radius was requested and the RPC that implements it
+   * failed. Lets the caller tell "nothing within X miles" apart from "location
+   * search is down" — two states that both render as an empty grid and mean
+   * completely different things to the visitor (C3.3 empty states).
+   */
+  radiusUnavailable?: boolean
 }
 
 export type RawRow = {
@@ -211,6 +222,9 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
+    lat: params.lat,
+    lng: params.lng,
+    radius: params.radius,
   })
 
   const wantFacets = !!params.withFacets
@@ -231,12 +245,18 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     }
   }
 
-  // When the user is actively faceting (attributes / price / open-now), suppress
-  // sponsored injection so off-filter sponsored listings don't appear.
+  const radiusActive = resolved.p_radius_miles !== null
+
+  // When the user is actively faceting (attributes / price / open-now / radius),
+  // suppress sponsored injection so off-filter sponsored listings don't appear.
+  // Radius belongs in this list for the same reason as the rest, and one more:
+  // splicing a sponsored business 200 miles away into a "within 5 miles" result
+  // set is not a placement, it is a wrong answer.
   const deepFilter = !!(
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
-    resolved.p_open_now
+    resolved.p_open_now ||
+    radiusActive
   )
 
   // Build the sponsored query (page 1, no deep filter) so it runs in parallel.
@@ -286,9 +306,19 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // Resilience: if the faceted RPC is unavailable (e.g. the migration has not
   // been applied yet), fall back to a basic PostgREST query so browse/search
   // keep working.
-  const search = searchResult.error
-    ? await legacyFacetedIds(supabase, resolved, LISTINGS_PAGE_SIZE, offset)
-    : searchResult
+  //
+  // Except under a radius. legacyFacetedIds cannot express haversine at all, so
+  // falling back there would hand the visitor the whole directory under a
+  // heading that says "near you" — the unresolvable-slug defect wearing a
+  // different hat. Zero results plus an honest "location search is unavailable"
+  // state is the correct answer; radiusUnavailable is what carries it up.
+  const radiusRpcFailed = searchResult.error && radiusActive
+  const search =
+    searchResult.error && !radiusActive
+      ? await legacyFacetedIds(supabase, resolved, LISTINGS_PAGE_SIZE, offset)
+      : radiusRpcFailed
+        ? { ids: [] as string[], total: 0 }
+        : searchResult
 
   // Hydrate the page of ids with the rich nested select, then reorder to the
   // RPC's ordering (the .in() filter does not preserve order).
@@ -352,5 +382,12 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   } = await supabase.auth.getUser()
   await attachSavedState(supabase, user?.id, finalEntities)
 
-  return { entities: finalEntities, total: search.total, page, pageSize: LISTINGS_PAGE_SIZE, facets }
+  return {
+    entities: finalEntities,
+    total: search.total,
+    page,
+    pageSize: LISTINGS_PAGE_SIZE,
+    facets,
+    ...(radiusRpcFailed ? { radiusUnavailable: true } : {}),
+  }
 }
