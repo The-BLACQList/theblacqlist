@@ -3,12 +3,18 @@
 import { X } from 'lucide-react'
 
 import type { FacetGroupData } from '@/lib/listings/facets'
-import { useFacetParams, FACET_KEYS } from '@/components/discovery/useFacetParams'
+import {
+  useFacetParams,
+  FACET_KEYS,
+  LOCATION_KEYS,
+  clearEntries,
+} from '@/components/discovery/useFacetParams'
 import {
   ENTITY_TYPE_LABEL,
   TRUST_TIER_LABEL,
   OWNERSHIP_LABEL_MAP,
 } from '@/components/discovery/facetConstants'
+import { parseLocationFromQuery } from '@/lib/listings/location-params'
 
 interface ActiveFilterChipsProps {
   groups: FacetGroupData[]
@@ -28,7 +34,12 @@ export function ActiveFilterChips({
   cities = [],
   hideCityFilter = false,
 }: ActiveFilterChipsProps) {
-  const { searchParams, setParam, getCsv, removeCsv, clearKeys } = useFacetParams()
+  const { searchParams, setParam, setParams, getCsv, removeCsv } = useFacetParams()
+
+  const clearableKeys = [
+    ...(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS),
+    ...LOCATION_KEYS,
+  ]
 
   // slug → display name for attribute values and taxonomies
   const attrLabel: Record<string, string> = {}
@@ -59,6 +70,17 @@ export function ActiveFilterChips({
       onRemove: () => setParam('ownership', ''),
     })
 
+  // One chip for the whole location filter, not three. Removing it takes the
+  // distance sort with it, since that sort cannot be honored without coordinates.
+  // Parsed, not merely present: a chip reading "Within 10 miles" over results the
+  // server never filtered is the one thing this feature must never do.
+  const location = parseLocationFromQuery((key) => searchParams.get(key))
+  if (location)
+    chips.push({
+      label: `Within ${location.radius} ${location.radius === 1 ? 'mile' : 'miles'}`,
+      onRemove: () => setParams(clearEntries(LOCATION_KEYS, searchParams.get('sort'))),
+    })
+
   if (searchParams.get('open_now') === '1')
     chips.push({ label: 'Open now', onRemove: () => setParam('open_now', '') })
 
@@ -86,7 +108,7 @@ export function ActiveFilterChips({
       {chips.length > 1 && (
         <button
           type="button"
-          onClick={() => clearKeys(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS)}
+          onClick={() => setParams(clearEntries(clearableKeys, searchParams.get('sort')))}
           className="text-xs font-subhead text-charcoal underline underline-offset-2 hover:text-brand-black"
         >
           Clear all

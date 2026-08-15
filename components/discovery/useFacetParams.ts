@@ -33,6 +33,24 @@ export function useFacetParams() {
     [searchParams, push]
   )
 
+  /**
+   * Writes several keys in one navigation. Near You needs this: lat, lng and
+   * radius are only valid together, and three sequential setParam calls would
+   * each push a URL the search schema rejects (a coordinate with no pair).
+   * An empty-string value deletes its key.
+   */
+  const setParams = useCallback(
+    (entries: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams.toString())
+      for (const [key, value] of Object.entries(entries)) {
+        if (value) params.set(key, value)
+        else params.delete(key)
+      }
+      push(params)
+    },
+    [searchParams, push]
+  )
+
   const getCsv = useCallback(
     (key: string): string[] => {
       const raw = searchParams.get(key)
@@ -75,7 +93,7 @@ export function useFacetParams() {
     [searchParams, push]
   )
 
-  return { searchParams, setParam, getCsv, toggleCsv, removeCsv, clearKeys }
+  return { searchParams, setParam, setParams, getCsv, toggleCsv, removeCsv, clearKeys }
 }
 
 /** The URL keys the facet sidebar owns (everything except q + sort). */
@@ -90,3 +108,25 @@ export const FACET_KEYS = [
   'attrs',
   'open_now',
 ]
+
+/**
+ * The Near You keys. Deliberately NOT part of FACET_KEYS: they are three URL
+ * keys describing one filter, so counting them alongside the others would show
+ * "3 filters" for a single "within 10 miles". Callers clear both lists.
+ */
+export const LOCATION_KEYS = ['lat', 'lng', 'radius']
+
+/**
+ * The entries for a "clear everything" write: every key blanked, plus `sort`
+ * when it is the distance sort. A distance sort outliving its coordinates is a
+ * lie the server cannot catch quietly — the RPC orders NULLS LAST and would
+ * fall through to another key while the control still reads "Nearest".
+ */
+export function clearEntries(
+  keys: string[],
+  currentSort: string | null
+): Record<string, string> {
+  const next: Record<string, string> = Object.fromEntries(keys.map((k) => [k, '']))
+  if (currentSort === 'distance') next.sort = ''
+  return next
+}

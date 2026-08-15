@@ -14,18 +14,26 @@ import {
 } from '@/components/ui/sheet'
 import { FacetSidebar, type FacetSidebarProps } from '@/components/discovery/FacetSidebar'
 import { FACET_KEYS } from '@/components/discovery/useFacetParams'
+import { parseLocationFromQuery } from '@/lib/listings/location-params'
 
 /** Mobile entry point: a "Filters" button that opens the full FacetSidebar in a sheet. */
 export function MobileFilterSheet(props: FacetSidebarProps) {
   const [open, setOpen] = useState(false)
   const searchParams = useSearchParams()
 
-  const activeCount = FACET_KEYS.reduce((acc, key) => {
+  const facetCount = FACET_KEYS.reduce((acc, key) => {
     if (key === 'city' && props.hideCityFilter) return acc
     const value = searchParams.get(key)
     if (!value) return acc
     return acc + (key === 'price' || key === 'attrs' ? value.split(',').filter(Boolean).length : 1)
   }, 0)
+
+  // Near You counts once, not three times: lat, lng and radius are three URL
+  // keys describing a single "within N miles" filter. And it only counts when it
+  // parses — a badge counting a location the server dropped is a filter the
+  // visitor cannot find or clear.
+  const hasLocation = parseLocationFromQuery((key) => searchParams.get(key)) !== null
+  const activeCount = facetCount + (hasLocation ? 1 : 0)
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

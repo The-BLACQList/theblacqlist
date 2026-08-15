@@ -4,8 +4,14 @@ import { SlidersHorizontal, Clock } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
-import { useFacetParams, FACET_KEYS } from '@/components/discovery/useFacetParams'
+import {
+  useFacetParams,
+  FACET_KEYS,
+  LOCATION_KEYS,
+  clearEntries,
+} from '@/components/discovery/useFacetParams'
 import { ENTITY_TYPES, TRUST_TIERS, OWNERSHIP_LABELS } from '@/components/discovery/facetConstants'
+import { NearYouFilter } from '@/components/discovery/NearYouFilter'
 
 const legendClass =
   'font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2'
@@ -35,7 +41,7 @@ export function FacetSidebar({
   hideCityFilter = false,
   className,
 }: FacetSidebarProps) {
-  const { searchParams, setParam, getCsv, toggleCsv, clearKeys } = useFacetParams()
+  const { searchParams, setParam, setParams, getCsv, toggleCsv } = useFacetParams()
 
   const activeType = searchParams.get('type') ?? ''
   const activeCategory = searchParams.get('category') ?? ''
@@ -46,10 +52,15 @@ export function FacetSidebar({
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
 
-  const hasActiveFilters = FACET_KEYS.some((k) => {
-    if (k === 'city' && hideCityFilter) return false
-    return !!searchParams.get(k)
-  })
+  const clearableKeys = [
+    ...(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS),
+    ...LOCATION_KEYS,
+  ]
+  const hasActiveFilters = clearableKeys.some((k) => !!searchParams.get(k))
+
+  function clearAll() {
+    setParams(clearEntries(clearableKeys, searchParams.get('sort')))
+  }
 
   return (
     <aside aria-label="Discovery filters" className={cn('flex flex-col gap-5', className)}>
@@ -61,13 +72,16 @@ export function FacetSidebar({
         {hasActiveFilters && (
           <button
             type="button"
-            onClick={() => clearKeys(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS)}
+            onClick={clearAll}
             className="text-xs font-subhead text-charcoal underline underline-offset-2 hover:text-brand-black"
           >
             Clear all
           </button>
         )}
       </div>
+
+      {/* Near You — geolocation, with a city picker behind every failure path */}
+      <NearYouFilter cities={cities} showCityFallback={!hideCityFilter} />
 
       {/* Open now */}
       <label className="flex items-center gap-2 cursor-pointer select-none">

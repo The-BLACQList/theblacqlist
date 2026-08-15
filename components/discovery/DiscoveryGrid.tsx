@@ -12,7 +12,18 @@ interface DiscoveryGridProps {
   error?: string | null
   nextPageUrl?: string
   currentPage?: number
+  /** Miles, when a Near You search is active. Drives its own empty state. */
+  radiusMiles?: number | null
+  /** True when the radius search could not run at all (see lib/listings/query.ts). */
+  radiusUnavailable?: boolean
+  /** Same search at a wider radius. Omitted when already at the widest. */
+  widerRadiusUrl?: string
+  /** Same search with the location filter dropped. */
+  clearLocationUrl?: string
 }
+
+const linkClass =
+  'font-subhead text-sm text-amber hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm'
 
 function LoadingGrid() {
   return (
@@ -55,6 +66,72 @@ function EmptyState({ query }: { query?: string }) {
   )
 }
 
+/**
+ * Zero results inside a radius is not the same emptiness as zero results from a
+ * filter, and it has a cause the visitor cannot see: not every published listing
+ * has coordinates, and an unmapped business is excluded from every distance
+ * search by design. Saying so is the difference between "there is nothing near
+ * you" and the truth, which is "there is nothing near you that we have mapped".
+ */
+function RadiusEmptyState({
+  radiusMiles,
+  widerRadiusUrl,
+  clearLocationUrl,
+}: {
+  radiusMiles: number
+  widerRadiusUrl?: string
+  clearLocationUrl?: string
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">
+        Nothing within {radiusMiles} {radiusMiles === 1 ? 'mile' : 'miles'} of you
+      </p>
+      <p className="font-subhead text-sm text-charcoal max-w-md">
+        Try a wider search, or browse the full directory. Some businesses have not
+        been mapped yet, and those never show up in a distance search.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
+        {widerRadiusUrl && (
+          <Link href={widerRadiusUrl} className={linkClass}>
+            Search a wider area
+          </Link>
+        )}
+        {clearLocationUrl && (
+          <Link href={clearLocationUrl} className={linkClass}>
+            Browse every business
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The radius search itself could not run. Distinct from "nothing nearby" on
+ * purpose: the fallback query cannot express a distance filter, so answering
+ * with the whole directory under a Near You heading would be a wrong answer
+ * wearing the right label.
+ */
+function RadiusUnavailableState({ clearLocationUrl }: { clearLocationUrl?: string }) {
+  return (
+    <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">
+        Distance search is unavailable right now
+      </p>
+      <p className="font-subhead text-sm text-charcoal max-w-md">
+        We could not search by distance just now, so we are not going to guess.
+        Try again in a moment, or browse without the location filter.
+      </p>
+      {clearLocationUrl && (
+        <Link href={clearLocationUrl} className={`${linkClass} mt-4`}>
+          Browse every business
+        </Link>
+      )}
+    </div>
+  )
+}
+
 function ErrorState({ message }: { message: string }) {
   return (
     <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -72,10 +149,24 @@ export function DiscoveryGrid({
   error = null,
   nextPageUrl,
   currentPage = 1,
+  radiusMiles = null,
+  radiusUnavailable = false,
+  widerRadiusUrl,
+  clearLocationUrl,
 }: DiscoveryGridProps) {
   if (isLoading) return <LoadingGrid />
   if (error) return <ErrorState message={error} />
-  if (entities.length === 0) return <EmptyState query={query} />
+  if (radiusUnavailable) return <RadiusUnavailableState clearLocationUrl={clearLocationUrl} />
+  if (entities.length === 0)
+    return radiusMiles ? (
+      <RadiusEmptyState
+        radiusMiles={radiusMiles}
+        widerRadiusUrl={widerRadiusUrl}
+        clearLocationUrl={clearLocationUrl}
+      />
+    ) : (
+      <EmptyState query={query} />
+    )
 
   const showing = Math.min(currentPage * entities.length, total)
 
