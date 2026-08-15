@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ArrowUpRight, Lock, Filter, Building2 } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { buildEntityUrl } from '@/lib/listings/url'
 import { FlowSummaryCards } from '@/components/flow-map/FlowSummaryCards'
 import { FlowNodeTable } from '@/components/flow-map/FlowNodeTable'
 import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
@@ -48,21 +49,27 @@ export default async function FlowMapPage() {
     .limit(10)
 
   const businessIds = (businessNodes ?? []).map((n) => n.entity_id)
-  let businessMap: Record<string, { name: string; slug: string }> = {}
+  let businessMap: Record<string, { name: string; href: string }> = {}
   if (businessIds.length > 0) {
     const { data: listings } = await serviceClient
       .from('listings')
-      .select('id, name, slug')
+      .select('id, name, slug, entity_type, cities!listings_city_id_fkey(slug)')
       .in('id', businessIds)
     businessMap = Object.fromEntries(
-      (listings ?? []).map((l) => [l.id, { name: l.name, slug: l.slug }])
+      (listings ?? []).map((l) => [
+        l.id,
+        {
+          name: l.name,
+          href: buildEntityUrl(l.entity_type, (l.cities as { slug: string } | null)?.slug, l.slug),
+        },
+      ])
     )
   }
 
   const topBusinesses = (businessNodes ?? []).map((n) => ({
     entity_id: n.entity_id,
     name: businessMap[n.entity_id]?.name ?? 'Unknown Business',
-    slug: businessMap[n.entity_id]?.slug ?? '',
+    href: businessMap[n.entity_id]?.href ?? null,
     total_amount_cents: n.total_amount_cents,
     transaction_count: n.transaction_count,
   }))
@@ -85,7 +92,6 @@ export default async function FlowMapPage() {
   const topCities = (cityNodes ?? []).map((n) => ({
     entity_id: n.entity_id,
     name: cityMap[n.entity_id] ?? 'Unknown City',
-    slug: '',
     total_amount_cents: n.total_amount_cents,
     transaction_count: n.transaction_count,
   }))
