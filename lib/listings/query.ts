@@ -247,11 +247,21 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       .from('sponsored_placements')
       .select(
         `
+        id,
         position,
         listings!sponsored_placements_listing_id_fkey(${NESTED_SELECT})
       `
       )
-      .eq('status', 'active')
+      // 'scheduled' belongs here alongside 'active'. Nothing in this codebase
+      // ever moves a row from 'scheduled' to 'active' — the status is written
+      // once at creation (createSponsoredPlacement.ts:43) and there is no
+      // expiry or activation job — so filtering on 'active' alone meant a
+      // placement booked to start in the future NEVER started. The date window
+      // below is what decides delivery; the stored status only carries the
+      // states dates cannot express ('canceled', 'inactive'). Same rule the
+      // admin table now reads through lib/listings/sponsoredStatus.ts, so both
+      // surfaces answer from the same facts.
+      .in('status', ['active', 'scheduled'])
       .lte('starts_at', now)
       .gt('ends_at', now)
       .order('position', { ascending: true })
@@ -303,12 +313,22 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       const sponsoredIds = new Set<string>()
       const toInject: Array<{ position: number; entity: DiscoveryEntity }> = []
 
-      for (const sp of spRows as Array<{ position: number | null; listings: unknown }>) {
+      for (const sp of spRows as Array<{
+        id: string
+        position: number | null
+        listings: unknown
+      }>) {
         const raw = sp.listings as unknown as RawRow | null
         if (!raw) continue
-        const entity = { ...mapRow(raw), is_sponsored: true }
+        const position = sp.position ?? 1
+        const entity: DiscoveryEntity = {
+          ...mapRow(raw),
+          is_sponsored: true,
+          sponsored_placement_id: sp.id,
+          sponsored_position: position,
+        }
         sponsoredIds.add(entity.id)
-        toInject.push({ position: sp.position ?? 1, entity })
+        toInject.push({ position, entity })
       }
 
       const filtered = organicEntities.filter((e) => !sponsoredIds.has(e.id))

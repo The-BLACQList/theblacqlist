@@ -56,6 +56,15 @@ export interface DiscoveryEntity {
   event_starts_at?: string | null
   /** Per-user save state — attached fail-soft in queryListings (anon → false). */
   isSaved?: boolean
+  /**
+   * The sponsored_placements row that put this card here. Present only on cards
+   * spliced in by the sponsored path in queryListings, and it is what delivery
+   * events are keyed on — the placement, not the listing, because one listing
+   * can hold several placements over time and a sponsor buys a placement.
+   */
+  sponsored_placement_id?: string
+  /** 1–3, the slot this placement was served into. Sponsored cards only. */
+  sponsored_position?: number
 }
 
 // ─── CTA Types ────────────────────────────────────────────────────────────────
