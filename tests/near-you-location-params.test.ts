@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest'
 
 import {
   parseLocationParams,
+  parseLocationFromQuery,
   widerRadius,
   roundCoord,
   RADIUS_OPTIONS,
   DEFAULT_RADIUS_MILES,
 } from '@/lib/listings/location-params'
 import { clearEntries, LOCATION_KEYS, FACET_KEYS } from '@/components/discovery/useFacetParams'
+import { buildPageUrl } from '@/lib/listings/pagination'
 
 /**
  * C3.3 — the "Near You" UI contract.
@@ -62,6 +64,68 @@ describe('parseLocationParams', () => {
   it('rejects non-numeric input', () => {
     expect(parseLocationParams({ lat: 'here', lng: '-90.071', radius: '10' })).toBeNull()
     expect(parseLocationParams({ lat: '29.951', lng: '-90.071', radius: 'near' })).toBeNull()
+  })
+})
+
+/**
+ * Both cases below were found live on the PR #54 preview, with all five CI checks
+ * green. The client controls asked "is lat present and lng present?" while the
+ * server asked "does the whole triple parse?", and the two disagreed exactly where
+ * it mattered: ?lat=29.951&lng=-90.071 with no radius rendered the entire
+ * unfiltered directory under "Showing businesses within 10 miles of you", with a
+ * radius picker, a "Turn off location" control and a "Nearest" sort option over
+ * results that were never filtered by distance.
+ */
+describe('parseLocationFromQuery — the client half of the same contract', () => {
+  const query = (init: Record<string, string>) => {
+    const params = new URLSearchParams(init)
+    return (key: string) => params.get(key)
+  }
+
+  it('returns the triple when the URL carries a usable one', () => {
+    expect(parseLocationFromQuery(query({ lat: '29.951', lng: '-90.071', radius: '10' }))).toEqual({
+      lat: 29.951,
+      lng: -90.071,
+      radius: 10,
+    })
+  })
+
+  it('returns null when coordinates are present but the radius is missing', () => {
+    expect(parseLocationFromQuery(query({ lat: '29.951', lng: '-90.071' }))).toBeNull()
+  })
+
+  it('returns null for present-but-out-of-range coordinates', () => {
+    expect(parseLocationFromQuery(query({ lat: '91', lng: '-90.071', radius: '10' }))).toBeNull()
+  })
+
+  it('returns null for a present-but-unusable radius', () => {
+    expect(parseLocationFromQuery(query({ lat: '29.951', lng: '-90.071', radius: '0' }))).toBeNull()
+  })
+
+  it('returns null on an empty query', () => {
+    expect(parseLocationFromQuery(query({}))).toBeNull()
+  })
+})
+
+describe('the way out of an empty radius search', () => {
+  const cleared = { lat: undefined, lng: undefined, radius: undefined, sort: undefined }
+
+  it('buildPageUrl returns an empty string once nothing is left to encode', () => {
+    // Which is the ordinary case: Near You is usually the only active filter.
+    expect(buildPageUrl(cleared, 1)).toBe('')
+  })
+
+  it('so the clear-location link falls back to a real path instead of an empty href', () => {
+    // An empty href renders as nothing. At the widest radius there is no wider-area
+    // link either, so without this fallback the empty state is a dead end while its
+    // own copy offers two ways out.
+    expect(buildPageUrl(cleared, 1) || '/discover').toBe('/discover')
+  })
+
+  it('keeps the other filters when there are some', () => {
+    expect(buildPageUrl({ ...cleared, city: 'new-orleans' }, 1) || '/discover').toBe(
+      '?city=new-orleans'
+    )
   })
 })
 

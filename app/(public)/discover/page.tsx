@@ -99,7 +99,13 @@ async function DiscoverContent({
       ? buildPageUrl({ ...params, radius: String(nextRadius) }, 1)
       : undefined
   const clearLocationUrl = location
-    ? buildPageUrl(
+    ? // `|| '/discover'` is load-bearing, not defensive. buildPageUrl returns an
+      // empty string when nothing is left in the query, which is the ordinary case
+      // here — location is usually the only filter — and an empty href renders as
+      // nothing at all. At the widest radius there is no "wider area" link either,
+      // so the empty state would have been a dead end with copy promising two ways
+      // out. Never a dead end is the whole point of this screen.
+      buildPageUrl(
         {
           ...params,
           lat: undefined,
@@ -109,7 +115,7 @@ async function DiscoverContent({
           sort: params.sort === 'distance' ? undefined : params.sort,
         },
         1
-      )
+      ) || '/discover'
     : undefined
 
   return (

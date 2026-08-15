@@ -9,6 +9,7 @@ import {
   RADIUS_OPTIONS,
   DEFAULT_RADIUS_MILES,
   roundCoord,
+  parseLocationFromQuery,
 } from '@/lib/listings/location-params'
 
 type LocateState = 'idle' | 'locating' | 'denied' | 'unavailable' | 'unsupported'
@@ -32,10 +33,12 @@ export function NearYouFilter({ cities, showCityFallback = true }: NearYouFilter
   const { searchParams, setParam, setParams } = useFacetParams()
   const [state, setState] = useState<LocateState>('idle')
 
-  const lat = searchParams.get('lat')
-  const lng = searchParams.get('lng')
-  const active = Boolean(lat && lng)
-  const radius = Number(searchParams.get('radius') ?? DEFAULT_RADIUS_MILES)
+  // Parsed, not merely present — the same all-or-nothing read the page does on
+  // the server. A location the server dropped must not leave this control
+  // showing a radius the results were never filtered by.
+  const location = parseLocationFromQuery((key) => searchParams.get(key))
+  const active = location !== null
+  const radius = location?.radius ?? DEFAULT_RADIUS_MILES
 
   function locate() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {

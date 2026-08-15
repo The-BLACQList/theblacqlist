@@ -14,6 +14,7 @@ import {
   TRUST_TIER_LABEL,
   OWNERSHIP_LABEL_MAP,
 } from '@/components/discovery/facetConstants'
+import { parseLocationFromQuery } from '@/lib/listings/location-params'
 
 interface ActiveFilterChipsProps {
   groups: FacetGroupData[]
@@ -71,12 +72,12 @@ export function ActiveFilterChips({
 
   // One chip for the whole location filter, not three. Removing it takes the
   // distance sort with it, since that sort cannot be honored without coordinates.
-  const lat = searchParams.get('lat')
-  const lng = searchParams.get('lng')
-  const radius = searchParams.get('radius')
-  if (lat && lng && radius)
+  // Parsed, not merely present: a chip reading "Within 10 miles" over results the
+  // server never filtered is the one thing this feature must never do.
+  const location = parseLocationFromQuery((key) => searchParams.get(key))
+  if (location)
     chips.push({
-      label: `Within ${radius} ${radius === '1' ? 'mile' : 'miles'}`,
+      label: `Within ${location.radius} ${location.radius === 1 ? 'mile' : 'miles'}`,
       onRemove: () => setParams(clearEntries(LOCATION_KEYS, searchParams.get('sort'))),
     })
 

@@ -73,6 +73,27 @@ export function parseLocationParams(params: {
 }
 
 /**
+ * The same parse, against a `URLSearchParams`-shaped getter.
+ *
+ * Client controls must read the location through this rather than through their
+ * own `searchParams.get('lat') && searchParams.get('lng')` check. Presence is not
+ * validity: `?lat=91&lng=-90.071&radius=10` is out of range and `?lat=29.9&lng=-90.0`
+ * has no radius at all, so the server drops both and answers the whole directory —
+ * while a presence check would still paint "Showing businesses within 10 miles of
+ * you" over the result. Same parse on both sides, or the page tells a lie the
+ * server has no way to catch.
+ */
+export function parseLocationFromQuery(
+  get: (key: string) => string | null
+): LocationParams | null {
+  return parseLocationParams({
+    lat: get('lat') ?? undefined,
+    lng: get('lng') ?? undefined,
+    radius: get('radius') ?? undefined,
+  })
+}
+
+/**
  * The next radius up from the current one, or null when already at the widest.
  * Drives the "Search a wider area" link on the radius empty state — offered only
  * when there is genuinely somewhere wider to go.
