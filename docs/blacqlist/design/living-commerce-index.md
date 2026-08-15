@@ -56,19 +56,45 @@ business pages. The photography reads as belonging to the hero, not the brand.
 10. Business-owner CTA · photographic footer transition
 
 "Find What You Need" becomes a split-screen module: changing photograph left; indexed discovery
-paths right (01 Near You · 02 Open Now · 03 Highly Rated · 04 Newly Added · 05 Black-Woman-Owned ·
-06 Community Favorites); hover changes the image.
+paths right; hover changes the image. Every tile resolves to a filter that exists today
+`[Measured — repo, 2026-08-15]`:
+
+| Tile | Destination |
+|---|---|
+| 01 Near You | **not a plain link** — the geolocation control at `/discover`; the browser has to supply the coordinates before a URL can exist |
+| 02 Open Now | `/discover?open_now=1` |
+| 03 Highly Rated | `/discover?sort=rating` |
+| 04 Newly Added | `/discover?sort=newest` |
+| 05 Black-Woman-Owned | `/discover?attrs=black-woman-owned` |
+| 06 Community Favorites | `/discover?sort=saves` |
+
+Tile 01 is the one exception to "a tile is a link." A radius search needs a position the visitor
+grants at the moment of asking, so the tile has to land on `/discover` and let the control run —
+never a hardcoded coordinate, and never a link that silently returns the whole directory.
 
 **Tile 05 reads "Black-Woman-Owned," not "Women-Owned"** [Decision — founder, 2026-08-09]. That is
 the actual facet — `/discover?attrs=black-woman-owned`, seeded at `supabase/seed.sql:630`. The
 broader label would promise a set the filter does not return.
 
-**Tile 01 "Near You" has no filter behind it** — `/discover` has no `lat`/`lng`/`radius` param, no
-`distance` sort key, and no geolocation prompt `[Observed, 2026-08-09]`. Listings do carry lat/lng
-from the N7 geocode pass, so the data exists, but the filter is a feature to build rather than a
-link to write. Open founder call, tracked in `ops/next-actions.md`: build the radius filter, drop
-to a five-tile module, or swap the tile for something that exists. **The module is not buildable
-until that is settled.**
+**Tile 01 "Near You" now has a filter behind it** `[Measured — repo, 2026-08-15]`. The open call
+that blocked this module was settled by building the filter (C3.1–C3.3): `/discover` accepts
+`lat`/`lng`/`radius`, `search_listings_faceted` filters by haversine distance, `sort=distance`
+orders by it, and `components/discovery/NearYouFilter.tsx` asks for the visitor's position. The
+tile links to `/discover` and the control does the rest — the module is **buildable at six tiles**,
+with no swap and no drop to five.
+
+Three things the tile inherits, and must not paper over:
+
+- **Location is all-or-nothing.** `lat`, `lng` and `radius` are parsed together, in range, or
+  dropped whole (`lib/listings/location-params.ts`). A partial triple would short-circuit the RPC's
+  radius predicate to TRUE and answer the entire directory under a proximity label. Both the server
+  page and every client control run that one parse — a preview walk on 2026-08-15 caught them
+  disagreeing, and that is exactly the lie it produced.
+- **65 of 254 published listings have no coordinates** — 26% of the corpus, 41 of them the known
+  unmatched addresses awaiting human cleanup. They are invisible to every radius query. The control
+  says so in plain words rather than letting a visitor conclude the neighborhood is empty.
+- **Denied is not a dead end.** Refusing the permission prompt yields a city picker, not an error.
+  Same for a position the device cannot fix, plus a retry there only.
 
 ### Discovery / search
 - **Claimed card:** 4:3 or 3:2 photograph · logo · name · category+city · verification ·
