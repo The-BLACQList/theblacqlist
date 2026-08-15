@@ -3,7 +3,9 @@ import Link from 'next/link'
 interface FlowNode {
   entity_id: string
   name: string
-  slug?: string
+  /** Public listing URL, built by the caller via buildEntityUrl. Null when the
+   *  backing listing row is gone — the row renders as plain text. */
+  href?: string | null
   total_amount_cents: number
   transaction_count: number
 }
@@ -51,9 +53,9 @@ export function FlowNodeTable({
           {nodes.map((node, i) => {
             const barWidth = percentOfMax(node.total_amount_cents, maxAmount)
             const nameEl =
-              linkToEntity && node.slug ? (
+              linkToEntity && node.href ? (
                 <Link
-                  href={`/b/${node.slug}`}
+                  href={node.href}
                   className="font-subhead text-sm font-semibold text-brand-black hover:text-amber transition-colors truncate"
                 >
                   {node.name}
