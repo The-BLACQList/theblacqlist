@@ -75,7 +75,7 @@ export default async function MyReceiptsPage({
         {submitted === 'true' && (
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">
-              Receipt submitted — thank you!
+              Receipt submitted. Thank you!
             </p>
             <p className="font-body text-xs text-green-700 mt-0.5">
               Our team will review it within 1–3 business days.

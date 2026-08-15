@@ -314,8 +314,8 @@ export function ServiceForm({
             defaultValue={defaultValues.status ?? 'draft'}
             className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold"
           >
-            <option value="draft">Draft — not publicly visible</option>
-            <option value="active">Active — visible in marketplace</option>
+            <option value="draft">Draft: not publicly visible</option>
+            <option value="active">Active: visible in marketplace</option>
             <option value="archived">Archived</option>
           </select>
         </div>

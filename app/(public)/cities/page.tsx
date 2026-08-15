@@ -15,7 +15,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
 
 const title = 'Cities | The BLACQList'
 const description =
-  'Explore Black-owned businesses city by city — Atlanta, Houston, Chicago, Los Angeles, Washington DC, New Orleans, and more. Support your local community.'
+  'Explore Black-owned businesses city by city: Atlanta, Houston, Chicago, Los Angeles, Washington DC, New Orleans, and more. Support your local community.'
 
 export const metadata: Metadata = {
   title,
@@ -91,7 +91,7 @@ export default async function CitiesPage() {
           </h1>
           <p className="font-body text-base text-charcoal max-w-xl leading-relaxed">
             Every chapter is a real index of the businesses, professionals, and creatives in one
-            metro — claimed, verified, and kept current by the people who run them.
+            metro, claimed, verified, and kept current by the people who run them.
           </p>
 
           {live.length > 0 && (

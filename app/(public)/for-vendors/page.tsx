@@ -51,12 +51,12 @@ export default function ForVendorsPage() {
         <span className="inline-block rounded-full border border-charcoal/30 text-charcoal text-xs font-subhead font-semibold px-3 py-1 mb-5">
           V2 Feature
         </span>
-        <SectionHeading subtitle="The Marketplace is the next chapter — letting Black-owned vendors sell products and services directly through the platform.">
+        <SectionHeading subtitle="The Marketplace is the next chapter, letting Black-owned vendors sell products and services directly through the platform.">
           Marketplace Vendor Access Coming in V2
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
           We&apos;re accepting early vendor applications now. When the Marketplace launches, early
-          applicants will be among the first to go live — with full product listings, checkout, and
+          applicants will be among the first to go live, with full product listings, checkout, and
           analytics. Start by getting your business listed in the directory today.
         </p>
       </Section>

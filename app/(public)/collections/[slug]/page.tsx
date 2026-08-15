@@ -190,7 +190,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                   No businesses in this collection yet
                 </p>
                 <p className="font-body text-sm text-charcoal-soft">
-                  Check back soon — we&apos;re curating this list.
+                  Check back soon. We&apos;re curating this list.
                 </p>
                 <Link
                   href="/discover"

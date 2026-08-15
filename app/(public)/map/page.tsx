@@ -4,7 +4,7 @@ import { MapPageClient } from '@/app/(public)/map/MapPageClient'
 export const metadata: Metadata = {
   title: 'Explore the Map | The BLACQList',
   description:
-    'Every Black-owned business on The BLACQList, pinned on a live map — search, filter, and traverse your neighborhood.',
+    'Every Black-owned business on The BLACQList, pinned on a live map. Search, filter, and traverse your neighborhood.',
 }
 
 /**

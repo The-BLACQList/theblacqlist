@@ -97,7 +97,7 @@ Review text: {{review_text}}
 
 Requirements:
 - Maximum 300 characters
-- Warm and personal tone — not corporate or template-sounding
+- Warm and personal tone, not corporate or template-sounding
 - For positive reviews (4–5 stars): express genuine gratitude, reference something specific from the review
 - For neutral reviews (3 stars): thank the reviewer, acknowledge their feedback, invite them back
 - For negative reviews (1–2 stars): acknowledge the experience calmly, express commitment to improvement, invite direct contact to resolve
@@ -119,7 +119,7 @@ Last 7 days page views: {{page_views_7d}}
 
 Requirements:
 - 2–3 sentences maximum
-- Plain language — no jargon
+- Plain language, no jargon
 - Highlight the strongest metric
 - End with one actionable tip to improve the weakest metric
 - Do not include numbers that appear fabricated
@@ -127,7 +127,7 @@ Requirements:
 
   // ─── Admin / platform agents ─────────────────────────────────────────────
 
-  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList — a platform for Black-owned businesses.
+  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList, a platform for Black-owned businesses.
 
 Collection name: {{collection_name}}
 Collection description: {{collection_description}}
@@ -144,7 +144,7 @@ For each candidate that fits the collection, provide:
 
 Format your response as a simple list. Only include listings that genuinely fit. If none fit, say so.`,
 
-  GUIDE_SECTION: `Write a section for a city guide on The BLACQList — a platform for discovering Black-owned businesses.
+  GUIDE_SECTION: `Write a section for a city guide on The BLACQList, a platform for discovering Black-owned businesses.
 
 City: {{city_name}}
 Category: {{category_name}}

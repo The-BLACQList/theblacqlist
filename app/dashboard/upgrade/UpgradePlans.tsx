@@ -128,7 +128,7 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
                 <button
                   disabled
                   className="w-full h-10 rounded-full bg-charcoal/10 text-charcoal-faint font-body font-bold text-sm cursor-not-allowed"
-                  aria-label={`${plan.name} — coming soon`}
+                  aria-label={`${plan.name}, coming soon`}
                 >
                   Coming Soon
                 </button>

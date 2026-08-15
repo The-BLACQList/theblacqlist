@@ -8,7 +8,7 @@ import { NodeNetworkBackground } from './node-network-background'
 
 export const metadata: Metadata = {
   title: 'Launching soon',
-  description: 'The BLACQList is launching soon. Find & Be Found — the directory for Black-owned businesses.',
+  description: 'The BLACQList is launching soon. Find & Be Found. The directory for Black-owned businesses.',
 }
 
 // Inline social glyphs for platforms not in this lucide-react version (mirrors the footer).

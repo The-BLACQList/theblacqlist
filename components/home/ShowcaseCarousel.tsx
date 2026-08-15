@@ -81,7 +81,7 @@ export function ShowcaseCarousel({ items }: Props) {
           <Link
             key={item.id}
             href={item.href}
-            aria-label={`${item.name} — page example ${i + 1} of ${items.length}`}
+            aria-label={`${item.name}, page example ${i + 1} of ${items.length}`}
             data-showcase-card
             className="group shrink-0 w-[82%] sm:w-[46%] lg:w-[31%] snap-start rounded-xl border border-charcoal/10 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >

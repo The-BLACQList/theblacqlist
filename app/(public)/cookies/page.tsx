@@ -35,7 +35,7 @@ export default function CookiesPage() {
             <h2 className="font-headline text-xl text-brand-black">1. What Are Cookies</h2>
             <p>
               Cookies are small text files stored on your device when you visit a website. They help
-              the website remember information about your visit — such as keeping you signed in — and
+              the website remember information about your visit, such as keeping you signed in, and
               help us understand how the platform is being used so we can improve it.
             </p>
             <p>
@@ -59,11 +59,11 @@ export default function CookiesPage() {
                 </p>
                 <ul className="list-disc list-inside space-y-1 pl-2 mt-2 text-sm">
                   <li>
-                    <strong>sb-access-token</strong> — Supabase authentication token; required to
+                    <strong>sb-access-token</strong>: Supabase authentication token; required to
                     identify your session server-side
                   </li>
                   <li>
-                    <strong>sb-refresh-token</strong> — Used to refresh your session without
+                    <strong>sb-refresh-token</strong>: Used to refresh your session without
                     requiring you to sign in again
                   </li>
                 </ul>
@@ -79,7 +79,7 @@ export default function CookiesPage() {
                 </h3>
                 <p>
                   We use Vercel Analytics and Vercel Speed Insights to understand how visitors
-                  interact with the platform — for example, which pages are most visited, where
+                  interact with the platform: for example, which pages are most visited, where
                   users encounter issues, and how quickly pages load. These tools are designed
                   without traditional tracking cookies: they do not set a persistent identifier
                   cookie, do not track you across sites, and do not build a personal behavioral

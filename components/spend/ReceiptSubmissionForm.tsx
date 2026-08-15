@@ -81,7 +81,7 @@ export function ReceiptSubmissionForm() {
       <Field
         id="raw_business_name"
         label="Business name"
-        hint="Start typing — we'll match it to a business on The BLACQList. Not there yet? Type the name anyway."
+        hint="Start typing and we'll match it to a business on The BLACQList. Not there yet? Type the name anyway."
         error={fieldErrors.raw_business_name}
       >
         <ListingCombobox
@@ -128,7 +128,7 @@ export function ReceiptSubmissionForm() {
       <Field
         id="notes"
         label="Notes"
-        hint="Optional — anything else you want to add about this purchase."
+        hint="Optional. Anything else you want to add about this purchase."
       >
         <textarea
           id="notes"
@@ -149,7 +149,7 @@ export function ReceiptSubmissionForm() {
           Receipt photo
         </label>
         <p className="font-body text-xs text-charcoal-soft">
-          Optional — attach a photo of your receipt. JPEG, PNG, HEIC, up to 10 MB.
+          Optional. Attach a photo of your receipt. JPEG, PNG, HEIC, up to 10 MB.
         </p>
         <label
           htmlFor="receipt_file"
@@ -181,7 +181,7 @@ export function ReceiptSubmissionForm() {
         <div className="flex items-start gap-2">
           <Info className="size-4 text-charcoal-faint shrink-0 mt-0.5" aria-hidden="true" />
           <p className="font-body text-xs text-charcoal-soft leading-relaxed">
-            Receipt details are private — only you and BLACQList admins can see your submission. We
+            Receipt details are private. Only you and BLACQList admins can see your submission. We
             use anonymized totals to power the community spend map. Your name is never attached to
             public data.
           </p>

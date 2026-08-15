@@ -18,7 +18,7 @@ export function MicrositeShowcase({ items }: Props) {
               Your official page
             </p>
             <h2 id="showcase-heading" className="font-headline text-[26px] md:text-[32px] text-brand-black max-w-[22ch] text-balance">
-              More than a listing — your business&apos;s home
+              More than a listing. Your business&apos;s home
             </h2>
           </div>
           <Link
@@ -32,7 +32,7 @@ export function MicrositeShowcase({ items }: Props) {
         <ShowcaseCarousel items={items} />
 
         <p className="font-subhead text-xs text-charcoal-soft mt-2.5">
-          Real pages on the platform right now — menus, services, portfolios, event tickets,
+          Real pages on the platform right now: menus, services, portfolios, event tickets,
           reviews, and verification, for every kind of Black enterprise. Swipe, use the arrows, or arrow keys.
         </p>
       </div>

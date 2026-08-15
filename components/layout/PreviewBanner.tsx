@@ -11,7 +11,7 @@ export function PreviewBanner() {
       role="status"
       className="bg-amber-gold text-brand-black text-center text-xs font-subhead font-bold uppercase tracking-wide px-4 py-1"
     >
-      Preview deployment — staging data, payments in test mode
+      Preview deployment: staging data, payments in test mode
     </div>
   )
 }

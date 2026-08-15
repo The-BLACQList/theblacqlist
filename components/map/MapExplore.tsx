@@ -661,7 +661,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
           role="status"
           className="absolute top-16 right-3 z-20 max-w-[260px] rounded-lg bg-deep-bg/90 border border-off-white/20 px-3.5 py-2.5 font-subhead text-xs text-off-white backdrop-blur-sm"
         >
-          Map imagery is taking a while — the list below is live.
+          Map imagery is taking a while. The list below is live.
         </p>
       )}
       <MapDrawer

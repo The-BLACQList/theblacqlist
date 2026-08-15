@@ -348,7 +348,7 @@ export function SubmitListingForm({ categories }: Props) {
             </h2>
             <p className="font-subhead text-sm text-charcoal leading-relaxed">
               The BLACQList centers and elevates Black-owned businesses. Businesses that support the
-              community are welcome too — every listing is clearly labeled so shoppers know exactly
+              community are welcome too. Every listing is clearly labeled so shoppers know exactly
               who they&apos;re supporting.
             </p>
           </div>
@@ -401,14 +401,14 @@ export function SubmitListingForm({ categories }: Props) {
             <div className="flex flex-col gap-2">
               {(fields.ownership_label === 'black_owned'
                 ? [
-                    'Majority Black-owned — at least 51% Black or African American ownership',
-                    'Operational control — Black owner(s) actively manage the business',
-                    'Currently operating — not closed or inactive',
+                    'Majority Black-owned: at least 51% Black or African American ownership',
+                    'Operational control: Black owner(s) actively manage the business',
+                    'Currently operating, not closed or inactive',
                   ]
                 : [
                     'You support Black-owned businesses and the community',
                     'Your listing will be clearly labeled “Ally”',
-                    'Currently operating — not closed or inactive',
+                    'Currently operating, not closed or inactive',
                   ]
               ).map((item) => (
                 <div key={item} className="flex items-start gap-3">
@@ -1053,7 +1053,7 @@ export function SubmitListingForm({ categories }: Props) {
               value={fields.founder_story}
               onChange={(e) => set('founder_story', e.target.value)}
               className={textareaCls('founder_story')}
-              placeholder="Share the story behind your business — why you started, what drives you."
+              placeholder="Share the story behind your business. Why you started, what drives you."
             />
           </div>
 

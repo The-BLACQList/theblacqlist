@@ -11,7 +11,7 @@ import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
 export const metadata: Metadata = {
   title: 'Community Dollar Flow | The BLACQList',
   description:
-    'See how the BLACQList community is circulating dollars within Black-owned businesses. All data is anonymized — no buyer identities exposed.',
+    'See how the BLACQList community is circulating dollars within Black-owned businesses. All data is anonymized. No buyer identities exposed.',
 }
 
 // Revalidate every hour — same cadence as /api/flow-map/summary
@@ -271,7 +271,7 @@ export default async function FlowMapPage() {
             nodes={topBusinesses}
             title="Top businesses"
             linkToEntity
-            emptyText="No businesses yet — submit a receipt to add one."
+            emptyText="No businesses yet. Submit a receipt to add one."
           />
           <FlowNodeTable nodes={topCities} title="Top cities" emptyText="No city data yet." />
         </div>

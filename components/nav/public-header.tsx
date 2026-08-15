@@ -37,7 +37,7 @@ export async function PublicHeader() {
           {/* Logo: node-Q mark + Jost wordmark */}
           <Link
             href="/"
-            aria-label="The BLACQList — home"
+            aria-label="The BLACQList home"
             className="group flex items-center gap-2 shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
             <BrandMark className="h-7 w-7 md:h-8 md:w-8 text-gold transition-colors" />

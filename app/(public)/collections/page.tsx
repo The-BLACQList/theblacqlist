@@ -54,7 +54,7 @@ export default async function CollectionsPage() {
                 No collections yet
               </p>
               <p className="font-body text-sm text-charcoal-soft">
-                Check back soon — curated lists are on the way.
+                Check back soon. Curated lists are on the way.
               </p>
             </div>
           ) : (

@@ -178,7 +178,7 @@ export function SubmitJobForm({ categories }: Props) {
 
       <fieldset className="flex flex-col gap-3 border-t border-charcoal/10 pt-5">
         <legend className={cn(labelCls, 'px-0')}>
-          Pay <span className={optionalCls}>(optional — but postings with pay get more applicants)</span>
+          Pay <span className={optionalCls}>(optional, but postings with pay get more applicants)</span>
         </legend>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="flex flex-col gap-1">
@@ -265,7 +265,7 @@ export function SubmitJobForm({ categories }: Props) {
         </div>
       </div>
       <p className="font-subhead text-xs text-charcoal-soft -mt-3">
-        Add at least one — it becomes the Apply button on your posting.
+        Add at least one. It becomes the Apply button on your posting.
       </p>
 
       <div className="flex flex-col gap-1">

@@ -41,7 +41,7 @@ export default function PrivacyPage() {
             <h2 className="font-headline text-xl text-brand-black">1. Who We Are</h2>
             <p>
               The BLACQList (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates the
-              platform at theblacqlist.com — a directory and discovery platform dedicated to Black-owned
+              platform at theblacqlist.com, a directory and discovery platform dedicated to Black-owned
               businesses across the United States. This Privacy Policy explains how we collect, use,
               disclose, and safeguard your information when you visit or use our platform. Questions
               about this policy can be directed to{' '}
@@ -70,8 +70,8 @@ export default function PrivacyPage() {
             <h3 className="font-subhead font-semibold text-brand-black mt-4">Information collected automatically</h3>
             <p>When you use the platform, we automatically collect:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>Log data (browser type, operating system, referring URLs, pages visited, time and date of your visit). Your IP address is used transiently to deliver and secure the service and, where recorded for analytics, is stored only in irreversible hashed form — we do not retain your raw IP address</li>
-              <li>Usage data (search queries, listings viewed, saves, clicks on calls-to-action) — stored in anonymized form</li>
+              <li>Log data (browser type, operating system, referring URLs, pages visited, time and date of your visit). Your IP address is used transiently to deliver and secure the service and, where recorded for analytics, is stored only in irreversible hashed form. We do not retain your raw IP address</li>
+              <li>Usage data (search queries, listings viewed, saves, clicks on calls-to-action), stored in anonymized form</li>
               <li>Device information (device type, screen resolution)</li>
               <li>Session authentication tokens managed through cookies (see our <Link href="/cookies" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">Cookie Policy</Link>)</li>
             </ul>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
               <li>Display business listing content to visitors searching the platform</li>
               <li>Send transactional emails you have requested (account verification, claim status updates, password reset)</li>
               <li>Generate anonymized community spend data for public display on the Circulation Map</li>
-              <li>Provide analytics to business owners about their listing performance (page views, saves, CTA clicks — all anonymized at the user level)</li>
+              <li>Provide analytics to business owners about their listing performance (page views, saves, CTA clicks, all anonymized at the user level)</li>
               <li>Detect, investigate, and prevent fraudulent or unauthorized activity</li>
               <li>Improve platform performance and features</li>
               <li>Comply with applicable legal obligations</li>
@@ -231,7 +231,7 @@ export default function PrivacyPage() {
                   </tr>
                   <tr>
                     <td className="p-3">Stripe</td>
-                    <td className="p-3">Payment processing — used when paid features become available</td>
+                    <td className="p-3">Payment processing, used when paid features become available</td>
                     <td className="p-3">
                       <a
                         href="https://stripe.com/privacy"

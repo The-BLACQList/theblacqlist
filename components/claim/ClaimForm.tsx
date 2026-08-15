@@ -133,7 +133,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           Business email address <span aria-hidden="true">*</span>
         </label>
         <p className="font-body text-xs text-charcoal-soft">
-          An email address associated with this business — used to verify your connection to it.
+          An email address associated with this business. We use it to verify your connection.
         </p>
         <input
           id="verification_email"

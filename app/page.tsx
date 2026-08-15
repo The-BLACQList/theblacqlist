@@ -22,7 +22,7 @@ export const revalidate = 1800
 export const metadata: Metadata = {
   title: 'Find & Be Found. | The BLACQList',
   description:
-    'The national directory for Black-owned businesses — built by community, powered by culture. Discover, support, and connect across every city.',
+    'The national directory for Black-owned businesses. Built by community, powered by culture. Discover, support, and connect across every city.',
 }
 
 interface ShowcaseRaw {

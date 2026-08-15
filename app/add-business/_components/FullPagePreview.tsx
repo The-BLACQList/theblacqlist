@@ -100,7 +100,7 @@ export function FullPagePreview({
       {/* Top bar */}
       <div className="sticky top-0 z-10 flex items-center justify-between bg-white/95 backdrop-blur border-b border-charcoal/10 px-4 py-3">
         <p className="font-subhead text-sm font-semibold text-brand-black">
-          Preview — how your page will look
+          Preview: how your page will look
         </p>
         <button
           type="button"

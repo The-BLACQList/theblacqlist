@@ -169,7 +169,7 @@ function SignInContent() {
           href={next ? `/sign-up?next=${encodeURIComponent(next)}` : '/sign-up'}
           className="font-semibold text-brand-black hover:underline underline-offset-2"
         >
-          Sign up — it&apos;s free
+          Sign up, it&apos;s free
         </Link>
       </p>
     </>

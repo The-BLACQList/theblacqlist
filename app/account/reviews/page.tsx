@@ -87,7 +87,7 @@ export default async function MyReviewsPage() {
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">No reviews yet</h2>
             <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
-              Visit a business page and share your experience — your reviews show up here.
+              Visit a business page and share your experience. Your reviews show up here.
             </p>
             <Link
               href="/discover"

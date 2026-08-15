@@ -6,7 +6,7 @@ interface Props {
 }
 
 export const metadata = {
-  title: 'Submission Received — The BLACQList',
+  title: 'Submission Received | The BLACQList',
 }
 
 export default async function SubmittedPage({ searchParams }: Props) {

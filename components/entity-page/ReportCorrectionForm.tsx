@@ -62,7 +62,7 @@ export function ReportCorrectionForm({ listingId }: Props) {
           <div className="px-5 py-8 text-center" role="status" aria-live="polite">
             <CheckCircle className="size-10 text-green-500 mx-auto mb-3" aria-hidden="true" />
             <p className="font-subhead text-base font-semibold text-brand-black mb-1">
-              Thanks — we&apos;re on it.
+              Thanks. We&apos;re on it.
             </p>
             <p className="font-body text-sm text-charcoal-soft mb-4">
               Our team reviews all reports. We&apos;ll update the listing if the information is

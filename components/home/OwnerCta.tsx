@@ -9,7 +9,7 @@ export function OwnerCta() {
           Ready to be found?
         </h2>
         <p className="font-body text-[15px] text-off-white/80 mt-2 max-w-[48ch] mx-auto">
-          Storefront, service, practice, studio, or stage — get your official home on The BLACQList,
+          Storefront, service, practice, studio, or stage. Get your official home on The BLACQList,
           with reviews, verification, and a community that&apos;s looking for you.
         </p>
         <div className="flex justify-center gap-3 flex-wrap mt-6">

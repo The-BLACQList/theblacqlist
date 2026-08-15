@@ -236,7 +236,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
           </div>
         </div>
         <p className="font-body text-xs text-charcoal-soft -mt-2">
-          Add at least one — it becomes the Apply button on your posting.
+          Add at least one. It becomes the Apply button on your posting.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

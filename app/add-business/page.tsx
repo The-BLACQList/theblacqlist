@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { SubmitListingForm } from '@/components/listings/SubmitListingForm'
 
 export const metadata = {
-  title: 'Add Your Business — The BLACQList',
+  title: 'Add Your Business | The BLACQList',
   description:
-    'Submit your business for review on The BLACQList. Black-owned businesses and allies who support them are welcome — every listing is clearly labeled.',
+    'Submit your business for review on The BLACQList. Black-owned businesses and allies who support them are welcome. Every listing is clearly labeled.',
 }
 
 export interface CategoryOption {

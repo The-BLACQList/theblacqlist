@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/page-header'
 export const metadata: Metadata = {
   title: 'How Ranking Works | The BLACQList',
   description:
-    'Exactly how BLACQList orders search results — including where paid placement does and does not apply.',
+    'Exactly how BLACQList orders search results, including where paid placement does and does not apply.',
   robots: { index: true, follow: true },
 }
 
@@ -28,7 +28,7 @@ export default function HowRankingWorksPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="How ranking works"
-          subtitle="What decides the order of search results — in plain language, and in the order it actually happens."
+          subtitle="What decides the order of search results, in plain language, and in the order it actually happens."
         />
       </Section>
 
@@ -41,7 +41,7 @@ export default function HowRankingWorksPage() {
 
           <section id="sponsored" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              1. Sponsored placements come first — and they are always labeled
+              1. Sponsored placements come first, and they are always labeled
             </h2>
             <p>
               A business can buy a placement at the top of a specific city or category. When one is
@@ -67,7 +67,7 @@ export default function HowRankingWorksPage() {
             </p>
             <p>
               Allies are genuinely welcome here and are listed, searchable, and sold exactly the same
-              plans at exactly the same prices. What they do not get is the editorial spotlight — that
+              plans at exactly the same prices. What they do not get is the editorial spotlight. That
               is reserved, on purpose, and it is not something a subscription can buy back. A paying
               Ally business is still listed below Black-owned businesses.
             </p>
@@ -78,8 +78,8 @@ export default function HowRankingWorksPage() {
               3. Then: how well the business matches what you searched
             </h2>
             <p>
-              This is the main thing. We score every business against your search terms — its name,
-              description, category, and tags — and the closest matches rise to the top. Nothing
+              This is the main thing. We score every business against your search terms: its name,
+              description, category, and tags. The closest matches rise to the top, and nothing
               below this point can override a genuinely better match.
             </p>
           </section>
@@ -107,7 +107,7 @@ export default function HowRankingWorksPage() {
               </li>
               <li>
                 It only applies to search results. Browsing a city page, a category, or the map is
-                completely unaffected — those are ordered the same way for everyone.
+                completely unaffected. Those are ordered the same way for everyone.
               </li>
               <li>
                 Growth and Premium get exactly the same weight here. Paying more does not buy a
@@ -128,7 +128,7 @@ export default function HowRankingWorksPage() {
             <ul className="list-disc ml-5 space-y-2">
               <li>
                 <span className="font-semibold">Map prominence is never for sale.</span> How large
-                and visible a business appears on the map is set entirely by its trust level —
+                and visible a business appears on the map is set entirely by its trust level:
                 whether it has been claimed by its owner and verified. Prominence there is earned by
                 trust, not bought.
               </li>
@@ -140,7 +140,7 @@ export default function HowRankingWorksPage() {
                 an Ally, and no plan, placement, or badge is offered to one label and withheld from
                 the other. The difference is editorial and it runs one way only: Black-owned
                 businesses are centered in ranking, as described above. Money does not change that
-                in either direction — an Ally cannot pay to be centered, and a Black-owned business
+                in either direction. An Ally cannot pay to be centered, and a Black-owned business
                 does not have to pay to be.
               </li>
               <li>
@@ -157,12 +157,12 @@ export default function HowRankingWorksPage() {
             </h2>
             <p>
               Sort by name, rating, review count, newest, or most-saved and that is what orders your
-              results. Subscriptions have no effect on any of those orderings — if you asked for
+              results. Subscriptions have no effect on any of those orderings. If you asked for
               alphabetical, paying for a plan will not move a business up the alphabet.
             </p>
             <p>
               The two things above still apply: a labeled Sponsored placement stays at the top, and
-              Black-owned businesses are still centered — so an A-to-Z sort reads as the Black-owned
+              Black-owned businesses are still centered. An A-to-Z sort reads as the Black-owned
               businesses in alphabetical order, then the Allies in alphabetical order.
             </p>
           </section>
@@ -170,7 +170,7 @@ export default function HowRankingWorksPage() {
           <section id="questions" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">Questions</h2>
             <p>
-              If something in your results looks wrong or unexplained, tell us — we will look at it.{' '}
+              If something in your results looks wrong or unexplained, tell us. We will look at it.{' '}
               <Link href="/contact" className="text-amber hover:underline">
                 Get in touch
               </Link>

@@ -104,7 +104,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonicalUrl = `${BASE_URL}/${citySlug}/${entityType}`
   const locationLabel = city.states ? `${city.name}, ${city.states.code}` : city.name
 
-  const title = `${category.name} in ${locationLabel} — Black-Owned Businesses | The BLACQList`
+  const title = `${category.name} in ${locationLabel}: Black-Owned Businesses | The BLACQList`
   const description = `Discover Black-owned ${category.name.toLowerCase()} businesses in ${locationLabel}. Browse and support local on The BLACQList.`
 
   return {

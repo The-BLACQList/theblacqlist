@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const locationLabel = entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : 'Online'
 
-  const description = `${entity.tagline} — ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
+  const description = `${entity.tagline}. ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
   // An owner cover resolves to an absolute Storage URL, already OG-ready. With
   // no cover there is no OG image — the F-1 fallback is a render-time CSS tile,
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const ogImage = cover.src ?? undefined
 
   return {
-    title: `${entity.name} — ${locationLabel}`,
+    title: `${entity.name} in ${locationLabel}`,
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: {
