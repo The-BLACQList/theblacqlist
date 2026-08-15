@@ -86,8 +86,12 @@ export function HomeCategories({ categories }: Props) {
               <PhotoPanelCaption className="p-4">
                 <span
                   className={cn(
-                    'font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
-                    i === 0 ? 'text-[24px] md:text-[30px]' : 'text-[16px] md:text-[18px]'
+                    'font-headline text-white group-hover:text-light-gold transition-colors duration-150 line-clamp-2',
+                    i === 0 ? 'text-[24px] md:text-[30px]' : 'text-[16px] md:text-[18px]',
+                    // After the font-size classes on purpose: tailwind-merge
+                    // treats font-size as conflicting with line-height, so an
+                    // earlier leading-tight gets stripped.
+                    'leading-tight'
                   )}
                 >
                   {category.name}

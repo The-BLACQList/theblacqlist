@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
 import { VALID_SHIPPING_OPTIONS } from '@/lib/constants/marketplace'
 
 type FieldErrors = Partial<Record<string, string>>
@@ -160,7 +161,7 @@ export async function createProductAction(
     return { error: 'Failed to create product. Please try again.' }
   }
 
-  void serviceClient.from('analytics_events').insert({
+  trackServerEvent({
     event_name: 'product_created',
     entity_id: product.id,
     entity_type: 'marketplace_product',
