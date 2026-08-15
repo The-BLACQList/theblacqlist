@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SubmitJobForm } from '@/components/listings/SubmitJobForm'
 
 export const metadata = {
-  title: 'Post a Job — The BLACQList',
+  title: 'Post a Job | The BLACQList',
   description: 'Post an open role at a Black-owned business or ally organization.',
 }
 

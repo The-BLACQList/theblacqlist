@@ -36,7 +36,7 @@ export function ComingSoonForm() {
           <Check className="size-4 text-light-gold" aria-hidden="true" />
         </span>
         <p className="font-subhead text-sm text-cream">
-          You&apos;re on the list — we&apos;ll let you know the moment we launch.
+          You&apos;re on the list. We&apos;ll let you know the moment we launch.
         </p>
       </div>
     )

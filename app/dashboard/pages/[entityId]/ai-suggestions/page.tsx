@@ -23,7 +23,7 @@ function ScoreBadge({ score, maxScore }: { score: number; maxScore: number }) {
       : pct >= 50
         ? 'bg-amber-100 text-amber-700 border-amber-200'
         : 'bg-red-100 text-red-700 border-red-200'
-  const label = pct >= 80 ? 'Strong' : pct >= 50 ? 'Good — keep improving' : 'Needs work'
+  const label = pct >= 80 ? 'Strong' : pct >= 50 ? 'Good, keep improving' : 'Needs work'
 
   return (
     <div className={`inline-flex items-center gap-3 px-5 py-3 rounded-xl border ${colorClass}`}>
@@ -231,7 +231,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
             <p className="font-body text-sm text-charcoal-soft">AI copy suggestions coming in V2.</p>
             <p className="font-body text-xs text-charcoal-faint mt-1">
               Once available, AI-generated suggestions for your description, SEO copy, and social
-              captions will appear here — ready for your review and approval before anything is
+              captions will appear here, ready for your review and approval before anything is
               published.
             </p>
           </div>
@@ -267,7 +267,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
         </p>
         <p className="font-body text-xs text-charcoal-soft leading-relaxed">
           All AI-generated suggestions require your review and approval before anything is published
-          to your page. You stay in control — nothing changes without you explicitly applying it.
+          to your page. You stay in control. Nothing changes without you explicitly applying it.
         </p>
       </div>
     </div>

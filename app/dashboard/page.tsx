@@ -135,7 +135,7 @@ export default async function DashboardPage() {
                 {/* Completeness checklist */}
                 <div className="px-5 py-4">
                   <p className="font-subhead text-xs font-semibold text-charcoal-soft mb-2 uppercase tracking-wide">
-                    Profile completeness — {doneCount}/{completeness.length}
+                    Profile completeness: {doneCount}/{completeness.length}
                   </p>
                   <ul className="space-y-1.5 mb-4">
                     {completeness.map(({ done, label }) => (

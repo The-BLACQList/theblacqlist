@@ -129,7 +129,7 @@ function NewListButton() {
   return (
     <ActionDialog
       title="New list"
-      description="Group saved businesses however you like — lists are private to you."
+      description="Group saved businesses however you like. Lists are private to you."
       trigger={
         <button
           type="button"

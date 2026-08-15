@@ -19,7 +19,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <div className="mb-8 flex justify-center">
           <Link
             href="/"
-            aria-label="The BLACQList — home"
+            aria-label="The BLACQList home"
             className="group flex flex-col items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
             <BrandMark className="h-12 w-12 text-gold transition-colors group-hover:text-light-gold" />

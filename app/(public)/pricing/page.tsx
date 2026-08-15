@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 const FAQ_ITEMS = [
   {
     q: 'Is listing my business really free?',
-    a: 'Yes. A full BLACQList Page — with your profile, hours, contact info, social links, and marketplace listings — is free forever. No credit card required.',
+    a: 'Yes. A full BLACQList Page is free forever: your profile, hours, contact info, social links, and marketplace listings. No credit card required.',
   },
   {
     q: 'What do the paid plans add?',
@@ -25,11 +25,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How does annual billing work?',
-    a: 'Choose annual at checkout and you save about 20% — a little more than two months free on every plan. You can switch between monthly and annual anytime from your billing portal.',
+    a: 'Choose annual at checkout and you save about 20%, a little more than two months free on every plan. You can switch between monthly and annual anytime from your billing portal.',
   },
   {
     q: 'What is a Sponsored Spotlight?',
-    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views. Inventory is limited — Sponsored Spotlight slots are available as an add-on separate from the monthly plans.',
+    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views. Inventory is limited. Sponsored Spotlight slots are available as an add-on separate from the monthly plans.',
   },
   {
     q: 'What is BLACQ Boost?',
@@ -52,7 +52,7 @@ export default function PricingPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Pricing"
-          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility — pay monthly or save with annual billing."
+          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility. Pay monthly or save with annual billing."
         />
       </Section>
 
@@ -67,7 +67,7 @@ export default function PricingPage() {
 
       {/* Add-ons */}
       <Section variant="cream">
-        <SectionHeading subtitle="Boost your visibility beyond your monthly plan — pay only when you need it.">
+        <SectionHeading subtitle="Boost your visibility beyond your monthly plan. Pay only when you need it.">
           Add-ons & Visibility Boosts
         </SectionHeading>
 
@@ -168,7 +168,7 @@ export default function PricingPage() {
 
       {/* Bottom CTA */}
       <Section variant="cream">
-        <SectionHeading subtitle="Every business starts with a free listing — no credit card required. Upgrade when paid plans launch.">
+        <SectionHeading subtitle="Every business starts with a free listing. No credit card required. Upgrade when paid plans launch.">
           Start Free. Grow at Your Pace.
         </SectionHeading>
         <div className="mt-6">

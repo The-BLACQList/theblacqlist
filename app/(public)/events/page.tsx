@@ -18,7 +18,7 @@ export default function EventsPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Events"
-          subtitle="Pop-ups, markets, networking nights, and cultural experiences — hosted by and for the community."
+          subtitle="Pop-ups, markets, networking nights, and cultural experiences, hosted by and for the community."
         />
       </Section>
 

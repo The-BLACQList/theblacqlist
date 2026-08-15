@@ -79,7 +79,7 @@ export default async function RecommendedPage() {
           {!hasSaves
             ? 'Based on businesses you save.'
             : recommendations.length === 0
-              ? 'No new recommendations right now — check back later.'
+              ? 'No new recommendations right now. Check back later.'
               : `${recommendations.length} businesses you might like`}
         </p>
 

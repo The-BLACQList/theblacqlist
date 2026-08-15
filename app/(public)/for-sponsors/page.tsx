@@ -22,7 +22,7 @@ const SPONSOR_TYPES = [
   {
     title: 'City Spotlight',
     description:
-      'Brands and organizations targeting a specific metropolitan area — get featured placement on BLACQList city pages where your audience already looks.',
+      'Brands and organizations targeting a specific metropolitan area. Get featured placement on BLACQList city pages where your audience already looks.',
     badge: 'Regional',
   },
   {
@@ -47,7 +47,7 @@ const HOW_IT_WORKS = [
   {
     step: '03',
     title: 'Launch your campaign',
-    body: 'Go live with homepage, city-level, or category placements — your brand alongside the businesses your audience already trusts.',
+    body: 'Go live with homepage, city-level, or category placements. Your brand alongside the businesses your audience already trusts.',
   },
 ]
 
@@ -91,7 +91,7 @@ export default function ForSponsorsPage() {
 
       {/* Who sponsors BLACQList */}
       <Section variant="white">
-        <SectionHeading subtitle="From local community organizations to national brands — we match sponsors with the audiences they want to reach authentically.">
+        <SectionHeading subtitle="From local community organizations to national brands, we match sponsors with the audiences they want to reach authentically.">
           Who sponsors BLACQList?
         </SectionHeading>
 
@@ -176,7 +176,7 @@ export default function ForSponsorsPage() {
               <span className="font-subhead text-sm text-charcoal-soft ml-1">/ 30 days</span>
             </p>
             <p className="font-body text-xs text-charcoal-soft mb-4">
-              Coming soon — join the waitlist
+              Coming soon. Join the waitlist.
             </p>
             <Button
               asChild

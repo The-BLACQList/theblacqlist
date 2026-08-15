@@ -178,7 +178,7 @@ export function ListingCombobox({ id, defaultName = '', describedBy, invalid, cl
           </button>
         </div>
         <p className="mt-1 font-body text-xs text-charcoal-soft">
-          Linked — this receipt counts toward community totals for this business.
+          Linked. This receipt counts toward community totals for this business.
         </p>
       </div>
     )

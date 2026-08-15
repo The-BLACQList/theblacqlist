@@ -50,7 +50,7 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
           </h2>
           <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
             Every tracked receipt keeps money moving through Black-owned business. The flow map
-            shows the network in motion — live.
+            shows the network in motion, live.
           </p>
           <div className="flex gap-3 flex-wrap mt-6">
             <Link

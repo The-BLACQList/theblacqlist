@@ -40,7 +40,7 @@ export function HomeHero() {
           Find &amp; Be Found.
         </h1>
         <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
-          Every kind of Black-owned enterprise — brick & mortar, products & services, professionals, creatives, events, and more — one living index.
+          Every kind of Black-owned enterprise: brick & mortar, products & services, professionals, creatives, events, and more. One living index.
         </p>
 
         <div className="mt-7 max-w-xl">

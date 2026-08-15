@@ -254,25 +254,25 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         <div className="space-y-4">
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Page views — daily
+              Page views, daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="page_views" label="Page views" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              CTA clicks — daily
+              CTA clicks, daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="cta_clicks" label="CTA clicks" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Saves — daily
+              Saves, daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="saves" label="Saves" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Shares — daily
+              Shares, daily
             </h2>
             <MiniChart rows={dailyRows} valueKey="shares" label="Shares" />
           </div>
@@ -282,7 +282,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {/* Top search queries */}
       <div>
         <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-          Top search queries — {periodLabel}
+          Top search queries, {periodLabel}
         </h2>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {topQueries.length === 0 ? (

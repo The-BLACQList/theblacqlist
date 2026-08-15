@@ -102,7 +102,7 @@ export function DuplicateWarningDialog({ duplicates, onContinue, onCancel }: Pro
             onClick={onContinue}
             className="h-11 w-full rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
           >
-            This is different — publish anyway
+            This is different, publish anyway
           </button>
           <button
             type="button"

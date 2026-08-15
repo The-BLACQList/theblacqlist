@@ -38,7 +38,7 @@ export function EntityJobDetails({ entity }: { entity: EntityPageData }) {
     job.workplace_type === 'remote'
       ? 'Remote'
       : entity.city
-        ? `${workplaceLabel} — ${entity.city.name}, ${entity.city.state_abbr}`
+        ? `${workplaceLabel}, ${entity.city.name}, ${entity.city.state_abbr}`
         : workplaceLabel
 
   const salaryLine = formatSalary(

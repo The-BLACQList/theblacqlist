@@ -90,7 +90,7 @@ export function ReceiptImageButton({ receiptId, filePath, businessLabel }: Props
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader className="p-5 pb-3 pr-14">
-            <DialogTitle>Receipt — {businessLabel}</DialogTitle>
+            <DialogTitle>Receipt: {businessLabel}</DialogTitle>
             <DialogDescription>
               This file is private. Only the person who submitted it and BLACQList admins can open
               it.

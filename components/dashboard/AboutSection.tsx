@@ -18,7 +18,7 @@ export function AboutSection({ listingId, description }: Props) {
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Story</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
-          Tell the community about your business — who you are, what you do, and why it matters.
+          Tell the community about your business. Who you are, what you do, and why it matters.
         </p>
       </div>
       <form action={formAction} className="px-5 py-4 space-y-4">

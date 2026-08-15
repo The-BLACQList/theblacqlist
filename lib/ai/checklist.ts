@@ -68,7 +68,7 @@ export function computePageChecklist(
     {
       id: 'tagline',
       label: 'Tagline added',
-      hint: "Add a short tagline under your business name — it's the first thing visitors read.",
+      hint: "Add a short tagline under your business name. It's the first thing visitors read.",
       category: 'required',
       weight: 8,
       passed: !!listing.tagline?.trim(),
@@ -84,7 +84,7 @@ export function computePageChecklist(
     {
       id: 'logo',
       label: 'Logo or profile image uploaded',
-      hint: 'Upload a logo or a clear photo of your business — pages with images get 3× more clicks.',
+      hint: 'Upload a logo or a clear photo of your business. Pages with images get 3× more clicks.',
       category: 'required',
       weight: 10,
       passed: mediaCount >= 1,
@@ -92,7 +92,7 @@ export function computePageChecklist(
     {
       id: 'cover',
       label: 'Cover image uploaded',
-      hint: 'Add a cover photo — 1200×800px or larger. Without one your page shows a brand tile instead of your business in search results and collections.',
+      hint: 'Add a cover photo, 1200×800px or larger. Without one your page shows a brand tile instead of your business in search results and collections.',
       category: 'recommended',
       weight: 8,
       passed: !!listing.cover_image_path?.trim(),
@@ -100,7 +100,7 @@ export function computePageChecklist(
     {
       id: 'gallery',
       label: 'Gallery image added',
-      hint: 'Add at least one more image — photos of your space, products, or work build trust.',
+      hint: 'Add at least one more image. Photos of your space, products, or work build trust.',
       category: 'recommended',
       weight: 6,
       passed: mediaCount >= 3,
@@ -124,7 +124,7 @@ export function computePageChecklist(
     {
       id: 'hours',
       label: 'Business hours set',
-      hint: "Add your hours so customers know when you're open — a top reason people leave without contacting.",
+      hint: "Add your hours so customers know when you're open. Missing hours are a top reason people leave without contacting you.",
       category: 'recommended',
       weight: 8,
       passed: hoursCount > 0,
@@ -156,7 +156,7 @@ export function computePageChecklist(
     {
       id: 'meta_description',
       label: 'SEO description set',
-      hint: "Set a meta description — it's the preview text that shows up under your page title in search results.",
+      hint: "Set a meta description. It's the preview text that shows up under your page title in search results.",
       category: 'seo',
       weight: 8,
       passed: !!listing.meta_description?.trim(),

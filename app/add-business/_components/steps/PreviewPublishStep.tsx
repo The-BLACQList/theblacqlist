@@ -266,7 +266,7 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
           <div className="flex items-center gap-2">
             <Eye className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
             <p className="font-subhead text-xs text-amber-800 font-medium">
-              Preview — this is how your page will look to visitors.
+              Preview: this is how your page will look to visitors.
             </p>
           </div>
           <button

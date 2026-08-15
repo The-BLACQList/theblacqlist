@@ -118,7 +118,7 @@ function SignUpContent() {
     <>
       <h1 className="font-headline text-[26px] text-brand-black mb-1">Create your account</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
-        Join The BLACQList — it&apos;s free.
+        Join The BLACQList. It&apos;s free.
       </p>
 
       {generalError && (

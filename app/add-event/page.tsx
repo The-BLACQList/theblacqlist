@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SubmitEventForm } from '@/components/listings/SubmitEventForm'
 
 export const metadata = {
-  title: 'Add an Event — The BLACQList',
+  title: 'Add an Event | The BLACQList',
   description: 'List a Black-owned or Black-centered event on The BLACQList.',
 }
 

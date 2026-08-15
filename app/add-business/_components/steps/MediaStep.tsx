@@ -122,7 +122,7 @@ function UploadZone({
             {state.status === 'uploading'
               ? 'Uploading…'
               : state.status === 'error'
-                ? 'Upload failed — tap to retry'
+                ? 'Upload failed. Tap to retry'
                 : 'Tap to upload'}
           </span>
           {state.errorMsg && (
@@ -261,7 +261,7 @@ export function MediaStep({
     <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
       <div>
         <p className="font-subhead text-sm text-charcoal-soft leading-relaxed">
-          Add photos to help people recognize your business. All photos are optional — you can add
+          Add photos to help people recognize your business. All photos are optional. You can add
           or update them later.
         </p>
       </div>

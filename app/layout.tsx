@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'The BLACQList',
-    title: 'The BLACQList — Discover Black-Owned Businesses',
+    title: 'The BLACQList: Discover Black-Owned Businesses',
     description: 'Find, save, and support Black-owned businesses near you.',
     url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com',
     images: [OG_IMAGE],

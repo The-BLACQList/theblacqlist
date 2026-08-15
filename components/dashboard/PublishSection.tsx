@@ -37,7 +37,7 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
             <>
               <Globe className="size-4 text-green-600 shrink-0" aria-hidden="true" />
               <span className="font-subhead text-sm font-semibold text-green-700">Published</span>
-              <span className="font-body text-xs text-charcoal-soft">— visible to everyone</span>
+              <span className="font-body text-xs text-charcoal-soft">· visible to everyone</span>
             </>
           )}
           {isPending_ && (
@@ -50,7 +50,7 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
             <>
               <EyeOff className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
               <span className="font-subhead text-sm font-semibold text-charcoal-soft">Draft</span>
-              <span className="font-body text-xs text-charcoal-faint">— not visible to the public</span>
+              <span className="font-body text-xs text-charcoal-faint">· not visible to the public</span>
             </>
           )}
         </div>

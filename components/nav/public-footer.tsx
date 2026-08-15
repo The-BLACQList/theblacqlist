@@ -127,7 +127,7 @@ export function PublicFooter() {
         <div>
           <Link
             href="/"
-            aria-label="The BLACQList — home"
+            aria-label="The BLACQList home"
             className="inline-flex items-center gap-2.5 mb-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
             <BrandMark className="h-8 w-8 text-gold" />

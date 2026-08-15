@@ -9,25 +9,25 @@ import { Button } from '@/components/ui/button'
 export const metadata: Metadata = {
   title: 'List Your Business | The BLACQList',
   description:
-    "Your BLACQList Page is more than a directory listing — it's your digital headquarters. Tell your story. Showcase your services. Get discovered.",
+    "Your BLACQList Page is more than a directory listing. It's your digital headquarters. Tell your story. Showcase your services. Get discovered.",
 }
 
 const WHAT_YOU_GET = [
   {
     title: 'A Professional Business Profile',
-    body: 'Cover photo, logo, your story, and a services menu — all on one page that looks as good as you are.',
+    body: 'Cover photo, logo, your story, and a services menu, all on one page that looks as good as you are.',
   },
   {
     title: 'Hours, Contact & Social Media',
-    body: 'Give your customers everything they need to find you, call you, and follow you — without leaving your page.',
+    body: 'Give your customers everything they need to find you, call you, and follow you, without leaving your page.',
   },
   {
     title: 'Community Reviews & Verification',
-    body: 'Earn trust through authentic community reviews and our tiered verification system — from Claimed to Certified.',
+    body: 'Earn trust through authentic community reviews and our tiered verification system, from Claimed to Certified.',
   },
   {
     title: 'Analytics That Matter',
-    body: "See who's finding your page, how they found you, and what they're looking at — so you can grow smarter.",
+    body: "See who's finding your page, how they found you, and what they're looking at, so you can grow smarter.",
   },
 ]
 
@@ -47,7 +47,7 @@ export default function ForBusinessPage() {
             You deserve a better page.
           </h1>
           <p className="font-subhead text-pale-lavender text-lg md:text-xl leading-relaxed max-w-xl mb-8">
-            Your BLACQList Page is your digital headquarters — tell your story, showcase your
+            Your BLACQList Page is your digital headquarters. Tell your story, showcase your
             services, and get found by the community that wants to support you.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -69,7 +69,7 @@ export default function ForBusinessPage() {
 
       {/* What you get */}
       <Section variant="white">
-        <SectionHeading subtitle="Everything a Black-owned business deserves — visibility, trust, and community.">
+        <SectionHeading subtitle="Everything a Black-owned business deserves: visibility, trust, and community.">
           What You Get on The BLACQList
         </SectionHeading>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const PILLARS = [
   {
     title: 'Discovery with Depth',
-    body: 'Not just a list of names — full business profiles that tell the story behind each venture.',
+    body: 'Not just a list of names. Full business profiles that tell the story behind each venture.',
   },
   {
     title: 'Community Trust',
@@ -23,7 +23,7 @@ const PILLARS = [
   },
   {
     title: 'Economic Circulation',
-    body: 'Tools that help dollars move through Black communities — and show the impact in real time.',
+    body: 'Tools that help dollars move through Black communities, and show the impact in real time.',
   },
   {
     title: 'Cultural Specificity',
@@ -77,7 +77,7 @@ export default function AboutPage() {
           <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
             <p>
               We started with a simple observation: Black-owned businesses were everywhere, but
-              finding them — reliably, completely, with full context — was harder than it should be.
+              finding them reliably, completely, with full context, was harder than it should be.
             </p>
             <p>
               Generic directories weren&apos;t built with us in mind. Social media pages came and
@@ -135,15 +135,15 @@ export default function AboutPage() {
               <strong>Black-Owned</strong> means a business in which Black or African American
               individual(s) hold majority ownership (&ge;51%) and exercise meaningful operational
               control or management authority. Black-owned businesses are what the platform is
-              built around — they are featured first across the directory.
+              built around. They are featured first across the directory.
             </p>
             <p>
               <strong>Ally</strong> means a business that supports Black-owned businesses and the
               community but is not itself majority Black-owned. Allies are welcome and always
-              clearly labeled — never presented as Black-owned.
+              clearly labeled, never presented as Black-owned.
             </p>
             <p>
-              How we present and prioritize listings is an editorial judgment — the same way a
+              How we present and prioritize listings is an editorial judgment, the same way a
               publication decides what to cover and what to feature. This is what keeps the
               directory trustworthy for the community it was built to serve.
             </p>

@@ -48,7 +48,7 @@ const BANNERS: Record<string, BannerContent> = {
   },
   event: {
     title: 'Events',
-    line: 'Pull up — the culture is live.',
+    line: 'Pull up. The culture is live.',
     shot: 'crowd at dusk, stage glow',
     tone: 'linear-gradient(140deg, #23392e 0%, #3f6b52 55%, #14231b 100%)',
   },

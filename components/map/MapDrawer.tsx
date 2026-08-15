@@ -90,7 +90,7 @@ export function MapDrawer({ listings, totalCount, loadError, highlightId, onHove
         )}
         {!loadError && listings.length === 0 && (
           <li className="p-4 text-center font-body text-sm text-off-white/70">
-            No businesses in this view — zoom out or switch city.
+            No businesses in this view. Zoom out or switch city.
           </li>
         )}
         {listings.map((listing) => {

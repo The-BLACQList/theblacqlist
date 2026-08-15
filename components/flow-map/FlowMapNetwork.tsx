@@ -52,7 +52,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
       <div className="px-5 py-4 border-b border-charcoal/5 flex items-center justify-between">
         <h2 className="font-headline text-base text-brand-black">Network view</h2>
         <span className="font-subhead text-xs text-charcoal-faint border border-charcoal/10 rounded-full px-2 py-0.5">
-          Beta — full graph coming
+          Beta: full graph coming
         </span>
       </div>
 
@@ -66,7 +66,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
       ) : (
         <svg
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-          aria-label="Community dollar flow network — businesses shown as nodes connected to a central community node"
+          aria-label="Community dollar flow network. Businesses shown as nodes connected to a central community node"
           role="img"
           className="w-full"
         >

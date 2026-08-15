@@ -60,11 +60,11 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
   const [hover, setHover] = useState(0)
   const labels = [
     '',
-    '1 star — Poor',
-    '2 stars — Fair',
-    '3 stars — Good',
-    '4 stars — Great',
-    '5 stars — Excellent',
+    '1 star, Poor',
+    '2 stars, Fair',
+    '3 stars, Good',
+    '4 stars, Great',
+    '5 stars, Excellent',
   ]
   const display = hover || value
 
@@ -119,7 +119,7 @@ export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
           Thanks for your review of {listingName}.
         </p>
         <p className="font-body text-sm text-green-700">
-          We&apos;ll publish it after a quick check — usually within 48 hours.
+          We&apos;ll publish it after a quick check, usually within 48 hours.
         </p>
       </div>
     )
