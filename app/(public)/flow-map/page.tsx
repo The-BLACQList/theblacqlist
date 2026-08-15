@@ -4,6 +4,7 @@ import { ArrowUpRight, Lock, Filter, Building2 } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import { FlowSummaryCards } from '@/components/flow-map/FlowSummaryCards'
 import { FlowNodeTable } from '@/components/flow-map/FlowNodeTable'
 import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
@@ -40,11 +41,14 @@ export default async function FlowMapPage() {
   const totalTransactions = spendData.length
   const uniqueBusinessCount = new Set(spendData.map((r) => r.listing_id).filter(Boolean)).size
 
-  // Top business nodes
+  // Top business nodes. Gated at the threshold the privacy panel below promises —
+  // naming a business next to a dollar figure is the disclosure that matters, and
+  // below the bar it approaches publishing one person's receipt.
   const { data: businessNodes } = await serviceClient
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(10)
 
@@ -79,6 +83,7 @@ export default async function FlowMapPage() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'city')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(8)
 
@@ -267,13 +272,24 @@ export default async function FlowMapPage() {
 
         {/* ── Top businesses + cities ───────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/*
+            Empty text names the threshold. "No businesses yet" was true when
+            these tables showed everything; now a business can exist, be matched,
+            and still be held back for having fewer than AGGREGATE_MIN_TRANSACTIONS
+            transactions behind it. Telling someone there is no data when there is
+            data being withheld is the same copy-vs-code gap as the privacy notice.
+          */}
           <FlowNodeTable
             nodes={topBusinesses}
             title="Top businesses"
             linkToEntity
-            emptyText="No businesses yet. Submit a receipt to add one."
+            emptyText={`No businesses to show yet. A business appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
           />
-          <FlowNodeTable nodes={topCities} title="Top cities" emptyText="No city data yet." />
+          <FlowNodeTable
+            nodes={topCities}
+            title="Top cities"
+            emptyText={`No cities to show yet. A city appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
+          />
         </div>
 
         {/* ── Personal impact ───────────────────────────────────────────────── */}
@@ -416,8 +432,10 @@ export default async function FlowMapPage() {
           </p>
           <p className="font-body text-xs text-charcoal-soft leading-relaxed">
             All dollar-flow data is anonymized. Individual receipt details and buyer identities are
-            never included in public views. Community totals only appear when contributed to by 5 or
-            more distinct transactions. Users can opt out of community aggregates at any time.
+            never included in public views. A named business or city only appears here once{' '}
+            {AGGREGATE_MIN_TRANSACTIONS} or more distinct transactions are behind its total. The
+            community-wide figures at the top of this page are a single sum across everything
+            reported, so they identify no one. Users can opt out of community aggregates at any time.
           </p>
         </div>
       </div>

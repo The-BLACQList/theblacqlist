@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 // GET /api/flow-map/summary
 // Public. Returns anonymized aggregate flow data.
 // Cache: 1 hour ISR.
+//
+// Every per-entity result — business nodes, city nodes, edges — is gated at
+// AGGREGATE_MIN_TRANSACTIONS. The edge query carried that bound from the start;
+// the node queries did not, which meant the same page could suppress an edge
+// while naming the business on both ends of it.
 export const revalidate = 3600
 
 export async function GET() {
@@ -32,6 +38,7 @@ export async function GET() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(10)
 
@@ -60,6 +67,7 @@ export async function GET() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'city')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(10)
 
@@ -77,11 +85,11 @@ export async function GET() {
     transaction_count: n.transaction_count,
   }))
 
-  // Edges meeting the 5-transaction minimum threshold (privacy guard)
+  // Edges meeting the minimum-transaction threshold (privacy guard)
   const { data: edges } = await serviceClient
     .from('flow_edges')
     .select('id, source_node_id, target_node_id, total_amount_cents, transaction_count')
-    .gte('transaction_count', 5)
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(50)
 

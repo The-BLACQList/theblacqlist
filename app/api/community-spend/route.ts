@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 // GET /api/community-spend
 // Public endpoint — returns anonymized community spend aggregates.
 // Cached 1 hour. No user IDs exposed.
+//
+// Per-entity rows (named businesses, named cities) are gated at
+// AGGREGATE_MIN_TRANSACTIONS. This endpoint is unauthenticated and
+// machine-readable, so a sub-threshold row here is the most quotable version of
+// the disclosure — it returns the business name, its exact total, and the
+// transaction count in one JSON object.
 export const revalidate = 3600
 
 export async function GET() {
@@ -30,6 +37,7 @@ export async function GET() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(10)
 
@@ -57,6 +65,7 @@ export async function GET() {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'city')
+    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(10)
 
