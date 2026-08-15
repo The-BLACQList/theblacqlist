@@ -1,7 +1,8 @@
 'use server'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -410,8 +411,7 @@ export async function createListingAction(
     }
   }
 
-  const serviceClient = createServiceClient()
-  void serviceClient.from('analytics_events').insert({
+  trackServerEvent({
     event_name: 'listing_draft_created',
     entity_id: listing.id,
     entity_type: 'listing',

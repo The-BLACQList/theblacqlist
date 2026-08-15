@@ -196,8 +196,12 @@ export default async function CitiesPage() {
                           className={cn(
                             // Tiles are fixed-height, so a long city name has to clamp
                             // rather than push the count line out of the tile.
-                            'font-headline text-white group-hover:text-light-gold transition-colors duration-150 leading-tight line-clamp-2',
-                            isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]'
+                            'font-headline text-white group-hover:text-light-gold transition-colors duration-150 line-clamp-2',
+                            isFeature ? 'text-[30px] md:text-[40px]' : 'text-[19px] md:text-[24px]',
+                            // After the font-size classes on purpose: tailwind-merge
+                            // treats font-size as conflicting with line-height, so an
+                            // earlier leading-tight gets stripped.
+                            'leading-tight'
                           )}
                         >
                           {city.name}
