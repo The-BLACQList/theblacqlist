@@ -12,7 +12,24 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$'
 export const PRICE_RANGES: PriceRange[] = ['$', '$$', '$$$', '$$$$']
 
-export type SortKey = 'relevance' | 'rating' | 'reviews' | 'newest' | 'name' | 'saves'
+export type SortKey =
+  | 'relevance'
+  | 'rating'
+  | 'reviews'
+  | 'newest'
+  | 'name'
+  | 'saves'
+  | 'distance'
+
+/**
+ * The always-available sort choices, in dropdown order.
+ *
+ * 'distance' is deliberately NOT here: it is only meaningful once the visitor
+ * has shared a location, so the UI adds it conditionally (C3.3). SORT_KEYS is
+ * the acceptance list and DOES include it — the two used to be the same array,
+ * and keeping them identical would have meant either offering a sort that
+ * returns an arbitrary order or rejecting a URL the server can honor.
+ */
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'relevance', label: 'Relevance' },
   { value: 'rating', label: 'Top rated' },
@@ -21,7 +38,14 @@ export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'saves', label: 'Most saved' },
   { value: 'name', label: 'Name (A–Z)' },
 ]
-export const SORT_KEYS = SORT_OPTIONS.map((o) => o.value)
+
+/** The sort option offered only when coordinates are present. */
+export const DISTANCE_SORT_OPTION: { value: SortKey; label: string } = {
+  value: 'distance',
+  label: 'Nearest',
+}
+
+export const SORT_KEYS: SortKey[] = [...SORT_OPTIONS.map((o) => o.value), 'distance']
 
 export interface FacetValue {
   id: string
@@ -60,6 +84,10 @@ export interface RawFacetParams {
   price?: string[]
   attrs?: string[]
   open_now?: boolean
+  /** "Near You" — all three or none. Validated upstream (searchSchema). */
+  lat?: number
+  lng?: number
+  radius?: number
 }
 
 /**
@@ -109,6 +137,9 @@ export interface ResolvedFacetParams {
   p_price_ranges: string[] | null
   p_attribute_values: string[] | null
   p_open_now: boolean | null
+  p_lat: number | null
+  p_lng: number | null
+  p_radius_miles: number | null
 }
 
 // The new tables/RPCs are not in the generated Database types yet, so accept the
@@ -224,6 +255,12 @@ export async function resolveFacetParams(
       p_price_ranges: price.length > 0 ? price : null,
       p_attribute_values: attrIds.length > 0 ? attrIds : null,
       p_open_now: raw.open_now ? true : null,
+      // Passed straight through — there is nothing to resolve, and coordinates
+      // must never be persisted. They reach the RPC and stop there; per
+      // data-privacy.md they are deliberately absent from logSearchEvent.
+      p_lat: raw.lat ?? null,
+      p_lng: raw.lng ?? null,
+      p_radius_miles: raw.radius ?? null,
     },
     unresolved,
   }

@@ -123,6 +123,9 @@ export async function searchListings(
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
+    lat: params.lat,
+    lng: params.lng,
+    radius: params.radius,
   })
 
   if (hasUnresolved(unresolved)) throw new UnknownFilterValueError(unresolved)
@@ -130,12 +133,24 @@ export async function searchListings(
   const cityId = resolved.p_city_id
   const categoryId = resolved.p_category_id
 
-  // Deep facets (attributes / price / open-now) are implemented only in
+  // Deep facets (attributes / price / open-now / radius) are implemented only in
   // search_listings_faceted — PostgREST cannot express them against this table.
   // Requests that use one go through the RPC; every other request keeps the
   // exact code path it had before, including the pg_trgm fallback the typeahead
   // depends on.
-  if (resolved.p_attribute_values || resolved.p_price_ranges || resolved.p_open_now) {
+  //
+  // sort=distance is in this condition for the same reason as the radius: the
+  // PostgREST branch below has no distance to order by, so it would answer 200
+  // with an arbitrary order for a sort the caller explicitly asked for.
+  // searchSchema already rejects sort=distance without coordinates, so reaching
+  // here with it means the coordinates are present and the RPC can honor it.
+  if (
+    resolved.p_attribute_values ||
+    resolved.p_price_ranges ||
+    resolved.p_open_now ||
+    resolved.p_radius_miles !== null ||
+    params.sort === 'distance'
+  ) {
     const sort: SortKey =
       params.sort && (SORT_KEYS as string[]).includes(params.sort)
         ? (params.sort as SortKey)
@@ -156,6 +171,11 @@ export async function searchListings(
       results = faceted.ids.map((id) => byId.get(id)).filter((r): r is SearchResult => !!r)
     }
 
+    // Coordinates are deliberately NOT passed here and must never be added.
+    // They are precise enough to place a person at an address; the query is the
+    // only thing entitled to see them, and analytics_events is retained. City
+    // and category are the coarse location signal this event is allowed to
+    // carry. See data-privacy.md ("minimize what you pull").
     void logSearchEvent(q, faceted.total, cityId, categoryId)
     return { results, total: faceted.total }
   }
