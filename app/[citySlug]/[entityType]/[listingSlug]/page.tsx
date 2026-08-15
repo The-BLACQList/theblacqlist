@@ -48,7 +48,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const locationLabel = entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : 'Online'
 
-  const description = `${entity.tagline}. ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
+  // Taglines are owner-written and land here both with and without terminal
+  // punctuation, so trim it before adding our own period. Without this, a
+  // tagline like "...since 1947." renders "since 1947.. Food & Dining".
+  const tagline = entity.tagline.replace(/[.!?]+\s*$/, '')
+  const description = `${tagline}. ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
 
   // An owner cover resolves to an absolute Storage URL, already OG-ready. With
   // no cover there is no OG image — the F-1 fallback is a render-time CSS tile,
