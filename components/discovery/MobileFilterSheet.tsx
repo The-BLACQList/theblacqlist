@@ -20,12 +20,17 @@ export function MobileFilterSheet(props: FacetSidebarProps) {
   const [open, setOpen] = useState(false)
   const searchParams = useSearchParams()
 
-  const activeCount = FACET_KEYS.reduce((acc, key) => {
+  const facetCount = FACET_KEYS.reduce((acc, key) => {
     if (key === 'city' && props.hideCityFilter) return acc
     const value = searchParams.get(key)
     if (!value) return acc
     return acc + (key === 'price' || key === 'attrs' ? value.split(',').filter(Boolean).length : 1)
   }, 0)
+
+  // Near You counts once, not three times: lat, lng and radius are three URL
+  // keys describing a single "within N miles" filter.
+  const hasLocation = Boolean(searchParams.get('lat') && searchParams.get('lng'))
+  const activeCount = facetCount + (hasLocation ? 1 : 0)
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

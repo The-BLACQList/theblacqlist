@@ -11,6 +11,7 @@ import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
+import { parseLocationParams, widerRadius } from '@/lib/listings/location-params'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -31,6 +32,10 @@ interface DiscoverPageProps {
     price?: string
     attrs?: string
     open_now?: string
+    // "Near You" — all three or none. See lib/listings/location-params.ts.
+    lat?: string
+    lng?: string
+    radius?: string
     sort?: string
     page?: string
   }>
@@ -43,6 +48,13 @@ async function DiscoverContent({
 }) {
   const params = await searchParams
   const page = parseInt(params.page ?? '1', 10)
+
+  // All-or-nothing: a partial or out-of-range location is dropped whole rather
+  // than passed through, because the RPC treats a NULL in the triple as "no
+  // radius filter" and would answer the entire directory under a Near You label.
+  const location = parseLocationParams(params)
+  // The distance sort cannot outlive the coordinates it sorts by.
+  const sort = location ? params.sort : params.sort === 'distance' ? undefined : params.sort
 
   const supabase = await createClient()
   const [result, { data: cities }, { data: categories }] = await Promise.all([
@@ -57,7 +69,10 @@ async function DiscoverContent({
       price: params.price ? params.price.split(',').filter(Boolean) : undefined,
       attrs: params.attrs ? params.attrs.split(',').filter(Boolean) : undefined,
       open_now: params.open_now === '1' || params.open_now === 'true',
-      sort: params.sort,
+      lat: location?.lat,
+      lng: location?.lng,
+      radius: location?.radius,
+      sort,
       page,
       withFacets: true,
     }),
@@ -75,6 +90,27 @@ async function DiscoverContent({
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
+
+  // The two ways out of an empty radius search. Both are plain links so they
+  // work before any JavaScript loads, and both go back to page 1.
+  const nextRadius = location ? widerRadius(location.radius) : null
+  const widerRadiusUrl =
+    location && nextRadius !== null
+      ? buildPageUrl({ ...params, radius: String(nextRadius) }, 1)
+      : undefined
+  const clearLocationUrl = location
+    ? buildPageUrl(
+        {
+          ...params,
+          lat: undefined,
+          lng: undefined,
+          radius: undefined,
+          // Dropping the coordinates drops the sort that depended on them.
+          sort: params.sort === 'distance' ? undefined : params.sort,
+        },
+        1
+      )
+    : undefined
 
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
@@ -115,6 +151,10 @@ async function DiscoverContent({
           query={params.q}
           nextPageUrl={nextPageUrl}
           currentPage={page}
+          radiusMiles={location?.radius ?? null}
+          radiusUnavailable={result.radiusUnavailable ?? false}
+          widerRadiusUrl={widerRadiusUrl}
+          clearLocationUrl={clearLocationUrl}
         />
       </div>
     </div>
