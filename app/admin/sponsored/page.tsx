@@ -3,6 +3,13 @@ import type { Metadata } from 'next'
 import { Plus } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin/guard'
 import { createClient } from '@/lib/supabase/server'
+import {
+  effectiveSponsoredStatus,
+  isCancelable,
+  SPONSORED_STATUS_LABEL,
+  type SponsoredEffectiveStatus,
+} from '@/lib/listings/sponsoredStatus'
+import { CancelPlacementButton } from './CancelPlacementButton'
 
 export const metadata: Metadata = { title: 'Sponsored Placements | Admin' }
 
@@ -17,7 +24,27 @@ type PlacementRow = {
   categories: { name: string } | null
 }
 
-function PlacementTable({ items }: { items: PlacementRow[] }) {
+type Delivery = { impressions: number; clicks: number }
+
+/**
+ * null means the delivery numbers could not be read at all — the RPC is
+ * missing or errored. Those rows render "—", never "0". A zero here would be a
+ * fabricated measurement: it reads as "we served this and nobody looked",
+ * which is a very different thing to tell a sponsor than "we don't know yet".
+ */
+type DeliveryMap = Map<string, Delivery> | null
+
+type Row = PlacementRow & { effective: SponsoredEffectiveStatus }
+
+function PlacementTable({
+  items,
+  delivery,
+  cancelable = false,
+}: {
+  items: Row[]
+  delivery: DeliveryMap
+  cancelable?: boolean
+}) {
   if (items.length === 0) {
     return <p className="font-body text-sm text-charcoal-soft px-1 py-3">None</p>
   }
@@ -44,6 +71,17 @@ function PlacementTable({ items }: { items: PlacementRow[] }) {
             <th className="px-4 py-2.5 font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
               Status
             </th>
+            <th className="px-4 py-2.5 font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide text-right">
+              Impr.
+            </th>
+            <th className="px-4 py-2.5 font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide text-right">
+              Clicks
+            </th>
+            {cancelable && (
+              <th className="px-4 py-2.5 font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide text-right">
+                <span className="sr-only">Actions</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-charcoal/5">
@@ -62,11 +100,27 @@ function PlacementTable({ items }: { items: PlacementRow[] }) {
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`inline-block px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold capitalize ${statusClass(row.status)}`}
+                  className={`inline-block px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${statusClass(row.effective)}`}
                 >
-                  {row.status}
+                  {SPONSORED_STATUS_LABEL[row.effective]}
                 </span>
               </td>
+              <td className="px-4 py-3 text-charcoal-soft text-right tabular-nums">
+                {delivery ? (delivery.get(row.id)?.impressions ?? 0).toLocaleString() : '—'}
+              </td>
+              <td className="px-4 py-3 text-charcoal-soft text-right tabular-nums">
+                {delivery ? (delivery.get(row.id)?.clicks ?? 0).toLocaleString() : '—'}
+              </td>
+              {cancelable && (
+                <td className="px-4 py-3 text-right">
+                  {isCancelable(row.effective) && (
+                    <CancelPlacementButton
+                      id={row.id}
+                      listingName={row.listings?.name ?? 'this placement'}
+                    />
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -75,7 +129,7 @@ function PlacementTable({ items }: { items: PlacementRow[] }) {
   )
 }
 
-function statusClass(status: string) {
+function statusClass(status: SponsoredEffectiveStatus) {
   switch (status) {
     case 'active':
       return 'bg-green-100 text-green-700'
@@ -115,13 +169,52 @@ export default async function SponsoredPlacementsPage() {
     .order('starts_at', { ascending: false })
     .limit(100)
 
-  const rows = (placements ?? []) as unknown as PlacementRow[]
+  const raw = (placements ?? []) as unknown as PlacementRow[]
 
-  const active = rows.filter((r) => r.status === 'active')
-  const scheduled = rows.filter((r) => r.status === 'scheduled')
+  // Bucket on the DERIVED status, not the stored one. The stored value is
+  // written once at creation and nothing ever moves it on, so a placement whose
+  // ends_at passed months ago still says 'active' in the row. This table used to
+  // report that verbatim while the delivery path had long since stopped serving
+  // it. See lib/listings/sponsoredStatus.ts.
+  const now = new Date()
+  const rows: Row[] = raw.map((r) => ({ ...r, effective: effectiveSponsoredStatus(r, now) }))
+
+  const active = rows.filter((r) => r.effective === 'active')
+  const scheduled = rows.filter((r) => r.effective === 'scheduled')
   const ended = rows.filter(
-    (r) => r.status === 'expired' || r.status === 'canceled' || r.status === 'inactive'
+    (r) =>
+      r.effective === 'expired' || r.effective === 'canceled' || r.effective === 'inactive'
   )
+
+  // Delivery counts. `delivery === null` is the honest "we could not read this"
+  // state and renders "—"; it is what the page shows until the migration that
+  // creates sponsored_placement_delivery has been applied to this environment.
+  let delivery: DeliveryMap = null
+  if (rows.length > 0) {
+    // Not yet in the generated Database types — cast through any, same as the
+    // other post-generation RPCs in app/admin/analytics.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: counts, error: deliveryError } = await (supabase as any).rpc(
+      'sponsored_placement_delivery',
+      { p_placement_ids: rows.map((r) => r.id) }
+    )
+    if (deliveryError) {
+      console.error('[admin/sponsored] delivery counts unavailable', deliveryError)
+    } else {
+      const map = new Map<string, Delivery>()
+      for (const c of (counts ?? []) as Array<{
+        placement_id: string
+        impressions: number | string
+        clicks: number | string
+      }>) {
+        map.set(c.placement_id, {
+          impressions: Number(c.impressions),
+          clicks: Number(c.clicks),
+        })
+      }
+      delivery = map
+    }
+  }
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -141,6 +234,19 @@ export default async function SponsoredPlacementsPage() {
         </Link>
       </div>
 
+      {rows.length > 0 && delivery === null && (
+        <p
+          className="font-body text-sm text-charcoal-soft rounded-lg border border-charcoal/10 bg-pale-lavender/30 px-4 py-3"
+          role="status"
+        >
+          Delivery counts are unavailable in this environment. They read through{' '}
+          <code className="font-mono text-xs">sponsored_placement_delivery</code>, added in
+          migration <code className="font-mono text-xs">20260815000000</code>. Until that
+          migration is applied here, impressions and clicks show as &ldquo;&mdash;&rdquo; rather
+          than zero.
+        </p>
+      )}
+
       <section aria-labelledby="active-heading">
         <h2
           id="active-heading"
@@ -148,7 +254,7 @@ export default async function SponsoredPlacementsPage() {
         >
           Active ({active.length})
         </h2>
-        <PlacementTable items={active} />
+        <PlacementTable items={active} delivery={delivery} cancelable />
       </section>
 
       <section aria-labelledby="scheduled-heading">
@@ -158,7 +264,7 @@ export default async function SponsoredPlacementsPage() {
         >
           Scheduled ({scheduled.length})
         </h2>
-        <PlacementTable items={scheduled} />
+        <PlacementTable items={scheduled} delivery={delivery} cancelable />
       </section>
 
       <section aria-labelledby="ended-heading">
@@ -168,7 +274,7 @@ export default async function SponsoredPlacementsPage() {
         >
           Ended ({ended.length})
         </h2>
-        <PlacementTable items={ended} />
+        <PlacementTable items={ended} delivery={delivery} />
       </section>
     </div>
   )

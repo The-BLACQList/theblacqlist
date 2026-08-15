@@ -7,6 +7,7 @@ import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SaveIconButton } from '@/components/ui/save-icon-button'
+import { SponsoredImpression, SponsoredLink } from '@/components/entities/SponsoredTracking'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity } from '@/types'
@@ -60,6 +61,14 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
   const locationStr = getLocationString(entity)
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
 
+  // Set only on cards the sponsored path spliced in (lib/listings/query.ts), so
+  // the client islands below mount on at most three cards per page. The rest of
+  // the grid stays server-rendered.
+  const placementId = entity.sponsored_placement_id
+  const delivery = placementId
+    ? { placementId, listingId: entity.id, position: entity.sponsored_position }
+    : null
+
   return (
     <article
       className={cn(
@@ -67,6 +76,8 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
         className
       )}
     >
+      {delivery && <SponsoredImpression {...delivery} />}
+
       {/* Cover image — 3:2 aspect ratio */}
       <div className="relative w-full aspect-[3/2] bg-deep-bg overflow-hidden shrink-0">
         <CoverImage
@@ -122,9 +133,15 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
 
         {/* Name */}
         <h3 className="font-headline text-base text-brand-black leading-snug line-clamp-2">
-          <Link href={href as Route} className="hover:underline underline-offset-2">
-            {entity.name}
-          </Link>
+          {delivery ? (
+            <SponsoredLink {...delivery} href={href} className="hover:underline underline-offset-2">
+              {entity.name}
+            </SponsoredLink>
+          ) : (
+            <Link href={href as Route} className="hover:underline underline-offset-2">
+              {entity.name}
+            </Link>
+          )}
         </h3>
 
         {/* Category + location */}
@@ -168,7 +185,13 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
             variant="outline"
             className="w-full border-brand-black text-brand-black font-body font-bold rounded-full min-h-[44px] h-auto hover:bg-brand-black hover:text-white transition-colors"
           >
-            <Link href={href as Route}>View Page</Link>
+            {delivery ? (
+              <SponsoredLink {...delivery} href={href}>
+                View Page
+              </SponsoredLink>
+            ) : (
+              <Link href={href as Route}>View Page</Link>
+            )}
           </Button>
         </div>
       </div>

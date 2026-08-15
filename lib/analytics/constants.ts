@@ -20,6 +20,14 @@ export const ANALYTICS_EVENTS = {
   MARKETPLACE_PRODUCT_VIEWED: 'marketplace_product_viewed',
   MARKETPLACE_CTA_CLICK: 'marketplace_cta_click',
 
+  // ── Sponsored delivery ────────────────────────────────────────────────────
+  // entity_type is 'sponsored_placement' and entity_id is the PLACEMENT id
+  // (not the listing id) — a sponsor buys a placement, and the same listing can
+  // hold several over time. See the reporting note below before reading these
+  // numbers back to anyone who paid for them.
+  SPONSORED_IMPRESSION: 'sponsored_impression',
+  SPONSORED_CLICK: 'sponsored_click',
+
   // ── Conversion ────────────────────────────────────────────────────────────
   REVIEW_SUBMITTED: 'review_submitted',
   CLAIM_STARTED: 'claim_started',
@@ -71,7 +79,29 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            marketplace_product_viewed, marketplace_cta_click,
  *            review_submitted, claim_started, receipt_submitted.
  *
+ *   Added 2026-08-15 and emitted from the same commit: sponsored_impression,
+ *   sponsored_click (components/entities/SponsoredTracking.tsx).
+ *
  * Wire an emitter before surfacing any of the second group in a UI.
+ */
+
+/**
+ * WHAT THE SPONSORED NUMBERS MEAN — read before quoting them to a sponsor.
+ *
+ * 1. Both are CLIENT-REPORTED, same trust level as page_view and cta_click.
+ *    They travel through /api/analytics/event, which any browser can POST to.
+ *    They are rate-limited (30/IP/min) but not authenticated, so treat them as
+ *    delivery telemetry, not as a billing meter.
+ *
+ * 2. Impression = "the card was rendered in the results", counted once per card
+ *    mount. It is NOT viewport-verified — a card below the fold still counts.
+ *
+ * 3. Client-side is the only correct place to count these. The sponsored splice
+ *    lives in lib/listings/query.ts, which runs inside an ISR page
+ *    (app/[citySlug]/[entityType]/page.tsx, revalidate = 86400). A server-side
+ *    count there would record one impression per REVALIDATION rather than per
+ *    view, under-reporting by orders of magnitude, and `after()` is not even
+ *    available during generateStaticParams prerender.
  */
 
 // ── Properties ───────────────────────────────────────────────────────────────
@@ -140,6 +170,12 @@ export interface MarketplaceCtaClickProperties {
   listing_id?: string
 }
 
+export interface SponsoredDeliveryProperties {
+  listing_id?: string
+  position?: number // 1–3, the slot the placement was served into
+  surface?: string // 'discover' | 'city_category' | 'search'
+}
+
 export interface GuidViewedProperties {
   guide_slug?: string
 }
@@ -161,6 +197,7 @@ export type AnyEventProperties =
   | ReceiptSubmittedProperties
   | MarketplaceProductViewedProperties
   | MarketplaceCtaClickProperties
+  | SponsoredDeliveryProperties
   | GuidViewedProperties
   | CollectionViewedProperties
   | Record<string, string | number | boolean | null | undefined>
