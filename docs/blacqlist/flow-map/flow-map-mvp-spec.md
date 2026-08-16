@@ -165,7 +165,7 @@ At V3, the `flow_map_snapshots` computation enforces the 5-contributor minimum b
 
 ### View 1: National Summary
 
-- Total dollars circulated (from non-opt-out `spend_events`)
+- Total dollars spent with Black-owned businesses (from non-opt-out `spend_events`)
 - Number of businesses supported (unique `listing_id` in `flow_nodes`)
 - Number of transactions
 - Time scope: all-time at MVP; time filter deferred
@@ -214,7 +214,7 @@ Links to `/for-business`.
 ```
 /flow-map
 ├── Hero: "The Community Dollar Flow" + total spend stat
-├── Summary cards: $ circulated / businesses / transactions
+├── Summary cards: total spent / businesses supported / tracked purchases
 ├── [Network SVG visualization]
 ├── Top businesses (table/list)
 ├── Top cities (table/list)

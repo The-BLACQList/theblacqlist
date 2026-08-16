@@ -807,7 +807,7 @@ The aggregate view of where and how much the community has spent with Black-owne
 
 - Personal spend log (from marketplace purchases + receipt uploads)
 - Personal spend dashboard: total spend, by category, by month
-- Community spend aggregate: total $ circulated, by city, by category (anonymized)
+- Community spend aggregate: total $ spent with Black-owned businesses, by city, by category (anonymized)
 - Community spend summary ("The BLACQList community has tracked $X.XM in Black-owned spend this year")
 - Spend milestone gamification (V3): streaks, community rankings, milestones
 
@@ -847,7 +847,7 @@ The long-term differentiator. A visual graph showing how dollars circulate throu
 
 **MVP scope:** Data model designed and seeded. No visualization.
 
-**V2 scope:** Aggregate summary number displayed ("$X circulated in Atlanta this quarter").
+**V2 scope:** Aggregate summary number displayed ("$X spent with Black-owned businesses in Atlanta this quarter").
 
 **V3 scope:** Interactive flow map. City/category filters. Business node opt-in. Embed option.
 
