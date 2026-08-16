@@ -1,11 +1,13 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle, Upload, Info } from 'lucide-react'
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
+import { updateReceiptSubmissionAction } from '@/lib/actions/spend/updateReceiptSubmission'
 import { ListingCombobox } from './ListingCombobox'
 import { ReceiptImageButton } from './ReceiptImageButton'
 
@@ -47,9 +49,27 @@ function formatDollars(cents: number): string {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
-export function ReceiptSubmissionForm() {
+/**
+ * The values an existing receipt is loaded with. Its presence is what puts the
+ * form in edit mode — there is no separate edit component, because two copies
+ * of this form would drift and the edit copy is the one nobody would notice
+ * drifting.
+ */
+export interface ReceiptFormDefaults {
+  id: string
+  rawBusinessName: string | null
+  listing: { id: string; name: string; cityName: string | null } | null
+  amountCents: number
+  purchaseDate: string
+  notes: string | null
+  aggregateOptOut: boolean
+  hasFile: boolean
+}
+
+export function ReceiptSubmissionForm({ receipt }: { receipt?: ReceiptFormDefaults }) {
+  const isEdit = receipt !== undefined
   const [state, formAction, isPending] = useActionState<ReceiptSubmissionState, FormData>(
-    createReceiptSubmissionAction,
+    isEdit ? updateReceiptSubmissionAction : createReceiptSubmissionAction,
     null
   )
   const router = useRouter()
@@ -58,15 +78,22 @@ export function ReceiptSubmissionForm() {
 
   useEffect(() => {
     if (state && 'success' in state) {
-      router.push('/account/receipts?submitted=true')
+      router.push(isEdit ? '/account/receipts?updated=true' : '/account/receipts?submitted=true')
     }
-  }, [state, router])
+  }, [state, router, isEdit])
 
   const fieldErrors = state && 'fieldErrors' in state && state.fieldErrors ? state.fieldErrors : {}
 
   return (
     <form action={formAction} encType="multipart/form-data" className="space-y-6">
-      <input type="hidden" name="client_idempotency_key" value={idempotencyKey} />
+      {/* The idempotency key guards a create against a double submit. An edit
+          is naturally idempotent — the same values written twice produce the
+          same row — so it carries the receipt id instead. */}
+      {isEdit ? (
+        <input type="hidden" name="receipt_id" value={receipt.id} />
+      ) : (
+        <input type="hidden" name="client_idempotency_key" value={idempotencyKey} />
+      )}
 
       {state && 'error' in state && (
         <div
@@ -86,6 +113,8 @@ export function ReceiptSubmissionForm() {
       >
         <ListingCombobox
           id="raw_business_name"
+          defaultName={receipt?.rawBusinessName ?? ''}
+          defaultSelected={receipt?.listing ?? null}
           invalid={Boolean(fieldErrors.raw_business_name)}
           className={inputCls}
         />
@@ -109,6 +138,7 @@ export function ReceiptSubmissionForm() {
             step="0.01"
             required
             placeholder="0.00"
+            defaultValue={receipt ? (receipt.amountCents / 100).toFixed(2) : undefined}
             className={`${inputCls} pl-7`}
           />
         </div>
@@ -120,7 +150,7 @@ export function ReceiptSubmissionForm() {
           name="purchase_date"
           type="date"
           required
-          defaultValue={new Date().toISOString().slice(0, 10)}
+          defaultValue={receipt?.purchaseDate ?? new Date().toISOString().slice(0, 10)}
           className={inputCls}
         />
       </Field>
@@ -136,6 +166,7 @@ export function ReceiptSubmissionForm() {
           rows={3}
           maxLength={500}
           placeholder="Optional notes…"
+          defaultValue={receipt?.notes ?? undefined}
           className={textareaCls}
         />
       </Field>
@@ -149,7 +180,9 @@ export function ReceiptSubmissionForm() {
           Receipt photo
         </label>
         <p className="font-body text-xs text-charcoal-soft">
-          Optional. Attach a photo of your receipt. JPEG, PNG, HEIC, up to 10 MB.
+          {receipt?.hasFile
+            ? 'You already attached a photo. Choose a new one to replace it, or leave this empty to keep it.'
+            : 'Optional. Attach a photo of your receipt. JPEG, PNG, HEIC, up to 10 MB.'}
         </p>
         <label
           htmlFor="receipt_file"
@@ -157,7 +190,7 @@ export function ReceiptSubmissionForm() {
         >
           <Upload className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
           <span className="font-body text-sm text-charcoal-soft truncate">
-            {fileName ?? 'Choose a photo…'}
+            {fileName ?? (receipt?.hasFile ? 'Choose a replacement…' : 'Choose a photo…')}
           </span>
           <input
             id="receipt_file"
@@ -190,6 +223,7 @@ export function ReceiptSubmissionForm() {
           <input
             type="checkbox"
             name="aggregate_opt_out"
+            defaultChecked={receipt?.aggregateOptOut}
             className="mt-0.5 rounded border-charcoal/30 accent-amber-gold"
           />
           <span className="font-body text-xs text-charcoal-soft leading-relaxed">
@@ -205,7 +239,13 @@ export function ReceiptSubmissionForm() {
           className="inline-flex items-center gap-2 h-10 px-6 rounded-full bg-amber-gold hover:bg-light-gold disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isPending ? 'Submitting…' : 'Submit receipt'}
+          {isEdit
+            ? isPending
+              ? 'Saving…'
+              : 'Save changes'
+            : isPending
+              ? 'Submitting…'
+              : 'Submit receipt'}
         </button>
       </div>
     </form>
@@ -227,6 +267,12 @@ interface ReceiptRowProps {
    * `hasFile: boolean`, which the row declared and then never used.
    */
   filePath: string | null
+  /**
+   * Only set on rejected receipts. Shown because a rejection the user cannot
+   * read is a dead end — the correction path for a rejected receipt is a new
+   * submission, and they need to know what to change before making one.
+   */
+  rejectionReason?: string | null
 }
 
 export function ReceiptListRow({
@@ -237,6 +283,7 @@ export function ReceiptListRow({
   purchaseDate,
   status,
   filePath,
+  rejectionReason,
 }: ReceiptRowProps) {
   const businessLabel = listingName ?? rawBusinessName ?? 'Unknown business'
 
@@ -260,15 +307,29 @@ export function ReceiptListRow({
             </span>
           )}
         </div>
-        {filePath && (
-          <div className="mt-2">
-            <ReceiptImageButton
-              receiptId={id}
-              filePath={filePath}
-              businessLabel={businessLabel}
-            />
-          </div>
+        {status === 'rejected' && rejectionReason && (
+          <p className="mt-1.5 font-body text-xs text-red-700">
+            <span className="font-semibold">Why it was rejected:</span> {rejectionReason}
+          </p>
         )}
+        <div className="mt-2 flex items-center gap-3">
+          {filePath && (
+            <ReceiptImageButton receiptId={id} filePath={filePath} businessLabel={businessLabel} />
+          )}
+          {/* Editing stops at pending. Once a receipt is approved its amount is
+              already folded into the community totals, and once rejected it is
+              terminal — the action refuses both, and offering a link that only
+              leads to a refusal would be worse than not offering one. */}
+          {status === 'pending_review' && (
+            <Link
+              href={`/account/receipts/${id}/edit`}
+              className="font-subhead text-xs font-semibold text-charcoal-soft underline underline-offset-2 hover:text-brand-black"
+            >
+              Edit
+              <span className="sr-only"> {businessLabel} receipt</span>
+            </Link>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">

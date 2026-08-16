@@ -25,10 +25,20 @@ import type { ListingSearchResult } from '@/app/api/listings/search/route'
  *     case — never force a match.
  */
 
+/** The fields the chip actually renders — `slug` is never read here. */
+type SelectedListing = Pick<ListingSearchResult, 'id' | 'name' | 'cityName'>
+
 interface Props {
   id: string
   /** Pre-filled name, e.g. when re-rendering after a validation error. */
   defaultName?: string
+  /**
+   * Start in the locked-chip state against an already-attached listing. The
+   * edit form needs this: rendering a bound receipt as loose text would drop
+   * its `listing_id` on the next save, and a receipt with no listing never
+   * reaches the community-spend breakdowns. The user can still clear it.
+   */
+  defaultSelected?: SelectedListing | null
   describedBy?: string
   invalid?: boolean
   className: string
@@ -37,9 +47,16 @@ interface Props {
 const MIN_QUERY_LENGTH = 2
 const DEBOUNCE_MS = 250
 
-export function ListingCombobox({ id, defaultName = '', describedBy, invalid, className }: Props) {
-  const [query, setQuery] = useState(defaultName)
-  const [selected, setSelected] = useState<ListingSearchResult | null>(null)
+export function ListingCombobox({
+  id,
+  defaultName = '',
+  defaultSelected = null,
+  describedBy,
+  invalid,
+  className,
+}: Props) {
+  const [query, setQuery] = useState(defaultSelected?.name ?? defaultName)
+  const [selected, setSelected] = useState<SelectedListing | null>(defaultSelected)
   const [results, setResults] = useState<ListingSearchResult[]>([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
