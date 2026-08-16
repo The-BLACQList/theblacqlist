@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ArrowUpRight, Lock, Filter, Building2 } from 'lucide-react'
+import { ArrowUpRight, Lock, Building2 } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -8,6 +8,7 @@ import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import { FlowSummaryCards } from '@/components/flow-map/FlowSummaryCards'
 import { FlowNodeTable } from '@/components/flow-map/FlowNodeTable'
 import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
+import { FlowMapFilters } from '@/components/flow-map/FlowMapFilters'
 
 export const metadata: Metadata = {
   title: 'Community Dollar Flow | The BLACQList',
@@ -26,8 +27,13 @@ function formatDollars(cents: number) {
   })
 }
 
-export default async function FlowMapPage() {
+interface FlowMapPageProps {
+  searchParams: Promise<{ city?: string; category?: string }>
+}
+
+export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   const serviceClient = createServiceClient()
+  const params = await searchParams
 
   // ── Public summary data ──────────────────────────────────────────────────────
 
@@ -41,16 +47,82 @@ export default async function FlowMapPage() {
   const totalTransactions = spendData.length
   const uniqueBusinessCount = new Set(spendData.map((r) => r.listing_id).filter(Boolean)).size
 
+  // ── City / category filters ──────────────────────────────────────────────────
+  //
+  // These filters SELECT which businesses are shown. They do not re-aggregate
+  // anything. City and category are attributes of the business, not slices of an
+  // individual transaction, so narrowing the set of flow_nodes rows on display
+  // leaves AGGREGATE_MIN_TRANSACTIONS meaning exactly what it means unfiltered:
+  // this named business has at least that many transactions behind its total.
+  // A filter can hide a business from the page. It can never publish one that
+  // was being withheld, and it never changes a published figure.
+  //
+  // The community-wide numbers at the top are deliberately NOT sliced — see the
+  // note beneath the summary cards and lib/spend/aggregate-privacy.ts.
+
+  const [{ data: cityOptions }, { data: categoryOptions }] = await Promise.all([
+    serviceClient.from('cities').select('id, name, slug').order('name'),
+    serviceClient
+      .from('categories')
+      .select('id, name, slug')
+      .is('parent_id', null)
+      .eq('is_active', true)
+      .order('display_order'),
+  ])
+
+  const cities = cityOptions ?? []
+  const categories = categoryOptions ?? []
+
+  const requestedCity = params.city?.trim() || undefined
+  const requestedCategory = params.category?.trim() || undefined
+
+  // Resolve slugs against the real lists rather than trusting the URL. An
+  // unknown slug is a miss, not a silently-ignored param — /discover ignoring
+  // unrecognized facet values is tracked debt, not a pattern to copy.
+  const selectedCity = requestedCity ? (cities.find((c) => c.slug === requestedCity) ?? null) : null
+  const selectedCategory = requestedCategory
+    ? (categories.find((c) => c.slug === requestedCategory) ?? null)
+    : null
+
+  const filtersActive = !!(requestedCity || requestedCategory)
+  const unresolvedFilter =
+    (!!requestedCity && !selectedCity) || (!!requestedCategory && !selectedCategory)
+
+  // Which listings the filter admits. null means "no filter" — every listing.
+  let filteredListingIds: string[] | null = null
+  if (selectedCity || selectedCategory) {
+    const base = serviceClient.from('listings').select('id')
+    const byCity = selectedCity ? base.eq('city_id', selectedCity.id) : base
+    const scoped = selectedCategory ? byCity.eq('category_id', selectedCategory.id) : byCity
+    const { data: matchingListings } = await scoped
+    filteredListingIds = (matchingListings ?? []).map((l) => l.id)
+  }
+
+  const noMatches =
+    unresolvedFilter || (filteredListingIds !== null && filteredListingIds.length === 0)
+
+  // A city node totals every category in that city. Showing one beside a
+  // category-filtered business table would read as the category's city total,
+  // which it is not — so the city table is withheld when a category filter is
+  // on without a city, and says why.
+  const showCityTable = !selectedCategory || !!selectedCity
+
   // Top business nodes. Gated at the threshold the privacy panel below promises —
   // naming a business next to a dollar figure is the disclosure that matters, and
   // below the bar it approaches publishing one person's receipt.
-  const { data: businessNodes } = await serviceClient
-    .from('flow_nodes')
-    .select('entity_id, total_amount_cents, transaction_count')
-    .eq('node_type', 'business')
-    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
-    .order('total_amount_cents', { ascending: false })
-    .limit(10)
+  async function loadBusinessNodes() {
+    if (noMatches) return []
+    const base = serviceClient
+      .from('flow_nodes')
+      .select('entity_id, total_amount_cents, transaction_count')
+      .eq('node_type', 'business')
+      .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
+    const scoped = filteredListingIds ? base.in('entity_id', filteredListingIds) : base
+    const { data } = await scoped.order('total_amount_cents', { ascending: false }).limit(10)
+    return data ?? []
+  }
+
+  const businessNodes = await loadBusinessNodes()
 
   const businessIds = (businessNodes ?? []).map((n) => n.entity_id)
   let businessMap: Record<string, { name: string; href: string }> = {}
@@ -79,13 +151,19 @@ export default async function FlowMapPage() {
   }))
 
   // Top city nodes
-  const { data: cityNodes } = await serviceClient
-    .from('flow_nodes')
-    .select('entity_id, total_amount_cents, transaction_count')
-    .eq('node_type', 'city')
-    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
-    .order('total_amount_cents', { ascending: false })
-    .limit(8)
+  async function loadCityNodes() {
+    if (noMatches || !showCityTable) return []
+    const base = serviceClient
+      .from('flow_nodes')
+      .select('entity_id, total_amount_cents, transaction_count')
+      .eq('node_type', 'city')
+      .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
+    const scoped = selectedCity ? base.eq('entity_id', selectedCity.id) : base
+    const { data } = await scoped.order('total_amount_cents', { ascending: false }).limit(8)
+    return data ?? []
+  }
+
+  const cityNodes = await loadCityNodes()
 
   const cityIds = (cityNodes ?? []).map((n) => n.entity_id)
   let cityMap: Record<string, string> = {}
@@ -233,11 +311,28 @@ export default async function FlowMapPage() {
 
         {/* ── Summary cards ─────────────────────────────────────────────────── */}
         {hasAnyData ? (
-          <FlowSummaryCards
-            totalAmountCents={totalAmountCents}
-            totalTransactions={totalTransactions}
-            uniqueBusinesses={uniqueBusinessCount}
-          />
+          <div className="space-y-2">
+            <FlowSummaryCards
+              totalAmountCents={totalAmountCents}
+              totalTransactions={totalTransactions}
+              uniqueBusinesses={uniqueBusinessCount}
+            />
+            {/*
+              The filters below narrow the businesses and cities on display. They
+              do not narrow these three figures, and the copy says so rather than
+              letting the reader assume it. Slicing a community-wide sum by city
+              or category would produce small-population totals for a figure the
+              privacy notice describes as "a single sum across everything
+              reported, so they identify no one" — that promise only holds while
+              the sum stays whole.
+            */}
+            {filtersActive && (
+              <p className="font-body text-xs text-charcoal-soft">
+                These three figures are community-wide. Filters apply to the businesses and cities
+                listed below them.
+              </p>
+            )}
+          </div>
         ) : (
           <div className="rounded-xl bg-brand-black text-white p-8 text-center">
             <p className="font-headline text-2xl">Be the first to contribute</p>
@@ -247,58 +342,68 @@ export default async function FlowMapPage() {
           </div>
         )}
 
+        {/* ── City/category filters ─────────────────────────────────────────── */}
+        {/* Above the network and the tables, because it scopes both. */}
+        <FlowMapFilters cities={cities} categories={categories} />
+
         {/* ── Network visualization ─────────────────────────────────────────── */}
         <FlowMapNetwork nodes={networkNodes} />
 
-        {/* ── City/category filters (placeholder) ──────────────────────────── */}
-        <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-headline text-base text-brand-black">Filter by city or category</h2>
-            <span className="font-subhead text-xs text-charcoal-faint border border-charcoal/10 rounded-full px-2 py-0.5">
-              Coming soon
-            </span>
-          </div>
-          <div className="flex gap-3 flex-wrap">
-            <button
-              disabled
-              aria-disabled="true"
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal-faint font-subhead text-sm cursor-not-allowed"
-            >
-              <Filter className="size-3.5" aria-hidden="true" />
-              All cities
-            </button>
-            <button
-              disabled
-              aria-disabled="true"
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-charcoal/10 bg-charcoal/5 text-charcoal-faint font-subhead text-sm cursor-not-allowed"
-            >
-              <Filter className="size-3.5" aria-hidden="true" />
-              All categories
-            </button>
-          </div>
-        </div>
-
         {/* ── Top businesses + cities ───────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/*
-            Empty text names the threshold. "No businesses yet" was true when
-            these tables showed everything; now a business can exist, be matched,
-            and still be held back for having fewer than AGGREGATE_MIN_TRANSACTIONS
-            transactions behind it. Telling someone there is no data when there is
-            data being withheld is the same copy-vs-code gap as the privacy notice.
-          */}
-          <FlowNodeTable
-            nodes={topBusinesses}
-            title="Top businesses"
-            linkToEntity
-            emptyText={`No businesses to show yet. A business appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
-          />
-          <FlowNodeTable
-            nodes={topCities}
-            title="Top cities"
-            emptyText={`No cities to show yet. A city appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
-          />
-        </div>
+        {filtersActive && topBusinesses.length === 0 ? (
+          /*
+            The filtered-empty state, distinct from the two unfiltered ones. It
+            has to be its own block because "no results for these filters" and
+            "nothing has cleared the threshold yet" call for different actions,
+            and because a filtered dead end with no way out is the failure this
+            page can most easily create.
+          */
+          <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-8 text-center">
+            <p className="font-subhead text-sm font-semibold text-brand-black">
+              No results for these filters
+            </p>
+            <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-sm mx-auto">
+              {unresolvedFilter
+                ? 'That city or category is not one we track. Clear the filters to see the full map.'
+                : `Nothing here has cleared the privacy threshold yet. A business appears once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
+            </p>
+            <Link
+              href="/flow-map"
+              className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
+            >
+              Clear filters
+            </Link>
+          </div>
+        ) : (
+          <div className={showCityTable ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-3'}>
+            {/*
+              Empty text names the threshold. "No businesses yet" was true when
+              these tables showed everything; now a business can exist, be matched,
+              and still be held back for having fewer than AGGREGATE_MIN_TRANSACTIONS
+              transactions behind it. Telling someone there is no data when there is
+              data being withheld is the same copy-vs-code gap as the privacy notice.
+            */}
+            <FlowNodeTable
+              nodes={topBusinesses}
+              title="Top businesses"
+              linkToEntity
+              emptyText={`No businesses to show yet. A business appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
+            />
+            {showCityTable ? (
+              <FlowNodeTable
+                nodes={topCities}
+                title={selectedCity ? 'This city' : 'Top cities'}
+                emptyText={`No cities to show yet. A city appears here once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
+              />
+            ) : (
+              <p className="font-body text-xs text-charcoal-soft">
+                City totals cover every category in that city, so they are not shown while a
+                category filter is on. Add a city filter to see one city, or clear the category to
+                see them all.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Personal impact ───────────────────────────────────────────────── */}
         <div className="rounded-xl border border-charcoal/10 overflow-hidden">
@@ -443,7 +548,8 @@ export default async function FlowMapPage() {
             never included in public views. A named business or city only appears here once{' '}
             {AGGREGATE_MIN_TRANSACTIONS} or more distinct transactions are behind its total. The
             community-wide figures at the top of this page are a single sum across everything
-            reported, so they identify no one. Users can opt out of community aggregates at any time.
+            reported, so they identify no one. Users can opt out of community aggregates at any
+            time.
           </p>
         </div>
       </div>
