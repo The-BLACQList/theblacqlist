@@ -279,6 +279,96 @@ describe('RLS on the community-aggregate tables', () => {
 
 })
 
+// ── The opt-out reaches the flow graph ──────────────────────────────────────
+// /flow-map promises "users can opt out of community aggregates at any time",
+// and until 2026-08-16 that promise was kept by exactly one of the two figures
+// on the page. The headline reads spend_events with .eq('aggregate_opt_out',
+// false); the named-business table directly beneath it reads flow_nodes, which
+// has NO opt-out column at all. An opted-out user was excluded from the total
+// and still counted in the ranking under it — the opt-out failing in precisely
+// the place where a name sits beside a dollar figure.
+//
+// Because flow_nodes cannot carry the flag, the exclusion can only happen at
+// write time. That makes two things load-bearing, and both are pinned here:
+// that approveReceipt.ts remains the sole writer, and that its guard tests the
+// flag. If a second write path appears, the first test fails rather than the
+// promise quietly breaking again.
+
+describe('opted-out spend never enters the flow graph', () => {
+  const WRITER = 'lib/actions/spend/approveReceipt.ts'
+  const GRAPH_TABLES = ['flow_nodes', 'flow_edges'] as const
+  const MUTATIONS = ['.insert(', '.update(', '.upsert(', '.delete('] as const
+
+  function sourceFiles(): string[] {
+    const roots = ['app', 'lib', 'components'].map((d) => path.resolve(process.cwd(), d))
+    const out: string[] = []
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) walk(full)
+        else if (/\.tsx?$/.test(entry.name)) out.push(full)
+      }
+    }
+    roots.forEach(walk)
+    return out
+  }
+
+  /** Files containing a mutating query against flow_nodes or flow_edges. */
+  function graphWriters(): string[] {
+    const found = new Set<string>()
+    for (const file of sourceFiles()) {
+      const src = readFileSync(file, 'utf8')
+      for (const table of GRAPH_TABLES) {
+        const needle = `.from('${table}')`
+        for (let at = src.indexOf(needle); at !== -1; at = src.indexOf(needle, at + 1)) {
+          // A supabase-js chain ends at the statement, so the mutation verb sits
+          // within a few lines of .from(). 400 chars covers the longest chain in
+          // this repo without spilling into the next statement.
+          const chain = src.slice(at, at + 400)
+          if (MUTATIONS.some((verb) => chain.includes(verb))) {
+            found.add(path.relative(process.cwd(), file))
+          }
+        }
+      }
+    }
+    return [...found].sort()
+  }
+
+  it('approveReceipt.ts is the only writer to flow_nodes and flow_edges', () => {
+    // The whole design rests on this. A second writer would need its own guard,
+    // and nothing else in the suite would notice it was missing.
+    expect(graphWriters()).toEqual([WRITER])
+  })
+
+  it('the guard around the flow-graph writes tests aggregate_opt_out', () => {
+    const src = readFileSync(path.resolve(process.cwd(), WRITER), 'utf8')
+
+    // The CALL, not the declaration — `async function upsertFlowNode(` appears
+    // first in the file and has no guard above it.
+    const firstWrite = src.indexOf('await upsertFlowNode(')
+    expect(firstWrite, 'no upsertFlowNode call found — this test needs rewriting').toBeGreaterThan(
+      -1
+    )
+
+    const guardStart = src.lastIndexOf('if (', firstWrite)
+    expect(guardStart, 'the flow-graph writes are not inside an if').toBeGreaterThan(-1)
+
+    const guard = src.slice(guardStart, firstWrite)
+    expect(guard, `the guard before the flow-graph writes must exclude opted-out spend: ${guard}`)
+      .toContain('!receipt.aggregate_opt_out')
+  })
+
+  it('spend_events still records the flag, so a recompute can tell rows apart', () => {
+    // The code fix stops new opted-out spend entering the graph. It does not
+    // correct totals already stored — that recompute is a GATE-DATA decision,
+    // and spend_events.aggregate_opt_out is the only record of which historical
+    // rows must come back out. Dropping it would make the correction impossible.
+    const src = readFileSync(path.resolve(process.cwd(), WRITER), 'utf8')
+    const insert = src.slice(src.indexOf("from('spend_events')"))
+    expect(insert.slice(0, 400)).toContain('aggregate_opt_out: receipt.aggregate_opt_out')
+  })
+})
+
 // ── The methodology document tracks the pipeline it describes ───────────────
 // docs/blacqlist/flow-map/data-sourcing-and-methodology.md is the file anyone
 // citing a community-spend figure is sent to. It carries the same maintenance

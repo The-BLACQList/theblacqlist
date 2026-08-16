@@ -165,21 +165,25 @@ Consequences, all of them intentional:
 
 Two findings, both measured against `9e55a8e`, both unresolved at the time of writing. They are recorded here rather than left for rediscovery.
 
-### 5.1 The opt-out does not reach `flow_nodes` or `flow_edges`
+### 5.1 The opt-out does not reach `flow_nodes` or `flow_edges` — code fixed, existing totals not
 
 `/flow-map` tells the community: *"Users can opt out of community aggregates at any time."*
 
-The opt-out is honored on `spend_events` — every community-wide total filters `.eq('aggregate_opt_out', false)`. It is **not** honored on the flow graph. `approveReceipt.ts` upserts the business node, the city node and the edge without checking the flag, and neither `flow_nodes` nor `flow_edges` has a column to carry it.
+**The defect, as it stood.** The opt-out was honored on `spend_events` — every community-wide total filters `.eq('aggregate_opt_out', false)` — and **not** on the flow graph. `approveReceipt.ts` upserted the business node, the city node and the edge without checking the flag, and neither `flow_nodes` nor `flow_edges` has a column to carry it.
 
-So an opted-out receipt is excluded from the anonymous headline sums and **included** in the named per-business and per-city totals. That is the inverse of the intended protection: the opt-out fails in exactly the place where a name sits next to a dollar figure.
+So an opted-out receipt was excluded from the anonymous headline sums and **included** in the named per-business and per-city totals. That is the inverse of the intended protection: the opt-out failed in exactly the place where a name sits next to a dollar figure. On `/flow-map` the two rules render on one screen — the headline reads `spend_events` filtered, the top-business table directly beneath it reads `flow_nodes` unfiltered.
 
-The threshold still applies, so no single opted-out receipt is individually exposed. The gap is that opted-out spend is silently counted in a figure the user was told it would be withheld from.
+The threshold still applied, so no single opted-out receipt was individually exposed. The gap was that opted-out spend was silently counted in a figure the user was told it would be withheld from.
+
+**Half of this is now fixed.** Because `flow_nodes` has no opt-out column, the exclusion can only happen at write time, and `approveReceipt.ts` is the only writer `[Measured — repo grep of flow_nodes/flow_edges writers, 2026-08-16]`. Its step-4 guard now reads `if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out)`, so **no new opted-out spend enters the graph**.
+
+**The other half is still open and is a GATE-DATA decision.** Node and edge totals accumulated before that guard landed still contain opted-out spend, and no code change corrects a stored sum. Until a recompute is approved and run, the named per-business and per-city figures on `/flow-map`, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend` include historical opted-out spend. **Do not cite the opt-out as fully implemented on the strength of the code fix alone.**
 
 ### 5.2 "At any time" is not currently supported
 
 `aggregate_opt_out` is written once, at submission, and there is no code path anywhere in `app/`, `lib/` or `components/` that updates it. There is no account setting, no per-receipt toggle, and no path to withdraw spend that has already been aggregated. Today the flag is a submission-time choice, not a revocable preference.
 
-**Both are corrections to make, not language to soften.** Fixing 5.1 is a code change plus a recompute of existing node and edge totals, which is a GATE-DATA decision of its own; fixing 5.2 is an update path plus a decision about what "withdraw" means for spend already summed into a node. Until both land, do not cite the opt-out sentence as fully implemented.
+**Both are corrections to make, not language to soften.** 5.1's code half has landed (the write-time guard above); its data half — recomputing existing node and edge totals — is a **GATE-DATA** decision of its own and is still open. Fixing 5.2 is an update path plus a decision about what "withdraw" means for spend already summed into a node. Until both land, do not cite the opt-out sentence as fully implemented.
 
 ### 5.3 Node and edge upserts are not concurrency-safe
 
