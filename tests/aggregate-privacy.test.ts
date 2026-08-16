@@ -276,4 +276,51 @@ describe('RLS on the community-aggregate tables', () => {
       }
     }
   })
+
+})
+
+// ── The methodology document tracks the pipeline it describes ───────────────
+// docs/blacqlist/flow-map/data-sourcing-and-methodology.md is the file anyone
+// citing a community-spend figure is sent to. It carries the same maintenance
+// contract /how-ranking-works does — "if the pipeline changes, this file changes
+// in the same PR" — and a methodology doc that has drifted from the code is
+// worse than none, because it is quotable.
+//
+// Two things in it are mechanically checkable, so they are checked here rather
+// than trusted: the one number it states, and the file paths it names as the
+// sole write paths. Prose can only be kept honest by reading it.
+
+describe('community-spend methodology doc', () => {
+  const DOC = readFileSync(
+    path.resolve(process.cwd(), 'docs/blacqlist/flow-map/data-sourcing-and-methodology.md'),
+    'utf8'
+  )
+
+  it('states the same threshold the code enforces', () => {
+    // The doc hardcodes the digit (it is prose, it cannot interpolate). If the
+    // constant moves and the doc does not, every figure it explains is wrong.
+    expect(DOC).toContain(`AGGREGATE_MIN_TRANSACTIONS = ${AGGREGATE_MIN_TRANSACTIONS}`)
+    expect(DOC).toContain(`transaction_count >= ${AGGREGATE_MIN_TRANSACTIONS}`)
+  })
+
+  it('names files that exist — a rename must not leave the doc pointing at nothing', () => {
+    const CITED = [
+      'lib/actions/spend/approveReceipt.ts',
+      'lib/actions/spend/createReceiptSubmission.ts',
+      'lib/actions/spend/rejectReceipt.ts',
+      'lib/actions/account/deleteAccount.ts',
+      'lib/spend/aggregate-privacy.ts',
+      'app/(public)/flow-map/page.tsx',
+      'app/api/flow-map/summary/route.ts',
+      'app/api/community-spend/route.ts',
+      'app/account/community-spend/page.tsx',
+      'supabase/migrations/20260511000001_receipt_community_spend.sql',
+      'supabase/migrations/20260815010000_spend_aggregate_rls_close_anon_read.sql',
+    ] as const
+
+    for (const file of CITED) {
+      expect(DOC, `the doc must cite ${file}`).toContain(file)
+      expect(() => readFileSync(path.resolve(process.cwd(), file), 'utf8')).not.toThrow()
+    }
+  })
 })
