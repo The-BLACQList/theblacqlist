@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'My Receipts' }
 export default async function MyReceiptsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ submitted?: string }>
+  searchParams: Promise<{ submitted?: string; updated?: string }>
 }) {
   const supabase = await createClient()
   const {
@@ -19,7 +19,7 @@ export default async function MyReceiptsPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/sign-in?next=/account/receipts')
 
-  const { submitted } = await searchParams
+  const { submitted, updated } = await searchParams
 
   const serviceClient = createServiceClient()
 
@@ -33,6 +33,7 @@ export default async function MyReceiptsPage({
       purchase_date,
       status,
       file_path,
+      rejection_reason,
       listing_id,
       listings(name)
     `
@@ -79,6 +80,15 @@ export default async function MyReceiptsPage({
             </p>
             <p className="font-body text-xs text-green-700 mt-0.5">
               Our team will review it within 1–3 business days.
+            </p>
+          </div>
+        )}
+
+        {updated === 'true' && (
+          <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
+            <p className="font-subhead text-sm font-semibold text-green-800">Changes saved.</p>
+            <p className="font-body text-xs text-green-700 mt-0.5">
+              Your receipt is still pending review.
             </p>
           </div>
         )}
@@ -131,6 +141,7 @@ export default async function MyReceiptsPage({
                     purchaseDate={receipt.purchase_date}
                     status={receipt.status}
                     filePath={receipt.file_path}
+                    rejectionReason={receipt.rejection_reason}
                   />
                 )
               })}
