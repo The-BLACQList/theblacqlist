@@ -65,14 +65,30 @@ export default async function VerificationDetailPage({ params }: Props) {
 
   const queueItem = pendingQueueItem.data
 
-  // Generate signed URLs for uploaded docs
+  // Generate signed URLs for uploaded docs.
+  //
+  // Two buckets, on purpose. Verification documents were being written to
+  // `receipt-uploads` — the upload form posted to the receipt endpoint — so
+  // every document submitted before the upload consolidation lives there. New
+  // ones land in `verification-docs`, where they belong. Reading both keeps the
+  // existing queue reviewable without moving production objects, which would be
+  // a GATE-DATA action. New paths are prefixed `listings/`; legacy ones start
+  // with the submitting user's id. The prefix picks the bucket, and a miss
+  // falls back to the other one rather than showing an admin a blank row.
   const docPaths: string[] = Array.isArray(listing.verification_docs)
     ? (listing.verification_docs as string[])
     : []
   const signedDocs: { path: string; url: string }[] = []
   for (const path of docPaths) {
-    const { data } = await serviceClient.storage.from('receipt-uploads').createSignedUrl(path, 3600)
-    if (data?.signedUrl) signedDocs.push({ path, url: data.signedUrl })
+    const [primary, fallback] = path.startsWith('listings/')
+      ? (['verification-docs', 'receipt-uploads'] as const)
+      : (['receipt-uploads', 'verification-docs'] as const)
+
+    let signed = await serviceClient.storage.from(primary).createSignedUrl(path, 3600)
+    if (!signed.data?.signedUrl) {
+      signed = await serviceClient.storage.from(fallback).createSignedUrl(path, 3600)
+    }
+    if (signed.data?.signedUrl) signedDocs.push({ path, url: signed.data.signedUrl })
   }
 
   return (
