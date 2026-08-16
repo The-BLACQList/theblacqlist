@@ -153,7 +153,15 @@ export async function approveReceiptAction(
   // 4. Accumulate the flow graph: a business node, a city node when the listing
   //    has one, and the business -> city edge between them. All three feed
   //    /account/community-spend and /api/flow-map/summary.
-  if (spendEvent && receipt.listing_id) {
+  //
+  //    Opted-out spend never enters the graph. flow_nodes carries no opt-out
+  //    column, so exclusion can only happen here at write time -- and it has to,
+  //    because the same public page reads both rules at once: /flow-map's
+  //    headline queries spend_events with .eq('aggregate_opt_out', false) while
+  //    the named-business table directly beneath it reads flow_nodes. Without
+  //    this guard a user who opted out is excluded from the total and still
+  //    counted in the ranking under it. One rule, both figures.
+  if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out) {
     const businessNodeId = await upsertFlowNode(
       serviceClient,
       'business',
