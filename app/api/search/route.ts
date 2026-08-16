@@ -1,30 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { searchSchema } from '@/lib/validations/search'
 import { searchListings, UnknownFilterValueError } from '@/lib/services/search'
 
 const ANON_LIMIT = 60
 const AUTH_LIMIT = 120
-const WINDOW_MS = 60_000
 
-const ipHits = new Map<string, { count: number; windowStart: number }>()
-
-function getRateLimitKey(req: NextRequest, userId: string | null): string {
+// Was an in-memory Map until 2026-08-16. On Fluid Compute an instance is reused
+// across concurrent requests but is still replaced, and concurrent instances do
+// not share memory, so the Map bounded nothing under real traffic. The counter
+// now lives in Postgres; see lib/security/rate-limit.ts.
+function getRateLimitIdentifier(req: NextRequest, userId: string | null): string {
   if (userId) return `user:${userId}`
-  const forwarded = req.headers.get('x-forwarded-for') ?? ''
-  return (forwarded.split(',')[0] ?? '').trim() || req.headers.get('x-real-ip') || 'unknown'
-}
-
-function checkRateLimit(key: string, limit: number): boolean {
-  const now = Date.now()
-  const entry = ipHits.get(key)
-  if (!entry || now - entry.windowStart > WINDOW_MS) {
-    ipHits.set(key, { count: 1, windowStart: now })
-    return true
-  }
-  if (entry.count >= limit) return false
-  entry.count++
-  return true
+  return getClientIp(req.headers)
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -53,9 +42,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // anonymous request
   }
 
-  const rateKey = getRateLimitKey(req, userId)
-  const rateLimit = userId ? AUTH_LIMIT : ANON_LIMIT
-  if (!checkRateLimit(rateKey, rateLimit)) {
+  const allowed = await checkRateLimit({
+    bucket: 'search',
+    identifier: getRateLimitIdentifier(req, userId),
+    limit: userId ? AUTH_LIMIT : ANON_LIMIT,
+  })
+  if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests.', code: 'RATE_LIMITED' },
       { status: 429 }

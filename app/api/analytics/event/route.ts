@@ -1,32 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { VALID_EVENT_NAMES } from '@/lib/analytics/constants'
 
 const MAX_PROPERTIES_BYTES = 5 * 1024 // 5 KB
 
-// In-memory rate limiter: 30 requests per IP per 60-second window
+// 30 requests per IP per 60-second window.
+//
+// Was an in-memory Map until 2026-08-16. On Fluid Compute an instance is reused
+// across concurrent requests but is still replaced, and concurrent instances do
+// not share memory, so the Map bounded nothing under real traffic. The counter
+// now lives in Postgres; see lib/security/rate-limit.ts.
 const RATE_LIMIT = 30
-const WINDOW_MS = 60_000
-const ipHits = new Map<string, { count: number; windowStart: number }>()
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = ipHits.get(ip)
-  if (!entry || now - entry.windowStart > WINDOW_MS) {
-    ipHits.set(ip, { count: 1, windowStart: now })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const forwarded = req.headers.get('x-forwarded-for') ?? ''
-  const ip = (forwarded.split(',')[0] ?? '').trim() || req.headers.get('x-real-ip') || 'unknown'
+  const allowed = await checkRateLimit({
+    bucket: 'analytics_event',
+    identifier: getClientIp(req.headers),
+    limit: RATE_LIMIT,
+  })
 
-  if (!checkRateLimit(ip)) {
+  if (!allowed) {
     return NextResponse.json({ error: 'Too many requests.', code: 'RATE_LIMITED' }, { status: 429 })
   }
 
