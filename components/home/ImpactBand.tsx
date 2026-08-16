@@ -46,7 +46,7 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
             Community impact
           </p>
           <h2 id="impact-heading" className="font-headline text-[26px] md:text-[32px] text-white max-w-[20ch] text-balance">
-            Watch the dollars circulate
+            Watch the money move
           </h2>
           <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
             Every tracked receipt keeps money moving through Black-owned business. The flow map
@@ -75,7 +75,7 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
                 <dd className="font-headline text-[28px] md:text-[34px] text-white m-0">
                   {formatDollars(totalAmountCents)}
                 </dd>
-                <dt className="font-subhead text-xs text-off-white/70">circulated</dt>
+                <dt className="font-subhead text-xs text-off-white/70">spent</dt>
               </div>
               <div className="border-t-2 border-gold pt-3">
                 <dd className="font-headline text-[28px] md:text-[34px] text-white m-0">
