@@ -25,13 +25,21 @@
 //   * the plan photo limit and the compensating delete apply to every gallery
 //     upload, not only the ones that happened to come through the dashboard.
 //
-// Magic-byte sniffing (ledger 6.3) is deliberately NOT here. It lands once, on
-// this endpoint, as its own change.
+// Magic-byte sniffing (ledger 6.3) landed here separately, once the three
+// endpoints were one: lib/security/file-signature.ts, called with the rest of
+// the input validation. Malware scanning is the remaining half of 6.3 and is
+// not here — it needs a scanning service, which is a spend decision.
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { photoLimit } from '@/lib/stripe/features'
+import {
+  matchesDeclaredType,
+  readSignatureHeader,
+  SIGNATURE_MISMATCH_CODE,
+  SIGNATURE_MISMATCH_ERROR,
+} from '@/lib/security/file-signature'
 
 // `receipt-uploads` is intentionally absent. Its only API caller was the
 // verification form (which belonged in `verification-docs` all along); receipts
@@ -149,6 +157,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (file.size > sizeLimit) {
     const limitMB = Math.round(sizeLimit / (1024 * 1024))
     return bad(`File exceeds ${limitMB} MB limit.`, 'FILE_TOO_LARGE', 413)
+  }
+
+  // The declared type has to survive contact with the bytes. This sits with the
+  // other input validation, before the service client is created and before any
+  // row is read, so a mismatched file costs one 12-byte slice and nothing else.
+  const header = await readSignatureHeader(file)
+  if (!matchesDeclaredType(header, file.type)) {
+    return bad(SIGNATURE_MISMATCH_ERROR, SIGNATURE_MISMATCH_CODE, 400)
   }
 
   const serviceClient = createServiceClient()

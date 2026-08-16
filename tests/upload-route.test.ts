@@ -137,8 +137,30 @@ const USER_ID = '11111111-1111-4111-8111-111111111111'
 const OTHER_ID = '99999999-9999-4999-8999-999999999999'
 const LISTING_ID = '22222222-2222-4222-8222-222222222222'
 
+// Genuine leading bytes per type. Since ledger 6.3 the endpoint reads them, so
+// a zero-filled body no longer reaches storage — every case that expects a 201
+// needs a real signature, and the mismatch cases build their bodies by hand.
+const MAGIC: Record<string, number[]> = {
+  'image/jpeg': [0xff, 0xd8, 0xff, 0xe0],
+  'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+  'image/webp': [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50],
+  'application/pdf': [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34],
+}
+
 function file(type = 'image/jpeg', name = 'photo.jpg', bytes = 3): File {
-  return new File([new Uint8Array(bytes)], name, { type })
+  // `bytes: 0` is honoured literally — the empty-file case is a real assertion,
+  // not a request for a minimum-size file.
+  if (bytes === 0) return new File([], name, { type })
+  const magic = MAGIC[type] ?? []
+  const body = new Uint8Array(Math.max(bytes, magic.length))
+  body.set(magic)
+  return new File([body], name, { type })
+}
+
+/** A file whose declared type and actual leading bytes disagree, on purpose. */
+function mislabelled(actual: string, declaredType: string, name: string): File {
+  const magic = MAGIC[actual] ?? []
+  return new File([new Uint8Array(magic)], name, { type: declaredType })
 }
 
 function req(fields: Record<string, string | File>): NextRequest {
@@ -265,16 +287,70 @@ describe('MIME and size, per bucket', () => {
   })
 
   it('applies the tighter logo limit, not the bucket default', async () => {
-    const big = new File([new Uint8Array(3 * 1024 * 1024)], 'logo.png', { type: 'image/png' })
+    const big = file('image/png', 'logo.png', 3 * 1024 * 1024)
     const res = await POST(listingMedia({ file: big, media_role: 'logo' }))
     expect(res.status).toBe(413)
     expect((await body(res)).code).toBe('FILE_TOO_LARGE')
   })
 
   it('accepts at the cover limit what it refuses at the logo limit', async () => {
-    const mid = () => new File([new Uint8Array(3 * 1024 * 1024)], 'x.png', { type: 'image/png' })
+    const mid = () => file('image/png', 'x.png', 3 * 1024 * 1024)
     const ok = await POST(listingMedia({ file: mid(), media_role: 'cover' }))
     expect(ok.status).toBe(201)
+  })
+})
+
+describe('the declared type has to match the bytes (ledger 6.3)', () => {
+  it('rejects a PDF sent as image/jpeg, and stores nothing', async () => {
+    const res = await POST(
+      listingMedia({ file: mislabelled('application/pdf', 'image/jpeg', 'photo.jpg') })
+    )
+    expect(res.status).toBe(400)
+    expect((await body(res)).code).toBe('FILE_CONTENT_MISMATCH')
+    expect(h.calls.uploadBucket).toBeNull()
+  })
+
+  it('rejects a body with no recognised signature at all', async () => {
+    // The case the whole check exists for: an HTML document, a script, or an
+    // executable, declared as an image and previously stored in a public bucket
+    // with an image content-type.
+    const script = new File([new TextEncoder().encode('<script>alert(1)</script>')], 'x.png', {
+      type: 'image/png',
+    })
+    const res = await POST(listingMedia({ file: script }))
+    expect(res.status).toBe(400)
+    expect((await body(res)).code).toBe('FILE_CONTENT_MISMATCH')
+    expect(h.calls.uploadBucket).toBeNull()
+  })
+
+  it('rejects a mismatch between two types the bucket both allows', async () => {
+    // Both jpeg and png pass the bucket MIME check, so this fails only because
+    // the bytes were read.
+    const res = await POST(
+      listingMedia({ file: mislabelled('image/jpeg', 'image/png', 'photo.png') })
+    )
+    expect(res.status).toBe(400)
+    expect((await body(res)).code).toBe('FILE_CONTENT_MISMATCH')
+  })
+
+  it('runs before any row is read, so a mismatch outranks a permission denial', async () => {
+    h.state.listing = { id: LISTING_ID, owner_user_id: OTHER_ID, tier: 'premium' }
+    const res = await POST(
+      listingMedia({ file: mislabelled('application/pdf', 'image/jpeg', 'photo.jpg') })
+    )
+    expect((await body(res)).code).toBe('FILE_CONTENT_MISMATCH')
+    expect(res.status).toBe(400)
+  })
+
+  it('accepts a genuine WebP, whose marker sits at byte 8 rather than byte 0', async () => {
+    const res = await POST(listingMedia({ file: file('image/webp', 'photo.webp') }))
+    expect(res.status).toBe(201)
+    expect(h.calls.uploadPath).toMatch(/\.webp$/)
+  })
+
+  it('accepts a genuine PDF into verification-docs', async () => {
+    const res = await POST(verificationDoc({ file: file('application/pdf', 'licence.pdf') }))
+    expect(res.status).toBe(201)
   })
 })
 
