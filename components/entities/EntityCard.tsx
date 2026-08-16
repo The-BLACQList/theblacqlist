@@ -10,7 +10,7 @@ import { SaveIconButton } from '@/components/ui/save-icon-button'
 import { SponsoredImpression, SponsoredLink } from '@/components/entities/SponsoredTracking'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
-import type { DiscoveryEntity } from '@/types'
+import type { DiscoveryEntity, LocationType } from '@/types'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 
@@ -34,14 +34,35 @@ const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
   job: 'Job',
 }
 
+/**
+ * What the card's location line says for each of the six live
+ * `listings.location_type` values (migration 20260524000001). `standalone`
+ * replaces the city line — a virtual business has no meaningful city to show —
+ * and `suffix` appends to it.
+ *
+ * Exhaustive over LocationType on purpose: a seventh value added to the CHECK
+ * fails this build instead of quietly rendering nothing. Until 2026-08-15 this
+ * was three `if` branches testing the PRE-migration names ('online',
+ * 'virtual-services', 'ships-nationwide'), which had matched no row since May,
+ * while the four values the DB actually serves had no branch at all — so an
+ * online-only listing with no city read "Multiple Locations".
+ */
+const LOCATION_COPY: Record<LocationType, { standalone?: string; suffix?: string }> = {
+  physical: {},
+  virtual: { standalone: 'Online only' },
+  national: { standalone: 'Ships nationwide' },
+  hybrid: { suffix: 'Storefront & online' },
+  service_area: { suffix: 'Comes to you' },
+  traveling: { suffix: 'Mobile' },
+}
+
 function getLocationString(entity: DiscoveryEntity): string {
   const { location_type, city } = entity
-  if (location_type === 'online') return 'Online'
-  if (location_type === 'virtual-services') return 'Virtual Services'
-  if (location_type === 'ships-nationwide') return 'Ships Nationwide'
+  const copy = LOCATION_COPY[location_type]
+  if (copy?.standalone) return copy.standalone
   if (city) {
     const base = `${city.name}, ${city.state_abbr}`
-    return location_type === 'hybrid' ? `${base} · Hybrid` : base
+    return copy?.suffix ? `${base} · ${copy.suffix}` : base
   }
   return 'Multiple Locations'
 }

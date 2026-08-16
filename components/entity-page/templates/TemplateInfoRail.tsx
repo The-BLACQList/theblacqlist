@@ -1,15 +1,30 @@
-import type { EntityPageData } from '@/types'
+import type { EntityPageData, LocationType } from '@/types'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 
 interface Props {
   entity: EntityPageData
 }
 
-const LOCATION_NOTES: Record<string, string> = {
-  online: 'Online',
-  'virtual-services': 'Virtual available',
-  'ships-nationwide': 'Ships nationwide',
+/**
+ * The fulfillment note in the rail, keyed by the six live
+ * `listings.location_type` values (migration 20260524000001). An empty string
+ * means the rail says nothing — a storefront's location is already the city
+ * line above it.
+ *
+ * Typed exhaustively over LocationType rather than `Record<string, string>`:
+ * the loose signature let three PRE-migration keys ('online',
+ * 'virtual-services', 'ships-nationwide') sit here unnoticed since May, matching
+ * no row, while every value the DB actually serves fell through to no note at
+ * all. It also required an `as string` cast at the lookup, which is the tell.
+ * Fixed 2026-08-15.
+ */
+const LOCATION_NOTES: Record<LocationType, string> = {
+  physical: '',
+  virtual: 'Online only',
   hybrid: 'In person & virtual',
+  service_area: 'Comes to you',
+  national: 'Ships nationwide',
+  traveling: 'Mobile / pop-up',
 }
 
 /**
@@ -23,9 +38,11 @@ export function TemplateInfoRail({ entity }: Props) {
     items.push(`★ ${entity.avg_rating.toFixed(1)} · ${entity.review_count.toLocaleString()} review${entity.review_count === 1 ? '' : 's'}`)
   }
   if (entity.city) items.push(`${entity.city.name}, ${entity.city.state_abbr}`)
-  const locationNote = LOCATION_NOTES[entity.location_type as string]
+  const locationNote = LOCATION_NOTES[entity.location_type]
   if (locationNote) items.push(locationNote)
-  if (entity.details.ships_nationwide && entity.location_type !== 'ships-nationwide') {
+  // The details flag is a separate opt-in, so guard against saying it twice —
+  // 'national' is the location_type that already carries the same sentence.
+  if (entity.details.ships_nationwide && entity.location_type !== 'national') {
     items.push('Ships nationwide')
   }
 
