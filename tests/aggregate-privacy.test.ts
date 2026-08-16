@@ -24,7 +24,7 @@
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 import {
@@ -157,15 +157,16 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
   })
 
   // The threshold is only worth what the table underneath it enforces. These
-  // three tables are granted `TO anon, authenticated USING (true)` by
-  // 20260511000001_receipt_community_spend.sql, so today anyone can query them
+  // three tables were granted `TO anon, authenticated USING (true)` by
+  // 20260511000001_receipt_community_spend.sql, so anyone could query them
   // directly through PostgREST with the publishable key that ships in every page
   // bundle — unfiltered, including sub-threshold rows and rows whose owner set
-  // aggregate_opt_out. Closing that grant is a migration and its own gate.
+  // aggregate_opt_out. 20260815010000 drops all three; the migration-state suite
+  // at the bottom of this file pins that they stay dropped.
   //
-  // What this test pins is the prerequisite: no surface may read these tables
-  // with the user-scoped client. While one does, dropping the policy silently
-  // empties that page instead of hardening it, and the migration cannot ship.
+  // What this test pins is the prerequisite that made dropping them safe: no
+  // surface may read these tables with the user-scoped client. If one did,
+  // dropping the policy would silently empty that page instead of hardening it.
   it('every read of the three aggregate tables goes through the service client', () => {
     const AGGREGATE_TABLES = ['spend_events', 'flow_nodes', 'flow_edges']
 
@@ -196,6 +197,83 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
         src.indexOf("from('flow_nodes')")
       )
       expect(spendBlock).not.toContain('transaction_count')
+    }
+  })
+})
+
+// ── The RLS grant underneath the threshold ──────────────────────────────────
+// The application-side guards above are worthless if the table is readable
+// around them. Every read path uses the service role (pinned above), so anon and
+// authenticated need no SELECT policy at all — and while they had one, the
+// published promise ("a named business only appears once 5 or more distinct
+// transactions are behind its total", "users can opt out at any time") was true
+// of the rendered pages and false of the database.
+//
+// This replays every migration in filename order and asserts the FINAL policy
+// state, rather than grepping for the drop. A later migration that re-adds the
+// grant under a new name fails here; a grep for "DROP POLICY" would not.
+
+describe('RLS on the community-aggregate tables', () => {
+  const AGGREGATE_TABLES = ['spend_events', 'flow_nodes', 'flow_edges'] as const
+
+  /** Policy names on the three tables that grant SELECT to anon, after replaying `files`. */
+  function anonSelectPoliciesAfter(files: readonly string[]): string[] {
+    const dir = path.resolve(process.cwd(), 'supabase/migrations')
+    const live = new Set<string>()
+
+    for (const file of files) {
+      const sql = readFileSync(path.join(dir, file), 'utf8')
+
+      // CREATE POLICY "name" ON <table> ... ;  — body runs to the first semicolon.
+      for (const [, name, table, body] of sql.matchAll(
+        /CREATE POLICY\s+"([^"]+)"\s+ON\s+(\w+)([\s\S]*?);/g
+      )) {
+        if (!name || !table || !body) continue
+        if (!AGGREGATE_TABLES.includes(table as (typeof AGGREGATE_TABLES)[number])) continue
+        if (!/FOR\s+SELECT/i.test(body)) continue
+        if (!/\bTO\b[^;]*\banon\b/i.test(body)) continue
+        live.add(`${table}.${name}`)
+      }
+
+      for (const [, name, table] of sql.matchAll(
+        /DROP POLICY(?:\s+IF EXISTS)?\s+"([^"]+)"\s+ON\s+(\w+)/g
+      )) {
+        live.delete(`${table}.${name}`)
+      }
+    }
+
+    return [...live].sort()
+  }
+
+  const ALL_MIGRATIONS = readdirSync(path.resolve(process.cwd(), 'supabase/migrations'))
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
+
+  // Non-vacuity: a parser that matches nothing would pass the real assertion
+  // silently. Replaying only the migration that CREATED the grant must find all
+  // three, or the assertion below is meaningless.
+  it('the parser finds all three grants in the migration that created them', () => {
+    expect(anonSelectPoliciesAfter(['20260511000001_receipt_community_spend.sql'])).toEqual([
+      'flow_edges.flow_edges_public_select',
+      'flow_nodes.flow_nodes_public_select',
+      'spend_events.spend_events_public_select',
+    ])
+  })
+
+  it('no anon SELECT policy survives on spend_events, flow_nodes or flow_edges', () => {
+    expect(anonSelectPoliciesAfter(ALL_MIGRATIONS)).toEqual([])
+  })
+
+  it('RLS is never disabled on the three tables', () => {
+    const dir = path.resolve(process.cwd(), 'supabase/migrations')
+    for (const file of ALL_MIGRATIONS) {
+      const sql = readFileSync(path.join(dir, file), 'utf8')
+      for (const table of AGGREGATE_TABLES) {
+        expect(
+          sql,
+          `${file} disables RLS on ${table} — with no SELECT policy that would make it world-readable`
+        ).not.toMatch(new RegExp(`ALTER TABLE\\s+${table}\\s+DISABLE ROW LEVEL SECURITY`, 'i'))
+      }
     }
   })
 })
