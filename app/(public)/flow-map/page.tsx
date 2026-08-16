@@ -12,7 +12,7 @@ import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
 export const metadata: Metadata = {
   title: 'Community Dollar Flow | The BLACQList',
   description:
-    'See how the BLACQList community is circulating dollars within Black-owned businesses. All data is anonymized. No buyer identities exposed.',
+    'See how the BLACQList community is directing dollars to Black-owned businesses. All data is anonymized. No buyer identities exposed.',
 }
 
 // Revalidate every hour — same cadence as /api/flow-map/summary
@@ -196,9 +196,17 @@ export default async function FlowMapPage() {
           <div className="inline-flex items-center gap-1.5 bg-amber-gold/10 text-amber-700 rounded-full px-3 py-1 font-subhead text-xs font-semibold mb-4">
             Community Dollar Flow · Beta
           </div>
+          {/*
+            The figure is labeled for what it measures. One approved receipt is
+            one unit of spend, counted once — consumer to business. It is not
+            "circulated": that word means multi-hop velocity, and the schema
+            cannot express a second hop (flow_nodes.node_type CHECKs to
+            'business' | 'city'). See docs/blacqlist/flow-map/
+            data-sourcing-and-methodology.md §2.
+          */}
           <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight">
             {hasAnyData
-              ? `${formatDollars(totalAmountCents)} circulated`
+              ? `${formatDollars(totalAmountCents)} spent with Black-owned businesses`
               : 'Where does our money go?'}
           </h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-3 max-w-[520px] leading-relaxed">
