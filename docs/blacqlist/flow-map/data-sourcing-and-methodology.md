@@ -79,12 +79,45 @@ Four surfaces read these tables. All five read paths use the service-role client
 
 ---
 
-## 2. What each published figure actually means
+## 2. What we count, and what we call it
+
+### The definition
+
+**One receipt, approved by an admin, is one unit of measured spend. It is counted once.**
+
+A dollar enters this dataset when a person reports paying it to a Black-owned business and an admin approves that receipt. Nothing follows the dollar after that. What the business pays its supplier, its staff, or its landlord is not observed, not modeled, and not estimated.
+
+So the figure we publish is a **one-hop total**: consumer → business, summed. It is not velocity, not a multiplier, and not a measure of how many times a dollar changed hands.
+
+### Why we do not call it "circulation"
+
+"Circulation" in economics means a dollar being re-spent — counted on each hop as it moves through a community. We measure one hop. Publishing a one-hop sum under a word that means multi-hop velocity overstates the finding, and it is the kind of overstatement that gets checked the first time the number matters.
+
+The schema makes this concrete: it cannot represent multi-hop flow **even in principle**. `flow_nodes.node_type` carries a `CHECK` permitting `'business' | 'city'` and nothing else, so `business → city` is the only edge that exists (§1, Stage 4). There is no business-to-business edge to accumulate, because there is no business-to-business data.
+
+**`[Decision — founder, 2026-08-16]`** Published figures are labeled for what they measure — *spent with Black-owned businesses*, *directed to Black-owned businesses*. **"Circulation" remains the mission language** in the product vision, the PRD, the pitch and the partner materials, where it describes what the platform is *for*. It does not label a number.
+
+### The vocabulary, in one table
+
+| Say this | Not this | Because |
+|---|---|---|
+| spent with Black-owned businesses | circulated | one hop, not velocity |
+| reported spend | verified spend | an admin approved a receipt; nothing reconciled it against a processor |
+| tracked purchases | transactions | "transaction" implies a payment record we do not hold |
+| businesses supported | businesses reached | we know money was reported to them, not what it did for them |
+
+### The claim that is not ours
+
+`PRD.md:66` and `product-vision.md:36` carry an external, third-party statistic about how long a dollar circulates in the Black community relative to other communities. That figure is **macro-economic research, not a BLACQList measurement**, and its sourcing has never been verified in this repo `[Unknown]`.
+
+It must never appear beside one of our figures in a way that implies we measured it, and it should not be repeated in public materials until someone has traced it to a primary source. → **`[Needs professional review]`** for the sourcing question before it is used in press or partner materials again.
+
+### What each published figure actually means
 
 | Figure | Computed as | Excludes |
 |---|---|---|
-| Total dollars circulated | `SUM(amount_cents)` over **all** `spend_events` where `aggregate_opt_out = false` | Pending, rejected, opted-out |
-| Total transactions | `COUNT(*)` of the same rows | Same |
+| Total dollars spent with Black-owned businesses | `SUM(amount_cents)` over **all** `spend_events` where `aggregate_opt_out = false` | Pending, rejected, opted-out |
+| Tracked purchases | `COUNT(*)` of the same rows | Same |
 | Unique businesses | `COUNT(DISTINCT listing_id)` of the same rows, nulls dropped | Receipts with no directory listing |
 | Top businesses / cities | `flow_nodes` rows with `transaction_count >= 5`, ordered by `total_amount_cents`, limit 10 (8 on the account page) | Anything under the threshold — **but not opted-out spend, see §5** |
 | Edges | `flow_edges` rows with `transaction_count >= 5`, limit 50 | Same |
