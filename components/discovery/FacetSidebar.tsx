@@ -10,7 +10,12 @@ import {
   LOCATION_KEYS,
   clearEntries,
 } from '@/components/discovery/useFacetParams'
-import { ENTITY_TYPES, TRUST_TIERS, OWNERSHIP_LABELS } from '@/components/discovery/facetConstants'
+import {
+  ENTITY_TYPES,
+  TRUST_TIERS,
+  OWNERSHIP_LABELS,
+  LOCATION_TYPES,
+} from '@/components/discovery/facetConstants'
 import { NearYouFilter } from '@/components/discovery/NearYouFilter'
 
 const legendClass =
@@ -47,6 +52,7 @@ export function FacetSidebar({
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
+  const activeLocationType = searchParams.get('location_type') ?? ''
   const activeOwnership = searchParams.get('ownership') ?? ''
   const openNow = searchParams.get('open_now') === '1'
   const selectedPrices = getCsv('price')
@@ -139,6 +145,35 @@ export function FacetSidebar({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => setParam('type', isActive ? '' : value)}
+                className={cn(
+                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
+                  isActive
+                    ? 'bg-brand-black text-white font-semibold'
+                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
+                )}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
+
+      {/* Where they operate — the online-only / no-fixed-address axis. Deliberately
+          next to Type: together they answer "show me services, not storefronts".
+          Mirrors the owner-side "Where you operate" wording. No per-option counts,
+          matching Ownership and Trust Level. */}
+      <fieldset>
+        <legend className={legendClass}>Where they operate</legend>
+        <div className="flex flex-col gap-1">
+          {LOCATION_TYPES.map(({ value, label }) => {
+            const isActive = activeLocationType === value
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setParam('location_type', isActive ? '' : value)}
                 className={cn(
                   'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
                   isActive

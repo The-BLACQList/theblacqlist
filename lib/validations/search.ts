@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { EntityType, LocationType } from '@/types'
+import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 
 /** Splits a comma-separated query param into a trimmed, de-duplicated array. */
 const csvArray = z
@@ -34,28 +34,14 @@ export const searchSchema = z.object({
   q: z.string().max(200).trim().optional(),
   city: z.string().optional(),
   category: z.string().optional(),
-  // `satisfies` keeps this in lockstep with EntityType — a value the DB serves but zod
-  // rejects is a silent 400 on a legitimate URL, which is exactly how 'service_provider'
-  // was broken from May until 2026-08-13.
-  type: z
-    .enum([
-      'business',
-      'restaurant',
-      'service_provider',
-      'professional',
-      'creative',
-      'vendor',
-      'event',
-      'job',
-    ] satisfies [EntityType, ...EntityType[]])
-    .optional(),
+  // Both enums read the canonical constants directly rather than repeating the values.
+  // A value the DB serves but zod rejects is a silent 400 on a legitimate URL — which is
+  // exactly how 'service_provider' was broken from May until 2026-08-13, and how every
+  // location_type except 'physical' and 'hybrid' was broken from May until 2026-08-15.
+  // A retyped list is what made both possible, so there is no retyped list here.
+  type: z.enum(VALID_ENTITY_TYPES).optional(),
   trust_tier: z.enum(['claimed', 'verified', 'certified']).optional(),
-  location_type: z
-    .enum(['physical', 'online', 'hybrid', 'virtual-services', 'ships-nationwide'] satisfies [
-      LocationType,
-      ...LocationType[],
-    ])
-    .optional(),
+  location_type: z.enum(VALID_LOCATION_TYPES).optional(),
   // Faceted filters (CSV in the URL): price=$,$$  attrs=delivery,vegan-options
   price: csvArray,
   attrs: csvArray,

@@ -1,27 +1,26 @@
 // ─── Discovery / Listing Types ───────────────────────────────────────────────
 
-/**
- * The live `listings.entity_type` CHECK — see lib/constants/listing.ts:VALID_ENTITY_TYPES,
- * which this must mirror exactly. Until 2026-08-13 this union carried 'job' (which the DB
- * rejected) and omitted 'restaurant' / 'service_provider' (which the DB served); the drift
- * forced an `as string` cast in the entity-page renderer. Both ends now agree.
- */
-export type EntityType =
-  | 'business'
-  | 'restaurant'
-  | 'service_provider'
-  | 'professional'
-  | 'creative'
-  | 'vendor'
-  | 'event'
-  | 'job'
+import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 
-export type LocationType =
-  | 'physical'
-  | 'online'
-  | 'hybrid'
-  | 'virtual-services'
-  | 'ships-nationwide'
+/**
+ * Both unions are DERIVED from the canonical constants rather than retyped, because
+ * hand-copied unions here have now drifted from the live DB CHECK twice:
+ *
+ *   - `entity_type` carried 'job' (which the DB rejected) and omitted 'restaurant' /
+ *     'service_provider' (which the DB served) until 2026-08-13. The drift forced an
+ *     `as string` cast in the entity-page renderer and silently 400'd legitimate URLs.
+ *   - `location_type` was still the ORIGINAL 20260510000000 schema's value set — superseded
+ *     by 20260524000001 back in May. Three of its five values ('online', 'virtual-services',
+ *     'ships-nationwide') could never match a row, and the four real values the DB serves
+ *     ('virtual', 'service_area', 'national', 'traveling') were rejected by the search
+ *     validator that pins itself to this union. Found 2026-08-15.
+ *
+ * Deriving them removes the copy, so the only place a value set can be wrong is
+ * lib/constants/listing.ts — which tests/constraint-drift.test.ts pins to the migrations.
+ */
+export type EntityType = (typeof VALID_ENTITY_TYPES)[number]
+
+export type LocationType = (typeof VALID_LOCATION_TYPES)[number]
 
 export type TrustTier = 'unclaimed' | 'claimed' | 'verified' | 'certified'
 

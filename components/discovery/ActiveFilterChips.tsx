@@ -13,6 +13,7 @@ import {
   ENTITY_TYPE_LABEL,
   TRUST_TIER_LABEL,
   OWNERSHIP_LABEL_MAP,
+  LOCATION_TYPE_LABEL,
 } from '@/components/discovery/facetConstants'
 import { parseLocationFromQuery } from '@/lib/listings/location-params'
 
@@ -68,6 +69,15 @@ export function ActiveFilterChips({
     chips.push({
       label: OWNERSHIP_LABEL_MAP[ownership] ?? ownership,
       onRemove: () => setParam('ownership', ''),
+    })
+
+  // Where the business operates. Distinct from the Near You filter below, which is
+  // about where the SEARCHER is — this one has no coordinates in it.
+  const locationType = searchParams.get('location_type')
+  if (locationType)
+    chips.push({
+      label: LOCATION_TYPE_LABEL[locationType] ?? locationType,
+      onRemove: () => setParam('location_type', ''),
     })
 
   // One chip for the whole location filter, not three. Removing it takes the
