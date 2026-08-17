@@ -53,13 +53,19 @@ export const SUBSCRIBE_RATE_LIMIT_SALT = process.env.SUBSCRIBE_RATE_LIMIT_SALT ?
 // gates on a flag must opt out of static generation — `export const dynamic =
 // 'force-dynamic'` — or read the flag somewhere already dynamic (a route
 // handler, a server action, or a request-scoped Server Component).
-export type FeatureFlag = 'aiBeta' | 'ocrExtraction'
+export type FeatureFlag = 'aiBeta' | 'ocrExtraction' | 'paidPostings'
 
 // The map is the registry. Adding a flag means adding it here and to the union
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   aiBeta: 'FEATURE_AI_BETA',
   ocrExtraction: 'FEATURE_OCR_EXTRACTION',
+  // E-2. Covers BOTH halves of the monetization change — charging for job
+  // postings and enforcing the events cap — on purpose, even though they are
+  // two features. They are one behavior change from a user's point of view
+  // ("what it costs to post"), and splitting them into two flags would allow a
+  // half-state where jobs are paid but the events copy is still untrue.
+  paidPostings: 'FEATURE_PAID_POSTINGS',
 }
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a

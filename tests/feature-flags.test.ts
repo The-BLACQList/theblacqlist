@@ -153,7 +153,7 @@ describe('getEnabledFeatures', () => {
 
   it('lists every flag in a bare preview deployment', async () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
-    expect(getEnabledFeatures().sort()).toEqual(['aiBeta', 'ocrExtraction'])
+    expect(getEnabledFeatures().sort()).toEqual(['aiBeta', 'ocrExtraction', 'paidPostings'])
   })
 
   it('lists only what is switched on in production', async () => {

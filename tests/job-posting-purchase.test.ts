@@ -1,0 +1,408 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type Stripe from 'stripe'
+
+// E-2 · Model A — paid job postings and the newly-enforced events cap.
+//
+// Two things under test:
+//   1. The rules module (`lib/stripe/jobPostings.ts`) — quota arithmetic,
+//      grandfathering, and paid-purchase lookup. Pure enough to test directly.
+//   2. The Stripe fulfilment handler — including duplicate delivery, which is
+//      the case that decides whether a redelivered webhook double-charges the
+//      ledger or republishes a listing a moderator has already handled.
+
+const h = vi.hoisted(() => {
+  const transitionToPendingReview = vi.fn(async () => ({ success: true as const }))
+  const writeSystemAuditLog = vi.fn(async () => {})
+  return { transitionToPendingReview, writeSystemAuditLog }
+})
+
+vi.mock('@/lib/listings/submitForReview', () => ({
+  transitionToPendingReview: h.transitionToPendingReview,
+}))
+vi.mock('@/lib/audit/system', () => ({ writeSystemAuditLog: h.writeSystemAuditLog }))
+vi.mock('@/lib/email/resend', () => ({ sendEmail: vi.fn(async () => {}) }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('@/lib/supabase/server', () => ({ createServiceClient: vi.fn() }))
+
+import {
+  eventQuotaFor,
+  hasPaidJobPosting,
+  jobPostingExpiryFrom,
+  jobPostingPriceId,
+  ownerPlanTier,
+  EVENT_LIMIT_ENFORCED_FROM,
+  JOB_POSTING_DURATION_DAYS,
+} from '@/lib/stripe/jobPostings'
+import { handleCheckoutSessionCompleted } from '@/lib/services/billing/webhookHandlers'
+
+// ── Fake Supabase ────────────────────────────────────────────────────────────
+// Records every write so the tests can assert on what actually reached the
+// database, and lets each test pin the rows a given table returns.
+
+type Row = Record<string, unknown>
+
+function makeClient(tables: Record<string, Row[]>) {
+  const writes: { table: string; op: string; row: Row }[] = []
+
+  const client = {
+    from(table: string) {
+      const filters: Row = {}
+      let gteCreatedAt: string | null = null
+
+      const rows = () => {
+        let out = tables[table] ?? []
+        for (const [k, v] of Object.entries(filters)) {
+          if (Array.isArray(v)) out = out.filter((r) => v.includes(r[k] as string))
+          else out = out.filter((r) => r[k] === v)
+        }
+        if (gteCreatedAt) {
+          out = out.filter((r) => String(r.created_at) >= gteCreatedAt!)
+        }
+        return out
+      }
+
+      // The builder is awaitable at any point in the chain and always resolves
+      // to both `data` and `count`, so the same fake serves a plain select and a
+      // `select(..., { count: 'exact', head: true })`.
+      const builder: Record<string, unknown> = {
+        select: () => builder,
+        eq: (col: string, val: unknown) => {
+          filters[col] = val
+          return builder
+        },
+        in: (col: string, vals: unknown[]) => {
+          filters[col] = vals
+          return builder
+        },
+        is: () => builder,
+        gte: (_col: string, val: string) => {
+          gteCreatedAt = val
+          return builder
+        },
+        maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
+        upsert: async (row: Row) => {
+          writes.push({ table, op: 'upsert', row })
+          return { error: null }
+        },
+        insert: async (row: Row) => {
+          writes.push({ table, op: 'insert', row })
+          return { error: null }
+        },
+        update: async (row: Row) => {
+          writes.push({ table, op: 'update', row })
+          return { error: null }
+        },
+        then: (res: (v: { data: Row[]; count: number; error: null }) => unknown) =>
+          res({ data: rows(), count: rows().length, error: null }),
+      }
+      return builder
+    },
+  }
+
+  return { client: client as never, writes }
+}
+
+const AFTER_CUTOFF = '2026-09-01T00:00:00.000Z'
+const BEFORE_CUTOFF = '2026-01-01T00:00:00.000Z'
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  delete process.env.STRIPE_JOB_POSTING_PRICE_ID
+})
+
+// ── The price is configuration, never a constant ─────────────────────────────
+
+describe('jobPostingPriceId', () => {
+  it('is null until the Stripe product exists, so checkout fails closed', () => {
+    expect(jobPostingPriceId()).toBeNull()
+  })
+
+  it('reads the configured price and trims it', () => {
+    process.env.STRIPE_JOB_POSTING_PRICE_ID = '  price_abc123  '
+    expect(jobPostingPriceId()).toBe('price_abc123')
+  })
+
+  it('treats a blank value as unset rather than as an empty price id', () => {
+    process.env.STRIPE_JOB_POSTING_PRICE_ID = '   '
+    expect(jobPostingPriceId()).toBeNull()
+  })
+})
+
+describe('jobPostingExpiryFrom', () => {
+  it('adds exactly the documented window', () => {
+    const paidAt = new Date('2026-08-17T12:00:00.000Z')
+    const expiry = new Date(jobPostingExpiryFrom(paidAt))
+    const days = (expiry.getTime() - paidAt.getTime()) / 86_400_000
+    expect(days).toBe(JOB_POSTING_DURATION_DAYS)
+  })
+})
+
+// ── Owner tier ───────────────────────────────────────────────────────────────
+
+describe('ownerPlanTier', () => {
+  it('is free when the owner has no listings', async () => {
+    const { client } = makeClient({ listings: [] })
+    expect(await ownerPlanTier(client, 'u1')).toBe('free')
+  })
+
+  it('takes the highest tier the owner holds, not the first or the last', async () => {
+    const { client } = makeClient({
+      listings: [
+        { owner_user_id: 'u1', tier: 'free' },
+        { owner_user_id: 'u1', tier: 'growth' },
+        { owner_user_id: 'u1', tier: 'starter' },
+      ],
+    })
+    expect(await ownerPlanTier(client, 'u1')).toBe('growth')
+  })
+
+  it('treats a null tier as free rather than crashing', async () => {
+    const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: null }] })
+    expect(await ownerPlanTier(client, 'u1')).toBe('free')
+  })
+
+  it('ignores an unrecognized tier string instead of ranking it above premium', async () => {
+    const { client } = makeClient({
+      listings: [
+        { owner_user_id: 'u1', tier: 'enterprise' },
+        { owner_user_id: 'u1', tier: 'starter' },
+      ],
+    })
+    expect(await ownerPlanTier(client, 'u1')).toBe('starter')
+  })
+})
+
+// ── The events cap ───────────────────────────────────────────────────────────
+
+describe('eventQuotaFor', () => {
+  it('blocks a free owner immediately — free includes zero events', async () => {
+    const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'free' }] })
+    const quota = await eventQuotaFor(client, 'u1')
+    expect(quota.limit).toBe(0)
+    expect(quota.atLimit).toBe(true)
+  })
+
+  it('gives a growth owner their three events', async () => {
+    const { client } = makeClient({
+      listings: [
+        { owner_user_id: 'u1', tier: 'growth' },
+        {
+          owner_user_id: 'u1',
+          tier: 'free',
+          entity_type: 'event',
+          status: 'published',
+          created_at: AFTER_CUTOFF,
+        },
+      ],
+    })
+    const quota = await eventQuotaFor(client, 'u1')
+    expect(quota.tier).toBe('growth')
+    expect(quota.limit).toBe(3)
+    expect(quota.used).toBe(1)
+    expect(quota.atLimit).toBe(false)
+  })
+
+  it('stops a growth owner at the third countable event', async () => {
+    const events = [1, 2, 3].map(() => ({
+      owner_user_id: 'u1',
+      tier: 'free',
+      entity_type: 'event',
+      status: 'published',
+      created_at: AFTER_CUTOFF,
+    }))
+    const { client } = makeClient({
+      listings: [{ owner_user_id: 'u1', tier: 'growth' }, ...events],
+    })
+    const quota = await eventQuotaFor(client, 'u1')
+    expect(quota.used).toBe(3)
+    expect(quota.atLimit).toBe(true)
+  })
+
+  it('grandfathers pre-cutoff events — they neither block nor consume allowance', async () => {
+    const old = [1, 2, 3, 4, 5].map(() => ({
+      owner_user_id: 'u1',
+      tier: 'free',
+      entity_type: 'event',
+      status: 'published',
+      created_at: BEFORE_CUTOFF,
+    }))
+    const { client } = makeClient({
+      listings: [{ owner_user_id: 'u1', tier: 'growth' }, ...old],
+    })
+    const quota = await eventQuotaFor(client, 'u1')
+    expect(quota.used).toBe(0)
+    expect(quota.atLimit).toBe(false)
+  })
+
+  it('never blocks a premium owner — unlimited short-circuits the count', async () => {
+    const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'premium' }] })
+    const quota = await eventQuotaFor(client, 'u1')
+    expect(quota.limit).toBeNull()
+    expect(quota.atLimit).toBe(false)
+  })
+
+  it('uses the documented cutoff instant', () => {
+    expect(EVENT_LIMIT_ENFORCED_FROM).toBe('2026-08-17T00:00:00.000Z')
+  })
+})
+
+// ── Paid-posting lookup ──────────────────────────────────────────────────────
+
+describe('hasPaidJobPosting', () => {
+  it('is false with no purchase row', async () => {
+    const { client } = makeClient({ job_posting_purchases: [] })
+    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+  })
+
+  it('is true for an unexpired paid purchase', async () => {
+    const { client } = makeClient({
+      job_posting_purchases: [
+        {
+          listing_id: 'l1',
+          status: 'paid',
+          expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+        },
+      ],
+    })
+    expect(await hasPaidJobPosting(client, 'l1')).toBe(true)
+  })
+
+  it('is false once the window has closed', async () => {
+    const { client } = makeClient({
+      job_posting_purchases: [
+        {
+          listing_id: 'l1',
+          status: 'paid',
+          expires_at: new Date(Date.now() - 86_400_000).toISOString(),
+        },
+      ],
+    })
+    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+  })
+
+  it('ignores a refunded purchase — the filter is on status, not existence', async () => {
+    const { client } = makeClient({
+      job_posting_purchases: [{ listing_id: 'l1', status: 'refunded', expires_at: null }],
+    })
+    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+  })
+})
+
+// ── Fulfilment ───────────────────────────────────────────────────────────────
+
+function session(over: Partial<Stripe.Checkout.Session> = {}): Stripe.Checkout.Session {
+  return {
+    id: 'cs_test_1',
+    payment_status: 'paid',
+    amount_total: 4900,
+    currency: 'usd',
+    payment_intent: 'pi_test_1',
+    metadata: { purpose: 'job_posting', listing_id: 'l1', user_id: 'u1' },
+    ...over,
+  } as Stripe.Checkout.Session
+}
+
+const draftListing = { id: 'l1', owner_user_id: 'u1', status: 'draft' }
+
+describe('handleCheckoutSessionCompleted', () => {
+  it('records the purchase and submits the job for review', async () => {
+    const { client, writes } = makeClient({
+      listings: [draftListing],
+      job_posting_purchases: [],
+    })
+
+    await handleCheckoutSessionCompleted(client, session())
+
+    const purchase = writes.find((w) => w.table === 'job_posting_purchases')
+    expect(purchase).toBeDefined()
+    expect(purchase!.row.status).toBe('paid')
+    expect(purchase!.row.stripe_checkout_session_id).toBe('cs_test_1')
+    expect(purchase!.row.stripe_payment_intent_id).toBe('pi_test_1')
+    expect(h.transitionToPendingReview).toHaveBeenCalledWith(client, 'l1', 'u1')
+  })
+
+  it('records what Stripe charged, never a hardcoded price', async () => {
+    const { client, writes } = makeClient({ listings: [draftListing] })
+    await handleCheckoutSessionCompleted(client, session({ amount_total: 12345, currency: 'cad' }))
+    const purchase = writes.find((w) => w.table === 'job_posting_purchases')!
+    expect(purchase.row.amount_cents).toBe(12345)
+    expect(purchase.row.currency).toBe('cad')
+  })
+
+  it('stamps an expiry a full window after payment', async () => {
+    const { client, writes } = makeClient({ listings: [draftListing] })
+    await handleCheckoutSessionCompleted(client, session())
+    const purchase = writes.find((w) => w.table === 'job_posting_purchases')!
+    const paidAt = new Date(String(purchase.row.paid_at)).getTime()
+    const expires = new Date(String(purchase.row.expires_at)).getTime()
+    expect((expires - paidAt) / 86_400_000).toBe(JOB_POSTING_DURATION_DAYS)
+  })
+
+  it('ignores a subscription checkout — that state belongs to the subscription events', async () => {
+    const { client, writes } = makeClient({ listings: [draftListing] })
+    await handleCheckoutSessionCompleted(client, session({ metadata: {} }))
+    expect(writes).toHaveLength(0)
+    expect(h.transitionToPendingReview).not.toHaveBeenCalled()
+  })
+
+  it('fulfils nothing while the payment is still unpaid', async () => {
+    const { client, writes } = makeClient({ listings: [draftListing] })
+    await handleCheckoutSessionCompleted(client, session({ payment_status: 'unpaid' }))
+    expect(writes).toHaveLength(0)
+    expect(h.transitionToPendingReview).not.toHaveBeenCalled()
+  })
+
+  it('throws on missing metadata so the caller returns 500 and Stripe retries', async () => {
+    const { client } = makeClient({ listings: [draftListing] })
+    await expect(
+      handleCheckoutSessionCompleted(client, session({ metadata: { purpose: 'job_posting' } }))
+    ).rejects.toThrow(/missing listing_id/)
+  })
+
+  // The case that matters most: Stripe redelivers, and two different events can
+  // describe the same session.
+  it('is safe on duplicate delivery — the purchase upserts and the listing is not re-transitioned', async () => {
+    const { client, writes } = makeClient({
+      listings: [{ id: 'l1', owner_user_id: 'u1', status: 'pending' }],
+    })
+
+    await handleCheckoutSessionCompleted(client, session())
+
+    const purchase = writes.find((w) => w.table === 'job_posting_purchases')!
+    expect(purchase.op).toBe('upsert')
+    // Already past draft — a redelivery must not drag a moderated listing back.
+    expect(h.transitionToPendingReview).not.toHaveBeenCalled()
+  })
+
+  it('does not re-publish a listing a moderator has already published', async () => {
+    const { client } = makeClient({
+      listings: [{ id: 'l1', owner_user_id: 'u1', status: 'published' }],
+    })
+    await handleCheckoutSessionCompleted(client, session())
+    expect(h.transitionToPendingReview).not.toHaveBeenCalled()
+  })
+
+  it('will not transition a listing owned by someone else', async () => {
+    const { client } = makeClient({
+      listings: [{ id: 'l1', owner_user_id: 'someone_else', status: 'draft' }],
+    })
+    await handleCheckoutSessionCompleted(client, session())
+    expect(h.transitionToPendingReview).not.toHaveBeenCalled()
+  })
+
+  it('throws if the paid job cannot be submitted, rather than silently stranding it', async () => {
+    h.transitionToPendingReview.mockResolvedValueOnce({ error: 'db down' } as never)
+    const { client } = makeClient({ listings: [draftListing] })
+    await expect(handleCheckoutSessionCompleted(client, session())).rejects.toThrow(
+      /could not be submitted for review/
+    )
+  })
+
+  it('writes an audit trail for the money movement', async () => {
+    const { client } = makeClient({ listings: [draftListing] })
+    await handleCheckoutSessionCompleted(client, session())
+    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'job_posting_purchased', targetId: 'l1' })
+    )
+  })
+})
