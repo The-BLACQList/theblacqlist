@@ -16,16 +16,18 @@
  * "not found" is the wrong thing to tell someone who is looking at a suggestion
  * they rejected an hour ago.
  *
- * ── Expiry is decided when someone looks, not by a sweep ─────────────────────
+ * ── Expiry is decided both on access and on a schedule ───────────────────────
  * The safety plan says unreviewed suggestions become `expired` after 7 days.
- * There is no scheduled job doing that, so expiry is evaluated on access: a
- * `pending` row past the window is written to `expired` and refused. Two
- * consequences worth stating plainly rather than discovering later — a suggestion
- * nobody opens stays `pending` in the table indefinitely, and the `expired_at`
- * transition happens whenever it is first noticed rather than on the seventh day.
- * Neither affects what an owner can act on, which is the thing the rule exists to
- * control. A cron sweep would make the stored state match the clock; it is filed
- * as debt, not pretended into place here.
+ * This check evaluates that on access — a `pending` row past the window is
+ * written to `expired` and refused — and the daily sweep in
+ * `lib/services/expiry/sweeps.ts` (`expireStaleSuggestions`) catches the rows
+ * nobody ever opens, which would otherwise sit `pending` forever.
+ *
+ * Keeping both is deliberate rather than redundant. The sweep runs once a day,
+ * so between runs there is always a window in which a row is over-age and still
+ * stored as `pending`; this check is what makes the rule exact at the moment it
+ * matters. The sweep uses {@link SUGGESTION_EXPIRY_DAYS} too, so the two cannot
+ * disagree about how old is too old.
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
