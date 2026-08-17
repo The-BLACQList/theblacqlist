@@ -4378,7 +4378,7 @@ ISR 1 hour — `community_impact_daily` is updated once per day via scheduled ag
 >
 > They read **`flow_nodes` and `flow_edges` directly, per request**. The Section 11 endpoints below are a *different, later* design that reads precomputed `flow_map_snapshots` rows.
 >
-> **`flow_map_snapshots` does not exist.** There is no migration and no generated type for it `[Measured — repo grep, 2026-08-17]`. It is a requirement of the V3/V4 design, not existing V2 infrastructure, and the roadmap schedules it in Phase 4 (`production-roadmap.md:1090`) rather than V2. Every Section 11 endpoint that reads from it is blocked on that table being built.
+> **`flow_map_snapshots` does not exist.** There is no migration and no generated type for it `[Measured — repo grep, 2026-08-17]`. It is a requirement of the V3/V4 design, not existing V2 infrastructure, and the roadmap schedules it in Phase 4 (`production-roadmap.md:1096`, migration `20260512000004_flow_map_snapshots.sql`) rather than V2. Every Section 11 endpoint that reads from it is blocked on that table being built.
 
 ---
 
