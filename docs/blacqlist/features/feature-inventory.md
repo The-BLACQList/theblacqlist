@@ -241,14 +241,14 @@ This is the canonical list of all features across all modules and phases. Use th
 
 ## Module 11 — Dollar-Flow Map
 
-| Feature                                                 | Priority | Phase | Notes                             |
-| ------------------------------------------------------- | -------- | ----- | --------------------------------- |
-| Business / vendor node display (opt-in)                 | F        | V3    |                                   |
-| Anonymized buyer flow volume                            | F        | V3    |                                   |
-| City-level filter                                       | F        | V3    |                                   |
-| Category-level filter                                   | F        | V3    |                                   |
-| Embed option for external sites                         | F        | V3    |                                   |
-| Aggregate summary number ("$X circulated this quarter") | L        | V2    | Simpler version before full graph |
+| Feature                                            | Priority | Phase | Notes                             |
+| -------------------------------------------------- | -------- | ----- | --------------------------------- |
+| Business / vendor node display (opt-in)            | F        | V3    |                                   |
+| Anonymized buyer flow volume                       | F        | V3    |                                   |
+| City-level filter                                  | F        | V3    |                                   |
+| Category-level filter                              | F        | V3    |                                   |
+| Embed option for external sites                    | F        | V3    |                                   |
+| Aggregate summary number ("$X spent this quarter") | L        | V2    | Simpler version before full graph |
 
 ---
 

@@ -496,7 +496,7 @@ UNIQUE constraint on `(listing_id, date)` — one row per listing per day. Aggre
 
 ### Layer 3: Community Impact
 
-**`community_impact_daily`** (V2) — Anonymized spend aggregates by city and category. No user FKs. No individual spend attribution. Used for the community impact visualization and public "dollars circulated" metrics.
+**`community_impact_daily`** (V2) — Anonymized spend aggregates by city and category. No user FKs. No individual spend attribution. Used for the community impact visualization and public "dollars spent with Black-owned businesses" metrics.
 
 | Field               | Type                                          | Notes                                                   |
 | ------------------- | --------------------------------------------- | ------------------------------------------------------- |

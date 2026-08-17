@@ -65,7 +65,7 @@ No background jobs. No `flow_map_snapshots` table at MVP. Queries run against li
 
 | File                                       | Purpose                                                                                                                                               |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `components/flow-map/FlowSummaryCards.tsx` | Three stat cards: total circulated / businesses supported / transactions. Pure display component.                                                     |
+| `components/flow-map/FlowSummaryCards.tsx` | Three stat cards: total spent / businesses supported / tracked purchases. Pure display component.                                                     |
 | `components/flow-map/FlowNodeTable.tsx`    | Ranked list of business or city nodes with progress bars proportional to spend. Optional link to entity page.                                         |
 | `components/flow-map/FlowMapNetwork.tsx`   | Server-side SVG network visualization. Business nodes as circles orbiting a central "Community" node. Sized by transaction count. No d3 or client JS. |
 
@@ -81,7 +81,7 @@ All three are Server Components (no `"use client"` directive).
 
 **Page sections:**
 
-1. **Hero** — Headline stat (total $ circulated if data exists, else "Where does our money go?"), CTA to submit receipt
+1. **Hero** — Headline stat (total $ spent with Black-owned businesses if data exists, else "Where does our money go?"), CTA to submit receipt
 2. **Summary cards** — `FlowSummaryCards` with total, businesses, transactions. Empty state hero card if no data yet.
 3. **Network SVG** — `FlowMapNetwork` with up to 8 business nodes. Shows "No flow data yet" empty state.
 4. **City/category filter placeholder** — Disabled filter buttons with "Coming soon" badge

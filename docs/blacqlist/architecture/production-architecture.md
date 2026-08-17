@@ -692,7 +692,7 @@ No external graph database is needed. `spend_events` rows aggregated by `busines
 
 ### V2: Aggregate Counter
 
-The `/api/spend/city-total` endpoint (V2) returns the aggregate dollar amount circulated within a city:
+The `/api/spend/city-total` endpoint (V2) returns the aggregate dollar amount spent with Black-owned businesses in a city:
 
 ```
 SELECT city_id, SUM(amount) as total
@@ -702,7 +702,7 @@ WHERE listings.city_id = [city_id]
 GROUP BY city_id
 ```
 
-This query result is cached in memory (or via a simple `unstable_cache` wrapper in Next.js) with a 1-hour TTL. The result surfaces as the "Total Circulated" counter on city pages and the homepage. No visualization at V2 beyond this counter.
+This query result is cached in memory (or via a simple `unstable_cache` wrapper in Next.js) with a 1-hour TTL. The result surfaces as the "Total spent" counter on city pages and the homepage. No visualization at V2 beyond this counter.
 
 ### V3: Interactive Graph
 
