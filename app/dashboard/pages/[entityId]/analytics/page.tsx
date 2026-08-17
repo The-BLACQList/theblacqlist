@@ -29,10 +29,7 @@ function TrendBar({ value, max, date }: { value: number; max: number; date: stri
     day: 'numeric',
   })
   return (
-    <div
-      className="flex flex-col items-center gap-1 flex-1 min-w-0"
-      title={`${label}: ${value}`}
-    >
+    <div className="flex flex-col items-center gap-1 flex-1 min-w-0" title={`${label}: ${value}`}>
       <div className="w-full flex items-end justify-center" style={{ height: 64 }}>
         <div
           className="w-full bg-amber-gold/70 rounded-t-sm transition-all"
@@ -51,7 +48,13 @@ function MiniChart({
   valueKey,
   label,
 }: {
-  rows: { snapshot_date: string; page_views: number; cta_clicks: number; saves: number; shares: number }[]
+  rows: {
+    snapshot_date: string
+    page_views: number
+    cta_clicks: number
+    saves: number
+    shares: number
+  }[]
   valueKey: 'page_views' | 'cta_clicks' | 'saves' | 'shares'
   label: string
 }) {
@@ -111,8 +114,8 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
             Analytics is a paid feature
           </h2>
           <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
-            Upgrade to Starter or above to see page views, CTA clicks, saves, shares, and your
-            trend charts.
+            Upgrade to Starter or above to see page views, CTA clicks, saves, shares, and your trend
+            charts.
           </p>
           <Link
             href="/dashboard/upgrade"
@@ -130,64 +133,101 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
   const sinceDateStr = sinceDate.toISOString().slice(0, 10)
   const sinceIso = sinceDate.toISOString()
 
-  const [viewsCount, ctaClicksCount, sharesCount, savesCount, dailyResult, searchQueriesResult] =
-    await Promise.all([
-      supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_id', entityId)
-        .eq('event_name', ANALYTICS_EVENTS.PAGE_VIEW)
-        .gte('created_at', sinceIso),
+  const [
+    viewsCount,
+    ctaClicksCount,
+    marketplaceCtaCount,
+    sharesCount,
+    savesCount,
+    dailyResult,
+    searchQueriesResult,
+  ] = await Promise.all([
+    supabase
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', entityId)
+      .eq('event_name', ANALYTICS_EVENTS.PAGE_VIEW)
+      .gte('created_at', sinceIso),
 
-      supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_id', entityId)
-        .in('event_name', [
-          ANALYTICS_EVENTS.CTA_CLICK,
-          ANALYTICS_EVENTS.HERO_CTA_CLICK,
-          ANALYTICS_EVENTS.ACTION_BAR_CTA_CLICK,
-          ANALYTICS_EVENTS.MARKETPLACE_CTA_CLICK,
-        ])
-        .gte('created_at', sinceIso),
+    // Listing-scoped CTA clicks. HERO_CTA_CLICK and ACTION_BAR_CTA_CLICK are
+    // included for forward-compatibility and currently have no emitter — see
+    // the emission table in lib/analytics/constants.ts. MARKETPLACE_CTA_CLICK
+    // is deliberately NOT in this list: the marketplace emits plain
+    // `cta_click` (app/api/marketplace/cta-click/route.ts), so asking for
+    // `marketplace_cta_click` here matched nothing and the constant's presence
+    // only made the omission look handled.
+    supabase
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', entityId)
+      .in('event_name', [
+        ANALYTICS_EVENTS.CTA_CLICK,
+        ANALYTICS_EVENTS.HERO_CTA_CLICK,
+        ANALYTICS_EVENTS.ACTION_BAR_CTA_CLICK,
+      ])
+      .gte('created_at', sinceIso),
 
-      supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_id', entityId)
-        .eq('event_name', ANALYTICS_EVENTS.SHARE_INITIATED)
-        .gte('created_at', sinceIso),
+    // Marketplace CTA clicks, attributed back to this listing.
+    //
+    // WHY THIS IS A SEPARATE QUERY. A marketplace CTA click writes
+    // `entity_id` = the product/service id, not the listing id — the click
+    // happened on a product, and rewriting entity_id to the listing would
+    // lose which product converted. The owner still needs the click, so the
+    // listing arrives in `properties.listing_id` and is read back out here.
+    // Without this, the "CTA clicks" tile below counted zero for every
+    // listing on the site while real purchase-intent clicks were being
+    // recorded and discarded from the owner's view.
+    //
+    // The entity_type filter keeps this double-count-safe: if a
+    // listing-scoped `cta_click` is ever added that also carries
+    // properties.listing_id, it will be counted by the query above and must
+    // not be counted again here.
+    supabase
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_name', ANALYTICS_EVENTS.CTA_CLICK)
+      .in('entity_type', ['product', 'service'])
+      .eq('properties->>listing_id', entityId)
+      .gte('created_at', sinceIso),
 
-      // The action filter is required, not optional: save_toggled covers both
-      // directions, and without it an unsave would read as a save. It also keeps
-      // this live count consistent with the nightly rollup, which filters the
-      // same way (20260515000000_analytics_aggregation.sql).
-      supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_id', entityId)
-        .eq('event_name', ANALYTICS_EVENTS.SAVE_TOGGLED)
-        .eq('properties->>action', 'save')
-        .gte('created_at', sinceIso),
+    supabase
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', entityId)
+      .eq('event_name', ANALYTICS_EVENTS.SHARE_INITIATED)
+      .gte('created_at', sinceIso),
 
-      supabase
-        .from('entity_analytics_daily')
-        .select('snapshot_date, page_views, cta_clicks, saves, shares')
-        .eq('listing_id', entityId)
-        .gte('snapshot_date', sinceDateStr)
-        .order('snapshot_date', { ascending: true }),
+    // The action filter is required, not optional: save_toggled covers both
+    // directions, and without it an unsave would read as a save. It also keeps
+    // this live count consistent with the nightly rollup, which filters the
+    // same way (20260515000000_analytics_aggregation.sql).
+    supabase
+      .from('analytics_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_id', entityId)
+      .eq('event_name', ANALYTICS_EVENTS.SAVE_TOGGLED)
+      .eq('properties->>action', 'save')
+      .gte('created_at', sinceIso),
 
-      // Queries that led to a click on this listing from search results
-      supabase
-        .from('search_events')
-        .select('query')
-        .eq('clicked_listing_id', entityId)
-        .gte('created_at', sinceIso)
-        .limit(200),
-    ])
+    supabase
+      .from('entity_analytics_daily')
+      .select('snapshot_date, page_views, cta_clicks, saves, shares')
+      .eq('listing_id', entityId)
+      .gte('snapshot_date', sinceDateStr)
+      .order('snapshot_date', { ascending: true }),
+
+    // Queries that led to a click on this listing from search results
+    supabase
+      .from('search_events')
+      .select('query')
+      .eq('clicked_listing_id', entityId)
+      .gte('created_at', sinceIso)
+      .limit(200),
+  ])
 
   const views = viewsCount.count ?? 0
-  const cta = ctaClicksCount.count ?? 0
+  const marketplaceCta = marketplaceCtaCount.count ?? 0
+  const cta = (ctaClicksCount.count ?? 0) + marketplaceCta
   const sh = sharesCount.count ?? 0
   const sv = savesCount.count ?? 0
 
@@ -234,7 +274,11 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="Page views" value={views} />
-          <StatCard label="CTA clicks" value={cta} />
+          <StatCard
+            label="CTA clicks"
+            value={cta}
+            sub={marketplaceCta > 0 ? `${marketplaceCta} from marketplace` : undefined}
+          />
           <StatCard label="Saves" value={sv} />
           <StatCard label="Shares" value={sh} />
         </div>
@@ -258,11 +302,25 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
             </h2>
             <MiniChart rows={dailyRows} valueKey="page_views" label="Page views" />
           </div>
+          {/*
+            DELIBERATELY NARROWER THAN THE TILE ABOVE, AND LABELLED TO SAY SO.
+            `entity_analytics_daily` is keyed on listing_id and its rollup counts
+            only rows where entity_type = 'listing'
+            (20260515000000_analytics_aggregation.sql). Marketplace CTA rows are
+            entity_type 'product'/'service', so they are invisible to this chart
+            BY DESIGN — the rollup would have to re-derive the listing from
+            properties->>listing_id to see them.
+
+            Do not "fix" the rollup to fold them in. The daily table is per-listing
+            page performance; a product click on a shared storefront is a different
+            measurement. The combined figure comes from the live query above, which
+            is why the tile can read higher than the sum of these bars.
+          */}
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              CTA clicks, daily
+              Page CTA clicks, daily
             </h2>
-            <MiniChart rows={dailyRows} valueKey="cta_clicks" label="CTA clicks" />
+            <MiniChart rows={dailyRows} valueKey="cta_clicks" label="Page CTA clicks" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">

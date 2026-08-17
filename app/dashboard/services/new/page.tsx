@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { ServiceForm } from '@/components/marketplace/ServiceForm'
+import { NoListingsNotice } from '@/components/dashboard/NoListingsNotice'
 import { createServiceAction } from '@/lib/actions/marketplace/createService'
 
 export const metadata: Metadata = { title: 'New Service | Dashboard' }
@@ -36,13 +37,17 @@ export default async function NewServicePage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-        <ServiceForm
-          action={createServiceAction}
-          listings={listings ?? []}
-          submitLabel="Create service"
-        />
-      </div>
+      {(listings ?? []).length === 0 ? (
+        <NoListingsNotice kind="service" />
+      ) : (
+        <div className="rounded-xl border border-charcoal/10 bg-white p-6">
+          <ServiceForm
+            action={createServiceAction}
+            listings={listings ?? []}
+            submitLabel="Create service"
+          />
+        </div>
+      )}
     </div>
   )
 }

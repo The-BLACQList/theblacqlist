@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Package, Briefcase, ArrowRight } from 'lucide-react'
+import { Package, Briefcase, Store, ArrowRight } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/marketplace/ProductCard'
@@ -89,6 +89,13 @@ export default async function MarketplacePage() {
             >
               <Briefcase className="size-4 shrink-0" aria-hidden="true" />
               Browse Services
+            </Link>
+            <Link
+              href="/vendors"
+              className="inline-flex items-center gap-2 h-11 px-6 rounded-full border border-white/30 text-white font-subhead font-bold text-sm hover:bg-white/10 transition-colors min-h-[44px]"
+            >
+              <Store className="size-4 shrink-0" aria-hidden="true" />
+              Browse Storefronts
             </Link>
           </div>
         </div>

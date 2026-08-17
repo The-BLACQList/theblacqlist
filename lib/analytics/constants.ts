@@ -61,13 +61,27 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
 )
 
 /**
- * Emission status as of 2026-08-11. Kept honest because the owner-facing
+ * Emission status as of 2026-08-17. Kept honest because the owner-facing
  * dashboard is a paid feature — a declared-but-unemitted name renders as a
  * confident zero, which is worse than an absent metric.
  *
  *   Emitted: page_view, search_performed, cta_click, save_toggled,
  *            share_initiated, claim_submitted, listing_submitted
  *            + the three SERVER_ONLY_EVENTS above.
+ *
+ *   cta_click IS NOT ONE EVENT WITH ONE SHAPE. Two emitters write it, and they
+ *   disagree about what entity_id means:
+ *     · Marketplace (components/marketplace/CTAButton.tsx →
+ *       /api/marketplace/cta-click) — entity_type 'product' | 'service',
+ *       entity_id = the product/service id, listing in properties.listing_id.
+ *       All four current call sites are marketplace surfaces.
+ *     · Listing pages — entity_type 'listing', entity_id = the listing id.
+ *       DECLARED BUT UNEMITTED: no component passes entityType='listing' today,
+ *       so in practice every cta_click row in the table is marketplace-scoped.
+ *   Any per-listing count must therefore query BOTH entity_id and
+ *   properties->>listing_id, filtered by entity_type so neither is double
+ *   counted. app/dashboard/pages/[entityId]/analytics/page.tsx does this; it
+ *   read a permanent zero until 2026-08-17 because it only did the first half.
  *
  *   share_initiated is emitted by components/entity-page/ShareButton.tsx, which
  *   until 2026-08-11 was defined but mounted nowhere — all three share
@@ -78,6 +92,12 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            guide_viewed, hero_cta_click, action_bar_cta_click,
  *            marketplace_product_viewed, marketplace_cta_click,
  *            review_submitted, claim_started, receipt_submitted.
+ *
+ *   MARKETPLACE_CTA_CLICK IS A TRAP. The marketplace does emit CTA clicks — it
+ *   just emits them as plain `cta_click` (above), not under this name. Nothing
+ *   writes 'marketplace_cta_click', so including it in a query adds an
+ *   always-empty branch that makes the real gap look handled. Either wire an
+ *   emitter or delete the constant; do not query it.
  *
  *   Added 2026-08-15 and emitted from the same commit: sponsored_impression,
  *   sponsored_click (components/entities/SponsoredTracking.tsx).
