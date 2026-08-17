@@ -123,12 +123,25 @@ describe('the false opt-out claim is gone from the flow map', () => {
     expect(read(FLOW_MAP)).toContain('When you submit a receipt you can choose to keep it')
   })
 
-  // Deliberately NOT asserted here: that app/(public)/privacy/page.tsx and
-  // app/(public)/terms/page.tsx carry the same correction. Both still say
-  // "at any time … from your account settings". They are a Privacy Policy and
-  // a Terms of Service — a founder decision with [Needs professional review],
-  // not a copy fix this PR may make unilaterally. Guarding them here would
-  // redden CI over a decision that has not been taken yet. It is filed.
+  // Still deliberately NOT asserted here: that app/(public)/privacy/page.tsx
+  // and app/(public)/terms/page.tsx carry the same correction. The reason has
+  // changed, so it is worth stating precisely.
+  //
+  // When this file was written the decision had not been taken. It has been
+  // since [Decision — founder, 2026-08-17: "B — correct the copy"], and the
+  // correction exists: all three sentences are rewritten and guarded by
+  // tests/opt-out-copy.test.ts. But that work sits on an unmerged branch,
+  // held on [Needs professional review] — a Privacy Policy and a Terms of
+  // Service narrowing a stated data right is a change counsel reads before it
+  // ships, not one a green build clears.
+  //
+  // So on main today both documents still carry the false claim — privacy
+  // §4/§8 as "at any time through your account settings", terms §6 as the
+  // account-wide shape alone ("unless you opt out in your account settings"),
+  // which is why the fix guards both halves separately rather than banning one
+  // phrase. Asserting the correction here would redden CI over copy that has
+  // not landed. When it lands, opt-out-copy.test.ts is where the guard lives —
+  // do not duplicate it here.
 })
 
 describe('section 8 — the limitations a tidy-up would quietly delete', () => {
