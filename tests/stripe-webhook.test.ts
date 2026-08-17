@@ -9,6 +9,7 @@ const h = vi.hoisted(() => {
   const handleSubscriptionUpsert = vi.fn(async () => {})
   const handleSubscriptionDeleted = vi.fn(async () => {})
   const handlePaymentFailed = vi.fn(async () => {})
+  const handleCheckoutSessionCompleted = vi.fn(async () => {})
 
   const state: { seen: unknown; markInsertError: { code: string } | null } = {
     seen: null,
@@ -36,6 +37,7 @@ const h = vi.hoisted(() => {
     handleSubscriptionUpsert,
     handleSubscriptionDeleted,
     handlePaymentFailed,
+    handleCheckoutSessionCompleted,
     createServiceClient,
     state,
     inserts,
@@ -50,6 +52,7 @@ vi.mock('@/lib/services/billing/webhookHandlers', () => ({
   handleSubscriptionUpsert: h.handleSubscriptionUpsert,
   handleSubscriptionDeleted: h.handleSubscriptionDeleted,
   handlePaymentFailed: h.handlePaymentFailed,
+  handleCheckoutSessionCompleted: h.handleCheckoutSessionCompleted,
 }))
 
 import { POST } from '@/app/api/stripe/webhook/route'

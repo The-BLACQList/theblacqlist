@@ -3,6 +3,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
 import {
+  handleCheckoutSessionCompleted,
   handlePaymentFailed,
   handleSubscriptionDeleted,
   handleSubscriptionUpsert,
@@ -52,6 +53,12 @@ export async function POST(request: Request) {
         break
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(supabase, event.data.object as Stripe.Subscription)
+        break
+      case 'checkout.session.completed':
+        // One-time purchases (E-2 paid job postings). Subscription checkouts also
+        // emit this; the handler ignores anything without our own metadata, since
+        // subscription state is written by the `customer.subscription.*` cases.
+        await handleCheckoutSessionCompleted(supabase, event.data.object as Stripe.Checkout.Session)
         break
       case 'invoice.payment_failed':
         await handlePaymentFailed(supabase, event.data.object as Stripe.Invoice)

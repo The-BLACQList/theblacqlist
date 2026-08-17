@@ -1,25 +1,60 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import Link from 'next/link'
 import { Loader2, CheckCircle, AlertCircle, Globe, EyeOff, Clock } from 'lucide-react'
 import { updateListingStatusAction } from '@/lib/actions/dashboard/updateListingStatus'
+import { submitListingForReviewAction } from '@/lib/actions/listings/submitListingForReview'
 
 interface Props {
   listingId: string
   status: string
   trustTier: string
+  /**
+   * `job` and `event` listings are created by `/add-job` and `/add-event`, which
+   * leave them `draft` + `unclaimed`. Before this prop existed they fell into the
+   * unsubmitted branch below and were pointed at `/add-business` — a flow that
+   * cannot submit them — so they could never reach moderation at all. They get a
+   * real submit button instead.
+   */
+  entityType?: string
 }
 
-export function PublishSection({ listingId, status: initialStatus, trustTier }: Props) {
+export function PublishSection({
+  listingId,
+  status: initialStatus,
+  trustTier,
+  entityType,
+}: Props) {
   const [state, formAction, isPending] = useActionState(updateListingStatusAction, null)
+  const [submitState, submitAction, isSubmitting] = useActionState(
+    submitListingForReviewAction,
+    null
+  )
 
-  const currentStatus = state && 'success' in state ? state.status : initialStatus
+  // A job posting that needs paying for comes back with a Stripe Checkout URL
+  // rather than a success. Nothing has been written at this point — the listing
+  // only advances once the webhook confirms the payment.
+  useEffect(() => {
+    if (submitState && 'requiresPayment' in submitState) {
+      window.location.href = submitState.checkoutUrl
+    }
+  }, [submitState])
+
+  const submitted = submitState !== null && 'success' in submitState
+
+  const currentStatus =
+    state && 'success' in state ? state.status : submitted ? 'pending' : initialStatus
+
+  const isSelfSubmittable = entityType === 'job' || entityType === 'event'
 
   const isPublished = currentStatus === 'published'
   const isPending_ = currentStatus === 'pending'
   const isDraftReviewable = currentStatus === 'draft' && trustTier !== 'unclaimed'
-  const isDraftUnsubmitted = currentStatus === 'draft' && trustTier === 'unclaimed'
+  const isDraftSelfSubmit =
+    currentStatus === 'draft' && trustTier === 'unclaimed' && isSelfSubmittable
+  const isDraftUnsubmitted =
+    currentStatus === 'draft' && trustTier === 'unclaimed' && !isSelfSubmittable
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -46,7 +81,7 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
               <span className="font-subhead text-sm font-semibold text-amber-700">Under review</span>
             </>
           )}
-          {(isDraftReviewable || isDraftUnsubmitted) && (
+          {(isDraftReviewable || isDraftUnsubmitted || isDraftSelfSubmit) && (
             <>
               <EyeOff className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
               <span className="font-subhead text-sm font-semibold text-charcoal-soft">Draft</span>
@@ -75,6 +110,36 @@ export function PublishSection({ listingId, status: initialStatus, trustTier }: 
             </Link>{' '}
             to submit it for review and go live.
           </p>
+        )}
+
+        {/* Draft job/event — submit for review directly */}
+        {isDraftSelfSubmit && (
+          <>
+            <p className="font-body text-sm text-charcoal-soft leading-relaxed">
+              This {entityType === 'job' ? 'job' : 'event'} hasn&apos;t been submitted for review
+              yet. Submit it and The BLACQList team will review it before it goes live.
+            </p>
+            {submitState && 'error' in submitState && (
+              <div
+                role="alert"
+                className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
+              >
+                <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
+                <p className="font-body text-sm text-red-700">{submitState.error}</p>
+              </div>
+            )}
+            <form action={submitAction}>
+              <input type="hidden" name="listing_id" value={listingId} />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                {isSubmitting ? 'Submitting…' : 'Submit for review'}
+              </button>
+            </form>
+          </>
         )}
 
         {/* Action feedback */}

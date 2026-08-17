@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache'
 import type Stripe from 'stripe'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -7,6 +8,8 @@ import { writeSystemAuditLog } from '@/lib/audit/system'
 import { sendEmail } from '@/lib/email/resend'
 import { PaymentFailedEmail } from '@/lib/email/templates/payment-failed'
 import type { PlanSlug } from '@/lib/stripe/plans'
+import { jobPostingExpiryFrom } from '@/lib/stripe/jobPostings'
+import { transitionToPendingReview } from '@/lib/listings/submitForReview'
 
 type ServiceClient = ReturnType<typeof createServiceClient>
 
@@ -224,5 +227,109 @@ export async function handlePaymentFailed(
     targetTable: 'subscriptions',
     targetId: subRow?.listing_id ?? null,
     afterState: { status: 'past_due' },
+  })
+}
+
+/**
+ * Fulfil a completed one-time Checkout session.
+ *
+ * The product's first non-subscription money path (E-2, Model A). It is
+ * deliberately the ONLY writer of `job_posting_purchases` — there is no RLS
+ * INSERT policy on that table, so a client cannot mint itself a paid row.
+ *
+ * Ordering matters and is not arbitrary: the purchase is recorded BEFORE the
+ * listing transitions. If the transition fails, the caller returns 500, Stripe
+ * retries, and the `stripe_checkout_session_id` UNIQUE constraint makes the
+ * re-recorded purchase a no-op while the transition gets a second chance. The
+ * reverse order would risk a published job with no record of the payment that
+ * bought it.
+ */
+export async function handleCheckoutSessionCompleted(
+  supabase: ServiceClient,
+  session: Stripe.Checkout.Session
+): Promise<void> {
+  const meta = (session.metadata ?? {}) as Record<string, string>
+
+  // Subscription checkouts also emit this event. Their state is written by
+  // `customer.subscription.*`, so anything that is not an explicit one-time
+  // purchase of ours is left alone rather than guessed at.
+  if (meta.purpose !== 'job_posting') return
+
+  // `unpaid` sessions can complete when the payment method settles
+  // asynchronously. Nothing is fulfilled until the money is actually there —
+  // Stripe sends a later event when it is.
+  if (session.payment_status !== 'paid') return
+
+  const listingId = meta.listing_id
+  const userId = meta.user_id
+  if (!listingId || !userId) {
+    throw new Error(`checkout.session.completed ${session.id} is missing listing_id/user_id metadata`)
+  }
+
+  const paidAt = new Date()
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? null)
+
+  // Upsert on the session id, not insert: Stripe redelivers, and this handler
+  // must be safe to run twice. `stripe_events_processed` already guards the
+  // common case, but it is keyed on the event — two different events can
+  // describe the same session.
+  // `job_posting_purchases` is not in the generated Database types — the
+  // migration is written but unapplied (GATE-DATA, lands at G1). Same approach as
+  // lib/security/rate-limit.ts: narrow the call rather than hand-edit generated
+  // types, which would then disagree with the next regeneration.
+  const { error: purchaseError } = await (supabase as unknown as SupabaseClient)
+    .from('job_posting_purchases')
+    .upsert(
+    {
+      listing_id: listingId,
+      purchased_by: userId,
+      stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id: paymentIntentId,
+      // Never a hardcoded amount — what Stripe says was charged is what gets
+      // recorded, so a dashboard price change cannot desync the ledger.
+      amount_cents: session.amount_total ?? 0,
+      currency: session.currency ?? 'usd',
+      status: 'paid',
+      paid_at: paidAt.toISOString(),
+      expires_at: jobPostingExpiryFrom(paidAt),
+      updated_at: paidAt.toISOString(),
+    },
+    { onConflict: 'stripe_checkout_session_id' }
+  )
+
+  if (purchaseError) {
+    throw new Error(`Failed to record job posting purchase: ${purchaseError.message}`)
+  }
+
+  // Only a draft advances. A redelivery arriving after a moderator has already
+  // published the listing must not drag it back to `pending`.
+  const { data: listing } = await supabase
+    .from('listings')
+    .select('status')
+    .eq('id', listingId)
+    .eq('owner_user_id', userId)
+    .maybeSingle()
+
+  if (listing?.status !== 'draft') return
+
+  const result = await transitionToPendingReview(supabase, listingId, userId)
+  if ('error' in result) {
+    throw new Error(`Paid job ${listingId} could not be submitted for review: ${result.error}`)
+  }
+
+  await writeSystemAuditLog({
+    actorUserId: userId,
+    action: 'job_posting_purchased',
+    targetTable: 'job_posting_purchases',
+    targetId: listingId,
+    beforeState: { status: 'draft' },
+    afterState: {
+      status: 'pending',
+      amount_cents: session.amount_total ?? 0,
+      stripe_checkout_session_id: session.id,
+    },
   })
 }

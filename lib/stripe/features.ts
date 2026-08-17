@@ -55,8 +55,12 @@ export type GatedFeature =
   | 'sonnet_agents'
   | 'dedicated_support'
 
-// Tier order for comparison: 0=free, 1=starter, 2=growth, 3=premium
-const TIER_RANK: Record<string, number> = {
+// Tier order for comparison: 0=free, 1=starter, 2=growth, 3=premium.
+// Exported so callers that need to *compare* two tiers (rather than test one
+// against a feature) use this ordering instead of re-declaring their own — a
+// second copy of it drifting is how a paid tier silently stops outranking a free
+// one.
+export const TIER_RANK: Record<string, number> = {
   free: 0,
   starter: 1,
   growth: 2,
