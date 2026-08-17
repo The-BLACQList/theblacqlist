@@ -4,6 +4,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { canAccess } from '@/lib/stripe/features'
+import { isFeatureEnabled } from '@/lib/env'
+import { findAgent, type ApplyTarget } from '@/lib/ai/agents'
+import { RequestSuggestion } from '@/components/dashboard/RequestSuggestion'
+import { SuggestionControls } from '@/components/dashboard/SuggestionControls'
 import {
   computePageChecklist,
   CATEGORY_LABELS,
@@ -13,6 +17,20 @@ import {
 
 interface Props {
   params: Promise<{ entityId: string }>
+}
+
+// `isFeatureEnabled` is read below. No `export const dynamic` is needed here
+// because `requireOwner()` and `createClient()` both read cookies, so this route
+// is already request-scoped and can never be prerendered with a baked-in flag —
+// the caveat in lib/env.ts applies to routes that could be static, not this one.
+
+/** What Apply would overwrite, named the way the owner sees it in their editor. */
+function applyLabelFor(target: ApplyTarget): string | null {
+  if (!target) return null
+  if (target.table === 'listings') {
+    return target.column === 'meta_title' ? 'SEO title' : 'SEO description'
+  }
+  return 'business description'
 }
 
 function ScoreBadge({ score, maxScore }: { score: number; maxScore: number }) {
@@ -123,7 +141,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
 
     supabase
       .from('ai_suggestions')
-      .select('id, suggestion_type, agent_type, suggestion_text, status, created_at')
+      .select('id, suggestion_type, agent_type, suggestion_text, status, created_at, metadata')
       .eq('listing_id', entityId)
       .in('status', ['pending', 'approved', 'applied'])
       .order('created_at', { ascending: false })
@@ -134,6 +152,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
   const serviceCount = serviceResult.count ?? 0
   const hoursCount = hoursResult.count ?? 0
   const suggestions = suggestionsResult.data ?? []
+  const aiBetaEnabled = isFeatureEnabled('aiBeta')
 
   const checklist = computePageChecklist(
     {
@@ -219,6 +238,16 @@ export default async function AiSuggestionsPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Request a suggestion */}
+      {aiBetaEnabled && (
+        <div className="space-y-4">
+          <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
+            Ask for a draft
+          </h2>
+          <RequestSuggestion listingId={entityId} />
+        </div>
+      )}
+
       {/* AI Suggestions section */}
       <div className="space-y-4">
         <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide">
@@ -228,34 +257,77 @@ export default async function AiSuggestionsPage({ params }: Props) {
         {suggestions.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
             <Sparkles className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
-            <p className="font-body text-sm text-charcoal-soft">AI copy suggestions coming in V2.</p>
-            <p className="font-body text-xs text-charcoal-faint mt-1">
-              Once available, AI-generated suggestions for your description, SEO copy, and social
-              captions will appear here, ready for your review and approval before anything is
-              published.
-            </p>
+            {aiBetaEnabled ? (
+              <>
+                <p className="font-body text-sm text-charcoal-soft">Nothing drafted yet.</p>
+                <p className="font-body text-xs text-charcoal-faint mt-1">
+                  Ask for a draft above. Whatever comes back lands here for you to read, approve or
+                  reject — nothing reaches your page until you apply it.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-body text-sm text-charcoal-soft">
+                  AI copy suggestions aren&apos;t switched on yet.
+                </p>
+                <p className="font-body text-xs text-charcoal-faint mt-1">
+                  When they are, drafts for your description, SEO copy, and social captions will
+                  appear here, ready for your review and approval before anything is published.
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="rounded-xl border border-charcoal/10 bg-white divide-y divide-charcoal/5">
-            {suggestions.map((s) => (
-              <div key={s.id} className="px-5 py-4">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="font-mono text-xs text-charcoal-soft">{s.suggestion_type}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${
-                      s.status === 'applied'
-                        ? 'bg-green-100 text-green-700'
-                        : s.status === 'approved'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-amber-100 text-amber-700'
-                    }`}
-                  >
-                    {s.status}
-                  </span>
+            {suggestions.map((s) => {
+              const agent = findAgent(s.agent_type)
+              const applyTarget = agent?.applyTarget ?? null
+              // A "Sample" label, not a disclaimer buried in help text. The mock
+              // tier writes real copy from the listing's own values, so nothing
+              // about the text itself tells the owner it wasn't a model.
+              const isSample =
+                s.metadata !== null &&
+                typeof s.metadata === 'object' &&
+                !Array.isArray(s.metadata) &&
+                (s.metadata as Record<string, unknown>).provider === 'mock'
+
+              return (
+                <div key={s.id} className="px-5 py-4">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="font-body text-sm font-semibold text-brand-black truncate">
+                        {agent?.label ?? s.suggestion_type}
+                      </span>
+                      {isSample && (
+                        <span className="shrink-0 px-2 py-0.5 rounded-full bg-charcoal/5 font-subhead text-[11px] font-semibold text-charcoal-soft">
+                          Sample
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={`shrink-0 px-2 py-0.5 rounded-full font-subhead text-[11px] font-semibold ${
+                        s.status === 'applied'
+                          ? 'bg-green-100 text-green-700'
+                          : s.status === 'approved'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-amber-100 text-amber-700'
+                      }`}
+                    >
+                      {s.status}
+                    </span>
+                  </div>
+                  <p className="font-body text-sm text-brand-black whitespace-pre-line">
+                    {s.suggestion_text}
+                  </p>
+                  <SuggestionControls
+                    suggestionId={s.id}
+                    status={s.status}
+                    canApply={applyTarget !== null}
+                    applyLabel={applyLabelFor(applyTarget)}
+                  />
                 </div>
-                <p className="font-body text-sm text-brand-black">{s.suggestion_text}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
