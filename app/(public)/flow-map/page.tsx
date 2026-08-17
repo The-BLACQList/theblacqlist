@@ -601,9 +601,15 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
             never included in public views. A named business or city only appears here once{' '}
             {AGGREGATE_MIN_TRANSACTIONS} or more distinct transactions are behind its total. The
             community-wide figures at the top of this page are a single sum across everything
-            reported, so they identify no one. Users can opt out of community aggregates at any
-            time.
+            reported, so they identify no one. When you submit a receipt you can choose to keep it
+            out of community figures.
           </p>
+          <Link
+            href="/flow-map/methodology"
+            className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors mt-2 inline-block"
+          >
+            How we count community spend →
+          </Link>
         </div>
       </div>
     </main>
