@@ -101,9 +101,27 @@ describe('mock tier', () => {
   it('produces output every agent’s own validator accepts', () => {
     // A mock that fails validateOutput would make the whole approval flow
     // untestable without a provider, which is the point of the mock tier.
+    //
+    // The ceiling is read from the registry deliberately. An earlier draft of
+    // this file passed `agent.maxChars`, which does not exist — it arrived as
+    // `undefined`, `Math.min(undefined, …)` is NaN, and `length > NaN` is
+    // always false, so the length check silently did nothing while the test
+    // still went green. tsc caught it; vitest could not.
     for (const agent of AI_AGENTS) {
-      const result = validateOutput(mockResponseFor(agent, CTX), agent.maxChars)
+      expect(Number.isFinite(agent.maxOutputChars)).toBe(true)
+      const result = validateOutput(mockResponseFor(agent, CTX), agent.maxOutputChars)
       expect(result.ok, `${agent.agentType}: ${JSON.stringify(result)}`).toBe(true)
+    }
+  })
+
+  it('gives every agent a ceiling its own mock response actually fits under', () => {
+    // The pair that the vacuous version above could not distinguish: a mock
+    // longer than its agent's ceiling would have passed there and fails here.
+    for (const agent of AI_AGENTS) {
+      const out = mockResponseFor(agent, CTX)
+      expect(out.length, `${agent.agentType} mock is ${out.length} chars`).toBeLessThanOrEqual(
+        agent.maxOutputChars
+      )
     }
   })
 
