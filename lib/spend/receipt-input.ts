@@ -96,6 +96,7 @@ export interface ReceiptStorage {
       file: File,
       opts: { contentType: string; upsert: boolean }
     ): Promise<{ error: { message: string } | null }>
+    remove(paths: string[]): Promise<{ error: { message: string } | null }>
   }
 }
 
@@ -150,4 +151,28 @@ export async function uploadReceiptFile(
   }
 
   return { ok: true, path: storagePath }
+}
+
+/**
+ * Best-effort removal of a stored receipt object. Compensation only — every
+ * caller has already decided what the row says, so a failed removal must not
+ * change what the user is told. Follows the same posture as the media upload
+ * route (app/api/upload/route.ts) and account deletion, both of which treat
+ * storage cleanup as non-blocking.
+ *
+ * Never throws. An orphan is invisible and permanent; a thrown error here
+ * would turn a successful edit into a failed one, which is strictly worse.
+ */
+export async function removeReceiptFile(storage: ReceiptStorage, path: string): Promise<void> {
+  try {
+    const { error } = await storage.from(RECEIPT_BUCKET).remove([path])
+    if (error) {
+      console.error('[receipt-remove] failed:', { bucket: RECEIPT_BUCKET, message: error.message })
+    }
+  } catch (err) {
+    console.error('[receipt-remove] threw:', {
+      bucket: RECEIPT_BUCKET,
+      message: err instanceof Error ? err.message : 'unknown',
+    })
+  }
 }

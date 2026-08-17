@@ -2,7 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { parseReceiptFields, uploadReceiptFile } from '@/lib/spend/receipt-input'
+import {
+  parseReceiptFields,
+  removeReceiptFile,
+  uploadReceiptFile,
+} from '@/lib/spend/receipt-input'
 
 export type ReceiptSubmissionState =
   | { success: true; id: string }
@@ -63,6 +67,18 @@ export async function createReceiptSubmissionAction(
     .single()
 
   if (error) {
+    // Compensate: the object is already in the bucket and no row will ever
+    // point at it. An orphan in storage is invisible — it survives account
+    // deletion too, because deletion collects paths from `file_path` and this
+    // path was never written there. Same posture as app/api/upload/route.ts.
+    //
+    // The duplicate branch below needs this as much as the unexpected ones: the
+    // first submission stored its own distinct path (every path carries a fresh
+    // UUID), so removing this one cannot detach the receipt that did save.
+    if (filePath !== null) {
+      await removeReceiptFile(serviceClient.storage, filePath)
+    }
+
     if (error.code === '23505') {
       return { error: 'This receipt has already been submitted.' }
     }
