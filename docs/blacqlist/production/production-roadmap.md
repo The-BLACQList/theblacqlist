@@ -701,19 +701,24 @@ Wire existing component placeholders to real data:
 | Component             | Current State                     | Action                                  |
 | --------------------- | --------------------------------- | --------------------------------------- |
 | `FlowSummaryCards`    | Exists, wired                     | Verify real data flows in               |
-| `FlowNodeTable`       | Exists                            | Wire city/category filter query params  |
-| `FlowMapNetwork`      | Exists (decorative SVG)           | Upgrade to force-directed graph         |
-| City/category filters | Placeholder `{/* placeholder */}` | Wire to URL query params + API filters  |
-| Entity impact panel   | Placeholder                       | Wire to `/api/flow-map/personal-impact` |
+| `FlowNodeTable`       | Exists, filters wired             | **Done** (PR #63)                       |
+| `FlowMapNetwork`      | Exists (decorative SVG)           | Upgrade — **medium is an open question**, see below |
+| City/category filters | Wired to URL query params         | **Done** (PR #63) — `searchParams: { city?, category? }` at `page.tsx:31` |
+| Entity impact panel   | Placeholder (`page.tsx:572`)      | Wire to `/api/flow-map/personal-impact` |
 
-**FlowMapNetwork visualization** (install `react-force-graph-2d`):
+**FlowMapNetwork visualization — the renderer is not chosen.** An earlier version of this section said *"upgrade to force-directed graph"* and *"install `react-force-graph-2d`"*. That presupposes an answer to a decision the founder has explicitly reopened: `[Decision — founder, 2026-08-17: Option A — widen the graph first, then decide the medium]`. Nothing is installed and no library is committed to.
 
-- Nodes: businesses (circles, amber gold) + cities (squares, charcoal)
+The reasoning, the falsifiable criterion the medium has to pass, and the current forecast (a layered/Sankey 2D layout, with 3D re-entering only on measured overplotting after launch) live in `docs/blacqlist/flow-map/flow-map-mvp-spec.md` §9. Read that before writing any of this.
+
+What is *not* medium-dependent, and holds whichever renderer wins:
+
+- Nodes: businesses + cities (`flow_nodes`); a `category` node type is a proposed third — a schema decision at GATE-DATA, not scheduled here
 - Node size: proportional to `total_spend_cents`
-- Edges: `transaction_count >= 5` only (privacy floor)
+- Edges: `transaction_count >= 5` only (privacy floor — applied **at query time**, see `api-contract.md` Section 11)
 - Edge thickness: proportional to `transaction_count`
 - Click on business node → navigate to entity page
 - Hover: tooltip with business name + total spend formatted as dollars
+- Reduced motion: the repo's contract is **opt-in** (`app/globals.css:154, 174, 247`), so a `requestAnimationFrame` loop of any kind — 2D force simulation included — must honour it explicitly. `components/motion/Reveal.tsx` is the precedent.
 
 Files: `components/flow-map/FlowMapNetwork.tsx`, `app/(public)/flow-map/page.tsx`
 
@@ -1062,8 +1067,8 @@ _Auto-drafts platform posts for new verified listings_
 
 - [ ] Receipt upload → admin approve → `spend_events` row created (no user_id)
 - [ ] `flow_nodes` and `flow_edges` updated after approval
-- [ ] `/flow-map` renders real nodes and edges in force-directed graph
-- [ ] Privacy floor: edges with `<5 transactions` excluded from visualization
+- [ ] `/flow-map` renders real nodes and edges (renderer TBD — the medium is an open decision, see §3.3)
+- [ ] Privacy floor: edges with `<5 transactions` excluded from visualization — note the bound counts **transactions, not distinct people** (`lib/spend/aggregate-privacy.ts:32`), and is applied **at query time** on every read
 - [ ] Personal impact panel shows authenticated user's real totals
 - [ ] All 22 AI agents produce output in staging (Anthropic API live)
 - [ ] No `ai_suggestions` row auto-published; all require approval
@@ -1278,8 +1283,8 @@ Build agents in this order to minimize rework and test on stable data:
 | 1    | 0     | Wire `/flow-map` `FlowSummaryCards` + `FlowNodeTable` to real API data      |
 | 2    | 3     | Add `spend_events.city_id`; write `process_receipt_approval()` trigger      |
 | 3    | 3     | OCR receipt → listing match → spend event pipeline end-to-end in staging    |
-| 4    | 3     | Upgrade `FlowMapNetwork.tsx` to force-directed graph (react-force-graph-2d) |
-| 5    | 3     | Wire city/category filters on flow-map page to query params                 |
+| 4    | 3     | Upgrade `FlowMapNetwork.tsx` — **renderer undecided**, no library committed (see §3.3) |
+| 5    | 3     | ~~Wire city/category filters on flow-map page to query params~~ — **done, PR #63**     |
 | 6    | 3     | Wire personal impact panel to `/api/flow-map/personal-impact`               |
 | 7    | 4     | `flow_map_snapshots` table + nightly archiving Edge Function                |
 | 8    | 4     | Time range slider in graph (requires ≥4 snapshots / 1 month of data)        |
@@ -1320,7 +1325,7 @@ Phase 2 (wks 10–18)
 Phase 3 (wks 18–32)
   Full receipt upload with OCR
   Flow map DB trigger (spend → nodes/edges)
-  Circulation Map visualization (force-directed graph)
+  Circulation Map visualization (renderer undecided)
   All 17 AI agents in production
   Marketplace media upload
         │
