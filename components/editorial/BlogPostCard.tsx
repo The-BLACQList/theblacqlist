@@ -7,6 +7,13 @@ interface Props {
   authorName?: string
   publishedAt?: string | null
   tags?: string[] | null
+  /**
+   * The card's title element. Defaults to `h2` for the `/blacqlight` index,
+   * where the page title is the `h1`. The homepage rail passes `h3` because
+   * its own section heading is already an `h2` — same level the listing cards
+   * use inside a carousel (`EntityCard.tsx`).
+   */
+  headingLevel?: 'h2' | 'h3'
 }
 
 function formatDate(iso: string) {
@@ -17,7 +24,15 @@ function formatDate(iso: string) {
   })
 }
 
-export function BlogPostCard({ title, slug, subtitle, authorName, publishedAt, tags }: Props) {
+export function BlogPostCard({
+  title,
+  slug,
+  subtitle,
+  authorName,
+  publishedAt,
+  tags,
+  headingLevel: Heading = 'h2',
+}: Props) {
   return (
     <Link
       href={`/blacqlight/${slug}`}
@@ -36,9 +51,9 @@ export function BlogPostCard({ title, slug, subtitle, authorName, publishedAt, t
         </div>
       )}
       <div>
-        <h2 className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
+        <Heading className="font-headline text-base text-brand-black group-hover:text-amber transition-colors leading-snug">
           {title}
-        </h2>
+        </Heading>
         {subtitle && (
           <p className="font-body text-sm text-charcoal-soft leading-relaxed mt-1 line-clamp-2">
             {subtitle}
@@ -46,7 +61,9 @@ export function BlogPostCard({ title, slug, subtitle, authorName, publishedAt, t
         )}
       </div>
       <div className="flex items-center gap-2 mt-auto pt-1">
-        {authorName && <span className="font-subhead text-xs text-charcoal-soft">{authorName}</span>}
+        {authorName && (
+          <span className="font-subhead text-xs text-charcoal-soft">{authorName}</span>
+        )}
         {authorName && publishedAt && (
           <span className="text-charcoal-faint" aria-hidden="true">
             ·
