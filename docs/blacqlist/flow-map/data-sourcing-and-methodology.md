@@ -1,8 +1,10 @@
 # Community Spend: Data Sourcing & Methodology
 
-**Status:** current as of commit `9e55a8e` (2026-08-16)
+**Status:** current as of 2026-08-17 (§5.2 corrected; see the warning there)
 **Audience:** anyone who publishes, cites, or defends a BLACQList community-spend figure
-**Companion:** [`flow-map-mvp-spec.md`](flow-map-mvp-spec.md) (what the feature is) — this file is where the numbers come from and what they mean.
+**Companions:**
+- [`flow-map-mvp-spec.md`](flow-map-mvp-spec.md) — what the feature is. This file is where the numbers come from and what they mean.
+- **`/flow-map/methodology`** (`app/(public)/flow-map/methodology/page.tsx`) — the **reader-facing half of this file**. Same facts, plain language, no file paths, nothing softened. **The two move together:** a correction here that changes what a published figure means is not finished until the public page says it too. §5.1 and §5.2 both appear there, as section 8.
 
 Every dollar figure the product publishes about community spend traces back through this pipeline. If a number cannot be located in this document, it is not a number we publish.
 
@@ -179,11 +181,31 @@ The threshold still applied, so no single opted-out receipt was individually exp
 
 **The other half is still open and is a GATE-DATA decision.** Node and edge totals accumulated before that guard landed still contain opted-out spend, and no code change corrects a stored sum. Until a recompute is approved and run, the named per-business and per-city figures on `/flow-map`, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend` include historical opted-out spend. **Do not cite the opt-out as fully implemented on the strength of the code fix alone.**
 
-### 5.2 "At any time" is not currently supported
+### 5.2 "At any time" is not supported — the window closes at approval
 
-`aggregate_opt_out` is written once, at submission, and there is no code path anywhere in `app/`, `lib/` or `components/` that updates it. There is no account setting, no per-receipt toggle, and no path to withdraw spend that has already been aggregated. Today the flag is a submission-time choice, not a revocable preference.
+**⚠ CORRECTED 2026-08-17.** The earlier text here said *"there is no code path anywhere in `app/`, `lib/` or `components/` that updates it."* **That was wrong.** `lib/actions/spend/updateReceiptSubmission.ts:110` writes `aggregate_opt_out`, and `app/account/receipts/[id]/edit/page.tsx` surfaces the checkbox pre-filled `[Measured — repo grep of every `aggregate_opt_out` writer, 2026-08-17]`. The claim was found stale while writing the public methodology page, which is the point of writing one.
 
-**Both are corrections to make, not language to soften.** 5.1's code half has landed (the write-time guard above); its data half — recomputing existing node and edge totals — is a **GATE-DATA** decision of its own and is still open. Fixing 5.2 is an update path plus a decision about what "withdraw" means for spend already summed into a node. Until both land, do not cite the opt-out sentence as fully implemented.
+What is actually true:
+
+| Receipt status | Can the opt-out be changed? | Enforced by |
+|---|---|---|
+| `pending_review` | **Yes**, by the owner, from Account → Receipts | the form; the write re-asserts `.eq('status','pending_review')` |
+| `approved` | **No** — *"This receipt has been approved and can no longer be edited."* | `updateReceiptSubmission.ts:67-74` |
+| `rejected` | No — terminal; the path is a new submission | same guard |
+
+So the flag is a **revocable preference until approval and a fixed fact after it**. The reason is sound and is stated in the action's own header: an approved receipt has already written a `spend_events` row and folded its amount into `flow_nodes` / `flow_edges`, so reversing it is a recompute, not a form write.
+
+**What remains false in public copy** — three places still promise more than this:
+
+| File | Claim | Wrong how |
+|---|---|---|
+| `app/(public)/privacy/page.tsx:117` | *"opt out … at any time through your account settings"* | not "at any time" (approval closes it); not "account settings" (per-receipt edit) |
+| `app/(public)/privacy/page.tsx:276` | *"Opt your spend data out … at any time from your account settings"* | same |
+| `app/(public)/terms/page.tsx:178` | *"unless you opt out in your account settings"* | same |
+
+`app/(public)/flow-map/page.tsx` carried a fourth (*"Users can opt out of community aggregates at any time"*) and **is corrected in this PR**. The remaining three are a **Privacy Policy and Terms edit** — a legal document, so a founder decision plus `[Needs professional review]`, not a copy tidy-up. Filed in `next-actions.md`. Until it is settled, `/flow-map`, `/flow-map/methodology` and the Privacy Policy **disagree with each other in public**, and the policy is the wrong one.
+
+**5.1 and 5.2 are corrections to make, not language to soften.** 5.1's code half has landed (the write-time guard above); its data half — recomputing existing node and edge totals — is a **GATE-DATA** decision of its own and is still open. Closing 5.2 means either widening the window (an account-level switch plus a decision about what "withdraw" means for spend already summed into a node) or correcting the two documents to describe the window that exists.
 
 ### 5.3 Node and edge upserts are not concurrency-safe
 
