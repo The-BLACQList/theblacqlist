@@ -83,6 +83,9 @@ export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin 
         { href: '/account/claims', label: 'Claims', count: counts.claims, badge: counts.claimsPending },
         { href: '/account/reviews', label: 'Reviews', count: counts.reviews },
         { href: '/account/receipts', label: 'Receipts', count: counts.receipts },
+        // Receipts (what you submit) -> My spending (your own rollup) ->
+        // Community spend (everyone's). The order is the widening scope.
+        { href: '/account/spending', label: 'My spending' },
         { href: '/account/community-spend', label: 'Community spend' },
       ],
     },
