@@ -60,7 +60,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // The community-wide numbers at the top are deliberately NOT sliced — see the
   // note beneath the summary cards and lib/spend/aggregate-privacy.ts.
 
-  const [{ data: cityOptions }, { data: categoryOptions }] = await Promise.all([
+  const [cityResult, categoryResult] = await Promise.all([
     serviceClient.from('cities').select('id, name, slug').order('name'),
     serviceClient
       .from('categories')
@@ -70,8 +70,13 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
       .order('display_order'),
   ])
 
-  const cities = cityOptions ?? []
-  const categories = categoryOptions ?? []
+  const cities = cityResult.data ?? []
+  const categories = categoryResult.data ?? []
+
+  // A failed options query and an empty options list both arrive here as `[]`,
+  // and they mean opposite things. Kept apart so the page never explains a
+  // failure as a finding — see the load-failure branch below.
+  const optionsLoadFailed = !!cityResult.error || !!categoryResult.error
 
   const requestedCity = params.city?.trim() || undefined
   const requestedCategory = params.category?.trim() || undefined
@@ -85,21 +90,45 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     : null
 
   const filtersActive = !!(requestedCity || requestedCategory)
+
+  // Only claim a slug is unknown when the lists it was checked against actually
+  // loaded. If the options query failed, every slug looks unrecognized, and
+  // "that city is not one we track" would be a statement about our data drawn
+  // from a broken read.
   const unresolvedFilter =
-    (!!requestedCity && !selectedCity) || (!!requestedCategory && !selectedCategory)
+    !optionsLoadFailed &&
+    ((!!requestedCity && !selectedCity) || (!!requestedCategory && !selectedCategory))
 
   // Which listings the filter admits. null means "no filter" — every listing.
   let filteredListingIds: string[] | null = null
+  let listingsLoadFailed = false
   if (selectedCity || selectedCategory) {
     const base = serviceClient.from('listings').select('id')
     const byCity = selectedCity ? base.eq('city_id', selectedCity.id) : base
     const scoped = selectedCategory ? byCity.eq('category_id', selectedCategory.id) : byCity
-    const { data: matchingListings } = await scoped
+    const { data: matchingListings, error: matchingError } = await scoped
+    listingsLoadFailed = !!matchingError
     filteredListingIds = (matchingListings ?? []).map((l) => l.id)
   }
 
+  // A filter that could not be applied is not a filter that matched nothing.
+  // Both end with empty tables, so without this the page would explain a failed
+  // read as a fact about the community's spend — the exact shape no-fabrication
+  // exists to prevent. The tables stay suppressed either way, because rendering
+  // the unfiltered top ten under an active filter would misreport it as filtered.
+  const filterLoadFailed = filtersActive && (optionsLoadFailed || listingsLoadFailed)
+
   const noMatches =
-    unresolvedFilter || (filteredListingIds !== null && filteredListingIds.length === 0)
+    filterLoadFailed ||
+    unresolvedFilter ||
+    (filteredListingIds !== null && filteredListingIds.length === 0)
+
+  // The current view's own URL, so a failed read can offer a retry that keeps
+  // the filters rather than only a way to abandon them.
+  const currentParams = new URLSearchParams()
+  if (requestedCity) currentParams.set('city', requestedCity)
+  if (requestedCategory) currentParams.set('category', requestedCategory)
+  const currentHref = currentParams.size > 0 ? `/flow-map?${currentParams}` : '/flow-map'
 
   // A city node totals every category in that city. Showing one beside a
   // category-filtered business table would read as the category's city total,
@@ -357,22 +386,46 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
             "nothing has cleared the threshold yet" call for different actions,
             and because a filtered dead end with no way out is the failure this
             page can most easily create.
+
+            It carries all three of the states ux.md requires of a filtered view:
+            an unknown slug, a genuinely empty result, and a read that failed.
+            The third is the one worth being careful about — it lands here with
+            the same empty tables as the other two, and describing it as either
+            of them would state something about the community's spend that we
+            did not actually learn.
           */
           <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-8 text-center">
             <p className="font-subhead text-sm font-semibold text-brand-black">
-              No results for these filters
+              {filterLoadFailed ? "Couldn't apply these filters" : 'No results for these filters'}
             </p>
             <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-sm mx-auto">
-              {unresolvedFilter
-                ? 'That city or category is not one we track. Clear the filters to see the full map.'
-                : `Nothing here has cleared the privacy threshold yet. A business appears once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
+              {filterLoadFailed
+                ? "Something went wrong on our end, so we can't say what these filters would show. Try again, or clear the filters to see the full map."
+                : unresolvedFilter
+                  ? 'That city or category is not one we track. Clear the filters to see the full map.'
+                  : `Nothing here has cleared the privacy threshold yet. A business appears once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind its total.`}
             </p>
-            <Link
-              href="/flow-map"
-              className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
-            >
-              Clear filters
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {filterLoadFailed && (
+                <Link
+                  href={currentHref}
+                  prefetch={false}
+                  className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
+                >
+                  Try again
+                </Link>
+              )}
+              <Link
+                href="/flow-map"
+                className={
+                  filterLoadFailed
+                    ? 'inline-flex items-center gap-2 h-9 px-5 rounded-full border border-charcoal/20 hover:bg-charcoal/5 text-brand-black font-subhead font-bold text-sm transition-colors'
+                    : 'inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors'
+                }
+              >
+                Clear filters
+              </Link>
+            </div>
           </div>
         ) : (
           <div className={showCityTable ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-3'}>

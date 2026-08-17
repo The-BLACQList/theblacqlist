@@ -164,3 +164,77 @@ describe('flow-map filtered empty state', () => {
     expect(source).toContain('That city or category is not one we track')
   })
 })
+
+// -----------------------------------------------------------------------------
+// A failed read is not a finding
+// -----------------------------------------------------------------------------
+// Three things can leave the filtered tables empty: an unknown slug, a filter
+// that genuinely matched nothing, and a query that failed. The first two are
+// facts about the data. The third is not — and because all three arrive at the
+// same empty tables, the page will describe a broken read as a fact about the
+// community's spend unless it is made to keep them apart.
+//
+// That is the exact failure no-fabrication.md rule 2 names: a number (or here, a
+// claim) is either measured or Unknown, never inferred from an absence. The
+// page's own privacy copy is what makes it acute — "nothing has cleared the
+// privacy threshold yet" reads as a measured statement about real businesses.
+//
+// Non-vacuity: every assertion in this block fails on the pre-fix tree. The
+// listings and options queries destructured `data` only and dropped `error`, so
+// there was no `filterLoadFailed`, no retry action, and a failed filter rendered
+// the below-threshold explanation verbatim.
+// -----------------------------------------------------------------------------
+
+describe('flow-map filter load failure', () => {
+  it('captures the error from every query the filter depends on', () => {
+    const source = read(PAGE)
+    // Both reads feed the filter: the options lists resolve the slug, the
+    // listings query resolves the matching set. Either failing produces the
+    // same empty tables, so both have to be observed.
+    expect(source).toContain('cityResult.error')
+    expect(source).toContain('categoryResult.error')
+    expect(source).toContain('error: matchingError')
+    expect(source).toContain('listingsLoadFailed = !!matchingError')
+  })
+
+  it('does not call a slug unknown when the lists it was checked against failed to load', () => {
+    const source = read(PAGE)
+    // With `cities` empty because the query failed, every slug looks
+    // unrecognized. Guarding `unresolvedFilter` on the load is what stops the
+    // page saying "we do not track that city" about a city we do track.
+    expect(source).toMatch(/unresolvedFilter\s*=\s*\n?\s*!optionsLoadFailed/)
+  })
+
+  it('gives a failed read its own message instead of the threshold explanation', () => {
+    const source = read(PAGE)
+    expect(source).toContain("Couldn't apply these filters")
+    expect(source).toContain("we can't say what these filters would show")
+    // The below-threshold copy is a claim about real businesses. It must sit
+    // behind the failure branch, not beside it.
+    const failureIndex = source.indexOf('filterLoadFailed\n')
+    const thresholdIndex = source.indexOf('Nothing here has cleared the privacy threshold yet')
+    expect(failureIndex).toBeGreaterThan(-1)
+    expect(thresholdIndex).toBeGreaterThan(failureIndex)
+  })
+
+  it('still suppresses the tables, rather than showing unfiltered rows under an active filter', () => {
+    const source = read(PAGE)
+    // Falling back to the unfiltered top ten would be worse than an empty
+    // state: the filter chips would still read as applied, so the reader would
+    // take community-wide rows for a city or category slice.
+    expect(source).toMatch(/const noMatches =\s*\n?\s*filterLoadFailed/)
+  })
+
+  it('offers a retry that keeps the filters, not only a way to abandon them', () => {
+    const source = read(PAGE)
+    expect(source).toContain('Try again')
+    expect(source).toContain('href={currentHref}')
+    // The retry has to rebuild the current view's URL from the params it was
+    // given; linking to /flow-map would silently drop the filters and look like
+    // the retry had succeeded.
+    expect(source).toContain("currentParams.set('city', requestedCity)")
+    expect(source).toContain("currentParams.set('category', requestedCategory)")
+    // And the way out stays available alongside it.
+    expect(source).toContain('Clear filters')
+  })
+})
