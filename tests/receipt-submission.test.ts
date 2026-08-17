@@ -25,7 +25,8 @@ const h = vi.hoisted(() => {
     user: { id: string } | null
     uploadError: { message: string } | null
     insertError: { code?: string; message: string; details?: string; hint?: string } | null
-  } = { user: null, uploadError: null, insertError: null }
+    removeError: { message: string } | null
+  } = { user: null, uploadError: null, insertError: null, removeError: null }
 
   // Records what actually reached Supabase so the test can assert on the
   // bucket name and storage path rather than trusting the call happened.
@@ -34,7 +35,14 @@ const h = vi.hoisted(() => {
     uploadPath: string | null
     uploadContentType: string | null
     inserted: Record<string, unknown> | null
-  } = { uploadBucket: null, uploadPath: null, uploadContentType: null, inserted: null }
+    removed: string[]
+  } = {
+    uploadBucket: null,
+    uploadPath: null,
+    uploadContentType: null,
+    inserted: null,
+    removed: [],
+  }
 
   const createClient = vi.fn(async () => ({
     auth: { getUser: async () => ({ data: { user: state.user } }) },
@@ -49,6 +57,10 @@ const h = vi.hoisted(() => {
             calls.uploadPath = path
             calls.uploadContentType = opts.contentType
             return { error: state.uploadError }
+          },
+          async remove(paths: string[]) {
+            calls.removed.push(...paths)
+            return { error: state.removeError }
           },
         }
       },
@@ -107,10 +119,12 @@ beforeEach(() => {
   h.state.user = { id: USER_ID }
   h.state.uploadError = null
   h.state.insertError = null
+  h.state.removeError = null
   h.calls.uploadBucket = null
   h.calls.uploadPath = null
   h.calls.uploadContentType = null
   h.calls.inserted = null
+  h.calls.removed = []
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -245,5 +259,53 @@ describe('insert failures', () => {
     h.state.insertError = { code: '23505', message: 'duplicate key' }
     const res = await createReceiptSubmissionAction(null, form())
     expect(res).toMatchObject({ error: expect.stringContaining('already been submitted') })
+  })
+})
+
+// ─── Storage cleanup ─────────────────────────────────────────────────────────
+// The upload happens before the insert, so a failed insert leaves an object in
+// the bucket that no row will ever reference. Nothing lists this bucket, and
+// account deletion collects paths from `receipt_uploads.file_path` — so an
+// object that never reached a row survives even a full account erasure.
+//
+// Non-vacuity: before the fix no receipt path called `storage.remove` at all,
+// so both failure cases below failed on an empty `calls.removed`. The success
+// case is the guard in the dangerous direction — a cleanup that ran on the happy
+// path would delete the photo of a receipt that saved correctly.
+// `[Observed — tests/receipt-submission.test.ts, 2026-08-17]`
+describe('storage cleanup', () => {
+  it('removes the uploaded object when the insert fails', async () => {
+    h.state.insertError = { code: '42P01', message: 'relation does not exist' }
+    await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([h.calls.uploadPath])
+  })
+
+  it('removes the uploaded object on a duplicate too', async () => {
+    // The first submission stored its own distinct path — every path carries a
+    // fresh UUID — so this cannot detach the receipt that did save. Leaving it
+    // would make a double-submitted form the cheapest way to grow the bucket.
+    h.state.insertError = { code: '23505', message: 'duplicate key' }
+    await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([h.calls.uploadPath])
+  })
+
+  it('removes nothing when the insert succeeds', async () => {
+    await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([])
+  })
+
+  it('removes nothing when no photo was attached', async () => {
+    h.state.insertError = { code: '42P01', message: 'relation does not exist' }
+    await createReceiptSubmissionAction(null, form())
+    expect(h.calls.removed).toEqual([])
+  })
+
+  it('still reports the insert failure when the removal also fails', async () => {
+    // Cleanup is compensation, not the user's business. A failed removal must
+    // not change the message or replace it with a storage error.
+    h.state.insertError = { code: '42P01', message: 'relation does not exist' }
+    h.state.removeError = { message: 'Object not found' }
+    const res = await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(res).toMatchObject({ error: 'Failed to submit receipt. Please try again.' })
   })
 })

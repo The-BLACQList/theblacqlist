@@ -23,7 +23,11 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-const ACCEPTED = 'image/jpeg,image/png,image/webp,application/pdf'
+// Matches the verification-docs bucket exactly. WebP was accepted here before
+// and appeared to work only because these documents were being written to the
+// receipt bucket by mistake; verification-docs has never allowed it, and no
+// scanner or camera produces WebP for a licence or a utility bill.
+const ACCEPTED = 'image/jpeg,image/png,application/pdf'
 const MAX_FILES = 5
 const MAX_BYTES = 10 * 1024 * 1024
 
@@ -57,8 +61,11 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
 
       const body = new FormData()
       body.append('file', file)
+      body.append('bucket', 'verification-docs')
+      body.append('entity_id', listingId)
+      body.append('purpose', 'listing_verification')
 
-      const res = await fetch('/api/upload/receipt-uploads', { method: 'POST', body })
+      const res = await fetch('/api/upload', { method: 'POST', body })
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
         setUploadError((json as { error?: string }).error ?? 'Upload failed. Please try again.')
@@ -66,7 +73,18 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
         return
       }
 
-      const { path } = (await res.json()) as { path: string }
+      // The response is `{ data: { path } }`. Reading `{ path }` off the top
+      // level is what broke this flow: every upload succeeded, every hidden
+      // input rendered `value={undefined}`, and the server action then rejected
+      // the submission for having no documents.
+      const json = (await res.json()) as { data?: { path?: string } }
+      const path = json.data?.path
+      if (!path) {
+        setUploadError('Upload failed. Please try again.')
+        setUploading(false)
+        return
+      }
+
       setFiles((prev) => [...prev, { name: file.name, size: file.size, path, type: file.type }])
     }
 

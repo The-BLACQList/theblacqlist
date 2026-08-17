@@ -1,6 +1,7 @@
 # Flow Map MVP Spec — The BLACQList
 
 **Date:** 2026-05-11
+**Last updated:** 2026-08-17 — §9 reopened (the V3 medium is an open question, not a settled 2D plan); §10 corrected
 **Feature area:** Community Dollar Flow
 **Phase:** MVP Foundation
 **Status:** Active build
@@ -314,22 +315,73 @@ Response:
 
 ## 9. Future Graph Visualization Plan
 
-The V3 full dollar-flow map will replace the SVG placeholder with an interactive force-directed graph using a lightweight library (candidate: `@visx/network` or plain SVG with client-side positioning). Requirements before upgrade:
+**The medium for the V3 map is an open question, not a settled one.** An earlier version of this section named a 2D force-directed graph (`@visx/network` or plain SVG with client-side positioning) as the plan. That was written before the graph had a shape worth choosing a medium for, and it is deliberately held open until it does.
 
-| Threshold                                     | Why                                                            |
-| --------------------------------------------- | -------------------------------------------------------------- |
-| ≥ 500 community members                       | Privacy — distinguishable nodes need anonymization buffer      |
-| ≥ 6 months of data                            | Meaningful edges; patterns not dominated by early contributors |
-| ≥ 30 business nodes with 5+ transactions      | Enough nodes to make the graph visually meaningful             |
-| `flow_map_snapshots` table populated          | Graph pre-computed server-side; not computed on request        |
-| `anonymized_community_nodes` pass implemented | Ensures <5 threshold enforced before data reaches client       |
+### 9.1 The prerequisite is the graph's shape, not the renderer
+
+`flow_nodes.node_type` is constrained to two values:
+
+```sql
+-- 20260511000001_receipt_community_spend.sql:63
+node_type text NOT NULL CHECK (node_type IN ('business', 'city')),
+```
+
+and a business belongs to exactly one city — `listings.city_id` is a single FK — so the approval path writes exactly one outgoing edge per business (`lib/actions/spend/approveReceipt.ts:173-175`). The resulting topology is a **forest of stars**: a few city hubs, N business leaves each, no edge between any two leaves, and no path longer than one hop.
+
+That shape is planar by construction. It has no crossings to untangle, no depth to encode, and no occlusion that rotation would resolve — so it cannot distinguish between candidate mediums. Choosing one against it would be choosing on taste rather than on the data.
+
+`flow_edges` is already general: a plain `(source_node_id, target_node_id)` pair with a `UNIQUE` on it, needing no change. **The only structural blocker is the `CHECK` on `node_type` plus the write path that decides which edges get drawn** — one constraint and one function, not a redesign.
+
+The leading candidate for a second edge class is `business → category`. `listings.category_id` is `uuid NOT NULL REFERENCES categories(id)` (`20260510000000:277`), so the data already exists on every listing and no new user input is required. It is the first candidate that gives a business two outgoing edges, which creates paths between cities that have none today. It is **not scheduled here** — it is a schema decision, and it belongs at GATE-DATA alongside the `flow_nodes`/`flow_edges` recompute rather than inside a rendering section.
+
+### 9.2 The test the medium has to pass
+
+Recorded before the shape is known, so the answer cannot be written to fit a preference. A third dimension earns its cost only if at least one of these holds at the time the decision is taken:
+
+| # | Criterion | Status today |
+| --- | --- | --- |
+| 1 | **Intra-layer edges exist** (business↔business, city↔city), forcing crossings no 2D layout can remove | **Fails** — every edge is business-to-attribute |
+| 2 | **Three or more independent grouping axes** must be shown at once, and dropping one loses a question the page exists to answer | **Fails** — two axes at most: place and kind |
+| 3 | **Measured overplotting** at real production node and edge counts | `[Unknown]` — not measurable until the site is public |
+
+If all three still fail when the question is re-taken, the answer is 2D — most likely a layered/Sankey-shaped layout, since `category → business → city` is a flow between attribute layers, which is the structure that shape was invented for.
+
+### 9.3 The constraint that binds any medium
+
+`app/globals.css` treats motion as **opt-in, not opt-out**: animation lives inside `@media (prefers-reduced-motion: no-preference)` (`:154`, `:174`, `:247`), with `:211` handling `reduce`. The page default is static.
+
+Any `requestAnimationFrame` loop inverts that, because it runs until code stops it — which binds a 2D force simulation exactly as much as a WebGL scene. Whichever medium is chosen inherits the obligation to honour reduced motion explicitly, rather than receiving it from the stylesheet's default. `components/motion/Reveal.tsx` is the hand-rolled precedent to match.
+
+### 9.4 Data thresholds before any upgrade
+
+| Threshold | Status |
+| --- | --- |
+| ≥ 500 community members | `[Unknown]` — needs a production read |
+| ≥ 6 months of data | `[Unknown]` — needs a production read |
+| ≥ 30 business nodes with 5+ transactions | `[Unknown]` — needs a production read |
+| Graph pre-computed server-side, not per request | **Not built.** An earlier version of this table named a `flow_map_snapshots` table as though it were a component that existed; there is no such table and no migration for one. This is a requirement, not a shipped piece. |
+| k-anonymity bound enforced before data reaches the client | **Met — by a different mechanism than the one this table once named.** There is no `anonymized_community_nodes` pass. The bound is `AGGREGATE_MIN_TRANSACTIONS = 5` (`lib/spend/aggregate-privacy.ts:32`), applied per query in `app/api/flow-map/summary/route.ts` and `app/api/community-spend/route.ts`. |
+
+### 9.5 Other documents that still assume the earlier plan
+
+Correcting this section leaves three tracked documents describing the superseded one. They are recorded here rather than edited, so that a reader who lands on one of them knows to come back — and so the fixes are taken deliberately, not folded into a documentation pass about something else.
+
+| Document | What it still says | Why it matters |
+| --- | --- | --- |
+| `docs/blacqlist/architecture/api-contract.md:4370` | *"No flow map endpoints are active at MVP, V1, or V2."* | Two are live today: `app/api/flow-map/summary/route.ts` and `app/api/community-spend/route.ts`. |
+| `docs/blacqlist/architecture/api-contract.md:4487` | The k-anonymity bound is *"enforced in the service layer before writing to `flow_nodes` or `flow_edges`, not at query time."* | The shipped enforcement is the opposite — at query time, per request. A stale claim about **where a privacy control lives** is the most costly kind to leave standing. |
+| `docs/blacqlist/production/production-roadmap.md:705, :1065` | The `FlowMapNetwork` upgrade is stated as a force-directed graph. | Presupposes the medium this section is holding open. |
+
+The api-contract entries describe endpoints still deferred to V3, so nothing shipped depends on them being wrong — but the second one should be corrected before anyone designs against it.
 
 ---
 
 ## 10. Known Limitations
 
-- **City attribution missing at MVP** — `approveReceiptAction` doesn't yet set `city_id` on `spend_events` or create city `flow_nodes`. This is noted in the receipt report and should be wired in a follow-up.
-- **`flow_edges` are empty at MVP** — The approval flow creates business flow_nodes but not edges. Edges require city attribution to create meaningful source→target pairs.
-- **No time filtering** — All-time totals only.
-- **No category filtering** — `spend_events` has no category field at this schema version.
-- **Network SVG is decorative at MVP** — It renders business nodes but doesn't represent actual flow edges (since edges are empty). V3 replaces with real force-directed graph.
+Two entries below were resolved and two had reasons expire. They are corrected rather than deleted, because the correction is the useful record — a limitation that quietly disappears reads as though it was never real.
+
+- ~~**City attribution missing at MVP**~~ — **Resolved.** `approveReceiptAction` sets `city_id` on the `spend_event`, creates the city `flow_node`, and writes the `business → city` edge (`lib/actions/spend/approveReceipt.ts:126-136`, `:173-175`).
+- ~~**`flow_edges` are empty at MVP**~~ — **Resolved** by the same change. Edges are written on every approval that resolves a city.
+- **No time filtering** — All-time totals only. `/flow-map` accepts `city` and `category` search params; there is no date parameter and no time-bounded query.
+- **No category filtering *in `spend_events`*** — the conclusion has changed, the underlying fact has not. `spend_events` still has no category column, but `/flow-map` filters by category by narrowing `listings` on `listings.category_id` before aggregating. Category filtering ships; it just does not read from `spend_events`.
+- **Network SVG is decorative** — still true, for a different reason than originally given. `components/flow-map/FlowMapNetwork.tsx` arranges the top business nodes around a synthetic "Community" centre and never reads `flow_edges` at all. The original reason ("since edges are empty") stopped being true once edges started being written; the SVG simply does not draw them. Section 9 covers the replacement.

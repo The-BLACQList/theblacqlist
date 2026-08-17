@@ -1,10 +1,16 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
+import { transitionToPendingReview } from '@/lib/listings/submitForReview'
+import { createJobPostingCheckoutSession } from '@/lib/stripe/jobPostingCheckout'
+import { eventQuotaFor, hasPaidJobPosting } from '@/lib/stripe/jobPostings'
 
 export type SubmitForReviewState =
   | { error: string }
   | { success: true }
+  /** The listing is a job that has not been paid for. The client redirects here. */
+  | { requiresPayment: true; checkoutUrl: string }
   | null
 
 export async function submitListingForReviewAction(
@@ -28,7 +34,7 @@ export async function submitListingForReviewAction(
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, status, owner_user_id')
+    .select('id, name, status, entity_type, owner_user_id')
     .eq('id', listingId)
     .maybeSingle()
 
@@ -44,33 +50,42 @@ export async function submitListingForReviewAction(
     return { error: 'Only draft listings can be submitted for review.' }
   }
 
-  const { error: updateError } = await supabase
-    .from('listings')
-    .update({ status: 'pending' })
-    .eq('id', listingId)
-    .eq('owner_user_id', user.id)
+  // ── E-2 monetization gates ────────────────────────────────────────────────
+  // Both live here rather than at creation time on purpose: a draft is free to
+  // write and free to abandon. What costs money, and what consumes an
+  // allowance, is asking to be seen publicly. It is also the only place both
+  // rules can be enforced once — every route to publication passes through this
+  // status transition.
+  if (isFeatureEnabled('paidPostings')) {
+    if (listing.entity_type === 'job') {
+      const paid = await hasPaidJobPosting(supabase, listingId)
+      if (!paid) {
+        const checkout = await createJobPostingCheckoutSession({
+          listingId,
+          listingName: listing.name,
+          userId: user.id,
+          userEmail: user.email ?? null,
+        })
+        if ('error' in checkout) return { error: checkout.error }
+        // Nothing has been written yet. The draft→pending transition happens in
+        // the webhook, after Stripe confirms the payment — never here on the
+        // optimistic assumption that the user will complete checkout.
+        return { requiresPayment: true, checkoutUrl: checkout.url }
+      }
+    }
 
-  if (updateError) {
-    return { error: 'Failed to submit listing for review. Please try again.' }
+    if (listing.entity_type === 'event') {
+      const quota = await eventQuotaFor(supabase, user.id)
+      if (quota.atLimit) {
+        return {
+          error:
+            quota.limit === 0
+              ? 'Publishing events is part of a paid plan. Upgrade to post this event.'
+              : `Your plan includes ${quota.limit} active event${quota.limit === 1 ? '' : 's'}. Upgrade or unpublish one to post this event.`,
+        }
+      }
+    }
   }
 
-  const serviceClient = createServiceClient()
-
-  await serviceClient.from('moderation_queue').insert({
-    entity_id: listingId,
-    entity_type: 'listing',
-    queue_type: 'new_submission',
-    status: 'pending',
-    priority: 0,
-  })
-
-  void serviceClient.from('analytics_events').insert({
-    event_name: 'listing_submitted',
-    entity_id: listingId,
-    entity_type: 'listing',
-    user_id: user.id,
-    properties: { source: 'web_form' },
-  })
-
-  return { success: true }
+  return await transitionToPendingReview(supabase, listingId, user.id)
 }

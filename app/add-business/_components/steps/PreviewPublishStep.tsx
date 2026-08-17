@@ -178,6 +178,14 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
     reviewFd.append('listing_id', createResult.listingId)
     const reviewResult = await submitListingForReviewAction(null, reviewFd)
 
+    // Businesses are never charged per posting, so this branch should not fire
+    // here. It is handled anyway rather than falling through to `onSuccess`,
+    // which would tell the owner their listing was submitted when it was not.
+    if (reviewResult && 'requiresPayment' in reviewResult) {
+      window.location.href = reviewResult.checkoutUrl
+      return
+    }
+
     if (!reviewResult || 'error' in reviewResult) {
       setServerError(
         ('error' in (reviewResult ?? {})) && reviewResult

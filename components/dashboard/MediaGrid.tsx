@@ -266,12 +266,18 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
     setError(null)
     setIsUploading(true)
 
+    // `compressedFile` is always re-encoded JPEG on the happy path, so the GIF
+    // the file input still accepts reaches storage as a JPEG still. Only the
+    // canvas-failure fallback forwards the original bytes, and the route now
+    // answers that with a readable 400 instead of an opaque storage 500.
     const fd = new FormData()
-    fd.append('listing_id', listingId)
     fd.append('file', compressedFile, compressedFile.name)
+    fd.append('bucket', 'listing-media')
+    fd.append('entity_id', listingId)
+    fd.append('media_role', 'gallery')
 
     try {
-      const res = await fetch('/api/media/upload', { method: 'POST', body: fd })
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const data = (await res.json()) as { error?: string }
       if (!res.ok) {
         setError(data.error ?? 'Upload failed. Please try again.')
@@ -385,9 +391,7 @@ export function MediaGrid({ media, supabaseStorageUrl, listingId, coverImagePath
         {!hasCover && (
           <div className="rounded-lg border border-amber-gold/40 bg-amber-gold/10 px-4 py-3">
             <p className="font-subhead text-sm font-bold text-brand-black">
-              {media.length === 0
-                ? 'Start with your cover photo'
-                : 'Pick one photo as your cover'}
+              {media.length === 0 ? 'Start with your cover photo' : 'Pick one photo as your cover'}
             </p>
             <p className="font-body text-xs text-charcoal-soft mt-0.5">
               {media.length === 0

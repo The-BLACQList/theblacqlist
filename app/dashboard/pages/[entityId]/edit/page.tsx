@@ -107,7 +107,12 @@ export default async function EditPage({ params }: Props) {
           )}
         </div>
 
-        <PublishSection listingId={listing.id} status={listing.status} trustTier={listing.trust_tier} />
+        <PublishSection
+          listingId={listing.id}
+          status={listing.status}
+          trustTier={listing.trust_tier}
+          entityType={listing.entity_type}
+        />
 
         <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
 
@@ -201,7 +206,12 @@ export default async function EditPage({ params }: Props) {
           )}
         </div>
 
-        <PublishSection listingId={listing.id} status={listing.status} trustTier={listing.trust_tier} />
+        <PublishSection
+          listingId={listing.id}
+          status={listing.status}
+          trustTier={listing.trust_tier}
+          entityType={listing.entity_type}
+        />
 
         <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
 
@@ -324,6 +334,7 @@ export default async function EditPage({ params }: Props) {
         listingId={listing.id}
         status={listing.status}
         trustTier={listing.trust_tier}
+        entityType={listing.entity_type}
       />
 
       <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
