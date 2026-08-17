@@ -4367,7 +4367,18 @@ ISR 1 hour — `community_impact_daily` is updated once per day via scheduled ag
 
 ## Section 11: Flow Map
 
-> **Phase: V3** — All endpoints in this section are deferred to V3. They are documented here because the underlying data model (`flow_nodes`, `flow_edges`, `flow_map_snapshots`) is planned for V2 infrastructure, and the frontend team needs this contract finalized before the V3 sprint begins. No flow map endpoints are active at MVP, V1, or V2.
+> **Phase: V3** — The endpoints *in this section* are deferred to V3. They are documented here because the frontend team needs the contract finalized before the V3 sprint begins.
+>
+> **Do not read that as "there is no flow map yet."** Two flow-map endpoints ship today and are not described in this section:
+>
+> | Live endpoint | Serves |
+> |---|---|
+> | `GET /api/flow-map/summary` (`app/api/flow-map/summary/route.ts`) | Public aggregate totals by business and city, `city` and `category` filters |
+> | `GET /api/flow-map/personal-impact` (`app/api/flow-map/personal-impact/route.ts`) | The authenticated user's own totals |
+>
+> They read **`flow_nodes` and `flow_edges` directly, per request**. The Section 11 endpoints below are a *different, later* design that reads precomputed `flow_map_snapshots` rows.
+>
+> **`flow_map_snapshots` does not exist.** There is no migration and no generated type for it `[Measured — repo grep, 2026-08-17]`. It is a requirement of the V3/V4 design, not existing V2 infrastructure, and the roadmap schedules it in Phase 4 (`production-roadmap.md:1096`, migration `20260512000004_flow_map_snapshots.sql`) rather than V2. Every Section 11 endpoint that reads from it is blocked on that table being built.
 
 ---
 
@@ -4484,7 +4495,16 @@ interface AnonymizedFlowResponse {
 }
 ```
 
-> Privacy model: This endpoint reads from `flow_map_snapshots.graph_json`, which is precomputed by the nightly job. No `user_id`, no individual spend amounts, no personally identifying data appears in any field. Nodes with fewer than 5 contributing users are excluded from the snapshot at computation time — this is enforced in the service layer before writing to `flow_nodes` or `flow_edges`, not at query time.
+> Privacy model: This endpoint reads from `flow_map_snapshots.graph_json`, which is precomputed by the nightly job. No `user_id`, no individual spend amounts, no personally identifying data appears in any field.
+>
+> ⚠ **The rest of this note described a control that does not exist, and promised a stronger one than ships.** It said *"nodes with fewer than 5 contributing users are excluded from the snapshot at computation time — enforced in the service layer before writing to `flow_nodes` or `flow_edges`, not at query time."* Both halves were wrong, and a privacy claim is the worst place to leave a wrong statement standing, so it is corrected here rather than deleted:
+>
+> | Claim | What ships |
+> |---|---|
+> | Enforced **before writing** | Enforced **at query time.** Every public read applies `.gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)` — `app/api/flow-map/summary/route.ts:41, :70, :92`, `app/api/community-spend/route.ts:40, :68`, `app/(public)/flow-map/page.tsx:148, :189`. `flow_nodes` and `flow_edges` hold every row, including rows below the bar. |
+> | Fewer than 5 **contributing users** | Fewer than 5 **transactions.** The bound is `AGGREGATE_MIN_TRANSACTIONS = 5` (`lib/spend/aggregate-privacy.ts:32`) counted over spend events, not distinct people. **Five receipts from one person clear it** — stated as an honest limit in that file's own header comment. A distinct-*people* guarantee needs a join through `receipt_uploads.user_id`, which `flow_nodes` does not carry. |
+>
+> Two consequences follow, and neither is hypothetical. **(1)** Anything that reads `flow_nodes` without the `.gte()` publishes below-threshold rows — the filter is a call-site obligation, not a property of the table. **(2)** If the Section 11 snapshot design is ever built, moving the bound to write time is a real change with a real benefit (the obligation stops being per-call-site), not the documentation of an existing state. The public copy is already honest about the unit — `/flow-map` says *"distinct transactions"* (`page.tsx:602`) and `/flow-map/methodology` says *"separate purchases"* (`methodology/page.tsx:193`) — so it is this contract, not the user-facing promise, that overstated the guarantee. `[Needs professional review]` — carried into the E-3 aggregation-privacy bundle.
 
 **Validation Rules**
 
