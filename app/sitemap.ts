@@ -37,6 +37,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/search`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
     { url: `${BASE_URL}/collections`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/blacqlight`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    // The marketplace was missing from the sitemap entirely — four live public
+    // indexes that no crawler was being pointed at. Individual product, service,
+    // and storefront URLs are still absent; adding them needs the same
+    // slug-enumeration treatment the listing loop below does, which is a separate
+    // piece of work, not a line in this array.
+    {
+      url: `${BASE_URL}/marketplace`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/marketplace/products`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/marketplace/services`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    { url: `${BASE_URL}/vendors`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/flow-map`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
     {
       url: `${BASE_URL}/for-business`,

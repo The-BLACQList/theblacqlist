@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { ProductForm } from '@/components/marketplace/ProductForm'
+import { NoListingsNotice } from '@/components/dashboard/NoListingsNotice'
 import { createProductAction } from '@/lib/actions/marketplace/createProduct'
 
 export const metadata: Metadata = { title: 'New Product | Dashboard' }
@@ -36,13 +37,17 @@ export default async function NewProductPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-        <ProductForm
-          action={createProductAction}
-          listings={listings ?? []}
-          submitLabel="Create product"
-        />
-      </div>
+      {(listings ?? []).length === 0 ? (
+        <NoListingsNotice kind="product" />
+      ) : (
+        <div className="rounded-xl border border-charcoal/10 bg-white p-6">
+          <ProductForm
+            action={createProductAction}
+            listings={listings ?? []}
+            submitLabel="Create product"
+          />
+        </div>
+      )}
     </div>
   )
 }
