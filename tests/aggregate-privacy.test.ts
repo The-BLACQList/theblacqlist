@@ -280,8 +280,14 @@ describe('RLS on the community-aggregate tables', () => {
 })
 
 // ── The opt-out reaches the flow graph ──────────────────────────────────────
-// /flow-map promises "users can opt out of community aggregates at any time",
-// and until 2026-08-16 that promise was kept by exactly one of the two figures
+// /flow-map used to promise "users can opt out of community aggregates at any
+// time" — a claim removed in #80 (2026-08-17) because no such opt-out exists;
+// the real window is per-receipt and closes at approval, and /flow-map and
+// /flow-map/methodology now say so. The paragraph below is kept in the past
+// tense on purpose: what follows is the write-path defect that promise was
+// hiding, and that defect is what these tests still guard.
+//
+// Until 2026-08-16 the promise was kept by exactly one of the two figures
 // on the page. The headline reads spend_events with .eq('aggregate_opt_out',
 // false); the named-business table directly beneath it reads flow_nodes, which
 // has NO opt-out column at all. An opted-out user was excluded from the total
