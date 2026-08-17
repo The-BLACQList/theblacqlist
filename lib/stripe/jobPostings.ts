@@ -133,9 +133,11 @@ export async function eventQuotaFor(supabase: AnyClient, userId: string): Promis
  *
  * Reads the purchase ledger rather than a flag on the listing so there is one
  * source of truth for the money. Expiry is checked here — a lapsed purchase
- * stops being a licence to re-submit — but note that **nothing unpublishes an
- * already-live job when its window ends**; that needs a scheduled task and is
- * filed as debt.
+ * stops being a licence to re-submit — and an already-live job is taken down
+ * when its window ends by the daily sweep in
+ * `lib/services/expiry/sweeps.ts` (`unpublishExpiredJobPostings`), which is
+ * written as the exact inverse of this function so the two cannot drift into
+ * disagreeing about what "paid" means.
  */
 export async function hasPaidJobPosting(supabase: AnyClient, listingId: string): Promise<boolean> {
   const { data } = await supabase
