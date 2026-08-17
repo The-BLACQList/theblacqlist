@@ -1,3 +1,30 @@
+// =============================================================================
+// Stripe webhook handlers — failure posture
+// =============================================================================
+// Every write in this file decides what a paying owner actually gets. A write
+// that fails silently here is invisible: nothing reads it back, and the audit
+// log used to be written unconditionally, so it recorded the tier the handler
+// *intended* rather than the tier the database ended up with. That made the log
+// read as evidence of a change that may never have happened.
+//
+// Two distinct failure modes, handled differently on purpose:
+//
+//   error        → transient (connection, RLS, constraint). Throw. The route
+//                  (app/api/stripe/webhook/route.ts) turns that into a 500 +
+//                  a `failed_webhooks` row, and — critically — does NOT mark
+//                  the event processed, so Stripe's redelivery genuinely
+//                  re-runs the handler. Every write before a throw is
+//                  idempotent, so a retry is safe.
+//
+//   zero rows    → the listing the metadata points at is gone. Retrying cannot
+//                  resurrect it, and throwing would schedule days of Stripe
+//                  retries against a condition that will never clear. Log a
+//                  distinct signature and record the audit row honestly.
+//
+// `.select('id')` on the tier writes is what makes the second case observable
+// at all: a filtered UPDATE that matches nothing returns no error.
+// =============================================================================
+
 import { revalidatePath } from 'next/cache'
 import type Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -107,7 +134,7 @@ export async function handleSubscriptionUpsert(
 
   const status = normalizeStatus(sub.status)
 
-  await supabase.from('subscriptions').upsert(
+  const { error: subError } = await supabase.from('subscriptions').upsert(
     {
       listing_id: listingId,
       user_id: userId,
@@ -122,19 +149,59 @@ export async function handleSubscriptionUpsert(
     { onConflict: 'stripe_subscription_id' }
   )
 
-  const newTier = KEEPS_ACCESS.has(sub.status) ? planSlug : 'free'
-  await supabase.from('listings').update({ tier: newTier }).eq('id', listingId)
+  // Throwing is the retry mechanism: the route returns 500, records a
+  // `failed_webhooks` row, and — critically — does NOT mark the event
+  // processed, so Stripe's redelivery actually re-runs this. Everything above
+  // is idempotent (upsert on the subscription id), so a retry is safe.
+  if (subError) {
+    throw new Error(`subscriptions upsert failed for ${sub.id}: ${subError.message}`)
+  }
 
+  const newTier = KEEPS_ACCESS.has(sub.status) ? planSlug : 'free'
+
+  const { data: tierUpdated, error: tierError } = await supabase
+    .from('listings')
+    .update({ tier: newTier })
+    .eq('id', listingId)
+    .select('id')
+
+  if (tierError) {
+    throw new Error(`listing tier write failed for ${listingId}: ${tierError.message}`)
+  }
+
+  // Zero rows is a different failure and a retry cannot fix it: the metadata
+  // points at a listing that no longer exists. Throwing here would put the
+  // event into Stripe's retry schedule for days against a condition that will
+  // never clear, so this is logged loudly and recorded honestly instead.
+  const tierWritten = (tierUpdated?.length ?? 0) > 0
+  if (!tierWritten) {
+    console.error('[webhook] tier write matched no listing:', {
+      subscriptionId: sub.id,
+      listingId,
+      intendedTier: newTier,
+    })
+  }
+
+  // The audit row records what actually happened, not what was intended. Before
+  // this, `afterState.tier` was written unconditionally — so a failed or
+  // no-op write produced a log asserting a tier change that never occurred,
+  // which is worse than no log because it reads as evidence.
   await writeSystemAuditLog({
     actorUserId: userId,
     action: 'subscription_synced',
     targetTable: 'subscriptions',
     targetId: listingId,
     beforeState: { tier: prevTier },
-    afterState: { tier: newTier, status, plan_slug: planSlug, billing_cycle: billingCycle },
+    afterState: {
+      tier: tierWritten ? newTier : prevTier,
+      status,
+      plan_slug: planSlug,
+      billing_cycle: billingCycle,
+      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
+    },
   })
 
-  if (newTier !== prevTier) {
+  if (tierWritten && newTier !== prevTier) {
     await revalidateListingPage(supabase, listingId)
   }
 }
@@ -147,10 +214,14 @@ export async function handleSubscriptionDeleted(
   const listingId = meta.listing_id
   const userId = meta.user_id ?? null
 
-  await supabase
+  const { error: cancelError } = await supabase
     .from('subscriptions')
     .update({ status: 'canceled', canceled_at: toIso(sub.canceled_at) ?? new Date().toISOString() })
     .eq('stripe_subscription_id', sub.id)
+
+  if (cancelError) {
+    throw new Error(`subscription cancel write failed for ${sub.id}: ${cancelError.message}`)
+  }
 
   if (!listingId) return
 
@@ -160,7 +231,25 @@ export async function handleSubscriptionDeleted(
     .eq('id', listingId)
     .maybeSingle()
 
-  await supabase.from('listings').update({ tier: 'free' }).eq('id', listingId)
+  const { data: tierUpdated, error: tierError } = await supabase
+    .from('listings')
+    .update({ tier: 'free' })
+    .eq('id', listingId)
+    .select('id')
+
+  // A cancellation whose downgrade silently fails is the expensive direction of
+  // this bug: the listing keeps paid placement after the money stops.
+  if (tierError) {
+    throw new Error(`listing downgrade failed for ${listingId}: ${tierError.message}`)
+  }
+
+  const tierWritten = (tierUpdated?.length ?? 0) > 0
+  if (!tierWritten) {
+    console.error('[webhook] downgrade matched no listing:', {
+      subscriptionId: sub.id,
+      listingId,
+    })
+  }
 
   await writeSystemAuditLog({
     actorUserId: userId,
@@ -168,10 +257,16 @@ export async function handleSubscriptionDeleted(
     targetTable: 'subscriptions',
     targetId: listingId,
     beforeState: { tier: prevListing?.tier ?? null },
-    afterState: { tier: 'free', status: 'canceled' },
+    afterState: {
+      tier: tierWritten ? 'free' : (prevListing?.tier ?? null),
+      status: 'canceled',
+      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: 'free' }),
+    },
   })
 
-  await revalidateListingPage(supabase, listingId)
+  if (tierWritten) {
+    await revalidateListingPage(supabase, listingId)
+  }
 }
 
 export async function handlePaymentFailed(
@@ -187,7 +282,14 @@ export async function handlePaymentFailed(
 
   if (!subId) return
 
-  await supabase.from('subscriptions').update({ status: 'past_due' }).eq('stripe_subscription_id', subId)
+  const { error: pastDueError } = await supabase
+    .from('subscriptions')
+    .update({ status: 'past_due' })
+    .eq('stripe_subscription_id', subId)
+
+  if (pastDueError) {
+    throw new Error(`past_due write failed for ${subId}: ${pastDueError.message}`)
+  }
 
   const { data: subRow } = await supabase
     .from('subscriptions')
