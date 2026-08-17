@@ -14,6 +14,11 @@
 //     them. The status is re-asserted on the write, not only read beforehand.
 //   * the photo — an edit that only fixes the amount must not detach the image
 //     the user already uploaded.
+//   * the storage lifecycle — a replaced photo leaves the previous object
+//     referenced by nothing. Nothing ever lists this bucket, and account
+//     deletion collects paths from `file_path`, so an unreferenced object is
+//     invisible and permanent. Which of the two objects is the orphan depends on
+//     whether the write landed, and the wrong answer deletes a live image.
 //
 // Validation itself is shared with the create path via `parseReceiptFields`, so
 // only the parity is asserted here; `receipt-submission.test.ts` owns the depth.
@@ -27,7 +32,18 @@ const h = vi.hoisted(() => {
     existing: { id: string; status: string; file_path: string | null } | null
     uploadError: { message: string } | null
     updateError: { code?: string; message: string; details?: string; hint?: string } | null
-  } = { user: null, existing: null, uploadError: null, updateError: null }
+    // Whether the guarded UPDATE matched a row. A miss is not an error — the
+    // status filter simply found nothing — so it has to be modelled separately.
+    updateMatched: boolean
+    removeError: { message: string } | null
+  } = {
+    user: null,
+    existing: null,
+    uploadError: null,
+    updateError: null,
+    updateMatched: true,
+    removeError: null,
+  }
 
   // Records what actually reached Supabase, so the ownership and status filters
   // can be asserted directly rather than inferred from the return value.
@@ -37,12 +53,14 @@ const h = vi.hoisted(() => {
     selectFilters: [string, unknown][]
     updated: Record<string, unknown> | null
     updateFilters: [string, unknown][]
+    removed: string[]
   } = {
     uploadBucket: null,
     uploadPath: null,
     selectFilters: [],
     updated: null,
     updateFilters: [],
+    removed: [],
   }
 
   const createClient = vi.fn(async () => ({
@@ -57,6 +75,10 @@ const h = vi.hoisted(() => {
             calls.uploadBucket = bucket
             calls.uploadPath = path
             return { error: state.uploadError }
+          },
+          async remove(paths: string[]) {
+            calls.removed.push(...paths)
+            return { error: state.removeError }
           },
         }
       },
@@ -80,9 +102,16 @@ const h = vi.hoisted(() => {
         async maybeSingle() {
           return { data: state.existing, error: null }
         },
-        // The update chain ends on `.eq()` and is awaited directly.
-        then(resolve: (v: { error: unknown }) => unknown) {
-          return Promise.resolve({ error: state.updateError }).then(resolve)
+        // The update chain ends on `.select('id')` and is awaited directly. It
+        // returns the matched rows, which is how the action distinguishes "the
+        // write landed" from "the status guard matched nothing".
+        then(resolve: (v: { data: unknown; error: unknown }) => unknown) {
+          const data = state.updateError
+            ? null
+            : state.updateMatched
+              ? [{ id: 'matched-row' }]
+              : []
+          return Promise.resolve({ data, error: state.updateError }).then(resolve)
         },
       }
       return builder
@@ -130,11 +159,14 @@ beforeEach(() => {
   h.state.existing = { id: RECEIPT_ID, status: 'pending_review', file_path: EXISTING_PATH }
   h.state.uploadError = null
   h.state.updateError = null
+  h.state.updateMatched = true
+  h.state.removeError = null
   h.calls.uploadBucket = null
   h.calls.uploadPath = null
   h.calls.selectFilters = []
   h.calls.updated = null
   h.calls.updateFilters = []
+  h.calls.removed = []
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 })
 
@@ -258,6 +290,70 @@ describe('the photo', () => {
     expect(res).toMatchObject({ fieldErrors: { receipt_file: expect.any(String) } })
     expect(h.calls.uploadBucket).toBeNull()
     expect(h.calls.updated).toBeNull()
+  })
+})
+
+// ─── Storage cleanup ─────────────────────────────────────────────────────────
+// Every branch below decides which of two objects is the orphan, and getting it
+// backwards deletes a receipt image the row is still using. That asymmetry is
+// why these are separate cases rather than one "cleanup happens" assertion.
+//
+// Non-vacuity: before the fix no code path called `storage.remove` at all, so
+// the first two cases failed on an empty `calls.removed`. The third and fourth
+// are the guards in the dangerous direction — they pass both before and after,
+// and exist so an over-eager cleanup cannot be introduced later without a red
+// test. `[Observed — tests/receipt-correction.test.ts, 2026-08-17]`
+describe('storage cleanup on replacement', () => {
+  it('removes the superseded object once the write has landed', async () => {
+    await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([EXISTING_PATH])
+  })
+
+  it('removes the new object, not the old one, when the write fails', async () => {
+    // The row still points at the old path, so removing that would destroy the
+    // image the receipt is still using.
+    h.state.updateError = { code: '42501', message: 'permission denied' }
+    await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([h.calls.uploadPath])
+    expect(h.calls.removed).not.toContain(EXISTING_PATH)
+  })
+
+  it('removes nothing when the edit attaches no replacement', async () => {
+    await updateReceiptSubmissionAction(null, form({ amount_dollars: '19.99' }))
+    expect(h.calls.removed).toEqual([])
+  })
+
+  it('removes nothing when the receipt never had a photo', async () => {
+    h.state.existing = { id: RECEIPT_ID, status: 'pending_review', file_path: null }
+    await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([])
+  })
+
+  it('still reports success when the removal itself fails', async () => {
+    // The row is already correct. A failed cleanup leaves an orphan, which is a
+    // storage-hygiene problem — not a reason to tell the user their edit failed.
+    h.state.removeError = { message: 'Object not found' }
+    const res = await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(res).toMatchObject({ success: true })
+  })
+})
+
+describe('the guarded write matching no rows', () => {
+  it('reports the edit as unsaved rather than as success', async () => {
+    // The status filter held: the receipt was reviewed between the read and the
+    // write. Postgres raises no error for a zero-row update, so without the row
+    // count this returned `success` while nothing had changed.
+    h.state.updateMatched = false
+    const res = await updateReceiptSubmissionAction(null, form())
+    expect(res).toMatchObject({ error: expect.stringContaining('reviewed') })
+    expect(res).not.toHaveProperty('success')
+  })
+
+  it('treats the replacement as the orphan, keeping the stored image', async () => {
+    h.state.updateMatched = false
+    await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(h.calls.removed).toEqual([h.calls.uploadPath])
+    expect(h.calls.removed).not.toContain(EXISTING_PATH)
   })
 })
 

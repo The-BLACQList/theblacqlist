@@ -2,7 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { parseReceiptFields, uploadReceiptFile } from '@/lib/spend/receipt-input'
+import {
+  parseReceiptFields,
+  removeReceiptFile,
+  uploadReceiptFile,
+} from '@/lib/spend/receipt-input'
 
 export type ReceiptCorrectionState =
   | { success: true; id: string }
@@ -72,16 +76,29 @@ export async function updateReceiptSubmissionAction(
   // A replacement photo is optional. With no new file the stored path is left
   // exactly as it was — an edit that only fixes the amount must not detach the
   // image the user already uploaded.
+  //
+  // `uploadedPath` is tracked separately from `filePath` because the two
+  // cleanup decisions below are opposites: if the write lands, the *old* object
+  // is now unreferenced; if it doesn't, the *new* one is. Deriving that from
+  // `filePath` alone would be guesswork, and guessing wrong deletes a live
+  // receipt image rather than an orphan.
   let filePath = existing.file_path
+  let uploadedPath: string | null = null
   if (fileField instanceof File && fileField.size > 0) {
     const uploaded = await uploadReceiptFile(serviceClient.storage, user.id, fileField)
     if (!uploaded.ok) {
       return { error: uploaded.error, fieldErrors: uploaded.fieldErrors }
     }
+    uploadedPath = uploaded.path
     filePath = uploaded.path
   }
 
-  const { error } = await serviceClient
+  // `.select('id')` is what makes the row count observable. The `status` guard
+  // below can match zero rows without raising an error — an approval landing
+  // between the read and the write is exactly that case — and "did this row
+  // change?" is the question both the user-facing result and the storage
+  // cleanup depend on.
+  const { data: updated, error } = await serviceClient
     .from('receipt_uploads')
     .update({
       listing_id: fields.listingId,
@@ -95,8 +112,17 @@ export async function updateReceiptSubmissionAction(
     .eq('id', receiptId)
     .eq('user_id', user.id)
     .eq('status', 'pending_review')
+    .select('id')
 
   if (error) {
+    // Compensate before returning: the row still points at `existing.file_path`,
+    // so the replacement we just uploaded is the unreferenced one. Removing
+    // `existing.file_path` here instead would delete the image the receipt is
+    // still using.
+    if (uploadedPath !== null) {
+      await removeReceiptFile(serviceClient.storage, uploadedPath)
+    }
+
     // Same reasoning as the insert path: a handled `return { error }` never
     // reaches Vercel's runtime-error table. IDs and Postgres fields only — no
     // user-entered text.
@@ -111,6 +137,27 @@ export async function updateReceiptSubmissionAction(
       hint: error.hint,
     })
     return { error: 'Failed to save your changes. Please try again.' }
+  }
+
+  // Zero rows matched: the status guard held, which means the receipt was
+  // reviewed between the read above and this write. Nothing was saved, so the
+  // replacement is the orphan and the stored image stays as it was. Reporting
+  // success here would tell the user their correction landed when it did not.
+  if (!updated || updated.length === 0) {
+    if (uploadedPath !== null) {
+      await removeReceiptFile(serviceClient.storage, uploadedPath)
+    }
+    return {
+      error: 'This receipt was reviewed while you were editing it, so your changes were not saved.',
+    }
+  }
+
+  // The write landed, so the previous object is now referenced by nothing.
+  // Removal comes last and never blocks: the row is already correct, and paths
+  // are unique per upload (userId/timestamp-uuid.ext), so this cannot detach
+  // another receipt's image.
+  if (uploadedPath !== null && existing.file_path !== null) {
+    await removeReceiptFile(serviceClient.storage, existing.file_path)
   }
 
   revalidatePath('/account/receipts')
