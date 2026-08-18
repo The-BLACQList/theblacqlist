@@ -591,6 +591,42 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           </div>
         </div>
 
+        {/* ── Downloadable reports ──────────────────────────────────────────── */}
+        {/*
+          The page above shows the top ten of each. These files are the whole
+          set at or above the same {AGGREGATE_MIN_TRANSACTIONS}-transaction
+          threshold — nothing looser, just untruncated. Plain <a> rather than
+          next/link: these are file downloads, not client-side navigations.
+        */}
+        <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-4">
+          <p className="font-subhead text-xs font-semibold text-brand-black mb-1">
+            Download the data
+          </p>
+          <p className="font-body text-xs text-charcoal-soft leading-relaxed mb-3">
+            Check our numbers yourself. Each file is a spreadsheet (CSV) listing every business or
+            city that meets the {AGGREGATE_MIN_TRANSACTIONS}-transaction threshold described below,
+            with its total in both dollars and cents. Because entities below that threshold are left
+            out, these files will total less than the community-wide figures at the top of this
+            page — that gap is the privacy floor doing its job.
+          </p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <a
+              href="/api/flow-map/export?dataset=businesses"
+              download
+              className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
+            >
+              Businesses (CSV) ↓
+            </a>
+            <a
+              href="/api/flow-map/export?dataset=cities"
+              download
+              className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
+            >
+              Cities (CSV) ↓
+            </a>
+          </div>
+        </div>
+
         {/* ── Privacy notice ────────────────────────────────────────────────── */}
         <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-4">
           <p className="font-subhead text-xs font-semibold text-brand-black mb-1">
