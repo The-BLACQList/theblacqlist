@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   IMPACT_DATASETS,
+  IMPACT_EXPORT_CACHE_CONTROL,
   IMPACT_EXPORT_MAX_ROWS,
   buildImpactCsv,
   impactExportFilename,
@@ -24,8 +25,21 @@ import {
 // is not defensible. The threshold below is what makes publishing it safe; it
 // is the same call the four existing public aggregate surfaces make.
 //
-// Cache: 1 hour ISR, matching /api/flow-map/summary.
-export const revalidate = 3600
+// CACHING — read this before copying the pattern from a sibling route.
+//
+// This route once declared `export const revalidate = 3600`, copied from
+// /api/flow-map/summary. It did not work: production served summary and
+// /api/community-spend with x-vercel-cache: PRERENDER and served this route
+// x-vercel-cache: MISS on every request
+// [Measured — curl against theblacqlist.com, 2026-08-18].
+//
+// The cache is now set explicitly on the response instead, from
+// IMPACT_EXPORT_CACHE_CONTROL in lib/spend/impact-report.ts — which is also
+// where the reasoning and the limits of what was actually established live.
+// The constant sits in that module rather than here because Next validates the
+// exports of a route file: only the HTTP methods and the recognised
+// segment-config keys are permitted, so a named export from route.ts fails the
+// build.
 
 export async function GET(request: Request) {
   const dataset = new URL(request.url).searchParams.get('dataset')
@@ -91,6 +105,7 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="${impactExportFilename(dataset, isoDate)}"`,
+      'Cache-Control': IMPACT_EXPORT_CACHE_CONTROL,
     },
   })
 }
