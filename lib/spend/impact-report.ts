@@ -55,6 +55,41 @@ export function isImpactDataset(value: string | null): value is ImpactDataset {
  */
 export const IMPACT_EXPORT_MAX_ROWS = 5000
 
+/**
+ * Cache policy for the export response.
+ *
+ * It lives here rather than in the route because Next validates the exports of
+ * a route file — only the HTTP methods and the recognised segment-config keys
+ * are permitted, so a named constant exported from route.ts fails the build.
+ *
+ * It is set on the response rather than declared as `revalidate` because
+ * `revalidate` demonstrably did not work here. The route shipped with
+ * `export const revalidate = 3600`, copied from /api/flow-map/summary, and
+ * production served it `x-vercel-cache: MISS` on every request while summary
+ * and /api/community-spend served `PRERENDER`
+ * [Measured — curl against theblacqlist.com, 2026-08-18].
+ *
+ * The likely cause is that this route takes a `request` argument to read
+ * `?dataset=` and the other two take none, so only they stay statically
+ * analyzable — since Next 15 a GET handler is dynamic by default and
+ * `revalidate` only bites when the handler can be prerendered. That is
+ * `[Assumption]`, not established: `next build` marks all three `ƒ (Dynamic)`
+ * in its route table, so the local build does not distinguish them and no
+ * claim here should rest on the mechanism. What is established is the
+ * production behaviour above, and an explicit response header is the right
+ * cache policy for a public aggregate regardless of which explanation holds.
+ *
+ *   s-maxage=3600            the CDN holds a copy for an hour
+ *   stale-while-revalidate   it may serve yesterday's copy while refetching,
+ *     =86400                 which is the right trade for a public aggregate
+ *                            that only changes when the nightly recompute runs
+ *   max-age=0                browsers do not keep their own copy — someone
+ *                            re-pulling the file is re-pulling it because they
+ *                            want the current numbers
+ */
+export const IMPACT_EXPORT_CACHE_CONTROL =
+  'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400'
+
 // ── CSV encoding ────────────────────────────────────────────────────────────
 // RFC 4180. Matches the conventions already set by the one other CSV route in
 // the repo, app/api/admin/analytics/search/export/route.ts: quote only when

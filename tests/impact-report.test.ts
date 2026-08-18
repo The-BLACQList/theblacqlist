@@ -28,8 +28,15 @@
 //                                                       aggregate-privacy)
 //   swapped the money math for (cents/100).toFixed(2) → 0 tests failed ✗
 //
-// The fourth is recorded as a miss rather than quietly dropped, because the
-// reason matters: it is not a gap in the tests. For integer cents the float
+// The cache-header assertions added afterward are covered differently. That
+// change edits pre-existing files, so a stash is a real control rather than a
+// no-op: with app/api/flow-map/export/route.ts and lib/spend/impact-report.ts
+// stashed, all 6 of the new assertions fail and the 39 that predate them still
+// pass [Observed — git stash push, 2026-08-18].
+//
+// The fourth mutation above is recorded as a miss rather than quietly dropped,
+// because the reason matters: it is not a gap in the tests. For integer cents
+// the float
 // divide is exact — checked across every value from 0 to 2,000,000 cents with
 // zero mismatches, and at 999999999. The integer implementation in the module
 // is a readability choice, not a correctness fix, and this suite cannot tell
@@ -44,6 +51,7 @@ import path from 'node:path'
 
 import {
   IMPACT_DATASETS,
+  IMPACT_EXPORT_CACHE_CONTROL,
   IMPACT_EXPORT_MAX_ROWS,
   IMPACT_HEADERS,
   buildCsvRow,
@@ -297,5 +305,53 @@ describe('the export route', () => {
     // community.
     expect(src).toContain('nodesError')
     expect(src).toContain('status: 500')
+  })
+
+  // ── Caching ───────────────────────────────────────────────────────────────
+  // The route originally declared `export const revalidate = 3600`, copying the
+  // pattern from /api/flow-map/summary. It did nothing: production served this
+  // route x-vercel-cache: MISS on every request while the two argument-less
+  // siblings served PRERENDER
+  // [Measured — curl against theblacqlist.com, 2026-08-18]. See
+  // lib/spend/impact-report.ts for why, and for what that reasoning does not
+  // establish.
+  //
+  // These assertions exist because the failure mode is silent. Nothing breaks
+  // when a cache header is absent — the file is still correct, it is just
+  // rebuilt from the database every time, and the source comment claims
+  // otherwise. Only a test notices.
+
+  it('sets the cache policy on the response', () => {
+    expect(src).toContain("'Cache-Control': IMPACT_EXPORT_CACHE_CONTROL")
+  })
+
+  it('does not declare revalidate, which is inert on a handler that reads the request', () => {
+    // Anchored to the start of a line so it matches a declaration and not the
+    // comment above GET, which quotes the phrase while explaining why it is
+    // gone. Guards against the pattern being re-copied from a sibling route —
+    // if this ever fails, delete the line rather than loosening the assertion.
+    expect(src).not.toMatch(/^\s*export\s+const\s+revalidate/m)
+  })
+})
+
+describe('IMPACT_EXPORT_CACHE_CONTROL', () => {
+  it('lets shared caches hold the file for an hour', () => {
+    expect(IMPACT_EXPORT_CACHE_CONTROL).toContain('s-maxage=3600')
+  })
+
+  it('allows a stale copy to be served while a fresh one is fetched', () => {
+    expect(IMPACT_EXPORT_CACHE_CONTROL).toContain('stale-while-revalidate=')
+  })
+
+  it('keeps browsers off their own stale copy', () => {
+    // Someone re-downloading the report is doing it to get the current numbers.
+    // The CDN copy is the one that absorbs the load; the browser's would only
+    // hand back yesterday's file with no way to tell.
+    expect(IMPACT_EXPORT_CACHE_CONTROL).toContain('max-age=0')
+  })
+
+  it('is public — this is an aggregate, not a per-user response', () => {
+    expect(IMPACT_EXPORT_CACHE_CONTROL).toMatch(/^public,/)
+    expect(IMPACT_EXPORT_CACHE_CONTROL).not.toContain('private')
   })
 })
