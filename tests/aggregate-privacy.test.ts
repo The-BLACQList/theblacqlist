@@ -121,10 +121,16 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     return readFileSync(path.resolve(process.cwd(), file), 'utf8')
   }
 
-  // The four surfaces that publish a named entity beside a dollar figure.
+  // Every surface that publishes a named entity beside a dollar figure.
+  //
+  // The CSV export is on this list deliberately. It is the one surface that
+  // publishes the WHOLE publishable set rather than a top-10 slice, which makes
+  // it the surface where a dropped .gte() would disclose the most — every
+  // sub-threshold business by name, in a file built for redistribution.
   const SURFACES = [
     'app/(public)/flow-map/page.tsx',
     'app/api/flow-map/summary/route.ts',
+    'app/api/flow-map/export/route.ts',
     'app/api/community-spend/route.ts',
     'app/account/community-spend/page.tsx',
   ] as const
