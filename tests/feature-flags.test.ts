@@ -34,6 +34,11 @@ beforeEach(() => {
   delete process.env.NEXT_PUBLIC_VERCEL_ENV
   delete process.env.FEATURE_AI_BETA
   delete process.env.FEATURE_OCR_EXTRACTION
+  // Added 2026-08-21 with the E-2 Model C work. Its absence was latent rather
+  // than harmless: `getEnabledFeatures` below asserts the full flag list, so a
+  // developer or CI runner with FEATURE_PAID_POSTINGS=0 in their shell would
+  // have failed that case for a reason that had nothing to do with the code.
+  delete process.env.FEATURE_PAID_POSTINGS
 })
 
 afterEach(() => {
@@ -56,6 +61,22 @@ describe('isFeatureEnabled — defaults', () => {
   it('is ON in local development when the env var is unset', async () => {
     const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: 'development' })
     expect(isFeatureEnabled('aiBeta')).toBe(true)
+  })
+
+  // The same two defaults, asserted for `paidPostings` specifically. The generic
+  // cases above run on `aiBeta`, which would keep passing if someone gave the
+  // money path its own default. This is the flag that gates job checkout, the
+  // included-job allowance, the event caps, and the job half of the nightly
+  // sweep — production has to stay dark until STRIPE_JOB_POSTING_PRICE_ID exists
+  // at every Vercel scope (§2B5 step 4), and "dark" is exactly this default.
+  it('keeps paidPostings OFF in production when the env var is unset', async () => {
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: 'production' })
+    expect(isFeatureEnabled('paidPostings')).toBe(false)
+  })
+
+  it('turns paidPostings ON in preview when the env var is unset', async () => {
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: 'preview' })
+    expect(isFeatureEnabled('paidPostings')).toBe(true)
   })
 })
 

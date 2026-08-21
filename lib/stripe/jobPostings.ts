@@ -1,12 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { eventLimit, TIER_RANK } from '@/lib/stripe/features'
+import { eventLimit, jobLimit, TIER_RANK } from '@/lib/stripe/features'
 import type { PlanSlug } from '@/lib/stripe/plans'
 
 /**
- * E-2 · Model A — paid job postings and the newly-enforced events cap.
+ * E-2 · Model C — job postings on an included allowance plus paid overflow, and
+ * the newly-enforced events cap.
  *
- * Everything here is inert until `FEATURE_PAID_POSTINGS` is on. Both call sites
+ * `[Decision — founder, 2026-08-21]`, superseding the Model A decision of
+ * 2026-08-17. Growth includes 1 job posting per rolling 30 days and Premium
+ * includes 3; free and starter include 0. Anyone, at any tier, can buy
+ * additional postings. Nothing about jobs is tier-locked — only tier-discounted.
+ *
+ * Everything here is inert until `FEATURE_PAID_POSTINGS` is on. The call sites
  * check the flag; this module deliberately does not, so the rules stay testable
  * without reaching into the environment.
  */
@@ -39,6 +45,25 @@ export function jobPostingPriceId(): string | null {
 }
 
 /**
+ * What the dashboard tells an owner an extra posting costs.
+ *
+ * ⚠ Display copy, NOT the enforcement boundary — the same relationship
+ * `lib/stripe/plans.ts` has with its price fields: "marketing copy, not the
+ * enforcement boundary". What the customer is actually charged comes from the
+ * Stripe price behind `STRIPE_JOB_POSTING_PRICE_ID`, and what gets recorded
+ * comes from `session.amount_total`. Nothing reads this constant to decide
+ * anything.
+ *
+ * It exists because the quota line has to name a price before checkout opens,
+ * and the alternative — a Stripe price lookup on every dashboard render — is a
+ * network call to display a number that changes once a year.
+ *
+ * **Keep in sync by hand with the Stripe price created at GATE-SPEND
+ * (§2C3 ①).** `[Decision — founder, 2026-08-21]` $9.99 per 30 days.
+ */
+export const JOB_POSTING_PRICE_DISPLAY = '$9.99'
+
+/**
  * The moment the events cap starts applying.
  *
  * `TIER_LIMITS.events` has been sold on the pricing page since launch and
@@ -50,6 +75,22 @@ export function jobPostingPriceId(): string | null {
  * `[Decision — founder, 2026-08-17]` enforce and grandfather.
  */
 export const EVENT_LIMIT_ENFORCED_FROM = '2026-08-17T00:00:00.000Z'
+
+/**
+ * The moment the job allowance starts applying. Same shape as the events cutoff
+ * above, same reason: jobs were free and uncapped, and Model C turns them into a
+ * sold entitlement. A job listing created before this instant is invisible to the
+ * check — neither blocked nor counted.
+ *
+ * ⚠ This constant is fixed when the code merges; enforcement actually begins at
+ * the later `FEATURE_PAID_POSTINGS` flip. Jobs created in that gap are already
+ * past the cutoff and so DO count. That direction is the safe one — a constant
+ * set in the future would fail open — but it means the gap must be counted
+ * before flipping the flag. See §2B5 step 4 in the founder completion plan.
+ *
+ * `[Decision — founder, 2026-08-21]` grandfather, same as events.
+ */
+export const JOB_LIMIT_ENFORCED_FROM = '2026-08-21T00:00:00.000Z'
 
 /** Listing statuses that make an event "active" for the purposes of the cap. */
 const ACTIVE_EVENT_STATUSES = ['pending', 'published'] as const
@@ -128,6 +169,68 @@ export async function eventQuotaFor(supabase: AnyClient, userId: string): Promis
   return { limit, used, atLimit: used >= limit, tier }
 }
 
+export type JobQuota = {
+  /** Included postings per rolling 30 days. null means unlimited (no tier is). */
+  limit: number | null
+  /** Included postings whose 30-day window is still open. */
+  used: number
+  /** True when the next posting would have to be purchased. */
+  atLimit: boolean
+  tier: PlanSlug | 'free'
+}
+
+/**
+ * How many included job postings this owner is currently using, against what
+ * allowance.
+ *
+ * "Used" means *window still open*, not *ever granted*: an included posting
+ * occupies a slot for {@link JOB_POSTING_DURATION_DAYS} days, the nightly sweep
+ * unpublishes it, and the slot refills. That is what makes the allowance a
+ * rolling one, and it is the same expiry test {@link hasPaidJobPosting} applies —
+ * a null `expires_at` counts as still open in both, so the two cannot disagree.
+ *
+ * Only `source = 'entitlement'` rows count. A posting the owner *bought* never
+ * consumes their allowance; that would charge them twice for one posting.
+ *
+ * No grandfather filter is applied here on purpose: entitlement rows cannot
+ * predate {@link JOB_LIMIT_ENFORCED_FROM}, because nothing wrote them before the
+ * feature existed. The grandfather check belongs on the job listing's own
+ * `created_at`, at the call site, before this function is reached.
+ *
+ * Inherits {@link ownerPlanTier}'s named `[Assumption]` — tier lives on
+ * `listings`, not on the user, and a job is itself a listing created at
+ * `tier: 'free'`, so reading the job's own tier would give every owner a limit of
+ * 0 and make the Growth entitlement unreachable. Highest-tier-wins is the reading
+ * that matches the pricing copy.
+ */
+export async function jobQuotaFor(supabase: AnyClient, userId: string): Promise<JobQuota> {
+  const tier = await ownerPlanTier(supabase, userId)
+  const limit = jobLimit(tier)
+
+  if (limit === null) {
+    return { limit: null, used: 0, atLimit: false, tier }
+  }
+  if (limit === 0) {
+    // Nothing to count — free and starter have no allowance to spend.
+    return { limit: 0, used: 0, atLimit: true, tier }
+  }
+
+  const { data } = await supabase
+    .from('job_posting_purchases')
+    .select('id, expires_at')
+    .eq('purchased_by', userId)
+    .eq('status', 'paid')
+    .eq('source', 'entitlement')
+
+  const now = Date.now()
+  const used = (data ?? []).filter((row) => {
+    const expiresAt = (row as { expires_at: string | null }).expires_at
+    return !expiresAt || new Date(expiresAt).getTime() > now
+  }).length
+
+  return { limit, used, atLimit: used >= limit, tier }
+}
+
 /**
  * Has this job posting been paid for?
  *
@@ -156,4 +259,69 @@ export async function hasPaidJobPosting(supabase: AnyClient, listingId: string):
 /** The end of the window a purchase completed at `paidAt` buys. */
 export function jobPostingExpiryFrom(paidAt: Date): string {
   return new Date(paidAt.getTime() + JOB_POSTING_DURATION_DAYS * 24 * 60 * 60 * 1000).toISOString()
+}
+
+/**
+ * The idempotency key for an included posting: `<listing_id>:<YYYY-MM-DD>` in UTC.
+ *
+ * Mirrors what the Stripe session id does for a purchase. A double-submit on the
+ * same day collides and is ignored; a genuine renewal 30 days later produces a
+ * different key and is allowed. A unique index on `listing_id` alone would have
+ * blocked renewals, and an index predicate over `now()` is not immutable.
+ */
+export function jobEntitlementKey(listingId: string, at: Date): string {
+  return `${listingId}:${at.toISOString().slice(0, 10)}`
+}
+
+export type GrantResult = { ok: true } | { ok: false; error: string }
+
+/**
+ * Spend one of the owner's included postings: write a $0, 30-day row into the
+ * same ledger a purchase writes to.
+ *
+ * One lifecycle, deliberately `[Decision — founder, 2026-08-21]`. The row is
+ * `status: 'paid'` with `amount_cents: 0` and `source: 'entitlement'`, so
+ * `hasPaidJobPosting`, the partial index, and `unpublishExpiredJobPostings` all
+ * treat it identically to a purchase and need no knowledge that it was free.
+ * `source` — not the amount — is what separates revenue from entitlement, because
+ * `amount_cents = 0` would be ambiguous with a fully-discounted purchase.
+ *
+ * `supabase` MUST be a service-role client: `job_posting_purchases` has no
+ * INSERT policy by design (a client that could insert a `paid` row could publish
+ * a job without paying for it). The caller is responsible for having verified
+ * ownership, draft status, the grandfather cutoff, and the remaining allowance
+ * before calling — this function checks none of that.
+ *
+ * Returns a result rather than throwing, and never falls through to checkout on
+ * failure: charging someone who was entitled to a free posting is the worse
+ * error, so the caller surfaces a retry instead.
+ */
+export async function grantIncludedJobPosting(
+  supabase: AnyClient,
+  params: { listingId: string; userId: string; now?: Date }
+): Promise<GrantResult> {
+  const grantedAt = params.now ?? new Date()
+
+  // Same narrowing the webhook uses (`webhookHandlers.ts`): `job_posting_purchases`
+  // is absent from the generated `Database` types until the migration is applied.
+  // Regenerate types after the apply and this cast comes out.
+  const { error } = await (supabase as unknown as SupabaseClient)
+    .from('job_posting_purchases')
+    .upsert(
+      {
+        listing_id: params.listingId,
+        purchased_by: params.userId,
+        source: 'entitlement',
+        entitlement_key: jobEntitlementKey(params.listingId, grantedAt),
+        amount_cents: 0,
+        currency: 'usd',
+        status: 'paid',
+        paid_at: grantedAt.toISOString(),
+        expires_at: jobPostingExpiryFrom(grantedAt),
+      },
+      { onConflict: 'entitlement_key', ignoreDuplicates: true }
+    )
+
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
 }
