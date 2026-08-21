@@ -1,10 +1,16 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
 import { createJobPostingCheckoutSession } from '@/lib/stripe/jobPostingCheckout'
-import { eventQuotaFor, hasPaidJobPosting } from '@/lib/stripe/jobPostings'
+import {
+  eventQuotaFor,
+  grantIncludedJobPosting,
+  hasPaidJobPosting,
+  jobQuotaFor,
+  JOB_LIMIT_ENFORCED_FROM,
+} from '@/lib/stripe/jobPostings'
 
 export type SubmitForReviewState =
   | { error: string }
@@ -34,7 +40,7 @@ export async function submitListingForReviewAction(
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name, status, entity_type, owner_user_id')
+    .select('id, name, status, entity_type, owner_user_id, created_at')
     .eq('id', listingId)
     .maybeSingle()
 
@@ -57,20 +63,51 @@ export async function submitListingForReviewAction(
   // rules can be enforced once — every route to publication passes through this
   // status transition.
   if (isFeatureEnabled('paidPostings')) {
+    // The job ladder, in this order for reasons that are not interchangeable:
+    //   1. grandfather  — so a pre-cutoff draft never burns an allowance
+    //   2. already paid — so re-submitting a covered job never spends a second slot
+    //   3. allowance    — spend an included posting if one is open
+    //   4. checkout     — otherwise, sell one
     if (listing.entity_type === 'job') {
-      const paid = await hasPaidJobPosting(supabase, listingId)
-      if (!paid) {
-        const checkout = await createJobPostingCheckoutSession({
-          listingId,
-          listingName: listing.name,
-          userId: user.id,
-          userEmail: user.email ?? null,
-        })
-        if ('error' in checkout) return { error: checkout.error }
-        // Nothing has been written yet. The draft→pending transition happens in
-        // the webhook, after Stripe confirms the payment — never here on the
-        // optimistic assumption that the user will complete checkout.
-        return { requiresPayment: true, checkoutUrl: checkout.url }
+      const grandfathered =
+        !!listing.created_at && new Date(listing.created_at) < new Date(JOB_LIMIT_ENFORCED_FROM)
+
+      if (!grandfathered && !(await hasPaidJobPosting(supabase, listingId))) {
+        const quota = await jobQuotaFor(supabase, user.id)
+
+        if (!quota.atLimit) {
+          // Written on the service role: the ledger has no INSERT policy by
+          // design. Ownership, draft status, the cutoff, and the allowance have
+          // all been checked above — this is the only thing left to do.
+          // try/catch, not `.catch()`: createServiceClient() throws synchronously
+          // when the service-role key is missing, which is outside a promise chain.
+          let ok = false
+          try {
+            ok = (await grantIncludedJobPosting(createServiceClient(), {
+              listingId,
+              userId: user.id,
+            })).ok
+          } catch {
+            ok = false
+          }
+          if (!ok) {
+            // Deliberately not falling through to checkout: charging someone who
+            // was entitled to a free posting is the worse failure.
+            return { error: 'Could not apply your included job posting. Please try again.' }
+          }
+        } else {
+          const checkout = await createJobPostingCheckoutSession({
+            listingId,
+            listingName: listing.name,
+            userId: user.id,
+            userEmail: user.email ?? null,
+          })
+          if ('error' in checkout) return { error: checkout.error }
+          // Nothing has been written yet. The draft→pending transition happens in
+          // the webhook, after Stripe confirms the payment — never here on the
+          // optimistic assumption that the user will complete checkout.
+          return { requiresPayment: true, checkoutUrl: checkout.url }
+        }
       }
     }
 

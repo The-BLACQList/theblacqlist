@@ -123,6 +123,14 @@ export interface TierLimits {
   products: number | null
   /** Concurrently active events. */
   events: number | null
+  /**
+   * Included job postings per rolling 30 days — NOT a cap on jobs.
+   * Postings beyond this are purchasable at every tier, including free, so this
+   * is an allowance rather than a gate. That is why `jobs` has no `GatedFeature`
+   * counterpart: nothing about jobs is tier-locked, only tier-discounted.
+   * A posting consumes one slot for 30 days and then the slot refills.
+   */
+  jobs: number | null
   /** Team members shown on the listing. */
   teamMembers: number | null
   /** Locations (listings) under one owner account. */
@@ -143,6 +151,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     attributes: 3,
     products: 0,
     events: 0,
+    jobs: 0,
     teamMembers: 0,
     locations: 1,
     aiGenerationsPerMonth: 0,
@@ -156,6 +165,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     attributes: 10,
     products: 0,
     events: 0,
+    jobs: 0,
     teamMembers: 0,
     locations: 1,
     aiGenerationsPerMonth: 10,
@@ -169,6 +179,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     attributes: null,
     products: 25,
     events: 3,
+    jobs: 1,
     teamMembers: 5,
     locations: 1,
     aiGenerationsPerMonth: 100,
@@ -182,6 +193,11 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     attributes: null,
     products: null,
     events: null,
+    // Deliberately a number, not `null`, on the tier where everything else is
+    // uncapped: a job posting carries real marginal cost (it is the thing being
+    // sold), so Premium gets a larger allowance, not an unlimited one. Postings
+    // past 3 are purchasable like anyone else's.
+    jobs: 3,
     teamMembers: null,
     locations: 3,
     aiGenerationsPerMonth: 500,
@@ -231,6 +247,12 @@ export function productLimit(tier: string | null): number | null {
 
 export function eventLimit(tier: string | null): number | null {
   return limitsFor(tier).events
+}
+
+// Included job postings per rolling 30 days. See `TierLimits.jobs` — this is an
+// allowance, not a cap; `lib/stripe/jobPostings.ts` sells anything beyond it.
+export function jobLimit(tier: string | null): number | null {
+  return limitsFor(tier).jobs
 }
 
 export function teamMemberLimit(tier: string | null): number | null {

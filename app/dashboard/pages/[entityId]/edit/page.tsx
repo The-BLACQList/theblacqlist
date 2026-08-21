@@ -3,7 +3,14 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { requireOwner } from '@/lib/dashboard/guard'
+import {
+  hasPaidJobPosting,
+  jobQuotaFor,
+  JOB_LIMIT_ENFORCED_FROM,
+  JOB_POSTING_PRICE_DISPLAY,
+} from '@/lib/stripe/jobPostings'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { loadAttributeGroups } from '@/lib/listings/facets'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
@@ -35,6 +42,7 @@ export default async function EditPage({ params }: Props) {
     .select(
       `
       id, name, slug, status, trust_tier, entity_type, tagline, meta_title, meta_description,
+      created_at,
       cities(slug, name),
       listing_details_business(
         description, phone, email, website_url,
@@ -174,6 +182,35 @@ export default async function EditPage({ params }: Props) {
         }
       : null
 
+    // E-2 Model C — the "N of M included postings used" line above the submit
+    // button. Deliberately mirrors the ladder in `submitListingForReviewAction`
+    // minus the writes: same flag, same grandfather cutoff, same already-paid
+    // check, same quota call. Each rung that skips the line is a rung where
+    // submitting costs nothing and there is nothing to warn about. If the two
+    // ever disagree, this file is the one that is wrong — the action is the
+    // enforcement boundary and re-derives all of it before granting or charging.
+    let jobQuota:
+      | { limit: number; used: number; atLimit: boolean; priceDisplay: string }
+      | undefined
+    if (isFeatureEnabled('paidPostings') && listing.status === 'draft') {
+      const grandfathered =
+        !!listing.created_at && new Date(listing.created_at) < new Date(JOB_LIMIT_ENFORCED_FROM)
+
+      if (!grandfathered && !(await hasPaidJobPosting(supabase, listing.id))) {
+        const quota = await jobQuotaFor(supabase, owner.user.id)
+        // `limit === null` is "unlimited" — no tier is, but the type allows it
+        // and an unlimited allowance has nothing to tell the owner.
+        if (quota.limit !== null) {
+          jobQuota = {
+            limit: quota.limit,
+            used: quota.used,
+            atLimit: quota.atLimit,
+            priceDisplay: JOB_POSTING_PRICE_DISPLAY,
+          }
+        }
+      }
+    }
+
     return (
       <div className="max-w-2xl space-y-6">
         <div className="flex items-start justify-between gap-4">
@@ -211,6 +248,7 @@ export default async function EditPage({ params }: Props) {
           status={listing.status}
           trustTier={listing.trust_tier}
           entityType={listing.entity_type}
+          jobQuota={jobQuota}
         />
 
         <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />

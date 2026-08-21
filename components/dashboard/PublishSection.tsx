@@ -18,6 +18,21 @@ interface Props {
    * real submit button instead.
    */
   entityType?: string
+  /**
+   * The owner's included-job-posting position, resolved server-side by the edit
+   * page (E-2 Model C). Present only for a draft job that would actually be
+   * charged or spend an allowance — absent when the feature is off, when the
+   * listing is grandfathered, or when it is already covered by a purchase.
+   *
+   * ⚠ Display only. Every one of these values is re-derived server-side in
+   * `submitListingForReviewAction` before anything is granted or charged; a
+   * tampered prop changes the sentence and nothing else.
+   *
+   * `priceDisplay` is passed in rather than imported so this client component
+   * never pulls `lib/stripe/jobPostings.ts` into the browser bundle. The
+   * constant stays single-source on the server.
+   */
+  jobQuota?: { limit: number; used: number; atLimit: boolean; priceDisplay: string }
 }
 
 export function PublishSection({
@@ -25,6 +40,7 @@ export function PublishSection({
   status: initialStatus,
   trustTier,
   entityType,
+  jobQuota,
 }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingStatusAction, null)
   const [submitState, submitAction, isSubmitting] = useActionState(
@@ -119,6 +135,31 @@ export function PublishSection({
               This {entityType === 'job' ? 'job' : 'event'} hasn&apos;t been submitted for review
               yet. Submit it and The BLACQList team will review it before it goes live.
             </p>
+            {jobQuota && (
+              <p className="font-body text-sm text-charcoal-soft leading-relaxed">
+                {jobQuota.limit === 0 ? (
+                  <>
+                    Job postings are {jobQuota.priceDisplay} for 30 days. Submitting takes you
+                    to checkout.{' '}
+                    <Link href="/dashboard/upgrade" className="underline hover:text-brand-black">
+                      Growth and Premium plans include free postings
+                    </Link>
+                    .
+                  </>
+                ) : jobQuota.atLimit ? (
+                  <>
+                    {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
+                    additional postings {jobQuota.priceDisplay} for 30 days. Submitting takes
+                    you to checkout.
+                  </>
+                ) : (
+                  <>
+                    {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
+                    this one is included. It stays live for 30 days.
+                  </>
+                )}
+              </p>
+            )}
             {submitState && 'error' in submitState && (
               <div
                 role="alert"

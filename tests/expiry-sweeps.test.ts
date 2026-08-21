@@ -38,6 +38,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 //       → 'separates lapsed from actually-unpublished'                   (1 red)
 //   M5  a null `expires_at` read as expired
 //       → 'treats a null expiry as an open window'                       (1 red)
+//
+// 2026-08-21: three cases added for the E-2 Model C included ($0) posting. The
+// "16/16" above is the count as measured on 2026-08-17 and is left as the
+// historical record; the mutation matrix was NOT re-run for the new cases.
 // =============================================================================
 
 const h = vi.hoisted(() => ({ writeSystemAuditLog: vi.fn(async () => {}) }))
@@ -315,5 +319,57 @@ describe('unpublishExpiredJobPostings', () => {
     await unpublishExpiredJobPostings(fake.client, NOW)
 
     expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
+  })
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // E-2 Model C — the included ($0) posting.
+  //
+  // Decision 1 of 2026-08-21 was "one lifecycle": an included posting is a row
+  // in this same ledger with `amount_cents = 0` and `source = 'entitlement'`,
+  // not a second concept. The sweep is deliberately NOT changed for it. These
+  // three cases are what turn that from an intention into a tested property —
+  // if someone later narrows the ledger read to paid-in-cash rows, an included
+  // posting would stay live forever and the allowance would never refill.
+
+  it('lapses a $0 included posting exactly like a purchased one', async () => {
+    const fake = makeFakeClient({
+      job_posting_purchases: ok([
+        { listing_id: 'l1', expires_at: expired, source: 'entitlement', amount_cents: 0 },
+      ]),
+      listings: ok([{ id: 'l1' }]),
+    })
+
+    const result = await unpublishExpiredJobPostings(fake.client, NOW)
+
+    expect(result).toEqual({ lapsed: 1, unpublished: 1, renewed: 0 })
+  })
+
+  it('does not narrow the ledger read to cash purchases', async () => {
+    const fake = makeFakeClient({ job_posting_purchases: ok([]) })
+
+    await unpublishExpiredJobPostings(fake.client, NOW)
+
+    // `status = 'paid'` and nothing else. An added `.eq('source','stripe')`
+    // would strand every included posting published, which is the failure this
+    // asserts against.
+    expect(fake.allArgsOf('job_posting_purchases', 'eq')).toEqual([['status', 'paid']])
+  })
+
+  it('spares a job whose expired purchase was followed by an included posting', async () => {
+    // The mixed ledger Model C makes ordinary: an owner buys a posting, then
+    // upgrades to Growth and re-submits on their allowance. Two rows, two
+    // sources, one listing — the open window is the one that counts.
+    const fake = makeFakeClient({
+      job_posting_purchases: ok([
+        { listing_id: 'l1', expires_at: expired, source: 'stripe' },
+        { listing_id: 'l1', expires_at: live, source: 'entitlement' },
+      ]),
+      listings: ok([]),
+    })
+
+    const result = await unpublishExpiredJobPostings(fake.client, NOW)
+
+    expect(fake.tablesTouched()).not.toContain('listings')
+    expect(result).toEqual({ lapsed: 0, unpublished: 0, renewed: 1 })
   })
 })
