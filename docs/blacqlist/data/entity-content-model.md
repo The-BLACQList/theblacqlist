@@ -637,21 +637,27 @@ Verification fields are on the `listings` base table. Described in Section 3.5 a
 
 **BLACQList Certified auto-grant criteria:**
 
-A listing is auto-elevated to `trust_tier = 'certified'` and `certification_auto_granted_at` is set to `now()` when ALL of the following conditions are simultaneously true:
+> **Corrected 2026-08-22.** The V1 criteria previously recorded here (≥ 6 reviews, average ≥ 4.0, 90 days from `published_at`, granted by a trigger on `reviews`) were superseded by `[Decision — founder, 2026-08-06]` (decision-log 009) and amended by `[Decision — founder, 2026-08-22]` (decision-log 031 and 032). `data-model.md` § "BLACQList Certified Auto-Grant Criteria" is the canonical statement; this section mirrors it.
+
+A listing is auto-elevated to `trust_tier = 'certified'` and `certification_auto_granted_at` is set to `now()` when ALL of the following are simultaneously true:
 
 1. `trust_tier = 'verified'` — the listing has already completed human verification
-2. Review count ≥ 6 — at least 6 rows in the `reviews` table where `listing_id = this listing` and `status = 'published'`
-3. Average review rating ≥ 4.0 — computed from the same published reviews
-4. `status = 'published'` — the listing is currently live
-5. `published_at <= now() - interval '90 days'` — the listing has been published for at least 90 days
+2. `status = 'published'` AND `deleted_at IS NULL` — the listing is currently live
+3. `listings.review_count >= 5` — the trigger-maintained count of published reviews
+4. `listings.avg_rating >= 3.5` — the trigger-maintained average over the same published reviews
+5. At least 90 days have passed since the **earliest approved claim** on the listing (`claims.reviewed_at` where `status = 'approved'`) — not since publication
+6. The `listing_details_business` row is complete: a non-blank `description`, at least one of `phone`/`email`, at least one of `website_url`/`address_line_1`, a `city_text`, and a `state`
 
-**Implementation approach:** This check should run as a database trigger on the `reviews` table (when a new review is inserted or updated to `status = 'published'`) rather than as a scheduled batch job. This ensures certification is granted promptly rather than waiting for the next batch window. The trigger should:
+Criterion 6 also means **only businesses can be certified** — events and jobs write to their own details tables and have no row to join. That is deliberate: a 30-day job posting cannot accumulate 90 days of tenure.
 
-1. Compute the count and average for the listing associated with the new/updated review
-2. Check all five criteria
-3. If all five pass, update `listings.trust_tier = 'certified'` and `listings.certification_auto_granted_at = now()` for that listing
+**Implementation approach:** There is **no trigger on `reviews`**. The rule is evaluated in two places, which must be kept in agreement:
 
-This certification check must run at the database level (trigger or Supabase Edge Function), not as application logic, to ensure it cannot be bypassed. Admins can manually revoke certification by resetting `trust_tier = 'verified'` and clearing `certification_auto_granted_at`.
+1. **Fast path** — `maybePromoteToCertified()` in `lib/services/trust/certification.ts`, called from `lib/actions/admin/moderateReview.ts` immediately after an admin publishes a review, so promotion feels prompt.
+2. **Safety net** — `auto_grant_certified()` (`supabase/migrations/20260822000000_certification_rule_alignment.sql`), scheduled nightly at 03:00 UTC via `pg_cron`. Without it, a listing that reaches 5 reviews on day 40 and never receives a sixth would never be re-evaluated on day 90.
+
+Both set `certification_auto_granted_at`; both guard the update with `AND trust_tier = 'verified'` so promotion is one-way and can never downgrade a listing. **Changing the rule means changing both files in the same PR** — they disagreed from 2026-08-06 to 2026-08-22 and could return opposite verdicts on the same listing.
+
+The fast path runs in a server action rather than in the database, so it is not bypass-proof on its own — the nightly SQL sweep is what makes the rule authoritative regardless of which code path ran. Admins can manually revoke certification by resetting `trust_tier = 'verified'` and clearing `certification_auto_granted_at`; there is no automated revocation path, which is why criterion 4 (the rating floor) exists.
 
 ---
 
