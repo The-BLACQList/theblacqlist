@@ -139,15 +139,15 @@ silently drops to chromium-only and takes two L cells with it.
 
 **Steps:**
 
-| #   | Action                                        | Expected                                                            |
-| --- | --------------------------------------------- | ------------------------------------------------------------------- |
-| 1   | Navigate to `/sign-up`                        | Sign-up form renders with email + password fields                   |
-| 2   | Submit empty form                             | Blocked by native constraint validation (`required`); no navigation |
-| 3   | Submit invalid email format                   | Blocked by `type="email"`; `validity.typeMismatch` is true          |
-| 4   | Submit valid email + password under 8 chars   | Blocked by `minLength={8}`; `validity.tooShort` is true             |
-| 5   | Submit valid email + strong password          | Account created; redirect to `/onboarding` or `/account`            |
-| 6   | Attempt sign-up with already-registered email | Error: "Email already in use" (not a 500)                           |
-| 7   | Navigate to `/sign-up` while signed in        | Redirected to `/account`                                            |
+| #   | Action                                        | Expected                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Navigate to `/sign-up`                        | Sign-up form renders with email + password fields                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2   | Submit empty form                             | Blocked by native constraint validation (`required`); no navigation                                                                                                                                                                                                                                                                                                                                                                 |
+| 3   | Submit invalid email format                   | Blocked by `type="email"`; `validity.typeMismatch` is true                                                                                                                                                                                                                                                                                                                                                                          |
+| 4   | Submit valid email + password under 8 chars   | Blocked by `minLength={8}`; `validity.tooShort` is true                                                                                                                                                                                                                                                                                                                                                                             |
+| 5   | Submit valid email + strong password          | Account created; redirect to `/onboarding` or `/account`                                                                                                                                                                                                                                                                                                                                                                            |
+| 6   | Attempt sign-up with already-registered email | **Depends on the project's Confirm-email setting.** OFF: `#email-error` reads "That email is already registered." with a Sign in instead link. ON (staging, production): Supabase suppresses the error to prevent account enumeration and returns an obfuscated success — the user sees "Check your inbox" and the `already registered` branch in `lib/actions/auth/signUp.ts:63` is unreachable. Never a 500, and never signed in. |
+| 7   | Navigate to `/sign-up` while signed in        | Redirected to `/account`                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 **Failure states:**
 
@@ -763,3 +763,22 @@ next, not defects in this plan:
 - `/dashboard/pages/[id]/analytics` commits a `200` before `notFound()` fires, because the route streams
   its shell before the ownership query resolves. The sibling `/edit` route returns a real 404. Authorization
   is intact in both; only the status code differs.
+
+### Surfaced 2026-08-23 — TA-02 step 6 has two correct answers
+
+`[Observed — CI e2e job against staging, 2026-08-23]` The named "already registered" message is only
+reachable on a Supabase project with **Confirm email OFF**. With it ON — staging and production —
+`supabase.auth.signUp()` returns an obfuscated success rather than an error, by design, so that an
+attacker cannot use the sign-up form to enumerate which emails hold accounts.
+
+The consequence is a real UX finding, not a test problem: **an owner who already has an account and
+tries to sign up again is shown "Check your inbox" and told to wait for an email that will never
+bring them a new account.** They are not told they already have one, and no path to sign in is
+offered. The anti-enumeration behaviour is correct; the dead end after it is not.
+
+→ **Frontend**: on the confirm-email panel, offer "Already have an account? Sign in" unconditionally —
+it costs nothing when the signup is genuine and rescues the duplicate case without leaking anything.
+→ Ticket: not yet written — needs founder priority call.
+
+`e2e/auth-validation.spec.ts` step 6 now asserts both branches and the invariant that holds in both
+(still on `/sign-up`, never signed in).
