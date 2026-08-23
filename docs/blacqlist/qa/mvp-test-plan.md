@@ -3,8 +3,12 @@
 **Date:** 2026-05-11
 **Status:** Draft
 **Scope:** Full MVP — all implemented flows, routes, and data operations
-**Environment:** Staging (no production data modified)
-**Test runner:** Manual (no automated test script exists as of this audit)
+**Last corrected:** 2026-08-23 — see **Corrections Log** at the foot of this document
+**Environment:** Staging or local only. ⚠ Never production — `e2e/global-setup.ts` provisions users
+and fixture listings on whatever project the env points at, and hard-stops on the production ref.
+**Test runner:** `pnpm test` — Vitest (unit) + Playwright (e2e). **122 Playwright tests** across three
+projects (`chromium`, `webkit-desktop`, `chromium-mobile`) `[Measured — pnpm test:e2e, 2026-08-23]`.
+Cases marked **Automated** below do not need a manual walk; see **Automation Coverage**.
 
 ---
 
@@ -14,7 +18,7 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 - Public shell and navigation
 - Homepage, city pages, discovery/browse, search
-- BLACQList business page (note: currently renders mock data)
+- BLACQList business page (real DB rows)
 - Authentication (sign-up, sign-in, sign-out, email verification)
 - User onboarding flow
 - Add Business form (7 steps)
@@ -42,18 +46,68 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ---
 
+## Automation Coverage
+
+`[Measured — e2e/ suite, 2026-08-23]` — added when the owner fixture landed in `e2e/global-setup.ts`.
+Before it, every owner-side case was blocked on the absence of an authenticated identity that owned
+exactly one listing and did _not_ own two others. One fixture unblocked eighteen cases.
+
+**Read this table before walking anything.** A row marked **Automated** needs no manual pass; a row
+marked **Partial** needs only the steps in its "Still manual" column.
+
+| Case                       | Coverage      | Automated steps                                         | Spec                                                   | Still manual                    |
+| -------------------------- | ------------- | ------------------------------------------------------- | ------------------------------------------------------ | ------------------------------- |
+| TA-01 Homepage             | Partial       | structure, a11y, contrast, keyboard                     | `a11y` · `keyboard` · `contrast`                       | visual/content check            |
+| TA-02 Sign-up              | **Automated** | 1, 2, 3, 4, 6                                           | `auth-validation`                                      | 5, 7 (creates a real account)   |
+| TA-03 Sign-in/out          | Partial       | 1, 2                                                    | `auth-validation`                                      | sign-out, session persistence   |
+| TA-04 Onboarding           | Partial       | `/account` + `/onboarding` guards                       | `route-guards`                                         | the flow itself                 |
+| TA-05 Add Business         | Partial       | 1; step-1 render in **3 browsers**                      | `route-guards` · `cross-browser` C                     | steps 2–7 (7-step form)         |
+| TA-06 Business page        | Partial       | 3                                                       | `discovery-pages`                                      | 4–11 (section rendering)        |
+| TA-07 Search               | Partial       | 2, 5                                                    | `discovery-pages`                                      | 1, 3, 4 (result relevance)      |
+| TA-08 City/category        | **Automated** | 1, 2, 3, 3b, 4                                          | `discovery-pages`                                      | —                               |
+| TA-09 Claim                | **Automated** | 1, 2, 3, 4, 5, 7, 8; **3 browsers**                     | `route-guards` · `claim-workflow` · `cross-browser` D  | 6 (actual submit — see note)    |
+| TA-10 Owner dashboard      | **Automated** | 1, 3, 4, 5, 6; **3 browsers**                           | `route-guards` · `owner-dashboard` · `cross-browser` E | 2 (stat correctness), 7         |
+| TA-11 Hero/About editor    | **Automated** | required-name guard + save round-trip                   | `owner-dashboard`                                      | —                               |
+| TA-12 Contact/Hours/Social | Partial       | server-side `https://` guard + save                     | `owner-dashboard`                                      | hours, social rows              |
+| TA-13 Gallery              | Manual        | —                                                       | —                                                      | all (no media fixture)          |
+| TA-14 Services             | Partial       | index, new, unknown-id 404                              | `owner-dashboard`                                      | create/edit/delete round-trip   |
+| TA-15 AI Suggestions       | Manual        | —                                                       | —                                                      | all                             |
+| TA-16 Owner analytics      | **Automated** | 1, 3, 4                                                 | `owner-dashboard`                                      | 2 (aggregation job)             |
+| TA-17 Analytics API        | **Automated** | all, plus malformed-JSON and optional-`entity_id` cases | `api-contracts`                                        | —                               |
+| TA-18 Admin guard          | **Automated** | 1, 2; **3 browsers**                                    | `route-guards` · `owner-dashboard` · `cross-browser` G | —                               |
+| TA-19 Claims queue         | Partial       | queue renders for an admin, **3 browsers**              | `cross-browser` G                                      | approve/reject actions          |
+| TA-20 Receipts             | Partial       | list renders; cross-user 404                            | `account-surfaces`                                     | submit → admin review lifecycle |
+| TA-21 Community spend      | **Automated** | privacy assertions on both endpoints                    | `api-contracts`                                        | —                               |
+| TA-22 Marketplace          | Partial       | 5 (cross-owner product 404)                             | `account-surfaces`                                     | 1–4 (storefront rendering)      |
+| TA-23 Collections          | Partial       | 6 (guard equivalent)                                    | `route-guards`                                         | 1–5                             |
+| TA-24 Save/share           | Partial       | save → appears in Saved → unsave                        | `account-surfaces`                                     | 5 (native share), 6 (counts)    |
+| TA-25 Admin AI tools       | Manual        | —                                                       | —                                                      | all                             |
+
+⚠ **No spec submits a claim.** `claim-workflow.spec.ts` sorts alphabetically _before_
+`cross-browser.spec.ts`, which walks the same claimable fixture, and `global-setup.ts` reconciles
+fixtures **between runs, not between files** — a submitted claim would flip that listing into the
+"pending" branch and fail a later spec on state this one created. Three separate fixtures
+(unclaimed / already-claimed / already-pending) cover the three branch pages instead. TA-09 step 6
+stays manual on purpose.
+
+⚠ **Cross-browser cells only count from one file.** `playwright.config.ts` scopes `webkit-desktop`
+and `chromium-mobile` with `testMatch: /cross-browser\.spec\.ts/`. A path moved out of that file
+silently drops to chromium-only and takes two L cells with it.
+
+---
+
 ## Test Areas and Cases
 
 ---
 
 ### TA-01 — Public Homepage
 
-| Field    | Value     |
-| -------- | --------- |
-| Severity | P1        |
-| Type     | Manual    |
-| Role     | Anonymous |
-| Status   | Not run   |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `a11y/keyboard/contrast`; remainder manual           |
+| Role     | Anonymous                                                                 |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps and expected results:**
 
@@ -76,24 +130,24 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-02 — Authentication (Sign-Up)
 
-| Field    | Value                 |
-| -------- | --------------------- |
-| Severity | P1                    |
-| Type     | Manual                |
-| Role     | Anonymous → Supporter |
-| Status   | Not run               |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P1                                               |
+| Type     | **Automated** — `auth-validation`                |
+| Role     | Anonymous → Supporter                            |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
-| #   | Action                                        | Expected                                                 |
-| --- | --------------------------------------------- | -------------------------------------------------------- |
-| 1   | Navigate to `/sign-up`                        | Sign-up form renders with email + password fields        |
-| 2   | Submit empty form                             | Inline validation errors on both fields                  |
-| 3   | Submit invalid email format                   | Email field shows format error                           |
-| 4   | Submit valid email + weak password            | Password strength error shown                            |
-| 5   | Submit valid email + strong password          | Account created; redirect to `/onboarding` or `/account` |
-| 6   | Attempt sign-up with already-registered email | Error: "Email already in use" (not a 500)                |
-| 7   | Navigate to `/sign-up` while signed in        | Redirected to `/account`                                 |
+| #   | Action                                        | Expected                                                            |
+| --- | --------------------------------------------- | ------------------------------------------------------------------- |
+| 1   | Navigate to `/sign-up`                        | Sign-up form renders with email + password fields                   |
+| 2   | Submit empty form                             | Blocked by native constraint validation (`required`); no navigation |
+| 3   | Submit invalid email format                   | Blocked by `type="email"`; `validity.typeMismatch` is true          |
+| 4   | Submit valid email + password under 8 chars   | Blocked by `minLength={8}`; `validity.tooShort` is true             |
+| 5   | Submit valid email + strong password          | Account created; redirect to `/onboarding` or `/account`            |
+| 6   | Attempt sign-up with already-registered email | Error: "Email already in use" (not a 500)                           |
+| 7   | Navigate to `/sign-up` while signed in        | Redirected to `/account`                                            |
 
 **Failure states:**
 
@@ -104,12 +158,12 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-03 — Authentication (Sign-In and Sign-Out)
 
-| Field    | Value                   |
-| -------- | ----------------------- |
-| Severity | P1                      |
-| Type     | Manual                  |
-| Role     | All authenticated roles |
-| Status   | Not run                 |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `auth-validation`; remainder manual                  |
+| Role     | All authenticated roles                                                   |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -126,12 +180,12 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-04 — User Onboarding Flow
 
-| Field    | Value                  |
-| -------- | ---------------------- |
-| Severity | P1                     |
-| Type     | Manual                 |
-| Role     | New authenticated user |
-| Status   | Not run                |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `route-guards`; remainder manual                     |
+| Role     | New authenticated user                                                    |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -146,12 +200,12 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-05 — Add Business Form (7 Steps)
 
-| Field    | Value               |
-| -------- | ------------------- |
-| Severity | P1                  |
-| Type     | Manual              |
-| Role     | Authenticated (any) |
-| Status   | Not run             |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `route-guards + cross-browser`; remainder manual     |
+| Role     | Authenticated (any)                                                       |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -174,41 +228,41 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-06 — BLACQList Business Page
 
-| Field    | Value                |
-| -------- | -------------------- |
-| Severity | P1                   |
-| Type     | Manual               |
-| Role     | Anonymous, Supporter |
-| Status   | Not run              |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `discovery-pages`; remainder manual                  |
+| Role     | Anonymous, Supporter                                                      |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
-| #   | Action                                           | Expected                                                                                                             |
-| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| 1   | Navigate to `/[citySlug]/business/[listingSlug]` | Page renders with business info                                                                                      |
-| 2   | Verify data source                               | **Note: currently uses mock data (`MOCK_ENTITIES`), not real DB.** Page shows mock content regardless of URL params. |
-| 3   | Check Save button (unauthenticated)              | Redirects to /sign-in with ?next= param (returns to listing after sign-in)                                           |
-| 4   | Check Save button (signed in)                    | Toggles save state; persists on refresh                                                                              |
-| 5   | Check Share button                               | Opens native share or copies URL                                                                                     |
-| 6   | Check CTA button                                 | Navigates to correct destination based on `cta_type`                                                                 |
-| 7   | Check Gallery section                            | Images display; lightbox or carousel works                                                                           |
-| 8   | Check Services section                           | Services list with prices/descriptions renders                                                                       |
-| 9   | Check Hours section                              | Open/closed badge reflects current time; hours table correct                                                         |
-| 10  | Check Reviews section                            | Reviews display; no PII exposed (no reviewer last names in display)                                                  |
-| 11  | Check Map/Address section                        | Address displays; no GPS coordinates exposed                                                                         |
+| #   | Action                                           | Expected                                                                                            |
+| --- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 1   | Navigate to `/[citySlug]/business/[listingSlug]` | Page renders with business info                                                                     |
+| 2   | Verify data source                               | Real DB rows. `MOCK_ENTITIES` was removed; zero references remain in `app/`, `lib/`, `components/`. |
+| 3   | Check Save button (unauthenticated)              | Redirects to /sign-in with ?next= param (returns to listing after sign-in)                          |
+| 4   | Check Save button (signed in)                    | Toggles save state; persists on refresh                                                             |
+| 5   | Check Share button                               | Opens native share or copies URL                                                                    |
+| 6   | Check CTA button                                 | Navigates to correct destination based on `cta_type`                                                |
+| 7   | Check Gallery section                            | Images display; lightbox or carousel works                                                          |
+| 8   | Check Services section                           | Services list with prices/descriptions renders                                                      |
+| 9   | Check Hours section                              | Open/closed badge reflects current time; hours table correct                                        |
+| 10  | Check Reviews section                            | Reviews display; no PII exposed (no reviewer last names in display)                                 |
+| 11  | Check Map/Address section                        | Address displays; no GPS coordinates exposed                                                        |
 
-**Critical gap: Real listing pages serve mock data — not real DB rows. This is a P1 gap before launch.**
+_Corrected 2026-08-23: the "serves mock data" gap this case was written around is closed._
 
 ---
 
 ### TA-07 — Search and Discovery
 
-| Field    | Value     |
-| -------- | --------- |
-| Severity | P1        |
-| Type     | Manual    |
-| Role     | Anonymous |
-| Status   | Not run   |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `discovery-pages`; remainder manual                  |
+| Role     | Anonymous                                                                 |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -227,32 +281,32 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-08 — City and Category Landing Pages
 
-| Field    | Value     |
-| -------- | --------- |
-| Severity | P2        |
-| Type     | Manual    |
-| Role     | Anonymous |
-| Status   | Not run   |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P2                                               |
+| Type     | **Automated** — `discovery-pages`                |
+| Role     | Anonymous                                        |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
-| #   | Action                                       | Expected                                                     |
-| --- | -------------------------------------------- | ------------------------------------------------------------ |
-| 1   | Navigate to `/[citySlug]` (e.g., `/atlanta`) | City landing page renders; city name, listings, hero visible |
-| 2   | Navigate to `/[citySlug]/[categorySlug]`     | Category + city page renders; filtered listings              |
-| 3   | Navigate to non-existent city slug           | 404 page renders (not a 500)                                 |
-| 4   | Check canonical URL in page source           | Correct canonical for SEO deduplication                      |
+| #   | Action                                                         | Expected                                                                                                                                                                                    |
+| --- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Navigate to `/discover/[citySlug]` (e.g., `/discover/atlanta`) | City landing page renders; city name, listings, hero visible. ⚠ There is **no bare `/[citySlug]` route** — `app/[citySlug]/[entityType]/` treats the second segment as a **category** slug. |
+| 2   | Navigate to `/[citySlug]/[categorySlug]`                       | Category + city page renders; filtered listings                                                                                                                                             |
+| 3   | Navigate to non-existent city slug                             | 404 page renders (not a 500)                                                                                                                                                                |
+| 4   | Check canonical URL in page source                             | Correct canonical for SEO deduplication                                                                                                                                                     |
 
 ---
 
 ### TA-09 — Claim Workflow
 
-| Field    | Value                        |
-| -------- | ---------------------------- |
-| Severity | P1                           |
-| Type     | Manual                       |
-| Role     | Authenticated (future owner) |
-| Status   | Not run                      |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P1                                               |
+| Type     | **Automated** — `claim-workflow + cross-browser` |
+| Role     | Authenticated (future owner)                     |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
@@ -273,35 +327,35 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-10 — Owner Dashboard
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P1      |
-| Type     | Manual  |
-| Role     | Owner   |
-| Status   | Not run |
+| Field    | Value                                             |
+| -------- | ------------------------------------------------- |
+| Severity | P1                                                |
+| Type     | **Automated** — `owner-dashboard + cross-browser` |
+| Role     | Owner                                             |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]`  |
 
 **Steps:**
 
-| #   | Action                                               | Expected                                                         |
-| --- | ---------------------------------------------------- | ---------------------------------------------------------------- |
-| 1   | Load `/dashboard` as non-owner                       | Redirected to `/account` (no owned listing)                      |
-| 2   | Load `/dashboard` as owner                           | Overview page renders with listing name, stats                   |
-| 3   | Load `/dashboard/pages/[entityId]` for owned listing | Page editor loads                                                |
-| 4   | Attempt `/dashboard/pages/[fakeId]`                  | 404 returned (not another owner's data)                          |
-| 5   | Attempt `/dashboard/pages/[otherOwnerId]`            | 404 returned (ownership enforced)                                |
-| 6   | Edit listing name + save                             | Change persists on reload; DB updated                            |
-| 7   | Upload gallery image                                 | **Known gap: upload route does not exist.** Document as failure. |
+| #   | Action                                               | Expected                                                                         |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | Load `/dashboard` as non-owner                       | Redirected to `/account` (no owned listing)                                      |
+| 2   | Load `/dashboard` as owner                           | Overview page renders with listing name, stats                                   |
+| 3   | Load `/dashboard/pages/[entityId]` for owned listing | Page editor loads                                                                |
+| 4   | Attempt `/dashboard/pages/[fakeId]`                  | 404 returned (not another owner's data)                                          |
+| 5   | Attempt `/dashboard/pages/[otherOwnerId]`            | 404 returned (ownership enforced)                                                |
+| 6   | Edit listing name + save                             | Change persists on reload; DB updated                                            |
+| 7   | Upload gallery image                                 | Upload succeeds via `app/api/upload/route.ts` (magic-byte sniffed, size-capped). |
 
 ---
 
 ### TA-11 — Page Editor — Hero and About
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P1      |
-| Type     | Manual  |
-| Role     | Owner   |
-| Status   | Not run |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P1                                               |
+| Type     | **Automated** — `owner-dashboard`                |
+| Role     | Owner                                            |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
@@ -317,12 +371,12 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-12 — Page Editor — Contact, Hours, Social
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P1      |
-| Type     | Manual  |
-| Role     | Owner   |
-| Status   | Not run |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `owner-dashboard`; remainder manual                  |
+| Role     | Owner                                                                     |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -348,23 +402,24 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 **Steps:**
 
-| #   | Action                                                                    | Expected                                                                               |
-| --- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| 1   | Attempt to upload an image                                                | **Known gap: upload route (`/api/upload/[bucket]`) does NOT exist.** Upload will fail. |
-| 2   | If upload somehow completes: verify Supabase Storage path stored, not URL | media_attachments row stores path only                                                 |
-| 3   | Delete uploaded image                                                     | Row removed from media_attachments; file deleted from Storage                          |
-| 4   | Reorder gallery images                                                    | Order persists on reload                                                               |
+| #   | Action                                                  | Expected                                                                          |
+| --- | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Upload an image                                         | Accepted by `app/api/upload/route.ts`; the file appears in the gallery            |
+| 1b  | Upload a `.png`-named file whose bytes are not an image | Rejected — the route sniffs magic bytes, not the filename or the client MIME type |
+| 2   | Verify what is persisted                                | `media_attachments` stores the Storage **path**, never a URL                      |
+| 3   | Delete uploaded image                                   | Row removed from media_attachments; file deleted from Storage                     |
+| 4   | Reorder gallery images                                  | Order persists on reload                                                          |
 
 ---
 
 ### TA-14 — Services Manager
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P1      |
-| Type     | Manual  |
-| Role     | Owner   |
-| Status   | Not run |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `owner-dashboard`; remainder manual                  |
+| Role     | Owner                                                                     |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -402,32 +457,33 @@ All features implemented and shipped as of the AI Foundation milestone:
 
 ### TA-16 — Owner Analytics Dashboard
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P2      |
-| Type     | Manual  |
-| Role     | Owner   |
-| Status   | Not run |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P2                                               |
+| Type     | **Automated** — `owner-dashboard`                |
+| Role     | Owner                                            |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
-| #   | Action                                       | Expected                                                |
-| --- | -------------------------------------------- | ------------------------------------------------------- |
-| 1   | Load `/dashboard/pages/[entityId]/analytics` | Page renders; stat cards show 0s if no events yet       |
-| 2   | Generate a page view event via API           | `entity_analytics_daily` records after next aggregation |
-| 3   | Filter by 7-day vs 30-day                    | Stats update for each range                             |
-| 4   | Wrong owner accesses page                    | 404                                                     |
+| #   | Action                                                                 | Expected                                                                                                                                                                                                                                                                                                             |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Load `/dashboard/pages/[entityId]/analytics` on a **Starter+** listing | Page renders; stat cards show 0s if no events yet                                                                                                                                                                                                                                                                    |
+| 1b  | Load the same route on a **free**-tier listing                         | Paywall renders, not the dashboard. `analytics` is Starter+ in `lib/stripe/features.ts` — a free-tier listing can never satisfy step 1.                                                                                                                                                                              |
+| 2   | Generate a page view event via API                                     | `entity_analytics_daily` records after next aggregation                                                                                                                                                                                                                                                              |
+| 3   | Filter by 7-day vs 30-day                                              | Heading and stats switch; 30d is the default and is expressed by the **absence** of `?period`                                                                                                                                                                                                                        |
+| 4   | Wrong owner accesses page                                              | The 404 page body renders. ⚠ The HTTP **status is 200** here — the route streams its shell before the ownership query resolves, so `notFound()` fires after the response commits. The sibling `/edit` route returns a real 404 status. Authorization is intact either way; assert the rendered page, not the status. |
 
 ---
 
 ### TA-17 — Analytics Event Ingestion API
 
-| Field    | Value                                  |
-| -------- | -------------------------------------- |
-| Severity | P1                                     |
-| Type     | Manual (curl)                          |
-| Role     | Any (anonymous allowed for page views) |
-| Status   | Not run                                |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P1                                               |
+| Type     | **Automated** — `api-contracts`                  |
+| Role     | Any (anonymous allowed for page views)           |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Test calls:**
 
@@ -440,11 +496,17 @@ curl -X POST /api/analytics/event \
 # Invalid event name
 curl -X POST /api/analytics/event \
   -d '{"event_name":"hacked_event","entity_id":"<uuid>","entity_type":"listing"}'
-# Expect: 400 INVALID_EVENT_NAME
+# Expect: 400 VALIDATION_ERROR
+# NOT INVALID_EVENT_NAME. The route returns the single code VALIDATION_ERROR for
+# every rejection by design — it never tells a caller which field failed.
 
 # Missing entity_id
 curl -X POST /api/analytics/event \
   -d '{"event_name":"page_view","entity_type":"listing"}'
+# Expect: 200. entity_id is OPTIONAL — a page_view on a non-entity page has no entity.
+
+# Malformed JSON body
+curl -X POST /api/analytics/event -d 'not json'
 # Expect: 400 VALIDATION_ERROR
 ```
 
@@ -454,12 +516,12 @@ curl -X POST /api/analytics/event \
 
 ### TA-18 — Admin Panel — Overview and Auth Guard
 
-| Field    | Value                         |
-| -------- | ----------------------------- |
-| Severity | P1                            |
-| Type     | Manual                        |
-| Role     | Non-admin, Admin, Super Admin |
-| Status   | Not run                       |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P1                                               |
+| Type     | **Automated** — `route-guards + owner-dashboard` |
+| Role     | Non-admin, Admin, Super Admin                    |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
@@ -475,12 +537,12 @@ curl -X POST /api/analytics/event \
 
 ### TA-19 — Admin Claims Queue
 
-| Field    | Value   |
-| -------- | ------- |
-| Severity | P1      |
-| Type     | Manual  |
-| Role     | Admin   |
-| Status   | Not run |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `cross-browser`; remainder manual                    |
+| Role     | Admin                                                                     |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -497,12 +559,12 @@ curl -X POST /api/analytics/event \
 
 ### TA-20 — Receipts — Full Lifecycle
 
-| Field    | Value             |
-| -------- | ----------------- |
-| Severity | P1                |
-| Type     | Manual            |
-| Role     | Supporter → Admin |
-| Status   | Not run           |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P1                                                                        |
+| Type     | Partial automation — `account-surfaces`; remainder manual                 |
+| Role     | Supporter → Admin                                                         |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -520,12 +582,12 @@ curl -X POST /api/analytics/event \
 
 ### TA-21 — Community Spend Widget
 
-| Field    | Value                |
-| -------- | -------------------- |
-| Severity | P2                   |
-| Type     | Manual               |
-| Role     | Anonymous, Supporter |
-| Status   | Not run              |
+| Field    | Value                                            |
+| -------- | ------------------------------------------------ |
+| Severity | P2                                               |
+| Type     | **Automated** — `api-contracts`                  |
+| Role     | Anonymous, Supporter                             |
+| Status   | Passing `[Measured — pnpm test:e2e, 2026-08-23]` |
 
 **Steps:**
 
@@ -540,12 +602,12 @@ curl -X POST /api/analytics/event \
 
 ### TA-22 — Marketplace (Vendor Storefronts and Products)
 
-| Field    | Value            |
-| -------- | ---------------- |
-| Severity | P2               |
-| Type     | Manual           |
-| Role     | Owner, Anonymous |
-| Status   | Not run          |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P2                                                                        |
+| Type     | Partial automation — `account-surfaces`; remainder manual                 |
+| Role     | Owner, Anonymous                                                          |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -562,34 +624,34 @@ curl -X POST /api/analytics/event \
 
 ### TA-23 — Collections
 
-| Field    | Value            |
-| -------- | ---------------- |
-| Severity | P2               |
-| Type     | Manual           |
-| Role     | Anonymous, Admin |
-| Status   | Not run          |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P2                                                                        |
+| Type     | Partial automation — `route-guards`; remainder manual                     |
+| Role     | Anonymous, Admin                                                          |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
-| #   | Action                                           | Expected                                      |
-| --- | ------------------------------------------------ | --------------------------------------------- |
-| 1   | Load `/collections`                              | Collections list renders; empty state if none |
-| 2   | Load `/collections/[slug]`                       | Collection detail page with member listings   |
-| 3   | Admin creates collection at `/admin/collections` | Collection created; visible on public page    |
-| 4   | Admin adds listing to collection                 | Listing appears in collection detail          |
-| 5   | Admin removes listing from collection            | Listing removed                               |
-| 6   | Non-admin attempts collection creation via POST  | 403/404                                       |
+| #   | Action                                           | Expected                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Load `/collections`                              | Collections list renders; empty state if none                                                                                                                                                                                         |
+| 2   | Load `/collections/[slug]`                       | Collection detail page with member listings                                                                                                                                                                                           |
+| 3   | Admin creates collection at `/admin/collections` | Collection created; visible on public page                                                                                                                                                                                            |
+| 4   | Admin adds listing to collection                 | Listing appears in collection detail                                                                                                                                                                                                  |
+| 5   | Admin removes listing from collection            | Listing removed                                                                                                                                                                                                                       |
+| 6   | Non-admin attempts to reach `/admin/collections` | Redirected. There is **no collections API route** to POST to — creation is a server action guarded by `requireAdmin()`, so the enforceable equivalent is the page redirect: anonymous → `/sign-in?next=…`, signed-in non-admin → `/`. |
 
 ---
 
 ### TA-24 — Save and Share Functionality
 
-| Field    | Value                |
-| -------- | -------------------- |
-| Severity | P2                   |
-| Type     | Manual               |
-| Role     | Anonymous, Supporter |
-| Status   | Not run              |
+| Field    | Value                                                                     |
+| -------- | ------------------------------------------------------------------------- |
+| Severity | P2                                                                        |
+| Type     | Partial automation — `account-surfaces`; remainder manual                 |
+| Role     | Anonymous, Supporter                                                      |
+| Status   | Automated portion passing `[Measured — 2026-08-23]`; manual steps not run |
 
 **Steps:**
 
@@ -630,12 +692,14 @@ curl -X POST /api/analytics/event \
 
 Run before first staging deployment:
 
-| Check      | Command                             | Exit Code | Status                                    |
-| ---------- | ----------------------------------- | --------- | ----------------------------------------- |
-| TypeScript | `pnpm tsc --noEmit`                 | 0         | **PASS — zero errors**                    |
-| Lint       | `pnpm exec eslint . --ext .ts,.tsx` | 0         | **PASS — zero errors**                    |
-| Tests      | `pnpm test`                         | 1         | **FAIL — no test script in package.json** |
-| Build      | `pnpm build`                        | Not run   | Not run — run on staging                  |
+| Check      | Command                             | Exit Code | Status                                                                |
+| ---------- | ----------------------------------- | --------- | --------------------------------------------------------------------- |
+| TypeScript | `pnpm tsc --noEmit`                 | 0         | **PASS — zero errors**                                                |
+| Lint       | `pnpm exec eslint . --ext .ts,.tsx` | 0         | **PASS — zero errors**                                                |
+| Tests      | `pnpm test`                         | 0         | **PASS — Vitest unit + 122 Playwright e2e** `[Measured — 2026-08-23]` |
+| Build      | `pnpm build`                        | Not run   | Not run — run on staging                                              |
+
+_Corrected 2026-08-23: the Tests row read "FAIL — no test script in package.json". `pnpm test` exists and is green; CI gates `typecheck`/`lint`/`unit`/`build` on every PR._
 
 Note: `pnpm lint` (bare `eslint` with no path) exits 0 silently. Use `pnpm exec eslint . --ext .ts,.tsx` for a real lint check. Recommend fixing the lint script in `package.json`.
 
@@ -643,9 +707,59 @@ Note: `pnpm lint` (bare `eslint` with no path) exits 0 silently. Use `pnpm exec 
 
 ## Known Gaps (P1 — Must Fix Before Launch)
 
-| Gap                                 | Severity | Details                                                                             |
-| ----------------------------------- | -------- | ----------------------------------------------------------------------------------- |
-| Upload route handler missing        | P1       | `app/api/upload/[bucket]/route.ts` does not exist; all media upload flows will fail |
-| Business detail page uses mock data | P1       | `/[citySlug]/business/[listingSlug]` renders `MOCK_ENTITIES`, not real DB rows      |
-| Search/discover uses mock data      | P1       | Results not real DB queries                                                         |
-| No automated test suite             | P2       | No `pnpm test` script; all QA is manual                                             |
+**All four gaps recorded here on 2026-05-11 are closed** `[Observed — code read, 2026-08-23]`. They are
+kept, struck, with what closed them — 14 steps across TA-06, TA-10, TA-13 and this table were written
+around them, and a reader who finds only the corrected steps has no way to tell whether the gap was
+fixed or the note was lost.
+
+| Gap (as recorded 2026-05-11)            | Severity | Status                                                                                                                                                                            |
+| --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~Upload route handler missing~~        | P1       | **Closed.** The route is `app/api/upload/route.ts` — not `/api/upload/[bucket]`, which is why it read as absent. It sniffs magic bytes rather than trusting the client MIME type. |
+| ~~Business detail page uses mock data~~ | P1       | **Closed.** Zero `MOCK_ENTITIES` references remain in `app/`, `lib/`, or `components/`.                                                                                           |
+| ~~Search/discover uses mock data~~      | P1       | **Closed.** Faceted RPC against real rows; asserted by `e2e/ownership-label.spec.ts` and `e2e/discovery-pages.spec.ts`.                                                           |
+| ~~No automated test suite~~             | P2       | **Closed.** `pnpm test` = Vitest + Playwright; 122 e2e tests across three browser projects.                                                                                       |
+
+**Open gaps as of 2026-08-23:**
+
+| Gap                                              | Severity | Details                                                                                                                                              |
+| ------------------------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Upload **malware** scanning                      | P2       | Magic-byte sniffing shipped (PR #67). Content scanning has not started — an image that is genuinely an image is accepted without further inspection. |
+| OCR extraction / auto-categorization on receipts | P2       | No OCR code exists in `lib/` or `app/`. Needs a paid vision API — a GATE-SPEND decision, not a bug.                                                  |
+| TA-13 steps 3–4, TA-15, TA-25                    | P2       | Still manual-only; no fixture exists for gallery media or AI suggestions.                                                                            |
+
+---
+
+## Corrections Log
+
+This plan was written 2026-05-11 against the AI Foundation milestone and was not revisited for three
+months. Fourteen steps asserted gaps that have since closed, and the header declared no automated
+suite exists. A test plan that is wrong in the _optimistic_ direction wastes a walk; one that is wrong
+in the _pessimistic_ direction — as this one was — teaches the walker to expect failure and to record
+a real regression as "the known gap." Both were present here.
+
+| #   | Corrected                   | Was                                                               | Is                                                                                                                                                       |
+| --- | --------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Header — Test runner        | "Manual (no automated test script exists as of this audit)"       | `pnpm test` = Vitest + Playwright; 122 e2e tests across 3 projects                                                                                       |
+| 2   | Header — Environment        | "Staging"                                                         | Staging **or local**, never production — `global-setup.ts` writes fixtures and hard-stops on the production ref                                          |
+| 3   | In Scope                    | "BLACQList business page (note: currently renders mock data)"     | Real DB rows                                                                                                                                             |
+| 4   | TA-02 steps 2/3/4           | Expected server-side validation errors                            | Native constraint validation (`required`, `type="email"`, `minLength={8}`) blocks submission client-side                                                 |
+| 5   | TA-06 step 2 + closing note | "currently uses mock data (`MOCK_ENTITIES`)"                      | Zero `MOCK_ENTITIES` references remain                                                                                                                   |
+| 6   | TA-08 step 1                | `/[citySlug]` (e.g. `/atlanta`)                                   | No such route. City landing is `/discover/[citySlug]`; `app/[citySlug]/[entityType]/` treats segment 2 as a **category**. Step 2 was already correct.    |
+| 7   | TA-10 step 7                | "Known gap: upload route does not exist"                          | `app/api/upload/route.ts` exists                                                                                                                         |
+| 8   | TA-13 steps 1–2             | Written entirely around the upload gap — unrunnable as written    | Rewritten; magic-byte rejection added as step 1b                                                                                                         |
+| 9   | TA-16                       | Assumed any listing                                               | Requires a **Starter+** listing (`analytics` is Starter+ gated); free tier renders a paywall. Step 4's `notFound()` returns a **200** with the 404 body. |
+| 10  | TA-17                       | Expected `INVALID_EVENT_NAME`; expected missing `entity_id` → 400 | Route returns `VALIDATION_ERROR` for every rejection by design; `entity_id` is optional and a page_view without one returns 200                          |
+| 11  | TA-23 step 6                | "Non-admin POST → 403/404"                                        | No collections API route exists; creation is a server action behind `requireAdmin()`. Enforceable equivalent is the page redirect.                       |
+| 12  | Safe Check Results — Tests  | "FAIL — no test script in package.json"                           | PASS                                                                                                                                                     |
+| 13  | Known Gaps table            | Four P1/P2 rows                                                   | All four closed; struck with what closed them, and a current open-gaps table added                                                                       |
+| 14  | Every case header           | `Type: Manual` / `Status: Not run`                                | Marked Automated / Partial / Manual against the real suite                                                                                               |
+
+Two findings surfaced while correcting, **not fixed** — they are notes for whoever touches that code
+next, not defects in this plan:
+
+- `lib/admin/guard.ts` documents "Never call from inside a server action" for `requireAdmin()`, yet all
+  five actions in `lib/actions/editorial/collections.ts` call it from exactly there. It works in Next 15
+  (`NEXT_REDIRECT` propagates), but the file contradicts its own contract.
+- `/dashboard/pages/[id]/analytics` commits a `200` before `notFound()` fires, because the route streams
+  its shell before the ownership query resolves. The sibling `/edit` route returns a real 404. Authorization
+  is intact in both; only the status code differs.
