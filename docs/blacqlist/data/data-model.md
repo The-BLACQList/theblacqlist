@@ -331,25 +331,37 @@ unclaimed
 | `unclaimed` | Default on create                          | None                                                                                                   | "Unclaimed" badge (gray)                 | Basic Page visibility                                |
 | `claimed`   | Admin approves claim via `claims` workflow | Approved row in `claims` table; `listings.claim_id` set; `listings.owner_user_id` set                  | "Claimed" badge (blue)                   | Owner can edit Page, upload media, configure CTA     |
 | `verified`  | V1: Admin approves verification submission | `verification_submissions` decision = approved; `listings.verified_at` set; `listings.verified_by` set | "Verified" badge (green)                 | Higher search placement; verified badge on Page      |
-| `certified` | Auto-grant trigger on `reviews` table      | All 5 criteria met simultaneously (see below)                                                          | "BLACQList Certified" badge (Amber Gold) | Premium badge treatment; highest search trust signal |
+| `certified` | Automatic — computed, never granted       | All 6 criteria met simultaneously (see below)                                                          | "BLACQList Certified" badge (Amber Gold) | Premium badge treatment; highest search trust signal |
 
 ### BLACQList Certified Auto-Grant Criteria
 
-All five conditions must be simultaneously true for the trigger to execute:
+> **Corrected 2026-08-22.** This section previously carried the V1 design criteria — ≥ 6 reviews, average ≥ 4.0, 90 days measured from `listings.published_at`, granted by a trigger on the `reviews` table, and citing a `reviews.star_rating` column that does not exist (the column is `reviews.rating`). Those criteria were superseded by `[Decision — founder, 2026-08-06]` (decision-log 009) and amended by `[Decision — founder, 2026-08-22]` (decision-log 031 and 032). The current rule is below.
 
-| #   | Condition                              | Table/Field                                                                 |
-| --- | -------------------------------------- | --------------------------------------------------------------------------- |
-| 1   | `trust_tier = 'verified'`              | `listings.trust_tier`                                                       |
-| 2   | ≥ 6 published reviews for this listing | `reviews WHERE listing_id = [id] AND status = 'published'`                  |
-| 3   | Average published review rating ≥ 4.0  | `AVG(reviews.star_rating) WHERE listing_id = [id] AND status = 'published'` |
-| 4   | `listings.status = 'published'`        | `listings.status`                                                           |
-| 5   | Published for ≥ 90 days                | `listings.published_at <= now() - interval '90 days'`                       |
+All six conditions must be simultaneously true:
 
-**Trigger placement:** Database trigger on `reviews` table fires on INSERT and on UPDATE where `status` changes to `'published'`. Trigger computes criteria 2 and 3 for the associated listing, then checks criteria 1, 4, and 5. If all five pass: `UPDATE listings SET trust_tier = 'certified', certification_auto_granted_at = now() WHERE id = [listing_id]`.
+| #   | Condition                                     | Table/Field                                                              |
+| --- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | `trust_tier = 'verified'`                     | `listings.trust_tier`                                                    |
+| 2   | Listing is live                               | `listings.status = 'published'` AND `listings.deleted_at IS NULL`         |
+| 3   | ≥ 5 published reviews for this listing        | `listings.review_count` (trigger-maintained over `status = 'published'`)  |
+| 4   | Average published review rating ≥ 3.5         | `listings.avg_rating` (same trigger, same population)                     |
+| 5   | ≥ 90 days since the **earliest approved claim** | `claims WHERE listing_id = [id] AND status = 'approved'`, earliest `reviewed_at` |
+| 6   | Business details complete                     | `listing_details_business` — see below                                    |
 
-**Revocation:** Admin resets `trust_tier = 'verified'` and `certification_auto_granted_at = NULL` manually. No automated revocation path. If a review is removed (reducing count below 6 or average below 4.0), certification is not automatically revoked — it requires admin action. This is intentional: certification is an achievement, not a continuously recalculated score.
+**Criterion 6 in full.** All of: a non-blank `description`; at least one of `phone` / `email`; at least one of `website_url` / `address_line_1`; a `city_text`; a `state`. Whitespace-only counts as blank. A listing with no `listing_details_business` row fails — which is why **events and jobs cannot be certified**: they write to their own details tables. That restriction is deliberate (a 30-day job posting cannot accumulate 90 days of tenure).
 
-**Open decision:** PostgreSQL trigger function vs. Supabase Edge Function invoked by a trigger. See Section 10.
+**Where the tenure clock starts.** Decision 009 moved the anchor from `listings.published_at` to the earliest approved claim. Certification is a statement about an *owner* who has stood behind the listing, not about how long a record has existed in the database — an unclaimed listing that has sat published for a year has earned nothing.
+
+**Two callers, one rule.** There is no trigger on `reviews`. Certification is evaluated in two places, which must agree:
+
+| Caller | When it runs | Where |
+| --- | --- | --- |
+| Fast path | Immediately after an admin publishes a review | `lib/services/trust/certification.ts` (`maybePromoteToCertified`), called from `lib/actions/admin/moderateReview.ts` |
+| Safety net | Nightly at 03:00 UTC via `pg_cron` | `auto_grant_certified()`, `supabase/migrations/20260822000000_certification_rule_alignment.sql` |
+
+The safety net exists because the fast path only fires on review publication. A listing that reaches 5 reviews on day 40 and never receives a sixth would otherwise never be re-evaluated on day 90. Both set `certification_auto_granted_at`. **Change one and you must change the other** — they disagreed from 2026-08-06 to 2026-08-22 and could reach opposite verdicts on the same listing.
+
+**Revocation:** Admin resets `trust_tier = 'verified'` and `certification_auto_granted_at = NULL` manually. No automated revocation path. If a review is removed (reducing the count below 5 or the average below 3.5), certification is not automatically revoked — it requires admin action. This is intentional: certification is an achievement, not a continuously recalculated score. It is also why criterion 4 exists at all: without a rating floor there would be no way for a badge earned on five one-star reviews ever to come off.
 
 ### Fields Used in Trust Workflow
 

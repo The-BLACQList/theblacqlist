@@ -15,10 +15,13 @@ import type { PlanSlug } from '@/lib/stripe/plans'
 // WHAT IS DELIBERATELY *NOT* HERE: the Certified Black-Owned badge.
 //
 // Ownership labels (Black-Owned / Certified Black-Owned / Ally) are never purchasable. Every tier is
-// sold to every label at the same price, and certification stays *earned* — verified + 6 approved
-// reviews + 4.0 average + 90 days active, granted by `20260518000000_certified_badge.sql` — at every
-// tier including Free. `certified` must never become a `GatedFeature`; a badge that can be bought is
-// not a trust signal, and the flow-map moat is built on that signal being credible.
+// sold to every label at the same price, and certification stays *earned* — verified + published +
+// 5 published reviews + 3.5 average + 90 days since claim approval + complete business details — at
+// every tier including Free. The rule lives in `lib/services/trust/certification.ts` and its SQL twin
+// `20260822000000_certification_rule_alignment.sql`, not here; this comment previously quoted the
+// superseded V1 criteria (6 reviews / 4.0 / 90 days "active"), corrected 2026-08-22.
+// `certified` must never become a `GatedFeature`; a badge that can be bought is not a trust signal,
+// and the flow-map moat is built on that signal being credible.
 //
 // `verified_badge` below IS tier-gated, and that is a different thing: paying gates the identity
 // *attestation check*, not its outcome or any ownership claim.
