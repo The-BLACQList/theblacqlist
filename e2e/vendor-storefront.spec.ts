@@ -42,7 +42,7 @@ const PLAIN_SLUG = `e2e-plain-${RUN_ID}`
 const PLAIN_NAME = `E2E Plain Business ${RUN_ID}`
 
 let svc: SupabaseClient
-let listingIds: string[] = []
+const listingIds: string[] = []
 let cityName: string
 let stateCode: string
 

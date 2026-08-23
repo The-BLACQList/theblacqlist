@@ -82,10 +82,29 @@ jobs:
       #                        active while production served one of four.
       #   vendor-storefront  — every /vendors/<slug> 404'd on a bad PostgREST
       #                        embed. Asserts an HTTP status, not a layout.
-      # All three assert on data or status codes rather than on rendering, so
-      # none has a flake surface. Widen the path list as other specs are proven
-      # stable in CI.
-      - run: pnpm exec playwright test e2e/analytics-emission.spec.ts e2e/security-headers.spec.ts e2e/vendor-storefront.spec.ts
+      # Widened 2026-08-23 with three specs that meet the same bar — they
+      # assert HTTP status, redirect target, or DOM validity state, never
+      # layout:
+      #   route-guards       — the six middleware-protected prefixes redirect
+      #                        anonymous callers, and the public routes don't.
+      #   api-contracts      — the analytics ingest and spend-privacy response
+      #                        shapes (TA-17, TA-21).
+      #   auth-validation    — native constraint validation on sign-up/sign-in
+      #                        (validity.tooShort etc.), plus the two refusal
+      #                        messages.
+      # Still excluded on purpose: discovery-pages, owner-dashboard,
+      # claim-workflow, account-surfaces, cross-browser, and the a11y/contrast
+      # specs all assert on rendering against a dev server. Widen further only
+      # as each is proven stable — a job that gets muted after its third false
+      # red is worse than no job.
+      - run: >-
+          pnpm exec playwright test
+          e2e/analytics-emission.spec.ts
+          e2e/api-contracts.spec.ts
+          e2e/auth-validation.spec.ts
+          e2e/route-guards.spec.ts
+          e2e/security-headers.spec.ts
+          e2e/vendor-storefront.spec.ts
         env:
           # Same STAGING project the build job uses. The spec creates and then
           # deletes its own throwaway listing, so it never depends on — or

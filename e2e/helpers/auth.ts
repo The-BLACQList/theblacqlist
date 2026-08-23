@@ -1,4 +1,5 @@
 import { type Page } from '@playwright/test'
+import { OWNER_EMAIL, OWNER_PASSWORD } from './fixtures'
 
 export const ADMIN_EMAIL = process.env.A11Y_ADMIN_EMAIL ?? 'a11y-admin@test.local'
 export const ADMIN_PASSWORD = process.env.A11Y_ADMIN_PASSWORD ?? 'A11yTest1234!'
@@ -22,13 +23,11 @@ export const ADMIN_PASSWORD = process.env.A11Y_ADMIN_PASSWORD ?? 'A11yTest1234!'
  * straight through on a slow load. Unset key -> no widget -> no-op, which keeps
  * a credential-free local run behaving exactly as it does today.
  */
-async function waitForTurnstileToken(page: Page) {
+export async function waitForTurnstileToken(page: Page) {
   if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) return
   await page.waitForFunction(
     () => {
-      const el = document.querySelector<HTMLInputElement>(
-        'input[name="cf-turnstile-response"]'
-      )
+      const el = document.querySelector<HTMLInputElement>('input[name="cf-turnstile-response"]')
       return Boolean(el?.value)
     },
     undefined,
@@ -37,23 +36,30 @@ async function waitForTurnstileToken(page: Page) {
 }
 
 /**
- * Signs in through the real sign-in form (cookie-based @supabase/ssr session)
- * as the admin user provisioned in global-setup, then lands on /admin/claims.
- * Using the UI login produces the exact cookie set the app's requireAdmin()
- * guard expects, rather than faking the chunked SSR cookies.
+ * The one sign-in path both fixture roles share.
+ *
+ * Signing in through the real form (cookie-based @supabase/ssr session)
+ * produces the exact cookie set the app's server-side guards expect, rather
+ * than faking the chunked SSR cookies. `landingPath` is the proof of role: the
+ * guards redirect anyone who does not hold it, so arriving there confirms
+ * authentication and authorization in one wait.
  */
-export async function loginAsAdmin(page: Page) {
-  await page.goto('/sign-in?next=/admin/claims')
-  await page.fill('#email', ADMIN_EMAIL)
-  await page.fill('#password', ADMIN_PASSWORD)
+async function signInAs(
+  page: Page,
+  email: string,
+  password: string,
+  landingPath: string,
+  label: string
+) {
+  await page.goto(`/sign-in?next=${landingPath}`)
+  await page.fill('#email', email)
+  await page.fill('#password', password)
   await waitForTurnstileToken(page)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  // requireAdmin() redirects non-admins to '/', so reaching /admin/claims
-  // confirms both authentication and the admin role.
   // Match on pathname only — a glob/regex would otherwise match the
-  // `?next=/admin/claims` query param while still on /sign-in.
+  // `?next=...` query param while still on /sign-in.
   try {
-    await page.waitForURL((url) => url.pathname === '/admin/claims', { timeout: 30_000 })
+    await page.waitForURL((url) => url.pathname === landingPath, { timeout: 30_000 })
   } catch (error) {
     // A rejected credential is not a navigation problem: the server action
     // answers 200 with an error state and the page simply stays put, so the
@@ -67,11 +73,34 @@ export async function loginAsAdmin(page: Page) {
     const rendered = alerts.map((t) => t.trim()).filter(Boolean)
     if (rendered.length > 0) {
       throw new Error(
-        `loginAsAdmin: sign-in was rejected for ${ADMIN_EMAIL} — ${rendered.join(' / ')}. ` +
+        `${label}: sign-in was rejected for ${email} — ${rendered.join(' / ')}. ` +
           'global-setup provisions this account and reconciles its password on every run, ' +
           'so this usually means it ran against a different Supabase project than the test.'
       )
     }
     throw error
   }
+}
+
+/**
+ * Signs in as the admin user provisioned in global-setup and lands on
+ * /admin/claims. requireAdmin() redirects non-admins to '/', so reaching that
+ * path confirms both authentication and the admin role.
+ */
+export async function loginAsAdmin(page: Page) {
+  await signInAs(page, ADMIN_EMAIL, ADMIN_PASSWORD, '/admin/claims', 'loginAsAdmin')
+}
+
+/**
+ * Signs in as the non-admin owner provisioned in global-setup and lands on
+ * /dashboard.
+ *
+ * Unlike /admin/claims, this landing proves authentication only: the dashboard
+ * layout and index both guard with getOwnerSession(), which checks for a signed-in
+ * user and nothing else — a user who owns no listing still gets the page, with an
+ * empty state. Ownership is enforced one level down, by requireOwner() on the
+ * per-listing routes, which is where the owner-scoped cases assert it.
+ */
+export async function loginAsOwner(page: Page) {
+  await signInAs(page, OWNER_EMAIL, OWNER_PASSWORD, '/dashboard', 'loginAsOwner')
 }
