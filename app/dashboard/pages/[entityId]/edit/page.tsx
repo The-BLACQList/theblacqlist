@@ -196,15 +196,23 @@ export default async function EditPage({ params }: Props) {
       const grandfathered =
         !!listing.created_at && new Date(listing.created_at) < new Date(JOB_LIMIT_ENFORCED_FROM)
 
-      if (!grandfathered && !(await hasPaidJobPosting(supabase, listing.id))) {
-        const quota = await jobQuotaFor(supabase, owner.user.id)
+      // ⚠ Either read can fail. Here the fail-closed answer is to say nothing:
+      // this line is informational, the action re-derives all of it before
+      // granting or charging, and a wrong "0 of 1 used" is worse than no line at
+      // all. `[Debt ⑮ — fixed 2026-08-24]`
+      const paidRead = grandfathered
+        ? ({ ok: true, value: true } as const)
+        : await hasPaidJobPosting(supabase, listing.id)
+
+      if (paidRead.ok && !paidRead.value) {
+        const quotaRead = await jobQuotaFor(supabase, owner.user.id)
         // `limit === null` is "unlimited" — no tier is, but the type allows it
         // and an unlimited allowance has nothing to tell the owner.
-        if (quota.limit !== null) {
+        if (quotaRead.ok && quotaRead.value.limit !== null) {
           jobQuota = {
-            limit: quota.limit,
-            used: quota.used,
-            atLimit: quota.atLimit,
+            limit: quotaRead.value.limit,
+            used: quotaRead.value.used,
+            atLimit: quotaRead.value.atLimit,
             priceDisplay: JOB_POSTING_PRICE_DISPLAY,
           }
         }

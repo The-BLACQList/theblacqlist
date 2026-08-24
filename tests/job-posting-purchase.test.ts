@@ -37,6 +37,7 @@ import {
   jobPostingPriceId,
   jobQuotaFor,
   ownerPlanTier,
+  type ReadResult,
   EVENT_LIMIT_ENFORCED_FROM,
   JOB_LIMIT_ENFORCED_FROM,
   JOB_POSTING_DURATION_DAYS,
@@ -49,14 +50,36 @@ import { handleCheckoutSessionCompleted } from '@/lib/services/billing/webhookHa
 
 type Row = Record<string, unknown>
 
-function makeClient(tables: Record<string, Row[]>) {
+/**
+ * A read failure to inject. Keyed by table name in {@link makeClient}'s second
+ * argument. A plain string fails every read of that table; `{ onCall, message }`
+ * fails only the nth — which is needed because `eventQuotaFor` reads `listings`
+ * twice, once for the tier and once for the count, and each of those reads had
+ * its own wrong answer before debt ⑮ was fixed.
+ *
+ * Without this the harness could only ever return `error: null`, so the entire
+ * fail-closed half of the module was untestable.
+ */
+type Failure = string | { onCall: number; message: string }
+
+function makeClient(tables: Record<string, Row[]>, failures: Record<string, Failure> = {}) {
   // `opts` is recorded because the entitlement path's whole idempotency story is
   // in the upsert options, not in the row: without `onConflict:
   // 'entitlement_key'` a double-submit writes a second free posting.
   const writes: { table: string; op: string; row: Row; opts?: Row }[] = []
+  const calls: Record<string, number> = {}
 
   const client = {
     from(table: string) {
+      const nth = (calls[table] = (calls[table] ?? 0) + 1)
+      const spec = failures[table]
+      const failure =
+        typeof spec === 'string'
+          ? { message: spec }
+          : spec && spec.onCall === nth
+            ? { message: spec.message }
+            : null
+
       const filters: Row = {}
       let gteCreatedAt: string | null = null
 
@@ -90,7 +113,8 @@ function makeClient(tables: Record<string, Row[]>) {
           gteCreatedAt = val
           return builder
         },
-        maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
+        maybeSingle: async () =>
+          failure ? { data: null, error: failure } : { data: rows()[0] ?? null, error: null },
         upsert: async (row: Row, opts?: Row) => {
           writes.push({ table, op: 'upsert', row, opts })
           return { error: null }
@@ -103,8 +127,21 @@ function makeClient(tables: Record<string, Row[]>) {
           writes.push({ table, op: 'update', row })
           return { error: null }
         },
-        then: (res: (v: { data: Row[]; count: number; error: null }) => unknown) =>
-          res({ data: rows(), count: rows().length, error: null }),
+        then: (
+          res: (v: {
+            data: Row[]
+            count: number | null
+            error: { message: string } | null
+          }) => unknown
+        ) =>
+          res(
+            // What Supabase actually returns on a failed read: no rows, no
+            // count, an error. Reading either of the first two as an answer is
+            // the bug this file now covers.
+            failure
+              ? { data: [], count: null, error: failure }
+              : { data: rows(), count: rows().length, error: null }
+          ),
       }
       return builder
     },
@@ -115,6 +152,17 @@ function makeClient(tables: Record<string, Row[]>) {
 
 const AFTER_CUTOFF = '2026-09-01T00:00:00.000Z'
 const BEFORE_CUTOFF = '2026-01-01T00:00:00.000Z'
+
+/**
+ * Unwraps a read that is expected to succeed. Every happy-path assertion below
+ * goes through this rather than reaching for `.value` directly, so a read that
+ * unexpectedly fails closed surfaces as a named failure instead of as
+ * `undefined` three assertions later.
+ */
+function ok<T>(result: ReadResult<T>): T {
+  if (!result.ok) throw new Error(`expected a successful read, got: ${result.error}`)
+  return result.value
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -153,7 +201,7 @@ describe('jobPostingExpiryFrom', () => {
 describe('ownerPlanTier', () => {
   it('is free when the owner has no listings', async () => {
     const { client } = makeClient({ listings: [] })
-    expect(await ownerPlanTier(client, 'u1')).toBe('free')
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('free')
   })
 
   it('takes the highest tier the owner holds, not the first or the last', async () => {
@@ -164,12 +212,12 @@ describe('ownerPlanTier', () => {
         { owner_user_id: 'u1', tier: 'starter' },
       ],
     })
-    expect(await ownerPlanTier(client, 'u1')).toBe('growth')
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('growth')
   })
 
   it('treats a null tier as free rather than crashing', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: null }] })
-    expect(await ownerPlanTier(client, 'u1')).toBe('free')
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('free')
   })
 
   it('ignores an unrecognized tier string instead of ranking it above premium', async () => {
@@ -179,7 +227,22 @@ describe('ownerPlanTier', () => {
         { owner_user_id: 'u1', tier: 'starter' },
       ],
     })
-    expect(await ownerPlanTier(client, 'u1')).toBe('starter')
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('starter')
+  })
+
+  it('refuses to answer when the read fails, instead of downgrading to free', async () => {
+    // ⚠ The worst of the four failure modes, and the reason debt ⑮ was four
+    // functions rather than three. `'free'` on a transient error tells a Premium
+    // owner they are at their limit and asks them to pay $9.99 for a posting
+    // their plan already includes — the exact outcome
+    // `submitListingForReview.ts` calls "the worse failure".
+    const { client } = makeClient(
+      { listings: [{ owner_user_id: 'u1', tier: 'premium' }] },
+      { listings: 'connection terminated' }
+    )
+    const result = await ownerPlanTier(client, 'u1')
+    expect(result.ok).toBe(false)
+    expect(result).toMatchObject({ error: expect.stringContaining('connection terminated') })
   })
 })
 
@@ -188,7 +251,7 @@ describe('ownerPlanTier', () => {
 describe('eventQuotaFor', () => {
   it('blocks a free owner immediately — free includes zero events', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'free' }] })
-    const quota = await eventQuotaFor(client, 'u1')
+    const quota = ok(await eventQuotaFor(client, 'u1'))
     expect(quota.limit).toBe(0)
     expect(quota.atLimit).toBe(true)
   })
@@ -206,7 +269,7 @@ describe('eventQuotaFor', () => {
         },
       ],
     })
-    const quota = await eventQuotaFor(client, 'u1')
+    const quota = ok(await eventQuotaFor(client, 'u1'))
     expect(quota.tier).toBe('growth')
     expect(quota.limit).toBe(3)
     expect(quota.used).toBe(1)
@@ -224,7 +287,7 @@ describe('eventQuotaFor', () => {
     const { client } = makeClient({
       listings: [{ owner_user_id: 'u1', tier: 'growth' }, ...events],
     })
-    const quota = await eventQuotaFor(client, 'u1')
+    const quota = ok(await eventQuotaFor(client, 'u1'))
     expect(quota.used).toBe(3)
     expect(quota.atLimit).toBe(true)
   })
@@ -240,16 +303,47 @@ describe('eventQuotaFor', () => {
     const { client } = makeClient({
       listings: [{ owner_user_id: 'u1', tier: 'growth' }, ...old],
     })
-    const quota = await eventQuotaFor(client, 'u1')
+    const quota = ok(await eventQuotaFor(client, 'u1'))
     expect(quota.used).toBe(0)
     expect(quota.atLimit).toBe(false)
   })
 
   it('never blocks a premium owner — unlimited short-circuits the count', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'premium' }] })
-    const quota = await eventQuotaFor(client, 'u1')
+    const quota = ok(await eventQuotaFor(client, 'u1'))
     expect(quota.limit).toBeNull()
     expect(quota.atLimit).toBe(false)
+  })
+
+  it('refuses to answer when the count fails, rather than reading it as zero used', async () => {
+    // ⚠ The fail-open case. `listings` is read twice here — once by
+    // `ownerPlanTier` for the tier, then once for the count — so the failure is
+    // pinned to the second call to prove the *count* path stops, not just the
+    // tier read it inherits.
+    const events = [1, 2, 3].map(() => ({
+      owner_user_id: 'u1',
+      tier: 'free',
+      entity_type: 'event',
+      status: 'published',
+      created_at: AFTER_CUTOFF,
+    }))
+    const { client } = makeClient(
+      { listings: [{ owner_user_id: 'u1', tier: 'growth' }, ...events] },
+      { listings: { onCall: 2, message: 'statement timeout' } }
+    )
+    const result = await eventQuotaFor(client, 'u1')
+    // Before the fix this returned `{ used: 0, atLimit: false }` and waved a
+    // capped owner straight past the limit.
+    expect(result.ok).toBe(false)
+    expect(result).toMatchObject({ error: expect.stringContaining('statement timeout') })
+  })
+
+  it('propagates a failed tier read rather than pricing the owner as free', async () => {
+    const { client } = makeClient(
+      { listings: [{ owner_user_id: 'u1', tier: 'premium' }] },
+      { listings: { onCall: 1, message: 'connection terminated' } }
+    )
+    expect((await eventQuotaFor(client, 'u1')).ok).toBe(false)
   })
 
   it('uses the documented cutoff instant', () => {
@@ -262,7 +356,7 @@ describe('eventQuotaFor', () => {
 describe('hasPaidJobPosting', () => {
   it('is false with no purchase row', async () => {
     const { client } = makeClient({ job_posting_purchases: [] })
-    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+    expect(ok(await hasPaidJobPosting(client, 'l1'))).toBe(false)
   })
 
   it('is true for an unexpired paid purchase', async () => {
@@ -275,7 +369,7 @@ describe('hasPaidJobPosting', () => {
         },
       ],
     })
-    expect(await hasPaidJobPosting(client, 'l1')).toBe(true)
+    expect(ok(await hasPaidJobPosting(client, 'l1'))).toBe(true)
   })
 
   it('is false once the window has closed', async () => {
@@ -288,14 +382,29 @@ describe('hasPaidJobPosting', () => {
         },
       ],
     })
-    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+    expect(ok(await hasPaidJobPosting(client, 'l1'))).toBe(false)
   })
 
   it('ignores a refunded purchase — the filter is on status, not existence', async () => {
     const { client } = makeClient({
       job_posting_purchases: [{ listing_id: 'l1', status: 'refunded', expires_at: null }],
     })
-    expect(await hasPaidJobPosting(client, 'l1')).toBe(false)
+    expect(ok(await hasPaidJobPosting(client, 'l1'))).toBe(false)
+  })
+
+  it('refuses to answer when the read fails, rather than reselling a paid posting', async () => {
+    // ⚠ This one always failed *closed*, but on the wrong side of the ledger: a
+    // broken read returned `false`, and a job that was genuinely paid for got
+    // pushed back through checkout to be paid for a second time.
+    const { client } = makeClient(
+      {
+        job_posting_purchases: [{ listing_id: 'l1', status: 'paid', expires_at: null }],
+      },
+      { job_posting_purchases: 'statement timeout' }
+    )
+    const result = await hasPaidJobPosting(client, 'l1')
+    expect(result.ok).toBe(false)
+    expect(result).toMatchObject({ error: expect.stringContaining('statement timeout') })
   })
 })
 
@@ -320,14 +429,14 @@ function entitlement(over: Row = {}): Row {
 describe('jobQuotaFor', () => {
   it('gives a free owner no allowance at all — every posting is a purchase', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'free' }] })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.limit).toBe(0)
     expect(quota.atLimit).toBe(true)
   })
 
   it('gives a starter owner none either — jobs start at growth', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'starter' }] })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.tier).toBe('starter')
     expect(quota.limit).toBe(0)
     expect(quota.atLimit).toBe(true)
@@ -340,7 +449,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'free' }],
       job_posting_purchases: [entitlement(), entitlement()],
     })
-    expect((await jobQuotaFor(client, 'u1')).used).toBe(0)
+    expect(ok(await jobQuotaFor(client, 'u1')).used).toBe(0)
   })
 
   it('gives a growth owner one included posting', async () => {
@@ -348,7 +457,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'growth' }],
       job_posting_purchases: [],
     })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.tier).toBe('growth')
     expect(quota.limit).toBe(1)
     expect(quota.used).toBe(0)
@@ -360,7 +469,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'premium' }],
       job_posting_purchases: [entitlement(), entitlement(), entitlement()],
     })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.limit).toBe(3)
     expect(quota.used).toBe(3)
     expect(quota.atLimit).toBe(true)
@@ -376,7 +485,7 @@ describe('jobQuotaFor', () => {
         { owner_user_id: 'u1', tier: 'free', entity_type: 'job' },
       ],
     })
-    expect((await jobQuotaFor(client, 'u1')).limit).toBe(1)
+    expect(ok(await jobQuotaFor(client, 'u1')).limit).toBe(1)
   })
 
   it('refills the slot once the window closes — the allowance is rolling, not lifetime', async () => {
@@ -384,7 +493,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'growth' }],
       job_posting_purchases: [entitlement({ expires_at: CLOSED() })],
     })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.used).toBe(0)
     expect(quota.atLimit).toBe(false)
   })
@@ -394,7 +503,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'growth' }],
       job_posting_purchases: [entitlement({ expires_at: null })],
     })
-    expect((await jobQuotaFor(client, 'u1')).used).toBe(1)
+    expect(ok(await jobQuotaFor(client, 'u1')).used).toBe(1)
   })
 
   it('never spends the allowance on a posting the owner bought', async () => {
@@ -405,7 +514,7 @@ describe('jobQuotaFor', () => {
         entitlement({ source: 'stripe' }),
       ],
     })
-    const quota = await jobQuotaFor(client, 'u1')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
     expect(quota.used).toBe(0)
     expect(quota.atLimit).toBe(false)
   })
@@ -415,7 +524,7 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'growth' }],
       job_posting_purchases: [entitlement({ status: 'refunded' })],
     })
-    expect((await jobQuotaFor(client, 'u1')).used).toBe(0)
+    expect(ok(await jobQuotaFor(client, 'u1')).used).toBe(0)
   })
 
   it("does not count another owner's entitlement", async () => {
@@ -423,7 +532,31 @@ describe('jobQuotaFor', () => {
       listings: [{ owner_user_id: 'u1', tier: 'growth' }],
       job_posting_purchases: [entitlement({ purchased_by: 'u2' })],
     })
-    expect((await jobQuotaFor(client, 'u1')).used).toBe(0)
+    expect(ok(await jobQuotaFor(client, 'u1')).used).toBe(0)
+  })
+
+  it('refuses to answer when the ledger read fails, rather than giving a slot away', async () => {
+    // ⚠ The costliest fail-open of the four: a failed SELECT read as `used = 0`
+    // grants an included posting the owner has already spent, and the grant is a
+    // write — so the mistake is durable, not just displayed.
+    const { client } = makeClient(
+      {
+        listings: [{ owner_user_id: 'u1', tier: 'growth' }],
+        job_posting_purchases: [entitlement()],
+      },
+      { job_posting_purchases: 'statement timeout' }
+    )
+    const result = await jobQuotaFor(client, 'u1')
+    expect(result.ok).toBe(false)
+    expect(result).toMatchObject({ error: expect.stringContaining('statement timeout') })
+  })
+
+  it('propagates a failed tier read rather than pricing the owner as free', async () => {
+    const { client } = makeClient(
+      { listings: [{ owner_user_id: 'u1', tier: 'premium' }] },
+      { listings: 'connection terminated' }
+    )
+    expect((await jobQuotaFor(client, 'u1')).ok).toBe(false)
   })
 
   it('uses the documented cutoff instant', () => {

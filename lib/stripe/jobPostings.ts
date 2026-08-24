@@ -98,6 +98,28 @@ const ACTIVE_EVENT_STATUSES = ['pending', 'published'] as const
 type AnyClient = SupabaseClient | { from: SupabaseClient['from'] }
 
 /**
+ * A read that is allowed to fail, and says so.
+ *
+ * Every quota read below used to destructure only `data` (or `count`) and let a
+ * Supabase error fall through as an empty result. That produced three different
+ * wrong answers from one cause: {@link eventQuotaFor} and {@link jobQuotaFor}
+ * failed **open** (a failed SELECT reads as `used = 0`, granting an allowance the
+ * owner may not have), {@link hasPaidJobPosting} failed **closed but wrongly** (a
+ * job that *was* paid for is refused publication), and {@link ownerPlanTier}
+ * silently **downgraded** a Premium owner to `'free'` — which under this module's
+ * own stated principle is the worst of the three, because
+ * `submitListingForReview.ts` says plainly that *"charging someone who was
+ * entitled to a free posting is the worse failure."*
+ *
+ * The shape mirrors {@link GrantResult}, which has always handled its error
+ * correctly. Callers must decide; the read no longer decides for them by
+ * omission.
+ *
+ * `[Debt ⑮ — fixed 2026-08-24]`
+ */
+export type ReadResult<T> = { ok: true; value: T } | { ok: false; error: string }
+
+/**
  * The owner's effective plan tier: the highest tier across every listing they
  * own.
  *
@@ -112,12 +134,17 @@ type AnyClient = SupabaseClient | { from: SupabaseClient['from'] }
 export async function ownerPlanTier(
   supabase: AnyClient,
   userId: string
-): Promise<PlanSlug | 'free'> {
-  const { data } = await supabase
+): Promise<ReadResult<PlanSlug | 'free'>> {
+  const { data, error } = await supabase
     .from('listings')
     .select('tier')
     .eq('owner_user_id', userId)
     .is('deleted_at', null)
+
+  // ⚠ Do NOT fall back to 'free' here. A transient read failure would tell a
+  // Premium owner they are at their limit and ask them to pay $9.99 for a
+  // posting their plan already includes.
+  if (error) return { ok: false, error: error.message }
 
   const rank = (tier: string | null | undefined): number => TIER_RANK[tier ?? 'free'] ?? 0
 
@@ -126,7 +153,7 @@ export async function ownerPlanTier(
     const tier = (row as { tier: string | null }).tier
     if (rank(tier) > rank(best)) best = (tier ?? 'free') as PlanSlug
   }
-  return best
+  return { ok: true, value: best }
 }
 
 export type EventQuota = {
@@ -148,15 +175,20 @@ export type EventQuota = {
  * generous reading of "grandfather" — the alternative (old events consume the
  * allowance) would block exactly the established owners the grace is for.
  */
-export async function eventQuotaFor(supabase: AnyClient, userId: string): Promise<EventQuota> {
-  const tier = await ownerPlanTier(supabase, userId)
+export async function eventQuotaFor(
+  supabase: AnyClient,
+  userId: string
+): Promise<ReadResult<EventQuota>> {
+  const tierRead = await ownerPlanTier(supabase, userId)
+  if (!tierRead.ok) return tierRead
+  const tier = tierRead.value
   const limit = eventLimit(tier)
 
   if (limit === null) {
-    return { limit: null, used: 0, atLimit: false, tier }
+    return { ok: true, value: { limit: null, used: 0, atLimit: false, tier } }
   }
 
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from('listings')
     .select('id', { count: 'exact', head: true })
     .eq('owner_user_id', userId)
@@ -165,8 +197,12 @@ export async function eventQuotaFor(supabase: AnyClient, userId: string): Promis
     .is('deleted_at', null)
     .gte('created_at', EVENT_LIMIT_ENFORCED_FROM)
 
+  // ⚠ `count ?? 0` on a failed count is the fail-open bug: it reads a broken
+  // query as "this owner has posted nothing" and waves them past the cap.
+  if (error) return { ok: false, error: error.message }
+
   const used = count ?? 0
-  return { limit, used, atLimit: used >= limit, tier }
+  return { ok: true, value: { limit, used, atLimit: used >= limit, tier } }
 }
 
 export type JobQuota = {
@@ -203,24 +239,34 @@ export type JobQuota = {
  * 0 and make the Growth entitlement unreachable. Highest-tier-wins is the reading
  * that matches the pricing copy.
  */
-export async function jobQuotaFor(supabase: AnyClient, userId: string): Promise<JobQuota> {
-  const tier = await ownerPlanTier(supabase, userId)
+export async function jobQuotaFor(
+  supabase: AnyClient,
+  userId: string
+): Promise<ReadResult<JobQuota>> {
+  const tierRead = await ownerPlanTier(supabase, userId)
+  if (!tierRead.ok) return tierRead
+  const tier = tierRead.value
   const limit = jobLimit(tier)
 
   if (limit === null) {
-    return { limit: null, used: 0, atLimit: false, tier }
+    return { ok: true, value: { limit: null, used: 0, atLimit: false, tier } }
   }
   if (limit === 0) {
     // Nothing to count — free and starter have no allowance to spend.
-    return { limit: 0, used: 0, atLimit: true, tier }
+    return { ok: true, value: { limit: 0, used: 0, atLimit: true, tier } }
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('job_posting_purchases')
     .select('id, expires_at')
     .eq('purchased_by', userId)
     .eq('status', 'paid')
     .eq('source', 'entitlement')
+
+  // ⚠ Same fail-open shape as the events count: `data ?? []` on a failed read
+  // means `used = 0`, which hands out an included posting the owner may have
+  // already spent.
+  if (error) return { ok: false, error: error.message }
 
   const now = Date.now()
   const used = (data ?? []).filter((row) => {
@@ -228,7 +274,7 @@ export async function jobQuotaFor(supabase: AnyClient, userId: string): Promise<
     return !expiresAt || new Date(expiresAt).getTime() > now
   }).length
 
-  return { limit, used, atLimit: used >= limit, tier }
+  return { ok: true, value: { limit, used, atLimit: used >= limit, tier } }
 }
 
 /**
@@ -242,18 +288,27 @@ export async function jobQuotaFor(supabase: AnyClient, userId: string): Promise<
  * written as the exact inverse of this function so the two cannot drift into
  * disagreeing about what "paid" means.
  */
-export async function hasPaidJobPosting(supabase: AnyClient, listingId: string): Promise<boolean> {
-  const { data } = await supabase
+export async function hasPaidJobPosting(
+  supabase: AnyClient,
+  listingId: string
+): Promise<ReadResult<boolean>> {
+  const { data, error } = await supabase
     .from('job_posting_purchases')
     .select('id, expires_at')
     .eq('listing_id', listingId)
     .eq('status', 'paid')
 
+  // ⚠ This one failed *closed*, but on the wrong side of the ledger: a failed
+  // read returned `false`, and a job that was genuinely paid for was pushed back
+  // through checkout to be paid for twice.
+  if (error) return { ok: false, error: error.message }
+
   const now = Date.now()
-  return (data ?? []).some((row) => {
+  const paid = (data ?? []).some((row) => {
     const expiresAt = (row as { expires_at: string | null }).expires_at
     return !expiresAt || new Date(expiresAt).getTime() > now
   })
+  return { ok: true, value: paid }
 }
 
 /** The end of the window a purchase completed at `paidAt` buys. */
