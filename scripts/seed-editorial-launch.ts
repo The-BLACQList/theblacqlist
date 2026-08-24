@@ -11,13 +11,20 @@
  * Usage:
  *   SUPABASE_URL=https://xxx.supabase.co \
  *   SUPABASE_SERVICE_ROLE_KEY=... \
- *   npx tsx scripts/seed-editorial-launch.ts
+ *   npx tsx scripts/seed-editorial-launch.ts [--dry-run] [--yes]
  *
- *   Add DRY_RUN=1 to print the plan and write nothing.
+ *   --dry-run   print the plan and write nothing (DRY_RUN=1 also works)
+ *   --yes       confirm a remote target; required for staging or production
  *
  * Idempotent: articles and guides upsert on `slug`; guide sections are replaced
  * for their guide on each run. Re-running restores the intended state rather
  * than duplicating it.
+ *
+ * TARGET SAFETY: there is no dotenv and no --env flag here, matching
+ * seed-launch-listings.ts. The database is chosen entirely by the exported
+ * SUPABASE_URL, so a mistyped host silently writes to the wrong project. The
+ * script prints the resolved project ref before writing and requires --yes for
+ * any non-local host.
  *
  * The homepage hero is the article with the newest `published_at`
  * (app/page.tsx:98 orders published_at DESC, :185 takes row 0). Publishing by
@@ -30,12 +37,47 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env['SUPABASE_URL']
 const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
-const DRY_RUN = process.env['DRY_RUN'] === '1'
+const DRY_RUN = process.env['DRY_RUN'] === '1' || process.argv.includes('--dry-run')
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.')
+  console.error('Values are in .env.production.local / .env.staging.local (never commit them).')
   process.exit(1)
 }
+
+/**
+ * Confirm the operator meant this database.
+ *
+ * Mirrors assertTargetConfirmed() in seed-launch-listings.ts. Local hosts run
+ * unattended. Anything else is a consequential write behind GATE-DATA, so it
+ * must be named out loud with --yes. The project ref is printed either way; it
+ * is the only signal that distinguishes staging from production at the command
+ * line. A dry run prints the target but never needs confirming, since it writes
+ * nothing.
+ */
+function assertTargetConfirmed(url: string): void {
+  const host = new URL(url).hostname
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
+  const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
+
+  console.log(`Target: ${isLocal ? 'LOCAL' : 'REMOTE'} — project ref "${ref}" (${host})`)
+  if (DRY_RUN) {
+    console.log('Mode:   DRY RUN — nothing will be written.\n')
+    return
+  }
+  console.log('Mode:   LIVE — this run publishes to the project above.\n')
+
+  if (isLocal || process.argv.includes('--yes')) return
+
+  console.error(
+    `Refusing to publish to remote project "${ref}" without confirmation.\n` +
+      `Check the ref above against the project you intend to write to, then re-run with --yes.\n` +
+      `Publishing to a remote project is a GATE-PUBLISH and GATE-DATA action; confirm the gate before passing it.`
+  )
+  process.exit(1)
+}
+
+assertTargetConfirmed(SUPABASE_URL)
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
@@ -524,14 +566,15 @@ async function verify(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log(DRY_RUN ? 'DRY RUN — nothing will be written.\n' : 'Seeding editorial launch set...\n')
+  if (!DRY_RUN) console.log('Seeding editorial launch set...\n')
 
   let ok = true
   for (const a of ARTICLES) ok = (await seedArticle(a)) && ok
   for (const g of GUIDES) ok = (await seedGuide(g)) && ok
 
   if (DRY_RUN) {
-    console.log('\nDry run complete. Re-run without DRY_RUN=1 to publish.')
+    console.log('\nDry run complete. Nothing was written.')
+    console.log('To publish, re-run the same command with --dry-run replaced by --yes.')
     return
   }
 
