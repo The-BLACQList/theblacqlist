@@ -72,8 +72,24 @@ export async function submitListingForReviewAction(
       const grandfathered =
         !!listing.created_at && new Date(listing.created_at) < new Date(JOB_LIMIT_ENFORCED_FROM)
 
-      if (!grandfathered && !(await hasPaidJobPosting(supabase, listingId))) {
-        const quota = await jobQuotaFor(supabase, user.id)
+      // ⚠ Both reads below can fail, and neither failure may be read as an
+      // answer. A broken `hasPaidJobPosting` would resell a posting already paid
+      // for; a broken `jobQuotaFor` would give away one that isn't owed. Stop
+      // instead — but only inside the grandfather guard, so a pre-cutoff draft
+      // still never touches the ledger at all.
+      const paidRead = grandfathered
+        ? ({ ok: true, value: true } as const)
+        : await hasPaidJobPosting(supabase, listingId)
+      if (!paidRead.ok) {
+        return { error: 'Could not check this job posting right now. Please try again.' }
+      }
+
+      if (!paidRead.value) {
+        const quotaRead = await jobQuotaFor(supabase, user.id)
+        if (!quotaRead.ok) {
+          return { error: 'Could not check your job posting allowance right now. Please try again.' }
+        }
+        const quota = quotaRead.value
 
         if (!quota.atLimit) {
           // Written on the service role: the ledger has no INSERT policy by
@@ -112,7 +128,11 @@ export async function submitListingForReviewAction(
     }
 
     if (listing.entity_type === 'event') {
-      const quota = await eventQuotaFor(supabase, user.id)
+      const quotaRead = await eventQuotaFor(supabase, user.id)
+      if (!quotaRead.ok) {
+        return { error: 'Could not check your event allowance right now. Please try again.' }
+      }
+      const quota = quotaRead.value
       if (quota.atLimit) {
         return {
           error:
