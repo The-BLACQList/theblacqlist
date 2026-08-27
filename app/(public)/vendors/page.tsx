@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Store, MapPin, Package, Briefcase, ArrowRight } from 'lucide-react'
+import { Store, MapPin, Package, Briefcase, ArrowRight, AlertTriangle } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
 
@@ -32,7 +32,16 @@ export default async function VendorsIndexPage() {
   // ── Step 1: who actually sells something ────────────────────────────────────
   // Only listing_id is needed. The rows are then counted per listing for the
   // "3 products · 1 service" line on each card.
-  const [{ data: productRows }, { data: serviceRows }] = await Promise.all([
+  //
+  // Every select on this page destructures `error`. A failed PostgREST select
+  // returns data: null, which renders the *identical* "No storefronts yet" empty
+  // state as a genuinely empty catalog — so without this, an operator cannot tell
+  // "no data" from "broken query." That ambiguity is what a broken column name in
+  // the select shape below costs, and it has cost it before.
+  const [
+    { data: productRows, error: productError },
+    { data: serviceRows, error: serviceError },
+  ] = await Promise.all([
     serviceClient
       .from('marketplace_products')
       .select('listing_id')
@@ -44,6 +53,16 @@ export default async function VendorsIndexPage() {
       .eq('status', 'active')
       .limit(MAX_OFFERING_ROWS),
   ])
+
+  // A failure here does not blank the page — it silently collapses sellerIds to
+  // [], which drops the query to the vendor-only branch and hides every
+  // non-vendor-typed storefront. Quieter than an empty page and harder to spot.
+  if (productError) {
+    console.error('[vendors] marketplace_products query failed:', productError.message)
+  }
+  if (serviceError) {
+    console.error('[vendors] marketplace_services query failed:', serviceError.message)
+  }
 
   const productCounts = new Map<string, number>()
   for (const row of productRows ?? []) {
@@ -78,10 +97,19 @@ export default async function VendorsIndexPage() {
     .order('name', { ascending: true })
     .limit(MAX_STOREFRONTS)
 
-  const { data: listingRows } =
+  const { data: listingRows, error: listingError } =
     sellerIds.length > 0
       ? await query.or(`entity_type.eq.vendor,id.in.(${sellerIds.join(',')})`)
       : await query.eq('entity_type', 'vendor')
+
+  if (listingError) {
+    console.error('[vendors] listings query failed:', listingError.message)
+  }
+
+  // Only the listings query blanks the grid outright, so only it earns a
+  // distinguishable failure state. A marketplace-query failure is logged above
+  // and degrades the counts rather than the page.
+  const loadFailed = Boolean(listingError)
 
   const storefronts = (listingRows ?? [])
     .map((listing) => {
@@ -136,7 +164,32 @@ export default async function VendorsIndexPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-10">
-        {storefronts.length === 0 ? (
+        {loadFailed ? (
+          // Distinct from "No storefronts yet" on purpose — these two states look
+          // identical from the database's side (both arrive as an empty list) and
+          // must not look identical on screen.
+          //
+          // ⚠ There is deliberately NO "Try again" button. revalidate = 3600 caches
+          // this render like any other, so a retry inside the ISR window would
+          // re-serve the cached failure — a button that cannot work. The honest
+          // action is an escape to a page that does, and the server log above is
+          // the real alarm. If this state ever needs a working retry, the route has
+          // to opt out of caching on the error path first.
+          <div className="rounded-xl border border-charcoal/10 bg-white py-16 text-center">
+            <AlertTriangle className="size-12 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
+            <p className="font-headline text-lg text-brand-black">Couldn&apos;t load storefronts</p>
+            <p className="font-body text-sm text-charcoal-soft mt-2 max-w-sm mx-auto">
+              Something went wrong on our end — this isn&apos;t an empty marketplace. Check back
+              shortly.
+            </p>
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-1.5 mt-5 h-10 px-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors min-h-[44px]"
+            >
+              Browse the marketplace <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        ) : storefronts.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white py-16 text-center">
             <Store className="size-12 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
             <p className="font-headline text-lg text-brand-black">No storefronts yet</p>
