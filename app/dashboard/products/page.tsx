@@ -4,8 +4,13 @@ import { Plus, Package, ExternalLink } from 'lucide-react'
 
 import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
+import { CreatedBanner } from '@/components/marketplace/CreatedBanner'
 
 export const metadata: Metadata = { title: 'Products | Dashboard' }
+
+interface Props {
+  searchParams: Promise<{ created?: string }>
+}
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
@@ -13,9 +18,10 @@ const STATUS_STYLES: Record<string, string> = {
   archived: 'bg-amber-100 text-amber-700',
 }
 
-export default async function DashboardProductsPage() {
+export default async function DashboardProductsPage({ searchParams }: Props) {
   const owner = await requireOwner()
   const supabase = await createClient()
+  const { created } = await searchParams
 
   // Fetch owner's listing IDs
   const { data: listings } = await supabase
@@ -52,6 +58,8 @@ export default async function DashboardProductsPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
+      <CreatedBanner status={created} kind="product" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Products</h1>

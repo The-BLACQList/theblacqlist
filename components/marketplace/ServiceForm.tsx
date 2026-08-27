@@ -58,7 +58,9 @@ export function ServiceForm({
   useEffect(() => {
     if (state && 'success' in state && state.success) {
       if ('globalSlug' in state) {
-        router.push(`/dashboard/services?created=true`)
+        // Carry the status through so the list page can say plainly whether the
+        // service is live or sitting as a draft.
+        router.push(`/dashboard/services?created=${state.status}`)
       } else {
         router.push(`/dashboard/services?updated=true`)
       }
@@ -299,27 +301,37 @@ export function ServiceForm({
         </p>
       </div>
 
-      {/* Status (edit only) */}
-      {defaultValues?.service_id && (
-        <div className="space-y-1">
-          <label
-            htmlFor="status"
-            className="block font-subhead text-sm font-semibold text-brand-black"
-          >
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaultValues.status ?? 'draft'}
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold"
-          >
-            <option value="draft">Draft: not publicly visible</option>
-            <option value="active">Active: visible in marketplace</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-      )}
+      {/*
+        Status renders on create as well as edit — see the matching comment in
+        ProductForm. Creating defaults to Active so the ordinary path publishes,
+        but the choice stays visible rather than being made for the owner.
+      */}
+      <div className="space-y-1">
+        <label htmlFor="status" className="block font-subhead text-sm font-semibold text-brand-black">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          defaultValue={defaultValues?.status ?? (defaultValues?.service_id ? 'draft' : 'active')}
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          aria-describedby={fieldErrors.status ? 'status-error' : 'status-hint'}
+        >
+          <option value="active">Active: visible in marketplace</option>
+          <option value="draft">Draft: not publicly visible</option>
+          {defaultValues?.service_id && <option value="archived">Archived</option>}
+        </select>
+        {fieldErrors.status ? (
+          <p id="status-error" role="alert" className="font-body text-xs text-red-600">
+            {fieldErrors.status}
+          </p>
+        ) : (
+          <p id="status-hint" className="font-body text-xs text-charcoal-faint">
+            Active services appear on your storefront and in the marketplace right away. Drafts stay
+            private until you change this to Active.
+          </p>
+        )}
+      </div>
 
       <button
         type="submit"
