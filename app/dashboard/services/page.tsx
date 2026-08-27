@@ -4,8 +4,13 @@ import { Plus, Briefcase, ExternalLink } from 'lucide-react'
 
 import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
+import { CreatedBanner } from '@/components/marketplace/CreatedBanner'
 
 export const metadata: Metadata = { title: 'Services | Dashboard' }
+
+interface Props {
+  searchParams: Promise<{ created?: string }>
+}
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-700',
@@ -20,9 +25,10 @@ const DELIVERY_LABELS: Record<string, string> = {
   hybrid: 'Virtual + in person',
 }
 
-export default async function DashboardServicesPage() {
+export default async function DashboardServicesPage({ searchParams }: Props) {
   const owner = await requireOwner()
   const supabase = await createClient()
+  const { created } = await searchParams
 
   const { data: listings } = await supabase
     .from('listings')
@@ -60,6 +66,8 @@ export default async function DashboardServicesPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
+      <CreatedBanner status={created} kind="service" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Services</h1>

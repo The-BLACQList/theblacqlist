@@ -54,7 +54,10 @@ export function ProductForm({
   useEffect(() => {
     if (state && 'success' in state && state.success) {
       if ('globalSlug' in state) {
-        router.push(`/dashboard/products?created=true`)
+        // Carry the status through so the list page can say plainly whether the
+        // product is live or sitting as a draft — an owner should never have to
+        // guess why a product they just made is not on the site.
+        router.push(`/dashboard/products?created=${state.status}`)
       } else {
         router.push(`/dashboard/products?updated=true`)
       }
@@ -346,27 +349,39 @@ export function ProductForm({
         </p>
       </div>
 
-      {/* Status (edit only) */}
-      {defaultValues?.product_id && (
-        <div className="space-y-1">
-          <label
-            htmlFor="status"
-            className="block font-subhead text-sm font-semibold text-brand-black"
-          >
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={defaultValues.status ?? 'draft'}
-            className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold"
-          >
-            <option value="draft">Draft: not publicly visible</option>
-            <option value="active">Active: visible in marketplace</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-      )}
+      {/*
+        Status renders on create as well as edit. It used to be edit-only, which
+        meant a first product was silently inserted as a draft — invisible in the
+        marketplace, with nothing on screen explaining why. Creating defaults to
+        Active so the ordinary path publishes, but the choice stays visible and
+        explicit rather than being made for the owner.
+      */}
+      <div className="space-y-1">
+        <label htmlFor="status" className="block font-subhead text-sm font-semibold text-brand-black">
+          Status
+        </label>
+        <select
+          id="status"
+          name="status"
+          defaultValue={defaultValues?.status ?? (defaultValues?.product_id ? 'draft' : 'active')}
+          className="w-full h-10 rounded-lg border border-charcoal/20 bg-white px-3 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold"
+          aria-describedby={fieldErrors.status ? 'status-error' : 'status-hint'}
+        >
+          <option value="active">Active: visible in marketplace</option>
+          <option value="draft">Draft: not publicly visible</option>
+          {defaultValues?.product_id && <option value="archived">Archived</option>}
+        </select>
+        {fieldErrors.status ? (
+          <p id="status-error" role="alert" className="font-body text-xs text-red-600">
+            {fieldErrors.status}
+          </p>
+        ) : (
+          <p id="status-hint" className="font-body text-xs text-charcoal-faint">
+            Active products appear on your storefront and in the marketplace right away. Drafts stay
+            private until you change this to Active.
+          </p>
+        )}
+      </div>
 
       <button
         type="submit"

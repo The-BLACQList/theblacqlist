@@ -3,11 +3,16 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { VALID_DELIVERY_MODES } from '@/lib/constants/marketplace'
+import { assertCanAddMarketplaceItem } from '@/lib/marketplace/entitlements'
+
+// A service may be created live or held back, but never archived — archiving is
+// an edit on something that already exists.
+const CREATE_STATUSES = ['draft', 'active'] as const
 
 type FieldErrors = Partial<Record<string, string>>
 
 export type CreateServiceState =
-  | { success: true; serviceId: string; globalSlug: string }
+  | { success: true; serviceId: string; globalSlug: string; status: string }
   | { error: string; fieldErrors?: FieldErrors }
   | null
 
@@ -47,6 +52,10 @@ export async function createServiceAction(
   const delivery = formData.get('delivery_mode')?.toString().trim() || 'in_person'
   const bookingUrl = formData.get('booking_url')?.toString().trim() || null
   const coverUrl = formData.get('cover_image_url')?.toString().trim() || null
+  // Absent means a caller that is not the create form. Fall back to 'draft': nothing
+  // becomes publicly visible unless a human explicitly chose it. The form always
+  // submits this field, and defaults its control to 'active'.
+  const status = formData.get('status')?.toString().trim() || 'draft'
 
   const fieldErrors: FieldErrors = {}
 
@@ -72,14 +81,19 @@ export async function createServiceAction(
     fieldErrors.cover_image_url = 'Image URL must start with https://'
   }
 
+  if (!CREATE_STATUSES.includes(status as (typeof CREATE_STATUSES)[number])) {
+    fieldErrors.status = 'Choose whether to publish this service or save it as a draft.'
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the errors below.', fieldErrors }
   }
 
-  // Verify user owns the listing
+  // Verify user owns the listing. `tier` rides along because the marketplace
+  // allowance is per listing, not per user.
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug')
+    .select('id, slug, tier')
     .eq('id', listingId)
     .eq('owner_user_id', user.id)
     .is('deleted_at', null)
@@ -91,6 +105,11 @@ export async function createServiceAction(
       fieldErrors: { listing_id: 'Invalid listing.' },
     }
   }
+
+  // Ownership is proven; now the plan. Services draw on the same allowance as
+  // products — `TierLimits.products` is a combined counter.
+  const refusal = await assertCanAddMarketplaceItem(listing.id, listing.tier, 'service')
+  if (refusal) return refusal
 
   // Generate scoped slug
   let slug = generateSlug(name)
@@ -131,7 +150,7 @@ export async function createServiceAction(
       delivery_mode: delivery,
       booking_url: bookingUrl,
       cover_image_url: coverUrl,
-      status: 'draft',
+      status,
       created_by: user.id,
     })
     .select('id, global_slug')
@@ -149,5 +168,5 @@ export async function createServiceAction(
     properties: { listing_id: listingId },
   })
 
-  return { success: true, serviceId: svc.id, globalSlug: svc.global_slug }
+  return { success: true, serviceId: svc.id, globalSlug: svc.global_slug, status }
 }

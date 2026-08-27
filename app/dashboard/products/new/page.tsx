@@ -6,7 +6,9 @@ import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { ProductForm } from '@/components/marketplace/ProductForm'
 import { NoListingsNotice } from '@/components/dashboard/NoListingsNotice'
+import { AllowanceNotice } from '@/components/marketplace/AllowanceNotice'
 import { createProductAction } from '@/lib/actions/marketplace/createProduct'
+import { marketplaceAllowances } from '@/lib/marketplace/entitlements'
 
 export const metadata: Metadata = { title: 'New Product | Dashboard' }
 
@@ -14,12 +16,26 @@ export default async function NewProductPage() {
   const owner = await requireOwner()
   const supabase = await createClient()
 
+  // `tier` rides along because the marketplace allowance is per listing.
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, name')
+    .select('id, name, tier')
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .order('name', { ascending: true })
+
+  const owned = listings ?? []
+  const allowances = await marketplaceAllowances(
+    owned.map((l) => ({ id: l.id, tier: l.tier }))
+  )
+  const names = Object.fromEntries(owned.map((l) => [l.id, l.name]))
+
+  // Only listings with room are offered in the selector — the same check the
+  // server action runs, surfaced before the form instead of after it.
+  const eligibleIds = new Set(allowances.filter((a) => a.canAddMore).map((a) => a.listingId))
+  const eligible = owned
+    .filter((l) => eligibleIds.has(l.id))
+    .map((l) => ({ id: l.id, name: l.name }))
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -37,16 +53,21 @@ export default async function NewProductPage() {
         </p>
       </div>
 
-      {(listings ?? []).length === 0 ? (
+      {owned.length === 0 ? (
         <NoListingsNotice kind="product" />
       ) : (
-        <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-          <ProductForm
-            action={createProductAction}
-            listings={listings ?? []}
-            submitLabel="Create product"
-          />
-        </div>
+        <>
+          <AllowanceNotice allowances={allowances} names={names} kind="product" />
+          {eligible.length > 0 && (
+            <div className="rounded-xl border border-charcoal/10 bg-white p-6">
+              <ProductForm
+                action={createProductAction}
+                listings={eligible}
+                submitLabel="Create product"
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   )
