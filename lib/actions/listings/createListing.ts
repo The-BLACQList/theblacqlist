@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { trackServerEvent } from '@/lib/analytics/server'
 import {
   VALID_ENTITY_TYPES,
@@ -54,6 +55,20 @@ export async function createListingAction(
   }
 
   const entityType = formData.get('entity_type')?.toString().trim() ?? ''
+
+  // Scoped to event/job on purpose. Server Action IDs are stable and callable
+  // without the page that renders the form, so 404'ing /add-event and /add-job
+  // closes the door but leaves the window open. This closes the window — and
+  // ONLY for the two entity types behind the flag, because the shipped
+  // /add-business flow calls this same action (PreviewPublishStep.tsx) and must
+  // keep working.
+  if (
+    (entityType === 'event' || entityType === 'job') &&
+    !isFeatureEnabled('postingSubmissions')
+  ) {
+    return { error: 'Event and job submissions are not open yet.' }
+  }
+
   const name = formData.get('name')?.toString().trim() ?? ''
   const tagline = formData.get('tagline')?.toString().trim() ?? ''
   const categoryId = formData.get('category_id')?.toString().trim() ?? ''

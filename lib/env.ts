@@ -53,7 +53,11 @@ export const SUBSCRIBE_RATE_LIMIT_SALT = process.env.SUBSCRIBE_RATE_LIMIT_SALT ?
 // gates on a flag must opt out of static generation — `export const dynamic =
 // 'force-dynamic'` — or read the flag somewhere already dynamic (a route
 // handler, a server action, or a request-scoped Server Component).
-export type FeatureFlag = 'aiBeta' | 'ocrExtraction' | 'paidPostings'
+export type FeatureFlag =
+  | 'aiBeta'
+  | 'ocrExtraction'
+  | 'paidPostings'
+  | 'postingSubmissions'
 
 // The map is the registry. Adding a flag means adding it here and to the union
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
@@ -66,6 +70,15 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // ("what it costs to post"), and splitting them into two flags would allow a
   // half-state where jobs are paid but the events copy is still untrue.
   paidPostings: 'FEATURE_PAID_POSTINGS',
+  // Gates the /add-event and /add-job submission forms and the event/job half of
+  // createListingAction. Both forms are complete and auth-gated but have zero
+  // inbound links, and nothing renders or moderates what they write — a signed-in
+  // user who finds either URL submits into a void. One flag rather than two for
+  // the same reason as paidPostings above: "can I post an event or a job" is one
+  // behavior to a user, and two flags would permit a half-state. Does NOT gate
+  // the public /events and /jobs pages, which are honest "coming in beta" pages
+  // with working waitlist capture.
+  postingSubmissions: 'FEATURE_POSTING_SUBMISSIONS',
 }
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a

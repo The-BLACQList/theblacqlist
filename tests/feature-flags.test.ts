@@ -39,6 +39,7 @@ beforeEach(() => {
   // developer or CI runner with FEATURE_PAID_POSTINGS=0 in their shell would
   // have failed that case for a reason that had nothing to do with the code.
   delete process.env.FEATURE_PAID_POSTINGS
+  delete process.env.FEATURE_POSTING_SUBMISSIONS
 })
 
 afterEach(() => {
@@ -174,7 +175,12 @@ describe('getEnabledFeatures', () => {
 
   it('lists every flag in a bare preview deployment', async () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
-    expect(getEnabledFeatures().sort()).toEqual(['aiBeta', 'ocrExtraction', 'paidPostings'])
+    expect(getEnabledFeatures().sort()).toEqual([
+      'aiBeta',
+      'ocrExtraction',
+      'paidPostings',
+      'postingSubmissions',
+    ])
   })
 
   it('lists only what is switched on in production', async () => {
