@@ -11,8 +11,15 @@ import { PricingPlans } from './PricingPlans'
 export const metadata: Metadata = {
   title: 'Pricing | The BLACQList',
   description:
-    'Getting listed is free forever. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility.',
+    'Getting listed is free forever. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Growth and Premium are coming.',
 }
+
+// COPY HONESTY: only Free and Starter are purchasable at launch. Growth and
+// Premium are described in the future tense everywhere on this page, and the
+// two add-ons carry no advertised price because neither has a purchase path
+// yet. The tier CARDS get their disabled/"Coming Soon" state from the live
+// `plans` table (see PricingPlans + lib/stripe/availability.ts) — this file
+// only has to make sure the prose around them doesn't promise otherwise.
 
 const FAQ_ITEMS = [
   {
@@ -20,20 +27,24 @@ const FAQ_ITEMS = [
     a: 'Yes. A full BLACQList Page is free forever: your profile, hours, contact info, social links, and marketplace listings. No credit card required.',
   },
   {
-    q: 'What do the paid plans add?',
-    a: 'Starter unlocks your verified badge, more photos and video, an FAQ section, review responses, and your analytics dashboard. Growth adds priority search placement, a products-and-services storefront, events and team members, featured collection and BLACQLight eligibility, full analytics, and priority support. Premium adds coupons, booking requests, up to three locations, homepage featured placement, category exclusivity in one city, and dedicated support.',
+    q: 'What does Starter add?',
+    a: 'Starter unlocks your verified badge, more photos and video, an FAQ section, review responses, and your analytics dashboard. It is the paid plan available today.',
+  },
+  {
+    q: 'When are Growth and Premium available?',
+    a: 'Not yet. Growth will add priority search placement, a products-and-services storefront, events and team members, featured collection and BLACQLight eligibility, full analytics, and priority support. Premium will add coupons, booking requests, multiple locations, homepage featured placement, and category exclusivity. We are not selling either until every feature on the list actually works — join the waitlist and we will tell you the day it does.',
   },
   {
     q: 'How does annual billing work?',
-    a: 'Choose annual at checkout and you save about 20%, a little more than two months free on every plan. You can switch between monthly and annual anytime from your billing portal.',
+    a: 'Choose annual at checkout and you save about 20%, a little more than two months free. You can switch between monthly and annual anytime from your billing portal.',
   },
   {
     q: 'What is a Sponsored Spotlight?',
-    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views. Inventory is limited. Sponsored Spotlight slots are available as an add-on separate from the monthly plans.',
+    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views, with limited inventory. It is not available for purchase yet — pricing will be published when it opens.',
   },
   {
     q: 'What is BLACQ Boost?',
-    a: 'A short-term boost that surfaces your listing higher in search results and relevant category pages. Pay once, boost for 30 days.',
+    a: 'A short-term boost that surfaces your listing higher in search results and relevant category pages for a focused 30-day window. It is not available for purchase yet — pricing will be published when it opens.',
   },
   {
     q: 'Can I cancel a paid plan anytime?',
@@ -52,7 +63,7 @@ export default function PricingPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Pricing"
-          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge and analytics, or Growth and Premium for priority placement and featured visibility. Pay monthly or save with annual billing."
+          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way."
         />
       </Section>
 
@@ -67,50 +78,49 @@ export default function PricingPage() {
 
       {/* Add-ons */}
       <Section variant="cream">
-        <SectionHeading subtitle="Boost your visibility beyond your monthly plan. Pay only when you need it.">
+        <SectionHeading subtitle="Extra visibility beyond your monthly plan. Neither is open for purchase yet — add your name and we'll tell you when it is.">
           Add-ons & Visibility Boosts
         </SectionHeading>
 
+        {/* No price is shown on either card. Both had one ($299–$999/mo and
+            $49–$99/30 days) with no purchase path behind it — advertising a
+            price for something nobody can buy is the exact dishonesty this
+            launch pass exists to remove. The prices go back when the products
+            do. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl">
           {/* Sponsored Spotlight */}
           <div className="rounded-xl border border-charcoal/15 bg-white p-6">
             <span className="inline-block rounded-full bg-amber-gold/15 text-amber text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
-              Limited Inventory
+              Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
-            <p className="font-subhead text-sm text-charcoal mb-3">
+            <p className="font-subhead text-sm text-charcoal mb-4">
               High-visibility placement on the BLACQList homepage, city pages, and category views.
-            </p>
-            <p className="font-headline text-2xl text-brand-black mb-4">
-              $299–$999
-              <span className="font-subhead text-sm text-charcoal-soft ml-1">/mo</span>
+              Limited inventory. Pricing will be published when it opens.
             </p>
             <Button
               asChild
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
-              <Link href="/for-sponsors">Learn More</Link>
+              <Link href="/for-sponsors">Talk to us about sponsorship</Link>
             </Button>
           </div>
 
           {/* BLACQ Boost */}
           <div className="rounded-xl border border-charcoal/15 bg-white p-6">
             <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
-              Pay Once
+              Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">BLACQ Boost</h3>
-            <p className="font-subhead text-sm text-charcoal mb-3">
+            <p className="font-subhead text-sm text-charcoal mb-4">
               Boost your listing in search results and category pages for a focused 30-day window.
-            </p>
-            <p className="font-headline text-2xl text-brand-black mb-4">
-              $49–$99
-              <span className="font-subhead text-sm text-charcoal-soft ml-1">/ 30 days</span>
+              Pay once, no subscription. Pricing will be published when it opens.
             </p>
             <Button
               asChild
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
-              <Link href="/sign-up">Join the Waitlist</Link>
+              <Link href="/sign-up">Join the waitlist</Link>
             </Button>
           </div>
         </div>
@@ -168,7 +178,7 @@ export default function PricingPage() {
 
       {/* Bottom CTA */}
       <Section variant="cream">
-        <SectionHeading subtitle="Every business starts with a free listing. No credit card required. Upgrade when paid plans launch.">
+        <SectionHeading subtitle="Every business starts with a free listing. No credit card required. Move up to Starter whenever you're ready.">
           Start Free. Grow at Your Pace.
         </SectionHeading>
         <div className="mt-6">

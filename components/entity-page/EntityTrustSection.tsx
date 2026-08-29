@@ -66,7 +66,8 @@ export function EntityTrustSection({ entity }: Props) {
             </p>
           </div>
 
-          {/* Reviews stub */}
+          {/* Rating summary. The full review list lives in EntityReviewsSection
+              above; this is the at-a-glance number beside the trust badge. */}
           <div className="flex-shrink-0 md:w-48 bg-white rounded-xl border border-charcoal/10 p-4 text-center">
             {entity.avg_rating !== null ? (
               <>
@@ -75,15 +76,13 @@ export function EntityTrustSection({ entity }: Props) {
                 </p>
                 <p className="font-subhead text-xs text-charcoal mt-0.5">out of 5</p>
                 <p className="font-subhead text-xs text-charcoal-soft mt-1">
-                  {entity.review_count.toLocaleString()} reviews
+                  {entity.review_count.toLocaleString()}{' '}
+                  {entity.review_count === 1 ? 'review' : 'reviews'}
                 </p>
               </>
             ) : (
               <p className="font-subhead text-sm text-charcoal-soft">No reviews yet</p>
             )}
-            <p className="font-subhead text-[10px] text-charcoal-faint mt-3 uppercase tracking-wide">
-              Reviews coming soon
-            </p>
           </div>
         </div>
       </div>
