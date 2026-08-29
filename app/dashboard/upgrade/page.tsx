@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
+import { getPlanAvailability } from '@/lib/stripe/availability'
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { UpgradePlans } from './UpgradePlans'
 
@@ -25,20 +26,9 @@ export default async function UpgradePage() {
   const primaryListingId = primaryListing?.id ?? ''
   const currentTier = (primaryListing?.tier ?? 'free') as PlanSlug
 
-  // Which plans have Stripe price IDs configured, per cycle.
-  const { data: dbPlans } = await supabase
-    .from('plans')
-    .select('plan_key, stripe_price_id_monthly, stripe_price_id_yearly')
-    .eq('is_active', true)
-
-  const availability: Record<string, { monthly: boolean; annual: boolean }> = {}
-  for (const p of dbPlans ?? []) {
-    if (!p.plan_key) continue
-    availability[p.plan_key] = {
-      monthly: !!p.stripe_price_id_monthly,
-      annual: !!p.stripe_price_id_yearly,
-    }
-  }
+  // Which plans have Stripe price IDs configured, per cycle. Shared with the
+  // public /pricing page so the two surfaces cannot disagree about what is for sale.
+  const availability = await getPlanAvailability(supabase)
 
   // Does the primary listing have a manageable subscription (portal target)?
   let canManage = false

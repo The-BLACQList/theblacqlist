@@ -6,7 +6,16 @@ import { SectionHeading } from '@/components/ui/section-heading'
 import { PageHeader } from '@/components/layout/page-header'
 import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/server'
+import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
+import { PLANS } from '@/lib/stripe/plans'
 import { PricingPlans } from './PricingPlans'
+import { PricingWaitlist, type WaitlistOption } from './PricingWaitlist'
+
+// The page reflects the live `plans` table, so it must not be a build-time
+// snapshot: withholding a tier is a data change, and a prerendered page would
+// keep advertising it as purchasable until the next deploy.
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Pricing | The BLACQList',
@@ -18,8 +27,17 @@ export const metadata: Metadata = {
 // Premium are described in the future tense everywhere on this page, and the
 // two add-ons carry no advertised price because neither has a purchase path
 // yet. The tier CARDS get their disabled/"Coming Soon" state from the live
-// `plans` table (see PricingPlans + lib/stripe/availability.ts) — this file
-// only has to make sure the prose around them doesn't promise otherwise.
+// `plans` table via lib/stripe/availability.ts — so withholding a tier is a
+// data change, and this file only has to make sure the prose around the cards
+// never promises what the cards won't sell.
+
+// A withheld tier needs somewhere for the demand to go, or the page just says
+// no. `value` must match ALLOWED_SOURCES in
+// lib/actions/subscribers/subscribeLaunch.ts.
+const WAITLIST_SOURCE: Record<string, string> = {
+  growth: 'pricing-growth',
+  premium: 'pricing-premium',
+}
 
 const FAQ_ITEMS = [
   {
@@ -56,7 +74,29 @@ const FAQ_ITEMS = [
   },
 ]
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const supabase = await createClient()
+  const availability = await getPlanAvailability(supabase)
+
+  // A tier earns a waitlist slot when neither cycle can be bought. Offering one
+  // for a tier that is merely annual-only would send a buyer to a form instead
+  // of to checkout. Both add-ons are always listed — neither has a purchase
+  // path, and BLACQ Boost's CTA points here.
+  const waitlistOptions: WaitlistOption[] = [
+    ...PLANS.flatMap((p) => {
+      const value = WAITLIST_SOURCE[p.slug]
+      if (
+        !value ||
+        isPlanPurchasable(availability, p.slug, 'monthly') ||
+        isPlanPurchasable(availability, p.slug, 'annual')
+      ) {
+        return []
+      }
+      return [{ value, label: p.name }]
+    }),
+    { value: 'pricing-addons', label: 'Add-ons (Spotlight or Boost)' },
+  ]
+
   return (
     <>
       {/* Header */}
@@ -73,7 +113,16 @@ export default function PricingPage() {
           Plans for every stage of growth
         </SectionHeading>
 
-        <PricingPlans />
+        <PricingPlans availability={availability} />
+      </Section>
+
+      {/* Waitlist for anything not yet purchasable */}
+      <Section variant="pale-lavender">
+        <SectionHeading subtitle="Growth, Premium, and the visibility add-ons are still being built. Tell us which one you want and we'll email you the day it opens — no charge until then.">
+          Waiting on something?
+        </SectionHeading>
+
+        <PricingWaitlist options={waitlistOptions} />
       </Section>
 
       {/* Add-ons */}
@@ -120,7 +169,10 @@ export default function PricingPage() {
               asChild
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
-              <Link href="/sign-up">Join the waitlist</Link>
+              {/* Was /sign-up — a button labelled "Join the waitlist" that
+                  created an account and captured no interest. It now reaches the
+                  form that actually records it. */}
+              <Link href="#pricing-waitlist">Join the waitlist</Link>
             </Button>
           </div>
         </div>
