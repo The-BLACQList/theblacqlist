@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { SubmitEventForm } from '@/components/listings/SubmitEventForm'
 
 export const metadata = {
@@ -7,7 +8,14 @@ export const metadata = {
   description: 'List a Black-owned or Black-centered event on The BLACQList.',
 }
 
+// Required, not incidental: a flag read during static prerendering is baked into
+// the HTML at BUILD time, so flipping FEATURE_POSTING_SUBMISSIONS and redeploying
+// the same commit would not change what this route serves. See lib/env.ts.
+export const dynamic = 'force-dynamic'
+
 export default async function AddEventPage() {
+  if (!isFeatureEnabled('postingSubmissions')) notFound()
+
   const supabase = await createClient()
   const {
     data: { user },
