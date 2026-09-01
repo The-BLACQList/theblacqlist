@@ -40,6 +40,10 @@ export type WitnessStepKey = (typeof WITNESS_STEPS)[number]
 
 export interface TourViewer {
   userId: string
+  /** For prefilling Stripe checkout (`customer_email`) — already in hand from
+   *  the auth resolution, so the claim route doesn't pay a second
+   *  `auth.getUser()` round-trip to learn it. */
+  email: string | null
   enrollment: {
     id: string
     listingId: string
@@ -87,6 +91,7 @@ export const resolveTourViewer = cache(async (): Promise<TourViewer | null> => {
 
     return {
       userId: user.id,
+      email: user.email ?? null,
       enrollment: {
         id: enrollment.id,
         listingId: enrollment.listing_id,
