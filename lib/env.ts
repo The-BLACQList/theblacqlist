@@ -58,6 +58,7 @@ export type FeatureFlag =
   | 'ocrExtraction'
   | 'paidPostings'
   | 'postingSubmissions'
+  | 'testerTour'
 
 // The map is the registry. Adding a flag means adding it here and to the union
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
@@ -83,6 +84,15 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // published listings of their type and are correct either way — with the flag
   // off they are a real, empty board rather than a page promising a feature.
   postingSubmissions: 'FEATURE_POSTING_SUBMISSIONS',
+  // Gates the Tester Tour: the progress rail, the page-render witnesses, the
+  // reflection action, the tour-state API route, and the trial-claim path. The
+  // default (on in preview, off in production) is exactly right here — the tour
+  // is reviewed on Previews, and production stays dark until GATE-DEPLOY sets
+  // FEATURE_TESTER_TOUR=true for the soft-launch cohort. Unsetting it again is
+  // how the tour retires: rail and claim route disappear without deploying
+  // different code. Evidence rows and any granted trials remain — trials are
+  // real Stripe subscriptions and must be cancelled deliberately, not by flag.
+  testerTour: 'FEATURE_TESTER_TOUR',
 }
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a
