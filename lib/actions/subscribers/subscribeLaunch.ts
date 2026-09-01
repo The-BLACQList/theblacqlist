@@ -21,6 +21,10 @@ const ALLOWED_SOURCES = new Set([
   'pricing-growth',
   'pricing-premium',
   'pricing-addons',
+  // /for-vendors. The marketplace requires the Growth tier, which is not for
+  // sale (decision D-M, 2026-09-01), so the page captures vendor interest
+  // instead of routing to a checkout that would 422.
+  'for-vendors',
 ])
 
 // Durable throttle. This action is unauthenticated and writes with the
