@@ -29,6 +29,7 @@ const h = vi.hoisted(() => ({
   captured: {
     attemptInserts: [] as Record<string, unknown>[],
     subscriberInserts: [] as Record<string, unknown>[],
+    subscriberUpdates: [] as { row: Record<string, unknown>; filters: Record<string, unknown> }[],
     countFilters: [] as Record<string, unknown>[],
   },
 }))
@@ -67,6 +68,20 @@ vi.mock('@/lib/supabase/server', () => ({
           h.captured.subscriberInserts.push(row)
           return Promise.resolve({ error: h.subscriberInsertError })
         },
+        // The 23505 promote path chains .update().eq().eq() and awaits the
+        // result, so the builder has to be both chainable and thenable.
+        update: (row: Record<string, unknown>) => {
+          const filters: Record<string, unknown> = {}
+          h.captured.subscriberUpdates.push({ row, filters })
+          const builder = {
+            eq: (col: string, val: unknown) => {
+              filters[col] = val
+              return builder
+            },
+            then: (resolve: (v: { error: null }) => void) => resolve({ error: null }),
+          }
+          return builder
+        },
       }
     },
   }),
@@ -74,9 +89,12 @@ vi.mock('@/lib/supabase/server', () => ({
 
 const { subscribeLaunchAction } = await import('@/lib/actions/subscribers/subscribeLaunch')
 
-function form(email: string): FormData {
+function form(email: string, source?: string): FormData {
   const fd = new FormData()
   fd.set('email', email)
+  // Omitted entirely when not given — the coming-soon form posts no `source`,
+  // and the action has to keep defaulting for it.
+  if (source !== undefined) fd.set('source', source)
   return fd
 }
 
@@ -88,6 +106,7 @@ describe('subscribeLaunchAction rate limiting', () => {
     h.subscriberInsertError = null
     h.captured.attemptInserts = []
     h.captured.subscriberInserts = []
+    h.captured.subscriberUpdates = []
     h.captured.countFilters = []
   })
 
@@ -166,5 +185,73 @@ describe('subscribeLaunchAction rate limiting', () => {
     expect(result).toEqual({ success: true })
     expect(h.captured.subscriberInserts).toHaveLength(1)
     expect(h.captured.attemptInserts).toHaveLength(0)
+  })
+})
+
+// =============================================================================
+// C4 — waitlist source attribution
+// =============================================================================
+// `launch_subscribers.source` is unconstrained text written by the service-role
+// client, and /pricing now posts a `source` chosen in the browser. Two safety
+// properties hold that together:
+//   * the allowlist — an arbitrary client string is never written through
+//   * the guarded promote — an existing generic row is upgraded to a tier
+//     interest, but one tier interest never overwrites another
+// =============================================================================
+
+describe('subscribeLaunchAction source attribution', () => {
+  beforeEach(() => {
+    h.ip = '203.0.113.7'
+    h.attemptCount = 0
+    h.countError = null
+    h.subscriberInsertError = null
+    h.captured.attemptInserts = []
+    h.captured.subscriberInserts = []
+    h.captured.subscriberUpdates = []
+    h.captured.countFilters = []
+  })
+
+  it('defaults the source when the form omits it', async () => {
+    await subscribeLaunchAction(null, form('plain@example.test'))
+
+    expect(h.captured.subscriberInserts[0]).toMatchObject({ source: 'coming-soon' })
+  })
+
+  it('writes an allowlisted source through', async () => {
+    await subscribeLaunchAction(null, form('growth@example.test', 'pricing-growth'))
+
+    expect(h.captured.subscriberInserts[0]).toMatchObject({ source: 'pricing-growth' })
+  })
+
+  it('falls back to the default for an unrecognized source', async () => {
+    await subscribeLaunchAction(null, form('evil@example.test', 'attacker-controlled'))
+
+    // The whole point of the allowlist: the column the founder reads to decide
+    // what to build next must not be writable to arbitrary strings by anyone
+    // who can POST the form.
+    expect(h.captured.subscriberInserts[0]).toMatchObject({ source: 'coming-soon' })
+  })
+
+  it('promotes an existing generic row on a duplicate, guarded on the old value', async () => {
+    h.subscriberInsertError = { code: '23505' }
+    const result = await subscribeLaunchAction(null, form('already@example.test', 'pricing-premium'))
+
+    expect(result).toEqual({ success: true })
+    expect(h.captured.subscriberUpdates).toHaveLength(1)
+    expect(h.captured.subscriberUpdates[0]?.row).toEqual({ source: 'pricing-premium' })
+    // The .eq('source', 'coming-soon') guard is what stops a later
+    // pricing-premium signup from erasing an earlier pricing-growth interest.
+    expect(h.captured.subscriberUpdates[0]?.filters).toEqual({
+      email: 'already@example.test',
+      source: 'coming-soon',
+    })
+  })
+
+  it('does not promote when the duplicate carries the default source', async () => {
+    h.subscriberInsertError = { code: '23505' }
+    const result = await subscribeLaunchAction(null, form('already@example.test'))
+
+    expect(result).toEqual({ success: true })
+    expect(h.captured.subscriberUpdates).toHaveLength(0)
   })
 })

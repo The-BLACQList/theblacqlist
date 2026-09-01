@@ -10,6 +10,19 @@ export type SubscribeState = { error: string } | { success: true } | null
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
+// `launch_subscribers.source` is unconstrained text written by the service-role
+// client, so the allowlist has to live here — passing a raw client string
+// through would let anyone write anything into the column the founder reads to
+// decide what to build next. Anything unrecognized falls back to the default
+// rather than being rejected: a mislabeled signup is still a signup.
+const DEFAULT_SOURCE = 'coming-soon'
+const ALLOWED_SOURCES = new Set([
+  DEFAULT_SOURCE,
+  'pricing-growth',
+  'pricing-premium',
+  'pricing-addons',
+])
+
 // Durable throttle. This action is unauthenticated and writes with the
 // service-role client, so without a limit anyone can drive unbounded inserts
 // into launch_subscribers. The ledger lives in Postgres rather than an in-memory
@@ -70,14 +83,35 @@ export async function subscribeLaunchAction(
     return { error: 'Please enter a valid email address.' }
   }
 
-  const { error } = await supabase
-    .from('launch_subscribers')
-    .insert({ email, source: 'coming-soon' })
+  const rawSource = formData.get('source')?.toString() ?? DEFAULT_SOURCE
+  const source = ALLOWED_SOURCES.has(rawSource) ? rawSource : DEFAULT_SOURCE
+
+  const { error } = await supabase.from('launch_subscribers').insert({ email, source })
 
   if (error) {
     // A repeat subscriber is told they are on the list, not that they already
     // were — the form must not become an enumeration oracle.
-    if (error.code === '23505') return { success: true }
+    if (error.code === '23505') {
+      // `email` is UNIQUE across the whole table, so someone already on the
+      // coming-soon list who now asks about a specific tier would otherwise have
+      // that interest silently dropped, and the founder would under-count demand
+      // for the thing they are deciding whether to build. Promote the generic
+      // row to the specific interest — guarded on the old value, so one tier
+      // interest never overwrites another.
+      //
+      // ⚠ Known limitation: a second, different tier interest from the same
+      // address is not recorded. Capturing every interest needs either a
+      // separate interests table or a relaxed UNIQUE, and neither is worth a
+      // migration for a waitlist this size.
+      if (source !== DEFAULT_SOURCE) {
+        await supabase
+          .from('launch_subscribers')
+          .update({ source })
+          .eq('email', email)
+          .eq('source', DEFAULT_SOURCE)
+      }
+      return { success: true }
+    }
     return { error: 'Something went wrong. Please try again.' }
   }
 
