@@ -9,6 +9,7 @@ import {
   type BillingCycle,
   type PlanSlug,
 } from '@/lib/stripe/plans'
+import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
 import { CheckoutButton } from './CheckoutButton'
 import { ManageSubscriptionButton } from './ManageSubscriptionButton'
@@ -18,7 +19,7 @@ interface Props {
   currentTier: PlanSlug
   canManage: boolean
   // Per paid plan, whether a Stripe price ID exists for each cycle.
-  availability: Record<string, { monthly: boolean; annual: boolean }>
+  availability: PlanAvailability
 }
 
 const TIER_ORDER: PlanSlug[] = ['free', 'starter', 'growth', 'premium']
@@ -45,12 +46,10 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
           const rank = TIER_ORDER.indexOf(plan.slug)
           const isCurrent = plan.slug === currentTier
           const isUpgrade = rank > currentRank
-          const hasPrice = isFree
-            ? false
-            : cycle === 'annual'
-              ? availability[plan.slug]?.annual
-              : availability[plan.slug]?.monthly
-          const isPurchasable = isUpgrade && !!hasPrice && !!primaryListingId
+          // Same derivation /pricing uses — one helper, so the two surfaces
+          // cannot drift into disagreeing about what is for sale.
+          const hasPrice = isPlanPurchasable(availability, plan.slug, cycle)
+          const isPurchasable = isUpgrade && hasPrice && !!primaryListingId
 
           const price = isFree
             ? '$0'
