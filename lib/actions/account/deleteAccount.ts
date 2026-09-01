@@ -17,12 +17,18 @@ type DeleteAccountState = { error: string } | null
  *                analytics references are anonymized; spend_events stay as
  *                de-linked anonymous aggregates (Privacy §7: not retroactively removed)
  *
- * Two things the bare cascade does NOT cover, handled explicitly here:
+ * Three things the bare cascade does NOT cover, handled explicitly here:
  *   1. Reviews (reviewer_user_id is SET NULL) — the spec says *remove* the user's
  *      reviews, so we delete them before deleting the auth user.
  *   2. Storage objects do not cascade — receipt images and the avatar are removed
  *      best-effort (the PII rows are already gone, so a storage hiccup must not
  *      block or fail the deletion the user asked for).
+ *   3. Verification documents — listings.owner_user_id and claims.claimant_user_id
+ *      are both SET NULL, so the rows holding `verification_docs` /
+ *      `verification_doc_paths` SURVIVE the user, and with them the uploaded
+ *      identity documents (registration filings, EIN letters, leases) naming the
+ *      deleted person. The objects are removed and the pointer columns cleared
+ *      best-effort after the auth delete succeeds.
  */
 export async function deleteAccountAction(
   _prev: DeleteAccountState,
@@ -47,6 +53,14 @@ export async function deleteAccountAction(
   // Paths collected before the auth-user delete cascades the rows away.
   let receiptPaths: string[] = []
   let avatarPath: string | null = null
+  // Verification documents: the rows are NOT cascaded away (both FKs are
+  // SET NULL), but the *link* to the user is — after the delete there is no
+  // way to find which listings/claims were theirs. Collect ids + paths now;
+  // act on them only after the auth delete succeeds, so a failed deletion
+  // destroys nothing.
+  const listingDocIds: string[] = []
+  const claimDocIds: string[] = []
+  const verificationDocPaths: string[] = []
 
   try {
     // 1) Collect storage paths while the owning rows still exist.
@@ -64,6 +78,35 @@ export async function deleteAccountAction(
       .eq('id', userId)
       .maybeSingle()
     avatarPath = profile?.avatar_url ?? null
+
+    // 1b) Verification documents on the user's listings and claims. These rows
+    //     survive the auth delete (SET NULL), so this is the only moment they
+    //     can still be attributed to the user.
+    const { data: ownedListings } = await service
+      .from('listings')
+      .select('id, verification_docs')
+      .eq('owner_user_id', userId)
+      .not('verification_docs', 'is', null)
+    for (const l of ownedListings ?? []) {
+      const paths = (l.verification_docs ?? []).filter((p): p is string => Boolean(p))
+      if (paths.length > 0) {
+        listingDocIds.push(l.id)
+        verificationDocPaths.push(...paths)
+      }
+    }
+
+    const { data: userClaims } = await service
+      .from('claims')
+      .select('id, verification_doc_paths')
+      .eq('claimant_user_id', userId)
+      .not('verification_doc_paths', 'is', null)
+    for (const c of userClaims ?? []) {
+      const paths = (c.verification_doc_paths ?? []).filter((p): p is string => Boolean(p))
+      if (paths.length > 0) {
+        claimDocIds.push(c.id)
+        verificationDocPaths.push(...paths)
+      }
+    }
 
     // 2) Reviews are SET NULL on user delete (anonymize) — but the data-handling
     //    spec says remove the user's reviews. Do it explicitly.
@@ -125,6 +168,28 @@ export async function deleteAccountAction(
     }
     if (avatarPath) {
       await service.storage.from('avatars').remove([avatarPath])
+    }
+    if (verificationDocPaths.length > 0) {
+      // New documents live in 'verification-docs'; ones submitted before the
+      // upload consolidation live in 'receipt-uploads' (see the bucket note in
+      // app/admin/verification/[id]/page.tsx). Paths are uuid-named per upload
+      // and never collide across buckets, so removing every collected path
+      // from both catches the legacy objects too — remove() of a path that
+      // isn't in a bucket is a no-op.
+      await service.storage.from('verification-docs').remove(verificationDocPaths)
+      await service.storage.from('receipt-uploads').remove(verificationDocPaths)
+    }
+    // The listing/claim rows outlive the user (SET NULL), so clear their
+    // pointers — a surviving row must not keep referencing objects that no
+    // longer exist, and the admin verification view reads these columns.
+    if (listingDocIds.length > 0) {
+      await service.from('listings').update({ verification_docs: null }).in('id', listingDocIds)
+    }
+    if (claimDocIds.length > 0) {
+      await service
+        .from('claims')
+        .update({ verification_doc_paths: null })
+        .in('id', claimDocIds)
     }
     await supabase.auth.signOut()
   } catch {

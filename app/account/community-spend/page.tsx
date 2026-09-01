@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowUpRight, TrendingUp, Building2, MapPin, Tag } from 'lucide-react'
 
@@ -28,6 +29,16 @@ function formatDollars(cents: number) {
 
 export default async function CommunitySpendPage() {
   const supabase = await createClient()
+
+  // In-page auth guard, matching every sibling /account/* page. The middleware
+  // guards the /account prefix and the layout redirects too, but a layout is
+  // not re-rendered on navigation between sibling routes in the same segment —
+  // an expiring session mid-visit is caught only by the guard the page itself
+  // carries. This was the one server page in the folder without it.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/sign-in?next=/account/community-spend')
 
   // The three aggregate tables (spend_events, flow_nodes, flow_edges) are read
   // through the SERVICE client on every surface, this one included.
