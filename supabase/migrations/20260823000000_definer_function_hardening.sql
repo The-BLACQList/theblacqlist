@@ -1,0 +1,108 @@
+-- ─── SECURITY DEFINER execution-privilege hardening ─────────────────────────
+--
+-- WHY THIS EXISTS
+-- Postgres grants EXECUTE on every new function to PUBLIC by default. A
+-- SECURITY DEFINER function therefore ships wide open unless a REVOKE follows
+-- it — the definer's rights become anyone's rights. Before 20260816000000 no
+-- migration in this repo contained a REVOKE at all, and there is still no
+-- `ALTER DEFAULT PRIVILEGES` anywhere, so nothing revokes by default.
+--
+-- Two scheduled maintenance functions are still executable by `anon` today:
+--
+--   aggregate_entity_analytics(date)  — 20260515000000_analytics_aggregation.sql
+--   prune_launch_subscribe_attempts() — 20260811000000_launch_subscribe_rate_limit.sql
+--
+-- Neither is a user-facing RPC. Both are called only by pg_cron (as the
+-- scheduling superuser, which bypasses grants) and by a Supabase Edge Function
+-- holding the service-role key. Closing them to `anon` and `authenticated`
+-- removes an anonymous caller's ability to trigger a full-table rollup or a
+-- retention delete at will.
+--
+-- This completes the pattern established by
+-- 20260816000000_rate_limit_counters.sql and continued by
+-- 20260822000000_certification_rule_alignment.sql. It is deliberately its own
+-- migration rather than a rider on either of those: scheduling these functions
+-- during §2B7 Part 1 added no exposure that did not already exist, so the
+-- hardening is a correctness cleanup, not an incident response.
+--
+-- CALLER AUDIT — every invocation path, checked before revoking
+-- [Observed — repo grep, 2026-08-23]
+--
+--   aggregate_entity_analytics(date)
+--     pg_cron 'aggregate-entity-analytics'                      → superuser, owner, unaffected
+--     supabase/functions/aggregate-entity-analytics/index.ts:40 → service-role client (:34),
+--                                                                 and the handler rejects any
+--                                                                 Authorization header that is
+--                                                                 not the service-role key (:14-21)
+--     e2e/analytics-emission.spec.ts:184                        → serviceClient(), built from
+--                                                                 SUPABASE_SERVICE_ROLE_KEY (:36-40)
+--     app/admin/analytics/page.tsx:393                          → display text inside a <code>
+--                                                                 element, not a call
+--
+--   prune_launch_subscribe_attempts()
+--     pg_cron 'prune-launch-subscribe-attempts'                 → superuser, owner, unaffected
+--     tests/migrations/launch-subscribe-rate-limit.test.ts:118  → scratch DB as superuser
+--
+-- No `anon` or `authenticated` caller exists for either function, so no
+-- application path changes. The revoke is not expected to be observable from
+-- the product.
+--
+-- ⚠ CORRECTION TO A CLAIM IN THE PREVIOUS MIGRATION
+-- 20260822000000_certification_rule_alignment.sql:141-144 states that
+-- `auto_grant_certified` was "previously the only SECURITY DEFINER function in
+-- `public` missing both `SET search_path` and a REVOKE block." That is wrong,
+-- and it is left uncorrected in that file because the file has already been
+-- applied to both projects and applied migrations are not edited. Two more
+-- functions are missing `SET search_path`
+-- [Observed — repo enumeration of every SECURITY DEFINER function, 2026-08-23]:
+--
+--   create_profile_on_signup()          — 20260510000000_…_mvp_schema.sql:232
+--   assign_supporter_role_on_signup()   — 20260510000000_…_mvp_schema.sql:573
+--
+-- Both are AFTER INSERT triggers on `auth.users` and are NOT touched here.
+-- They are a different defect (a mutable search_path, not an open grant) on a
+-- different blast radius (the account-signup path — a mistake there stops all
+-- registration), and `deploy-safety.md` #6 says one risky change at a time.
+-- They are recorded as their own debt-register entry and get their own PR.
+-- Note that a REVOKE would be the wrong fix for them regardless: a function
+-- returning `trigger` is not directly invocable, so the exposure is the
+-- search_path, not the grant.
+--
+-- NO GUARD BLOCK, DELIBERATELY
+-- These statements are bare REVOKE/GRANT. If either function is absent, the
+-- migration fails loudly and stops. That is the point: the `RAISE NOTICE`
+-- fallback in 20260518000001 is what let a no-op hide for three months, and
+-- `Success. No rows returned` was indistinguishable from success. Verification
+-- for this file is `has_function_privilege`, never the apply's exit text.
+--
+-- IDEMPOTENT. REVOKE of an absent privilege and GRANT of a held one are both
+-- no-ops, so re-running is safe. The file is written to be pasted into the
+-- Supabase SQL editor more than once.
+--
+-- ROLLBACK: restore the default-open state on both functions with
+--
+--   GRANT EXECUTE ON FUNCTION aggregate_entity_analytics(date) TO PUBLIC;
+--   GRANT EXECUTE ON FUNCTION prune_launch_subscribe_attempts() TO PUBLIC;
+--
+-- No data is touched by this file, so there is nothing else to undo.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ─── aggregate_entity_analytics(date) ───────────────────────────────────────
+-- Rolls up a day of analytics_events into entity_analytics_daily. An anonymous
+-- caller could otherwise run an arbitrary-date rollup on demand.
+REVOKE ALL ON FUNCTION aggregate_entity_analytics(date) FROM PUBLIC;
+REVOKE ALL ON FUNCTION aggregate_entity_analytics(date) FROM anon;
+REVOKE ALL ON FUNCTION aggregate_entity_analytics(date) FROM authenticated;
+GRANT EXECUTE ON FUNCTION aggregate_entity_analytics(date) TO service_role;
+
+-- ─── prune_launch_subscribe_attempts() ──────────────────────────────────────
+-- Deletes rows older than 1 hour from the launch-subscribe rate-limit ledger.
+-- This does NOT let a caller clear a live throttle budget — the rate-limit
+-- window is 10 minutes, so every row that still counts is far younger than the
+-- prune's cutoff. The exposure is narrower than that and still real: an
+-- anonymous caller can force an unbounded number of unthrottled full-table
+-- DELETE scans against the ledger.
+REVOKE ALL ON FUNCTION prune_launch_subscribe_attempts() FROM PUBLIC;
+REVOKE ALL ON FUNCTION prune_launch_subscribe_attempts() FROM anon;
+REVOKE ALL ON FUNCTION prune_launch_subscribe_attempts() FROM authenticated;
+GRANT EXECUTE ON FUNCTION prune_launch_subscribe_attempts() TO service_role;
