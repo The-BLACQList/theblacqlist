@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -234,45 +214,6 @@ export type Database = {
         }
         Relationships: []
       }
-      launch_subscribe_attempts: {
-        Row: {
-          attempted_at: string
-          id: string
-          ip_hash: string
-        }
-        Insert: {
-          attempted_at?: string
-          id?: string
-          ip_hash: string
-        }
-        Update: {
-          attempted_at?: string
-          id?: string
-          ip_hash?: string
-        }
-        Relationships: []
-      }
-      launch_subscribers: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          source: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          source?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          source?: string
-        }
-        Relationships: []
-      }
       analytics_job_log: {
         Row: {
           created_at: string
@@ -305,6 +246,98 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      attribute_groups: {
+        Row: {
+          applies_to: string[]
+          created_at: string
+          description: string | null
+          display_order: number
+          icon: string | null
+          id: string
+          input_type: string
+          is_active: boolean
+          is_filterable: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string[]
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          input_type?: string
+          is_active?: boolean
+          is_filterable?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string[]
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon?: string | null
+          id?: string
+          input_type?: string
+          is_active?: boolean
+          is_filterable?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      attribute_values: {
+        Row: {
+          created_at: string
+          display_order: number
+          group_id: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          group_id: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          group_id?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attribute_values_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "attribute_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -694,6 +727,36 @@ export type Database = {
           },
         ]
       }
+      failed_webhooks: {
+        Row: {
+          created_at: string
+          error_message: string
+          event_type: string
+          id: string
+          payload_json: Json | null
+          resolved_at: string | null
+          stripe_event_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message: string
+          event_type: string
+          id?: string
+          payload_json?: Json | null
+          resolved_at?: string | null
+          stripe_event_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string
+          event_type?: string
+          id?: string
+          payload_json?: Json | null
+          resolved_at?: string | null
+          stripe_event_id?: string | null
+        }
+        Relationships: []
+      }
       flow_edges: {
         Row: {
           id: string
@@ -846,6 +909,137 @@ export type Database = {
         }
         Relationships: []
       }
+      job_posting_purchases: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          entitlement_key: string | null
+          expires_at: string | null
+          id: string
+          listing_id: string
+          paid_at: string | null
+          purchased_by: string | null
+          source: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          entitlement_key?: string | null
+          expires_at?: string | null
+          id?: string
+          listing_id: string
+          paid_at?: string | null
+          purchased_by?: string | null
+          source?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          entitlement_key?: string | null
+          expires_at?: string | null
+          id?: string
+          listing_id?: string
+          paid_at?: string | null
+          purchased_by?: string | null
+          source?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_posting_purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      launch_subscribe_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
+      launch_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      listing_attributes: {
+        Row: {
+          created_at: string
+          listing_id: string
+          value_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          value_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          value_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_attributes_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_attributes_value_id_fkey"
+            columns: ["value_id"]
+            isOneToOne: false
+            referencedRelation: "attribute_values"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_details_business: {
         Row: {
           accepts_reservations: boolean | null
@@ -875,6 +1069,7 @@ export type Database = {
           social_youtube: string | null
           state: string | null
           updated_at: string
+          video_embed_url: string | null
           website_url: string | null
           zip: string | null
         }
@@ -906,6 +1101,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           updated_at?: string
+          video_embed_url?: string | null
           website_url?: string | null
           zip?: string | null
         }
@@ -937,6 +1133,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           updated_at?: string
+          video_embed_url?: string | null
           website_url?: string | null
           zip?: string | null
         }
@@ -945,6 +1142,200 @@ export type Database = {
             foreignKeyName: "listing_details_business_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_details_event: {
+        Row: {
+          city_text: string | null
+          created_at: string
+          cta_type: string
+          cta_url: string | null
+          description: string | null
+          ends_at: string | null
+          is_online: boolean
+          listing_id: string
+          organizer_listing_id: string | null
+          price_text: string | null
+          starts_at: string
+          state: string | null
+          ticket_url: string | null
+          timezone: string | null
+          updated_at: string
+          venue_address: string | null
+          venue_name: string | null
+          zip: string | null
+        }
+        Insert: {
+          city_text?: string | null
+          created_at?: string
+          cta_type?: string
+          cta_url?: string | null
+          description?: string | null
+          ends_at?: string | null
+          is_online?: boolean
+          listing_id: string
+          organizer_listing_id?: string | null
+          price_text?: string | null
+          starts_at: string
+          state?: string | null
+          ticket_url?: string | null
+          timezone?: string | null
+          updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city_text?: string | null
+          created_at?: string
+          cta_type?: string
+          cta_url?: string | null
+          description?: string | null
+          ends_at?: string | null
+          is_online?: boolean
+          listing_id?: string
+          organizer_listing_id?: string | null
+          price_text?: string | null
+          starts_at?: string
+          state?: string | null
+          ticket_url?: string | null
+          timezone?: string | null
+          updated_at?: string
+          venue_address?: string | null
+          venue_name?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_details_event_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_details_event_organizer_listing_id_fkey"
+            columns: ["organizer_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_details_job: {
+        Row: {
+          apply_email: string | null
+          apply_url: string | null
+          closes_at: string | null
+          created_at: string
+          cta_type: string
+          cta_url: string | null
+          description: string | null
+          employment_type: string
+          hiring_listing_id: string | null
+          listing_id: string
+          posted_at: string
+          salary_currency: string
+          salary_max: number | null
+          salary_min: number | null
+          salary_period: string | null
+          updated_at: string
+          workplace_type: string
+        }
+        Insert: {
+          apply_email?: string | null
+          apply_url?: string | null
+          closes_at?: string | null
+          created_at?: string
+          cta_type?: string
+          cta_url?: string | null
+          description?: string | null
+          employment_type: string
+          hiring_listing_id?: string | null
+          listing_id: string
+          posted_at?: string
+          salary_currency?: string
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_period?: string | null
+          updated_at?: string
+          workplace_type?: string
+        }
+        Update: {
+          apply_email?: string | null
+          apply_url?: string | null
+          closes_at?: string | null
+          created_at?: string
+          cta_type?: string
+          cta_url?: string | null
+          description?: string | null
+          employment_type?: string
+          hiring_listing_id?: string | null
+          listing_id?: string
+          posted_at?: string
+          salary_currency?: string
+          salary_max?: number | null
+          salary_min?: number | null
+          salary_period?: string | null
+          updated_at?: string
+          workplace_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_details_job_hiring_listing_id_fkey"
+            columns: ["hiring_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_details_job_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          display_order: number
+          id: string
+          is_visible: boolean
+          listing_id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          listing_id: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_visible?: boolean
+          listing_id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_faqs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -1028,6 +1419,39 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_tags: {
+        Row: {
+          created_at: string
+          listing_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_tags_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -1585,6 +2009,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_counters: {
+        Row: {
+          bucket: string
+          hits: number
+          key_hash: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          key_hash: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          key_hash?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       receipt_uploads: {
         Row: {
           aggregate_opt_out: boolean
@@ -1649,6 +2094,72 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_criteria: {
+        Row: {
+          applies_to: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      review_ratings: {
+        Row: {
+          created_at: string
+          criterion_id: string
+          rating: number
+          review_id: string
+        }
+        Insert: {
+          created_at?: string
+          criterion_id: string
+          rating: number
+          review_id: string
+        }
+        Update: {
+          created_at?: string
+          criterion_id?: string
+          rating?: number
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_ratings_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "review_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_ratings_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
         ]
@@ -1720,6 +2231,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_list_items: {
+        Row: {
+          created_at: string
+          list_id: string
+          save_id: string
+        }
+        Insert: {
+          created_at?: string
+          list_id: string
+          save_id: string
+        }
+        Update: {
+          created_at?: string
+          list_id?: string
+          save_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "saved_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_list_items_save_id_fkey"
+            columns: ["save_id"]
+            isOneToOne: false
+            referencedRelation: "saves"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       saves: {
         Row: {
@@ -1806,6 +2374,7 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number
+          group_label: string | null
           id: string
           is_featured: boolean
           listing_id: string
@@ -1817,6 +2386,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          group_label?: string | null
           id?: string
           is_featured?: boolean
           listing_id: string
@@ -1828,6 +2398,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          group_label?: string | null
           id?: string
           is_featured?: boolean
           listing_id?: string
@@ -2045,36 +2616,6 @@ export type Database = {
         }
         Relationships: []
       }
-      failed_webhooks: {
-        Row: {
-          created_at: string
-          error_message: string
-          event_type: string
-          id: string
-          payload_json: Json | null
-          resolved_at: string | null
-          stripe_event_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          error_message: string
-          event_type: string
-          id?: string
-          payload_json?: Json | null
-          resolved_at?: string | null
-          stripe_event_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          error_message?: string
-          event_type?: string
-          id?: string
-          payload_json?: Json | null
-          resolved_at?: string | null
-          stripe_event_id?: string | null
-        }
-        Relationships: []
-      }
       stripe_events_processed: {
         Row: {
           event_type: string
@@ -2156,6 +2697,127 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
+      tour_enrollments: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          ended_at: string | null
+          id: string
+          invited_by: string | null
+          listing_id: string
+          started_at: string
+          stripe_checkout_session_id: string | null
+          tester_user_id: string
+          trial_granted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          invited_by?: string | null
+          listing_id: string
+          started_at?: string
+          stripe_checkout_session_id?: string | null
+          tester_user_id: string
+          trial_granted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          invited_by?: string | null
+          listing_id?: string
+          started_at?: string
+          stripe_checkout_session_id?: string | null
+          tester_user_id?: string
+          trial_granted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_enrollments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tour_step_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          enrollment_id: string
+          id: string
+          reflected_at: string | null
+          reflection: string | null
+          step_key: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          reflected_at?: string | null
+          reflection?: string | null
+          step_key: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          reflected_at?: string | null
+          reflection?: string | null
+          step_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tour_step_completions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "tour_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2201,6 +2863,36 @@ export type Database = {
         Returns: Json
       }
       auto_grant_certified: { Args: never; Returns: Json }
+      check_rate_limit: {
+        Args: {
+          p_bucket: string
+          p_key_hash: string
+          p_limit: number
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
+      facet_counts: {
+        Args: {
+          p_attribute_values?: string[]
+          p_category_id?: string
+          p_city_id?: string
+          p_entity_type?: string
+          p_lat?: number
+          p_lng?: number
+          p_location_type?: string
+          p_open_now?: boolean
+          p_price_ranges?: string[]
+          p_q?: string
+          p_radius_miles?: number
+          p_trust_tier?: string
+        }
+        Returns: {
+          facet_count: number
+          facet_key: string
+          facet_kind: string
+        }[]
+      }
       get_top_listings_by_views: {
         Args: { days_back?: number; limit_n?: number }
         Returns: {
@@ -2219,12 +2911,51 @@ export type Database = {
         }[]
       }
       has_role: { Args: { p_role: string }; Returns: boolean }
+      haversine_miles: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       is_admin: { Args: never; Returns: boolean }
+      is_open_now: { Args: { p_listing_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       owns_entity: { Args: { p_entity_id: string }; Returns: boolean }
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }
+      prune_launch_subscribe_attempts: { Args: never; Returns: undefined }
+      prune_rate_limit_counters: { Args: never; Returns: undefined }
+      search_listings_faceted: {
+        Args: {
+          p_attribute_values?: string[]
+          p_category_id?: string
+          p_city_id?: string
+          p_entity_type?: string
+          p_lat?: number
+          p_limit?: number
+          p_lng?: number
+          p_location_type?: string
+          p_offset?: number
+          p_open_now?: boolean
+          p_ownership_label?: string
+          p_price_ranges?: string[]
+          p_q?: string
+          p_radius_miles?: number
+          p_sort?: string
+          p_trust_tier?: string
+        }
+        Returns: {
+          id: string
+          total_count: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sponsored_placement_delivery: {
+        Args: { p_placement_ids: string[] }
+        Returns: {
+          clicks: number
+          impressions: number
+          placement_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -2353,11 +3084,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-
