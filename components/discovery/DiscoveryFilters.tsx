@@ -179,48 +179,13 @@ export function DiscoveryFilters({
         </fieldset>
       )}
 
-      {/* Location type stub */}
-      <fieldset>
-        <legend className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2">
-          Availability
-        </legend>
-        <div className="flex flex-col gap-1">
-          {['Online / Virtual', 'Ships Nationwide', 'In-Person'].map((label) => (
-            <label
-              key={label}
-              className="flex items-center gap-2 text-sm font-subhead text-charcoal-soft cursor-not-allowed select-none"
-            >
-              <input
-                type="checkbox"
-                disabled
-                className="rounded border-charcoal/20"
-                aria-label={`${label} (coming soon)`}
-              />
-              {label}
-              <span className="ml-auto text-[10px] text-charcoal-faint uppercase tracking-wide">
-                Soon
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      {/* Trust tier stub */}
-      <fieldset>
-        <legend className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2">
-          Trust Level
-        </legend>
-        <label className="flex items-center gap-2 text-sm font-subhead text-charcoal-soft cursor-not-allowed select-none">
-          <input
-            type="checkbox"
-            disabled
-            className="rounded border-charcoal/20"
-            aria-label="Verified only (coming soon)"
-          />
-          Verified &amp; Certified only
-          <span className="ml-auto text-[10px] text-charcoal-faint uppercase tracking-wide">Soon</span>
-        </label>
-      </fieldset>
+      {/* An "Availability" fieldset (Online / Ships Nationwide / In-Person) and a
+          "Trust Level" fieldset lived here as permanently-disabled checkboxes with
+          "Soon" tags. Removed for public launch: a visible dead control on the
+          primary discovery surface reads as broken, not as roadmap. Trust Level is
+          cheap to build for real — `trust_tier` is already an indexed column and
+          this sidebar already does faceted filtering — so build it rather than
+          re-adding the stub. */}
     </aside>
   )
 }

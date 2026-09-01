@@ -1458,6 +1458,7 @@ export type Database = {
         Row: {
           assigned_to: string | null
           created_at: string
+          details: Json | null
           entity_id: string
           entity_type: string
           id: string
@@ -1465,11 +1466,13 @@ export type Database = {
           queue_type: string
           resolved_at: string | null
           status: string
+          submitted_by: string | null
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
           created_at?: string
+          details?: Json | null
           entity_id: string
           entity_type: string
           id?: string
@@ -1477,11 +1480,13 @@ export type Database = {
           queue_type: string
           resolved_at?: string | null
           status?: string
+          submitted_by?: string | null
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
           created_at?: string
+          details?: Json | null
           entity_id?: string
           entity_type?: string
           id?: string
@@ -1489,6 +1494,7 @@ export type Database = {
           queue_type?: string
           resolved_at?: string | null
           status?: string
+          submitted_by?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -15,16 +15,8 @@ export function EntityCommunityConnection({ entity }: Props) {
           Community
         </h2>
 
-        {/* Reviews placeholder */}
-        <div className="bg-pale-lavender/60 rounded-xl p-8 text-center mb-6">
-          <p className="font-headline text-lg text-brand-black mb-2">Reviews are coming soon</p>
-          <p className="font-body text-sm text-charcoal max-w-sm mx-auto">
-            The BLACQList community review system is in development. Be the first to share your
-            experience with {entity.name}.
-          </p>
-        </div>
-
-        {/* Community corrections */}
+        {/* Community corrections. Reviews are NOT rendered here — the real
+            review list and its submit form are in EntityReviewsSection. */}
         <p className="font-body text-sm text-charcoal-soft text-center">
           Know something that needs to be updated?{' '}
           <a

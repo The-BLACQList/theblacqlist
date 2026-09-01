@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -5,8 +6,27 @@ import { requireAdmin } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { QueueItemActions } from '@/components/admin/QueueItemActions'
+import { ISSUE_LABELS, type CorrectionIssueType } from '@/lib/constants/corrections'
 
 export const metadata: Metadata = { title: 'Reports & Corrections' }
+
+// The queue-type-specific payload written by submitCorrectionAction. Read
+// defensively: rows created before 20260828000000_moderation_queue_details.sql
+// have `details` NULL, and flagged_listing rows carry a different shape.
+interface CorrectionDetails {
+  issue_types?: unknown
+  notes?: unknown
+}
+
+function readCorrectionDetails(raw: unknown): { issues: string[]; notes: string | null } {
+  const d = (raw ?? {}) as CorrectionDetails
+  const issues = Array.isArray(d.issue_types)
+    ? d.issue_types
+        .filter((t): t is string => typeof t === 'string')
+        .map((t) => ISSUE_LABELS[t as CorrectionIssueType] ?? t)
+    : []
+  return { issues, notes: typeof d.notes === 'string' && d.notes ? d.notes : null }
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
@@ -32,9 +52,10 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
 
   let query = serviceClient
     .from('moderation_queue')
-    .select('id, queue_type, status, entity_id, entity_type, priority, created_at', {
-      count: 'exact',
-    })
+    .select(
+      'id, queue_type, status, entity_id, entity_type, priority, created_at, details, submitted_by',
+      { count: 'exact' }
+    )
     .in('queue_type', ['correction', 'flagged_listing'])
     .eq('status', status)
     .order('priority', { ascending: false })
@@ -147,8 +168,11 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-charcoal/5">
               {items.map((item) => {
                 const listing = listingMap[item.entity_id]
+                const { issues, notes } = readCorrectionDetails(item.details)
+                const hasReport = issues.length > 0 || notes !== null
                 return (
-                  <tr key={item.id} className="hover:bg-[#f9f9fb] transition-colors">
+                  <Fragment key={item.id}>
+                  <tr className={`hover:bg-[#f9f9fb] transition-colors ${hasReport ? 'border-b-0' : ''}`}>
                     <td className="px-4 py-3">
                       <p className="font-subhead text-sm font-semibold text-brand-black">
                         {listing?.name ?? 'Unknown listing'}
@@ -186,6 +210,44 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                       </div>
                     </td>
                   </tr>
+
+                  {/* What the reporter actually selected and wrote. Rendered as
+                      its own row rather than inside the Listing cell because
+                      notes run to 500 characters and would crush the column.
+                      Absent for rows submitted before the details column
+                      existed, and for flagged_listing rows. */}
+                  {hasReport && (
+                    <tr>
+                      <td colSpan={5} className="px-4 pb-3 pt-0">
+                        <div className="rounded-lg bg-[#f9f9fb] border border-charcoal/8 px-3 py-2.5">
+                          {issues.length > 0 && (
+                            <ul className="flex flex-wrap gap-1.5 mb-2">
+                              {issues.map((label) => (
+                                <li
+                                  key={label}
+                                  className="rounded-full border border-charcoal/15 px-2 py-0.5 font-subhead text-[11px] font-semibold text-charcoal"
+                                >
+                                  {label}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          {notes && (
+                            <p className="font-body text-sm text-charcoal whitespace-pre-wrap">
+                              {notes}
+                            </p>
+                          )}
+                          {/* By ID, never by name or email — see data-privacy.md. */}
+                          <p className="font-mono text-[11px] text-charcoal-faint mt-2">
+                            {item.submitted_by
+                              ? `Reported by ${item.submitted_by.slice(0, 8)}…`
+                              : 'Reported anonymously'}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 )
               })}
             </tbody>
