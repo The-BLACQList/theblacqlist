@@ -39,13 +39,13 @@ export function AllowanceNotice({ allowances, names, kind }: AllowanceNoticeProp
           <div className="space-y-1">
             <h2 className="font-subhead text-sm font-semibold text-brand-black">
               {needsUpgrade
-                ? `Your plan doesn't include a marketplace storefront yet`
+                ? `Marketplace selling isn't open yet`
                 : `You've used all your marketplace listings`}
             </h2>
             <p className="font-body text-sm text-charcoal-soft">
               {needsUpgrade
-                ? `Selling in the BLACQList Marketplace is part of the Growth plan and above. Upgrade to add your first ${noun}.`
-                : `Products and services share one allowance on each business page. Archive something you're no longer offering, or upgrade for more room.`}
+                ? `We're not selling vendor access while ${noun} listings, checkout, and analytics are still being built. Join the waitlist and we'll email you the day it opens.`
+                : `Products and services share one allowance on each business page. Archive something you're no longer offering to free up a slot.`}
             </p>
           </div>
         </div>
@@ -56,16 +56,24 @@ export function AllowanceNotice({ allowances, names, kind }: AllowanceNoticeProp
               {names[a.listingId] ?? 'Business page'} —{' '}
               {a.tierIncludesStorefront
                 ? `${a.used} of ${a.limit} marketplace listings used`
-                : 'no storefront on this plan'}
+                : 'storefront not open yet'}
             </li>
           ))}
         </ul>
 
+        {/*
+          Not /pricing. Storefronts need Growth+, and Growth and Premium are
+          deliberately unbuyable (decision D-M, 2026-09-01) — they render
+          "Coming Soon" and disabled there, so sending an owner to see plans
+          sends them to a page that only confirms they are stuck. The waitlist
+          is the honest next step; when the page is merely full, the next step
+          is on the owner's own list.
+        */}
         <Link
-          href="/pricing"
+          href={needsUpgrade ? '/for-vendors#for-vendors-waitlist' : `/dashboard/${kind}s`}
           className="inline-flex items-center h-10 px-5 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors min-h-[44px]"
         >
-          See plans
+          {needsUpgrade ? 'Join the waitlist' : `Manage your ${noun}s`}
         </Link>
       </div>
     )
