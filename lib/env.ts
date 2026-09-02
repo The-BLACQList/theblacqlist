@@ -70,14 +70,18 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // ("what it costs to post"), and splitting them into two flags would allow a
   // half-state where jobs are paid but the events copy is still untrue.
   paidPostings: 'FEATURE_PAID_POSTINGS',
-  // Gates the /add-event and /add-job submission forms and the event/job half of
-  // createListingAction. Both forms are complete and auth-gated but have zero
-  // inbound links, and nothing renders or moderates what they write — a signed-in
-  // user who finds either URL submits into a void. One flag rather than two for
-  // the same reason as paidPostings above: "can I post an event or a job" is one
-  // behavior to a user, and two flags would permit a half-state. Does NOT gate
-  // the public /events and /jobs pages, which are honest "coming in beta" pages
-  // with working waitlist capture.
+  // Gates the /add-event and /add-job submission forms, the event/job half of
+  // createListingAction, and every inbound link to those two forms — the footer's
+  // "For Businesses" entries and the CTAs on /events and /jobs. One flag rather
+  // than two for the same reason as paidPostings above: "can I post an event or a
+  // job" is one behavior to a user, and two flags would permit a half-state.
+  //
+  // The links must stay on this flag: both /add-* pages notFound() while it is
+  // off, so an ungated link is a link to a 404.
+  //
+  // Does NOT gate the public /events and /jobs pages themselves. Those query
+  // published listings of their type and are correct either way — with the flag
+  // off they are a real, empty board rather than a page promising a feature.
   postingSubmissions: 'FEATURE_POSTING_SUBMISSIONS',
 }
 

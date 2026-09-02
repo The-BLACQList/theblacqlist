@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { isFeatureEnabled } from '@/lib/env'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ui/brand-mark'
 
@@ -82,8 +83,8 @@ const columns: FooterColumn[] = [
       { label: 'Map', href: '/map', active: true },
       { label: 'Search', href: '/search', active: true },
       { label: 'Collections', href: '/collections', active: true },
-      { label: 'Events', href: '/events', active: false },
-      { label: 'Jobs', href: '/jobs', active: false },
+      { label: 'Events', href: '/events', active: true },
+      { label: 'Jobs', href: '/jobs', active: true },
       { label: 'Marketplace', href: '/marketplace', active: true },
       { label: 'Flow Map', href: '/flow-map', active: true },
       { label: 'BLACQLight', href: '/blacqlight', active: true },
@@ -118,9 +119,35 @@ const columns: FooterColumn[] = [
   },
 ]
 
+/**
+ * `/add-event` and `/add-job` call notFound() while FEATURE_POSTING_SUBMISSIONS
+ * is off, so they can only be linked when the flag is on. The check has to
+ * happen inside the component — `columns` is module scope, evaluated once at
+ * import, which would freeze the flag at build time instead of reading it per
+ * request.
+ */
+function resolveColumns(canPost: boolean): FooterColumn[] {
+  if (!canPost) return columns
+
+  return columns.map((col) =>
+    col.heading === 'For Businesses'
+      ? {
+          ...col,
+          links: [
+            ...col.links,
+            { label: 'Post an Event', href: '/add-event', active: true },
+            { label: 'Post a Job', href: '/add-job', active: true },
+          ],
+        }
+      : col
+  )
+}
+
 // ─── PublicFooter ─────────────────────────────────────────────────────────────
 
 export function PublicFooter() {
+  const resolvedColumns = resolveColumns(isFeatureEnabled('postingSubmissions'))
+
   return (
     <footer className="bg-black text-white">
       <Container className="py-12 md:py-16">
@@ -186,7 +213,7 @@ export function PublicFooter() {
 
         {/* ── Column grid ───────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {columns.map((col) => (
+          {resolvedColumns.map((col) => (
             <div key={col.heading}>
               <h3 className="text-gold text-xs uppercase tracking-wider font-subhead font-bold mb-3">
                 {col.heading}
