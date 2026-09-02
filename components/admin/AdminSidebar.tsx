@@ -10,6 +10,7 @@ import {
   Flag,
   BarChart3,
   ShieldCheck,
+  Compass,
   Layers,
   BookOpen,
   Lightbulb,
@@ -41,6 +42,7 @@ const NAV_ITEMS = [
   { href: '/admin/sponsored', label: 'Sponsored', icon: Megaphone, exact: false },
   { href: '/admin/ai-tools', label: 'AI Tools', icon: Sparkles, exact: false },
   { href: '/admin/users', label: 'Users', icon: Users, exact: false },
+  { href: '/admin/testers', label: 'Testers', icon: Compass, exact: false },
 ]
 
 export function AdminSidebar({ role }: Props) {

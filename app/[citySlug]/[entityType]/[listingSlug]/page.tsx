@@ -28,8 +28,11 @@ import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformA
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
 import { ProfessionalTemplate } from '@/components/entity-page/templates/ProfessionalTemplate'
 import { CreativeTemplate } from '@/components/entity-page/templates/CreativeTemplate'
+import { recordTourWitness } from '@/lib/tour/witness'
 
-export const revalidate = 3600
+// No `revalidate` declared on purpose: PublicHeader reads cookies in the root
+// layout, so every route is already dynamic and a revalidate here is dead —
+// declaring one would misstate the page's render mode (M4.9).
 
 interface PageProps {
   params: Promise<{ citySlug: string; entityType: string; listingSlug: string }>
@@ -190,6 +193,9 @@ export default async function EntityPage({ params }: PageProps) {
     entity_type: 'listing',
     user_id: user?.id ?? null,
   })
+  // Tour evidence: an enrolled tester opened a listing that isn't their own —
+  // the ownership check lives inside recordTourWitness. Swallows all failures.
+  await recordTourWitness('listing_opened', { listingOwnerId: entity.owner_user_id })
   if (user) {
     isOwner = entity.owner_user_id === user.id
 

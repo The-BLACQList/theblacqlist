@@ -40,6 +40,7 @@ beforeEach(() => {
   // have failed that case for a reason that had nothing to do with the code.
   delete process.env.FEATURE_PAID_POSTINGS
   delete process.env.FEATURE_POSTING_SUBMISSIONS
+  delete process.env.FEATURE_TESTER_TOUR
 })
 
 afterEach(() => {
@@ -180,6 +181,7 @@ describe('getEnabledFeatures', () => {
       'ocrExtraction',
       'paidPostings',
       'postingSubmissions',
+      'testerTour',
     ])
   })
 

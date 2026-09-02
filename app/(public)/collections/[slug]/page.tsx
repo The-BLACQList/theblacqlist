@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -6,14 +7,18 @@ import { ArrowLeft } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { TourWitness } from '@/components/tour/TourWitness'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 import {
   CollectionBusinessCard,
   type CollectionListing,
 } from '@/components/editorial/CollectionBusinessCard'
 
-// ISR: collections refresh hourly (matches the performance spec — collections 3600).
-export const revalidate = 3600
+// No `revalidate` declared on purpose: PublicHeader reads cookies in the root
+// layout, so every route is already dynamic and a revalidate here is dead —
+// declaring one would misstate the page's render mode (M4.9).
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -60,6 +65,14 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   if (!collection) notFound()
 
+  // Fire-and-forget analytics — collection_viewed was declared in
+  // constants.ts but emitted nowhere until now (M4.9, ungated).
+  trackServerEvent({
+    event_name: ANALYTICS_EVENTS.COLLECTION_VIEWED,
+    entity_id: collection.id,
+    entity_type: 'collection',
+  })
+
   // Businesses in this collection, with per-item editorial context.
   const { data: items, error: itemsError } = await supabase
     .from('collection_items')
@@ -95,6 +108,12 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-pale-lavender">
+      {/* Tour evidence: an enrolled tester browsed a collection. Suspense-
+          isolated so viewer resolution never blocks the page shell. */}
+      <Suspense>
+        <TourWitness step="collection_browsed" />
+      </Suspense>
+
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       {coverSrc ? (
         <section className="relative w-full h-[280px] md:h-[420px] overflow-hidden bg-deep-bg">

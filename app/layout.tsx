@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Jost, Inter } from 'next/font/google'
 import './globals.css'
 import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
 import { ChromeGate } from '@/components/layout/chrome-gate'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
+import { TourRailMount } from '@/components/tour/TourRailMount'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -88,6 +90,12 @@ export default function RootLayout({
         <ChromeGate header={<PublicHeader />} footer={<PublicFooter />}>
           {children}
         </ChromeGate>
+        {/* Tester Tour rail — renders nothing unless the flag is on AND the
+            viewer is a signed-in, enrolled tester. Suspense lets it stream in
+            after the page shell instead of blocking it. */}
+        <Suspense fallback={null}>
+          <TourRailMount />
+        </Suspense>
         <Analytics />
         <SpeedInsights />
       </body>
