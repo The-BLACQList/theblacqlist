@@ -197,47 +197,55 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
           </p>
         </fieldset>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="jb-apply-url" className={labelCls}>
-              Application link
-            </label>
-            <input
-              id="jb-apply-url"
-              name="apply_url"
-              type="url"
-              defaultValue={job?.apply_url ?? ''}
-              className={inputCls}
-              placeholder="https://…"
-            />
-            {fieldErr('apply_url') && (
-              <p role="alert" className="font-body text-xs text-red-600 mt-0.5">
-                {fieldErr('apply_url')}
-              </p>
-            )}
+        {/* The `*` belongs on the legend, not on either input — updateJobDetails
+            requires ONE of the two, so marking a field required would block a
+            posting that supplied the other. The group is what is required. */}
+        <fieldset className="border border-charcoal/15 rounded-lg px-3 pt-2 pb-3">
+          <legend className="font-subhead text-xs font-semibold text-charcoal-soft px-1">
+            How people apply <span className="text-red-500" aria-hidden="true">*</span>
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="jb-apply-url" className={labelCls}>
+                Application link
+              </label>
+              <input
+                id="jb-apply-url"
+                name="apply_url"
+                type="url"
+                defaultValue={job?.apply_url ?? ''}
+                className={inputCls}
+                placeholder="https://…"
+              />
+              {fieldErr('apply_url') && (
+                <p role="alert" className="font-body text-xs text-red-600 mt-0.5">
+                  {fieldErr('apply_url')}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="jb-apply-email" className={labelCls}>
+                Apply by email
+              </label>
+              <input
+                id="jb-apply-email"
+                name="apply_email"
+                type="email"
+                defaultValue={job?.apply_email ?? ''}
+                className={inputCls}
+                placeholder="hiring@example.com"
+              />
+              {fieldErr('apply_email') && (
+                <p role="alert" className="font-body text-xs text-red-600 mt-0.5">
+                  {fieldErr('apply_email')}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <label htmlFor="jb-apply-email" className={labelCls}>
-              Apply by email
-            </label>
-            <input
-              id="jb-apply-email"
-              name="apply_email"
-              type="email"
-              defaultValue={job?.apply_email ?? ''}
-              className={inputCls}
-              placeholder="hiring@example.com"
-            />
-            {fieldErr('apply_email') && (
-              <p role="alert" className="font-body text-xs text-red-600 mt-0.5">
-                {fieldErr('apply_email')}
-              </p>
-            )}
-          </div>
-        </div>
-        <p className="font-body text-xs text-charcoal-soft -mt-2">
-          Add at least one. It becomes the Apply button on your posting.
-        </p>
+          <p className="font-body text-xs text-charcoal-soft mt-2">
+            Add at least one. It becomes the Apply button on your posting.
+          </p>
+        </fieldset>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>

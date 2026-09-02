@@ -1,55 +1,139 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import Link from 'next/link'
 
-import { Section } from '@/components/layout/section'
-import { SectionHeading } from '@/components/ui/section-heading'
-import { PageHeader } from '@/components/layout/page-header'
-import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
+import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
+import { buildPageUrl } from '@/lib/listings/pagination'
+import { isFeatureEnabled } from '@/lib/env'
 
 export const metadata: Metadata = {
   title: 'Events | The BLACQList',
   description:
-    'Discover pop-ups, networking events, markets, and cultural experiences hosted by and for the Black community.',
+    'Pop-ups, markets, networking nights, and cultural experiences hosted by and for the Black community.',
 }
 
-export default function EventsPage() {
+// No `export const revalidate` on purpose. PublicHeader reads cookies in the
+// root layout on every route, so this page renders dynamically no matter what
+// it declares — and declaring a revalidate it cannot honour is a lie in the
+// source. Same reason the listing and collection pages dropped theirs.
+
+interface EventsPageProps {
+  searchParams: Promise<{ page?: string }>
+}
+
+const ctaClass =
+  'inline-block rounded-full bg-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-brand-black hover:bg-light-gold transition-colors'
+const secondaryCtaClass =
+  'inline-block rounded-full border border-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-amber hover:bg-amber-gold hover:text-brand-black transition-colors'
+
+async function EventResults({ searchParams }: { searchParams: EventsPageProps['searchParams'] }) {
+  const params = await searchParams
+  const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
+
+  // queryListings fails soft — a broken read comes back as zero rows, which
+  // would render as "nothing posted yet" and be untrue. Only a thrown error
+  // reaches here, and it gets the grid's error state rather than the page's.
+  let result
+  try {
+    result = await queryListings({ type: 'event', page })
+  } catch {
+    return (
+      <DiscoveryGrid
+        entities={[]}
+        total={0}
+        error="We couldn't load events just now. Refresh the page to try again."
+      />
+    )
+  }
+
+  const canPost = isFeatureEnabled('postingSubmissions')
+
+  if (result.entities.length === 0) {
+    // Past the last page of a non-empty list is a different emptiness from an
+    // empty directory, and it needs a way back rather than a way to post.
+    if (page > 1) {
+      return (
+        <div className="rounded-xl bg-pale-lavender px-8 py-10 text-center space-y-4">
+          <p className="font-headline text-xl text-brand-black">Nothing on this page</p>
+          <p className="font-body text-sm text-charcoal leading-relaxed">
+            There are no events this far into the list.
+          </p>
+          <div className="pt-2">
+            <Link href="/events" className={ctaClass}>
+              Back to the first page
+            </Link>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="rounded-xl bg-pale-lavender px-8 py-10 text-center space-y-4">
+        <p className="font-headline text-xl text-brand-black">No events posted yet</p>
+        <p className="font-body text-sm text-charcoal leading-relaxed">
+          Events appear here once business owners post them and our team approves them. Check back
+          soon.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          {canPost && (
+            <Link href="/add-event" className={ctaClass}>
+              Post an event
+            </Link>
+          )}
+          <Link href="/discover" className={secondaryCtaClass}>
+            Browse businesses
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const nextPageUrl =
+    result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
+
+  return (
+    <DiscoveryGrid
+      entities={result.entities}
+      total={result.total}
+      nextPageUrl={nextPageUrl}
+      currentPage={page}
+    />
+  )
+}
+
+export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const canPost = isFeatureEnabled('postingSubmissions')
+
   return (
     <>
-      <Section variant="pale-lavender">
-        <PageHeader
-          title="BLACQList Events"
-          subtitle="Pop-ups, markets, networking nights, and cultural experiences, hosted by and for the community."
-        />
-      </Section>
+      <div className="border-b border-charcoal/10 bg-white">
+        <Container className="py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="font-headline text-2xl md:text-3xl text-brand-black">
+                BLACQList Events
+              </h1>
+              <p className="font-subhead text-sm text-charcoal mt-1.5 max-w-xl">
+                Pop-ups, markets, networking nights, and cultural experiences, hosted by and for the
+                community.
+              </p>
+            </div>
+            {canPost && (
+              <Link href="/add-event" className={`${ctaClass} shrink-0 self-start sm:self-auto`}>
+                Post an event
+              </Link>
+            )}
+          </div>
+        </Container>
+      </div>
 
-      <Section variant="white">
-        <span className="inline-block rounded-full border border-amber-gold text-amber text-xs font-subhead font-semibold px-3 py-1 mb-5">
-          Beta Feature
-        </span>
-        <SectionHeading subtitle="Events will let business owners post upcoming experiences and let community members find what's happening in their city.">
-          Events Launching in Beta
-        </SectionHeading>
-        <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
-          From vendor markets to networking dinners, The BLACQList events calendar will become the
-          go-to source for Black community events across the country. Business owners will be able
-          to list events directly from their BLACQList Page.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-          <Button
-            asChild
-            className="bg-brand-black text-white font-body font-bold hover:bg-charcoal rounded-full px-6 py-2.5 min-h-[44px] h-auto"
-          >
-            <Link href="/sign-up">Get Notified at Launch</Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="border-brand-black text-brand-black font-body font-bold rounded-full px-6 py-2.5 min-h-[44px] h-auto"
-          >
-            <Link href="/for-business">List Your Business</Link>
-          </Button>
-        </div>
-      </Section>
+      <Container className="py-8">
+        <Suspense fallback={<DiscoveryGrid entities={[]} total={0} isLoading />}>
+          <EventResults searchParams={searchParams} />
+        </Suspense>
+      </Container>
     </>
   )
 }
