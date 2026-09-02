@@ -3,11 +3,16 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { VALID_SHIPPING_OPTIONS } from '@/lib/constants/marketplace'
+import { assertCanAddMarketplaceItem } from '@/lib/marketplace/entitlements'
+
+// A product may be created live or held back, but never archived — archiving is
+// an edit on something that already exists.
+const CREATE_STATUSES = ['draft', 'active'] as const
 
 type FieldErrors = Partial<Record<string, string>>
 
 export type CreateProductState =
-  | { success: true; productId: string; globalSlug: string }
+  | { success: true; productId: string; globalSlug: string; status: string }
   | { error: string; fieldErrors?: FieldErrors }
   | null
 
@@ -50,6 +55,10 @@ export async function createProductAction(
   const shipping = formData.get('shipping_options')?.toString().trim() || 'shipping'
   const returnNote = formData.get('return_policy_note')?.toString().trim() || null
   const purchaseUrl = formData.get('external_purchase_url')?.toString().trim() || null
+  // Absent means a caller that is not the create form. Fall back to 'draft': nothing
+  // becomes publicly visible unless a human explicitly chose it. The form always
+  // submits this field, and defaults its control to 'active'.
+  const status = formData.get('status')?.toString().trim() || 'draft'
 
   const fieldErrors: FieldErrors = {}
 
@@ -82,14 +91,19 @@ export async function createProductAction(
     fieldErrors.external_purchase_url = 'Purchase URL must start with https://'
   }
 
+  if (!CREATE_STATUSES.includes(status as (typeof CREATE_STATUSES)[number])) {
+    fieldErrors.status = 'Choose whether to publish this product or save it as a draft.'
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the errors below.', fieldErrors }
   }
 
-  // Verify user owns the listing
+  // Verify user owns the listing. `tier` rides along because the marketplace
+  // allowance is per listing, not per user.
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug')
+    .select('id, slug, tier')
     .eq('id', listingId)
     .eq('owner_user_id', user.id)
     .is('deleted_at', null)
@@ -101,6 +115,12 @@ export async function createProductAction(
       fieldErrors: { listing_id: 'Invalid listing.' },
     }
   }
+
+  // Ownership is proven; now the plan. The "new product" page surfaces the same
+  // allowance before the form, so reaching this refusal means the allowance was
+  // spent between loading the page and submitting it.
+  const refusal = await assertCanAddMarketplaceItem(listing.id, listing.tier, 'product')
+  if (refusal) return refusal
 
   const tags = tagsRaw
     ? tagsRaw
@@ -151,7 +171,7 @@ export async function createProductAction(
       shipping_options: shipping,
       return_policy_note: returnNote,
       external_purchase_url: purchaseUrl,
-      status: 'draft',
+      status,
       created_by: user.id,
     })
     .select('id, global_slug')
@@ -169,5 +189,5 @@ export async function createProductAction(
     properties: { listing_id: listingId },
   })
 
-  return { success: true, productId: product.id, globalSlug: product.global_slug }
+  return { success: true, productId: product.id, globalSlug: product.global_slug, status }
 }
