@@ -104,7 +104,15 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
 export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
   const [state, formAction, isPending] = useActionState(createReviewAction, null)
   const [rating, setRating] = useState(0)
-  const [bodyLen, setBodyLen] = useState(0)
+  // CONTROLLED on purpose (debt ⑰). React 19 resets an uncontrolled
+  // <form action={…}> once the action resolves, so a server-side rejection —
+  // Turnstile, a duplicate review, a body that failed a rule — used to wipe up
+  // to 2000 characters of writing while the rating, criteria and photo names
+  // beside it survived, because those were already held in state. `bodyLen` is
+  // now derived rather than tracked separately: as its own state it kept the
+  // old count after a reset and reported characters the textarea no longer had.
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
   const [criteriaRatings, setCriteriaRatings] = useState<Record<string, number>>({})
   const [photoNames, setPhotoNames] = useState<string[]>([])
 
@@ -168,6 +176,8 @@ export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
           name="title"
           type="text"
           maxLength={150}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Summarize your experience"
           className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
         />
@@ -186,10 +196,11 @@ export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
           rows={4}
           maxLength={2000}
           placeholder="Share your experience with this business…"
-          onChange={(e) => setBodyLen(e.target.value.length)}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
         />
-        <p className="font-body text-xs text-charcoal-faint text-right mt-0.5">{bodyLen}/2000</p>
+        <p className="font-body text-xs text-charcoal-faint text-right mt-0.5">{body.length}/2000</p>
         {state && 'field' in state && state.field === 'body' && (
           <p role="alert" className="font-body text-xs text-red-600 mt-0.5">
             {state.error}

@@ -73,6 +73,17 @@ function SignUpContent() {
   const [state, action] = useActionState(signUpAction, null)
   const [showPassword, setShowPassword] = useState(false)
   const [selectedRole, setSelectedRole] = useState<RoleValue>('supporter')
+  // CONTROLLED on purpose (debt ⑰). React 19 resets an uncontrolled
+  // <form action={…}> once the action resolves, so an uncontrolled sign-up
+  // form throws away the name and email every time the server rejects the
+  // password — the single likeliest failure on this page, and one that lands
+  // on the top of the signup funnel. The role radio below was already held in
+  // state, which is why it alone used to survive. Keeping the password here
+  // too lets the user edit the rejected value instead of retyping it; state
+  // stays in the browser and nothing is echoed back through the action.
+  const [displayName, setDisplayName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const isSuccess = state && 'success' in state && state.success
 
@@ -150,6 +161,8 @@ function SignUpContent() {
             autoComplete="name"
             required
             maxLength={100}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
             aria-describedby={getFieldError('displayName') ? 'displayName-error' : undefined}
             aria-invalid={!!getFieldError('displayName')}
             className={cn(
@@ -180,6 +193,8 @@ function SignUpContent() {
             type="email"
             autoComplete="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             aria-describedby={getFieldError('email') ? 'email-error' : undefined}
             aria-invalid={!!getFieldError('email')}
             className={cn(
@@ -216,6 +231,8 @@ function SignUpContent() {
               autoComplete="new-password"
               required
               minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               aria-describedby={cn(
                 'password-hint',
                 getFieldError('password') ? 'password-error' : undefined
