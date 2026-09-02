@@ -133,7 +133,7 @@ export default async function MarketplacePage() {
               <Package className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No products yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
-                Vendors are setting up their storefronts. Check back soon.
+                Vendor storefronts aren&apos;t open yet. Products will show up here as they do.
               </p>
               <Link
                 href="/add-business"
@@ -176,17 +176,24 @@ export default async function MarketplacePage() {
               <Briefcase className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No services yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
-                Service providers are joining the marketplace. Check back soon.
+                Vendor storefronts aren&apos;t open yet. Services will show up here as they do.
               </p>
             </div>
           )}
         </section>
 
-        {/* Vendor CTA */}
+        {/* Vendor CTA. Deliberately does NOT say "sell here" — vendor storefronts
+            are Growth+ and Growth is not purchasable (decision D-M, 2026-09-01),
+            so a "start selling" CTA would route a business owner to a paywall
+            they cannot pass. Getting listed is free and real, so that is the
+            offer; /for-vendors is the honest "not open yet" page behind it. */}
         <section className="rounded-xl bg-pale-lavender px-6 py-10 text-center">
-          <h2 className="font-headline text-2xl text-brand-black">Sell on BLACQList</h2>
+          <h2 className="font-headline text-2xl text-brand-black">
+            Get listed now. Sell here later.
+          </h2>
           <p className="font-body text-sm text-charcoal-soft mt-2 max-w-md mx-auto">
-            Have products or services to offer? List your business and start reaching the community.
+            Vendor storefronts aren&apos;t open yet. Adding your business to the directory is free,
+            and it&apos;s where every storefront will start.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
             <Link
@@ -199,7 +206,7 @@ export default async function MarketplacePage() {
               href="/for-vendors"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors min-h-[44px]"
             >
-              Learn more
+              When selling opens
             </Link>
           </div>
         </section>

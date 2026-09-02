@@ -20,6 +20,8 @@
 // =============================================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 const h = vi.hoisted(() => ({
   ip: '203.0.113.7',
@@ -223,6 +225,18 @@ describe('subscribeLaunchAction source attribution', () => {
     expect(h.captured.subscriberInserts[0]).toMatchObject({ source: 'pricing-growth' })
   })
 
+  it('writes the /for-vendors source through', async () => {
+    // The marketplace requires the Growth tier, which is deliberately not for
+    // sale, so /for-vendors captures interest instead of routing to a checkout
+    // that would 422. If this source were ever dropped from the allowlist the
+    // page would keep working and silently record every vendor as a generic
+    // coming-soon signup — under-counting the exact demand signal the founder
+    // is using to decide whether to build vendor storefronts next.
+    await subscribeLaunchAction(null, form('vendor@example.test', 'for-vendors'))
+
+    expect(h.captured.subscriberInserts[0]).toMatchObject({ source: 'for-vendors' })
+  })
+
   it('falls back to the default for an unrecognized source', async () => {
     await subscribeLaunchAction(null, form('evil@example.test', 'attacker-controlled'))
 
@@ -253,5 +267,41 @@ describe('subscribeLaunchAction source attribution', () => {
 
     expect(result).toEqual({ success: true })
     expect(h.captured.subscriberUpdates).toHaveLength(0)
+  })
+})
+
+// =============================================================================
+// The allowlist is a two-file invariant
+// =============================================================================
+// A page declares the `source` it posts; the action decides whether to honour
+// it. Nothing links the two at compile time — the option values are plain
+// strings on one side and a Set literal on the other. Drift is silent by
+// construction: the form keeps submitting, the subscriber keeps getting
+// recorded, and only the attribution is lost. Source-text is the only place the
+// pair can be compared, following tests/impact-report.test.ts:328-333.
+// =============================================================================
+
+describe('waitlist source declarations match the allowlist', () => {
+  const read = (rel: string) => readFileSync(path.resolve(process.cwd(), rel), 'utf8')
+  const actionSrc = read('lib/actions/subscribers/subscribeLaunch.ts')
+
+  // Scoped to the Set literal so a `source` string appearing in a comment or in
+  // the promote path cannot make a missing entry look present.
+  const allowlistBlock = actionSrc.match(/const ALLOWED_SOURCES = new Set\(\[([\s\S]*?)\]\)/)?.[1]
+
+  it('parses the ALLOWED_SOURCES literal', () => {
+    expect(allowlistBlock).toBeDefined()
+  })
+
+  it('allowlists every source /for-vendors declares', () => {
+    const pageSrc = read('app/(public)/for-vendors/page.tsx')
+    const declared = [...pageSrc.matchAll(/value:\s*'([^']+)'/g)].map((m) => m[1])
+
+    // A page that declares no source at all would pass an "every" assertion
+    // vacuously, so pin the count too.
+    expect(declared).toHaveLength(1)
+    for (const value of declared) {
+      expect(allowlistBlock).toContain(`'${value}'`)
+    }
   })
 })

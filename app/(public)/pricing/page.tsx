@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
 import { PLANS } from '@/lib/stripe/plans'
 import { PricingPlans } from './PricingPlans'
-import { PricingWaitlist, type WaitlistOption } from './PricingWaitlist'
+import { LaunchWaitlist, type WaitlistOption } from '@/components/marketing/LaunchWaitlist'
 
 // The page reflects the live `plans` table, so it must not be a build-time
 // snapshot: withholding a tier is a data change, and a prerendered page would
@@ -122,7 +122,7 @@ export default async function PricingPage() {
           Waiting on something?
         </SectionHeading>
 
-        <PricingWaitlist options={waitlistOptions} />
+        <LaunchWaitlist options={waitlistOptions} id="pricing-waitlist" />
       </Section>
 
       {/* Add-ons */}
