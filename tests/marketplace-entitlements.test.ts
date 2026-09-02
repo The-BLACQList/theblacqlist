@@ -235,15 +235,21 @@ describe('assertCanAddMarketplaceItem', () => {
     expect(await assertCanAddMarketplaceItem('L1', 'growth', 'product')).toBeNull()
   })
 
-  it('tells a no-storefront tier to upgrade, and names the right thing to list', async () => {
+  it('tells a no-storefront tier it is not open yet — never to buy an unbuyable tier', async () => {
     install({ marketplace_products: ok([]), marketplace_services: ok([]) })
 
     const product = await assertCanAddMarketplaceItem('L1', 'free', 'product')
     const service = await assertCanAddMarketplaceItem('L1', 'free', 'service')
 
-    expect(product?.error).toContain('does not include a marketplace storefront')
-    expect(product?.error).toContain('products')
-    expect(service?.error).toContain('services')
+    expect(product?.error).toContain("isn't open yet")
+    expect(product?.error).toContain('product')
+    expect(service?.error).toContain('service')
+    // Storefronts need Growth+, and Growth and Premium are deliberately not for
+    // sale (decision D-M, 2026-09-01). Naming either one here sends the owner to
+    // /pricing to buy something that renders disabled. This is the guard that
+    // stops that copy coming back.
+    expect(product?.error).not.toMatch(/upgrade|growth|premium/i)
+    expect(service?.error).not.toMatch(/upgrade|growth|premium/i)
     // The refusal is attached to the listing selector, which is the control the
     // owner can actually act on.
     expect(product?.fieldErrors?.['listing_id']).toBeTruthy()
@@ -256,8 +262,11 @@ describe('assertCanAddMarketplaceItem', () => {
 
     expect(refusal?.error).toContain('25')
     // "You are full" must not read as "your plan cannot do this" — the actions
-    // they lead to are different (archive one vs. upgrade).
-    expect(refusal?.error).not.toContain('does not include a marketplace storefront')
+    // they lead to are different (archive one vs. wait for the marketplace).
+    expect(refusal?.error).not.toMatch(/isn't open yet/i)
+    expect(refusal?.error).toMatch(/archive/i)
+    // A full page cannot buy its way to more room either — Premium is unbuyable.
+    expect(refusal?.error).not.toMatch(/upgrade|growth|premium/i)
     expect(refusal?.fieldErrors?.['listing_id']).toBeTruthy()
   })
 
