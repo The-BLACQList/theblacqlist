@@ -93,6 +93,40 @@ relative to owner race — and that decision must be made with a civil-rights / 
 attorney (post-*SFFA* / post-*Fearless Fund*) BEFORE billing is switched on.** `[Needs professional review]`
 This is not a checkbox; it is the gating legal question for monetization.
 
+### ✅ ANSWERED — 2026-08-27
+
+**The gating question above went to counsel and came back clean.** `[Observed — founder, 2026-08-26]`
+
+> **Question asked:** can a platform that centers Black-owned businesses run paid tiers without creating a
+> §1981 exposure?
+> **Answer: clean — no conditions.** Paid tiers **as designed** are approved. Nothing carries into the
+> marketplace cart build as a constraint.
+
+Recorded in `docs/blacqlist/ops/decision-log.md` under *"2026-08-26 — E1 · §1981 / paid tiers — RECORDED —
+clean, no conditions."* Closes ops ledger `2.3` and `4.0b`.
+
+⚠ **Three things this answer does not do, stated so the clearance is not read wider than it is:**
+
+1. **It is labeled `[Observed]`, not `[Decision]` or `[Measured]`.** The founder stated the answer in session
+   and declined to produce the written response, so **no attorney letter exists in this repo**. The reader of
+   this document is seeing a relayed answer, not the source.
+2. **"As designed" is load-bearing.** What was cleared is the structure this document describes as the safe
+   one: `lib/stripe/plans.ts:23-26` sells every tier to every business at the same price regardless of the
+   ownership label, and there are **zero ownership checks on the checkout path.** The rule at
+   `.claude/rules/moderation-policy.md` — *"do not make a paid tier, placement, or badge contingent on the
+   `Black-Owned` label"* — is **part of the cleared design and stays binding.** Gating a paid product by
+   owner race would put the platform back on the *Fearless Fund* fact pattern **outside the scope of this
+   answer**, and would need a fresh referral.
+3. **The badge touchpoint is not covered.** Part 2 Finding 5 — undefined "Verified / BLACQList Certified"
+   criteria — was flagged here as a *second* §1981 surface if the badge ever becomes a paid or contractual
+   benefit. Certification is currently automatic and free (six computed criteria, no human grant), which is
+   why it is not implicated. **It becomes implicated the moment it is sold.** `[Needs professional review]`
+   still applies to Finding 5 on its own terms.
+
+**Also not covered:** the tax + payout model for marketplace checkout (ops referral **E5**, CPA + attorney),
+which gates *going live* with checkout rather than building it. And the arbitration/class-waiver question at
+Part 2 Finding 3, which is a different theory entirely.
+
 ### Two traps to avoid
 
 - **Don't over-rely on the Georgia forum/choice-of-law clause (Terms §12) for this risk.** `[Inference]` It
@@ -152,9 +186,12 @@ Honesty cuts both ways; these are genuine strengths, several **code-verified** t
 
 ## Part 4 — Prioritized action list
 
-1. **Before switching on paid features:** engage a **civil-rights / constitutional litigation attorney** on
-   the §1981 / *Fearless Fund* structure of paid tiers and the "Certified" badge (Part 1). *Highest priority;
-   gating decision for monetization.* `[Needs professional review]`
+1. ~~**Before switching on paid features:** engage a **civil-rights / constitutional litigation attorney** on
+   the §1981 / *Fearless Fund* structure of paid tiers and the "Certified" badge (Part 1).~~ ✅ **DONE —
+   answered clean, no conditions, 2026-08-27** `[Observed — founder, 2026-08-26]`. See *"✅ ANSWERED"* in
+   Part 1 for the three limits on that clearance. **The badge half is not covered** — certification is
+   automatic and free today, so it is not implicated; it becomes implicated the moment it is sold, and
+   Finding 5 keeps its own `[Needs professional review]` tag.
 2. **Fix the "anonymized" wording** in Privacy §2 (or anonymize `analytics_events`) — Finding 1. *Fast, high-value.*
 3. **Implement receipt PAN redaction / handling** and reflect it in Privacy §4 — Finding 2.
 4. **Decide on arbitration + class-action waiver** with counsel — Finding 3.

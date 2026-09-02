@@ -780,9 +780,9 @@ Systemic form of the same defect = ticket **105** (enforce tier limits at call s
 **Description.** Adds paid posting and promotion for jobs and events, extending revenue beyond subscriptions and sponsorship into the engagement surfaces. Done when a paid posting/promotion flow works end-to-end.
 
 **Checklist.**
-- Paid job posting
+- ✅ **Paid job posting** — **2026-08-26.** Model C shipped: an included allowance plus paid overflow. Free 0 · Starter 0 · **Growth 1** · **Premium 3** included postings per 30 days; additional postings **$9.99 / 30 days** (`[Decision — founder, 2026-08-21]`, decision-log 013–016). Grandfathered at `JOB_LIMIT_ENFORCED_FROM = 2026-08-21T00:00:00Z`. The four-rung ladder lives in `lib/actions/listings/submitListingForReview.ts:65-128` — grandfather → already-paid → allowance → checkout — and the `draft→pending` transition happens **in the webhook after Stripe confirms**, never optimistically at submit.
 - Paid event promotion
-- Billing wired to Stripe
+- ✅ **Billing wired to Stripe** — **2026-08-26.** `FEATURE_PAID_POSTINGS=on` at Production; `dpl_GwfeQLgraUTAmeKvHZpnq41Ttnz3` live. Verified twice: the full webhook loop on staging via `stripe listen` against TBL2 (ledger row `paid`/`999`/`usd`, idempotent resend, `count(*)` stayed 1), then on production a real owner submit redirecting to a **live** $9.99 Checkout page — cancelled, `job_posting_purchases` count still `0` `[Measured — 2026-08-26]`. Expiry sweep armed in the same redeploy (`CRON_SECRET`; the cron route went `503` → `401`).
 
 ---
 

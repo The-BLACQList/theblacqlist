@@ -23,6 +23,7 @@
     "brand:assets": "npx tsx scripts/generate-brand-assets.ts",
     "seed:launch": "npx tsx scripts/seed-launch-listings.ts",
     "seed:editorial": "npx tsx scripts/seed-editorial-launch.ts",
+    "seed:marketplace-demo": "npx tsx scripts/seed-marketplace-demo.ts",
     "test:seed-idempotent": "bash scripts/check-seed-idempotent.sh",
     "stripe:setup-products": "npx tsx scripts/stripe/setup-products.ts",
     "stripe:sync-price-ids": "npx tsx scripts/stripe/sync-price-ids.ts",
