@@ -23,28 +23,12 @@ import {
   type ReflectionState,
 } from '@/lib/actions/tour/submitReflection'
 import { REFLECTION_MIN_LENGTH } from '@/lib/tour/steps'
-import { ClaimTrialButton } from './ClaimTrialButton'
-
 // Prefix-hidden routes. The rail belongs on the public marketplace surfaces
 // the tour walks (search, listings, collections, reviews) — not over the
-// admin console, the coming-soon gate, auth flows, or onboarding.
-const HIDDEN_PREFIXES = [
-  '/admin',
-  '/coming-soon',
-  '/auth',
-  '/sign-in',
-  '/sign-up',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email',
-  '/onboarding',
-] as const
-
-function isHiddenPath(pathname: string): boolean {
-  return HIDDEN_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-  )
-}
+// admin console, the coming-soon gate, auth flows, or onboarding. The policy
+// lives in lib/tour/routes.ts so it is testable outside a client chunk.
+import { isHiddenPath } from '@/lib/tour/routes'
+import { ClaimTrialButton } from './ClaimTrialButton'
 
 // Mirrors the /api/tour/state response shape. Kept local so the client chunk
 // carries no server-module imports.
