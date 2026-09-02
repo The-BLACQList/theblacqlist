@@ -11,6 +11,9 @@
 //   * the migration SQL       — all five listing_details_job policies and the
 //     eight-value entity_type CHECK, in the style of account-surfaces.test.ts,
 //     so dropping one fails CI instead of 404-ing every job page.
+//   * the two apply forms     — the apply-link / apply-email pair is a one-of
+//     rule on the server, so the required marker belongs on the fieldset legend
+//     and neither input may carry `required` (debt ⑱).
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
@@ -247,6 +250,89 @@ describe('listing_details_job migration', () => {
       'job',
     ]) {
       expect(last, `entity_type CHECK dropped '${t}'`).toContain(`'${t}'`)
+    }
+  })
+})
+
+// ── debt ⑱ — the apply-link / apply-email required marker ────────────────────
+
+/**
+ * Both job forms enforce a *one-of* rule on the server: `createListing.ts:240`
+ * and `updateJobDetails.ts:72` reject a posting that supplies neither an
+ * application link nor an application email, and accept one that supplies
+ * either. Before this guard, neither form told the user that — the pair sat in
+ * a bare <div> with no required marker anywhere on it, so the rule was only
+ * discoverable by submitting and being refused.
+ *
+ * The marker belongs on the <legend>, and `required` belongs on neither input.
+ * Marking a field required would be wrong twice over: the browser would block a
+ * posting that filled in the *other* field, and a screen reader would announce
+ * a requirement the server does not have. The group is what is required.
+ *
+ * Read as source text for the same reason as form-input-preservation.test.ts —
+ * there is no @testing-library here, and what is under test is a property of
+ * the JSX, not of any runtime interaction.
+ */
+
+const APPLY_FORMS = [
+  {
+    label: 'SubmitJobForm (public /add-job)',
+    file: 'components/listings/SubmitJobForm.tsx',
+  },
+  {
+    label: 'JobDetailsSection (owner dashboard edit)',
+    file: 'components/dashboard/JobDetailsSection.tsx',
+  },
+] as const
+
+/** The <fieldset>…</fieldset> block that holds the apply pair, or undefined. */
+function readApplyFieldset(relPath: string): string | undefined {
+  const source = readFileSync(path.resolve(process.cwd(), relPath), 'utf8')
+
+  return source
+    .split('<fieldset')
+    .slice(1)
+    .map((chunk) => {
+      const end = chunk.indexOf('</fieldset>')
+      // A `<fieldset` with no close means the matcher no longer understands the
+      // file; drop the chunk rather than let slice(0, -1) silently truncate it.
+      return end === -1 ? null : chunk.slice(0, end)
+    })
+    .find((chunk): chunk is string => chunk !== null && chunk.includes('name="apply_url"'))
+}
+
+describe('debt ⑱ — the apply-link / apply-email group is marked required', () => {
+  it.each(APPLY_FORMS)('$label', ({ file }) => {
+    const fieldset = readApplyFieldset(file)
+
+    expect(
+      fieldset,
+      `${file}: the apply_url / apply_email pair is not inside a <fieldset> — there is nowhere to put the required marker`
+    ).toBeDefined()
+    const block = fieldset as string
+
+    // Both halves of the one-of rule must live in the same group, or the legend
+    // is not speaking for the rule the server actually enforces.
+    expect(block, `${file}: apply_email is not in the same fieldset as apply_url`).toContain(
+      'name="apply_email"'
+    )
+
+    const legend = /<legend\b[\s\S]*?<\/legend>/.exec(block)?.[0]
+    expect(legend, `${file}: the apply fieldset has no <legend>`).toBeDefined()
+    expect(
+      legend,
+      `${file}: the apply fieldset's legend carries no required marker — the one-of rule is invisible until the server refuses the submission`
+    ).toContain('*')
+
+    // Neither input may be `required`: HTML would then demand both, and the
+    // server demands either.
+    for (const match of block.matchAll(/<input\b([\s\S]*?)\/?>/g)) {
+      const attrs = match[1] ?? ''
+      const name = /\bname="([^"]*)"/.exec(attrs)?.[1] ?? '(unnamed)'
+      expect(
+        /\brequired\b/.test(attrs),
+        `${file}: <input name="${name}"> is marked required, but the server accepts a posting that supplies only the other field`
+      ).toBe(false)
     }
   })
 })

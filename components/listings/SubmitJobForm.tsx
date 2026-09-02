@@ -233,40 +233,50 @@ export function SubmitJobForm({ categories }: Props) {
         </div>
       </fieldset>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="apply_url" className={labelCls}>
-            Application link
-          </label>
-          <input
-            id="apply_url"
-            name="apply_url"
-            type="url"
-            className={inputCls('apply_url')}
-            placeholder="https://…"
-          />
-          {fieldErr('apply_url') && <p role="alert" className={errCls}>{fieldErr('apply_url')}</p>}
+      {/* The `*` belongs on the legend, not on either input. createListing.ts
+          requires ONE of these two, so marking a field required would be wrong
+          on both counts: the browser would block a posting that supplied the
+          other one, and a screen reader would announce a requirement the server
+          does not have. The group is what is required. */}
+      <fieldset className="flex flex-col gap-3 border-t border-charcoal/10 pt-5">
+        <legend className={cn(labelCls, 'px-0')}>
+          How people apply <span className="text-red-500" aria-hidden="true">*</span>
+        </legend>
+        <p className="font-subhead text-xs text-charcoal-soft">
+          Add at least one. It becomes the Apply button on your posting.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="apply_url" className={labelCls}>
+              Application link
+            </label>
+            <input
+              id="apply_url"
+              name="apply_url"
+              type="url"
+              className={inputCls('apply_url')}
+              placeholder="https://…"
+            />
+            {fieldErr('apply_url') && <p role="alert" className={errCls}>{fieldErr('apply_url')}</p>}
+          </div>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="apply_email" className={labelCls}>
+              Or an email to apply to
+            </label>
+            <input
+              id="apply_email"
+              name="apply_email"
+              type="email"
+              autoComplete="email"
+              className={inputCls('apply_email')}
+              placeholder="hiring@example.com"
+            />
+            {fieldErr('apply_email') && (
+              <p role="alert" className={errCls}>{fieldErr('apply_email')}</p>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="apply_email" className={labelCls}>
-            Or an email to apply to
-          </label>
-          <input
-            id="apply_email"
-            name="apply_email"
-            type="email"
-            autoComplete="email"
-            className={inputCls('apply_email')}
-            placeholder="hiring@example.com"
-          />
-          {fieldErr('apply_email') && (
-            <p role="alert" className={errCls}>{fieldErr('apply_email')}</p>
-          )}
-        </div>
-      </div>
-      <p className="font-subhead text-xs text-charcoal-soft -mt-3">
-        Add at least one. It becomes the Apply button on your posting.
-      </p>
+      </fieldset>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="closes_at" className={labelCls}>
