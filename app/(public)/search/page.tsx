@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/discovery/SearchBar'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
+import { TourWitness } from '@/components/tour/TourWitness'
 
 export const metadata: Metadata = {
   title: 'Search | The BLACQList',
@@ -63,13 +64,18 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
 
   return (
-    <DiscoveryGrid
-      entities={result.entities}
-      total={result.total}
-      query={query}
-      nextPageUrl={nextPageUrl}
-      currentPage={page}
-    />
+    <>
+      {/* Tour evidence: a real search ran in this render. Sits after the
+          empty-query early return — visiting /search is not searching. */}
+      <TourWitness step="search_ran" />
+      <DiscoveryGrid
+        entities={result.entities}
+        total={result.total}
+        query={query}
+        nextPageUrl={nextPageUrl}
+        currentPage={page}
+      />
+    </>
   )
 }
 
