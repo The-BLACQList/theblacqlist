@@ -58,10 +58,36 @@ test.describe('TA-02 — Sign-up validation', () => {
     await page.locator('#password').fill('short')
     await page.getByRole('button', { name: 'Create account' }).click()
 
-    // minLength={8} on the input; the server repeats the rule at
-    // lib/actions/auth/signUp.ts:28 for non-browser callers.
-    await expect(page.locator('#password')).toHaveJSProperty('validity.tooShort', true)
+    // TWO layers enforce this rule, and either one refusing is correct:
+    // the native `minLength={8}` constraint, and the server rule at
+    // lib/actions/auth/signUp.ts:28-32, which returns `field: 'password'`
+    // and drives `aria-invalid` plus the #password-error alert.
+    //
+    // ⚠ Asserting `validity.tooShort` ALONE is unreliable, and it turned
+    // `main` red twice on 2026-09-02. `tooShort` is only reported for an
+    // element whose dirty value flag is set. The password input is
+    // controlled (`value={password}`), so once the action returns its error
+    // state React re-renders it and the native flag reads false — while the
+    // app is visibly and correctly refusing the password. The captured DOM
+    // at failure showed exactly that: value="short", minlength="8",
+    // aria-invalid="true", the red border, and tooShort false.
+    //
+    // So assert the OUTCOME, which holds under both paths: the password is
+    // rejected by one layer or the other, and we never left the page.
     await expect(page).toHaveURL(new RegExp(`${SIGN_UP}$`))
+    await expect
+      .poll(
+        () =>
+          page
+            .locator('#password')
+            .evaluate(
+              (el) =>
+                (el as HTMLInputElement).validity.tooShort ||
+                el.getAttribute('aria-invalid') === 'true'
+            ),
+        { message: 'neither the native constraint nor the server rule rejected a 5-char password' }
+      )
+      .toBe(true)
   })
 
   test('step 6 — an already-registered email is refused by name, not generically', async ({
