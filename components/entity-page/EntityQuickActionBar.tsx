@@ -77,7 +77,8 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             listingId={entity.id}
             initialSaved={initialSaved}
             tabIndex={visible ? 0 : -1}
-            className="flex-shrink-0 size-10 bg-white/10 hover:bg-white/20 text-white"
+            surface="bar"
+            className="flex-shrink-0"
           />
           <ShareButton
             listingName={entity.name}
@@ -140,7 +141,8 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             listingId={entity.id}
             initialSaved={initialSaved}
             tabIndex={visible ? 0 : -1}
-            className="size-9 bg-white/10 hover:bg-white/20 text-white"
+            surface="bar"
+            className="size-9"
           />
 
           <ShareButton
