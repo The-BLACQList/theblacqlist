@@ -383,3 +383,87 @@ describe('z-index — the rail stays under the header', () => {
     expect(Math.max(...levels), file).toBeLessThan(50)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F. "We saw it — now write your note" is visible without expanding a row
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// The founder saved a listing and reported the tour check never fired. It did:
+// the server moved the step `act → reflect`. What failed is that a collapsed
+// `act` row and a collapsed `reflect` row rendered byte-identically and the
+// header printed one number that does not count `reflect`, so nothing on screen
+// moved.
+//
+// The arithmetic is pinned in tester-tour-progress.test.ts, where it can be
+// called. vitest here is `env: node` with no jsdom, so the RENDERING half can
+// only be held by reading source text. That is a weaker guard than a render
+// assertion and is written down as such — it catches a deletion, not a
+// regression in behaviour.
+
+describe('reflect state — the middle status is visible on a collapsed row', () => {
+  const strip = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+
+  const read = (rel: string) => strip(readFileSync(path.resolve(process.cwd(), rel), 'utf8'))
+
+  const row = () => read('components/tour/TourStepRow.tsx')
+  const rail = () => read('components/tour/TourRail.tsx')
+
+  it('derives the row marker from rowMarker, not from a done/not-done boolean', () => {
+    // The precise line that caused the bug was
+    //   const done = step.status === 'done'
+    // — a two-state question asked of a four-state field. If it comes back,
+    // `act` and `reflect` collapse into one appearance again.
+    const src = row()
+    expect(src).toContain('rowMarker')
+    expect(src).not.toMatch(/const\s+done\s*=\s*step\.status\s*===\s*'done'/)
+  })
+
+  it('renders a third glyph for the reflect state', () => {
+    const src = row()
+    expect(src).toMatch(/\bPencil\b/)
+    expect(src).toMatch(/awaitingNote/)
+  })
+
+  it('tells a screen reader what a reflect row is actually waiting on', () => {
+    // "not done yet" is true of a reflect step and useless to the tester — the
+    // numeral/check/pencil is aria-hidden, so this string is the only place the
+    // state reaches a screen reader.
+    expect(row()).toMatch(/saved, write your note/i)
+  })
+
+  it('shows the affordance while the row is still collapsed', () => {
+    // The whole point: visible WITHOUT expanding. `!expanded` is the load-bearing
+    // half — an affordance that only appears once the row is open tells the
+    // tester nothing they did not already know by opening it.
+    const src = row()
+    expect(src).toContain('Write your note')
+    expect(src).toMatch(/awaitingNote\s*&&\s*!expanded/)
+  })
+
+  it('counts pending reflections separately from done steps', () => {
+    const src = rail()
+    expect(src).toContain('pendingReflectionCount')
+    expect(src).toContain('to write')
+  })
+
+  it('prints the same count line in both the header and the collapsed pill', () => {
+    // The collapsed pill is what a tester who tucked the rail away is looking
+    // at. If only the expanded header gained the second number, the founder's
+    // exact complaint survives for anyone who collapsed the panel.
+    const matches = rail().match(/countLine/g) ?? []
+    expect(matches.length).toBeGreaterThanOrEqual(3) // one definition, two uses
+  })
+
+  it('opens the row that just moved, keyed on the sequence not the key', () => {
+    // A tester can produce the same key twice — save, close the row by hand,
+    // save again. Keyed on the key alone the second transition reads as "no
+    // change" and the row stays shut.
+    const src = rail()
+    expect(src).toMatch(/setOpenStep\(attentionKey\)/)
+    expect(src).toMatch(/\[attentionKey,\s*attentionSeq\]/)
+  })
+})

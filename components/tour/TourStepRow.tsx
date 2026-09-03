@@ -17,9 +17,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Check, ChevronDown, Crosshair } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, Crosshair, Pencil } from 'lucide-react'
 
 import { TOUR_STEP_TARGETS, planSpotlight, type TourTarget } from '@/lib/tour/targets'
+import { rowMarker } from '@/lib/tour/progress'
 import {
   applySpotlight,
   prefersReducedMotion,
@@ -52,7 +53,15 @@ export function TourStepRow({
   const rowRef = useRef<HTMLLIElement | null>(null)
   const wasExpanded = useRef(expanded)
   const panelId = `tour-step-panel-${step.key}`
-  const done = step.status === 'done'
+  // ⚠ The founder's actual bug lived in the line this replaces. It read
+  // `const done = step.status === 'done'`, which is a two-state question asked
+  // of a four-state field — so `act` and `reflect` both answered "false" and
+  // rendered byte-identically. Saving a listing DID move the step server-side;
+  // the row just had no way to say so. Three states now, derived by a pure
+  // function so the mapping is unit-testable outside a .tsx file.
+  const marker = rowMarker(step.status)
+  const done = marker === 'check'
+  const awaitingNote = marker === 'pencil'
 
   // The rail is a `max-h-[70vh]` panel whose body scrolls. Step 6 sits at the
   // bottom of six rows, so the reflection textarea opened BELOW the fold of the
@@ -130,16 +139,43 @@ export function TourStepRow({
           className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border font-subhead text-xs font-bold ${
             done
               ? 'border-amber-gold bg-amber-gold/20 text-amber-gold'
-              : 'border-white/25 text-cream/70'
+              : awaitingNote
+                ? 'border-amber-gold text-amber-gold'
+                : 'border-white/25 text-cream/70'
           }`}
         >
-          {done ? <Check className="size-3.5" /> : index + 1}
+          {done ? (
+            <Check className="size-3.5" />
+          ) : awaitingNote ? (
+            <Pencil className="size-3" />
+          ) : (
+            index + 1
+          )}
         </span>
-        <span className="min-w-0 flex-1 font-subhead text-sm font-bold text-cream">
+        <span className="flex min-w-0 flex-1 flex-col font-subhead text-sm font-bold text-cream">
           {step.title}
-          {/* The numeral/check is aria-hidden, so state reaches a screen reader
-              here or not at all. */}
-          <span className="sr-only">{done ? ' — done' : ' — not done yet'}</span>
+          {/* The numeral/check/pencil is aria-hidden, so state reaches a screen
+              reader here or not at all. The middle state needs its own words —
+              "not done yet" is true of a reflect step but tells a tester
+              nothing about what is actually being waited on. */}
+          <span className="sr-only">
+            {done ? ' — done' : awaitingNote ? ' — saved, write your note' : ' — not done yet'}
+          </span>
+          {/* The visible half of the same fact, and the reason it sits INSIDE
+              the toggle button rather than beside it: the whole row is already
+              the click target, so the hint is tappable without becoming a
+              second focusable control or nesting a button in a button. It is
+              aria-hidden because the sr-only line above already says this to a
+              screen reader — announcing it twice is worse than once. */}
+          {awaitingNote && !expanded && (
+            <span
+              aria-hidden="true"
+              className="mt-0.5 flex items-center gap-1 font-subhead text-xs font-normal text-amber-gold"
+            >
+              Write your note
+              <ArrowRight className="size-3" />
+            </span>
+          )}
         </span>
         <ChevronDown
           aria-hidden="true"

@@ -10,9 +10,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   announceTransition,
+  attentionStep,
   currentStepKey,
   doneCount,
   optionalUnfinishedSteps,
+  pendingReflectionCount,
+  rowMarker,
   statusFingerprint,
   type ProgressSnapshot,
   type ProgressStatus,
@@ -190,6 +193,138 @@ describe('optionalUnfinishedSteps', () => {
       completedAt: '2026-09-02T12:00:00Z',
     }
     expect(optionalUnfinishedSteps(snap)).toEqual([])
+  })
+})
+
+describe('pendingReflectionCount', () => {
+  // The founder's report, as arithmetic: they saved a listing, the server moved
+  // the step `act → reflect`, and the rail printed the same count it printed
+  // before. This is the second number the rail now prints so that stops being
+  // true — NOT a widening of `doneCount`.
+  it('counts nothing on a fresh enrollment', () => {
+    expect(pendingReflectionCount(ALL_ACT.steps)).toBe(0)
+  })
+
+  it('counts the steps whose evidence landed but whose note has not', () => {
+    const steps = snapshot({
+      search_ran: 'done',
+      listing_saved: 'reflect',
+      review_or_correction: 'reflect',
+      collection_browsed: 'retry',
+    }).steps
+    expect(pendingReflectionCount(steps)).toBe(2)
+  })
+
+  it('is disjoint from doneCount — a reflect step is progress, not completion', () => {
+    // If these two ever double-count the same step, the rail reports "3/6 · 1 to
+    // write" for two steps of real work and overstates what the tester has
+    // finished. Sum-of-parts is the check that keeps them honest.
+    const snap = snapshot({
+      search_ran: 'done',
+      listing_opened: 'done',
+      listing_saved: 'reflect',
+    })
+    expect(doneCount(snap.steps)).toBe(2)
+    expect(pendingReflectionCount(snap.steps)).toBe(1)
+    expect(doneCount(snap.steps) + pendingReflectionCount(snap.steps)).toBeLessThanOrEqual(
+      snap.steps.length
+    )
+  })
+
+  it('drops back to zero once the note is written', () => {
+    const after = snapshot({ listing_saved: 'done' }).steps
+    expect(pendingReflectionCount(after)).toBe(0)
+    expect(doneCount(after)).toBe(1)
+  })
+})
+
+describe('rowMarker', () => {
+  // The bug this replaces: `const done = step.status === 'done'` — a two-state
+  // question asked of a four-state field, so `act` and `reflect` both answered
+  // "false" and a collapsed row rendered byte-identically before and after a
+  // save. Three glyphs now, and the mapping is pure so it can be pinned here
+  // rather than only by reading .tsx source text.
+  it('draws a check for a finished step', () => {
+    expect(rowMarker('done')).toBe('check')
+  })
+
+  it('draws a pencil for a step waiting on its note', () => {
+    expect(rowMarker('reflect')).toBe('pencil')
+  })
+
+  it('draws the plain numeral for work not started', () => {
+    expect(rowMarker('act')).toBe('number')
+  })
+
+  it('draws the plain numeral for a retry, not a pencil', () => {
+    // `retry` means the server could NOT see the evidence. Showing a pencil
+    // would tell the tester to write a note about something that did not
+    // register — the exact false claim verify.ts's retry copy exists to avoid.
+    expect(rowMarker('retry')).toBe('number')
+  })
+
+  it('gives act and reflect different glyphs', () => {
+    expect(rowMarker('act')).not.toBe(rowMarker('reflect'))
+  })
+})
+
+describe('attentionStep', () => {
+  it('names nothing on first load', () => {
+    // Same rule as announceTransition, for the same reason: an arrival is not a
+    // change. Auto-expanding a row on page load would fight the tester's own
+    // choice of which row is open.
+    expect(attentionStep(null, ALL_ACT)).toBeNull()
+  })
+
+  it('names nothing when nothing moved', () => {
+    expect(attentionStep(ALL_ACT, snapshot({}))).toBeNull()
+  })
+
+  it('names the step that just became writable', () => {
+    // The founder's exact sequence: save a listing, the step moves to reflect,
+    // and this is what tells the rail which row to open.
+    expect(attentionStep(ALL_ACT, snapshot({ listing_saved: 'reflect' }))).toBe('listing_saved')
+  })
+
+  it('names the step that just finished', () => {
+    expect(attentionStep(ALL_ACT, snapshot({ search_ran: 'done' }))).toBe('search_ran')
+  })
+
+  it('prefers a newly done step over a newly reflect one', () => {
+    // Only one row can be open, so the order has to be decided rather than left
+    // to array position. Matches announceTransition: finishing outranks
+    // becoming writable.
+    const next = snapshot({ listing_saved: 'reflect', search_ran: 'done' })
+    expect(attentionStep(ALL_ACT, next)).toBe('search_ran')
+  })
+
+  it('does not open a row for a step going backwards', () => {
+    const prev = snapshot({ search_ran: 'done' })
+    expect(attentionStep(prev, snapshot({ search_ran: 'retry' }))).toBeNull()
+  })
+
+  it('ignores a step the previous snapshot had never heard of', () => {
+    // A step appearing mid-session is a payload shape change, not something the
+    // tester just did — yanking a row open for it would be a false claim.
+    const prev: ProgressSnapshot = {
+      steps: [{ key: 'search_ran', title: 'Run a real search', status: 'act' }],
+      completedAt: null,
+    }
+    const next: ProgressSnapshot = {
+      steps: [
+        { key: 'search_ran', title: 'Run a real search', status: 'act' },
+        { key: 'listing_opened', title: 'Open a listing', status: 'done' },
+      ],
+      completedAt: null,
+    }
+    expect(attentionStep(prev, next)).toBeNull()
+  })
+
+  it('names a retry step that finally registered', () => {
+    // retry → reflect is a real movement: the re-read found the evidence. The
+    // row must open so the tester sees the form that just appeared.
+    const prev = snapshot({ listing_saved: 'retry' })
+    expect(attentionStep(prev, snapshot({ listing_saved: 'reflect' }))).toBe('listing_saved')
   })
 })
 

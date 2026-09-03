@@ -31,6 +31,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { TOUR_STEP_TARGETS } from '@/lib/tour/targets'
 import {
   announceTransition,
+  attentionStep,
   statusFingerprint,
   type ProgressSnapshot,
 } from '@/lib/tour/progress'
@@ -58,11 +59,30 @@ export interface TourState {
 
 export type LoadPhase = 'loading' | 'ready' | 'failed' | 'gone'
 
+/**
+ * The step that just moved, plus a monotonic sequence number.
+ *
+ * ⚠ The sequence is load-bearing, not decoration. The rail opens `key` in an
+ * effect, and a tester who saves a listing, collapses the row themselves, then
+ * saves another listing produces the SAME key twice — which a bare string would
+ * render as "no change" and the row would stay shut. `seq` makes every
+ * transition distinct, so the effect fires once per actual movement.
+ */
+export interface TourAttention {
+  key: string
+  seq: number
+}
+
 export interface TourStateHandle {
   phase: LoadPhase
   tour: TourState | null
   /** Latest live-region line. Empty string when there is nothing to announce. */
   announcement: string
+  /**
+   * The step that moved on the most recent payload, or null when nothing has.
+   * Null on first load — an arrival is not a change (see `attentionStep`).
+   */
+  attention: TourAttention | null
   /** True while a background chase is in flight, for the manual check button. */
   checking: boolean
   refresh: () => void
@@ -105,6 +125,7 @@ export function useTourState(): TourStateHandle {
   const [phase, setPhase] = useState<LoadPhase>('loading')
   const [tour, setTour] = useState<TourState | null>(null)
   const [announcement, setAnnouncement] = useState('')
+  const [attention, setAttention] = useState<TourAttention | null>(null)
   const [checking, setChecking] = useState(false)
   const [fetchKey, setFetchKey] = useState(0)
 
@@ -142,15 +163,20 @@ export function useTourState(): TourStateHandle {
     }
     const fp = statusFingerprint(snapshot)
     const moved = fp !== fingerprint.current
-    // Diffed BEFORE `previous` is overwritten, and null on first load — a live
-    // region announces changes, not arrivals.
+    // Both diffed BEFORE `previous` is overwritten, and both null on first
+    // load — a live region announces changes, not arrivals, and the same is
+    // true of opening a row: page load must not fight the tester's own choice.
     const line = announceTransition(previous.current, snapshot)
+    const moving = attentionStep(previous.current, snapshot)
 
     fingerprint.current = fp
     previous.current = snapshot
     setTour(next)
     setPhase('ready')
     if (line !== null) setAnnouncement(line)
+    if (moving !== null) {
+      setAttention((prev) => ({ key: moving, seq: (prev?.seq ?? 0) + 1 }))
+    }
     return moved
   }, [])
 
@@ -256,7 +282,7 @@ export function useTourState(): TourStateHandle {
     setFetchKey((k) => k + 1)
   }, [])
 
-  return { phase, tour, announcement, checking, refresh, retry }
+  return { phase, tour, announcement, attention, checking, refresh, retry }
 }
 
 /**
