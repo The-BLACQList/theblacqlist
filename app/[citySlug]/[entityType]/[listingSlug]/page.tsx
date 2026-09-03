@@ -281,8 +281,14 @@ export default async function EntityPage({ params }: PageProps) {
         </>
       ) : (
         <>
-          {/* At a Glance — bg-white */}
-          <EntityAtAGlance entity={entity} />
+          {/* At a Glance — bg-white. id="visit" is getCtaHref's fallback anchor
+              for a listing with an address/hours but no configured CTA; the two
+              templates put the same id on their own At a Glance block, so it
+              lives on the call site here rather than inside the component (which
+              both render) to avoid a duplicate id on template pages. */}
+          <div id="visit" className="scroll-mt-32">
+            <EntityAtAGlance entity={entity} />
+          </div>
 
           {/* Owner-managed links (book / menu / order / socials) — bg-white; hidden if none */}
           <EntityLinks entity={entity} />

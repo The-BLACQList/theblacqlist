@@ -1,4 +1,5 @@
 import { EntityCard } from '@/components/entities/EntityCard'
+import { ENTITY_TYPE_LABEL } from '@/components/discovery/facetConstants'
 import type { EntityPageData } from '@/types'
 
 interface Props {
@@ -10,6 +11,10 @@ export function EntityRelatedDiscovery({ entity }: Props) {
 
   // Hidden if fewer than 3 related entities — spec rule
   if (!related || related.length < 3) return null
+
+  // The rail is entity_type-scoped, so the scroller can name what is in it
+  // instead of calling a rail of job postings "Related businesses".
+  const relatedLabel = `Related ${(ENTITY_TYPE_LABEL[entity.entity_type] ?? 'Listings').toLowerCase()}`
 
   return (
     <section aria-labelledby="related-heading" className="bg-pale-lavender py-12 md:py-16">
@@ -31,7 +36,7 @@ export function EntityRelatedDiscovery({ entity }: Props) {
         <div
           className="md:hidden flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory"
           role="list"
-          aria-label="Related businesses"
+          aria-label={relatedLabel}
         >
           {related.map((e) => (
             <div key={e.id} role="listitem" className="flex-shrink-0 w-[280px] snap-start">

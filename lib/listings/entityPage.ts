@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -41,6 +42,9 @@ type RawRow = {
   ships_nationwide: boolean
   owner_user_id: string | null
   category_id: string
+  // Selected for the related-listings query, which prefers same-city matches.
+  // Nullable: a national/online listing may have no city row.
+  city_id: string | null
   categories: { name: string; slug: string } | null
   cities: {
     name: string
@@ -75,7 +79,7 @@ const LISTING_SELECT = `
   id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
-  avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id,
+  avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id, city_id,
   categories!listings_category_id_fkey(name, slug),
   cities!listings_city_id_fkey(
     name, slug,
@@ -131,11 +135,38 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const raw = data as unknown as RawRow
 
   const sb = supabase as unknown as SupabaseClient
+
+  // Related listings, in two passes. This used to be a single query matching
+  // category_id alone, which put a job posting under a restaurant's "You Might
+  // Also Like" whenever they shared a category, and happily suggested a business
+  // three states away. Both passes now pin entity_type — a related card for a
+  // restaurant should be a restaurant — and the first also pins the city, so a
+  // local listing surfaces local neighbours before national ones.
+  //
+  // A listing with no city row (national / online-only) matches other city-less
+  // listings instead: that is its actual cohort, not an arbitrary city's.
+  const relatedBase = () =>
+    supabase
+      .from('listings')
+      .select(LISTING_SELECT)
+      .eq('entity_type', raw.entity_type)
+      .eq('category_id', raw.category_id)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .neq('id', raw.id)
+      .order('save_count', { ascending: false })
+      .limit(RELATED_LIMIT)
+
+  const relatedLocalQuery = raw.city_id
+    ? relatedBase().eq('city_id', raw.city_id)
+    : relatedBase().is('city_id', null)
+
   const [
     { data: servicesData },
     { data: mediaData },
     { data: reviewsData },
-    { data: relatedData },
+    { data: relatedLocalData },
+    { data: relatedAnywhereData },
     { data: attrData },
     { data: videoData },
     { data: serviceGroupData },
@@ -165,15 +196,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .limit(10),
-    supabase
-      .from('listings')
-      .select(LISTING_SELECT)
-      .eq('category_id', raw.category_id)
-      .eq('status', 'published')
-      .is('deleted_at', null)
-      .neq('id', raw.id)
-      .order('save_count', { ascending: false })
-      .limit(6),
+    relatedLocalQuery,
+    relatedBase(),
     sb
       .from('listing_attributes')
       .select(
@@ -607,7 +631,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   }
 
   // Related cards — attach event start dates fail-soft so related event cards show a date.
-  const related = (relatedData ?? []).map((r) => toDiscoveryEntity(r as unknown as RawRow))
+  const related = mergeRelated(
+    relatedLocalData as unknown as RawRow[] | null,
+    relatedAnywhereData as unknown as RawRow[] | null
+  ).map(toDiscoveryEntity)
   const relatedEventIds = related.filter((e) => e.entity_type === 'event').map((e) => e.id)
   if (relatedEventIds.length > 0) {
     const { data: relEvRows } = await sb
