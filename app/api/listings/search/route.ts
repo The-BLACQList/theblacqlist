@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { escapeLikePattern } from '@/lib/db/like'
 import { createClient } from '@/lib/supabase/server'
 
 /**
@@ -29,15 +30,6 @@ type RawRow = {
   name: string
   slug: string
   cities: { name: string } | null
-}
-
-/**
- * `%` and `_` are wildcards to ilike, so a user typing "50%" would otherwise
- * match far more than they asked for. PostgREST parameterizes the value, so
- * this is a correctness fix, not an injection fix.
- */
-function escapeLikePattern(value: string): string {
-  return value.replace(/[\\%_]/g, (ch) => `\\${ch}`)
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
