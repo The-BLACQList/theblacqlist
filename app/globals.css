@@ -254,6 +254,38 @@
   }
 }
 
+/* ─── Save control: confirmation pop (components/ui/save-icon-button) ───────
+   A single scale-up on the control the user just tapped, so a save on a dense
+   card grid reads as "that one, just now" rather than a colour that quietly
+   differs from its 23 neighbours.
+
+   Two constraints are load-bearing and asserted in tests/save-controls.test.ts:
+
+     * There is NO base rule. The `animation` declaration exists only inside
+       `prefers-reduced-motion: no-preference` — the `.blacq-reveal` /
+       `.blacq-tour-spotlight` house pattern, not the legacy kill-switch form
+       `.blacq-map-highlight` uses above. Reduced-motion users get the colour
+       change, which is the actual signal; the motion is the garnish.
+     * No `transform` outside the animation, so the class is inert when the
+       animation does not exist and the button never shifts on its own.
+
+   ⚠ Because the animation genuinely does not exist under reduced motion,
+   `animationend` never fires there — SaveIconButton clears `popping` on a
+   timeout as well. Do not remove that fallback. */
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-save-pop {
+    animation: blacq-save-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes blacq-save-pop {
+    from {
+      transform: scale(0.82);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+}
+
 /* MapLibre popup close button: legible over the photo header */
 .blacq-map-popup-wrap .maplibregl-popup-close-button {
   top: 6px;

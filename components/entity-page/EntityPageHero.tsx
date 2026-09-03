@@ -120,10 +120,15 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
             {ctaLabel}
           </a>
 
+          {/* The labelled variant, deliberately: "Save" / "Saved" in words is the
+              single clearest fix for "are these the same action?". `surface`
+              carries the colours — passing a `bg-` class here is what silently
+              overrode the saved state before. */}
           <SaveButton
             listingId={entity.id}
             initialSaved={initialSaved}
-            className="size-11 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+            variant="pill"
+            surface="hero"
           />
 
           <ShareButton

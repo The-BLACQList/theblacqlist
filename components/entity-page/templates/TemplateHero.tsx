@@ -150,10 +150,15 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             </a>
           )}
 
+          {/* Labelled variant + `surface`, matching EntityPageHero. `className`
+              is sizing only here — a `bg-` class would override the saved
+              state, which is exactly the bug this replaced. */}
           <SaveButton
             listingId={entity.id}
             initialSaved={initialSaved}
-            className="size-12 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+            variant="pill"
+            surface="hero"
+            className="h-12 px-6"
           />
         </div>
       </div>
