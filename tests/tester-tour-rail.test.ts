@@ -34,7 +34,7 @@
 // produces those verdicts is tested at tests/tester-tour-evidence.test.ts.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { HIDDEN_PREFIXES, isHiddenPath } from '@/lib/tour/routes'
@@ -327,29 +327,59 @@ describe('z-index — the rail stays under the header', () => {
   // Comments stripped: the file's own header explains that z-40 keeps the rail
   // under the z-50 header, and a scan that read prose would fail on the
   // sentence describing the rule it is enforcing.
-  const railSrc = readFileSync(
-    path.resolve(process.cwd(), 'components/tour/TourRail.tsx'),
-    'utf8'
-  )
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+  const strip = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
 
-  it('positions the rail at z-40', () => {
-    expect(railSrc).toMatch(/\bz-40\b/)
-  })
+  const read = (rel: string) => strip(readFileSync(path.resolve(process.cwd(), rel), 'utf8'))
 
-  it('declares nothing at z-50 or above', () => {
-    // The site header is fixed at z-50. A rail at or above it covers the nav
-    // on every public page — including, for a tester, the way out.
-    const classTokens = railSrc.match(/\bz-(\d+)\b/g) ?? []
-    const arbitrary = railSrc.match(/\bz-\[(\d+)\]/g) ?? []
-    const levels = [
+  // ⚠ The scan is a GLOB, not a single file. It used to read only
+  // TourRail.tsx, which meant that the moment the rail was split into
+  // TourStepRow / TourReflectionForm / a spotlight module, a z-50 element in
+  // any of the new files sailed straight past this guard. Splitting a
+  // component must not disarm the rule the component was carrying.
+  const tourFiles = readdirSync(path.resolve(process.cwd(), 'components/tour'))
+    .filter((f) => f.endsWith('.tsx') || f.endsWith('.ts'))
+    .map((f) => `components/tour/${f}`)
+
+  const levelsIn = (src: string) => {
+    const classTokens = src.match(/\bz-(\d+)\b/g) ?? []
+    const arbitrary = src.match(/\bz-\[(\d+)\]/g) ?? []
+    return [
       ...classTokens.map((t) => Number(t.slice(2))),
       ...arbitrary.map((t) => Number(t.slice(3, -1))),
     ]
+  }
 
-    expect(levels.length).toBeGreaterThan(0)
-    expect(Math.max(...levels)).toBeLessThan(50)
+  it('scans every file in components/tour', () => {
+    // A glob that silently matched nothing would pass every assertion below.
+    expect(tourFiles.length).toBeGreaterThan(0)
+    expect(tourFiles).toContain('components/tour/TourRail.tsx')
+  })
+
+  it('positions the rail at z-40', () => {
+    // Stays pinned to TourRail.tsx specifically: the shell owns the stacking
+    // context, and a split that moved `z-40` into a child would be a real
+    // change worth failing on.
+    expect(read('components/tour/TourRail.tsx')).toMatch(/\bz-40\b/)
+  })
+
+  it('declares a stacking level somewhere in the rail shell', () => {
+    expect(levelsIn(read('components/tour/TourRail.tsx')).length).toBeGreaterThan(0)
+  })
+
+  it.each(
+    // Only files that actually declare a level are worth asserting on — a
+    // presentational child legitimately declares none.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    tourFiles
+  )('%s declares nothing at z-50 or above', (file) => {
+    // The site header is fixed at z-50. A rail at or above it covers the nav
+    // on every public page — including, for a tester, the way out.
+    const levels = levelsIn(read(file))
+    if (levels.length === 0) return
+    expect(Math.max(...levels), file).toBeLessThan(50)
   })
 })
