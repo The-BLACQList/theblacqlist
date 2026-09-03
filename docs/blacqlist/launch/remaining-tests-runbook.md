@@ -262,17 +262,27 @@ These are state/configuration confirmations, not browser tests. Each needs **evi
 2. Confirm **zero** bugs rated **P0** remain open
 3. Any P1 must be documented with accepted-risk sign-off
 
-#### Checklist — M3
-- [ ] All A–M test results compiled
-- [ ] Zero open P0 bugs
-- [ ] Open P1s documented with accepted-risk sign-off from tech lead
-- [ ] Evidence: link to the QA sign-off report
+#### Checklist — M3 ✅ _(closed 2026-09-03)_
+- [x] All A–M test results compiled — `qa-sign-off-report.md`
+- [x] Zero open P0 bugs — re-derived 2026-09-03 against the *current* bug list, not the 2026-06-30 one. Four founder-walkthrough defects fixed and merged since (#113 save/heart, #111+#114 review intent, #112 admin search, #116 dead CTAs / wrong related / raw location slugs).
+- [x] Open P1s documented with accepted-risk sign-off from tech lead — **one open P1**: Discover's *Products & Services* bin returns no businesses (root cause: the bin filters on `entity_type` where the founder's meaning is `location_type`). P1 not P0 by this report's own severity guide — a workaround exists (the other bins and search return every listing). Accepted-risk sign-off: `decision-log.md`, `[Decision — founder, 2026-09-03]`. PRs 7 and 8 remove the defect before the flip.
+- [x] Evidence: link to the QA sign-off report — `docs/blacqlist/launch/qa-sign-off-report.md`; full re-derivation in `docs/blacqlist/ops/launch-gate-signoff-packets.md`
 
 ---
 
 ### M4 — At least one editorial collection published
 
-> **Current state: 0 collections exist.** This gate is NOT met yet. The `collections` table uses `is_active` as the published flag, with a `collection_items` join table linking listings.
+> ### 🔵 NOT A FLIP GATE — post-flip item
+>
+> `[Decision — founder, 2026-09-03]` **M4 is a post-flip item, not a flip gate.** It does not block `COMING_SOON_MODE=false`.
+>
+> **Why this needed deciding at all:** M4 is a condition in `qa-sign-off-report.md` but appears in **no** blocker list — not in `launch-readiness.md`'s seven, not in blocker ⑦'s five sign-offs. `launch-readiness.md` rule 3 closes the blocker set against *additions* as well as subtractions, so whether M4 was consciously dropped or overlooked was `[Unknown]` and was the founder's to answer. It is now answered.
+>
+> **What made "post-flip" defensible:** `launch-readiness.md` already records that quality gaps are not flip gates ("every listing perfect" is explicitly out), and its actual standard is that *every public surface either works or is honestly labelled*. `/collections` clears that standard while empty — it is linked in the public footer (`components/nav/public-footer.tsx:85`), and its empty state reads *"No collections yet. Check back soon. Curated lists are on the way."* `[Observed — app/(public)/collections/page.tsx:52-60, 2026-09-03]`. Empty, reachable, and honest is a valid launch state; empty and misleading would not have been.
+>
+> **Do not re-derive this at the flip checklist.** The steps below stay as the how-to for when the first collection ships (week one), and the seed script lives on unmerged draft PR #91.
+
+> **Current state: 0 collections exist.** The `collections` table uses `is_active` as the published flag, with a `collection_items` join table linking listings.
 
 **To create and publish a collection:**
 
@@ -294,7 +304,7 @@ WHERE c.is_active = true;
 -- Expect > 0 items
 ```
 
-#### Checklist — M4
+#### Checklist — M4 🔵 _(post-flip — these boxes do NOT gate the flip; see the note under the M4 heading above)_
 - [ ] At least one collection created via `/admin/collections/new`
 - [ ] Collection has ≥3 listings attached (`collection_items`)
 - [ ] Collection `is_active = true`
@@ -303,18 +313,20 @@ WHERE c.is_active = true;
 
 ---
 
-### M5 — Claim queue SLA confirmed (≤48h response)
+### M5 — Claim queue SLA confirmed (≤48h during business hours)
 
 This is an operational commitment, not code.
 
+> **Wording corrected 2026-09-03.** This gate previously read "≤48h" while `on-call.md:70` reads "≤48 hours **during business hours**." Those differ materially on a Friday-evening claim, and this is a promise made to business owners, not an internal target. `[Decision — founder, 2026-09-03]` **the real promise is "≤48h during business hours."** `on-call.md` stands as written; this gate now matches it. One number, one meaning, one source.
+
 1. Confirm a named owner is responsible for monitoring `/admin/claims`
-2. Document the response-time commitment (≤48h) in the support playbook / on-call doc
+2. Document the response-time commitment (≤48h during business hours) in the support playbook / on-call doc
 3. Confirm the claims queue is reachable and shows pending claims
 
-#### Checklist — M5
-- [ ] Claim-queue owner named in `docs/blacqlist/launch/on-call.md`
-- [ ] ≤48h response SLA written down
-- [ ] `/admin/claims` confirmed functional with a real pending claim
+#### Checklist — M5 ⚠️ _(2 of 3 — one founder residual)_
+- [x] Claim-queue owner named in `docs/blacqlist/launch/on-call.md` — founder, all roles (`on-call.md:14-16`)
+- [x] ≤48h-during-business-hours response SLA written down — `on-call.md:70`, and this gate corrected to match
+- [ ] `/admin/claims` confirmed functional with a real pending claim — **⛔ no evidence exists anywhere.** Tickets 040 and 041 are specifications, not runtime confirmation, and a route existing in the codebase is not the same as the queue having been opened. **Founder action, ~2 min:** open `/admin/claims` in production once and record what loads. An empty queue satisfies this honestly — say so and it is recorded as "surface loads, queue empty."
 
 ---
 
@@ -324,11 +336,13 @@ This is an operational commitment, not code.
 2. Fill in: on-call names, contact methods, escalation path, and a day-by-day or week-by-week schedule covering the first 30 days post-launch
 3. Confirm everyone listed has acknowledged
 
-#### Checklist — M6
-- [ ] `on-call.md` exists and is fully filled in (no placeholders)
-- [ ] 30-day rotation covered
-- [ ] Escalation path documented
-- [ ] All on-call people acknowledged
+> **Fixed 2026-09-03.** `on-call.md` was filled in, but three of its rows described a team that does not exist: SEV1 routed to "Tech Lead + Product Lead **via phone**", SEV2 to "Tech Lead **via Slack**", and escalation steps 2 and 3 pointed at a "backup on-call" and a "Product Lead" who is the same founder. Four inexecutable paths, all reading as coverage. `[Decision — founder, 2026-09-03]` **match solo reality.** The rewrite routes every severity to the founder by email + Sentry alert, and replaces person-escalation with **state**-escalation: at 30 min, roll back; at 60 min, re-gate the site and work the incident with the public surface closed. The single-point-of-failure risk is now named as accepted rather than papered over.
+
+#### Checklist — M6 ✅ _(closed 2026-09-03)_
+- [x] `on-call.md` exists and is fully filled in (no placeholders) — verified line by line; the four phantom-team paths were the last placeholders in disguise and are gone
+- [x] 30-day rotation covered — `on-call.md:27-32`, four weeks, founder primary. The weeks are **relative** ("Week 1 (launch week)"), so the document does not go stale as the flip date moves
+- [x] Escalation path documented — rewritten so every step is executable by one person: mitigate → roll back at 30 min → re-gate at 60 min → preserve state on data-loss/security
+- [x] All on-call people acknowledged — there is exactly one, and the founder's `[Decision — 2026-09-03]` authorizing this rewrite **is** the acknowledgment
 
 ---
 
