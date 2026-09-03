@@ -27,7 +27,12 @@ import { ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
 // lives in lib/tour/routes.ts so it is testable outside a client chunk.
 import { isHiddenPath } from '@/lib/tour/routes'
 import { TOUR_STEP_TARGETS, type TourTarget } from '@/lib/tour/targets'
-import { currentStepKey, doneCount, optionalUnfinishedSteps } from '@/lib/tour/progress'
+import {
+  currentStepKey,
+  doneCount,
+  optionalUnfinishedSteps,
+  pendingReflectionCount,
+} from '@/lib/tour/progress'
 import { ClaimTrialButton } from './ClaimTrialButton'
 import { TourStepRow } from './TourStepRow'
 import {
@@ -98,7 +103,7 @@ function subscribeCollapse(listener: () => void): () => void {
 export function TourRail() {
   const pathname = usePathname()
   const router = useRouter()
-  const { phase, tour, announcement, checking, refresh, retry } = useTourState()
+  const { phase, tour, announcement, attention, checking, refresh, retry } = useTourState()
   const collapsed = useSyncExternalStore(subscribeCollapse, readCollapse, serverCollapse)
   // null = "follow the tour" (the first unfinished step is open). A string
   // pins the tester's own choice; '' means they closed everything.
@@ -148,12 +153,45 @@ export function TourRail() {
     return () => timers.forEach(clearTimeout)
   }, [pathname])
 
+  // The row that just moved opens itself.
+  //
+  // ⚠ `attentionSeq` is in the dependency array on purpose, and it is the half
+  // that does the work. The same step can become the moving one twice — save a
+  // listing, collapse the row by hand, then save another listing that lands on
+  // the same key — and a key-only effect reads the second transition as "no
+  // change" and leaves the row shut. The sequence makes every movement
+  // distinct.
+  //
+  // `attention` is null on first load by construction (`attentionStep` returns
+  // null with no predecessor), so a page load never yanks open a row the tester
+  // deliberately closed. Same rule the live region follows: an arrival is not a
+  // change.
+  const attentionKey = attention?.key ?? null
+  const attentionSeq = attention?.seq ?? 0
+  useEffect(() => {
+    if (attentionKey === null) return
+    // Deferred for the same reason as the parked spotlight above: no state
+    // write runs synchronously inside an effect body.
+    const timer = setTimeout(() => setOpenStep(attentionKey), 0)
+    return () => clearTimeout(timer)
+  }, [attentionKey, attentionSeq])
+
   if (isHiddenPath(pathname) || phase === 'gone') return null
 
   const done = doneCount(steps)
   const total = steps.length || 6
   const complete = tour?.completedAt != null
   const effectiveOpen = openStep ?? currentStepKey(steps)
+
+  // ⚠ Two numbers, not one, and this is the founder's bug stated as arithmetic.
+  // Saving a listing moves a step `act → reflect`, which `doneCount` does not
+  // count — correctly, because the step is not done until the note is written.
+  // So the single count printed the same thing before and after the save. The
+  // rail now states progress and the work waiting on the tester separately;
+  // neither number is inflated to make something appear to have happened.
+  const pending = pendingReflectionCount(steps)
+  const count = complete ? 'complete' : `${done}/${total}`
+  const countLine = pending > 0 ? `${count} · ${pending} to write` : count
 
   if (collapsed) {
     return (
@@ -165,7 +203,7 @@ export function TourRail() {
           className="inline-flex items-center gap-2 rounded-full border border-amber-gold/40 bg-deep-bg px-4 py-2 font-subhead text-sm text-cream shadow-lg transition-colors hover:border-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
         >
           <span className="font-bold text-amber-gold">Tester Tour</span>
-          <span>{complete ? 'complete' : `${done}/${total}`}</span>
+          <span>{countLine}</span>
           <ChevronUp className="size-4" aria-hidden="true" />
         </button>
       </div>
@@ -188,9 +226,7 @@ export function TourRail() {
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <p className="font-subhead text-sm font-bold text-amber-gold">
           Tester Tour{' '}
-          <span className="font-normal text-cream">
-            · {complete ? 'complete' : `${done}/${total}`}
-          </span>
+          <span className="font-normal text-cream">· {countLine}</span>
         </p>
         <button
           type="button"
