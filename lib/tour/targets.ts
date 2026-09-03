@@ -83,7 +83,13 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     // ⚠ ORDER MATTERS. The correction trigger renders ABOVE the reviews
     // section on a listing page, so a comma-joined selector — which resolves
     // in document order, not list order — would always land on the wrong one.
-    selectors: ['#review-body', '[data-tour="report-correction"]'],
+    //
+    // `[data-tour="write-review"]` is the middle rung because the review form
+    // now mounts on intent: `#review-body` only exists once the form is open,
+    // so with it closed the trigger is what the tour must ring. Dropping this
+    // entry would leave step 5 spotlighting the correction link on every
+    // listing page a tester had not already opened the form on.
+    selectors: ['#review-body', '[data-tour="write-review"]', '[data-tour="report-correction"]'],
     href: null,
     fallbackHref: '/discover',
     hint: 'The review box is near the bottom of a listing page; the correction link sits above it.',

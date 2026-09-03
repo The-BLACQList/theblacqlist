@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { Star, BadgeCheck, MessageSquare } from 'lucide-react'
 import type { EntityPageData, ReviewItem } from '@/types'
-import { ReviewForm } from '@/components/entity-page/ReviewForm'
+import { ReviewFormDisclosure } from '@/components/entity-page/ReviewFormDisclosure'
 import { OwnerRespondForm } from '@/components/entity-page/OwnerRespondForm'
 
 interface Props {
@@ -234,10 +234,14 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             {hasReviews && (
               <h3 className="font-headline text-lg text-brand-black mb-4">Share your experience</h3>
             )}
-            <ReviewForm
+            {/* Behind a trigger on purpose — the form carries a Turnstile
+                widget, and mounting it here made a captcha run on every listing
+                page a signed-in visitor opened. See ReviewFormDisclosure. */}
+            <ReviewFormDisclosure
               listingId={entity.id}
               listingName={entity.name}
               criteria={entity.reviewCriteria}
+              hasReviews={hasReviews}
             />
           </div>
         )}

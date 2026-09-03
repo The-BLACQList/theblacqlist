@@ -58,6 +58,12 @@ const ANCHORS: Record<string, { file: string; literals: readonly string[]; minCo
     file: 'components/entity-page/ReviewForm.tsx',
     literals: ['id="review-body"'],
   },
+  '[data-tour="write-review"]': {
+    // The form mounts on intent, so `#review-body` is absent until this trigger
+    // is clicked. It is the only step-5 anchor a tester sees on arrival.
+    file: 'components/entity-page/ReviewFormDisclosure.tsx',
+    literals: ['data-tour="write-review"'],
+  },
   '[data-tour="report-correction"]': {
     file: 'components/entity-page/ReportCorrectionForm.tsx',
     literals: ['data-tour="report-correction"'],

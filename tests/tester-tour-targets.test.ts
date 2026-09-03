@@ -106,9 +106,17 @@ describe('TOUR_STEP_TARGETS — selector order', () => {
     // the reviews section. A comma-joined selector resolves in DOCUMENT order,
     // not list order, so it would always land on the wrong one — the ordered
     // list is the fix, and this asserts the order that makes it work.
-    expect(TOUR_STEP_TARGETS.review_or_correction.selectors[0]).toBe('#review-body')
-    expect(TOUR_STEP_TARGETS.review_or_correction.selectors[1]).toBe(
-      '[data-tour="report-correction"]'
+    //
+    // Asserted by RELATIVE position, not by index: M4.14 added
+    // `[data-tour="write-review"]` between the two because the review form now
+    // mounts on intent, and a rung added in the middle must not fail a test
+    // whose real subject is "the review path outranks the correction link".
+    const { selectors } = TOUR_STEP_TARGETS.review_or_correction
+    expect(selectors[0]).toBe('#review-body')
+    expect(selectors.indexOf('[data-tour="write-review"]')).toBeGreaterThan(0)
+    expect(selectors.indexOf('[data-tour="report-correction"]')).toBe(selectors.length - 1)
+    expect(selectors.indexOf('[data-tour="write-review"]')).toBeLessThan(
+      selectors.indexOf('[data-tour="report-correction"]')
     )
   })
 

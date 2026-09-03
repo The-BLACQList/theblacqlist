@@ -16,6 +16,9 @@
 //   * the FormData wrapper reads the exact field name the widget injects
 // =============================================================================
 
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import {
@@ -159,5 +162,55 @@ describe('turnstile — FormData wrapper', () => {
 
   it('field name matches Cloudflare’s documented hidden input', () => {
     expect(TURNSTILE_TOKEN_FIELD).toBe('cf-turnstile-response')
+  })
+})
+
+// =============================================================================
+// M4.14 — the widget mounts on intent, not on page load
+// =============================================================================
+// The founder, walking a listing page on the PR #110 Preview: "Does the
+// cloudflare turnstile have to be on every listing page?? I don't like it."
+//
+// It was not on every listing page — it was on every listing page he was
+// ELIGIBLE TO REVIEW, which while signed in is nearly all of them. The form had
+// no toggle, so `EntityReviewsSection` mounted `ReviewForm`, which mounts
+// `TurnstileWidget`, which injects Cloudflare's script and polls every 200ms for
+// up to 10s (TurnstileWidget.tsx:71-72) before anyone touched anything.
+//
+// Source text is the evidence here because vitest runs with no jsdom
+// (vitest.config.ts) — there is no DOM in which to mount a component and count
+// network requests. e2e/review-form-intent.spec.ts does that half in a browser;
+// these three assertions catch the refactor that quietly undoes it.
+// =============================================================================
+
+describe('turnstile mounts on intent', () => {
+  const read = (rel: string) => readFileSync(path.resolve(process.cwd(), rel), 'utf8')
+
+  it('EntityReviewsSection does not render ReviewForm directly', () => {
+    // The regex, not `.toContain`, because `<ReviewFormDisclosure` contains
+    // `<ReviewForm` as a prefix — a substring check here can never fail.
+    const src = read('components/entity-page/EntityReviewsSection.tsx')
+    expect(src).not.toMatch(/<ReviewForm[\s/>]/)
+    expect(src).toContain('<ReviewFormDisclosure')
+  })
+
+  it('the disclosure holds its own open state and imports ReviewForm itself', () => {
+    // ⚠ Both halves matter. A disclosure that took `children` from the server
+    // parent would still mount the form on load — the parent creates the child
+    // — and the captcha would be back with every test here still green.
+    const src = read('components/entity-page/ReviewFormDisclosure.tsx')
+    expect(src).toContain('useState')
+    expect(src).toContain("import { ReviewForm } from '@/components/entity-page/ReviewForm'")
+    expect(src).toContain('<ReviewForm')
+    // Neither declared as a prop nor rendered as one.
+    expect(src).not.toMatch(/children\s*\??\s*:/)
+    expect(src).not.toMatch(/\{\s*children\s*\}/)
+  })
+
+  it('ReviewForm still carries the widget once it is open', () => {
+    // The fix defers the captcha; it does not remove it. Server verification
+    // (createReview.ts) fails closed, so dropping the widget would make every
+    // review submission impossible rather than merely unprotected.
+    expect(read('components/entity-page/ReviewForm.tsx')).toContain('<TurnstileWidget')
   })
 })
