@@ -292,6 +292,33 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // At a ~41% cut, 15% puts the band top at 6.1% — inside the antenna. 22% read
   // plausible against an eyeballed ~9% and clipped it.
   '/images/cities/chicago.webp': 'object-[50%_15%]',
+  // The three below are not the same problem as the three above, and copying
+  // 25% into them would have been the `chicago` mistake made a second time.
+  // None is a tower-topped skyline: DC is a low horizontal city under a very
+  // tall sunset sky, so a top-weighted crop returns mostly cloud and loses the
+  // dome; New Orleans puts its skyline band at ~34% with the river below it,
+  // so biasing up crops the water that says "New Orleans" and still doesn't
+  // gain a subject. Both sit slightly below centre on purpose.
+  '/images/cities/dc.webp': 'object-[50%_45%]',
+  '/images/cities/new-orleans.webp': 'object-[50%_45%]',
+  // Los Angeles is the only one of the three that behaves like the set above —
+  // the US Bank Tower crown is the highest structure at ~17%, well clear of
+  // Atlanta's ~11% spire, so it needs a gentler bias than 25%.
+  '/images/cities/los-angeles.webp': 'object-[50%_30%]',
+
+  // Discover banners. Different geometry from everything above: the frame is a
+  // wide letterbox (~1280×300 at desktop) rather than a portrait-ish panel, so
+  // `object-cover` crops *vertically* and hard, and the type sits over the
+  // lower two thirds. Each value keeps the subject clear of that type band
+  // rather than clear of the top edge.
+  '/images/editorial/categories/brick-and-mortar.webp': 'object-[50%_35%]',
+  '/images/editorial/categories/restaurants.webp': 'object-[50%_50%]',
+  '/images/editorial/categories/products-and-services.webp': 'object-[50%_50%]',
+  // Faces highest in the set — heads near the top of the frame, so bias up.
+  '/images/editorial/categories/professionals.webp': 'object-[50%_30%]',
+  '/images/editorial/categories/creatives.webp': 'object-[50%_40%]',
+  '/images/editorial/categories/events.webp': 'object-[50%_45%]',
+  '/images/editorial/categories/jobs.webp': 'object-[50%_35%]',
 }
 
 /**
@@ -306,10 +333,13 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
  * The mapped set is exactly the cities we have licensed skyline photography for
  * — nothing more. It used to coincide with the `is_active = true` set, but that
  * was a coincidence and never a rule: activating a city does not give it a
- * photograph, and Los Angeles, Washington DC, and New Orleans went live on the
- * wash. A city gets a frame when its photo is licensed and art-directed into
- * `PHOTO_FOCAL`; until then the wash is the finished look, not a gap.
- * Do not stretch one of these three across another city.
+ * photograph. Washington DC, Los Angeles and New Orleans spent months on the
+ * wash for exactly that reason and joined the map on 2026-09-03, when the
+ * founder confirmed their photographs carry the same license as the original
+ * three `[Decision — founder, 2026-09-03]`. That is still the only way in: a
+ * city gets a frame when its photo is licensed and art-directed into
+ * `PHOTO_FOCAL`, and until then the wash is the finished look, not a gap.
+ * Do not stretch one of these six across a seventh city.
  *
  * Unlike the editorial frames these are informative, so consumers pass a real
  * `alt` — see `PhotoPanelGround`.
@@ -318,6 +348,9 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
   'atlanta-ga': '/images/cities/atlanta.webp',
   'houston-tx': '/images/cities/houston.webp',
   'chicago-il': '/images/cities/chicago.webp',
+  'washington-dc': '/images/cities/dc.webp',
+  'los-angeles-ca': '/images/cities/los-angeles.webp',
+  'new-orleans-la': '/images/cities/new-orleans.webp',
 }
 
 /**

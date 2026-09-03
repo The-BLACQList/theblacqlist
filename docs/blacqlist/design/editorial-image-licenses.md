@@ -1,20 +1,31 @@
 # Editorial image licenses
 
-**Status:** ✅ **Recorded.** All **twenty** photographs are cleared — the original
-twelve, the six added on 2026-08-09 in PR #23, and the two added later the same day
-to fill the last empty bento tiles.
-**Last updated:** 2026-08-09
+**Status:** ⚠️ **Recorded, with one open confirmation.** **Twenty-three of thirty**
+photographs are cleared outright — the original twelve, the six added on 2026-08-09
+in PR #23, the two bento fills, `suit-and-ledger`, and the **three city skylines
+added on 2026-09-03**. **Seven** frames added the same day carry an inferred
+clearance that needs one word from the founder — see
+[The 2026-09-03 additions](#the-2026-09-03-additions).
+**Last updated:** 2026-09-03
 
 `.claude/rules/3d-assets.md` requires a recorded license per asset before it enters
 the product: source, author, license name, and commercial-use confirmation.
 
-**Source of record:** all twenty photographs were obtained through the founder's
-**Canva Pro** subscription and are licensed under the **Canva Content License
-Agreement (Pro content)** `[Decision — founder statement, 2026-08-09]`. The
+**Source of record:** all twenty-three cleared photographs were obtained through the
+founder's **Canva Pro** subscription and are licensed under the **Canva Content
+License Agreement (Pro content)** `[Decision — founder statement, 2026-08-09]`. The
 statement was made twice: once about the original twelve, and again about the
 staging-directory frames once they were selected — *"they still came from canva.
 All of them."* The two later additions come out of the same staging directory and
-are covered by the same statement.
+are covered by the same statement. The three 2026-09-03 skylines were cleared by
+name on the same footing — *"the license is the same as the other city images"*
+`[Decision — founder, 2026-09-03]`.
+
+**Two files in this record are not stock at all.** `public/brand/node-bg.webp` and
+`public/icons/q-frame.webp` are **first-party BLACQList brand artwork** — the node
+network and the Q monogram frame — and sit on the same footing as the five SVGs in
+`public/brand/`. They are listed at the end for completeness because they entered
+the product in the same commit, not because they need a stock license.
 
 That license permits commercial use without attribution, and it carries three
 restrictions that bind how these files may be used here. They are written out in
@@ -90,11 +101,17 @@ pass.
 
 ## Inventory
 
-All twenty share one provenance, so the license columns are uniform. They are
+All thirty share one provenance, so the license columns are uniform. They are
 written per row anyway rather than collapsed into a note — `3d-assets.md` asks for
 a record **per asset**, and a table that stays row-complete survives the pool being
-split or added to later. That is exactly what happened, twice: the six PR #23 rows
-and then the two bento rows both slotted in without reshaping the table.
+split or added to later. That is exactly what happened, three times over: the six
+PR #23 rows, the two bento rows, and now the ten 2026-09-03 rows all slotted in
+without reshaping the table.
+
+⚠ **Seven rows carry a footnote, not a clearance.** The Discover-bin frames are
+marked `Canva Pro [Assumption]` because the founder's clearance statement named the
+*city images*. Read
+[The 2026-09-03 additions](#the-2026-09-03-additions) before shipping them.
 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
@@ -119,11 +136,38 @@ and then the two bento rows both slotted in without reshaping the table.
 | `physician-portrait.webp` | 74 KB | category bento — `healthcare` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `agency-desk.webp` | 69 KB | category bento — `social-media-marketing` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `suit-and-ledger.webp` | 72 KB | category bento — `professional-services` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/dc.webp` | 127 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/los-angeles.webp` | 196 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cities/new-orleans.webp` | 167 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `categories/brick-and-mortar.webp` | 98 KB | `/discover` banner — `?type=business` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/restaurants.webp` | 103 KB | `/discover` banner — `?type=restaurant` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/products-and-services.webp` | 136 KB | `/discover` banner — `?type=service_provider` **and** `?type=vendor` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/professionals.webp` | 59 KB | `/discover` banner — `?type=professional` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/creatives.webp` | 64 KB | `/discover` banner — `?type=creative` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/events.webp` | 78 KB | `/discover` banner — `?type=event` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/jobs.webp` | 42 KB | `/discover` banner — `?type=job` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 
-Rows 13–18 are the PR #23 additions and the last three are the bento fill. Only the
-three `cities/` files live outside `public/images/editorial/`; the path column says
-so where it applies. Sizes `[Measured — ls, 2026-08-09]`, except the last row
-`[Measured — ls, 2026-08-10]`.
+Rows 13–18 are the PR #23 additions, rows 19–21 the bento fill and
+`professional-services`, and the last ten the 2026-09-03 additions. Only the
+`cities/` and `categories/` files live outside `public/images/editorial/` itself;
+the path column says so where it applies. Sizes `[Measured — ls, 2026-08-09]`,
+except `suit-and-ledger` `[Measured — ls, 2026-08-10]` and the last ten
+`[Measured — ls, 2026-09-03]`.
+
+**Two first-party brand assets** entered the product in the same commit and are
+recorded here so nothing in `public/` is unaccounted for. They are **not** stock and
+need no third-party license:
+
+| File | Size | Where used | Source | Rights holder | License |
+|---|---|---|---|---|---|
+| `public/brand/node-bg.webp` | 11 KB | `ImageFallback` — the F-1 node ground on every photo-less card and hero | Founder-supplied brand artwork | The BLACQList | First-party — same footing as `public/brand/*.svg` |
+| `public/icons/q-frame.webp` | 17 KB | `ImageFallback` — the ring the monogram sits inside | Founder-supplied brand artwork | The BLACQList | First-party — same footing as `public/brand/*.svg` |
+
+These two replace CSS stand-ins (five seeded `radial-gradient` dots and a
+`border-2` circle with a rotated `<span>` for the Q tail)
+`[Decision — founder, 2026-09-03]`. Restriction 3 below — *no use as a trademark or
+logo* — does not reach them; the Q frame **is** the brand mark, which is exactly why
+it could not have been a licensed stock file.
 
 **All three bento-fill frames depict people** — a physician in a white coat, a
 person working at a desk in an agency office, and a man in a suit reviewing
@@ -339,6 +383,172 @@ What that rules out here, concretely:
 
 Anyone adding a second placement for any of the three needs a recorded decision, on
 the same footing as `soleil-kidswear.webp` below.
+
+---
+
+## The 2026-09-03 additions
+
+Twelve files arrived in one delivery from the founder, as PNGs dropped straight
+into their destination folders: *"these are missing images that are to replace the
+placeholders as well as the default card node background as well as an actual frame
+to hold the initials instead of the current drawn q frame"*
+`[Decision — founder, 2026-09-03]`. Ten are photographs and belong in this record.
+Two are brand artwork and are listed here only because they shipped in the same
+commit.
+
+### Source-frame mapping
+
+| File | Source PNG | Where used |
+|---|---|---|
+| `cities/dc.webp` | `images/cities/dc.png` | City chapters (home) + `/cities` |
+| `cities/los-angeles.webp` | `images/cities/losAngeles.png` | City chapters (home) + `/cities` |
+| `cities/new-orleans.webp` | `images/cities/newOrleans.png` | City chapters (home) + `/cities` |
+| `categories/brick-and-mortar.webp` | `categories/brick-and-mortar.png` | `/discover` banner — `?type=business` |
+| `categories/restaurants.webp` | `categories/restaurants.png` | `/discover` banner — `?type=restaurant` |
+| `categories/products-and-services.webp` | `categories/products-and-services.png` | `/discover` banner — `?type=service_provider` **and** `?type=vendor` |
+| `categories/professionals.webp` | `categories/professionals.png` | `/discover` banner — `?type=professional` |
+| `categories/creatives.webp` | `categories/creatives.png` | `/discover` banner — `?type=creative` |
+| `categories/events.webp` | `categories/events.png` | `/discover` banner — `?type=event` |
+| `categories/jobs.webp` | `categories/jobs.png` | `/discover` banner — `?type=job` |
+| `public/brand/node-bg.webp` | `brand/node-bg.png` | `ImageFallback` node ground — **first-party, not stock** |
+| `public/icons/q-frame.webp` | `icons/q-frame.png` | `ImageFallback` monogram ring — **first-party, not stock** |
+
+All ten photographs were converted at **WebP q74**, 1600×1067 — the house 3:2.
+q74 rather than the q82 used through 2026-08-10 because at q82 these particular
+frames landed at 175–261 KB against a house band of 137–143 KB
+`[Measured — sharp, 2026-09-03]`. `los-angeles.webp` still lands at 196 KB; a
+skyline of glass facades is high-frequency everywhere and there is no quality left
+to take without visible blocking. It ships anyway because `next/image` re-encodes
+at request time — the source weight is repo cost and transform input, not delivered
+bytes.
+
+The source PNGs are still untracked in `public/`. They can be deleted once the
+WebP set is live, on the same footing as
+[The staging archive](#the-staging-archive) — but deleting a founder-supplied file
+needs the founder's word, so they stay until then.
+
+### License
+
+**The three city skylines are cleared by name.** *"the license is the same as the
+other city images"* `[Decision — founder, 2026-09-03]`, answering a direct question
+about `dc.png`, `losAngeles.png` and `newOrleans.png`. That puts them on exactly the
+footing of `atlanta` / `chicago` / `houston`: Canva Pro, commercial use allowed,
+attribution not required, all three restrictions below live.
+
+⚠ **The seven Discover-bin frames are marked `[Assumption]`, and that is
+deliberate.** They arrived in the same delivery, but the clearance statement names
+the *city* images. Same-delivery is not the same as same-license, and
+`no-fabrication.md` does not allow the inference to be written down as a fact. The
+honest reading is that they are almost certainly Canva Pro like everything else in
+this record — but "almost certainly" is `[Assumption]`, not `[Decision]`.
+
+**What clears it:** one sentence from the founder confirming the seven category
+frames came from Canva Pro too. On that word, change the fourteen `[Assumption]`
+marks in the inventory table to the plain form and change this file's status header
+back to ✅.
+
+### Restriction 2 — the per-frame audit
+
+Every one of the seven bin frames was opened and read, because restriction 2 turns
+on what is *in* the picture, not on where the file came from
+`[Observed — visual inspection, 2026-09-03]`:
+
+| Frame | What it shows | Restriction 2 |
+|---|---|---|
+| `brick-and-mortar` | Bearded shop owner in a brown apron, arms crossed, warm-lit general store | **Live** — one highly identifiable subject |
+| `restaurants` | Burger with a fried egg, fries, two pizzas on weathered wood | Not live — people-free |
+| `products-and-services` | Handmade soap, twine, star anise, cinnamon, coffee beans on dark wood | Not live — people-free |
+| `professionals` | Tight headshot, dark suit and blue tie, blurred law-library shelves | **Live** — one highly identifiable subject |
+| `creatives` | Street film shoot — camera operator's hands on a cinema camera, two people behind it | **Live** — identifiable at full frame |
+| `events` | Large festival crowd at dusk, flags up, sunset behind | **Live** — many identifiable faces |
+| `jobs` | Office meeting, a woman reading a document, colleague in the foreground | **Live** — identifiable subjects |
+
+Five of seven carry identifiable people, which is a much higher rate than the PR #23
+set, where people-free frames were selected on crop grounds and happened to clear
+the restriction for free. That option was not available here — a bin called
+Professionals or Jobs that shows no people would not read as the bin.
+
+**The placement is the safe kind, and it is safe for a structural reason, not a
+lucky one.** A Discover banner heads a *bin*. It names a category and never a
+business, so no frame can read as any particular business's owner, staff, or
+customers — which is precisely the claim restriction 2 forbids. Every frame renders
+`alt=""` with the `<h1>` beneath carrying the meaning, so nothing in the picture is
+asserted as fact. The same fence the bento portraits sit behind applies here
+verbatim: **a second placement for any of these five is a new decision, not a
+reuse** — see
+[Restriction 2 and the bento portraits](#restriction-2-and-the-bento-portraits).
+
+`events.webp` deserves one extra note. It is the only frame in the whole pool
+showing a *crowd* of identifiable people rather than one or two, and a crowd photo
+carries the same restriction multiplied. It must not be captioned as a BLACQList
+event, a specific festival, or anything that implies those attendees are our users.
+
+### ⚠ `brick-and-mortar.webp` reads as AI-generated
+
+The signage along the left shelf edge is garbled — letterforms that resolve to
+nothing at full resolution `[Observed — visual inspection, 2026-09-03]`. That is the
+classic generative-image tell, and once seen it is hard to unsee.
+
+This is raised rather than quietly accepted because the frame heads the bin for
+*physical storefronts*, on a directory whose entire proposition is that the
+businesses are real. Nothing about it breaks the license — Canva sells generative
+content under the same Content License, and the restrictions in this file already
+cover it. The exposure is credibility, not law.
+
+The mitigation already shipped is the same structural one: it is decorative
+(`alt=""`), it heads a category and never a business, and no copy claims the shop is
+real. `[Recommendation]` — if a hand-shot storefront frame is available, swap it;
+this is the one frame in the set where provenance and product promise rub against
+each other. Not a blocker.
+
+### Crop verification — measured, not estimated
+
+Every banner frame was rendered at the crop `object-cover` will actually produce and
+inspected, at both the ordinary desktop band (1440×300 → 333 visible source rows of
+1067) and the tightest real case (1920×300 → 250 rows)
+`[Measured — sharp extract at the configured `PHOTO_FOCAL` value, 2026-09-03]`.
+
+**The seven focal values in `lib/design/surfaces.ts` are correct as set** — no face
+is cut in half, no subject is decapitated, and no frame loses its subject at the
+tight band.
+
+`professionals.webp` was the one genuinely at risk: a tight vertical portrait in a
+~4.8:1 letterbox has very little room, and an arithmetic estimate made before
+rendering predicted a decapitated crop. **The estimate was wrong.** At the configured
+30% the face sits whole at 1440 with headroom, and at 1920 only the crown clips —
+an ordinary editorial portrait crop. 26% was tried as an improvement and is worse:
+it buys nothing at the top and cuts the chin at the tight band. 0%, 15% and 45% all
+fail. 30% stands.
+
+`creatives.webp` at 40% shows the cinema camera and the operator's hands with the
+standing subjects cropped to torsos. That is on-brief for "studio session" and it
+also happens to remove the identifiable faces — a lower value (20%, 28%) brings
+faces back into frame and is strictly worse on restriction 2. 40% stands.
+
+### The two first-party assets
+
+`node-bg.webp` and `q-frame.webp` are BLACQList brand artwork, not stock. They sit
+with the five SVGs in `public/brand/` and need no third-party license. They replaced
+CSS stand-ins in `ImageFallback` — five seeded `radial-gradient` dots and a
+`border-2` circle with a rotated `<span>` for the Q tail — drawn only because the
+real assets did not exist yet.
+
+Restriction 3 — *no use as a trademark or logo* — is the reason this matters rather
+than being a footnote. The Q frame **is** the brand mark. It could never have been a
+licensed stock file, and no stock file may ever take its place.
+
+Two measurements govern how they are used, both recorded in the component:
+
+- **Ring geometry** `[Measured — sharp alpha channel, 2026-09-03]`: cropped square
+  at 320×320 with the ring centred, the ring occupies 80.8% of the box and its hole
+  65.8%. That is why the monogram box grew — to 96px (hero) / 64px (card), which
+  draw a 77.6px / 51.7px ring against the 80px / 56px CSS rings they replace. The
+  card size is set by the tightest host: `CollectionBusinessCard` puts a card
+  fallback in a 112×112 tile, so box + `gap-2` + the ~14px label has to fit 112px.
+- **Ground luminance** `[Measured — sharp raw pixels, 2026-09-03]`: across all
+  1,196,400 pixels the p99 luminance is 0.0081 — 15.5:1 against off-white. The
+  artwork is near-black everywhere except the node cores, so it ships undimmed where
+  the old CSS field needed `opacity-30`.
 
 ---
 

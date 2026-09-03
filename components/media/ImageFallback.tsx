@@ -13,38 +13,59 @@ interface Props {
   className?: string
 }
 
+/** The founder's node-network ground and monogram frame. */
+const NODE_GROUND = '/brand/node-bg.webp'
+const Q_FRAME = '/icons/q-frame.webp'
+
 /**
- * Five zones the node field draws from. Fixed zones keep the field balanced and
- * sparse whatever the seed is, and keep every node clear of the centre where the
- * monogram and category label sit. The seed only jitters within a zone.
+ * How far the seed is allowed to move the crop, per axis, in percent.
+ *
+ * ⚠ Deliberately narrow, and the narrowness is the whole design. The artwork
+ * carries a broad dark vignette at its centre — which is exactly the job the old
+ * `NODE_ZONES` did by keeping every drawn node out of the middle, so the monogram
+ * and the category label always sat on clean ground. Pushing the crop to the
+ * edges would slide that vignette out from under the text and put a lit node
+ * cluster behind it. 35–65% varies which part of the network each card shows
+ * without ever losing the quiet centre.
  */
-const NODE_ZONES: ReadonlyArray<{ x: [number, number]; y: [number, number] }> = [
-  { x: [8, 30], y: [16, 38] },
-  { x: [68, 92], y: [10, 32] },
-  { x: [6, 26], y: [64, 86] },
-  { x: [70, 92], y: [58, 84] },
-  { x: [38, 60], y: [78, 92] },
-]
+const CROP_RANGE: readonly [number, number] = [35, 65]
 
 /** Deterministic value in [min, max] from a seed and an axis label. */
-function jitter(seed: string, key: string, [min, max]: [number, number]): number {
+function jitter(seed: string, key: string, [min, max]: readonly [number, number]): number {
   return min + (hashString(`${seed}:${key}`) % (max - min + 1))
 }
 
-function nodeGradients(seed: string | null | undefined): string {
-  return NODE_ZONES.map((zone, i) => {
-    const x = seed ? jitter(seed, `x${i}`, zone.x) : Math.round((zone.x[0] + zone.x[1]) / 2)
-    const y = seed ? jitter(seed, `y${i}`, zone.y) : Math.round((zone.y[0] + zone.y[1]) / 2)
-    return `radial-gradient(circle at ${x}% ${y}%, var(--color-gold) 1.5px, transparent 2.4px)`
-  }).join(', ')
+/**
+ * Where to crop the node ground for this record.
+ *
+ * The seed exists so a grid of fallbacks does not read as repeated wallpaper.
+ * One static image on every card is precisely that failure, so the artwork is
+ * still seeded — the seed now moves the crop instead of moving drawn nodes.
+ */
+function groundPosition(seed: string | null | undefined): string {
+  if (!seed) return '50% 50%'
+  return `${jitter(seed, 'gx', CROP_RANGE)}% ${jitter(seed, 'gy', CROP_RANGE)}%`
 }
 
 /**
  * F-1 "Monogram + Node Field" designed fallback (Living Commerce Index).
  * Replaces bare-initials placeholders wherever a listing has no verified
- * imagery: dark ground, sparse gold node field, monogram in a Q-style ring,
- * and the category named beneath so unclaimed covers still carry identity.
+ * imagery: dark ground, gold node network, monogram in the Q frame, and the
+ * category named beneath so unclaimed covers still carry identity.
  * Never renders stock photography that could be mistaken for the business.
+ *
+ * **Both marks are now artwork, not CSS.** The ground was five seeded
+ * `radial-gradient` dots and the frame was a `border-2` circle with a rotated
+ * `<span>` for the Q tail — stand-ins drawn because the real assets did not
+ * exist yet [Decision — founder, 2026-09-03]. `node-bg.webp` and
+ * `q-frame.webp` are those assets. Do not redraw either in CSS.
+ *
+ * The ground needs no dimming: measured across all 1,196,400 pixels its 99th
+ * percentile luminance is 0.0081, which is 15.5:1 against off-white — the
+ * artwork is near-black everywhere except the node cores, and those are specks
+ * `[Measured — sharp raw pixels, 2026-09-03]`. The old field carried
+ * `opacity-30` because five hard gold dots at full strength read as decoration
+ * competing with the monogram; this one does not have that problem.
  */
 export function ImageFallback({ name, categoryName, size = 'hero', seed, className }: Props) {
   const initials = name
@@ -62,33 +83,39 @@ export function ImageFallback({ name, categoryName, size = 'hero', seed, classNa
       className={cn('absolute inset-0 bg-deep-bg flex items-center justify-center', className)}
       aria-hidden="true"
     >
-      {/* Sparse gold node field — signature accent, never wallpaper */}
+      {/* Gold node network — signature accent, seeded so a grid never repeats */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 bg-cover bg-no-repeat"
         style={{
-          backgroundImage: nodeGradients(seed),
-          backgroundSize: isHero ? '340px 340px' : '210px 210px',
+          backgroundImage: `url(${NODE_GROUND})`,
+          backgroundPosition: groundPosition(seed),
         }}
       />
 
       <div className="relative flex flex-col items-center gap-2">
-        {/* Monogram in the Q-node ring */}
+        {/* Monogram inside the Q frame.
+            The asset is cropped square with the ring dead centre and the tail
+            fully inside it, so ordinary flex centring lands the initials in the
+            ring with no offsets to maintain — see the crop note in the PR.
+
+            ⚠ The box is deliberately larger than the 80/56px ring it replaces,
+            because the ring only occupies 80.8% of it (its hole, 65.8%). 96px
+            draws a 77.6px ring and 64px draws a 51.7px one — within a couple of
+            pixels of the drawn ring on both sides, so the artwork lands at the
+            weight the layout was tuned for rather than 13% heavier.
+
+            The card size is the constrained one: `CollectionBusinessCard` puts a
+            card fallback in a 112×112 tile, so the whole stack — box + gap-2 +
+            the ~14px label — has to fit 112px. At 64px it is 86px and breathes;
+            at 80px it was 102px and crowded the tile edge to edge. */}
         <span
           className={cn(
-            'relative flex items-center justify-center rounded-full border-2 border-gold font-headline text-gold select-none',
-            isHero ? 'size-20 text-3xl' : 'size-14 text-xl'
+            'flex items-center justify-center bg-contain bg-center bg-no-repeat font-headline text-gold select-none',
+            isHero ? 'size-24 text-3xl' : 'size-16 text-lg'
           )}
+          style={{ backgroundImage: `url(${Q_FRAME})` }}
         >
           {initials}
-          {/* Q tail */}
-          <span
-            className={cn(
-              'absolute bg-gold rounded-[2px] rotate-45',
-              isHero
-                ? 'w-5 h-[2.5px] -right-2 bottom-1.5'
-                : 'w-3.5 h-[2px] -right-1.5 bottom-1'
-            )}
-          />
         </span>
 
         {categoryName && (
