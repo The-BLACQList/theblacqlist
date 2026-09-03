@@ -6,6 +6,7 @@
 
 import { Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { LOCATION_TYPE_META } from '@/lib/constants/listing'
 import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
 
@@ -165,8 +166,8 @@ export function EntityAtAGlance({ entity }: Props) {
                     <span className="group-hover:underline whitespace-pre-line">{fullAddress}</span>
                   </a>
                 ) : (
-                  <p className="font-body text-sm text-charcoal capitalize">
-                    {entity.location_type.replace(/-/g, ' ')}
+                  <p className="font-body text-sm text-charcoal">
+                    {LOCATION_TYPE_META[entity.location_type].label}
                   </p>
                 )}
               </div>

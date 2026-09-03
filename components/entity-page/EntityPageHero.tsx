@@ -4,6 +4,7 @@ import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
 import { CoverImage } from '@/components/media/CoverImage'
+import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
@@ -19,11 +20,10 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
 
-  // CTA href: "call" type uses tel: link, otherwise use cta_url or fallback "#"
-  const ctaHref =
-    entity.details.cta_type === 'call' && entity.details.phone
-      ? `tel:${entity.details.phone.replace(/\D/g, '')}`
-      : (entity.details.cta_url ?? '#')
+  // Shared with the templates. Returns null rather than a dead href="#" when the
+  // listing has no reachable destination — which is most unclaimed events and
+  // jobs, the two types that never got a cta_url.
+  const ctaHref = getCtaHref(entity)
 
   return (
     <div
@@ -111,14 +111,18 @@ export function EntityPageHero({ entity, initialSaved = false }: Props) {
         )}
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Primary CTA — id="hero-cta" is the IntersectionObserver target */}
-          <a
-            id="hero-cta"
-            href={ctaHref}
-            className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[120px]"
-          >
-            {ctaLabel}
-          </a>
+          {/* Primary CTA — id="hero-cta" is EntityQuickActionBar's
+              IntersectionObserver target; the bar no-ops when the element is
+              absent (no real CTA destination). */}
+          {ctaHref && (
+            <a
+              id="hero-cta"
+              href={ctaHref}
+              className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[120px]"
+            >
+              {ctaLabel}
+            </a>
+          )}
 
           {/* The labelled variant, deliberately: "Save" / "Saved" in words is the
               single clearest fix for "are these the same action?". `surface`

@@ -1,3 +1,4 @@
+import { LOCATION_TYPE_META, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 import type { EntityType, LocationType } from '@/types'
 
 export const ENTITY_TYPES: { value: EntityType; label: string }[] = [
@@ -16,15 +17,13 @@ export const ENTITY_TYPES: { value: EntityType; label: string }[] = [
  * no-permanent-address businesses". Values are the live `listings.location_type`
  * CHECK (migration 20260524000001); labels are plain language, not the raw slugs.
  * No per-option counts, matching Ownership and Trust Level below.
+ *
+ * Derived from LOCATION_TYPE_META rather than recopied: this list and the entity
+ * page disagreed about what to call a `service_area` business until 2026-09-03.
+ * The chip order is the CHECK's own order.
  */
-export const LOCATION_TYPES: { value: LocationType; label: string }[] = [
-  { value: 'physical', label: 'Storefront' },
-  { value: 'virtual', label: 'Online only' },
-  { value: 'hybrid', label: 'Storefront + online' },
-  { value: 'service_area', label: 'Comes to you' },
-  { value: 'national', label: 'Ships nationwide' },
-  { value: 'traveling', label: 'Mobile / pop-up' },
-]
+export const LOCATION_TYPES: { value: LocationType; label: string }[] =
+  VALID_LOCATION_TYPES.map((value) => ({ value, label: LOCATION_TYPE_META[value].label }))
 
 export const TRUST_TIERS: { value: string; label: string }[] = [
   { value: 'claimed', label: 'Claimed' },

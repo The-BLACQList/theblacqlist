@@ -63,6 +63,35 @@ export const VALID_LOCATION_TYPES = [
   'traveling',
 ] as const
 
+export type LocationType = (typeof VALID_LOCATION_TYPES)[number]
+
+/**
+ * Plain-language label for each location_type. The stored values are snake_case
+ * enum keys ('service_area'), never hyphenated and never user-facing.
+ *
+ * This exists because the entity page rendered the raw value through
+ * `location_type.replace(/-/g, ' ')` + `capitalize` — a no-op on all six values,
+ * since none contains a hyphen — so a "Comes to you" business read
+ * **"Service_area"** on its own page while Discover's facet said "Comes to you"
+ * for the same row. Two other label sets already existed (the Discover facet and
+ * the submit form) and disagreed with each other, so the vocabulary is settled
+ * here and derived from, not recopied. Fixed 2026-09-03.
+ *
+ * Two surface-specific maps deliberately stay separate rather than deriving from
+ * this one, because they encode placement rather than vocabulary:
+ * `TemplateInfoRail.LOCATION_NOTES` (empty string = the rail says nothing, since
+ * a storefront's city line is already above it) and `EntityCard.LOCATION_COPY`
+ * (standalone vs. suffix against the city line).
+ */
+export const LOCATION_TYPE_META: Record<LocationType, { label: string }> = {
+  physical: { label: 'Storefront' },
+  virtual: { label: 'Online only' },
+  hybrid: { label: 'Storefront + online' },
+  service_area: { label: 'Comes to you' },
+  national: { label: 'Ships nationwide' },
+  traveling: { label: 'Mobile / pop-up' },
+}
+
 export const VALID_CTA_TYPES = [
   'book',
   'order',
