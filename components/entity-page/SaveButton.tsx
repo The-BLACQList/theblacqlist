@@ -89,6 +89,13 @@ export function SaveButton({
           type="button"
           onClick={toggle}
           disabled={isPending}
+          // `data-tour` is a PRODUCT ANCHOR, not a test hook: the Tester Tour
+          // rail spotlights this control by that name. It is deliberately not
+          // the aria-label, which is user-facing copy that gets reworded and
+          // which flips with `saved`. Both variants carry it — a listing page
+          // renders up to three Save buttons and the tour must find whichever
+          // one is actually visible. See lib/tour/targets.ts.
+          data-tour="save-listing"
           aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
           aria-pressed={saved}
           className={cn(
@@ -116,6 +123,8 @@ export function SaveButton({
         type="button"
         onClick={toggle}
         disabled={isPending}
+        // Product anchor — see the note on the pill variant above.
+        data-tour="save-listing"
         aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
         aria-pressed={saved}
         tabIndex={tabIndex}

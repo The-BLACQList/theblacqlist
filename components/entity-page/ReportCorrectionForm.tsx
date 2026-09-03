@@ -57,6 +57,10 @@ export function ReportCorrectionForm({
       <DialogTrigger asChild>
         <button
           type="button"
+          // Product anchor for the Tester Tour's step 5 — see lib/tour/targets.ts.
+          // Tried AFTER `#review-body`, because this trigger renders above the
+          // reviews section and a document-order match would always win here.
+          data-tour="report-correction"
           className={
             triggerClassName ??
             'inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-charcoal/80 underline underline-offset-2 transition-colors'

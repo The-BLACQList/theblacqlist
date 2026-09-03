@@ -214,6 +214,46 @@
   }
 }
 
+/* ─── Tester Tour: spotlight ring (components/tour) ─────────────────────────
+   The ring the rail draws around a step's target when a tester clicks "Show me".
+
+   Deliberately NOT `.blacq-map-highlight`: that class also sets
+   width/height/border-radius:50% — it is a PIN, and applying it to the search
+   input would turn the input into a gold dot.
+
+   Three constraints are load-bearing and are asserted in
+   tests/tester-tour-anchors.test.ts:
+
+     * `outline`, not `box-shadow` alone. A box-shadow ring is clipped by any
+       ancestor `overflow: hidden`, and card grids clip. Outlines are not
+       clipped and cost no layout. The glow is additive on top.
+     * NO `z-index` and NO `position`. The site header is `fixed z-50`; a
+       spotlight that raises its target above the header is the same defect as
+       a z-50 rail, laundered through CSS.
+     * The pulse lives INSIDE `prefers-reduced-motion: no-preference` — the
+       `.blacq-reveal` house pattern above, not the legacy kill-switch the map
+       pin uses. The reduced variant is a genuine static ring. */
+.blacq-tour-spotlight {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+  box-shadow: 0 0 22px rgba(255, 216, 103, 0.55);
+  border-radius: 12px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-tour-spotlight {
+    animation: blacq-tour-pulse 1.6s ease-in-out 2;
+  }
+  @keyframes blacq-tour-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 22px rgba(255, 216, 103, 0.55);
+    }
+    50% {
+      box-shadow: 0 0 32px rgba(255, 216, 103, 0.85);
+    }
+  }
+}
+
 /* MapLibre popup close button: legible over the photo header */
 .blacq-map-popup-wrap .maplibregl-popup-close-button {
   top: 6px;
