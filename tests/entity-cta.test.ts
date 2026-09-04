@@ -9,9 +9,12 @@
 //
 // The correct helper already existed (`templates/cta.ts`, returning null rather
 // than a dead href) but only the two Living Commerce Index templates called it.
-// The fix routes EntityPageHero and EntityQuickActionBar through the same
-// helper and renders NOTHING when it returns null. A missing button is honest;
-// a button that does nothing is not.
+// The fix routes every hero and EntityQuickActionBar through the same helper
+// and renders NOTHING when it returns null. A missing button is honest; a
+// button that does nothing is not.
+//
+// PR 6 then deleted EntityPageHero outright — all five listing types now render
+// through TemplateHero — so the call sites below are the two that remain.
 //
 // The helper's last fallback is the '#visit' anchor, which is the part that can
 // silently regress: it is only a real destination on pages that actually render
@@ -140,9 +143,12 @@ describe('getCtaHref — the #visit anchor is guarded by entity_type', () => {
 
 describe('the #visit anchor exists wherever the helper can return it', () => {
   // A returned '#visit' is only honest if something on the page carries that id.
-  it('the default listing page wraps At a Glance in id="visit"', () => {
-    const src = source('app/[citySlug]/[entityType]/[listingSlug]/page.tsx')
-    expect(src).toMatch(/id="visit"[\s\S]{0,80}<EntityAtAGlance/)
+  // Since PR 6 the listing page renders no sections of its own — every type
+  // goes through a template — so the storefront template is where the default
+  // listing's anchor now lives.
+  it('the storefront template wraps At a Glance in id="visit"', () => {
+    const src = source('components/entity-page/templates/StorefrontTemplate.tsx')
+    expect(src).toMatch(/id="visit"[\s\S]{0,120}<EntityAtAGlance/)
   })
 
   it.each([
@@ -178,7 +184,6 @@ describe('the #visit anchor exists wherever the helper can return it', () => {
 
 describe('no call site renders a CTA without a destination', () => {
   const CALL_SITES = [
-    'components/entity-page/EntityPageHero.tsx',
     'components/entity-page/EntityQuickActionBar.tsx',
     'components/entity-page/templates/TemplateHero.tsx',
   ] as const
@@ -208,13 +213,14 @@ describe('no call site renders a CTA without a destination', () => {
 
   it('keeps id="hero-cta" on the hero anchor', () => {
     // e2e/contrast.spec.ts:66 and e2e/keyboard-a11y.spec.ts:43 locate it, and
-    // EntityQuickActionBar observes it to decide when to slide in.
-    for (const file of [
-      'components/entity-page/EntityPageHero.tsx',
-      'components/entity-page/templates/TemplateHero.tsx',
-    ]) {
-      expect(source(file)).toContain('id="hero-cta"')
-    }
+    // EntityQuickActionBar observes it to decide when to slide in. Since PR 6
+    // TemplateHero is the only hero in the codebase, and it must carry the id
+    // exactly once — a duplicate id would make both e2e locators strict-mode
+    // ambiguous.
+    // Matched as a standalone JSX attribute line so the two prose mentions of
+    // the id in this file's own comments do not count toward the total.
+    const hero = source('components/entity-page/templates/TemplateHero.tsx')
+    expect(hero.match(/^\s*id="hero-cta"$/gm) ?? []).toHaveLength(1)
   })
 
   it('the quick action bar no-ops when the hero CTA is absent', () => {

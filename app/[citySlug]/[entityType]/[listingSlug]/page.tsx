@@ -8,26 +8,8 @@ import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
 import { resolveCoverImage, resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
-import { EntityPageHero } from '@/components/entity-page/EntityPageHero'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
-import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
-import { EntityLinks } from '@/components/entity-page/EntityLinks'
-import { EntityEventDetails } from '@/components/entity-page/EntityEventDetails'
-import { EntityJobDetails } from '@/components/entity-page/EntityJobDetails'
-import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
-import { EntityStorySection } from '@/components/entity-page/EntityStorySection'
-import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferingsSection'
-import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
-import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
-import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
-import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
-import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
-import { EntityTrustSection } from '@/components/entity-page/EntityTrustSection'
-import { EntityCommunityConnection } from '@/components/entity-page/EntityCommunityConnection'
-import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
-import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
-import { ProfessionalTemplate } from '@/components/entity-page/templates/ProfessionalTemplate'
-import { CreativeTemplate } from '@/components/entity-page/templates/CreativeTemplate'
+import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { recordTourWitness } from '@/lib/tour/witness'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
@@ -165,12 +147,12 @@ export default async function EntityPage({ params }: PageProps) {
 
   if (!entity) notFound()
 
+  // Which template renders the page is EntityTemplateOutlet's call, not this
+  // file's — it covers all eight entity types exhaustively. These two booleans
+  // survive only because structured data still branches by schema.org type,
+  // which is a different question from layout.
   const isEvent = entity.entity_type === 'event'
   const isJob = entity.entity_type === 'job'
-  // Living Commerce Index templates (Service + Portfolio archetypes).
-  const isProfessional =
-    entity.entity_type === 'professional' || entity.entity_type === 'service_provider'
-  const isCreative = entity.entity_type === 'creative'
   const jsonLd = isEvent
     ? buildEventJsonLd(entity, entityType)
     : isJob
@@ -231,110 +213,17 @@ export default async function EntityPage({ params }: PageProps) {
       {/* QuickActionBar — Client, appears on scroll */}
       <EntityQuickActionBar entity={entity} initialSaved={initialSaved} />
 
-      {/* Living Commerce Index templates own their full page (immersive
-          full-bleed hero included); other types keep the shared hero. */}
-      {isProfessional || isCreative ? null : (
-        <div className="max-w-7xl mx-auto w-full overflow-hidden rounded-t-xl bg-deep-bg">
-          <EntityPageHero entity={entity} initialSaved={initialSaved} />
-        </div>
-      )}
-
-      {/* Sections — each manages its own background and max-width */}
-
-      {isProfessional ? (
-        <ProfessionalTemplate
-          entity={entity}
-          initialSaved={initialSaved}
-          userId={user?.id ?? null}
-          isOwner={isOwner}
-          hasReviewed={hasReviewed}
-        />
-      ) : isCreative ? (
-        <CreativeTemplate
-          entity={entity}
-          initialSaved={initialSaved}
-          userId={user?.id ?? null}
-          isOwner={isOwner}
-          hasReviewed={hasReviewed}
-        />
-      ) : isEvent ? (
-        <>
-          {/* Event details — When/Where, ticket CTA, organizer, about */}
-          <EntityEventDetails entity={entity} />
-
-          {/* Media Gallery — bg-deep-bg; hidden if no images */}
-          <EntityMediaGallery entity={entity} images={entity.images} />
-
-          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
-          <EntityRelatedDiscovery entity={entity} />
-        </>
-      ) : isJob ? (
-        <>
-          {/* Job details — type/where/pay/closing, apply CTA, hiring company, about */}
-          <EntityJobDetails entity={entity} />
-
-          {/* Media Gallery — bg-deep-bg; hidden if no images */}
-          <EntityMediaGallery entity={entity} images={entity.images} />
-
-          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
-          <EntityRelatedDiscovery entity={entity} />
-        </>
-      ) : (
-        <>
-          {/* At a Glance — bg-white. id="visit" is getCtaHref's fallback anchor
-              for a listing with an address/hours but no configured CTA; the two
-              templates put the same id on their own At a Glance block, so it
-              lives on the call site here rather than inside the component (which
-              both render) to avoid a duplicate id on template pages. */}
-          <div id="visit" className="scroll-mt-32">
-            <EntityAtAGlance entity={entity} />
-          </div>
-
-          {/* Owner-managed links (book / menu / order / socials) — bg-white; hidden if none */}
-          <EntityLinks entity={entity} />
-
-          {/* Story — bg-cream */}
-          <EntityStorySection entity={entity} />
-
-          {/* Offerings — bg-white */}
-          <EntityOfferingsSection entity={entity} />
-
-          {/* Attributes & amenities — bg-cream; hidden if none set */}
-          <EntityAttributes attributes={entity.attributes} />
-
-          {/* FAQ — bg-white; hidden if no questions */}
-          <EntityFaqSection faqs={entity.faqs} />
-
-          {/* Upcoming events this business organizes — bg-cream; hidden if none */}
-          <EntityUpcomingEvents entity={entity} />
-
-          {/* Media Gallery — bg-deep-bg; hidden if no images */}
-          <EntityMediaGallery entity={entity} images={entity.images} />
-
-          {/* Video — bg-cream; hidden if no (valid) embed */}
-          <EntityVideoSection entity={entity} />
-
-          {/* Reviews — bg-white */}
-          <EntityReviewsSection
-            entity={entity}
-            userId={user?.id ?? null}
-            isOwner={isOwner}
-            hasReviewed={hasReviewed}
-          />
-
-          {/* Trust & Verification — bg-pale-lavender */}
-          <EntityTrustSection entity={entity} />
-
-          {/* Community — bg-white */}
-          <EntityCommunityConnection entity={entity} />
-
-          {/* Platform Activity — bg-cream; hidden if no saves */}
-          <EntityPlatformActivity entity={entity} />
-
-          {/* Related Discovery — bg-pale-lavender; hidden if < 3 related */}
-          <EntityRelatedDiscovery entity={entity} />
-        </>
-      )}
+      {/* Every listing type renders through its own template — the outlet
+          picks it, and each template owns its full page including the
+          immersive hero. Before PR 6 this was a four-way nested ternary with a
+          separately-mounted shared hero above it. */}
+      <EntityTemplateOutlet
+        entity={entity}
+        initialSaved={initialSaved}
+        userId={user?.id ?? null}
+        isOwner={isOwner}
+        hasReviewed={hasReviewed}
+      />
     </div>
   )
 }
