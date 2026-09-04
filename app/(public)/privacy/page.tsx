@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Section variant="pale-lavender">
-        <PageHeader title="Privacy Policy" subtitle="Last updated: June 30, 2026" />
+        <PageHeader title="Privacy Policy" subtitle="Last updated: August 17, 2026" />
       </Section>
 
       <Section variant="white">
@@ -97,6 +97,15 @@ export default function PrivacyPage() {
             </p>
           </section>
 
+          {/* [Needs professional review] The aggregation opt-out described in this
+              section and in the §8 rights list was corrected on 2026-08-17. Both
+              previously promised an account-settings opt-out available "at any
+              time"; the product provides a per-receipt choice that locks when a
+              reviewer approves the receipt (lib/actions/spend/updateReceiptSubmission.ts).
+              A stated data right that is narrower than it was is a change counsel
+              should see before it ships, particularly against CCPA/GDPR erasure
+              expectations. tests/opt-out-copy.test.ts pins this wording to the
+              guard that enforces it. */}
           <section id="receipt-data" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">4. Receipt and Spend Data</h2>
             <p>
@@ -114,9 +123,21 @@ export default function PrivacyPage() {
               traced back to any individual.
             </p>
             <p>
-              You may opt out of community spend aggregation at any time through your account settings.
-              Opting out removes your spend data from future aggregate calculations; it does not delete
-              historical records already incorporated into prior aggregates.
+              The choice about community aggregation belongs to each receipt individually. You make it
+              when you submit the receipt, and you may change it from Account &rarr; Receipts for as long
+              as that receipt is still awaiting review. Once a reviewer approves a receipt, its choice is
+              fixed, because the amount has by then been included in the totals.
+            </p>
+            <p>
+              There is no account-wide setting, and no automated way to withdraw spend that has already
+              been counted. If you need spend removed after approval, contact us at{' '}
+              <a
+                href="mailto:privacy@theblacqlist.com"
+                className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors"
+              >
+                privacy@theblacqlist.com
+              </a>{' '}
+              and we will process the request by hand.
             </p>
           </section>
 
@@ -273,7 +294,7 @@ export default function PrivacyPage() {
               <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
               <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
               <li><strong>Deletion:</strong> Delete your account and personal data yourself from Account → Settings, or request deletion by email</li>
-              <li><strong>Opt-out of aggregation:</strong> Opt your spend data out of community aggregation at any time from your account settings</li>
+              <li><strong>Opt-out of aggregation:</strong> Choose, for each receipt you submit, whether it is included in community aggregate totals &mdash; changeable from Account &rarr; Receipts until that receipt is approved (see Section 4)</li>
               <li><strong>Portability:</strong> Request a copy of your data; we will provide it in a structured, machine-readable format where technically feasible</li>
               <li><strong>Complaint:</strong> Lodge a complaint with a data protection supervisory authority in your jurisdiction</li>
             </ul>
