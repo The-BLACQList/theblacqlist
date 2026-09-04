@@ -73,11 +73,15 @@ export function ActiveFilterChips({
 
   // Where the business operates. Distinct from the Near You filter below, which is
   // about where the SEARCHER is — this one has no coordinates in it.
-  const locationType = searchParams.get('location_type')
-  if (locationType)
+  //
+  // One chip per selected type, not one chip for the key. Products & Services
+  // arrives as four types at once, and a single "Where they operate" chip that
+  // cleared all four would give the caller no way to drop just one of them —
+  // the same reason price and attrs render per value below.
+  for (const value of getCsv('location_type'))
     chips.push({
-      label: LOCATION_TYPE_LABEL[locationType] ?? locationType,
-      onRemove: () => setParam('location_type', ''),
+      label: LOCATION_TYPE_LABEL[value] ?? value,
+      onRemove: () => removeCsv('location_type', value),
     })
 
   // One chip for the whole location filter, not three. Removing it takes the

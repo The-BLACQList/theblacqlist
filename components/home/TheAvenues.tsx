@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EMBER_WASH } from '@/lib/design/surfaces'
+import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 
 export interface AvenueCounts {
   brick: number
@@ -36,7 +37,16 @@ interface Avenue {
 // type to /discover; counts sum every underlying entity type they cover.
 const AVENUES: Avenue[] = [
   { key: 'brick', label: 'Brick & Mortar', verb: 'shops & storefronts', href: '/discover?type=business', icon: Store },
-  { key: 'products', label: 'Products & Services', verb: 'shop & book', href: '/discover?type=service_provider', icon: ShoppingBag },
+  // Not `?type=…`: this avenue is a location_type bin, not an entity_type one.
+  // See PRODUCTS_SERVICES_LOCATION_TYPES — app/page.tsx counts from the same
+  // constant, so the number on the tile and the page behind it cannot disagree.
+  {
+    key: 'products',
+    label: 'Products & Services',
+    verb: 'shop & book',
+    href: `/discover?location_type=${PRODUCTS_SERVICES_LOCATION_TYPES.join(',')}`,
+    icon: ShoppingBag,
+  },
   { key: 'professionals', label: 'Professionals', verb: 'consult & advise', href: '/discover?type=professional', icon: Briefcase },
   { key: 'creatives', label: 'Creatives', verb: 'commission & collect', href: '/discover?type=creative', icon: Palette },
   { key: 'events', label: 'Events', verb: 'pull up', href: '/discover?type=event', icon: CalendarDays },

@@ -64,7 +64,13 @@ async function DiscoverContent({
       category: params.category,
       city: params.city,
       trust_tier: params.trust_tier,
-      location_type: params.location_type,
+      // Split, never filtered against the known values: an unrecognised type
+      // must survive to the query and return nothing. Dropping it here would
+      // turn `?location_type=nonsense` into no filter at all and answer with
+      // the whole directory under the caller's filter chip.
+      location_type: params.location_type
+        ? params.location_type.split(',').filter(Boolean)
+        : undefined,
       ownership: params.ownership,
       price: params.price ? params.price.split(',').filter(Boolean) : undefined,
       attrs: params.attrs ? params.attrs.split(',').filter(Boolean) : undefined,

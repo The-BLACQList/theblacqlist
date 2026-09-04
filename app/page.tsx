@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
+import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
@@ -61,7 +62,7 @@ export default async function HomePage() {
       .order('display_order'),
     supabase
       .from('listings')
-      .select('category_id, city_id, entity_type')
+      .select('category_id, city_id, entity_type, location_type')
       .eq('status', 'published')
       .is('deleted_at', null),
     supabase
@@ -118,15 +119,24 @@ export default async function HomePage() {
   const categoryCounts = new Map<string, number>()
   const cityCounts = new Map<string, number>()
   const typeCounts = new Map<string, number>()
+  // Counted separately from typeCounts because this avenue is binned by
+  // location_type, not entity_type — see PRODUCTS_SERVICES_LOCATION_TYPES.
+  const productsServices: Set<string> = new Set(PRODUCTS_SERVICES_LOCATION_TYPES)
+  let productsServicesCount = 0
   for (const row of listingFacetRes.data ?? []) {
     if (row.category_id)
       categoryCounts.set(row.category_id, (categoryCounts.get(row.category_id) ?? 0) + 1)
     if (row.city_id) cityCounts.set(row.city_id, (cityCounts.get(row.city_id) ?? 0) + 1)
     typeCounts.set(row.entity_type, (typeCounts.get(row.entity_type) ?? 0) + 1)
+    if (row.location_type && productsServices.has(row.location_type)) productsServicesCount += 1
   }
   const avenueCounts: AvenueCounts = {
+    // Brick & Mortar is still entity_type, matching its own unchanged href. The
+    // two bins can therefore overlap — an online-only `business` is counted in
+    // both — but each tile's number matches the page it links to, which is the
+    // only thing either tile has ever claimed.
     brick: (typeCounts.get('business') ?? 0) + (typeCounts.get('restaurant') ?? 0),
-    products: (typeCounts.get('service_provider') ?? 0) + (typeCounts.get('vendor') ?? 0),
+    products: productsServicesCount,
     professionals: typeCounts.get('professional') ?? 0,
     creatives: typeCounts.get('creative') ?? 0,
     events: typeCounts.get('event') ?? 0,

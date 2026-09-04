@@ -17,6 +17,36 @@ const csvArray = z
   .optional()
 
 /**
+ * A CSV param whose every element must be one of `values` — an unrecognised
+ * element is a 400, not a silent drop.
+ *
+ * `csvArray` above is deliberately permissive because `price` and `attrs` name
+ * rows that may or may not exist, and an unmatched one only NARROWS the page:
+ * the caller sees zero results, which reads as "nothing matches" and is honest.
+ * A location type is the opposite. Dropping the bad half of
+ * `?location_type=virtual,online` would leave `virtual` alone — but dropping
+ * the only value in `?location_type=online` removes the filter entirely and
+ * hands back every storefront in the directory, looking exactly like a correct
+ * unfiltered page. Widening a filter silently is the failure this file already
+ * records twice above, so this one validates elementwise and fails loudly.
+ */
+const csvEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
+  z
+    .string()
+    .transform((s) =>
+      Array.from(
+        new Set(
+          s
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean)
+        )
+      )
+    )
+    .pipe(z.array(z.enum(values)))
+    .optional()
+
+/**
  * A numeric URL param that treats an empty value (`?lat=`) as absent.
  *
  * `z.coerce.number()` turns `''` into `0`, and lat=0/lng=0 is a real point in
@@ -41,7 +71,12 @@ export const searchSchema = z.object({
   // A retyped list is what made both possible, so there is no retyped list here.
   type: z.enum(VALID_ENTITY_TYPES).optional(),
   trust_tier: z.enum(['claimed', 'verified', 'certified']).optional(),
-  location_type: z.enum(VALID_LOCATION_TYPES).optional(),
+  // Multi-select as of 2026-09-04: the Products & Services bin is four location
+  // types at once (`?location_type=virtual,service_area,national,traveling`).
+  // The key name does not change and a single value is a one-element CSV, so
+  // every link shared before this — and every crawled URL — parses to the same
+  // filter it always did.
+  location_type: csvEnum(VALID_LOCATION_TYPES),
   // Faceted filters (CSV in the URL): price=$,$$  attrs=delivery,vegan-options
   price: csvArray,
   attrs: csvArray,
