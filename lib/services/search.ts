@@ -191,7 +191,11 @@ export async function searchListings(
   if (categoryId) query = query.eq('category_id', categoryId)
   if (params.type) query = query.eq('entity_type', params.type)
   if (params.trust_tier) query = query.eq('trust_tier', params.trust_tier)
-  if (params.location_type) query = query.eq('location_type', params.location_type)
+  // `.in()` on a guarded length: `.in('x', [])` matches nothing, so an empty
+  // array would empty the page rather than leave the filter off.
+  if (params.location_type?.length) {
+    query = query.in('location_type', params.location_type)
+  }
 
   // Editorial centering: Black-Owned ranks ahead of Ally ('black_owned' > 'ally'
   // lexically, so ascending:false centers Black-Owned). Mirrors the ORDER BY in

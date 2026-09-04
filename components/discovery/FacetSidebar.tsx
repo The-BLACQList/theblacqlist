@@ -52,11 +52,13 @@ export function FacetSidebar({
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
-  const activeLocationType = searchParams.get('location_type') ?? ''
   const activeOwnership = searchParams.get('ownership') ?? ''
   const openNow = searchParams.get('open_now') === '1'
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
+  // Multi-select as of 2026-09-04: Products & Services is four location types at
+  // once, so this reads like price/attrs rather than the single-value facets.
+  const selectedLocationTypes = getCsv('location_type')
 
   const clearableKeys = [
     ...(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS),
@@ -167,13 +169,13 @@ export function FacetSidebar({
         <legend className={legendClass}>Where they operate</legend>
         <div className="flex flex-col gap-1">
           {LOCATION_TYPES.map(({ value, label }) => {
-            const isActive = activeLocationType === value
+            const isActive = selectedLocationTypes.includes(value)
             return (
               <button
                 key={value}
                 type="button"
                 aria-pressed={isActive}
-                onClick={() => setParam('location_type', isActive ? '' : value)}
+                onClick={() => toggleCsv('location_type', value)}
                 className={cn(
                   'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
                   isActive

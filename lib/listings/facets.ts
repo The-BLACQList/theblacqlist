@@ -79,7 +79,12 @@ export interface RawFacetParams {
   city?: string
   type?: string
   trust_tier?: string
-  location_type?: string
+  /**
+   * Multi-select. One URL key holding a CSV, validated elementwise upstream
+   * (searchSchema), so an unknown value is a 400 rather than a filter that
+   * quietly disappears and widens the page.
+   */
+  location_type?: string[]
   ownership?: string
   price?: string[]
   attrs?: string[]
@@ -132,7 +137,14 @@ export interface ResolvedFacetParams {
   p_city_id: string | null
   p_entity_type: string | null
   p_trust_tier: string | null
-  p_location_type: string | null
+  /**
+   * The plural arg added by 20260904000000_search_location_types.sql. The
+   * singular `p_location_type` still exists in both functions, but nothing here
+   * sends it any more — it stays in the database only so the previously
+   * deployed code kept working between the migration and this release, and it
+   * is dropped in its own migration once that window has closed.
+   */
+  p_location_types: string[] | null
   p_ownership_label: string | null
   p_price_ranges: string[] | null
   p_attribute_values: string[] | null
@@ -250,7 +262,10 @@ export async function resolveFacetParams(
       p_city_id: cityId,
       p_entity_type: raw.type || null,
       p_trust_tier: raw.trust_tier || null,
-      p_location_type: raw.location_type || null,
+      // An empty array is the same as no filter, and it must be sent as NULL:
+      // the RPC treats both as inert, but `[]` through PostgREST is a longer
+      // way to say nothing and would read as a filter in a logged arg set.
+      p_location_types: raw.location_type?.length ? raw.location_type : null,
       p_ownership_label: raw.ownership || null,
       p_price_ranges: price.length > 0 ? price : null,
       p_attribute_values: attrIds.length > 0 ? attrIds : null,
@@ -318,7 +333,13 @@ export async function legacyFacetedIds(
   if (resolved.p_city_id) q = q.eq('city_id', resolved.p_city_id)
   if (resolved.p_entity_type) q = q.eq('entity_type', resolved.p_entity_type)
   if (resolved.p_trust_tier) q = q.eq('trust_tier', resolved.p_trust_tier)
-  if (resolved.p_location_type) q = q.eq('location_type', resolved.p_location_type)
+  // `.in()` rather than `.eq()`, and guarded on length: `.in('x', [])` compiles
+  // to `x=in.()`, which matches nothing — so an empty array here would empty
+  // the page instead of leaving the filter off, the same trap the RPC's
+  // array_length test avoids on the SQL side.
+  if (resolved.p_location_types?.length) {
+    q = q.in('location_type', resolved.p_location_types)
+  }
   if (resolved.p_ownership_label) q = q.eq('ownership_label', resolved.p_ownership_label)
   if (resolved.p_q) {
     q = q.textSearch('search_vector', resolved.p_q, { type: 'websearch', config: 'english' })

@@ -92,6 +92,27 @@ export const LOCATION_TYPE_META: Record<LocationType, { label: string }> = {
   traveling: { label: 'Mobile / pop-up' },
 }
 
+/**
+ * The Products & Services avenue, defined by where a business operates rather
+ * than by `entity_type`.
+ *
+ * The tile used to link to `?type=service_provider` and count
+ * `service_provider + vendor`, and both were zero: every published listing is
+ * `entity_type='business'`. What the avenue actually means — "operate solely
+ * online, may not have an address, may be mobile and/or service based"
+ * [founder, 2026-09-03] — is `location_type`, which is already a live facet.
+ *
+ * The tile's href and the tile's count both read this constant so they cannot
+ * drift apart: a count that disagrees with the page it links to is the same
+ * class of defect as the zero it replaces.
+ */
+export const PRODUCTS_SERVICES_LOCATION_TYPES = [
+  'virtual',
+  'service_area',
+  'national',
+  'traveling',
+] as const satisfies readonly LocationType[]
+
 export const VALID_CTA_TYPES = [
   'book',
   'order',

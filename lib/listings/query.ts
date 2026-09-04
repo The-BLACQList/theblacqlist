@@ -21,7 +21,8 @@ export interface ListingsParams {
   category?: string
   city?: string
   trust_tier?: string
-  location_type?: string
+  /** Multi-select; one CSV URL key. See RawFacetParams.location_type. */
+  location_type?: string[]
   ownership?: string
   price?: string[]
   attrs?: string[]
