@@ -2,6 +2,7 @@ import { Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
+import { ShareButton } from '@/components/entity-page/ShareButton'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
@@ -10,27 +11,61 @@ import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 
+/**
+ * One hero per template. `professional` and `creative` are the two Living
+ * Commerce Index archetypes; `storefront`, `event` and `job` were added when
+ * every listing type moved onto the template system (PR 6) and the old
+ * EntityPageHero was retired.
+ */
+export type TemplateHeroVariant = 'professional' | 'creative' | 'storefront' | 'event' | 'job'
+
 interface Props {
   entity: EntityPageData
   initialSaved?: boolean
   /** professional = P-A Immersive Microsite; creative = C-B Cover Story */
-  variant: 'professional' | 'creative'
+  variant: TemplateHeroVariant
 }
 
 const TYPE_LABELS: Record<string, string> = {
+  business: 'Business',
+  restaurant: 'Restaurant',
+  vendor: 'Vendor',
   professional: 'Professional',
   service_provider: 'Professional',
   creative: 'Creative',
+  event: 'Event',
+  job: 'Job',
+}
+
+// The hero gets shorter as the page below it gets more utilitarian: a portfolio
+// cover earns the full viewport, a job posting does not.
+const MIN_HEIGHTS: Record<TemplateHeroVariant, string> = {
+  creative: 'min-h-[420px] md:min-h-[74vh]',
+  professional: 'min-h-[360px] md:min-h-[62vh]',
+  storefront: 'min-h-[360px] md:min-h-[58vh]',
+  event: 'min-h-[340px] md:min-h-[52vh]',
+  job: 'min-h-[320px] md:min-h-[46vh]',
+}
+
+const HEADING_SIZES: Record<TemplateHeroVariant, string> = {
+  creative: 'text-[38px] md:text-[56px] lg:text-[64px]',
+  professional: 'text-[32px] md:text-[44px] lg:text-[52px]',
+  storefront: 'text-[32px] md:text-[44px] lg:text-[52px]',
+  event: 'text-[30px] md:text-[40px] lg:text-[46px]',
+  job: 'text-[28px] md:text-[38px] lg:text-[42px]',
 }
 
 /**
- * Immersive photographic hero for the Living Commerce Index templates.
+ * Immersive photographic hero for every listing template.
  * Full-bleed cover (or the designed F-1 fallback), badges, name, tagline,
  * and the business-defined CTA inside the hero. The CTA keeps id="hero-cta"
  * so EntityQuickActionBar's IntersectionObserver continues to work.
  */
 export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   const isCreative = variant === 'creative'
+  // Events and jobs have no opening hours and no "is it open right now?"
+  // question to answer — OpenStatus would render an empty promise there.
+  const showOpenStatus = variant !== 'event' && variant !== 'job'
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
   const ctaHref = getCtaHref(entity)
@@ -43,7 +78,11 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
     <div
       className={cn(
         'relative w-full overflow-hidden bg-deep-bg flex items-end',
-        isCreative ? 'min-h-[420px] md:min-h-[74vh]' : 'min-h-[360px] md:min-h-[62vh]'
+        MIN_HEIGHTS[variant],
+        // The one surviving piece of EntityPageHero's tier ladder. Its three
+        // steps (360 / 400 / 560) collapsed to a single premium bump: the
+        // standard step was an 11% difference nobody could see.
+        variant === 'storefront' && entity.tier === 'premium' && 'md:min-h-[70vh]'
       )}
     >
       <CoverImage
@@ -56,6 +95,17 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         scrim={cover.src ? 'bottom' : 'none'}
         fallbackSize="hero"
       />
+
+      {/* Ported from EntityPageHero — the only place is_featured surfaces on a
+          listing page. Deleting that component without this was a silent
+          regression on every featured storefront. */}
+      {entity.is_featured && (
+        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-gold text-brand-black font-subhead text-xs font-semibold leading-none">
+            Featured
+          </span>
+        </div>
+      )}
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-5 md:px-8 lg:px-10 pt-24 pb-9 md:pb-10">
         {isCreative && entity.category?.name && (
@@ -72,21 +122,14 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           </span>
         </div>
 
-        <h1
-          className={cn(
-            'font-headline text-white leading-tight text-balance',
-            isCreative
-              ? 'text-[38px] md:text-[56px] lg:text-[64px]'
-              : 'text-[32px] md:text-[44px] lg:text-[52px]'
-          )}
-        >
+        <h1 className={cn('font-headline text-white leading-tight text-balance', HEADING_SIZES[variant])}>
           {entity.name}
         </h1>
 
         {!isCreative && locationLine && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">
             {locationLine}
-            <OpenStatus hours={entity.details.hours} surface="dark" />
+            {showOpenStatus && <OpenStatus hours={entity.details.hours} surface="dark" />}
           </p>
         )}
         {isCreative && entity.city && (
@@ -150,15 +193,24 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             </a>
           )}
 
-          {/* Labelled variant + `surface`, matching EntityPageHero. `className`
-              is sizing only here — a `bg-` class would override the saved
-              state, which is exactly the bug this replaced. */}
+          {/* Labelled variant + `surface`. `className` is sizing only here — a
+              `bg-` class would override the saved state, which is exactly the
+              bug this replaced. */}
           <SaveButton
             listingId={entity.id}
             initialSaved={initialSaved}
             variant="pill"
             surface="hero"
             className="h-12 px-6"
+          />
+
+          {/* Also ported from EntityPageHero. Share was reachable from every
+              storefront listing and from nowhere else once that hero went. */}
+          <ShareButton
+            listingName={entity.name}
+            listingId={entity.id}
+            className="size-12 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+            iconClassName="size-5"
           />
         </div>
       </div>

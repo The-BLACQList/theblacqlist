@@ -139,7 +139,6 @@ describe('no call site can override the saved surface', () => {
   // THE regression guard for the tailwind-merge bug described at the top.
   // `className` is for sizing and position; `surface` owns the colours.
   const CALL_SITES = [
-    'components/entity-page/EntityPageHero.tsx',
     'components/entity-page/templates/TemplateHero.tsx',
     'components/entity-page/EntityQuickActionBar.tsx',
     'app/account/saved/page.tsx',
@@ -163,14 +162,14 @@ describe('no call site can override the saved surface', () => {
     }
   })
 
-  it.each([
-    'components/entity-page/EntityPageHero.tsx',
-    'components/entity-page/templates/TemplateHero.tsx',
-  ])('%s uses the labelled variant on the photo scrim', (file) => {
+  it('the hero uses the labelled variant on the photo scrim', () => {
     // "Save" / "Saved" in words is the single clearest answer to "are these the
     // same action?" — an icon alone is what made the card and the page read as
     // two different things. Icons stay where space is genuinely tight.
-    const el = elements(source(file), 'SaveButton')[0]!
+    //
+    // One file since PR 6: EntityPageHero is gone and every listing type
+    // renders through TemplateHero.
+    const el = elements(source('components/entity-page/templates/TemplateHero.tsx'), 'SaveButton')[0]!
     expect(el).toContain('variant="pill"')
     expect(el).toContain('surface="hero"')
   })
