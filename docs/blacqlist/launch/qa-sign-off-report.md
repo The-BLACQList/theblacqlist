@@ -201,7 +201,18 @@ All 5 critical paths passed on production (founder-run via `?preview`, 2026-06-3
 **Conditions before flipping `COMING_SOON_MODE=false` (full public):**
 - Optional ~10-min desktop **Chrome + Safari** re-click of the 5 paths (founder ran mobile-first).
 - A few formal sub-steps not separately re-clicked this pass (CP1 post-sign-in redirect-back, CP2 admin-queue-appears, CP4 publish/unpublish toggle, CP5 approve-claim) — low-risk, partly covered elsewhere; spot-check during soft launch.
-- **Founder-gated launch gates** (independent of QA): M5 claim-SLA owner, M6 on-call (`on-call.md`), M7 PITR enabled on prod Supabase, legal F8 (P.O. box + DMCA agent), M4 ≥1 published collection (`scripts/seed-collections.ts`), and the account-deletion E2E walk-through (`prod-qa-closeout.md` item 1).
+- **Founder-gated launch gates** (independent of QA): M5 claim-SLA owner, M6 on-call (`on-call.md`), M7 PITR enabled on prod Supabase, legal F8 (P.O. box + DMCA agent), ~~M4 ≥1 published collection~~, and the account-deletion E2E walk-through (`prod-qa-closeout.md` item 1).
+
+> **Status of this list, re-derived 2026-09-03** — four of the six have moved since this report was written on 2026-06-30. Do not read the line above as current:
+>
+> | Item | State |
+> |---|---|
+> | **M4** — ≥1 published collection | 🔵 **NOT a flip gate.** `[Decision — founder, 2026-09-03]` post-flip item. It appears in **no** blocker list — not in `launch-readiness.md`'s seven, not in blocker ⑦'s five sign-offs — so whether it was consciously dropped or overlooked was `[Unknown]`, and is now answered. `/collections` is linked in the public footer (`components/nav/public-footer.tsx:85`) and its empty state reads *"No collections yet. Check back soon. Curated lists are on the way."* `[Observed — app/(public)/collections/page.tsx:52-60, 2026-09-03]`. **Empty, reachable and honest** is exactly `launch-readiness.md`'s standard; empty and misleading would not have been. Full reasoning in `remaining-tests-runbook.md` under M4 — do not re-derive it at the flip checklist. |
+> | **M5** — claim-SLA owner | 🟢 owner + SLA closed 2026-09-03 (SLA wording corrected to "≤48h **during business hours**"). One founder residual: open `/admin/claims` once and record what loads. |
+> | **M6** — on-call | 🟢 **closed 2026-09-03.** `on-call.md`'s escalation table had four inexecutable paths (phone, Slack, a backup, a second lead — all the same solo founder); rewritten to solo reality. |
+> | **Legal F8** — P.O. box + DMCA agent | 🟢 **closed.** Entity *The BLACQList, LLC*, mailing address in Privacy §11 + Terms §8, DMCA agent registered with the U.S. Copyright Office (Reg. No. DMCA-1074879), all shipped on `main` in `81f55ce`. Zero `[CONFIRM]` strings remain under `app/`. |
+> | **Account-deletion E2E** | 🟢 **PASSES** — the `SECURITY DEFINER` / `search_path` trigger fix cleared it. |
+> | **M7** — PITR on prod Supabase | ⛔ **the one genuinely open item.** GATE-SPEND, founder's, sequenced immediately before the flip. |
 
 **Original Go criteria (for reference):**
 - All 5 critical paths pass in Chrome desktop, Safari desktop, and Chrome mobile 375px — *met on founder's primary device; desktop cross-check carried as a pre-public condition.*
