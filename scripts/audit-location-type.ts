@@ -30,22 +30,33 @@ import { mkdirSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { Client } from 'pg'
-import { AUDIT_REASONS, diff, summarize, type AuditListing } from '../lib/listings/locationTypeAudit'
+import {
+  AUDIT_REASONS,
+  describeConnectionTarget,
+  diff,
+  summarize,
+  type AuditListing,
+} from '../lib/listings/locationTypeAudit'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const outDir = join(__dirname, '..', 'docs', 'blacqlist', 'ops', 'data')
 
 /**
- * Name the target before touching it — copied from
- * scripts/seed-editorial-launch.ts:63. This script is read-only, so there is
- * no confirmation flag; the point is that the operator sees which project the
+ * Name the target before touching it. This script is read-only, so there is no
+ * confirmation flag; the point is that the operator sees which project the
  * numbers came from before the numbers appear.
+ *
+ * The ref is derived by `describeConnectionTarget`, which knows the two shapes
+ * a Supabase Postgres URL comes in. Never print the connection string itself —
+ * it carries the database password.
  */
 function announceTarget(url: string): void {
-  const host = new URL(url).hostname
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
-  const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
-  console.log(`Target: ${isLocal ? 'LOCAL' : 'REMOTE'} — project ref "${ref}" (${host})`)
+  const { kind, projectRef } = describeConnectionTarget(url)
+  const where = kind === 'local' ? 'LOCAL' : kind === 'remote' ? 'REMOTE' : 'UNRECOGNISED'
+  console.log(`Target: ${where} — project ref ${projectRef ? `"${projectRef}"` : '[could not read]'}`)
+  if (kind !== 'local' && !projectRef) {
+    console.log('        Check by hand which project this points at before trusting the numbers.')
+  }
   console.log('Mode:   READ-ONLY — this script never writes to the database.\n')
 }
 

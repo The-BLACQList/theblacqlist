@@ -35,7 +35,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import { dirname, isAbsolute, join } from 'path'
 import { fileURLToPath } from 'url'
 import { Client } from 'pg'
-import { isValidLocationType } from '../lib/listings/locationTypeAudit'
+import { describeConnectionTarget, isValidLocationType } from '../lib/listings/locationTypeAudit'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const dataDir = join(__dirname, '..', 'docs', 'blacqlist', 'ops', 'data')
@@ -121,23 +121,39 @@ function latestAudit(): string {
 }
 
 /**
- * Name the target before touching it — scripts/seed-editorial-launch.ts:63.
- * A live run against a remote project additionally requires --yes.
+ * Name the target before touching it. A live run against a remote project
+ * additionally requires --yes.
+ *
+ * The ref comes from `describeConnectionTarget` — never from the raw hostname,
+ * and the connection string is never printed (it carries the password). If the
+ * ref cannot be read, a live remote run refuses even with --yes: --yes means
+ * "yes, that ref is the one I meant", and there is no ref to mean.
  */
 function assertTargetConfirmed(url: string, live: boolean): void {
-  const host = new URL(url).hostname
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
-  const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
+  const { kind, projectRef } = describeConnectionTarget(url)
+  const isLocal = kind === 'local'
+  const where = isLocal ? 'LOCAL' : kind === 'remote' ? 'REMOTE' : 'UNRECOGNISED'
 
-  console.log(`Target: ${isLocal ? 'LOCAL' : 'REMOTE'} — project ref "${ref}" (${host})`)
+  console.log(`Target: ${where} — project ref ${projectRef ? `"${projectRef}"` : '[could not read]'}`)
   if (!live) {
     console.log('Mode:   DRY RUN — nothing will be written.\n')
     return
   }
   console.log('Mode:   LIVE — this run updates location_type on the project above.\n')
-  if (isLocal || YES) return
+  if (isLocal) return
+
+  if (!projectRef) {
+    console.error(
+      'Refusing to write: the project ref could not be read from DATABASE_URL.\n' +
+        'Expected a Supabase connection string — db.<ref>.supabase.co, or a pooler host\n' +
+        'with the ref in the username as postgres.<ref>. Fix the URL and re-run.'
+    )
+    process.exit(1)
+  }
+  if (YES) return
+
   console.error(
-    `Refusing to write to remote project "${ref}" without confirmation.\n` +
+    `Refusing to write to remote project "${projectRef}" without confirmation.\n` +
       `Check the ref above against the project you intend to write to, then re-run with --yes.\n` +
       `Writing location_type on a remote project is a GATE-DATA action; confirm the gate before passing it.`
   )

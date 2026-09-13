@@ -37,6 +37,70 @@ import { VALID_LOCATION_TYPES, type LocationType } from '@/lib/constants/listing
  * own, so a listing with no details row has no address evidence at all —
  * `hasDetailsRow` distinguishes that from an details row with empty fields.
  */
+/** What a Postgres connection string points at. Carries no credentials, ever. */
+export interface ConnectionTarget {
+  kind: 'local' | 'remote' | 'unknown'
+  /** The Supabase project ref, or null when the string is not a recognised Supabase target. */
+  projectRef: string | null
+}
+
+// Supabase refs are lowercase alphanumeric, currently 20 characters. The range
+// is deliberately loose so a future length change degrades to `projectRef: null`
+// (the operator is told to check by hand) rather than to a confident wrong answer.
+const SUPABASE_DIRECT_HOST = /^(?:db\.)?([a-z0-9]{16,32})\.supabase\.co$/
+const SUPABASE_POOLER_HOST = /\.pooler\.supabase\.(?:com|co)$/
+const SUPABASE_POOLER_USER = /^postgres\.([a-z0-9]{16,32})$/
+
+/**
+ * Read the project ref out of a Postgres connection string, so a script can say
+ * which database it is about to touch before it touches it.
+ *
+ * This replaces a one-liner that both scripts carried:
+ *
+ *     const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
+ *
+ * which was copied from scripts/seed-editorial-launch.ts:63, where it was
+ * correct — that script parses a Supabase *API* URL (`https://<ref>.supabase.co`),
+ * and there the first label really is the ref. Postgres connection strings are
+ * shaped differently, in two ways the copy missed:
+ *
+ *   - direct:  db.<ref>.supabase.co            → the first label is "db"
+ *   - pooler:  aws-0-<region>.pooler.supabase.com, with the ref in the
+ *              *username* as `postgres.<ref>`  → the host has no ref at all
+ *
+ * So against production it printed `project ref "db"` or a pooler hostname, and
+ * never the ref the operator was told to check for. A safety line that cannot
+ * confirm the thing it exists to confirm is worse than no line, because it
+ * stops a correct run and waves through a wrong one.
+ *
+ * Returns `projectRef: null` rather than guessing. Nothing from the credentials
+ * is returned or printed — only the ref, which is public (it is in the
+ * NEXT_PUBLIC_SUPABASE_URL).
+ */
+export function describeConnectionTarget(url: string): ConnectionTarget {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return { kind: 'unknown', projectRef: null }
+  }
+
+  const host = parsed.hostname
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.endsWith('.local')) {
+    return { kind: 'local', projectRef: null }
+  }
+
+  const direct = SUPABASE_DIRECT_HOST.exec(host)
+  if (direct) return { kind: 'remote', projectRef: direct[1] ?? null }
+
+  if (SUPABASE_POOLER_HOST.test(host)) {
+    const pooled = SUPABASE_POOLER_USER.exec(parsed.username)
+    return { kind: 'remote', projectRef: pooled?.[1] ?? null }
+  }
+
+  return { kind: 'remote', projectRef: null }
+}
+
 export interface AuditListing {
   id: string
   name: string

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AUDIT_REASONS,
   classify,
+  describeConnectionTarget,
   diff,
   isValidLocationType,
   summarize,
@@ -223,5 +224,65 @@ describe('summarize', () => {
 
   it('is all zeroes for an empty input', () => {
     expect(summarize([])).toEqual({ ok: 0, change: 0, review: 0 })
+  })
+})
+
+/**
+ * These cases exist because the line they replaced was wrong in production.
+ * Both scripts derived the ref as `host.split('.')[0]`, which prints "db" for
+ * every direct Supabase connection string — so the operator was told to check
+ * for a ref the script could not print. The apply script carried the same line,
+ * and that one writes.
+ *
+ * The password below is a placeholder. A real connection string never appears
+ * in this repo.
+ */
+describe('describeConnectionTarget', () => {
+  const REF = 'abcdefghijklmnopqrst'
+
+  it('reads the ref from a direct connection (db.<ref>.supabase.co)', () => {
+    expect(describeConnectionTarget(`postgresql://postgres:pw@db.${REF}.supabase.co:5432/postgres`)).toEqual({
+      kind: 'remote',
+      projectRef: REF,
+    })
+  })
+
+  it('reads the ref from a bare <ref>.supabase.co host', () => {
+    expect(describeConnectionTarget(`postgresql://postgres:pw@${REF}.supabase.co:5432/postgres`)).toEqual({
+      kind: 'remote',
+      projectRef: REF,
+    })
+  })
+
+  it('reads the ref from the username on a pooler connection', () => {
+    // The pooler host carries the region, not the ref — the ref is in the user.
+    const url = `postgresql://postgres.${REF}:pw@aws-0-us-east-1.pooler.supabase.com:6543/postgres`
+    expect(describeConnectionTarget(url)).toEqual({ kind: 'remote', projectRef: REF })
+  })
+
+  it('reports local for localhost and 127.0.0.1', () => {
+    expect(describeConnectionTarget('postgresql://postgres:pw@localhost:54322/postgres').kind).toBe('local')
+    expect(describeConnectionTarget('postgresql://postgres:pw@127.0.0.1:54322/postgres').kind).toBe('local')
+  })
+
+  it('returns a null ref rather than guessing at an unrecognised host', () => {
+    expect(describeConnectionTarget('postgresql://postgres:pw@db.example.com:5432/postgres')).toEqual({
+      kind: 'remote',
+      projectRef: null,
+    })
+  })
+
+  it('returns a null ref for a pooler host whose username carries no ref', () => {
+    const url = 'postgresql://postgres:pw@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
+    expect(describeConnectionTarget(url)).toEqual({ kind: 'remote', projectRef: null })
+  })
+
+  it('does not throw on a string that is not a URL', () => {
+    expect(describeConnectionTarget('not a url')).toEqual({ kind: 'unknown', projectRef: null })
+  })
+
+  it('never returns any part of the credentials', () => {
+    const url = `postgresql://postgres:sup3r-s3cret@db.${REF}.supabase.co:5432/postgres`
+    expect(JSON.stringify(describeConnectionTarget(url))).not.toContain('s3cret')
   })
 })
