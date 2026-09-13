@@ -19,6 +19,32 @@ const AUTH_PAGES = ['/sign-in', '/sign-up']
 // Cookie that persists a coming-soon bypass once the secret ?preview token is used.
 const COMING_SOON_COOKIE = 'bl_preview'
 
+// Paths that stay reachable while COMING_SOON_MODE is on, even with no bypass.
+//
+// The auth entries exist so a failed auth link fails *legibly*. An expired or
+// cross-browser confirmation link lands on /sign-in?error=…; without this the
+// gate below bounced it to /coming-soon and wiped the query string, so the
+// person saw a marketing page and no explanation. Line ~103 already carries a
+// deliberate exception to keep ?error from being swallowed — the gate above it
+// swallowed it anyway. These finish what that exception was for. The same trap
+// applies to password reset, which reaches real account holders, not just
+// testers.
+//
+// /sign-up is deliberately NOT here. Any authenticated user bypasses the gate
+// (`bypass = hasValidToken || !!user` below), so a publicly reachable sign-up
+// page is a public door into the gated site. Testers do not need it: the invite
+// link is /sign-up?preview=<token>, which sets the cookie and serves the page in
+// one response, allowlist or not.
+const COMING_SOON_ALLOWED_PATHS = [
+  '/coming-soon',
+  '/api',
+  '/auth',
+  '/sign-in',
+  '/verify-email',
+  '/forgot-password',
+  '/reset-password',
+]
+
 export async function proxy(request: NextRequest) {
   // supabaseResponse must be mutated — not replaced — so cookies are forwarded
   // correctly between the browser, the middleware, and the Server Components.
@@ -73,10 +99,11 @@ export async function proxy(request: NextRequest) {
     }
 
     const bypass = hasValidToken || !!user
-    const isAllowed =
-      pathname === '/coming-soon' ||
-      pathname.startsWith('/api') ||
-      pathname.startsWith('/auth')
+    // Exact match or a real path segment beneath it. `startsWith` alone would
+    // also let through a sibling like /sign-inbox that nobody meant to open.
+    const isAllowed = COMING_SOON_ALLOWED_PATHS.some(
+      (allowed) => pathname === allowed || pathname.startsWith(`${allowed}/`)
+    )
 
     if (!bypass && !isAllowed) {
       const url = request.nextUrl.clone()
