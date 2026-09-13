@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-// M. MVP Launch Gates — the repo-checkable gates (M1, M2, M4, M8, M9).
+// M. MVP Launch Gates — the repo-checkable gates (M1, M2, M8, M9; M4 skipped
+// as a post-flip item, see the block below).
 // A FAILING test here means the gate is genuinely NOT yet satisfied (a real
 // launch blocker), not that the test is broken. Ops/owner gates (M3, M5, M6,
 // M7, M10) are tracked in docs/blacqlist/qa/cross-browser-and-launch-gates-guide.md.
@@ -27,7 +28,19 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
     expect(await res.text()).toMatch(/terms/i)
   })
 
-  test('M4 — at least one editorial collection published (is_active=true)', async () => {
+  // M4 is a **post-flip** item, not a flip gate. `[Decision — founder, 2026-09-03]`
+  // (decision-log.md, "Launch-gate sign-offs M3, M5, M6 — closed; M4 ruled a
+  // post-flip item"; read-back in qa-sign-off-report.md:210). An empty-but-honest
+  // /collections page is a valid launch state; an empty-and-misleading one is not,
+  // and the page has no misleading surface. The collection ships at S-05.
+  //
+  // Un-skip when that collection is published — do not delete this block. It is the
+  // only automated check that the collection exists, and skipping it here is what
+  // lets the rest of the suite run clean against production at C-16. Note this does
+  // NOT overlap with the editorial seed (`pnpm seed:editorial`, run 2026-08-24):
+  // that publishes *articles and guides*; M4 asks for a *collection*, which it
+  // seeds none of. Two different objects.
+  test.skip('M4 — at least one editorial collection published (is_active=true)', async () => {
     const supabase = serviceClient()
     const { count, error } = await supabase
       .from('collections')
