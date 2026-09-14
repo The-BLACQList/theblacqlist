@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, ChevronRight, Store, Search } from 'lucide-react'
 
 import { setOnboardingRoleAction } from '@/lib/actions/account/setOnboardingRole'
+import type { OnboardingRole } from '@/lib/auth/onboardingRole'
 import { cn } from '@/lib/utils'
 
 const CATEGORY_PILLS = [
@@ -43,13 +44,19 @@ interface CityOption {
 
 interface OnboardingFlowProps {
   cities: CityOption[]
+  /**
+   * The role the user picked at sign-up, normalized by the page. Used only when
+   * the URL carries no ?role= — auth-callback lands here with a bare path, so
+   * this is the ordinary case, not the fallback.
+   */
+  savedRole?: OnboardingRole
 }
 
-export function OnboardingFlow({ cities }: OnboardingFlowProps) {
+export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const roleParam = searchParams.get('role') ?? 'supporter'
+  const roleParam = searchParams.get('role') ?? savedRole ?? 'supporter'
   const next = searchParams.get('next') ?? ''
   const action = searchParams.get('action') ?? ''
   const listingId = searchParams.get('listing_id') ?? ''
