@@ -21,8 +21,9 @@ export default function AdminEmailPreviewPage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Email preview</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Paste a tester&rsquo;s preview link, see the invite rendered, and copy it into a Gmail
-          compose window. Nothing is sent from this page.
+          Paste a tester&rsquo;s preview link, pick whether they own a business or are here to
+          discover, see the invite rendered, and copy it into a Gmail compose window. Nothing is
+          sent from this page.
         </p>
       </div>
 

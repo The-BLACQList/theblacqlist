@@ -25,40 +25,48 @@ const TEMPLATE_SOURCE = readFileSync(
   'utf8'
 )
 
-describe('the tester invite email', () => {
+// Everything the two variants share. Each block below runs once per variant so
+// a supporter-only regression cannot hide behind a green owner run.
+const VARIANTS = ['owner', 'supporter'] as const
+
+describe.each(VARIANTS)('the %s tester invite email', (variant) => {
   it('puts the link it was given in the button', async () => {
-    const html = await renderInvite({ previewLink: LINK })
+    const html = await renderInvite({ variant, previewLink: LINK })
     expect(html).toContain(`href="${LINK}"`)
     expect(html).toContain('Start here')
   })
 
   it('does not mangle the query string', async () => {
-    const html = await renderInvite({ previewLink: LINK })
+    const html = await renderInvite({ variant, previewLink: LINK })
     // React escapes & in attributes; the ? and = must survive intact or the
     // token never reaches the gate.
     expect(html).toContain('?preview=not-a-real-token-0000')
   })
 
   it('greets by name when one is given', async () => {
-    const html = await renderInvite({ previewLink: LINK, firstName: 'Andrea' })
+    const html = await renderInvite({ variant, previewLink: LINK, firstName: 'Andrea' })
     expect(html).toContain('Andrea')
   })
 
   it('reads cleanly with no name — no dangling comma', async () => {
-    const html = await renderInvite({ previewLink: LINK })
+    const html = await renderInvite({ variant, previewLink: LINK })
     expect(html).toMatch(/You(&#x27;|&apos;|')re in early\./)
     expect(html).not.toMatch(/in early, ?(undefined|null|,)/)
   })
 
   it('carries the same-browser warning, which is the whole point of the callout', async () => {
-    const html = await renderInvite({ previewLink: LINK })
+    const html = await renderInvite({ variant, previewLink: LINK })
     expect(html).toContain('same browser')
   })
 
-  it('walks the five steps, and does not mention the tour or a trial', async () => {
-    const html = await renderInvite({ previewLink: LINK })
-    expect(html).toContain('I have a business')
-    expect(html).toContain('Confirm your email')
+  it('asks the tester to reply with anything broken', async () => {
+    // The reply IS the feedback channel for tester week. No form, no Slack.
+    const html = await renderInvite({ variant, previewLink: LINK })
+    expect(html).toContain('Reply to this')
+  })
+
+  it('does not mention the tour or a trial', async () => {
+    const html = await renderInvite({ variant, previewLink: LINK })
     // The tour needs a published listing and the trial rides on the tour.
     // Neither exists for a tester starting from scratch, so promising either
     // here would be a promise the product cannot keep this week.
@@ -67,8 +75,39 @@ describe('the tester invite email', () => {
   })
 
   it('renders no broken hrefs', async () => {
-    const html = await renderInvite({ previewLink: LINK })
+    const html = await renderInvite({ variant, previewLink: LINK })
     expect(html).not.toMatch(/href="[^"]*(undefined|null)/)
+  })
+})
+
+describe('the owner variant', () => {
+  it('walks the five owner steps', async () => {
+    const html = await renderInvite({ variant: 'owner', previewLink: LINK })
+    expect(html).toContain('I have a business')
+    expect(html).toContain('Confirm your email')
+    expect(html).toContain('Fill in your business')
+    expect(html).not.toMatch(/here to discover/i)
+  })
+})
+
+describe('the supporter variant', () => {
+  it('walks the five supporter steps and points at the right role card', async () => {
+    const html = await renderInvite({ variant: 'supporter', previewLink: LINK })
+    expect(html).toMatch(/here to discover/i)
+    expect(html).toContain('Confirm your email')
+    expect(html).toContain('Save a few')
+    expect(html).toContain('Leave a review')
+    // The owner instruction would send a supporter down the add-business path.
+    expect(html).not.toContain('I have a business')
+    expect(html).not.toContain('Fill in your business')
+  })
+
+  it('promises nothing the product cannot do this week', async () => {
+    const html = await renderInvite({ variant: 'supporter', previewLink: LINK })
+    // The categories picked at onboarding are not saved, so nothing is
+    // personalised. Following does not exist. Both would be broken promises.
+    expect(html).not.toMatch(/personali[sz]/i)
+    expect(html).not.toMatch(/\bfollow/i)
   })
 })
 
@@ -85,6 +124,14 @@ describe('the template source', () => {
     expect(TEMPLATE_SOURCE).toMatch(/previewLink: string$/m)
     expect(TEMPLATE_SOURCE).not.toMatch(/previewLink\?:/)
     expect(TEMPLATE_SOURCE).not.toMatch(/previewLink\s*=/)
+  })
+
+  it('leaves variant required, with no default', () => {
+    // Defaulting to owner would quietly send the add-your-business copy to a
+    // supporter. A caller has to say which audience they mean.
+    expect(TEMPLATE_SOURCE).toMatch(/^\s+variant: TesterInviteVariant$/m)
+    expect(TEMPLATE_SOURCE).not.toMatch(/variant\?:/)
+    expect(TEMPLATE_SOURCE).not.toMatch(/variant\s*=\s*'/)
   })
 
   it('keeps the house style — gold wordmark, gold pill button, cream ground', () => {
