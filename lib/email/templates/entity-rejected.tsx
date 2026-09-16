@@ -24,7 +24,7 @@ export function EntityRejectedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>An update on your submission for {listingName} — next steps inside.</Preview>
+      <Preview>An update on your submission for {listingName}. Next steps inside.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}

@@ -38,12 +38,12 @@ export function VerificationApprovedEmail({
             <Text style={heading}>{listingName} is now Verified.</Text>
             <Text style={paragraph}>
               We reviewed your documents and confirmed your ownership. Your page now carries the{' '}
-              <strong>Verified</strong> badge — the signal that tells the community this business is
+              <strong>Verified</strong> badge, the signal that tells the community this business is
               exactly who it says it is.
             </Text>
             <Text style={paragraph}>
               Verified pages rank higher in discovery and stand out on the map. The next rung,{' '}
-              <strong>Certified</strong>, is earned over time — it comes automatically once your
+              <strong>Certified</strong>, is earned over time. It comes automatically once your
               page has built up enough published community reviews and tenure. Nothing to apply
               for.
             </Text>

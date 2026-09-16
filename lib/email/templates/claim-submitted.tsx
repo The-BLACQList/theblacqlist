@@ -14,7 +14,7 @@ export function ClaimSubmittedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Your claim for {listingName} is under review — we&apos;ll be in touch soon.</Preview>
+      <Preview>Your claim for {listingName} is under review. We&apos;ll be in touch soon.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}

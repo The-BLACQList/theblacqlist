@@ -24,7 +24,7 @@ export function ClaimRejectedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>An update on your claim for {listingName} — next steps inside.</Preview>
+      <Preview>An update on your claim for {listingName}. Next steps inside.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}

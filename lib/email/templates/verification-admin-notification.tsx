@@ -28,7 +28,7 @@ export function VerificationAdminNotificationEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Verification requested for {listingName} — founder review required.</Preview>
+      <Preview>Verification requested for {listingName}. Founder review required.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
@@ -43,7 +43,7 @@ export function VerificationAdminNotificationEmail({
             <Text style={heading}>{listingName} requested verification.</Text>
             <Text style={paragraph}>
               A claimed listing has submitted documents for the Verified badge. Verification grants
-              are founder-level and are never batched — review the documents individually against
+              are founder-level and are never batched. Review the documents individually against
               the evidence bar before deciding.
             </Text>
 
