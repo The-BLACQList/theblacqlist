@@ -50,7 +50,7 @@ _Pending. Runs against the refreshed `preview/tester-week-all-four` once #133 is
 
 | # | Action | When | Why |
 |---|---|---|---|
-| C-1 | Supabase → Authentication → Email Templates → **Confirm signup** → set the link to `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup&next=/onboarding` on **production** `ytlrnczevdnsfdzjbeqg` **and staging** `fmbohsloskqbmlwbzpjm` | **After** #133 is deployed, never before. Old template keeps working with new code; new template with old code sends testers to a 404 | Moves confirmation off PKCE so the link works from any browser or device |
+| C-1 | Supabase → Authentication → Email Templates → **Confirm signup** → set the link to `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=signup&next=/onboarding` on **production** `ytlrnczevdnsfdzjbeqg` **and staging** `fmbohsloskqbmlwbzpjm` | **After** #133 is deployed, never before. Old template keeps working with new code; new template with old code sends every tester to `/sign-in?error=auth_callback_failed` without confirming anything | Moves confirmation off PKCE so the link works from any browser or device |
 | C-2 | Same screen → **Reset Password** template → confirm it already reads `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery` | Same sitting | Password reset has needed this since `2a69ab6`; the tester path includes `/forgot-password` |
 | C-3 | resend.com/domains, signed in to the account whose key is in Vercel **Production** → `theblacqlist.com` shows **Verified** | Before Mon 21 | A-5 above. If not verified, testers' welcome emails fail silently |
 | C-4 | Expect `/onboarding` once on your own next sign-in | After #133 deploys | Existing accounts have no `onboarding_completed_at` stamp; it is set the first time the role is saved |
