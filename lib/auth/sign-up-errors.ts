@@ -21,14 +21,15 @@ export interface SignUpErrorCopy {
 }
 
 /**
- * The existing duplicate-account message, unchanged and quoted in two other
- * places: app/(auth)/sign-up/page.tsx matches the substring `already registered`
- * to decide whether to render the "Sign in instead" link, and
- * e2e/auth-validation.spec.ts asserts the sentence. Reword it in one place only
- * and the link silently disappears.
+ * The duplicate-account message, quoted in two other places:
+ * app/(auth)/sign-up/page.tsx matches the substring `already registered` to
+ * decide whether to render its own "Sign in instead" link right after this
+ * sentence (so the sentence must NOT end with those words itself, or the
+ * person reads them twice), and e2e/auth-validation.spec.ts asserts the
+ * sentence. Reword it in one place only and the link silently disappears.
  */
 export const SIGN_UP_ALREADY_REGISTERED: SignUpErrorCopy = {
-  error: 'That email is already registered. Sign in instead.',
+  error: 'That email is already registered.',
   field: 'email',
 }
 

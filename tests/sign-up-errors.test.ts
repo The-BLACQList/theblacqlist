@@ -120,13 +120,14 @@ describe('mapSignUpError', () => {
   })
 
   it('keeps the duplicate wording other files depend on, character for character', () => {
-    // app/(auth)/sign-up/page.tsx renders the "Sign in instead" link only when
-    // the message contains `already registered`, and e2e/auth-validation.spec.ts
-    // asserts the sentence. Both break silently if this string drifts.
-    expect(SIGN_UP_ALREADY_REGISTERED.error).toBe(
-      'That email is already registered. Sign in instead.'
-    )
+    // app/(auth)/sign-up/page.tsx renders its own "Sign in instead" link only
+    // when the message contains `already registered`, and
+    // e2e/auth-validation.spec.ts asserts the sentence. Both break silently if
+    // this string drifts. The sentence must not carry "Sign in instead" itself:
+    // the page appends the link, and the founder read it twice on 2026-09-17.
+    expect(SIGN_UP_ALREADY_REGISTERED.error).toBe('That email is already registered.')
     expect(SIGN_UP_ALREADY_REGISTERED.error).toContain('already registered')
+    expect(SIGN_UP_ALREADY_REGISTERED.error).not.toContain('Sign in instead')
     expect(SIGN_UP_ALREADY_REGISTERED.field).toBe('email')
   })
 })
