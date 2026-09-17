@@ -117,8 +117,8 @@ test.describe('TA-02 — Sign-up validation', () => {
     await expect(namedError.or(confirmPanel).first()).toBeVisible()
 
     if (await namedError.isVisible()) {
-      // toContainText, not toHaveText: the message element also holds a
-      // "Sign in instead" link, so the sentence appears twice in textContent.
+      // toContainText, not toHaveText: the message element also holds the
+      // "Sign in instead" link, so textContent is sentence + link label.
       await expect(namedError).toContainText('That email is already registered.')
       await expect(namedError.getByRole('link', { name: 'Sign in instead' })).toHaveAttribute(
         'href',
