@@ -10,7 +10,7 @@ export type TesterInvitePreviewState =
   | { error: string }
   | null
 
-const SUBJECT = "You're in early — add your business to The BLACQList"
+const SUBJECT = "You're in early. Add your business to The BLACQList"
 
 /**
  * Render the tester invite for the founder to look at and copy into Gmail.
