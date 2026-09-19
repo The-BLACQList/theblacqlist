@@ -79,9 +79,11 @@ Preview now holds #121 #125 #126 #127 #129 #130 #131 (with `28d0f15`) #133 #134 
 
 | # | Do | Expect | Status |
 |---|---|---|---|
-| R-1 | Signed in as a supporter: open listing A, open listing B, Back, leave a review | Success text names A; the review sits on A | `[Unknown]` until the founder re-walks |
-| R-2 | Signed in as admin: `/admin` with the test business still pending | Amber alert above the stat cards, "N businesses are waiting for review" linking to the pending queue; count pills on Entities and Claims in the sidebar; pills still present on `/admin/entities` | `[Unknown]` until the founder re-walks |
-| R-3 | `/admin/email-preview`, audience Owner | The free-month sentence sits right after step 5; supporter render does not have it | `[Unknown]` until the founder re-walks |
+| R-1 | Signed in as a supporter: open listing A, open listing B, Back, leave a review | Success text names A; the review sits on A | ✅ `[Observed — founder, 2026-09-19]` |
+| R-2 | Signed in as admin: `/admin` with the test business still pending | Amber alert above the stat cards, "N businesses are waiting for review" linking to the pending queue; count pills on Entities and Claims in the sidebar; pills still present on `/admin/entities` | ✅ `[Observed — founder, 2026-09-19]` |
+| R-3 | `/admin/email-preview`, audience Owner | The free-month sentence sits right after step 5; supporter render does not have it | ✅ `[Observed — founder, 2026-09-19]` |
+
+All three confirmed by the founder on the `00e1130` preview on 2026-09-19. Walk A step 10 and the two admin findings are closed; the batch is ready for GATE-DEPLOY.
 
 Note for R-2: on this preview, approving an entity also emails the owner (`EntityApprovedEmail`, from one of the tester-week PRs). The alert copy does not promise or deny an email for that reason. Do not approve the test business during the re-check.
 
