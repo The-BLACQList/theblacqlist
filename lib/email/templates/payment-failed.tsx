@@ -26,7 +26,7 @@ export function PaymentFailedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>{subject} — update your payment method to keep your plan active.</Preview>
+      <Preview>{subject}. Update your payment method to keep your plan active.</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -38,7 +38,7 @@ export function PaymentFailedEmail({
             <Text style={heading}>{subject}.</Text>
             <Text style={paragraph}>
               Your latest subscription payment didn&apos;t go through, so your account is now marked
-              past due. Your paid features stay active for now while we retry — but to avoid losing
+              past due. Your paid features stay active for now while we retry. To avoid losing
               them, please update your payment method.
             </Text>
             <Text style={paragraph}>
