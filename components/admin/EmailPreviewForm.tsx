@@ -3,12 +3,38 @@
 import { useActionState, useState } from 'react'
 
 import { renderTesterInviteAction } from '@/lib/actions/admin/renderTesterInvite'
+import type { TesterInviteVariant } from '@/lib/email/templates/tester-invite'
+import { cn } from '@/lib/utils'
 
 type CopyState = 'idle' | 'copied' | 'failed'
+
+const AUDIENCE_OPTIONS: {
+  value: TesterInviteVariant
+  label: string
+  description: string
+}[] = [
+  {
+    value: 'owner',
+    label: 'Business owner',
+    description: 'Asks them to add their business',
+  },
+  {
+    value: 'supporter',
+    label: 'Supporter',
+    description: 'Asks them to search, save, and review',
+  },
+]
 
 export function EmailPreviewForm() {
   const [state, dispatch, pending] = useActionState(renderTesterInviteAction, null)
   const [copied, setCopied] = useState<CopyState>('idle')
+
+  // Controlled on purpose. React 19 resets an uncontrolled form once the
+  // action resolves, which here means a validation error wipes the link you
+  // just pasted. tests/form-input-preservation.test.ts guards this.
+  const [previewLink, setPreviewLink] = useState('')
+  const [audience, setAudience] = useState<TesterInviteVariant>('owner')
+  const [firstName, setFirstName] = useState('')
 
   const error = state !== null && 'error' in state ? state.error : null
   const rendered = state !== null && 'html' in state ? state : null
@@ -65,10 +91,57 @@ export function EmailPreviewForm() {
             required
             autoComplete="off"
             spellCheck={false}
+            value={previewLink}
+            onChange={(e) => setPreviewLink(e.target.value)}
             placeholder="https://theblacqlist.com/sign-up?preview=…"
             className="mt-1.5 w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:border-amber-gold focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
+
+        {/* A real named input, not client-only state: the server action reads
+            the form body and nothing else. Same radio-card pattern as the role
+            picker on /sign-up. */}
+        <fieldset>
+          <legend className="font-subhead text-sm font-semibold text-brand-black">
+            Who is this invite for?
+          </legend>
+          <p className="font-body text-xs text-charcoal-soft mt-0.5">
+            The body and the subject line change with this.
+          </p>
+          <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-2 max-w-lg">
+            {AUDIENCE_OPTIONS.map((option) => {
+              const isSelected = audience === option.value
+              return (
+                <label
+                  key={option.value}
+                  className={cn(
+                    'flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors',
+                    isSelected
+                      ? 'border-brand-black bg-pale-lavender'
+                      : 'border-charcoal/20 hover:border-charcoal/40'
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="audience"
+                    value={option.value}
+                    checked={isSelected}
+                    onChange={() => setAudience(option.value)}
+                    className="mt-0.5 accent-brand-black shrink-0"
+                  />
+                  <span className="flex flex-col min-w-0">
+                    <span className="font-subhead text-sm font-semibold text-brand-black leading-snug">
+                      {option.label}
+                    </span>
+                    <span className="font-subhead text-xs text-charcoal-soft leading-snug mt-0.5">
+                      {option.description}
+                    </span>
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </fieldset>
 
         <div>
           <label
@@ -85,6 +158,8 @@ export function EmailPreviewForm() {
             name="first_name"
             type="text"
             autoComplete="off"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             placeholder="e.g. Andrea"
             className="mt-1.5 w-full max-w-xs rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:border-amber-gold focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
