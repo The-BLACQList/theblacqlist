@@ -216,8 +216,17 @@ export default async function EntityPage({ params }: PageProps) {
       {/* Every listing type renders through its own template — the outlet
           picks it, and each template owns its full page including the
           immersive hero. Before PR 6 this was a four-way nested ternary with a
-          separately-mounted shared hero above it. */}
+          separately-mounted shared hero above it.
+
+          Keyed by listing id so a listing-to-listing navigation (and a Back
+          restore) remounts every client component under it, instead of
+          reconciling a new entity into instances still holding the previous
+          listing's state. Added after a tester's review, written with one
+          listing in the URL, landed on the listing visited before it
+          (2026-09-19). The client-side Back path did not reproduce it under
+          Playwright; the key makes the invariant hold regardless of path. */}
       <EntityTemplateOutlet
+        key={entity.id}
         entity={entity}
         initialSaved={initialSaved}
         userId={user?.id ?? null}

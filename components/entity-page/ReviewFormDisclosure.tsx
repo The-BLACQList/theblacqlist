@@ -92,7 +92,11 @@ export function ReviewFormDisclosure({ listingId, listingName, criteria, hasRevi
         aria-label={`Write a review of ${listingName}`}
         className="focus:outline-none"
       >
-        <ReviewForm listingId={listingId} listingName={listingName} criteria={criteria} />
+        {/* Keyed by listing id so the form's draft, rating and action result
+            die with the listing they were written for. The form does not take
+            the name: its success message reads the name back from the server
+            (createReview.ts) so it can never disagree with the row. */}
+        <ReviewForm key={listingId} listingId={listingId} criteria={criteria} />
       </div>
     )
   }
