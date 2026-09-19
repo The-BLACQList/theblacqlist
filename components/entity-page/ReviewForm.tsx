@@ -7,9 +7,14 @@ import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import type { ReviewCriterion } from '@/types'
 import { cn } from '@/lib/utils'
 
+// No `listingName` prop on purpose. The success message used to print it. When
+// a tester's review went to the listing visited before the one in the URL
+// (2026-09-19), the message named that listing too, so the screen agreed with
+// the row and nothing pointed at the mismatch. The name now comes back from
+// the server action, read from the row it validated, so the message can only
+// ever name the business the row belongs to.
 interface Props {
   listingId: string
-  listingName: string
   criteria?: ReviewCriterion[]
 }
 
@@ -101,7 +106,7 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
   )
 }
 
-export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
+export function ReviewForm({ listingId, criteria = [] }: Props) {
   const [state, formAction, isPending] = useActionState(createReviewAction, null)
   const [rating, setRating] = useState(0)
   // CONTROLLED on purpose (debt ⑰). React 19 resets an uncontrolled
@@ -124,7 +129,7 @@ export function ReviewForm({ listingId, listingName, criteria = [] }: Props) {
         className="rounded-xl border border-green-200 bg-green-50 px-5 py-4"
       >
         <p className="font-subhead text-sm font-semibold text-green-800 mb-1">
-          Thanks for your review of {listingName}.
+          Thanks for your review of {state.listingName}.
         </p>
         <p className="font-body text-sm text-green-700">
           We&apos;ll publish it after a quick check, usually within 48 hours.

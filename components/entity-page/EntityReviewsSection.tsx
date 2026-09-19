@@ -236,8 +236,12 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             )}
             {/* Behind a trigger on purpose — the form carries a Turnstile
                 widget, and mounting it here made a captcha run on every listing
-                page a signed-in visitor opened. See ReviewFormDisclosure. */}
+                page a signed-in visitor opened. See ReviewFormDisclosure.
+                Keyed by listing id: the disclosure and the form under it hold
+                client state (opened, draft text, action result) that must never
+                outlive the listing it was created for. */}
             <ReviewFormDisclosure
+              key={entity.id}
               listingId={entity.id}
               listingName={entity.name}
               criteria={entity.reviewCriteria}
