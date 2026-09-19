@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
@@ -64,6 +65,10 @@ export async function rejectEntityAction(
     beforeState: { status: listing.status },
     afterState: { status: 'rejected', rejection_reason: reason },
   })
+
+  // Sidebar pills and the overview alert read the pending count from the
+  // admin layout; refresh it now so the number follows the decision.
+  revalidatePath('/admin', 'layout')
 
   // ── Rejection email (fire-and-forget) ────────────────────────────────────────
   if (listing.submitted_by) {
