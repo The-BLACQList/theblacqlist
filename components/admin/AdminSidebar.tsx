@@ -19,6 +19,7 @@ import {
   Sparkles,
   Users,
   Megaphone,
+  Mail,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -50,6 +51,7 @@ const NAV_ITEMS = [
   { href: '/admin/ai-tools', label: 'AI Tools', icon: Sparkles, exact: false },
   { href: '/admin/users', label: 'Users', icon: Users, exact: false },
   { href: '/admin/testers', label: 'Testers', icon: Compass, exact: false },
+  { href: '/admin/email-preview', label: 'Email preview', icon: Mail, exact: false },
 ]
 
 export function AdminSidebar({ role, counts }: Props) {

@@ -9,7 +9,14 @@ const REVIEW_PHOTO_MAX_BYTES = 5 * 1024 * 1024
 const REVIEW_PHOTO_MAX_COUNT = 3
 
 export type CreateReviewState =
-  | { success: true; reviewId: string }
+  // `listingName` is the name of the row the review was actually written
+  // against, read back from the lookup below. The form renders THIS in its
+  // success message, never its own `listingName` prop. A tester's review
+  // once went to the listing visited before the one in the URL, and the
+  // message agreed with the row rather than the address bar, so nothing on
+  // screen said where the review actually went. A prop can be stale; the
+  // validated row cannot.
+  | { success: true; reviewId: string; listingName: string }
   | { error: string; field?: string }
   | null
 
@@ -75,7 +82,7 @@ export async function createReviewAction(
   // Verify listing is published and exists
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, owner_user_id, trust_tier')
+    .select('id, name, owner_user_id, trust_tier')
     .eq('id', listingId)
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -176,5 +183,5 @@ export async function createReviewAction(
     }
   }
 
-  return { success: true, reviewId: review.id }
+  return { success: true, reviewId: review.id, listingName: listing.name }
 }

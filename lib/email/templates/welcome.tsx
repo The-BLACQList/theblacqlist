@@ -22,7 +22,7 @@ export function WelcomeEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Welcome to The BLACQList — find and support Black-owned businesses.</Preview>
+      <Preview>Welcome to The BLACQList. Find and support Black-owned businesses.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
@@ -34,8 +34,8 @@ export function WelcomeEmail({
           <Section style={content}>
             <Text style={heading}>Welcome, {displayName}.</Text>
             <Text style={paragraph}>
-              You&apos;re now part of the national directory for Black-owned businesses — built by
-              community, powered by culture.
+              You&apos;re now part of the national directory for Black-owned businesses, built by
+              community and powered by culture.
             </Text>
             <Text style={paragraph}>
               Start by exploring businesses in your city, saving your favorites, and leaving reviews

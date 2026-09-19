@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { ONBOARDING_COMPLETED_KEY, hasCompletedOnboarding } from '@/lib/services/auth/onboarding'
 
 type OnboardingRole = 'supporter' | 'owner'
 
@@ -32,6 +33,17 @@ export async function setOnboardingRoleAction(
 
   if (!user) {
     return { error: 'You must be signed in.', code: 'AUTH_REQUIRED' }
+  }
+
+  // Every exit from the onboarding flow — Get started, Skip, and the save-intent
+  // shortcut — passes through this action, so this is where onboarding is
+  // marked done. Sign-in reads the stamp to decide whether to route back here
+  // (lib/services/auth/onboarding.ts). Best-effort: a failed stamp only means
+  // the person sees onboarding once more on their next sign-in.
+  if (!hasCompletedOnboarding(user)) {
+    await supabase.auth.updateUser({
+      data: { [ONBOARDING_COMPLETED_KEY]: new Date().toISOString() },
+    })
   }
 
   // Uses service client to bypass RLS per api-contract.md Section 2 spec.

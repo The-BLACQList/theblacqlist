@@ -1,3 +1,17 @@
+/**
+ * Sent when an admin approves a submitted listing and it goes live.
+ *
+ * This template existed only as a promise until now. PublishSection.tsx:113
+ * tells every owner "You'll receive an email when it's approved," and
+ * `rejectEntityAction` has always sent one on the way down — but
+ * `approveEntityAction` sent nothing on the way up. An owner who submitted a
+ * listing and was approved heard silence.
+ *
+ * Structure and styles are copied from claim-approved.tsx verbatim. The other
+ * eleven templates each carry their own copy of these style objects; a shared
+ * layout is the right refactor and the wrong week for it.
+ */
+
 import {
   Body,
   Button,
@@ -10,21 +24,27 @@ import {
   Text,
 } from '@react-email/components'
 
-interface VerificationApprovedEmailProps {
+interface EntityApprovedEmailProps {
   listingName: string
-  listingId: string
+  /**
+   * Absolute URL of the live listing page. Optional because the action can
+   * only build it when the listing has a slug and an entity type — a missing
+   * URL must degrade to the dashboard button, never to a broken link or a
+   * failed send.
+   */
+  listingUrl?: string | null
   siteUrl?: string
 }
 
-export function VerificationApprovedEmail({
+export function EntityApprovedEmail({
   listingName,
-  listingId,
+  listingUrl = null,
   siteUrl = 'https://theblacqlist.com',
-}: VerificationApprovedEmailProps) {
+}: EntityApprovedEmailProps) {
   return (
     <Html lang="en">
       <Head />
-      <Preview>{listingName} is now Verified on The BLACQList.</Preview>
+      <Preview>{listingName} is approved and live on The BLACQList.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
@@ -34,28 +54,29 @@ export function VerificationApprovedEmail({
 
           {/* Content */}
           <Section style={content}>
-            <Text style={eyebrow}>Verified</Text>
-            <Text style={heading}>{listingName} is now Verified.</Text>
+            <Text style={eyebrow}>Listing Approved</Text>
+            <Text style={heading}>{listingName} is live on The BLACQList.</Text>
             <Text style={paragraph}>
-              We reviewed your documents and confirmed your ownership. Your page now carries the{' '}
-              <strong>Verified</strong> badge, the signal that tells the community this business is
-              exactly who it says it is.
+              Your submission has been reviewed and published. People can now find {listingName}{' '}
+              through search and browsing on The BLACQList.
             </Text>
             <Text style={paragraph}>
-              Verified pages rank higher in discovery and stand out on the map. The next rung,{' '}
-              <strong>Certified</strong>, is earned over time. It comes automatically once your
-              page has built up enough published community reviews and tenure. Nothing to apply
-              for.
+              The site is still in private preview, so you may need to be signed in to see your
+              page. Once we open to the public, anyone with the link will be able to view it.
             </Text>
 
-            <Button href={`${siteUrl}/dashboard/pages/${listingId}`} style={button}>
-              Go to Your Page
+            <Button href={listingUrl ?? `${siteUrl}/dashboard`} style={button}>
+              {listingUrl ? 'View your listing' : 'Go to your dashboard'}
             </Button>
 
             <Hr style={divider} />
 
             <Text style={paragraph}>
-              Questions about your badge?{' '}
+              You can update your details, add photos, and respond to reviews any time from{' '}
+              <a href={`${siteUrl}/dashboard`} style={link}>
+                your dashboard
+              </a>
+              . Need a hand?{' '}
               <a href="mailto:support@theblacqlist.com" style={link}>
                 We&apos;re here to help.
               </a>

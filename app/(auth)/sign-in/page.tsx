@@ -42,9 +42,11 @@ function SignInContent() {
   const isResetLinkExpired = error === 'reset_link_expired'
   const callbackError = isResetLinkExpired
     ? 'Your password-reset link is invalid or has expired.'
-    : error === 'auth_callback_failed'
-      ? 'That verification link has expired or is invalid. Please sign in again.'
-      : null
+    : error === 'confirm_link_expired'
+      ? 'That confirmation link is invalid or was already used. If you have already confirmed your email, just sign in.'
+      : error === 'auth_callback_failed'
+        ? 'That verification link has expired or is invalid. Please sign in again.'
+        : null
 
   return (
     <>

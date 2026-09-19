@@ -42,7 +42,7 @@ export function VerificationRejectedEmail({
               We couldn&apos;t verify {listingName} with the documents provided.
             </Text>
             <Text style={paragraph}>
-              This is not a rejection of your business, and it does not affect your claim — you keep
+              This is not a rejection of your business, and it does not affect your claim. You keep
               full owner access to your page. It only means the documents we received weren&apos;t
               enough to grant the Verified badge yet.
             </Text>
@@ -60,7 +60,7 @@ export function VerificationRejectedEmail({
             )}
 
             <Text style={paragraph}>
-              You can upload new documents any time — there&apos;s no waiting period and no limit on
+              You can upload new documents any time. There&apos;s no waiting period and no limit on
               attempts.
             </Text>
 

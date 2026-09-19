@@ -11,6 +11,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const next = searchParams.get('next')
   const errorParam = searchParams.get('error')
 
+  // A token_hash link belongs to the /auth/confirm interstitial, not here. The
+  // Supabase email templates build their link from {{ .RedirectTo }}, which is
+  // this route (signUp passes emailRedirectTo = <app url>/auth/callback), so a
+  // template that switches to token_hash still arrives at this path. Forward it
+  // with the query intact and let the interstitial verify on its POST — a GET
+  // here must never consume the one-time token, or mail link-scanners will.
+  if (searchParams.has('token_hash')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/confirm'
+    return NextResponse.redirect(url)
+  }
+
   // The password-reset email points back here with next=/reset-password. A reset
   // link must act on its own account no matter who is currently signed in, so the
   // recovery path is handled specially below. Its failures get a distinct error
