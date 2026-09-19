@@ -22,7 +22,7 @@ export function ClaimApprovedEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>Your claim for {listingName} has been approved — welcome to your dashboard.</Preview>
+      <Preview>Your claim for {listingName} has been approved. Welcome to your dashboard.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
@@ -35,7 +35,7 @@ export function ClaimApprovedEmail({
             <Text style={eyebrow}>Claim Approved</Text>
             <Text style={heading}>Your claim for {listingName} is approved.</Text>
             <Text style={paragraph}>
-              Congratulations — you now have owner access to your BLACQList page. You can update
+              Congratulations. You now have owner access to your BLACQList page. You can update
               your business details, add photos, manage your services, and respond to community
               reviews.
             </Text>

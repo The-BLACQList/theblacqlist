@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
@@ -136,6 +137,9 @@ export async function approveClaimAction(
       })
     }
   })()
+
+  // Sidebar pill + overview count read from the admin layout.
+  revalidatePath('/admin', 'layout')
 
   return { success: true, claimId, listingId: claim.listing_id }
 }

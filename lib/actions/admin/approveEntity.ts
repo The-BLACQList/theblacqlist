@@ -1,7 +1,11 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
+import { sendEmail } from '@/lib/email/resend'
+import { EntityApprovedEmail } from '@/lib/email/templates/entity-approved'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 export type ApproveEntityState =
   | { success: true; listingId: string; listingName: string }
@@ -24,7 +28,9 @@ export async function approveEntityAction(
 
   const { data: listing } = await serviceClient
     .from('listings')
-    .select('id, name, status, trust_tier')
+    .select(
+      'id, name, status, trust_tier, slug, entity_type, submitted_by, cities!listings_city_id_fkey(slug)'
+    )
     .eq('id', listingId)
     .maybeSingle()
 
@@ -62,6 +68,39 @@ export async function approveEntityAction(
     beforeState: { status: listing.status, trust_tier: listing.trust_tier },
     afterState: { status: 'published' },
   })
+
+  // The pending count lives in the admin layout (sidebar pills) and the
+  // overview alert; drop it the moment the founder acts, not on the next
+  // full reload.
+  revalidatePath('/admin', 'layout')
+
+  // ── Approval email (fire-and-forget) ─────────────────────────────────────────
+  // Same shape as rejectEntity.ts:69-81, and for the same reason: the publish
+  // has already succeeded by this point. A missing address, a missing Resend
+  // key, or a rejected send must never turn a published listing into an error
+  // the admin sees. `sendEmail` itself never throws (lib/email/resend.ts:20).
+  if (listing.submitted_by) {
+    void (async () => {
+      const { data: userData } = await serviceClient.auth.admin.getUserById(listing.submitted_by!)
+      const submitterEmail = userData?.user?.email
+      if (!submitterEmail) return
+
+      // Built only when both segments exist. buildEntityUrl would happily
+      // return "/online/undefined/undefined" — a link to a 404 is worse than
+      // the dashboard button the template falls back to.
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
+      const listingUrl =
+        listing.slug && listing.entity_type
+          ? `${siteUrl}${buildEntityUrl(listing.entity_type, listing.cities?.slug ?? null, listing.slug)}`
+          : null
+
+      await sendEmail({
+        to: submitterEmail,
+        subject: `${listing.name} is live on The BLACQList`,
+        react: EntityApprovedEmail({ listingName: listing.name, listingUrl, siteUrl }),
+      })
+    })()
+  }
 
   return { success: true, listingId, listingName: listing.name }
 }

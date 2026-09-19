@@ -110,5 +110,8 @@ export async function moderateReviewAction(
     afterState: { status: decision },
   })
 
+  // Sidebar pill reads the intake count from the admin layout.
+  revalidatePath('/admin', 'layout')
+
   return { success: true, reviewId, decision }
 }
