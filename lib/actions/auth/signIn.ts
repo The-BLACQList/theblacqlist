@@ -3,14 +3,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
+import { postSignInDestination } from '@/lib/services/auth/onboarding'
 
 type SignInField = 'email' | 'password' | 'general'
 
 type SignInState = { error: string; field?: SignInField } | { success: true } | null
-
-function isSafeRedirect(next: string | null): next is string {
-  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')
-}
 
 export async function signInAction(_prev: SignInState, formData: FormData): Promise<SignInState> {
   const email = formData.get('email')?.toString().trim() ?? ''
@@ -25,7 +22,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
   // every password/recovery endpoint at once — sign-in included. Verified by
   // Supabase, not by us (single-use token; see lib/security/turnstile.ts).
   const captchaToken = formData.get(TURNSTILE_TOKEN_FIELD)?.toString() || undefined
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
     options: { captchaToken },
@@ -47,6 +44,8 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     return { error: 'Something went wrong. Please try again.', field: 'general' }
   }
 
-  const destination = isSafeRedirect(next) ? next : '/account'
-  redirect(destination)
+  // An account whose confirmation link failed (other device, mail prefetch,
+  // different hostname) has a confirmed email but never saw onboarding. Sign-in
+  // is its second door — see lib/services/auth/onboarding.ts.
+  redirect(postSignInDestination(next, data.user))
 }
