@@ -88,9 +88,23 @@ describe('the owner variant', () => {
     expect(html).toContain('Fill in your business')
     expect(html).not.toMatch(/here to discover/i)
   })
+
+  it('names the compensation: one free month on any tier', async () => {
+    // [Decision — founder, 2026-09-19]. "Any tier" is the phrase that matters;
+    // the owner must not read it as a Starter-only offer.
+    const html = await renderInvite({ variant: 'owner', previewLink: LINK })
+    expect(html).toMatch(/one month of The BLACQList free on any tier/i)
+  })
 })
 
 describe('the supporter variant', () => {
+  it('makes no compensation offer', async () => {
+    // The free month is an owner thing. A supporter has nothing to subscribe to.
+    const html = await renderInvite({ variant: 'supporter', previewLink: LINK })
+    expect(html).not.toMatch(/free on any tier/i)
+    expect(html).not.toMatch(/\bmonth\b/i)
+  })
+
   it('walks the five supporter steps and points at the right role card', async () => {
     const html = await renderInvite({ variant: 'supporter', previewLink: LINK })
     expect(html).toMatch(/here to discover/i)
