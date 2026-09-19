@@ -28,7 +28,7 @@ export function ClaimSubmittedEmail({
             <Text style={heading}>We received your claim for {listingName}.</Text>
             <Text style={paragraph}>
               Our team will review your submission and verify the information you provided. This
-              typically takes 2–3 business days.
+              typically takes 3–5 business days.
             </Text>
             <Text style={paragraph}>
               You&apos;ll receive an email as soon as a decision has been made. In the meantime, you
