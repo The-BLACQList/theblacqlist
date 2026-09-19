@@ -68,26 +68,26 @@ export function TesterInviteEmail({
             </Button>
 
             <Text style={note}>
-              If you ever land on a &ldquo;coming soon&rdquo; page, open this link again — that
+              If you ever land on a &ldquo;coming soon&rdquo; page, open this link again. It
               always puts you back in.
             </Text>
 
             <Hr style={divider} />
 
-            <Text style={subheading}>What it takes — about ten minutes</Text>
+            <Text style={subheading}>What it takes: about ten minutes</Text>
 
             <Text style={step}>
               <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings you
               here, pick <strong>&ldquo;I have a business.&rdquo;</strong>
             </Text>
             <Text style={step}>
-              <strong style={stepNumber}>2.</strong> Confirm your email. We send a link — click it.
+              <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click it.
             </Text>
             <Text style={step}>
               <strong style={stepNumber}>3.</strong> Answer two quick questions.
             </Text>
             <Text style={step}>
-              <strong style={stepNumber}>4.</strong> Fill in your business — the name, what you do,
+              <strong style={stepNumber}>4.</strong> Fill in your business: the name, what you do,
               where you are, and a photo or two.
             </Text>
             <Text style={step}>
@@ -100,7 +100,7 @@ export function TesterInviteEmail({
               <Text style={calloutTitle}>Open the confirmation email in the same browser.</Text>
               <Text style={calloutBody}>
                 If you sign up on your laptop and then open our confirmation email on your phone,
-                the link won&rsquo;t work. Same browser, same device — that&rsquo;s the one thing
+                the link won&rsquo;t work. Same browser, same device. That&rsquo;s the one thing
                 that trips people up.
               </Text>
             </Section>
@@ -108,7 +108,7 @@ export function TesterInviteEmail({
             <Hr style={divider} />
 
             <Text style={paragraph}>
-              Anything that looks wrong, reads wrong, or just doesn&rsquo;t work — reply to this
+              Anything that looks wrong, reads wrong, or just doesn&rsquo;t work? Reply to this
               email and tell us. Blunt is more useful to us than kind.
             </Text>
 

@@ -39,7 +39,7 @@ export function VerificationSubmittedEmail({
             <Text style={paragraph}>
               Your verification request is in our review queue. Our team reviews documents within
               2–3 business days. Verification is a stronger trust signal than a claim, so every
-              request is reviewed by hand — that is what makes the badge mean something.
+              request is reviewed by hand. That is what makes the badge mean something.
             </Text>
             <Text style={paragraph}>
               You do not need to do anything else right now. We will email you as soon as a decision
