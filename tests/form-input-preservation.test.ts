@@ -32,6 +32,10 @@ const SURFACES = [
     label: 'review form (a 2000-character body must survive a rejection)',
     file: 'components/entity-page/ReviewForm.tsx',
   },
+  {
+    label: 'email preview (a pasted preview link must survive a rejected audience)',
+    file: 'components/admin/EmailPreviewForm.tsx',
+  },
 ] as const
 
 /** Element types a user cannot type into, or that React cannot control. */

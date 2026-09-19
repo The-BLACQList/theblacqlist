@@ -3,14 +3,24 @@
 import { render } from '@react-email/components'
 
 import { getAdminSession } from '@/lib/admin/guard'
-import { TesterInviteEmail } from '@/lib/email/templates/tester-invite'
+import {
+  TesterInviteEmail,
+  type TesterInviteVariant,
+} from '@/lib/email/templates/tester-invite'
 
 export type TesterInvitePreviewState =
   | { html: string; text: string; subject: string }
   | { error: string }
   | null
 
-const SUBJECT = "You're in early. Add your business to The BLACQList"
+const SUBJECT: Record<TesterInviteVariant, string> = {
+  owner: "You're in early. Add your business to The BLACQList",
+  supporter: "You're in early. Explore The BLACQList before anyone else",
+}
+
+function parseVariant(raw: string): TesterInviteVariant | null {
+  return raw === 'owner' || raw === 'supporter' ? raw : null
+}
 
 /**
  * Render the tester invite for the founder to look at and copy into Gmail.
@@ -39,8 +49,12 @@ export async function renderTesterInviteAction(
 
   const previewLink = formData.get('preview_link')?.toString().trim() ?? ''
   const firstName = formData.get('first_name')?.toString().trim() ?? ''
+  const variant = parseVariant(formData.get('audience')?.toString() ?? '')
 
   if (!previewLink) return { error: 'Paste the preview link first.' }
+  // No silent default. Sending the owner copy to a supporter is the one
+  // mistake this page exists to prevent, so an unrecognised value is an error.
+  if (!variant) return { error: 'Pick who this invite is for.' }
 
   let parsed: URL
   try {
@@ -62,6 +76,7 @@ export async function renderTesterInviteAction(
   }
 
   const email = TesterInviteEmail({
+    variant,
     previewLink,
     firstName: firstName || null,
   })
@@ -71,5 +86,5 @@ export async function renderTesterInviteAction(
     render(email, { plainText: true }),
   ])
 
-  return { html, text, subject: SUBJECT }
+  return { html, text, subject: SUBJECT[variant] }
 }

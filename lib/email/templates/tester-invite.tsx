@@ -10,7 +10,17 @@ import {
   Text,
 } from '@react-email/components'
 
+/**
+ * Who the invite is for. One template, two bodies: a separate supporter file
+ * would duplicate the styling and, worse, slip past the source checks in
+ * tests/tester-invite-email.test.ts that keep a real token out of this repo.
+ *
+ * Required with no default so a caller has to say which one they mean.
+ */
+export type TesterInviteVariant = 'owner' | 'supporter'
+
 interface TesterInviteEmailProps {
+  variant: TesterInviteVariant
   /**
    * The full preview URL, including the `?preview=` query.
    *
@@ -28,15 +38,20 @@ interface TesterInviteEmailProps {
 }
 
 export function TesterInviteEmail({
+  variant,
   previewLink,
   firstName = null,
   siteUrl = 'https://theblacqlist.com',
 }: TesterInviteEmailProps) {
+  const isOwner = variant === 'owner'
+
   return (
     <Html lang="en">
       <Head />
       <Preview>
-        You&rsquo;re invited to add your business to The BLACQList before we open to the public.
+        {isOwner
+          ? 'You’re invited to add your business to The BLACQList before we open to the public.'
+          : 'You’re invited to explore The BLACQList before we open to the public.'}
       </Preview>
       <Body style={body}>
         <Container style={container}>
@@ -52,11 +67,19 @@ export function TesterInviteEmail({
               {firstName ? `You're in early, ${firstName}.` : "You're in early."}
             </Text>
 
-            <Text style={paragraph}>
-              The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small group
-              of business owners in first to add their business, tell us what&rsquo;s confusing, and
-              help us fix it before everyone else arrives.
-            </Text>
+            {isOwner ? (
+              <Text style={paragraph}>
+                The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small
+                group of business owners in first to add their business, tell us what&rsquo;s
+                confusing, and help us fix it before everyone else arrives.
+              </Text>
+            ) : (
+              <Text style={paragraph}>
+                The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small
+                group of people in first to find businesses, save the ones they like, tell us
+                what&rsquo;s confusing, and help us fix it before everyone else arrives.
+              </Text>
+            )}
 
             <Text style={paragraph}>
               <strong>Start with this link.</strong> It&rsquo;s your door in. It remembers you for 30
@@ -76,23 +99,63 @@ export function TesterInviteEmail({
 
             <Text style={subheading}>What it takes: about ten minutes</Text>
 
-            <Text style={step}>
-              <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings you
-              here, pick <strong>&ldquo;I have a business.&rdquo;</strong>
-            </Text>
-            <Text style={step}>
-              <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click it.
-            </Text>
-            <Text style={step}>
-              <strong style={stepNumber}>3.</strong> Answer two quick questions.
-            </Text>
-            <Text style={step}>
-              <strong style={stepNumber}>4.</strong> Fill in your business: the name, what you do,
-              where you are, and a photo or two.
-            </Text>
-            <Text style={step}>
-              <strong style={stepNumber}>5.</strong> We review it and email you when it&rsquo;s live.
-            </Text>
+            {isOwner ? (
+              <>
+                <Text style={step}>
+                  <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings
+                  you here, pick <strong>&ldquo;I have a business.&rdquo;</strong>
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click
+                  it.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>3.</strong> Answer two quick questions.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>4.</strong> Fill in your business: the name, what you
+                  do, where you are, and a photo or two.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>5.</strong> We review it and email you when it&rsquo;s
+                  live.
+                </Text>
+                {/* Owner compensation [Decision — founder, 2026-09-19]: one free
+                    month on any tier, redeemable now or held until the tier they
+                    want is purchasable. The word "trial" is deliberately absent;
+                    the tour trial is a different thing and the test guards it. */}
+                <Text style={paragraph}>
+                  As a thank you for testing, you get one month of The BLACQList free on any tier.
+                  Use it as soon as plans open, or hold it until the tier you want is available.
+                </Text>
+              </>
+            ) : (
+              <>
+                {/* Supporter copy promises only what the product does this week.
+                    No personalising (the categories picked at onboarding are not
+                    saved), no following (does not exist), no tour or trial (both
+                    need a published listing a supporter will never have). */}
+                <Text style={step}>
+                  <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings
+                  you here, pick <strong>&ldquo;I&rsquo;m here to discover.&rdquo;</strong>{' '}
+                  It&rsquo;s the first card, already selected.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click
+                  it.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>3.</strong> Answer two quick questions.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>4.</strong> Search for something near you. Save a few
+                  businesses. Sort them into a list.
+                </Text>
+                <Text style={step}>
+                  <strong style={stepNumber}>5.</strong> Leave a review on one you know.
+                </Text>
+              </>
+            )}
 
             {/* The one callout that earns its place. This is the most common
                 way the invite path breaks, and the fix is behavioral, not code. */}
