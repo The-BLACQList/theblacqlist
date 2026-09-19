@@ -35,7 +35,7 @@ export function ClaimAdminNotificationEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>New claim submitted for {listingName} — review required.</Preview>
+      <Preview>New claim submitted for {listingName}. Review required.</Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
