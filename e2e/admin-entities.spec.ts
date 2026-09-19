@@ -15,6 +15,12 @@ import { loginAsAdmin } from './helpers/auth'
  *      page goes through `adminEntitiesHref` for this reason; a template
  *      literal that forgets `q` drops the search with no error.
  *
+ * Also carries the F-2 (2026-09-19) pending-work signals: the sidebar count
+ * pills and the overview alert, asserted against the same fixture state.
+ *
+ * The search input is located by role, not label: the site header's search
+ * icon links also carry `aria-label="Search"`, so `getByLabel` is ambiguous.
+ *
  * ⚠ Nothing here approves, rejects, or edits a listing — this spec is
  * read-only, so it can run against staging without leaving state behind for
  * the specs that sort after it.
@@ -29,8 +35,8 @@ test.describe('admin entities queue', () => {
     await page.goto('/admin/entities')
 
     await expect(page.getByRole('heading', { name: 'Entities', level: 1 })).toBeVisible()
-    await expect(page.getByLabel('Search')).toBeVisible()
-    await expect(page.getByLabel('Type')).toBeVisible()
+    await expect(page.getByRole('searchbox', { name: 'Search' })).toBeVisible()
+    await expect(page.getByLabel('Type', { exact: true })).toBeVisible()
     await expect(page.getByLabel('Location type')).toBeVisible()
 
     // `All` is new — draft / unpublished / flagged / archived had no route into
@@ -41,7 +47,7 @@ test.describe('admin entities queue', () => {
   test('typing a query searches the whole catalog, not the visible page', async ({ page }) => {
     await page.goto('/admin/entities')
 
-    await page.getByLabel('Search').fill('the')
+    await page.getByRole('searchbox', { name: 'Search' }).fill('the')
     // Debounced at 250ms, then a router.replace — wait for the URL, not a timer.
     await page.waitForURL(/\/admin\/entities\?.*q=the/)
 
@@ -86,7 +92,44 @@ test.describe('admin entities queue', () => {
     await page.getByRole('button', { name: 'Clear filters' }).click()
     await page.waitForURL((url) => url.searchParams.toString() === '')
 
-    await expect(page.getByLabel('Search')).toHaveValue('')
+    await expect(page.getByRole('searchbox', { name: 'Search' })).toHaveValue('')
+  })
+
+  test('pending work is signalled in the sidebar and on the overview (F-2)', async ({ page }) => {
+    // global-setup plants one pending claim every run, so the Claims pill is
+    // guaranteed; a pending listing is not, so the Entities pill and the
+    // overview alert are asserted as an invariant against the stat card rather
+    // than as a fixed number. Read-only, like the rest of this spec.
+    await page.goto('/admin')
+
+    const claimsPill = page.getByTestId('admin-nav-count-claims')
+    await expect(claimsPill).toBeVisible()
+    await expect(claimsPill).toHaveText(/^[1-9]\d*$/)
+    await expect(claimsPill).toHaveAttribute('aria-label', /^\d+ pending$/)
+
+    const entitiesCard = page.getByRole('link', { name: /Pending entities/ })
+    const cardCount = Number(
+      ((await entitiesCard.locator('p').nth(1).textContent()) ?? '0').replace(/,/g, '')
+    )
+    const alert = page.getByTestId('admin-pending-alert')
+    const entitiesPill = page.getByTestId('admin-nav-count-entities')
+
+    if (cardCount > 0) {
+      await expect(alert).toBeVisible()
+      await expect(alert).toContainText(/waiting for review/)
+      await expect(alert.getByRole('link', { name: 'Review submissions' })).toHaveAttribute(
+        'href',
+        '/admin/entities?status=pending'
+      )
+      await expect(entitiesPill).toHaveText(String(cardCount))
+    } else {
+      await expect(alert).toHaveCount(0)
+      await expect(entitiesPill).toHaveCount(0)
+    }
+
+    // The pills ride the layout, so they must survive leaving the overview.
+    await page.goto('/admin/entities')
+    await expect(page.getByTestId('admin-nav-count-claims')).toBeVisible()
   })
 
   test('a query full of PostgREST metacharacters returns a page, not a 400', async ({ page }) => {
