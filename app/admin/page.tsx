@@ -2,9 +2,11 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { getPendingCounts } from '@/lib/admin/pendingCounts'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatCard } from '@/components/admin/AdminStatCard'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
+import { AdminPendingAlert } from '@/components/admin/AdminPendingAlert'
 
 export const metadata: Metadata = { title: 'Overview' }
 
@@ -31,41 +33,11 @@ export default async function AdminOverviewPage() {
   const { user, role } = await requireAdmin()
   const serviceClient = createServiceClient()
 
-  // Run stat queries in parallel
-  const [
-    { count: pendingEntities },
-    { count: pendingClaims },
-    { count: pendingVerifications },
-    { count: pendingReports },
-    { count: pendingReceipts },
-    { data: recentQueue },
-  ] = await Promise.all([
-    serviceClient
-      .from('listings')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
-    serviceClient
-      .from('claims')
-      .select('id', { count: 'exact', head: true })
-      .in('status', ['pending', 'under_review']),
-    serviceClient
-      .from('moderation_queue')
-      .select('id', { count: 'exact', head: true })
-      .eq('queue_type', 'verification')
-      .eq('status', 'pending'),
-    serviceClient
-      .from('moderation_queue')
-      .select('id', { count: 'exact', head: true })
-      .in('queue_type', ['correction', 'review', 'flagged_listing'])
-      .eq('status', 'pending'),
-    // Receipts never enter moderation_queue, so they are invisible to the
-    // "Recent queue activity" table below and need their own count. The status
-    // value is `pending_review` — the one /admin/receipts filters its default
-    // tab on — not `pending` like the queue rows above.
-    serviceClient
-      .from('receipt_uploads')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending_review'),
+  // The pending counts come from the same helper the sidebar reads, so the
+  // stat card, the alert and the nav pill can never show three different
+  // numbers. Only the recent-queue rows are fetched here.
+  const [pending, { data: recentQueue }] = await Promise.all([
+    getPendingCounts(),
     serviceClient
       .from('moderation_queue')
       .select('id, queue_type, entity_id, entity_type, created_at, status')
@@ -87,29 +59,33 @@ export default async function AdminOverviewPage() {
         </p>
       </div>
 
+      {/* Priority alert: the one thing a tester is waiting on. Renders
+          nothing at zero (no empty "all clear" panel). */}
+      <AdminPendingAlert count={pending.entities} />
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <AdminStatCard
           label="Pending entities"
-          count={pendingEntities ?? 0}
+          count={pending.entities}
           href="/admin/entities"
           urgent
         />
         <AdminStatCard
           label="Pending claims"
-          count={pendingClaims ?? 0}
+          count={pending.claims}
           href="/admin/claims"
           urgent
         />
         <AdminStatCard
           label="Pending verification"
-          count={pendingVerifications ?? 0}
+          count={pending.verifications}
           href="/admin/verification"
         />
-        <AdminStatCard label="Reports & flags" count={pendingReports ?? 0} href="/admin/reports" />
+        <AdminStatCard label="Reports & flags" count={pending.reports} href="/admin/reports" />
         <AdminStatCard
           label="Pending receipts"
-          count={pendingReceipts ?? 0}
+          count={pending.receipts}
           href="/admin/receipts"
           urgent
         />

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 
@@ -62,6 +63,11 @@ export async function approveEntityAction(
     beforeState: { status: listing.status, trust_tier: listing.trust_tier },
     afterState: { status: 'published' },
   })
+
+  // The pending count lives in the admin layout (sidebar pills) and the
+  // overview alert; drop it the moment the founder acts, not on the next
+  // full reload.
+  revalidatePath('/admin', 'layout')
 
   return { success: true, listingId, listingName: listing.name }
 }

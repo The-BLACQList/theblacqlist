@@ -24,6 +24,13 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   role: 'admin' | 'super_admin'
+  /**
+   * Pending-work counts keyed by nav href (see `toSidebarCounts` in
+   * `lib/admin/pendingCounts.ts`). An item with a count above zero gets a
+   * pill; zero or missing renders the plain item. Optional so every other
+   * caller and test of this component keeps working unchanged.
+   */
+  counts?: Record<string, number>
 }
 
 const NAV_ITEMS = [
@@ -45,7 +52,7 @@ const NAV_ITEMS = [
   { href: '/admin/testers', label: 'Testers', icon: Compass, exact: false },
 ]
 
-export function AdminSidebar({ role }: Props) {
+export function AdminSidebar({ role, counts }: Props) {
   const pathname = usePathname()
 
   return (
@@ -60,6 +67,7 @@ export function AdminSidebar({ role }: Props) {
       <nav aria-label="Admin navigation" className="flex-1 py-4 px-3 space-y-0.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
           const isActive = exact ? pathname === href : pathname.startsWith(href)
+          const pending = counts?.[href] ?? 0
           return (
             <Link
               key={href}
@@ -73,7 +81,19 @@ export function AdminSidebar({ role }: Props) {
               aria-current={isActive ? 'page' : undefined}
             >
               <Icon className="size-4 shrink-0" aria-hidden="true" />
-              {label}
+              <span className="flex-1">{label}</span>
+              {/* Pending-work pill. Rendered only above zero: an empty "0"
+                  next to every item is noise, and the founder's complaint was
+                  that the one item that mattered looked like all the others. */}
+              {pending > 0 && (
+                <span
+                  data-testid={`admin-nav-count-${label.toLowerCase().replace(/\s+/g, '-')}`}
+                  aria-label={`${pending} pending`}
+                  className="inline-flex items-center min-w-5 justify-center px-1.5 py-0.5 rounded-full bg-amber-gold/20 text-gold text-xs font-subhead font-semibold tabular-nums"
+                >
+                  {pending}
+                </span>
+              )}
             </Link>
           )
         })}
