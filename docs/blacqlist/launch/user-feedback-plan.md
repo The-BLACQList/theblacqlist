@@ -14,7 +14,7 @@ This document covers how feedback is collected, categorized, triaged, and routed
 | Channel                           | Purpose                                               | Monitored by     | Frequency                       |
 | --------------------------------- | ----------------------------------------------------- | ---------------- | ------------------------------- |
 | `feedback@theblacqlist.com`       | Primary public feedback email                         | Product Lead     | Daily                           |
-| Slack `#user-feedback`            | Internal routing for all feedback the team encounters | All team members | As it arrives                   |
+| Reply to the invite email         | Tester week feedback: testers reply to the invite they were sent, from the founder's mailbox | Founder          | Daily during tester week        |
 | Soft launch tester channel        | Direct channel with soft launch testers               | Product Lead     | Active during first 2 weeks     |
 | Social mentions (`@theblacqlist`) | Twitter/X, Instagram, Facebook mentions               | Product Lead     | Manual, daily for first 30 days |
 | In-app feedback form              | Dedicated `/feedback` form if built                   | Product Lead     | Daily (same as email)           |
@@ -34,7 +34,7 @@ Every piece of feedback must be assigned exactly one category before it enters t
 | **Bug**               | Something is broken, wrong, or not working as designed                           | Tech Lead    | → Bug triage (Section 3)                          |
 | **UX issue**          | Flow confusion, missing label, unclear state, confusing behavior (not broken)    | Product Lead | → Backlog ticket or next sprint                   |
 | **Data quality**      | Incorrect info on a listing: wrong hours, wrong address, wrong phone, wrong name | Admin        | → Admin correction queue + business outreach      |
-| **Feature request**   | A capability the user wants that does not currently exist                        | Product Lead | → Slack `#feature-requests` → monthly review      |
+| **Feature request**   | A capability the user wants that does not currently exist                        | Product Lead | → reply to invite email → monthly review          |
 | **Claim issue**       | Problem with submitting a claim, claim status, or claim result                   | Admin        | → Claim queue manual review at `/admin/claims`    |
 | **Accessibility**     | Screen reader, keyboard navigation, contrast, or label issue                     | Tech Lead    | → Accessibility ticket (link to ticket 087 group) |
 | **Praise / positive** | Positive feedback about the product                                              | Product Lead | → Log in monthly summary; share with team         |
@@ -201,7 +201,7 @@ At the end of Day 30, Product Lead produces a structured feedback summary for th
 
 ### By channel
 - Email (feedback@theblacqlist.com): [N]
-- Slack #user-feedback (internal routing): [N]
+- Reply to invite email (tester week): [N]
 - Soft launch tester channel: [N]
 - Social mentions: [N]
 
