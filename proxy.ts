@@ -140,6 +140,15 @@ export const config = {
   matcher: [
     // Run on all paths except Next.js internals, static assets, and the
     // Supabase health check so it never blocks non-page requests.
-    '/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico)$).*)',
+    //
+    // /api/map/tiles is excluded on purpose. It proxies byte ranges of a public
+    // PMTiles archive, nothing in it is per-user, and the map fires 20 to 35 of
+    // these per three-step zoom. Every one used to run getUser() above, which
+    // is a Supabase auth round trip for any signed-in visitor: tile TTFB went
+    // from ~30 ms signed out to ~130 ms signed in on the same machine
+    // [Measured - Playwright harness, local dev vs staging, 2026-09-21]. That
+    // is the zoom lag testers feel. The coming-soon gate already allowlists
+    // /api, so nothing about who may reach the tiles changes here.
+    '/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|api/map/tiles|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico)$).*)',
   ],
 }
