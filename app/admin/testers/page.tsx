@@ -4,7 +4,8 @@ import type { Metadata } from 'next'
 import { requireAdmin } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
-import { TOUR_STEPS } from '@/lib/tour/steps'
+import { TOUR_STEPS, type TourStepKey } from '@/lib/tour/steps'
+import { TOUR_STEP_COPY } from '@/lib/tour/verify'
 import {
   InviteTesterForm,
   EndEnrollmentButton,
@@ -23,6 +24,15 @@ function formatDate(iso: string) {
   })
 }
 
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 interface EnrollmentRow {
   id: string
   tester_user_id: string
@@ -33,6 +43,25 @@ interface EnrollmentRow {
   ended_at: string | null
   listings: { name: string; slug: string } | null
 }
+
+// One row of tour_step_completions. `reflection` is NULL for the two un-gated
+// progress steps and for a gated step the tester has not written yet.
+interface CompletionRow {
+  enrollment_id: string
+  step_key: TourStepKey
+  reflection: string | null
+  reflected_at: string | null
+}
+
+// A reflection the founder can act on: text plus who and which step.
+interface ReflectionEntry {
+  enrollmentId: string
+  step: TourStepKey
+  text: string
+  reflectedAt: string
+}
+
+type View = 'enrollments' | 'reflections'
 
 function enrollmentStatus(row: EnrollmentRow): { label: string; className: string } {
   if (row.ended_at) {
@@ -47,8 +76,20 @@ function enrollmentStatus(row: EnrollmentRow): { label: string; className: strin
   return { label: 'In progress', className: 'bg-blue-50 text-blue-800 border-blue-200' }
 }
 
-export default async function AdminTestersPage() {
+const TAB_BASE =
+  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold font-subhead transition-colors'
+const TAB_ON = 'bg-brand-black text-white border-brand-black'
+const TAB_OFF = 'bg-white text-charcoal-soft border-charcoal/15 hover:border-charcoal/40'
+
+export default async function AdminTestersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>
+}) {
   await requireAdmin()
+
+  const params = await searchParams
+  const view: View = params.view === 'reflections' ? 'reflections' : 'enrollments'
 
   const serviceClient = createServiceClient()
 
@@ -61,19 +102,38 @@ export default async function AdminTestersPage() {
 
   const enrollments = (enrollmentData ?? []) as EnrollmentRow[]
 
-  // Progress: completions per enrollment. Tester scale — no pagination needed.
+  // Progress and reflections come from the same rows. Tester scale, so one
+  // query and no pagination. Reflections are what the founder actually reads:
+  // the tour asks for twenty considered characters on four of the six steps,
+  // and until this page showed them they only existed in the table.
   const stepCountMap: Record<string, number> = {}
+  const reflectionsByEnrollment: Record<string, ReflectionEntry[]> = {}
+  const allReflections: ReflectionEntry[] = []
   if (enrollments.length > 0) {
     const { data: steps } = await serviceClient
       .from('tour_step_completions')
-      .select('enrollment_id')
+      .select('enrollment_id, step_key, reflection, reflected_at')
       .in(
         'enrollment_id',
         enrollments.map((e) => e.id)
       )
-    for (const s of steps ?? []) {
+    for (const s of (steps ?? []) as CompletionRow[]) {
       stepCountMap[s.enrollment_id] = (stepCountMap[s.enrollment_id] ?? 0) + 1
+      if (s.reflection && s.reflected_at) {
+        const entry: ReflectionEntry = {
+          enrollmentId: s.enrollment_id,
+          step: s.step_key,
+          text: s.reflection,
+          reflectedAt: s.reflected_at,
+        }
+        ;(reflectionsByEnrollment[s.enrollment_id] ??= []).push(entry)
+        allReflections.push(entry)
+      }
     }
+    const newestFirst = (a: ReflectionEntry, b: ReflectionEntry) =>
+      b.reflectedAt.localeCompare(a.reflectedAt)
+    allReflections.sort(newestFirst)
+    for (const list of Object.values(reflectionsByEnrollment)) list.sort(newestFirst)
   }
 
   // Tester identity for the founder's eyes: email from auth. Failures degrade
@@ -91,6 +151,13 @@ export default async function AdminTestersPage() {
     })
   )
 
+  const enrollmentById = Object.fromEntries(enrollments.map((e) => [e.id, e]))
+  const testerLabel = (enrollmentId: string) => {
+    const e = enrollmentById[enrollmentId]
+    if (!e) return enrollmentId.slice(0, 8)
+    return emailMap[e.tester_user_id] ?? `${e.tester_user_id.slice(0, 8)}…`
+  }
+
   const tourFlagOn = isFeatureEnabled('testerTour')
   const totalSteps = TOUR_STEPS.length
 
@@ -99,8 +166,9 @@ export default async function AdminTestersPage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Testers</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Tester Tour enrollments. Completing the tour unlocks a one-click
-          30-day Starter trial on the tester&rsquo;s own listing.
+          Tester Tour enrollments and what testers wrote at each step.
+          Completing the tour unlocks a one-click 30-day Starter trial on the
+          tester&rsquo;s own listing.
         </p>
       </div>
 
@@ -123,7 +191,28 @@ export default async function AdminTestersPage() {
         </div>
       </div>
 
-      {enrollments.length === 0 ? (
+      <nav aria-label="Tester views" className="flex flex-wrap gap-2">
+        <Link
+          href="/admin/testers"
+          aria-current={view === 'enrollments' ? 'page' : undefined}
+          className={`${TAB_BASE} ${view === 'enrollments' ? TAB_ON : TAB_OFF}`}
+        >
+          Enrollments
+          <span className="opacity-70">{enrollments.length}</span>
+        </Link>
+        <Link
+          href="/admin/testers?view=reflections"
+          aria-current={view === 'reflections' ? 'page' : undefined}
+          className={`${TAB_BASE} ${view === 'reflections' ? TAB_ON : TAB_OFF}`}
+        >
+          Reflections
+          <span className="opacity-70">{allReflections.length}</span>
+        </Link>
+      </nav>
+
+      {view === 'reflections' ? (
+        <ReflectionsList reflections={allReflections} testerLabel={testerLabel} />
+      ) : enrollments.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal-soft">
             No enrollments yet. Invite a listing owner above to start their
@@ -157,51 +246,17 @@ export default async function AdminTestersPage() {
               {enrollments.map((row) => {
                 const status = enrollmentStatus(row)
                 const done = stepCountMap[row.id] ?? 0
+                const reflections = reflectionsByEnrollment[row.id] ?? []
                 return (
-                  <tr key={row.id} className="hover:bg-[#f9f9fb] transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-subhead text-sm font-semibold text-brand-black">
-                        {emailMap[row.tester_user_id] ??
-                          `${row.tester_user_id.slice(0, 8)}…`}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      {row.listings ? (
-                        <Link
-                          href={`/admin/entities/${row.listing_id}`}
-                          className="font-subhead text-sm text-brand-black underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold"
-                        >
-                          {row.listings.name}
-                        </Link>
-                      ) : (
-                        <span className="font-body text-xs text-charcoal-faint">
-                          {row.listing_id.slice(0, 8)}…
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-subhead text-sm text-brand-black">
-                        {done}/{totalSteps}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-semibold font-subhead ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="font-body text-xs text-charcoal-soft">
-                        {formatDate(row.started_at)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {row.ended_at === null && (
-                        <EndEnrollmentButton enrollmentId={row.id} />
-                      )}
-                    </td>
-                  </tr>
+                  <EnrollmentRows
+                    key={row.id}
+                    row={row}
+                    status={status}
+                    done={done}
+                    totalSteps={totalSteps}
+                    tester={emailMap[row.tester_user_id] ?? `${row.tester_user_id.slice(0, 8)}…`}
+                    reflections={reflections}
+                  />
                 )
               })}
             </tbody>
@@ -209,5 +264,140 @@ export default async function AdminTestersPage() {
         </div>
       )}
     </div>
+  )
+}
+
+// One enrollment: the summary row, then a second row holding every reflection
+// the tester has written, newest first. Rendered inside the same <tbody> so
+// the reflection sits directly under the person who wrote it.
+function EnrollmentRows({
+  row,
+  status,
+  done,
+  totalSteps,
+  tester,
+  reflections,
+}: {
+  row: EnrollmentRow
+  status: { label: string; className: string }
+  done: number
+  totalSteps: number
+  tester: string
+  reflections: ReflectionEntry[]
+}) {
+  return (
+    <>
+      <tr className="hover:bg-[#f9f9fb] transition-colors">
+        <td className="px-4 py-3">
+          <p className="font-subhead text-sm font-semibold text-brand-black">{tester}</p>
+        </td>
+        <td className="px-4 py-3">
+          {row.listings ? (
+            <Link
+              href={`/admin/entities/${row.listing_id}`}
+              className="font-subhead text-sm text-brand-black underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold"
+            >
+              {row.listings.name}
+            </Link>
+          ) : (
+            <span className="font-body text-xs text-charcoal-faint">
+              {row.listing_id.slice(0, 8)}…
+            </span>
+          )}
+        </td>
+        <td className="px-4 py-3">
+          <span className="font-subhead text-sm text-brand-black">
+            {done}/{totalSteps}
+          </span>
+          <span className="block font-body text-xs text-charcoal-soft">
+            {reflections.length === 0
+              ? 'No reflections yet'
+              : `${reflections.length} reflection${reflections.length === 1 ? '' : 's'}`}
+          </span>
+        </td>
+        <td className="px-4 py-3">
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-semibold font-subhead ${status.className}`}
+          >
+            {status.label}
+          </span>
+        </td>
+        <td className="px-4 py-3 hidden lg:table-cell">
+          <span className="font-body text-xs text-charcoal-soft">
+            {formatDate(row.started_at)}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-right">
+          {row.ended_at === null && <EndEnrollmentButton enrollmentId={row.id} />}
+        </td>
+      </tr>
+      {reflections.length > 0 && (
+        <tr className="bg-[#fcfcfd]">
+          <td colSpan={6} className="px-4 pb-4 pt-1">
+            <ul className="space-y-3">
+              {reflections.map((r) => (
+                <ReflectionItem key={`${r.enrollmentId}-${r.step}`} entry={r} />
+              ))}
+            </ul>
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+
+function ReflectionItem({ entry, tester }: { entry: ReflectionEntry; tester?: string }) {
+  const copy = TOUR_STEP_COPY[entry.step]
+  return (
+    <li className="rounded-lg border border-charcoal/10 bg-white px-4 py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="font-subhead text-xs font-semibold text-brand-black">
+          {tester && <span className="mr-2">{tester}</span>}
+          <span className="text-charcoal-soft font-normal">{copy.title}</span>
+        </p>
+        <time
+          dateTime={entry.reflectedAt}
+          className="font-body text-xs text-charcoal-faint"
+        >
+          {formatDateTime(entry.reflectedAt)}
+        </time>
+      </div>
+      {copy.prompt && (
+        <p className="mt-1 font-body text-xs italic text-charcoal-soft">{copy.prompt}</p>
+      )}
+      <p className="mt-2 font-body text-sm text-brand-black whitespace-pre-wrap">{entry.text}</p>
+    </li>
+  )
+}
+
+// Every reflection from every tester, newest first. The triage view: read top
+// to bottom once a day during the tester window.
+function ReflectionsList({
+  reflections,
+  testerLabel,
+}: {
+  reflections: ReflectionEntry[]
+  testerLabel: (enrollmentId: string) => string
+}) {
+  if (reflections.length === 0) {
+    return (
+      <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
+        <p className="font-subhead text-sm text-charcoal-soft">
+          No reflections yet. They appear here the moment a tester submits one
+          on a reflection step of the tour.
+        </p>
+      </div>
+    )
+  }
+  return (
+    <ul className="space-y-3">
+      {reflections.map((r) => (
+        <ReflectionItem
+          key={`${r.enrollmentId}-${r.step}`}
+          entry={r}
+          tester={testerLabel(r.enrollmentId)}
+        />
+      ))}
+    </ul>
   )
 }

@@ -26,12 +26,25 @@ export interface PendingCounts {
   receipts: number
   /** Reviews written by the community and not yet moderated (`reviews.status = 'intake'`). */
   reviews: number
+  /**
+   * Tester Tour reflections written in the last 7 days. Not a queue with a
+   * "done" state; a recency signal so new tester writing is noticed the day it
+   * lands rather than whenever someone next opens /admin/testers.
+   */
+  reflections: number
 }
+
+/** The window the Testers pill counts over, in days. */
+export const REFLECTION_RECENT_DAYS = 7
 
 export async function getPendingCounts(): Promise<PendingCounts> {
   const serviceClient = createServiceClient()
+  const reflectionsSince = new Date(
+    Date.now() - REFLECTION_RECENT_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString()
 
-  const [entities, claims, verifications, reports, receipts, reviews] = await Promise.all([
+  const [entities, claims, verifications, reports, receipts, reviews, reflections] =
+    await Promise.all([
     serviceClient
       .from('listings')
       .select('id', { count: 'exact', head: true })
@@ -64,6 +77,13 @@ export async function getPendingCounts(): Promise<PendingCounts> {
       .from('reviews')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'intake'),
+    // A reflection row is a completion with text; the un-gated progress steps
+    // leave `reflected_at` null, so filtering on it counts only real writing.
+    serviceClient
+      .from('tour_step_completions')
+      .select('id', { count: 'exact', head: true })
+      .not('reflection', 'is', null)
+      .gte('reflected_at', reflectionsSince),
   ])
 
   return {
@@ -73,6 +93,7 @@ export async function getPendingCounts(): Promise<PendingCounts> {
     reports: reports.count ?? 0,
     receipts: receipts.count ?? 0,
     reviews: reviews.count ?? 0,
+    reflections: reflections.count ?? 0,
   }
 }
 
@@ -89,5 +110,6 @@ export function toSidebarCounts(counts: PendingCounts): Record<string, number> {
     '/admin/reviews': counts.reviews,
     '/admin/reports': counts.reports,
     '/admin/receipts': counts.receipts,
+    '/admin/testers': counts.reflections,
   }
 }
