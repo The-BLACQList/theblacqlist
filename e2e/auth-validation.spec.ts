@@ -12,7 +12,7 @@ import { waitForTurnstileToken } from './helpers/auth'
  * plan sees a form; only an assertion sees the missing guard.
  *
  * ⚠ Several TA-02 steps are enforced by NATIVE browser constraint validation
- * (`required`, `type="email"`, `minLength={8}`), not by a server-rendered
+ * (`required`, `type="email"`, `minLength={PASSWORD_MIN_LENGTH}`), not by a server-rendered
  * error. The correct assertion is "the control is :invalid and the form did
  * not navigate", not "an alert appeared". The test plan asserts the latter and
  * is wrong; see the 2d corrections.
@@ -51,7 +51,7 @@ test.describe('TA-02 — Sign-up validation', () => {
     await expect(page).toHaveURL(new RegExp(`${SIGN_UP}$`))
   })
 
-  test('step 4 — a password under 8 characters is rejected', async ({ page }) => {
+  test('step 4 — a password below the policy minimum is rejected', async ({ page }) => {
     await page.goto(SIGN_UP)
     await page.locator('#displayName').fill('E2E Validation Probe')
     await page.locator('#email').fill(`e2e-probe-${Date.now()}@test.local`)
@@ -59,9 +59,11 @@ test.describe('TA-02 — Sign-up validation', () => {
     await page.getByRole('button', { name: 'Create account' }).click()
 
     // TWO layers enforce this rule, and either one refusing is correct:
-    // the native `minLength={8}` constraint, and the server rule at
-    // lib/actions/auth/signUp.ts:28-32, which returns `field: 'password'`
-    // and drives `aria-invalid` plus the #password-error alert.
+    // the native `minLength={PASSWORD_MIN_LENGTH}` constraint (10 since
+    // 2026-09-21, lib/auth/password-policy.ts), and the server pre-check in
+    // lib/actions/auth/signUp.ts (`passwordPolicyError`), which returns
+    // `field: 'password'` and drives `aria-invalid` plus the #password-error
+    // alert. The live checklist under the input is cosmetic to this test.
     //
     // ⚠ Asserting `validity.tooShort` ALONE is unreliable, and it turned
     // `main` red twice on 2026-09-02. `tooShort` is only reported for an
@@ -69,7 +71,7 @@ test.describe('TA-02 — Sign-up validation', () => {
     // controlled (`value={password}`), so once the action returns its error
     // state React re-renders it and the native flag reads false — while the
     // app is visibly and correctly refusing the password. The captured DOM
-    // at failure showed exactly that: value="short", minlength="8",
+    // at failure showed exactly that: value="short", minlength="8" (now 10),
     // aria-invalid="true", the red border, and tooShort false.
     //
     // So assert the OUTCOME, which holds under both paths: the password is

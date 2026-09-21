@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { passwordPolicyError } from '@/lib/auth/password-policy'
 
 export type ResetPasswordState =
   | { error: string; field?: 'password' | 'confirmPassword' | 'general' }
@@ -15,8 +16,11 @@ export async function resetPasswordAction(
   const password = formData.get('password')?.toString() ?? ''
   const confirmPassword = formData.get('confirmPassword')?.toString() ?? ''
 
-  if (password.length < 8)
-    return { error: 'Password must be at least 8 characters.', field: 'password' }
+  // Same rule as sign-up and the Supabase Auth setting, checked before
+  // updateUser() so a weak password gets a named reason instead of the
+  // generic "Something went wrong" below.
+  const passwordError = passwordPolicyError(password)
+  if (passwordError) return { error: passwordError, field: 'password' }
   if (password !== confirmPassword)
     return { error: 'Passwords do not match.', field: 'confirmPassword' }
 

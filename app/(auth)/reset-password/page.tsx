@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 import { resetPasswordAction } from '@/lib/actions/auth/resetPassword'
+import { PASSWORD_MIN_LENGTH } from '@/lib/auth/password-policy'
+import { PasswordChecklist } from '@/components/security/PasswordChecklist'
 import { cn } from '@/lib/utils'
 
 function SubmitButton() {
@@ -27,6 +29,9 @@ export default function ResetPasswordPage() {
   const [state, action] = useActionState(resetPasswordAction, null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  // Controlled only so the live checklist can read it; nothing is echoed back
+  // through the action.
+  const [password, setPassword] = useState('')
 
   const generalError =
     state && 'error' in state && (!state.field || state.field === 'general') ? state.error : null
@@ -68,14 +73,16 @@ export default function ResetPasswordPage() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN_LENGTH}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               aria-describedby={cn('password-hint', passwordError ? 'password-error' : undefined)}
               aria-invalid={!!passwordError}
               className={cn(
                 'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                 passwordError ? 'border-red-400' : 'border-charcoal/30'
               )}
-              placeholder="Min. 8 characters"
+              placeholder={`Min. ${PASSWORD_MIN_LENGTH} characters`}
             />
             <button
               type="button"
@@ -90,9 +97,7 @@ export default function ResetPasswordPage() {
               )}
             </button>
           </div>
-          <p id="password-hint" className="text-xs font-subhead text-charcoal-soft">
-            Must be at least 8 characters.
-          </p>
+          <PasswordChecklist id="password-hint" password={password} className="mt-1" />
           {passwordError && (
             <p
               id="password-error"
