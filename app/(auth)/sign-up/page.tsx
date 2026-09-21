@@ -330,7 +330,7 @@ function SignUpContent() {
           .
         </p>
 
-        <TurnstileWidget className="mt-1" />
+        <TurnstileWidget className="mt-1" resetKey={state} />
 
         <div className="mt-1">
           <SubmitButton />

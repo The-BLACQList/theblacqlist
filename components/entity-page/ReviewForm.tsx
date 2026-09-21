@@ -268,7 +268,7 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
         </p>
       )}
 
-      <TurnstileWidget />
+      <TurnstileWidget resetKey={state} />
 
       <div className="flex justify-end">
         <button
