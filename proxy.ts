@@ -35,10 +35,17 @@ const COMING_SOON_COOKIE = 'bl_preview'
 // page is a public door into the gated site. Testers do not need it: the invite
 // link is /sign-up?preview=<token>, which sets the cookie and serves the page in
 // one response, allowlist or not.
+//
+// /join IS here (2026-09-21, flyer / QR admission). It is not a page: the route
+// handler checks ?code= against TESTER_FLYER_CODE in constant time and either
+// sets the same bl_preview cookie this file checks and redirects to /sign-up,
+// or redirects to /coming-soon. Without a code it is a redirect to /coming-soon,
+// so allowlisting it opens nothing that the flyer code does not open.
 const COMING_SOON_ALLOWED_PATHS = [
   '/coming-soon',
   '/api',
   '/auth',
+  '/join',
   '/sign-in',
   '/verify-email',
   '/forgot-password',

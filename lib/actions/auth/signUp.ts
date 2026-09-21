@@ -1,7 +1,10 @@
 'use server'
 
 import * as Sentry from '@sentry/nextjs'
+import { cookies } from 'next/headers'
 
+import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
+import { trackServerEvent } from '@/lib/analytics/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAppUrl } from '@/lib/env'
 import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
@@ -49,6 +52,13 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
   // check living only in this server action would protect nothing.
   const captchaToken = formData.get(TURNSTILE_TOKEN_FIELD)?.toString() || undefined
 
+  // Where the account came from. /join sets bl_src=flyer when the flyer code
+  // checks out; every other tester arrived through the emailed invite link.
+  // Only those two values are stored, so a tampered cookie cannot write an
+  // arbitrary string into user metadata or the analytics table.
+  const sourceCookie = (await cookies()).get('bl_src')?.value
+  const signupSource = sourceCookie === 'flyer' ? 'flyer' : 'invite'
+
   // `data` is captured, not discarded. It carries the only signal that a
   // duplicate account exists once email confirmation is on — see
   // isSuppressedDuplicate below.
@@ -64,6 +74,7 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
         // schema migration runs and setOnboardingRole can write to user_roles.
         onboarding_role: role,
         onboarding_intent: onboardingIntent,
+        signup_source: signupSource,
       },
     },
   })
@@ -103,6 +114,14 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
     to: email,
     subject: 'Welcome to The BLACQList',
     react: WelcomeEmail({ displayName }),
+  })
+
+  // Counts flyer versus invited sign-ups for the Go/No-Go. Deliberately no
+  // user_id and no email: the account is unconfirmed at this point and the
+  // count is all the question needs.
+  trackServerEvent({
+    event_name: SERVER_ONLY_EVENTS.SIGN_UP_COMPLETED,
+    properties: { source: signupSource, role },
   })
 
   return { success: true, email }
