@@ -19,7 +19,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 // undercount during a burst.
 // =============================================================================
 
-export type RateLimitBucket = 'search' | 'analytics_event'
+// `rate_limit_counters.bucket` is plain text with no CHECK, so adding a bucket
+// is a TypeScript change only; the ledger needs no migration.
+export type RateLimitBucket = 'search' | 'analytics_event' | 'problem_report'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

@@ -32,6 +32,8 @@ export interface PendingCounts {
    * lands rather than whenever someone next opens /admin/testers.
    */
   reflections: number
+  /** Problem reports nobody has looked at yet (`problem_reports.status = 'new'`). */
+  feedback: number
 }
 
 /** The window the Testers pill counts over, in days. */
@@ -43,7 +45,7 @@ export async function getPendingCounts(): Promise<PendingCounts> {
     Date.now() - REFLECTION_RECENT_DAYS * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  const [entities, claims, verifications, reports, receipts, reviews, reflections] =
+  const [entities, claims, verifications, reports, receipts, reviews, reflections, feedback] =
     await Promise.all([
     serviceClient
       .from('listings')
@@ -84,6 +86,12 @@ export async function getPendingCounts(): Promise<PendingCounts> {
       .select('id', { count: 'exact', head: true })
       .not('reflection', 'is', null)
       .gte('reflected_at', reflectionsSince),
+    // The Report a problem button. `new` is the only state that needs eyes;
+    // triaged/fixed/dismissed have already had them.
+    serviceClient
+      .from('problem_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'new'),
   ])
 
   return {
@@ -94,6 +102,7 @@ export async function getPendingCounts(): Promise<PendingCounts> {
     receipts: receipts.count ?? 0,
     reviews: reviews.count ?? 0,
     reflections: reflections.count ?? 0,
+    feedback: feedback.count ?? 0,
   }
 }
 
@@ -111,5 +120,6 @@ export function toSidebarCounts(counts: PendingCounts): Record<string, number> {
     '/admin/reports': counts.reports,
     '/admin/receipts': counts.receipts,
     '/admin/testers': counts.reflections,
+    '/admin/feedback': counts.feedback,
   }
 }

@@ -7,6 +7,7 @@ import { PublicFooter } from '@/components/nav/public-footer'
 import { ChromeGate } from '@/components/layout/chrome-gate'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
 import { TourRailMount } from '@/components/tour/TourRailMount'
+import { ReportProblemMount } from '@/components/feedback/ReportProblemMount'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -95,6 +96,11 @@ export default function RootLayout({
             after the page shell instead of blocking it. */}
         <Suspense fallback={null}>
           <TourRailMount />
+        </Suspense>
+        {/* Report a problem button — renders nothing unless the viewer is
+            signed in. Same streaming treatment as the rail. */}
+        <Suspense fallback={null}>
+          <ReportProblemMount />
         </Suspense>
         <Analytics />
         <SpeedInsights />

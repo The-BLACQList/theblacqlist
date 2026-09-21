@@ -1968,6 +1968,45 @@ export type Database = {
         }
         Relationships: []
       }
+      problem_reports: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          page_path: string
+          pr_ref: string | null
+          role: string | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          page_path: string
+          pr_ref?: string | null
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          page_path?: string
+          pr_ref?: string | null
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
