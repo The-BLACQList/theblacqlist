@@ -14,6 +14,14 @@ import Script from 'next/script'
 // carries the token with no extra wiring. All five call sites submit that way,
 // so none of them touch `onToken` today — it exists for a future form that
 // builds FormData by hand and has to append the token itself.
+//
+// A token is single-use. Once a submit has carried it to the server (Supabase
+// Auth or siteverify) it is spent, whether or not the action succeeded. A form
+// that fails validation server-side and stays mounted still holds that spent
+// token in its hidden input, so the person's retry is rejected as "Verification
+// failed" until they reload. `resetKey` is the fix: pass the action state, and
+// every time it changes (each settled submit) the widget is reset and issues a
+// fresh token for the next attempt.
 
 declare global {
   interface Window {
@@ -33,9 +41,14 @@ interface Props {
   /** 'auto' follows the page; the auth pages are light. */
   theme?: 'auto' | 'light' | 'dark'
   className?: string
+  /**
+   * Changes whenever a submit settles (pass the `useActionState` state). Each
+   * change resets the widget so the next submit carries an unspent token.
+   */
+  resetKey?: unknown
 }
 
-export function TurnstileWidget({ onToken, theme = 'light', className }: Props) {
+export function TurnstileWidget({ onToken, theme = 'light', className, resetKey }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
   // Held in a ref so re-renders of the parent never re-run the render effect
@@ -46,6 +59,23 @@ export function TurnstileWidget({ onToken, theme = 'light', className }: Props) 
   useEffect(() => {
     onTokenRef.current = onToken
   })
+
+  // Reset on every change of resetKey after mount. The previous value lives in
+  // a ref (not effect deps alone) so StrictMode's double-invoke on mount does
+  // not reset a widget that has not been submitted yet.
+  const prevResetKeyRef = useRef(resetKey)
+  useEffect(() => {
+    if (Object.is(prevResetKeyRef.current, resetKey)) return
+    prevResetKeyRef.current = resetKey
+    const id = widgetIdRef.current
+    if (id === null || !window.turnstile) return
+    try {
+      window.turnstile.reset(id)
+    } catch {
+      // Widget not rendered yet or already removed; the next render issues a
+      // fresh token anyway.
+    }
+  }, [resetKey])
 
   useEffect(() => {
     if (!SITE_KEY) return

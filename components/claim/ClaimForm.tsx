@@ -305,7 +305,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         />
       </div>
 
-      <TurnstileWidget />
+      <TurnstileWidget resetKey={state} />
 
       {/* Submit */}
       <button

@@ -99,7 +99,7 @@ function ForgotPasswordContent() {
           )}
         </div>
 
-        <TurnstileWidget className="mt-2" />
+        <TurnstileWidget className="mt-2" resetKey={state} />
 
         <div className="mt-2">
           <SubmitButton />
