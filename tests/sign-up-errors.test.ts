@@ -69,7 +69,7 @@ function form(overrides: Record<string, string> = {}): FormData {
   const fd = new FormData()
   fd.set('displayName', 'Test Person')
   fd.set('email', 'someone@example.test')
-  fd.set('password', 'correct-horse-battery')
+  fd.set('password', 'Correct-Horse-Battery1')
   for (const [k, v] of Object.entries(overrides)) fd.set(k, v)
   return fd
 }
@@ -160,6 +160,12 @@ describe('signUpAction', () => {
     expect(await signUpAction(null, form({ password: 'short' }))).toMatchObject({
       field: 'password',
     })
+    // Old rule was length >= 8; the policy is now 10 + four classes, so a
+    // long lowercase-only password is refused here too, with the reason named.
+    expect(await signUpAction(null, form({ password: 'correct-horse-battery' }))).toMatchObject({
+      field: 'password',
+      error: 'Password needs an uppercase letter and a number.',
+    })
     expect(h.emailsSent).toHaveLength(0)
   })
 
@@ -238,11 +244,11 @@ describe('signUpAction', () => {
 
     await signUpAction(
       null,
-      form({ email: 'private@person.test', password: 'hunter2-hunter2' })
+      form({ email: 'private@person.test', password: 'Hunter2-Hunter2!' })
     )
 
     const serialised = JSON.stringify(h.captured)
     expect(serialised).not.toContain('private@person.test')
-    expect(serialised).not.toContain('hunter2-hunter2')
+    expect(serialised).not.toContain('Hunter2-Hunter2!')
   })
 })

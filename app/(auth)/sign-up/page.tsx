@@ -7,6 +7,8 @@ import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Loader2, Mail } from 'lucide-react'
 
 import { signUpAction } from '@/lib/actions/auth/signUp'
+import { PASSWORD_MIN_LENGTH } from '@/lib/auth/password-policy'
+import { PasswordChecklist } from '@/components/security/PasswordChecklist'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import { cn } from '@/lib/utils'
 
@@ -230,7 +232,7 @@ function SignUpContent() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={PASSWORD_MIN_LENGTH}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               aria-describedby={cn(
@@ -242,7 +244,7 @@ function SignUpContent() {
                 'w-full h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 pr-11 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
                 getFieldError('password') ? 'border-red-400' : 'border-charcoal/30'
               )}
-              placeholder="Min. 8 characters"
+              placeholder={`Min. ${PASSWORD_MIN_LENGTH} characters`}
             />
             <button
               type="button"
@@ -257,9 +259,8 @@ function SignUpContent() {
               )}
             </button>
           </div>
-          <p id="password-hint" className="text-xs font-subhead text-charcoal-soft">
-            Must be at least 8 characters.
-          </p>
+          {/* Live checklist replaces the static hint; same id keeps aria-describedby honest. */}
+          <PasswordChecklist id="password-hint" password={password} className="mt-1" />
           {getFieldError('password') && (
             <p
               id="password-error"

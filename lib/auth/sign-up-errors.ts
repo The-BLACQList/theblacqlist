@@ -13,6 +13,8 @@
 // functions, and a pure mapper is worth testing directly.
 // =============================================================================
 
+import { PASSWORD_POLICY_SUMMARY } from '@/lib/auth/password-policy'
+
 export type SignUpField = 'email' | 'password' | 'displayName' | 'general'
 
 export interface SignUpErrorCopy {
@@ -75,7 +77,7 @@ const RULES: Array<{
     codes: ['weak_password'],
     messages: ['password should be', 'password is too weak', 'weak password'],
     copy: {
-      error: 'That password is too weak. Use at least 8 characters, mixing letters and numbers.',
+      error: `That password is too weak. ${PASSWORD_POLICY_SUMMARY}`,
       field: 'password',
     },
   },

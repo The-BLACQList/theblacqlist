@@ -7,6 +7,7 @@ import { getAppUrl } from '@/lib/env'
 import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
 import { WelcomeEmail } from '@/lib/email/templates/welcome'
+import { passwordPolicyError } from '@/lib/auth/password-policy'
 import {
   isSuppressedDuplicate,
   mapSignUpError,
@@ -31,12 +32,11 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
       field: 'displayName',
     }
   if (!email) return { error: 'Email is required.', field: 'email' }
-  if (!password) return { error: 'Password is required.', field: 'password' }
-  if (password.length < 8)
-    return {
-      error: 'Password must be at least 8 characters.',
-      field: 'password',
-    }
+  // Same rule as the live checklist on the page and the Supabase Auth setting.
+  // Refusing here, before signUp(), means a weak password never spends the
+  // single-use Turnstile token below.
+  const passwordError = passwordPolicyError(password)
+  if (passwordError) return { error: passwordError, field: 'password' }
 
   const supabase = await createClient()
 
