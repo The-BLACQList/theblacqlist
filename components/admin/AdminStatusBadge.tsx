@@ -30,6 +30,10 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   assigned: { label: 'Assigned', className: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   resolved: { label: 'Resolved', className: 'bg-green-50 text-green-700 border-green-200' },
   dismissed: { label: 'Dismissed', className: 'bg-charcoal/5 text-charcoal-soft border-charcoal/15' },
+  // problem_reports (supabase/migrations/20260921000000_problem_reports.sql)
+  new: { label: 'New', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  triaged: { label: 'Triaged', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  fixed: { label: 'Fixed', className: 'bg-green-50 text-green-700 border-green-200' },
 }
 
 export function AdminStatusBadge({ status, className }: Props) {
