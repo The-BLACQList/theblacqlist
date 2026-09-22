@@ -43,12 +43,15 @@ export const ANALYTICS_EVENTS = {
  * but deliberately kept OUT of VALID_EVENT_NAMES — the public endpoint should
  * not let a browser forge a draft-created or product-created event.
  *
- * Emitters: createListing.ts:314, createProduct.ts:164, createService.ts:144.
+ * Emitters: createListing.ts:314, createProduct.ts:164, createService.ts:144,
+ * and signUp.ts for sign_up_completed (properties.source is 'flyer' when the
+ * account came in through /join, else 'invite'; no user_id, no email).
  */
 export const SERVER_ONLY_EVENTS = {
   LISTING_DRAFT_CREATED: 'listing_draft_created',
   PRODUCT_CREATED: 'product_created',
   SERVICE_CREATED: 'service_created',
+  SIGN_UP_COMPLETED: 'sign_up_completed',
 } as const
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS]

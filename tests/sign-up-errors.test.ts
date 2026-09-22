@@ -32,6 +32,7 @@ const h = vi.hoisted(() => ({
   },
   captured: [] as { message: string; tags: Record<string, unknown> }[],
   emailsSent: [] as { to: string; subject: string }[],
+  events: [] as { event_name: string; properties?: Record<string, unknown> }[],
 }))
 
 vi.mock('@sentry/nextjs', () => ({
@@ -63,6 +64,19 @@ vi.mock('@/lib/email/templates/welcome', () => ({
   WelcomeEmail: () => null,
 }))
 
+// signUp reads the bl_src cookie (flyer vs invite) and emits sign_up_completed;
+// neither has a request scope under vitest. The events are captured so the
+// assertions below can check what would have been written.
+vi.mock('next/headers', () => ({
+  cookies: async () => ({ get: () => undefined }),
+}))
+
+vi.mock('@/lib/analytics/server', () => ({
+  trackServerEvent: (input: { event_name: string; properties?: Record<string, unknown> }) => {
+    h.events.push(input)
+  },
+}))
+
 const { signUpAction } = await import('@/lib/actions/auth/signUp')
 
 function form(overrides: Record<string, string> = {}): FormData {
@@ -78,6 +92,7 @@ beforeEach(() => {
   h.signUpResult = { data: { user: null, session: null }, error: null }
   h.captured = []
   h.emailsSent = []
+  h.events = []
 })
 
 // -----------------------------------------------------------------------------
@@ -178,6 +193,9 @@ describe('signUpAction', () => {
     // The old behaviour: a "Check your inbox" panel and a welcome email for an
     // account that already existed.
     expect(h.emailsSent).toHaveLength(0)
+    // A duplicate is not a completed sign-up; counting it would inflate the
+    // flyer-vs-invite numbers at the Go/No-Go.
+    expect(h.events).toHaveLength(0)
   })
 
   it('succeeds and sends the welcome email for a genuinely new account', async () => {
@@ -190,6 +208,14 @@ describe('signUpAction', () => {
 
     expect(state).toEqual({ success: true, email: 'someone@example.test' })
     expect(h.emailsSent).toHaveLength(1)
+    // With no bl_src cookie the account counts as invited; the event carries
+    // no email and no user id.
+    expect(h.events).toEqual([
+      {
+        event_name: 'sign_up_completed',
+        properties: { source: 'invite', role: 'supporter' },
+      },
+    ])
   })
 
   it('passes the captcha failure through untouched', async () => {

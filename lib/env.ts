@@ -24,6 +24,16 @@ export const IS_PREVIEW = APP_ENV === 'preview'
 // protection is not.
 export const SUBSCRIBE_RATE_LIMIT_SALT = process.env.SUBSCRIBE_RATE_LIMIT_SALT ?? ''
 
+// Self-serve tester admission (app/join/route.ts). A second, independently
+// revocable secret next to COMING_SOON_BYPASS_TOKEN: the bypass token is what the
+// invite email carries and what the cookie stores, this one is what a printed
+// flyer / QR code carries. Keeping them separate means the flyer can be pulled
+// (delete the var in Vercel) without invalidating anyone who was invited by
+// email, and vice versa. Empty string means the flyer path is closed.
+//
+// Server-only, never logged, never compared with `===` (see the route).
+export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
+
 // =============================================================================
 // Feature flags — checkpoint X.1
 // =============================================================================
