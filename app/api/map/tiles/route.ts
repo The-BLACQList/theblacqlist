@@ -30,6 +30,12 @@ export async function GET(request: NextRequest) {
     const value = res.headers.get(name)
     if (value) headers.set(name, value)
   }
+  // Browser cache only. Do not add s-maxage here expecting a CDN hit: Vercel's
+  // CDN never caches a response to a request that carries a Range header, and
+  // only caches 200/404/410/3xx statuses, so every 206 range below is a
+  // function invocation regardless of this header (vercel.com/docs/caching/
+  // cdn-cache, "Cacheable response criteria", read 2026-09-21). The win for
+  // signed-in visitors is the proxy.ts matcher exclusion, not this header.
   headers.set('Cache-Control', 'public, max-age=86400')
   return new Response(res.body, { status: res.status, headers })
 }
