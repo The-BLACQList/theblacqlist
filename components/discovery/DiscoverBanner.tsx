@@ -167,7 +167,12 @@ export function DiscoverBanner({ type }: Props) {
             'radial-gradient(110% 90% at 78% 20%, rgba(255,222,160,0.20), transparent 55%), linear-gradient(to top, rgba(4,4,5,0.55), transparent 60%)',
         }}
       />
-      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-16 md:py-24 min-h-[220px] md:min-h-[300px] flex flex-col justify-end">
+      {/* Height doubled 2026-09-21 (founder, pre-invite item 2): 220/300 to
+          440/600. At 375x667 the banner plus the search bar below it still
+          ends above the fold (header ~64 + 440 + ~56). Content stays pinned
+          to the bottom edge so the title sits at the same place relative to
+          the search bar as before; the extra room goes above it. */}
+      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-32 md:py-48 min-h-[440px] md:min-h-[600px] flex flex-col justify-end">
         <h1 className="font-headline text-[34px] md:text-[52px] text-white text-balance">
           {banner.title}
         </h1>
