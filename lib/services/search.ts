@@ -135,9 +135,27 @@ export async function searchListings(
 
   // Deep facets (attributes / price / open-now / radius) are implemented only in
   // search_listings_faceted — PostgREST cannot express them against this table.
-  // Requests that use one go through the RPC; every other request keeps the
-  // exact code path it had before, including the pg_trgm fallback the typeahead
-  // depends on.
+  // Requests that use one go through the RPC.
+  //
+  // `q` is in this condition as of 20260922000000_search_recall.sql. It used to
+  // take the PostgREST branch below, which ran a bare
+  // websearch_to_tsquery('english') and then patched thin results with a
+  // separate search_by_similarity RPC. That is a SECOND, different definition of
+  // "what matches", and it drifted from the one /discover uses: the founder's
+  // "dentist" query returned nothing here while /discover's RPC path was the
+  // thing actually being fixed. Recall now lives in exactly one place — the
+  // function — so a query can never mean two things depending on which page
+  // asked. The old pg_trgm fallback is gone with it; the RPC's
+  // word_similarity() clause is its replacement and is strictly wider (it reads
+  // tagline and category name, not just name).
+  //
+  // That fallback was also dead code, not a working feature being traded away:
+  // search_by_similarity is defined in no migration in this repo and does not
+  // exist in the production database — `select proname from pg_proc where
+  // proname like '%similarity%'` returns only pg_trgm's own functions
+  // [Measured — production SQL, 2026-09-22]. Every call it made errored, was
+  // swallowed, and added nothing. The comment it carried ("the typeahead
+  // depends on it") was false in production.
   //
   // sort=distance is in this condition for the same reason as the radius: the
   // PostgREST branch below has no distance to order by, so it would answer 200
@@ -145,6 +163,7 @@ export async function searchListings(
   // searchSchema already rejects sort=distance without coordinates, so reaching
   // here with it means the coordinates are present and the RPC can honor it.
   if (
+    q ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||
@@ -180,6 +199,10 @@ export async function searchListings(
     return { results, total: faceted.total }
   }
 
+  // Reached only when there is NO query string: a plain browse by city,
+  // category, type, trust tier, or location type. PostgREST expresses all of
+  // those exactly, and with no `q` there is no relevance to compute, so there is
+  // nothing here that could disagree with the RPC.
   let query = supabase
     .from('listings')
     .select(SELECT, { count: 'exact' })
@@ -199,83 +222,18 @@ export async function searchListings(
 
   // Editorial centering: Black-Owned ranks ahead of Ally ('black_owned' > 'ally'
   // lexically, so ascending:false centers Black-Owned). Mirrors the ORDER BY in
-  // search_listings_faceted; keeps the typeahead API consistent with browse.
-  if (q) {
-    query = query
-      .textSearch('search_vector', q, { type: 'websearch', config: 'english' })
-      .order('ownership_label', { ascending: false })
-      .order('published_at', { ascending: false })
-  } else {
-    query = query
-      .order('is_featured', { ascending: false })
-      .order('ownership_label', { ascending: false })
-      .order('published_at', { ascending: false })
-  }
+  // search_listings_faceted.
+  query = query
+    .order('is_featured', { ascending: false })
+    .order('ownership_label', { ascending: false })
+    .order('published_at', { ascending: false })
 
   const { data, count } = await query.range(offset, offset + limit - 1)
-  const ftsResults: SearchResult[] = data ? (data as unknown as RawSearchRow[]).map(mapRow) : []
-  const ftsTotal = count ?? 0
+  const results: SearchResult[] = data ? (data as unknown as RawSearchRow[]).map(mapRow) : []
+  const total = count ?? 0
 
-  // pg_trgm fallback: when FTS returns < 5 results and a query was provided.
-  // Requires the pg_trgm extension and search_by_similarity function in Supabase.
-  // Falls back to ilike partial matching if the function is unavailable.
-  if (q && ftsResults.length < 5) {
-    const ftsIds = new Set(ftsResults.map((r) => r.id))
-    const fallbackLimit = limit - ftsResults.length
-    let fallbackResults: SearchResult[] = []
-
-    try {
-      const { data: simIds, error } = await (
-        supabase.rpc as (
-          fn: string,
-          args: Record<string, unknown>
-        ) => ReturnType<typeof supabase.rpc>
-      )('search_by_similarity', {
-        name_query: q,
-        threshold: 0.25,
-        exclude_ids: Array.from(ftsIds),
-        result_limit: fallbackLimit,
-      })
-
-      if (error) throw error
-
-      if (simIds && Array.isArray(simIds) && simIds.length > 0) {
-        const ids = (simIds as Array<{ id: string }>).map((r) => r.id)
-        const { data: simRows } = await supabase
-          .from('listings')
-          .select(SELECT)
-          .in('id', ids)
-          .eq('status', 'published')
-          .is('deleted_at', null)
-          .eq('flag_status', 'none')
-        fallbackResults = simRows ? (simRows as unknown as RawSearchRow[]).map(mapRow) : []
-      }
-    } catch {
-      // pg_trgm not available — use ilike for partial name matching
-      const { data: ilikeRows } = await supabase
-        .from('listings')
-        .select(SELECT)
-        .ilike('name', `%${q}%`)
-        .eq('status', 'published')
-        .is('deleted_at', null)
-        .eq('flag_status', 'none')
-        .order('published_at', { ascending: false })
-        .limit(fallbackLimit)
-
-      fallbackResults = ilikeRows
-        ? (ilikeRows as unknown as RawSearchRow[])
-            .map(mapRow)
-            .filter((r) => !ftsIds.has(r.id))
-        : []
-    }
-
-    const combined = [...ftsResults, ...fallbackResults]
-    void logSearchEvent(q, combined.length, cityId, categoryId)
-    return { results: combined, total: Math.max(ftsTotal, combined.length) }
-  }
-
-  void logSearchEvent(q, ftsTotal, cityId, categoryId)
-  return { results: ftsResults, total: ftsTotal }
+  void logSearchEvent(q, total, cityId, categoryId)
+  return { results, total }
 }
 
 function logSearchEvent(

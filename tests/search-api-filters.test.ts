@@ -21,10 +21,22 @@
 //     every filter into an error
 //   * attrs / price / open_now actually route through search_listings_faceted
 //     and the returned page is the RPC's ids, in the RPC's order
-//   * a request with no deep facet takes the untouched PostgREST path and never
-//     calls the faceted RPC
-//   * the pg_trgm similarity fallback still fires under 5 FTS results — the
-//     typeahead depends on it and it is the main regression risk here
+//   * a request with no deep facet and no query takes the untouched PostgREST
+//     path and never calls the faceted RPC
+//
+// AMENDED 2026-09-22 (20260922000000_search_recall.sql). Two tests here used to
+// assert that a `q` request ran textSearch() on the listings table and then
+// patched thin results through a separate search_by_similarity RPC. That was a
+// SECOND definition of "what matches", parallel to the one /discover uses
+// through search_listings_faceted, and the two had drifted: the founder's
+// "dentist" query returned nothing on this path while the function was the
+// thing being fixed. Recall now lives in exactly one place. What replaces those
+// two assertions:
+//   * a `q` request routes through search_listings_faceted with p_q set
+//   * search_by_similarity is never called from anywhere
+// The second one is the guard. Reintroducing a side path would make a query
+// mean two different things depending on which page asked, which is the defect
+// this amendment closes rather than a style preference.
 // =============================================================================
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -41,8 +53,6 @@ const h = vi.hoisted(() => ({
   /** Rows the faceted RPC should return, as {id, total_count}. */
   facetedRows: [] as Array<{ id: string; total_count: number }>,
   facetedError: null as { message: string } | null,
-  /** Ids the similarity RPC should return. */
-  similarityRows: [] as Array<{ id: string }>,
 }))
 
 /** Four published listings across two cities and two categories. */
@@ -138,9 +148,9 @@ vi.mock('@/lib/supabase/server', () => {
       if (fn === 'search_listings_faceted') {
         return Promise.resolve({ data: h.facetedRows, error: h.facetedError })
       }
-      if (fn === 'search_by_similarity') {
-        return Promise.resolve({ data: h.similarityRows, error: null })
-      }
+      // search_by_similarity is deliberately NOT mocked. It is gone from the
+      // service as of 20260922000000, and an unmocked rpc resolves to an error
+      // here, so a reintroduction fails loudly rather than quietly working.
       return Promise.resolve({ data: null, error: { message: `unmocked rpc ${fn}` } })
     },
     auth: { getUser: async () => ({ data: { user: null } }) },
@@ -168,7 +178,6 @@ beforeEach(() => {
   h.rpcs = []
   h.facetedRows = []
   h.facetedError = null
-  h.similarityRows = []
 })
 
 // ── 1.17 · unresolvable ≠ not asked for ─────────────────────────────────────
@@ -252,24 +261,68 @@ describe('1.16 — attrs / price / open_now are implemented, not ignored', () =>
 
 // ── Regression surface: the untouched path ──────────────────────────────────
 
-describe('no-deep-facet requests keep their existing code path', () => {
-  it('never calls the faceted RPC when no deep facet was requested', async () => {
+describe('browse requests keep the PostgREST path', () => {
+  it('never calls the faceted RPC for a plain browse with no query', async () => {
     await searchListings({ ...base, city: 'chicago-il' })
     expect(h.rpcs.some((r) => r.fn === 'search_listings_faceted')).toBe(false)
   })
 
-  it('still runs full-text search for a plain query', async () => {
-    h.similarityRows = []
-    await searchListings({ ...base, q: 'bakery' })
-    const listings = h.queries.filter((q) => q.table === 'listings')
-    expect(listings[0]?.calls.some((c) => c[0] === 'textSearch')).toBe(true)
+  it('still narrows a browse by city on that path', async () => {
+    const { total } = await searchListings({ ...base, city: 'chicago-il' })
+    expect(total).toBe(2)
+  })
+})
+
+// ── One definition of relevance ─────────────────────────────────────────────
+
+describe('a keyword query resolves through search_listings_faceted', () => {
+  it('sends the query to the RPC rather than building its own match', async () => {
+    h.facetedRows = [{ id: 'l1', total_count: 1 }]
+    const { results, total } = await searchListings({ ...base, q: 'bakery' })
+
+    expect(h.rpcs.find((r) => r.fn === 'search_listings_faceted')?.args.p_q).toBe('bakery')
+    expect(results.map((r) => r.id)).toEqual(['l1'])
+    expect(total).toBe(1)
   })
 
-  it('still fires the pg_trgm fallback when FTS returns under 5 results', async () => {
-    h.similarityRows = [{ id: 'l2' }]
-    const { results } = await searchListings({ ...base, q: 'bakery' })
-    expect(h.rpcs.some((r) => r.fn === 'search_by_similarity')).toBe(true)
-    expect(results.map((r) => r.id)).toContain('l2')
+  it('does not run its own textSearch against the listings table', async () => {
+    h.facetedRows = [{ id: 'l1', total_count: 1 }]
+    await searchListings({ ...base, q: 'bakery' })
+    const usedTextSearch = h.queries
+      .filter((q) => q.table === 'listings')
+      .some((q) => q.calls.some((c) => c[0] === 'textSearch'))
+    expect(usedTextSearch).toBe(false)
+  })
+
+  it('never calls search_by_similarity', async () => {
+    // The guard. This RPC was the second definition of "what matches" and it
+    // disagreed with the function on the founder's own query. If this assertion
+    // starts failing, a side path has come back and /api/search and /discover
+    // can answer the same search differently again.
+    h.facetedRows = [{ id: 'l1', total_count: 1 }]
+    await searchListings({ ...base, q: 'bakery' })
+    expect(h.rpcs.some((r) => r.fn === 'search_by_similarity')).toBe(false)
+  })
+
+  it('still carries scalar filters into the RPC alongside the query', async () => {
+    // Routing `q` through the RPC must not drop what the PostgREST branch used
+    // to apply. city and category resolve to ids; type and trust_tier pass
+    // through as-is.
+    h.facetedRows = []
+    await searchListings({
+      ...base,
+      q: 'bakery',
+      city: 'chicago-il',
+      category: 'food-dining',
+      type: 'business',
+      trust_tier: 'verified',
+    })
+
+    const args = h.rpcs.find((r) => r.fn === 'search_listings_faceted')?.args
+    expect(args?.p_city_id).toBe(CITY_CHICAGO)
+    expect(args?.p_category_id).toBe(CAT_FOOD)
+    expect(args?.p_entity_type).toBe('business')
+    expect(args?.p_trust_tier).toBe('verified')
   })
 })
 
