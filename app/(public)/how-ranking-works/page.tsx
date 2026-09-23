@@ -19,8 +19,22 @@ export const revalidate = false
  * placement engine, where it means something materially different.
  *
  * The order of the sections below mirrors the actual ORDER BY in
- * search_listings_faceted (20260809000000_search_tier_tiebreak.sql). If the
- * ranking changes, this page changes in the same PR.
+ * search_listings_faceted (20260923000000_activity_ranking.sql). If the ranking
+ * changes, this page changes in the same PR.
+ *
+ * Rewritten 2026-09-23. Section 2 used to read "Black-owned businesses are
+ * centered" and described the `(ownership_label = 'black_owned') DESC` key that
+ * sat second in the ORDER BY. That key is gone: order is now sponsored first,
+ * then match quality, then how active and well-kept a listing is, with paid tier
+ * breaking remaining ties on keyword searches only
+ * [Decision — founder, 2026-09-21, refined 2026-09-23]. Sections 4, 5 and 6 each
+ * asserted the old key too ("a subscription will not move an Ally above a
+ * Black-owned one", "an A-to-Z sort reads as the Black-owned businesses in
+ * alphabetical order, then the Allies"), so all three changed with it rather
+ * than being left to contradict the code. The label itself is unchanged and
+ * still shown on every listing; what changed is that it no longer affects order.
+ * moderation-policy.md:48 still binds: no paid tier, placement, or badge is
+ * contingent on the label, and nothing here makes one so.
  */
 export default function HowRankingWorksPage() {
   return (
@@ -55,38 +69,62 @@ export default function HowRankingWorksPage() {
             </p>
           </section>
 
-          <section id="centering" className="space-y-3">
+          <section id="match" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              2. Then: Black-owned businesses are centered
+              2. Then: how well the business matches what you searched
             </h2>
             <p>
-              This is the whole point of the platform, so we do it in the ranking itself rather than
-              only in what we choose to feature. Within a set of results, businesses labeled{' '}
-              <span className="font-semibold">Black-Owned</span> are listed above businesses labeled{' '}
-              <span className="font-semibold">Ally</span>.
+              When you type something, this is the first thing that matters. We score every business
+              against your search terms: its name, description, category, and tags. Results are then
+              grouped by how well they matched, and nothing further down this page can lift a weaker
+              match above a better one.
             </p>
             <p>
-              Allies are genuinely welcome here and are listed, searchable, and sold exactly the same
-              plans at exactly the same prices. What they do not get is the editorial spotlight. That
-              is reserved, on purpose, and it is not something a subscription can buy back. A paying
-              Ally business is still listed below Black-owned businesses.
+              When you are browsing rather than searching, on a city page, a category, or the map,
+              there is nothing to match against. This step does nothing there and the next one
+              decides the order.
             </p>
           </section>
 
-          <section id="match" className="space-y-3">
+          <section id="activity" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              3. Then: how well the business matches what you searched
+              3. Then: how active and well-kept the business is
             </h2>
             <p>
-              This is the main thing. We score every business against your search terms: its name,
-              description, category, and tags. The closest matches rise to the top, and nothing
-              below this point can override a genuinely better match.
+              Among businesses that matched your search about equally well, the more positively
+              active one is listed first. This is the factor you can actually move, and it is the
+              main thing ordering every page you browse without searching.
+            </p>
+            <p>What counts toward it:</p>
+            <ul className="list-disc ml-5 space-y-2">
+              <li>People saving the business.</li>
+              <li>Published reviews, with a good average rating counting for more.</li>
+              <li>Recent visits to the listing.</li>
+              <li>An owner replying to the reviews they receive.</li>
+              <li>
+                An owner keeping the listing current, and claiming or verifying it so you know who
+                is behind it.
+              </li>
+            </ul>
+            <p>
+              Only the last 90 days count, and recent activity counts for more than older activity.
+              A business that was busy last year and quiet since then falls back. Nothing on this
+              list subtracts: a poor average rating counts for less rather than against, and we
+              recalculate the whole directory once a night.
+            </p>
+            <p>
+              <span className="font-semibold">
+                The ownership label is not part of this, in either direction.
+              </span>{' '}
+              Every listing shows whether it is <span className="font-semibold">Black-Owned</span> or
+              an <span className="font-semibold">Ally</span>, and neither label moves a business up
+              or down.
             </p>
           </section>
 
           <section id="subscription" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              4. Then: a subscription breaks ties between close matches
+              4. Then: a subscription breaks the ties that are left
             </h2>
             <p>
               Businesses on our Growth and Premium plans get priority placement. That means
@@ -95,28 +133,30 @@ export default function HowRankingWorksPage() {
             <ul className="list-disc ml-5 space-y-2">
               <li>
                 It only applies when two or more businesses matched your search{' '}
-                <span className="font-semibold">about equally well</span>. Among those, the
-                subscribing business is listed first.
+                <span className="font-semibold">about equally well</span> and are{' '}
+                <span className="font-semibold">equally active</span>. Among those, the subscribing
+                business is listed first.
               </li>
               <li>
                 <span className="font-semibold">
-                  A subscription never outranks a better match.
+                  A subscription never outranks a better match, and never outranks a more active
+                  business.
                 </span>{' '}
-                If a business with no paid plan is the better answer to what you typed, it is listed
-                first. Every time.
+                If a business with no paid plan is the better answer to what you typed, or is simply
+                more active, it is listed first. Every time.
               </li>
               <li>
-                It only applies to search results. Browsing a city page, a category, or the map is
-                completely unaffected. Those are ordered the same way for everyone.
+                It only applies when you actually searched for something. Browsing a city page, a
+                category, or the map is completely unaffected. Those are ordered the same way for
+                everyone.
               </li>
               <li>
                 Growth and Premium get exactly the same weight here. Paying more does not buy a
                 higher position.
               </li>
               <li>
-                It cannot lift a business past the two things above it. A subscription will not move
-                an Ally business above a Black-owned one, and it will not displace a labeled
-                Sponsored placement.
+                It cannot lift a business past the two things above it, and it cannot displace a
+                labeled Sponsored placement.
               </li>
             </ul>
           </section>
@@ -138,15 +178,18 @@ export default function HowRankingWorksPage() {
                 </span>{' '}
                 Every plan is sold to every business at the same price whether it is Black-Owned or
                 an Ally, and no plan, placement, or badge is offered to one label and withheld from
-                the other. The difference is editorial and it runs one way only: Black-owned
-                businesses are centered in ranking, as described above. Money does not change that
-                in either direction. An Ally cannot pay to be centered, and a Black-owned business
-                does not have to pay to be.
+                the other. The label is shown on every listing and it does not change the order of
+                results. No plan can buy a label, and no label can be bought.
               </li>
               <li>
                 <span className="font-semibold">Reviews and ratings are not for sale.</span> A paid
-                plan does not remove, hide, or reweight a review. A negative but genuine review
-                stays.
+                plan does not remove, hide, or reweight a review, and it does not change how a
+                review counts toward the activity above. A negative but genuine review stays.
+              </li>
+              <li>
+                <span className="font-semibold">Activity itself is not for sale.</span> Saves,
+                reviews, visits, and owner replies are things people do. There is no plan that adds
+                to them.
               </li>
             </ul>
           </section>
@@ -161,9 +204,8 @@ export default function HowRankingWorksPage() {
               alphabetical, paying for a plan will not move a business up the alphabet.
             </p>
             <p>
-              The two things above still apply: a labeled Sponsored placement stays at the top, and
-              Black-owned businesses are still centered. An A-to-Z sort reads as the Black-owned
-              businesses in alphabetical order, then the Allies in alphabetical order.
+              One thing above still applies: a labeled Sponsored placement stays at the top. Nothing
+              else reorders what you asked for. An A-to-Z sort reads straight through, A to Z.
             </p>
           </section>
 
@@ -180,6 +222,7 @@ export default function HowRankingWorksPage() {
               </Link>
               .
             </p>
+            <p className="text-sm text-charcoal-soft">Last updated 23 September 2026.</p>
           </section>
         </div>
       </Section>
