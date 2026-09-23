@@ -120,6 +120,7 @@ export async function searchListings(
     type: params.type,
     trust_tier: params.trust_tier,
     location_type: params.location_type,
+    ownership: params.ownership,
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
@@ -219,6 +220,13 @@ export async function searchListings(
   if (params.location_type?.length) {
     query = query.in('location_type', params.location_type)
   }
+  // The Ownership facet. Both paths carry it: the RPC branch above gets it via
+  // resolveFacetParams, this branch gets it here. Adding it to only one would
+  // leave it dead on half the requests, and which half depends on whether a
+  // deep facet happens to be present — the worst kind of filter bug to find.
+  // Note this is the EQUALITY filter; the .order() calls below are the
+  // editorial ordering and are a separate concern.
+  if (params.ownership) query = query.eq('ownership_label', params.ownership)
 
   // Mirrors search_listings_faceted's ORDER BY for the no-keyword case, which is
   // exactly the case this branch handles: sponsored first, then how active and

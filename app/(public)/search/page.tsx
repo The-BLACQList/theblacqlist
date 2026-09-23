@@ -7,6 +7,13 @@ import { SearchBar } from '@/components/discovery/SearchBar'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
+import { parseLocationParams } from '@/lib/listings/location-params'
+import {
+  buildLocationEscapeUrls,
+  parseDiscoverParams,
+  parsePage,
+  type DiscoverSearchParams,
+} from '@/lib/listings/discover-params'
 import { TourWitness } from '@/components/tour/TourWitness'
 
 export const metadata: Metadata = {
@@ -16,13 +23,8 @@ export const metadata: Metadata = {
 }
 
 interface SearchPageProps {
-  searchParams: Promise<{
-    q?: string
-    type?: string
-    category?: string
-    city?: string
-    page?: string
-  }>
+  // The same key set /discover reads — see lib/listings/discover-params.ts.
+  searchParams: Promise<DiscoverSearchParams>
 }
 
 async function SearchResults({ searchParams }: { searchParams: SearchPageProps['searchParams'] }) {
@@ -50,18 +52,22 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
     )
   }
 
-  const page = parseInt(params.page ?? '1', 10)
+  const page = parsePage(params.page)
 
   const result = await queryListings({
+    ...parseDiscoverParams(params),
+    // `query` is the trimmed form the empty-state check above already ran on.
     q: query,
-    type: params.type,
-    category: params.category,
-    city: params.city,
-    page,
   })
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
+
+  // Read again for the empty-state copy; parseDiscoverParams ran the same parse
+  // for the query itself. Both escape links keep `q` — dropping the location is
+  // not the same as abandoning the search.
+  const location = parseLocationParams(params)
+  const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, '/search')
 
   return (
     <>
@@ -74,6 +80,12 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
         query={query}
         nextPageUrl={nextPageUrl}
         currentPage={page}
+        radiusMiles={location?.radius ?? null}
+        radiusUnavailable={result.radiusUnavailable ?? false}
+        filtersUnavailable={result.filtersUnavailable ?? false}
+        widerRadiusUrl={widerRadiusUrl}
+        clearLocationUrl={clearLocationUrl}
+        clearFiltersUrl={`/search?q=${encodeURIComponent(query)}`}
       />
     </>
   )

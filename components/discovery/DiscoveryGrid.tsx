@@ -16,10 +16,14 @@ interface DiscoveryGridProps {
   radiusMiles?: number | null
   /** True when the radius search could not run at all (see lib/listings/query.ts). */
   radiusUnavailable?: boolean
+  /** True when a price / attribute / open-now filter could not run at all. */
+  filtersUnavailable?: boolean
   /** Same search at a wider radius. Omitted when already at the widest. */
   widerRadiusUrl?: string
   /** Same search with the location filter dropped. */
   clearLocationUrl?: string
+  /** The page with every filter dropped. The way out of filtersUnavailable. */
+  clearFiltersUrl?: string
 }
 
 const linkClass =
@@ -132,6 +136,33 @@ function RadiusUnavailableState({ clearLocationUrl }: { clearLocationUrl?: strin
   )
 }
 
+/**
+ * A price, amenity or open-now filter could not run. Same reasoning as
+ * RadiusUnavailableState one axis over: the fallback query honors only the
+ * scalar filters, so answering it would return a wider set than the chips the
+ * visitor is looking at claim. Better to say the filter is down than to quietly
+ * answer a different question.
+ */
+function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string }) {
+  return (
+    <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">
+        These filters are unavailable right now
+      </p>
+      <p className="font-subhead text-sm text-charcoal max-w-md">
+        We could not apply the price, amenity, or hours filters just now, and we
+        are not going to show you results that ignore them. Try again in a
+        moment, or browse without those filters.
+      </p>
+      {clearFiltersUrl && (
+        <Link href={clearFiltersUrl} className={`${linkClass} mt-4`}>
+          Browse every business
+        </Link>
+      )}
+    </div>
+  )
+}
+
 function ErrorState({ message }: { message: string }) {
   return (
     <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -151,12 +182,17 @@ export function DiscoveryGrid({
   currentPage = 1,
   radiusMiles = null,
   radiusUnavailable = false,
+  filtersUnavailable = false,
   widerRadiusUrl,
   clearLocationUrl,
+  clearFiltersUrl,
 }: DiscoveryGridProps) {
   if (isLoading) return <LoadingGrid />
   if (error) return <ErrorState message={error} />
+  // Both unavailable states come before the empty check on purpose: they also
+  // arrive with zero entities, and the empty state would read as an answer.
   if (radiusUnavailable) return <RadiusUnavailableState clearLocationUrl={clearLocationUrl} />
+  if (filtersUnavailable) return <FiltersUnavailableState clearFiltersUrl={clearFiltersUrl} />
   if (entities.length === 0)
     return radiusMiles ? (
       <RadiusEmptyState

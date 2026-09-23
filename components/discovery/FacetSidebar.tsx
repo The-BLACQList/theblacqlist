@@ -48,6 +48,13 @@ export function FacetSidebar({
 }: FacetSidebarProps) {
   const { searchParams, setParam, setParams, getCsv, toggleCsv } = useFacetParams()
 
+  // The counts did not come back. Every count reads 0, and 0 is what this panel
+  // uses to grey a control out, so without this the whole sidebar would render
+  // dead and tell the visitor that nothing in the directory matches anything.
+  // Counts are an affordance; being able to filter at all is the feature. So
+  // the badges go away and the controls stay live.
+  const countsOff = counts.countsUnavailable === true
+
   const activeType = searchParams.get('type') ?? ''
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
@@ -101,7 +108,7 @@ export function FacetSidebar({
         />
         <Clock className="size-4 text-charcoal" aria-hidden="true" />
         <span className="text-sm font-subhead text-brand-black">Open now</span>
-        <CountTag n={counts.openNow} />
+        {!countsOff && <CountTag n={counts.openNow} />}
       </label>
 
       {/* Price */}
@@ -111,7 +118,7 @@ export function FacetSidebar({
           {PRICE_RANGES.map((p) => {
             const isActive = selectedPrices.includes(p)
             const n = counts.price[p] ?? 0
-            const disabled = !isActive && n === 0
+            const disabled = !countsOff && !isActive && n === 0
             return (
               <button
                 key={p}
@@ -264,7 +271,7 @@ export function FacetSidebar({
             {group.values.map((value) => {
               const isActive = selectedAttrs.includes(value.slug)
               const n = counts.attribute[value.id] ?? 0
-              const disabled = !isActive && n === 0
+              const disabled = !countsOff && !isActive && n === 0
               return (
                 <label
                   key={value.id}
@@ -283,7 +290,7 @@ export function FacetSidebar({
                     className="rounded border-charcoal/30 text-brand-black focus:ring-brand-black/20"
                   />
                   {value.name}
-                  <CountTag n={n} />
+                  {!countsOff && <CountTag n={n} />}
                 </label>
               )
             })}
