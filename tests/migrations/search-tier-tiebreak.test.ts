@@ -24,7 +24,8 @@
 //   5. is_featured still first -> the manual placement engine's paid slot is
 //                                 not displaced by the tier tiebreak.
 //   6. Ownership is not for sale -> a PAYING Ally listing still sorts below a
-//                                 FREE Black-Owned one. moderation-policy.md:48.
+//                                 FREE Black-Owned one. HISTORICAL as of
+//                                 20260923000000 — see the note on the case.
 //   7. One overload only       -> the exact defect above can never recur.
 // Plus the ownership filter still working, idempotency, and the rollback.
 //
@@ -308,8 +309,25 @@ describe.skipIf(!DB_REACHABLE)("20260809000000_search_tier_tiebreak", () => {
       // Same band (identical vectors). The Ally listing is stacked to win on
       // every other key: it is on Growth (tier weight 1 vs 0) AND holds the
       // higher save_count. Only the editorial centering key can put the free
-      // Black-Owned listing first — which is exactly the guarantee that keeps
-      // this build clear of moderation-policy.md:48.
+      // Black-Owned listing first.
+      //
+      // READ THIS BEFORE CITING THIS CASE. The ordering it asserts is TRUE OF
+      // THE 2026-08-09 SCHEMA AND NO LONGER TRUE OF PRODUCTION. This file
+      // applies the chain only through 20260809000000, so it still correctly
+      // tests that historical state and still passes. But
+      // 20260923000000_activity_ranking.sql removed
+      // `(ownership_label = 'black_owned') DESC` from the ORDER BY entirely
+      // [Decision — founder, 2026-09-21, refined 2026-09-23]: a paying Ally
+      // that is more active now DOES sort above a quiet free Black-Owned
+      // listing, and that is the intended behavior. The live guard for the new
+      // rule is case 9 of tests/migrations/activity-score.test.ts.
+      //
+      // The compliance claim this comment used to make is therefore also stale.
+      // moderation-policy.md:48 ("do not make a paid tier, placement, or badge
+      // contingent on the Black-Owned label") still binds and is still met —
+      // but it is met because price and placement are decoupled from the label,
+      // NOT because of the ordering below. Do not change the assertion; it
+      // documents what 20260809000000 did.
       exec(
         url,
         `INSERT INTO listings (id, name, tier, save_count, ownership_label, search_vector) VALUES
