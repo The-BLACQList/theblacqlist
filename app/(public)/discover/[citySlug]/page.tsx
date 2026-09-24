@@ -7,6 +7,13 @@ import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
+import { parseLocationParams } from '@/lib/listings/location-params'
+import {
+  buildLocationEscapeUrls,
+  parseDiscoverParams,
+  parsePage,
+  type DiscoverSearchParams,
+} from '@/lib/listings/discover-params'
 import { Container } from '@/components/layout/container'
 import { SearchBar } from '@/components/discovery/SearchBar'
 import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters'
@@ -16,12 +23,10 @@ import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 
 interface PageProps {
   params: Promise<{ citySlug: string }>
-  searchParams: Promise<{
-    q?: string
-    type?: string
-    category?: string
-    page?: string
-  }>
+  // The same key set /discover reads. This page used to declare four of them,
+  // which meant a facet arriving on a shared or crawled URL was dropped in
+  // silence and the page answered wider than the address bar said.
+  searchParams: Promise<Omit<DiscoverSearchParams, 'city'>>
 }
 
 type CityRow = {
@@ -87,23 +92,29 @@ async function CityContent({
   searchParams: PageProps['searchParams']
 }) {
   const params = await searchParams
-  const page = Math.max(1, parseInt(params.page ?? '1', 10))
+  const page = parsePage(params.page)
 
   const result = await queryListings({
+    ...parseDiscoverParams(params),
+    // The route segment is the city, and it overrides whatever `?city=` says.
+    // A visitor on /discover/atlanta with a stale `?city=houston` in the URL is
+    // on the Atlanta page and gets Atlanta.
     city: city.slug,
-    q: params.q,
-    type: params.type,
-    category: params.category,
-    page,
   })
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE
-      ? `/discover/${city.slug}${buildPageUrl(
-          { q: params.q, type: params.type, category: params.category },
-          page + 1
-        )}`
+      ? // Every param travels to page 2, not just the three this page used to
+        // know about — otherwise paging silently widened the result set.
+        `/discover/${city.slug}${buildPageUrl({ ...params, city: undefined }, page + 1)}`
       : undefined
+
+  // A city page can still carry a Near You triple: the visitor filtered on
+  // /discover and clicked through. The escape links resolve relative to this
+  // route, so the base path is the city page, not /discover.
+  const basePath = `/discover/${city.slug}`
+  const location = parseLocationParams(params)
+  const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, basePath)
 
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
@@ -117,6 +128,12 @@ async function CityContent({
           query={params.q}
           nextPageUrl={nextPageUrl}
           currentPage={page}
+          radiusMiles={location?.radius ?? null}
+          radiusUnavailable={result.radiusUnavailable ?? false}
+          filtersUnavailable={result.filtersUnavailable ?? false}
+          widerRadiusUrl={widerRadiusUrl}
+          clearLocationUrl={clearLocationUrl}
+          clearFiltersUrl={basePath}
         />
       </div>
     </div>

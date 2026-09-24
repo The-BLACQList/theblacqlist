@@ -70,6 +70,21 @@ export interface FacetCounts {
   price: Record<string, number>
   /** count of listings open now under the current filters */
   openNow: number
+  /**
+   * True when the counts are absent rather than genuinely zero.
+   *
+   * The sidebar disables any control whose count is 0, so an all-zero object
+   * reads to the visitor as "every one of these filters matches nothing" and
+   * greys out the entire panel with no explanation. That is exactly what an
+   * unreachable `facet_counts` RPC produced before this flag existed, and it is
+   * indistinguishable at the UI from the legitimate all-zero case.
+   *
+   * When it is set, the controls stay enabled and the count badges are hidden:
+   * a filter that might work beats a filter that is definitely dead. Same
+   * principle as `radiusUnavailable` on ListingsResult — do not let a failure
+   * impersonate an answer.
+   */
+  countsUnavailable?: boolean
 }
 
 /** Raw (URL) facet inputs before slug → id resolution. */
@@ -371,7 +386,8 @@ export async function getFacetCounts(
   )
 
   const counts: FacetCounts = { attribute: {}, price: {}, openNow: 0 }
-  if (error) return counts
+  // Not zero counts. No counts. The sidebar needs to know which one it got.
+  if (error) return { ...counts, countsUnavailable: true }
 
   const rows = (data as Array<{ facet_kind: string; facet_key: string; facet_count: number }> | null) ?? []
   for (const row of rows) {

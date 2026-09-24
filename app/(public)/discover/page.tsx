@@ -11,7 +11,13 @@ import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
-import { parseLocationParams, widerRadius } from '@/lib/listings/location-params'
+import { parseLocationParams } from '@/lib/listings/location-params'
+import {
+  buildLocationEscapeUrls,
+  parseDiscoverParams,
+  parsePage,
+  type DiscoverSearchParams,
+} from '@/lib/listings/discover-params'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -21,24 +27,10 @@ export const metadata: Metadata = {
 }
 
 interface DiscoverPageProps {
-  searchParams: Promise<{
-    q?: string
-    type?: string
-    category?: string
-    city?: string
-    trust_tier?: string
-    location_type?: string
-    ownership?: string
-    price?: string
-    attrs?: string
-    open_now?: string
-    // "Near You" — all three or none. See lib/listings/location-params.ts.
-    lat?: string
-    lng?: string
-    radius?: string
-    sort?: string
-    page?: string
-  }>
+  // The full key set lives in lib/listings/discover-params.ts, which is also
+  // what maps it onto queryListings. This page was the only one that read every
+  // key; the city page and /search read three of them and dropped the rest.
+  searchParams: Promise<DiscoverSearchParams>
 }
 
 async function DiscoverContent({
@@ -47,41 +39,18 @@ async function DiscoverContent({
   searchParams: DiscoverPageProps['searchParams']
 }) {
   const params = await searchParams
-  const page = parseInt(params.page ?? '1', 10)
+  const page = parsePage(params.page)
 
   // All-or-nothing: a partial or out-of-range location is dropped whole rather
   // than passed through, because the RPC treats a NULL in the triple as "no
   // radius filter" and would answer the entire directory under a Near You label.
+  // Read again here for the empty-state links below; parseDiscoverParams runs
+  // the same parse for the query itself.
   const location = parseLocationParams(params)
-  // The distance sort cannot outlive the coordinates it sorts by.
-  const sort = location ? params.sort : params.sort === 'distance' ? undefined : params.sort
 
   const supabase = await createClient()
   const [result, { data: cities }, { data: categories }] = await Promise.all([
-    queryListings({
-      q: params.q,
-      type: params.type,
-      category: params.category,
-      city: params.city,
-      trust_tier: params.trust_tier,
-      // Split, never filtered against the known values: an unrecognised type
-      // must survive to the query and return nothing. Dropping it here would
-      // turn `?location_type=nonsense` into no filter at all and answer with
-      // the whole directory under the caller's filter chip.
-      location_type: params.location_type
-        ? params.location_type.split(',').filter(Boolean)
-        : undefined,
-      ownership: params.ownership,
-      price: params.price ? params.price.split(',').filter(Boolean) : undefined,
-      attrs: params.attrs ? params.attrs.split(',').filter(Boolean) : undefined,
-      open_now: params.open_now === '1' || params.open_now === 'true',
-      lat: location?.lat,
-      lng: location?.lng,
-      radius: location?.radius,
-      sort,
-      page,
-      withFacets: true,
-    }),
+    queryListings(parseDiscoverParams(params, { withFacets: true })),
     supabase.from('cities').select('name, slug').order('name'),
     supabase
       .from('categories')
@@ -97,32 +66,9 @@ async function DiscoverContent({
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
 
-  // The two ways out of an empty radius search. Both are plain links so they
-  // work before any JavaScript loads, and both go back to page 1.
-  const nextRadius = location ? widerRadius(location.radius) : null
-  const widerRadiusUrl =
-    location && nextRadius !== null
-      ? buildPageUrl({ ...params, radius: String(nextRadius) }, 1)
-      : undefined
-  const clearLocationUrl = location
-    ? // `|| '/discover'` is load-bearing, not defensive. buildPageUrl returns an
-      // empty string when nothing is left in the query, which is the ordinary case
-      // here — location is usually the only filter — and an empty href renders as
-      // nothing at all. At the widest radius there is no "wider area" link either,
-      // so the empty state would have been a dead end with copy promising two ways
-      // out. Never a dead end is the whole point of this screen.
-      buildPageUrl(
-        {
-          ...params,
-          lat: undefined,
-          lng: undefined,
-          radius: undefined,
-          // Dropping the coordinates drops the sort that depended on them.
-          sort: params.sort === 'distance' ? undefined : params.sort,
-        },
-        1
-      ) || '/discover'
-    : undefined
+  // The two ways out of an empty or failed radius search. Shared with the city
+  // page and /search, which now receive the radius keys too.
+  const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, '/discover')
 
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
@@ -165,8 +111,10 @@ async function DiscoverContent({
           currentPage={page}
           radiusMiles={location?.radius ?? null}
           radiusUnavailable={result.radiusUnavailable ?? false}
+          filtersUnavailable={result.filtersUnavailable ?? false}
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
+          clearFiltersUrl="/discover"
         />
       </div>
     </div>

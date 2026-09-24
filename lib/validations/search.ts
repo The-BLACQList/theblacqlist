@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
+import {
+  VALID_ENTITY_TYPES,
+  VALID_LOCATION_TYPES,
+  VALID_OWNERSHIP_LABELS,
+} from '@/lib/constants/listing'
 
 /** Splits a comma-separated query param into a trimmed, de-duplicated array. */
 const csvArray = z
@@ -77,6 +81,14 @@ export const searchSchema = z.object({
   // every link shared before this — and every crawled URL — parses to the same
   // filter it always did.
   location_type: csvEnum(VALID_LOCATION_TYPES),
+  // The Ownership facet. /discover has honored this since the facet sidebar
+  // shipped; /api/search did not, because this schema had no key for it and an
+  // unknown key is dropped by safeParse rather than rejected. The result was the
+  // same silent widening the location_type comment above describes: a caller
+  // asking for `?ownership=black_owned` got the whole directory back and could
+  // not tell. Enum-validated off the canonical constant for the same reason as
+  // the two above — no retyped list.
+  ownership: z.enum(VALID_OWNERSHIP_LABELS).optional(),
   // Faceted filters (CSV in the URL): price=$,$$  attrs=delivery,vegan-options
   price: csvArray,
   attrs: csvArray,

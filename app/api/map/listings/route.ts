@@ -43,6 +43,13 @@ export async function GET() {
     )
     .eq('status', 'published')
     .is('deleted_at', null)
+    // The same guard every list path applies (search_listings_faceted, the
+    // PostgREST branch in lib/services/search.ts, getFacetCounts). Without it a
+    // listing flagged inactive, duplicate, incorrect or spam disappears from
+    // every grid and still sits on the map as a pin, which is the one surface a
+    // visitor is most likely to drive to. Latent today (0 flagged rows in
+    // production) and cheap to close before it is not.
+    .eq('flag_status', 'none')
 
   if (error) {
     return NextResponse.json({ error: 'Could not load map listings' }, { status: 500 })
@@ -79,7 +86,7 @@ export async function GET() {
           trustTier: row.trust_tier,
           logoSrc,
           ownershipLabel: row.ownership_label,
-        avgRating: row.avg_rating,
+          avgRating: row.avg_rating,
           reviewCount: row.review_count,
           isFeatured: row.is_featured,
           isSponsored: row.is_sponsored,

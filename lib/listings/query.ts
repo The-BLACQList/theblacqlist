@@ -50,6 +50,19 @@ export interface ListingsResult {
    * completely different things to the visitor (C3.3 empty states).
    */
   radiusUnavailable?: boolean
+  /**
+   * The same distinction for the other three deep facets (attributes, price,
+   * open now). Separate from `radiusUnavailable` because the copy differs: a
+   * visitor whose radius search failed is told to browse without the location,
+   * and one whose price filter failed is told to clear the filters. Both are
+   * "we could not answer" rather than "there is nothing", which is the whole
+   * point of surfacing either.
+   *
+   * Mutually exclusive with `radiusUnavailable` — a request carrying both a
+   * radius and a price band reports the radius, because that is the constraint
+   * the visitor is most likely reading the empty grid through.
+   */
+  filtersUnavailable?: boolean
 }
 
 export type RawRow = {
@@ -242,7 +255,14 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       total: 0,
       page,
       pageSize: LISTINGS_PAGE_SIZE,
-      facets: groups ? { groups, counts: { attribute: {}, price: {}, openNow: 0 } } : undefined,
+      // The counts here were never computed, not computed as zero — the RPC is
+      // never called on this path. Saying "absent" keeps every sidebar control
+      // live, which matters more here than anywhere else: the visitor arrived
+      // with a filter nothing can satisfy, and a panel of greyed-out controls
+      // would take away the only way to pick a different one.
+      facets: groups
+        ? { groups, counts: { attribute: {}, price: {}, openNow: 0, countsUnavailable: true } }
+        : undefined,
     }
   }
 
@@ -308,16 +328,23 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // been applied yet), fall back to a basic PostgREST query so browse/search
   // keep working.
   //
-  // Except under a radius. legacyFacetedIds cannot express haversine at all, so
-  // falling back there would hand the visitor the whole directory under a
-  // heading that says "near you" — the unresolvable-slug defect wearing a
-  // different hat. Zero results plus an honest "location search is unavailable"
-  // state is the correct answer; radiusUnavailable is what carries it up.
-  const radiusRpcFailed = searchResult.error && radiusActive
+  // Except under any deep facet. legacyFacetedIds honors only the scalar
+  // filters — it cannot express haversine, attribute membership, price bands or
+  // open-now at all — so falling back while one of those is requested hands the
+  // visitor a WIDER result set than they asked for, under the filter chips they
+  // just clicked. That is the unresolvable-slug defect wearing a different hat,
+  // and it is worse than the radius case alone because it fails silently on the
+  // facets the sidebar is built around. Zero results plus an honest
+  // "unavailable" state is the correct answer.
+  //
+  // This guard used to read `radiusActive`, which covered exactly one of the
+  // four deep facets; `deepFilter` above is the same set the sponsored-injection
+  // suppression uses, so the two can no longer disagree about what "deep" means.
+  const deepRpcFailed = !!searchResult.error && deepFilter
   const search =
-    searchResult.error && !radiusActive
+    searchResult.error && !deepFilter
       ? await legacyFacetedIds(supabase, resolved, LISTINGS_PAGE_SIZE, offset)
-      : radiusRpcFailed
+      : deepRpcFailed
         ? { ids: [] as string[], total: 0 }
         : searchResult
 
@@ -389,6 +416,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     page,
     pageSize: LISTINGS_PAGE_SIZE,
     facets,
-    ...(radiusRpcFailed ? { radiusUnavailable: true } : {}),
+    // Radius wins when both are in play — see the ListingsResult comment.
+    ...(deepRpcFailed ? (radiusActive ? { radiusUnavailable: true } : { filtersUnavailable: true }) : {}),
   }
 }
