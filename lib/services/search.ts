@@ -220,12 +220,20 @@ export async function searchListings(
     query = query.in('location_type', params.location_type)
   }
 
-  // Editorial centering: Black-Owned ranks ahead of Ally ('black_owned' > 'ally'
-  // lexically, so ascending:false centers Black-Owned). Mirrors the ORDER BY in
-  // search_listings_faceted.
+  // Mirrors search_listings_faceted's ORDER BY for the no-keyword case, which is
+  // exactly the case this branch handles: sponsored first, then how active and
+  // well-kept a listing is, then the same stable tiebreakers.
+  // [Decision — founder, 2026-09-21 / refined 2026-09-23] Browse pages with no
+  // keyword are pure activity order. The ownership label is shown on every
+  // listing and no longer affects order, so the `ownership_label` key that used
+  // to sit here is gone.
+  // The RPC's match_band and rank keys are constant with no keyword, and its
+  // tier_weight key is NULL with no keyword, so they collapse out and these four
+  // keys are the whole order in both paths.
   query = query
     .order('is_featured', { ascending: false })
-    .order('ownership_label', { ascending: false })
+    .order('activity_score', { ascending: false })
+    .order('save_count', { ascending: false })
     .order('published_at', { ascending: false })
 
   const { data, count } = await query.range(offset, offset + limit - 1)
