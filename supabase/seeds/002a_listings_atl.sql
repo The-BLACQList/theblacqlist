@@ -492,14 +492,22 @@ INSERT INTO listings (
    'physical','published','free','unclaimed',false,7,2,'admin',now()),
 
   -- HEALTHCARE (134–137)
+  -- 134 and 135 sit on the `dentists` subcategory, not top-level `healthcare`.
+  -- Changed 2026-09-22 with 20260922000000_search_recall.sql. The trigger indexes
+  -- the category name at weight B, so filing a dentist under "Healthcare" is what
+  -- kept the word "dentist" out of the search vector entirely: the English stemmer
+  -- reduces "dentistry" to `dentistri` and "dentist" to `dentist`, which never
+  -- match. Nothing here carried the word until the category did.
+  -- The migration also expands a category filter to its children, so browsing
+  -- Healthcare still returns these two.
   ('00a00001-0000-0000-0000-000000000134','Art of Aesthetics Dental Studio','art-of-aesthetics-dental',
    'Celebrity smiles and inclusive oral care from Atlanta''s youngest Black dentist.',
-   'business',(SELECT id FROM categories WHERE slug='healthcare'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
+   'business',(SELECT id FROM categories WHERE slug='dentists'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
    'physical','published','free','unclaimed',false,13,4,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000135','Midtown Dental Center Atlanta','midtown-dental-center-atl',
    'Quality dental care in the heart of Atlanta''s Midtown.',
-   'business',(SELECT id FROM categories WHERE slug='healthcare'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
+   'business',(SELECT id FROM categories WHERE slug='dentists'),(SELECT id FROM cities WHERE slug='atlanta-ga'),
    'physical','published','free','unclaimed',false,10,3,'admin',now()),
 
   ('00a00001-0000-0000-0000-000000000136','Sylvain Eye Care','sylvain-eye-care-atl',
