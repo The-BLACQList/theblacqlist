@@ -5,6 +5,7 @@ import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
+import { expandTypeCategoryIds, listingMatchesType } from '@/lib/listings/type-shortcuts'
 import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
@@ -54,11 +55,11 @@ export default async function HomePage() {
     guidesRes,
     guideSectionsRes,
   ] = await Promise.all([
+    // The whole tree, not just parents: a parent tile counts its subcategories,
+    // and the Professionals / Creatives avenues expand through children too.
     supabase
       .from('categories')
-      .select('id, name, slug')
-      .is('parent_id', null)
-      .eq('is_active', true)
+      .select('id, name, slug, parent_id, is_active')
       .order('display_order'),
     supabase
       .from('listings')
@@ -130,6 +131,15 @@ export default async function HomePage() {
     typeCounts.set(row.entity_type, (typeCounts.get(row.entity_type) ?? 0) + 1)
     if (row.location_type && productsServices.has(row.location_type)) productsServicesCount += 1
   }
+  const categoryNodes = categoriesRes.data ?? []
+  // Professionals and Creatives link to ?type=professional / ?type=creative,
+  // which since 2026-09-24 also match their mapped categories. Counting with
+  // the same helper keeps each tile's number equal to what its link returns.
+  // [Decision — founder, 2026-09-24] "Type shortcuts map to categories."
+  const countMappedType = (type: string): number => {
+    const ids = new Set(expandTypeCategoryIds(type, categoryNodes))
+    return (listingFacetRes.data ?? []).filter((row) => listingMatchesType(type, row, ids)).length
+  }
   const avenueCounts: AvenueCounts = {
     // Brick & Mortar is still entity_type, matching its own unchanged href. The
     // two bins can therefore overlap — an online-only `business` is counted in
@@ -137,12 +147,26 @@ export default async function HomePage() {
     // only thing either tile has ever claimed.
     brick: (typeCounts.get('business') ?? 0) + (typeCounts.get('restaurant') ?? 0),
     products: productsServicesCount,
-    professionals: typeCounts.get('professional') ?? 0,
-    creatives: typeCounts.get('creative') ?? 0,
+    professionals: countMappedType('professional'),
+    creatives: countMappedType('creative'),
     events: typeCounts.get('event') ?? 0,
   }
-  const categories: CategoryTile[] = (categoriesRes.data ?? [])
-    .map((c) => ({ name: c.name, slug: c.slug, count: categoryCounts.get(c.id) ?? 0 }))
+  // A parent tile counts itself plus its subcategories, the same set the
+  // ?category= filter it links to returns.
+  const childrenOf = new Map<string, string[]>()
+  for (const c of categoryNodes) {
+    if (c.parent_id) childrenOf.set(c.parent_id, [...(childrenOf.get(c.parent_id) ?? []), c.id])
+  }
+  const categories: CategoryTile[] = categoryNodes
+    .filter((c) => c.parent_id === null && c.is_active)
+    .map((c) => ({
+      name: c.name,
+      slug: c.slug,
+      count: [c.id, ...(childrenOf.get(c.id) ?? [])].reduce(
+        (sum, id) => sum + (categoryCounts.get(id) ?? 0),
+        0
+      ),
+    }))
     .filter((c) => c.count > 0)
     .sort((a, b) => b.count - a.count)
 

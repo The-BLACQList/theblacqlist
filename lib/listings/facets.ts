@@ -1,5 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
+import {
+  expandTypeCategoryIds,
+  isMappedType,
+  parseCellKey,
+  rollupCells,
+  typeLocationTypes,
+  typeOrFilter,
+  type CategoryNode,
+  type FacetCell,
+} from '@/lib/listings/type-shortcuts'
+
 /**
  * Faceted-search support: attribute taxonomy loaders, slug → id resolution,
  * and the two Postgres RPC wrappers (search_listings_faceted, facet_counts).
@@ -12,14 +24,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$'
 export const PRICE_RANGES: PriceRange[] = ['$', '$$', '$$$', '$$$$']
 
-export type SortKey =
-  | 'relevance'
-  | 'rating'
-  | 'reviews'
-  | 'newest'
-  | 'name'
-  | 'saves'
-  | 'distance'
+export type SortKey = 'relevance' | 'rating' | 'reviews' | 'newest' | 'name' | 'saves' | 'distance'
 
 /**
  * The always-available sort choices, in dropdown order.
@@ -175,13 +180,85 @@ export interface ResolvedFacetParams {
   p_lat: number | null
   p_lng: number | null
   p_radius_miles: number | null
+  /**
+   * What a Type shortcut reaches past its own `entity_type`: the mapped
+   * categories (parents plus children) and location types, from
+   * lib/listings/type-shortcuts.ts. Added by 20260924000000. NULL for a type
+   * with no mapping, and never sent as NULL (see rpcArgs), so a request without
+   * a mapped type is the same call the pre-migration functions accept.
+   */
+  p_type_category_ids: string[] | null
+  p_type_location_types: string[] | null
 }
+
+/** The two keys only the 20260924000000 signatures accept. */
+const TYPE_KEYS = ['p_type_category_ids', 'p_type_location_types'] as const
 
 // The new tables/RPCs are not in the generated Database types yet, so accept the
 // library-default (untyped-schema) client. This lets `.from('attribute_groups')`
 // and `.rpc('facet_counts')` resolve without regenerating types.
 type AnyClient = SupabaseClient
-type RpcFn = (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>
+type RpcFn = (
+  fn: string,
+  args: Record<string, unknown>
+) => Promise<{ data: unknown; error: unknown }>
+
+/**
+ * The RPC args with the type keys dropped when they are NULL.
+ *
+ * PostgREST resolves a function by the names of the args it is sent, and
+ * rejects a name it does not know. Omitting the keys when there is nothing to
+ * send keeps every call without a mapped type identical to today's, so it
+ * resolves before and after the migration alike.
+ */
+export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...args }
+  for (const k of TYPE_KEYS) if (out[k] == null) delete out[k]
+  return out
+}
+
+function withoutTypeKeys(args: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...args }
+  for (const k of TYPE_KEYS) delete out[k]
+  return out
+}
+
+/**
+ * Calls an RPC, and if it fails while carrying the type keys, calls it once
+ * more without them. That second call is the pre-migration signature, so a
+ * deploy that lands before 20260924000000 still answers, with the old exact
+ * `entity_type` behavior, rather than failing the page.
+ */
+async function callWithTypeFallback(
+  supabase: AnyClient,
+  fn: string,
+  args: Record<string, unknown>
+): Promise<{ data: unknown; error: unknown }> {
+  const rpc = supabase.rpc.bind(supabase) as unknown as RpcFn
+  const first = await rpc(fn, args)
+  if (!first.error || !TYPE_KEYS.some((k) => k in args)) return first
+  return rpc(fn, withoutTypeKeys(args))
+}
+
+/**
+ * A category id plus the ids of its direct children: the same set the RPC's
+ * `category_id = p OR parent_id = p` predicate matches. The tree is two levels
+ * deep, so direct children are all of them.
+ */
+export async function categoryWithChildren(
+  supabase: AnyClient,
+  categoryId: string
+): Promise<string[]> {
+  const { data } = await supabase.from('categories').select('id').eq('parent_id', categoryId)
+  const childIds = ((data as { id: string }[] | null) ?? []).map((c) => c.id)
+  return [categoryId, ...childIds]
+}
+
+/** Every category as a tree node. The table is small and read-only here. */
+export async function loadCategoryNodes(supabase: AnyClient): Promise<CategoryNode[]> {
+  const { data } = await supabase.from('categories').select('id, slug, parent_id')
+  return ((data as CategoryNode[] | null) ?? []).filter((c) => c && c.id && c.slug)
+}
 
 /**
  * Loads active attribute groups with their active values, ordered for display.
@@ -248,7 +325,8 @@ export async function resolveFacetParams(
   supabase: AnyClient,
   raw: RawFacetParams
 ): Promise<FacetResolution> {
-  const [categoryRes, cityRes, attrRes] = await Promise.all([
+  const mappedType = isMappedType(raw.type)
+  const [categoryRes, cityRes, attrRes, categoryNodes] = await Promise.all([
     raw.category
       ? supabase.from('categories').select('id').eq('slug', raw.category).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -260,6 +338,9 @@ export async function resolveFacetParams(
         // caller — .in() returns only the rows that matched, never the gaps.
         supabase.from('attribute_values').select('id, slug').in('slug', raw.attrs)
       : Promise.resolve({ data: [] }),
+    // Only a mapped type needs the tree. Business, event, job and vendor stay
+    // exact `entity_type` matches and cost no extra query.
+    mappedType ? loadCategoryNodes(supabase) : Promise.resolve([] as CategoryNode[]),
   ])
 
   const categoryId = (categoryRes.data as { id: string } | null)?.id ?? null
@@ -276,7 +357,13 @@ export async function resolveFacetParams(
     if (missing.length > 0) unresolved.attrs = missing
   }
 
-  const price = raw.price?.filter((p): p is PriceRange => (PRICE_RANGES as string[]).includes(p)) ?? []
+  // If the tree did not load, the ids come back empty and are sent as NULL, so
+  // the search falls back to the exact type rather than failing.
+  const typeCategoryIds = mappedType ? expandTypeCategoryIds(raw.type, categoryNodes) : []
+  const typeLocations = mappedType ? [...typeLocationTypes(raw.type)] : []
+
+  const price =
+    raw.price?.filter((p): p is PriceRange => (PRICE_RANGES as string[]).includes(p)) ?? []
 
   return {
     params: {
@@ -299,6 +386,8 @@ export async function resolveFacetParams(
       p_lat: raw.lat ?? null,
       p_lng: raw.lng ?? null,
       p_radius_miles: raw.radius ?? null,
+      p_type_category_ids: typeCategoryIds.length > 0 ? typeCategoryIds : null,
+      p_type_location_types: typeLocations.length > 0 ? typeLocations : null,
     },
     unresolved,
   }
@@ -316,12 +405,11 @@ export async function searchFacetedIds(
   limit: number,
   offset: number
 ): Promise<{ ids: string[]; total: number; error: boolean }> {
-  const { data, error } = await (supabase.rpc as unknown as RpcFn)('search_listings_faceted', {
-    ...resolved,
-    p_sort: sort,
-    p_limit: limit,
-    p_offset: offset,
-  } as unknown as Record<string, unknown>)
+  const { data, error } = await callWithTypeFallback(
+    supabase,
+    'search_listings_faceted',
+    rpcArgs({ ...resolved, p_sort: sort, p_limit: limit, p_offset: offset })
+  )
 
   if (error) return { ids: [], total: 0, error: true }
 
@@ -352,9 +440,17 @@ export async function legacyFacetedIds(
     .is('deleted_at', null)
     .eq('flag_status', 'none')
 
-  if (resolved.p_category_id) q = q.eq('category_id', resolved.p_category_id)
+  // A category means itself plus its subcategories, the same as the RPC.
+  if (resolved.p_category_id) {
+    q = q.in('category_id', await categoryWithChildren(supabase, resolved.p_category_id))
+  }
   if (resolved.p_city_id) q = q.eq('city_id', resolved.p_city_id)
-  if (resolved.p_entity_type) q = q.eq('entity_type', resolved.p_entity_type)
+  if (resolved.p_entity_type) {
+    q =
+      resolved.p_type_category_ids || resolved.p_type_location_types
+        ? q.or(typeOrFilter(resolved.p_entity_type, resolved.p_type_category_ids ?? []))
+        : q.eq('entity_type', resolved.p_entity_type)
+  }
   if (resolved.p_trust_tier) q = q.eq('trust_tier', resolved.p_trust_tier)
   // `.in()` rather than `.eq()`, and guarded on length: `.in('x', [])` compiles
   // to `x=in.()`, which matches nothing — so an empty array here would empty
@@ -368,8 +464,11 @@ export async function legacyFacetedIds(
     q = q.textSearch('search_vector', resolved.p_q, { type: 'websearch', config: 'english' })
   }
 
+  // Featured leads only when browsing. With a keyword this path cannot rank by
+  // match strength, so it at least does not push featured listings ahead of
+  // better matches. [Decision — founder, 2026-09-24] relevance first.
+  if (!resolved.p_q) q = q.order('is_featured', { ascending: false })
   const { data, count } = await q
-    .order('is_featured', { ascending: false })
     .order('save_count', { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -388,21 +487,37 @@ export async function getFacetCounts(
   // set via search_listings_faceted.
   const { p_ownership_label: _ownership, ...countArgs } = resolved
   void _ownership
-  const { data, error } = await (supabase.rpc as unknown as RpcFn)(
-    'facet_counts',
-    countArgs as unknown as Record<string, unknown>
-  )
+  const { data, error } = await callWithTypeFallback(supabase, 'facet_counts', rpcArgs(countArgs))
 
   const counts: FacetCounts = { attribute: {}, price: {}, openNow: 0 }
   // Not zero counts. No counts. The sidebar needs to know which one it got.
   if (error) return { ...counts, countsUnavailable: true }
 
-  const rows = (data as Array<{ facet_kind: string; facet_key: string; facet_count: number }> | null) ?? []
+  const rows =
+    (data as Array<{ facet_kind: string; facet_key: string; facet_count: number }> | null) ?? []
+  const cells: FacetCell[] = []
   for (const row of rows) {
     const n = Number(row.facet_count)
     if (row.facet_kind === 'attribute') counts.attribute[row.facet_key] = n
     else if (row.facet_kind === 'price') counts.price[row.facet_key] = n
     else if (row.facet_kind === 'open_now') counts.openNow = n
+    else if (row.facet_kind === 'cell') {
+      const cell = parseCellKey(row.facet_key, n)
+      if (cell) cells.push(cell)
+    }
   }
-  return counts
+
+  // No cells means the pre-migration function answered. Leave the category and
+  // type maps undefined so the sidebar shows every option without a badge,
+  // rather than reading "no cells" as "every category is empty".
+  if (cells.length === 0) return counts
+
+  const categories = await loadCategoryNodes(supabase)
+  if (categories.length === 0) return counts
+  const { category, type } = rollupCells(cells, categories, {
+    types: VALID_ENTITY_TYPES,
+    activeType: resolved.p_entity_type,
+    activeCategoryId: resolved.p_category_id,
+  })
+  return { ...counts, category, type }
 }

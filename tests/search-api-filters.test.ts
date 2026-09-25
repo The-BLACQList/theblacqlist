@@ -43,6 +43,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 const CITY_CHICAGO = 'city-chi-0000'
 const CAT_FOOD = 'cat-food-0000'
+/** A Food & Dining subcategory. Type and category filters must reach it. */
+const CAT_FOOD_CHILD = 'cat-food-bake'
+const CAT_RETAIL = 'cat-retail-000'
 const ATTR_BLACK_WOMAN = 'attr-bwo-0000'
 
 const h = vi.hoisted(() => ({
@@ -55,15 +58,32 @@ const h = vi.hoisted(() => ({
   facetedError: null as { message: string } | null,
 }))
 
-/** Four published listings across two cities and two categories. */
+/**
+ * Five published listings across two cities. All are `business`, like prod. l5
+ * sits in a Food & Dining subcategory, and l4 works online only.
+ */
 const CORPUS = [
   row('l1', 'Ada Bakery', CITY_CHICAGO, CAT_FOOD),
-  row('l2', 'Baldwin Books', CITY_CHICAGO, 'cat-retail-000'),
+  row('l2', 'Baldwin Books', CITY_CHICAGO, CAT_RETAIL),
   row('l3', 'Carver Cafe', 'city-atl-0000', CAT_FOOD),
-  row('l4', 'Dunbar Design', 'city-atl-0000', 'cat-retail-000'),
+  row('l4', 'Dunbar Design', 'city-atl-0000', CAT_RETAIL, 'virtual'),
+  row('l5', 'Eula Sweets', 'city-atl-0000', CAT_FOOD_CHILD),
 ]
 
-function row(id: string, name: string, cityId: string, categoryId: string) {
+/** The category tree the mock serves: one parent with one child, and retail. */
+const CATEGORY_NODES = [
+  { id: CAT_FOOD, slug: 'food-dining', parent_id: null },
+  { id: CAT_FOOD_CHILD, slug: 'bakeries', parent_id: CAT_FOOD },
+  { id: CAT_RETAIL, slug: 'retail', parent_id: null },
+]
+
+function row(
+  id: string,
+  name: string,
+  cityId: string,
+  categoryId: string,
+  locationType = 'physical'
+) {
   return {
     id,
     slug: id,
@@ -81,6 +101,7 @@ function row(id: string, name: string, cityId: string, categoryId: string) {
     status: 'published',
     city_id: cityId,
     category_id: categoryId,
+    location_type: locationType,
     categories: { name: 'Food', slug: 'food-dining' },
     cities: { name: 'Chicago', slug: 'chicago-il' },
   }
@@ -101,7 +122,17 @@ vi.mock('@/lib/supabase/server', () => {
       }
       if (table === 'categories') {
         const slug = eqValue(calls, 'slug')
-        return { data: slug === 'food-dining' ? { id: CAT_FOOD } : null, error: null }
+        if (slug !== undefined) {
+          return { data: slug === 'food-dining' ? { id: CAT_FOOD } : null, error: null }
+        }
+        const parentId = eqValue(calls, 'parent_id')
+        if (parentId !== undefined) {
+          return {
+            data: CATEGORY_NODES.filter((c) => c.parent_id === parentId).map((c) => ({ id: c.id })),
+            error: null,
+          }
+        }
+        return { data: CATEGORY_NODES, error: null }
       }
       if (table === 'attribute_values') {
         const wanted = (calls.find((c) => c[0] === 'in')?.[2] as string[] | undefined) ?? []
@@ -120,6 +151,18 @@ vi.mock('@/lib/supabase/server', () => {
       if (cityId) rows = rows.filter((r) => r.city_id === cityId)
       const categoryId = eqValue(calls, 'category_id')
       if (categoryId) rows = rows.filter((r) => r.category_id === categoryId)
+      // A category filter is the category plus its children (`.in`), as of the
+      // 2026-09-24 type-shortcuts change.
+      const categoryIds = calls.find((c) => c[0] === 'in' && c[1] === 'category_id')?.[2] as
+        | string[]
+        | undefined
+      if (categoryIds) rows = rows.filter((r) => categoryIds.includes(r.category_id))
+      const entityType = eqValue(calls, 'entity_type')
+      if (entityType) rows = rows.filter((r) => r.entity_type === entityType)
+      // A mapped Type shortcut arrives as one PostgREST `.or()` string.
+      const orFilter = calls.find((c) => c[0] === 'or')?.[1] as string | undefined
+      if (orFilter)
+        rows = rows.filter((r) => matchesOr(orFilter, r as unknown as Record<string, string>))
       const ilike = calls.find((c) => c[0] === 'ilike')?.[2] as string | undefined
       if (ilike) {
         const needle = ilike.replace(/%/g, '').toLowerCase()
@@ -129,7 +172,18 @@ vi.mock('@/lib/supabase/server', () => {
     }
 
     const b: Record<string, unknown> = {}
-    for (const m of ['select', 'eq', 'is', 'in', 'ilike', 'order', 'limit', 'range', 'textSearch']) {
+    for (const m of [
+      'select',
+      'eq',
+      'is',
+      'in',
+      'or',
+      'ilike',
+      'order',
+      'limit',
+      'range',
+      'textSearch',
+    ]) {
       b[m] = (...args: unknown[]) => {
         calls.push([m, ...args])
         return b
@@ -159,9 +213,25 @@ vi.mock('@/lib/supabase/server', () => {
   return {
     createClient: async () => client,
     // logSearchEvent writes through this; it must never affect a response.
-    createServiceClient: () => ({ from: () => ({ insert: () => Promise.resolve({ error: null }) }) }),
+    createServiceClient: () => ({
+      from: () => ({ insert: () => Promise.resolve({ error: null }) }),
+    }),
   }
 })
+
+/** Enough of PostgREST's `.or()` grammar for typeOrFilter: `col.eq.v` and `col.in.(a,b)`. */
+function matchesOr(filter: string, r: Record<string, string>): boolean {
+  const clauses = filter.match(/[a-z_]+\.(?:eq\.[^,]+|in\.\([^)]*\))/g) ?? []
+  return clauses.some((clause) => {
+    const [col = '', op, ...rest] = clause.split('.')
+    const value = rest.join('.')
+    if (op === 'eq') return r[col] === value
+    return value
+      .slice(1, -1)
+      .split(',')
+      .includes(r[col] ?? '')
+  })
+}
 
 /** The value of the first `.eq(col, …)` recorded on a builder, if any. */
 function eqValue(calls: unknown[][], col: string): string | undefined {
@@ -220,9 +290,11 @@ describe('1.17 — unknown filter slugs are rejected, not dropped', () => {
     expect(results.map((r) => r.id)).toEqual(['l1', 'l2'])
   })
 
-  it('still filters normally on a KNOWN category', async () => {
+  it('still filters normally on a KNOWN category, subcategories included', async () => {
     const { results } = await searchListings({ ...base, category: 'food-dining' })
-    expect(results.map((r) => r.id)).toEqual(['l1', 'l3'])
+    // l5 is filed under a Food & Dining subcategory. The browse path used to
+    // match the parent id exactly and drop it, while /discover's RPC kept it.
+    expect(results.map((r) => r.id)).toEqual(['l1', 'l3', 'l5'])
   })
 })
 
@@ -230,7 +302,10 @@ describe('1.17 — unknown filter slugs are rejected, not dropped', () => {
 
 describe('1.16 — attrs / price / open_now are implemented, not ignored', () => {
   it('routes an attrs request through search_listings_faceted with resolved ids', async () => {
-    h.facetedRows = [{ id: 'l3', total_count: 2 }, { id: 'l1', total_count: 2 }]
+    h.facetedRows = [
+      { id: 'l3', total_count: 2 },
+      { id: 'l1', total_count: 2 },
+    ]
     const { results, total } = await searchListings({ ...base, attrs: ['black-woman-owned'] })
 
     const rpc = h.rpcs.find((r) => r.fn === 'search_listings_faceted')
@@ -244,7 +319,9 @@ describe('1.16 — attrs / price / open_now are implemented, not ignored', () =>
   it('passes price ranges to the RPC', async () => {
     h.facetedRows = [{ id: 'l1', total_count: 1 }]
     await searchListings({ ...base, price: ['$$'] })
-    expect(h.rpcs.find((r) => r.fn === 'search_listings_faceted')?.args.p_price_ranges).toEqual(['$$'])
+    expect(h.rpcs.find((r) => r.fn === 'search_listings_faceted')?.args.p_price_ranges).toEqual([
+      '$$',
+    ])
   })
 
   it('passes open_now to the RPC', async () => {
@@ -270,6 +347,37 @@ describe('browse requests keep the PostgREST path', () => {
   it('still narrows a browse by city on that path', async () => {
     const { total } = await searchListings({ ...base, city: 'chicago-il' })
     expect(total).toBe(2)
+  })
+})
+
+// ── Type shortcuts map to categories [Decision — founder, 2026-09-24] ────────
+
+describe('type shortcuts on the browse path', () => {
+  it('Restaurants finds business listings in Food & Dining and its subcategories', async () => {
+    const { results } = await searchListings({ ...base, type: 'restaurant' })
+    // Every row is entity_type 'business'. An exact entity_type match returns
+    // zero here, which is the founder-reported defect.
+    expect(results.map((r) => r.id)).toEqual(['l1', 'l3', 'l5'])
+  })
+
+  it('Services finds listings by where they operate', async () => {
+    const { results } = await searchListings({ ...base, type: 'service_provider' })
+    expect(results.map((r) => r.id)).toEqual(['l4'])
+  })
+
+  it('Businesses stays an exact entity_type match', async () => {
+    await searchListings({ ...base, type: 'business' })
+    const listings = h.queries.find((q) => q.table === 'listings')
+    expect(listings?.calls.some((c) => c[0] === 'or')).toBe(false)
+    expect(listings?.calls).toContainEqual(['eq', 'entity_type', 'business'])
+  })
+
+  it('sends the mapped ids to the RPC when there is a query', async () => {
+    h.facetedRows = [{ id: 'l1', total_count: 1 }]
+    await searchListings({ ...base, q: 'cake', type: 'restaurant' })
+    const rpc = h.rpcs.find((r) => r.fn === 'search_listings_faceted')
+    expect(rpc?.args.p_type_category_ids).toEqual([CAT_FOOD, CAT_FOOD_CHILD])
+    expect(rpc?.args).not.toHaveProperty('p_type_location_types')
   })
 })
 

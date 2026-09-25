@@ -19,7 +19,7 @@ export const revalidate = false
  * placement engine, where it means something materially different.
  *
  * The order of the sections below mirrors the actual ORDER BY in
- * search_listings_faceted (20260923000000_activity_ranking.sql). If the ranking
+ * search_listings_faceted (20260924000000_type_shortcuts_relevance.sql). If the ranking
  * changes, this page changes in the same PR.
  *
  * Rewritten 2026-09-23. Section 2 used to read "Black-owned businesses are
@@ -35,6 +35,18 @@ export const revalidate = false
  * still shown on every listing; what changed is that it no longer affects order.
  * moderation-policy.md:48 still binds: no paid tier, placement, or badge is
  * contingent on the label, and nothing here makes one so.
+ *
+ * Rewritten again 2026-09-25 for 20260924000000_type_shortcuts_relevance.sql.
+ * `is_featured DESC` was the first ORDER BY key, above match quality, so a
+ * featured restaurant whose description said "photographs" outranked real
+ * photography studios. Now: with a keyword and the relevance sort, match band
+ * leads and featured only breaks ties inside a band; browsing is unchanged
+ * (featured first). Name, tagline and category hits (tsvector weights A and B)
+ * form a higher band than description-only hits. Sponsored placements are no
+ * longer spliced into keyword results (lib/listings/query.ts injectSponsored).
+ * Featured got its own section because it and Sponsored were described as one
+ * thing before; they are two ("Featured" badge vs the "Sponsored" chip).
+ * [Decision — founder, 2026-09-24] relevance first on a keyword search.
  */
 export default function HowRankingWorksPage() {
   return (
@@ -55,40 +67,54 @@ export default function HowRankingWorksPage() {
 
           <section id="sponsored" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              1. Sponsored placements come first, and they are always labeled
+              1. Sponsored placements are always labeled, and never appear on a keyword search
             </h2>
             <p>
               A business can buy a placement at the top of a specific city or category. When one is
-              running, it appears first and carries a visible{' '}
+              running and you are browsing, it appears first and carries a visible{' '}
               <span className="font-semibold">Sponsored</span> chip on the card. There are never
               more than three, they expire on a set date, and they disappear entirely once you
               filter deeply enough that they would no longer be relevant.
             </p>
             <p>
-              If it does not say Sponsored, nobody paid to put it in that position.
+              When you type a search, there are no Sponsored slots at all. What you searched for
+              decides the order, not a placement someone bought.
             </p>
+            <p>If it does not say Sponsored, nobody paid to put it in that position.</p>
           </section>
 
           <section id="match" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              2. Then: how well the business matches what you searched
+              2. When you search, the best match comes first
             </h2>
             <p>
               When you type something, this is the first thing that matters. We score every business
-              against your search terms: its name, description, category, and tags. Results are then
-              grouped by how well they matched, and nothing further down this page can lift a weaker
-              match above a better one.
+              against your search terms and group the results by how well they matched. A business
+              whose name, tagline, or category matches your words is listed ahead of one that only
+              mentions them somewhere in its description. Nothing further down this page can lift a
+              weaker match above a better one.
             </p>
             <p>
               When you are browsing rather than searching, on a city page, a category, or the map,
-              there is nothing to match against. This step does nothing there and the next one
-              decides the order.
+              there is nothing to match against. This step does nothing there.
+            </p>
+          </section>
+
+          <section id="featured" className="space-y-3">
+            <h2 className="font-headline text-xl text-brand-black">
+              3. Then: featured businesses break ties
+            </h2>
+            <p>
+              Some businesses carry a visible <span className="font-semibold">Featured</span> badge.
+              When you are browsing, featured businesses are listed first. When you search, being
+              featured only decides the order between businesses that matched your search equally
+              well. A featured business never outranks a better match.
             </p>
           </section>
 
           <section id="activity" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              3. Then: how active and well-kept the business is
+              4. Then: how active and well-kept the business is
             </h2>
             <p>
               Among businesses that matched your search about equally well, the more positively
@@ -116,15 +142,15 @@ export default function HowRankingWorksPage() {
               <span className="font-semibold">
                 The ownership label is not part of this, in either direction.
               </span>{' '}
-              Every listing shows whether it is <span className="font-semibold">Black-Owned</span> or
-              an <span className="font-semibold">Ally</span>, and neither label moves a business up
-              or down.
+              Every listing shows whether it is <span className="font-semibold">Black-Owned</span>{' '}
+              or an <span className="font-semibold">Ally</span>, and neither label moves a business
+              up or down.
             </p>
           </section>
 
           <section id="subscription" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              4. Then: a subscription breaks the ties that are left
+              5. Then: a subscription breaks the ties that are left
             </h2>
             <p>
               Businesses on our Growth and Premium plans get priority placement. That means
@@ -155,16 +181,14 @@ export default function HowRankingWorksPage() {
                 higher position.
               </li>
               <li>
-                It cannot lift a business past the two things above it, and it cannot displace a
-                labeled Sponsored placement.
+                It cannot lift a business past the things above it, and it cannot displace a labeled
+                Sponsored placement or a Featured business.
               </li>
             </ul>
           </section>
 
           <section id="never" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">
-              5. What money never affects
-            </h2>
+            <h2 className="font-headline text-xl text-brand-black">6. What money never affects</h2>
             <ul className="list-disc ml-5 space-y-2">
               <li>
                 <span className="font-semibold">Map prominence is never for sale.</span> How large
@@ -196,7 +220,7 @@ export default function HowRankingWorksPage() {
 
           <section id="sorting" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">
-              6. If you choose your own sort, we use it
+              7. If you choose your own sort, we use it
             </h2>
             <p>
               Sort by name, rating, review count, newest, or most-saved and that is what orders your
@@ -204,8 +228,9 @@ export default function HowRankingWorksPage() {
               alphabetical, paying for a plan will not move a business up the alphabet.
             </p>
             <p>
-              One thing above still applies: a labeled Sponsored placement stays at the top. Nothing
-              else reorders what you asked for. An A-to-Z sort reads straight through, A to Z.
+              One thing above still applies: a labeled Sponsored placement or a Featured business
+              stays at the top. Nothing else reorders what you asked for. Within each of those, an
+              A-to-Z sort reads straight through, A to Z.
             </p>
           </section>
 
@@ -222,7 +247,7 @@ export default function HowRankingWorksPage() {
               </Link>
               .
             </p>
-            <p className="text-sm text-charcoal-soft">Last updated 23 September 2026.</p>
+            <p className="text-sm text-charcoal-soft">Last updated 25 September 2026.</p>
           </section>
         </div>
       </Section>

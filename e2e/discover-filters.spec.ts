@@ -295,3 +295,44 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     expect(url.searchParams.get('ownership')).toBe('ally')
   })
 })
+
+/**
+ * PR3 — the Type shortcuts, relevance on a keyword, and sponsored on a keyword.
+ *
+ * The first two need 20260924000000_type_shortcuts_relevance applied to the
+ * database this server reads. Without it the code falls back on purpose (exact
+ * entity_type, featured first), so these fail loudly rather than skip: a
+ * skipped check counts as red, and a red here before GATE-DATA is the honest
+ * answer. The sponsored case is code-only and passes on either side.
+ */
+test.describe('Discover — type shortcuts and keyword relevance', () => {
+  for (const type of ['restaurant', 'professional', 'creative', 'service_provider']) {
+    test(`?type=${type} returns listings`, async ({ page }) => {
+      const n = requireNumber(await totalAt(page, `/discover?type=${type}`), `?type=${type}`)
+      expect(
+        n,
+        `the ${type} shortcut must map to categories, not only entity_type`
+      ).toBeGreaterThan(0)
+    })
+  }
+
+  test('"photographer" puts a photography listing first', async ({ page }) => {
+    const n = requireNumber(await totalAt(page, '/discover?q=photographer'), '?q=photographer')
+    expect(n, 'the directory must have at least one photography match').toBeGreaterThan(0)
+
+    const first = page.locator('article').first()
+    const name = (await first.getByRole('heading', { level: 3 }).textContent()) ?? ''
+    const category = (await first.locator('h3 + p').textContent()) ?? ''
+    expect(`${name} ${category}`, 'the first card must be about photography').toMatch(/photo/i)
+  })
+
+  test('a keyword search shows no sponsored card', async ({ page }) => {
+    await page.goto('/discover')
+    await resultTotal(page)
+    const browsing = await page.locator('article').getByText('Sponsored', { exact: true }).count()
+    test.skip(browsing === 0, 'no active sponsored placement in this database, so nothing to hide')
+
+    await totalAt(page, '/discover?q=photographer')
+    await expect(page.locator('article').getByText('Sponsored', { exact: true })).toHaveCount(0)
+  })
+})

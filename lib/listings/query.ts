@@ -12,6 +12,7 @@ import {
   type FacetGroupData,
   type FacetCounts,
 } from '@/lib/listings/facets'
+import { listingMatchesType } from '@/lib/listings/type-shortcuts'
 
 export const LISTINGS_PAGE_SIZE = 24
 
@@ -72,6 +73,8 @@ export type RawRow = {
   tagline: string | null
   entity_type: string
   location_type: string
+  /** Read by the sponsored-placement type filter (listingMatchesType). */
+  category_id: string | null
   trust_tier: string
   tier: string
   ownership_label: string
@@ -88,7 +91,7 @@ export type RawRow = {
 }
 
 export const NESTED_SELECT = `
-  id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
+  id, slug, name, tagline, entity_type, location_type, category_id, trust_tier, tier,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count,
@@ -280,9 +283,15 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     radiusActive
   )
 
-  // Build the sponsored query (page 1, no deep filter) so it runs in parallel.
+  // A keyword search is a question with a best answer, and a paid slot above that
+  // answer is not a placement, it is a wrong answer (the "photographer" search
+  // that opened on a featured restaurant). So sponsored placements show when
+  // browsing only. [Decision — founder, 2026-09-24] "Relevance first."
+  const injectSponsored = page === 1 && !deepFilter && !resolved.p_q
+
+  // Build the sponsored query (page 1, no deep filter, no keyword) so it runs in parallel.
   let spQueryPromise: Promise<{ data: unknown[] | null }> | null = null
-  if (page === 1 && !deepFilter) {
+  if (injectSponsored) {
     const now = new Date().toISOString()
     let spQuery = supabase
       .from('sponsored_placements')
@@ -354,18 +363,21 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   if (search.ids.length > 0) {
     const { data } = await supabase.from('listings').select(NESTED_SELECT).in('id', search.ids)
     const byId = new Map<string, DiscoveryEntity>()
-    for (const raw of ((data as unknown as RawRow[]) ?? [])) byId.set(raw.id, mapRow(raw))
-    organicEntities = search.ids
-      .map((id) => byId.get(id))
-      .filter((e): e is DiscoveryEntity => !!e)
+    for (const raw of (data as unknown as RawRow[]) ?? []) byId.set(raw.id, mapRow(raw))
+    organicEntities = search.ids.map((id) => byId.get(id)).filter((e): e is DiscoveryEntity => !!e)
   }
 
   const facets = wantFacets && counts && groups ? { groups, counts } : undefined
 
   let finalEntities = organicEntities
 
-  if (page === 1 && !deepFilter) {
+  if (injectSponsored) {
     const { data: spRows } = spResult as { data: unknown[] | null }
+    // A placement carries a city and a category but not a type, so under a Type
+    // shortcut an off-type listing would otherwise land in slot 1. Same predicate
+    // the search runs, from the one mapping (lib/listings/type-shortcuts.ts).
+    const activeType = resolved.p_entity_type
+    const typeIds = new Set(resolved.p_type_category_ids ?? [])
 
     if (spRows && spRows.length > 0) {
       const sponsoredIds = new Set<string>()
@@ -378,6 +390,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       }>) {
         const raw = sp.listings as unknown as RawRow | null
         if (!raw) continue
+        if (activeType && !listingMatchesType(activeType, raw, typeIds)) continue
         const position = sp.position ?? 1
         const entity: DiscoveryEntity = {
           ...mapRow(raw),

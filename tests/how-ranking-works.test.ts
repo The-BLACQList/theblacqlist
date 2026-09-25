@@ -11,7 +11,9 @@
 //
 //   • Section order. The page is read top to bottom as "this is the order we
 //     apply them", so the section ids have to match the ORDER BY sequence:
-//     sponsored -> match band -> activity -> paid tier.
+//     sponsored -> match band -> featured -> activity -> paid tier. Since
+//     20260924000000 featured leads only when browsing; on a keyword search it
+//     breaks ties inside a match band [Decision - founder, 2026-09-24].
 //
 //   • The removed ownership key. Until 20260923000000_activity_ranking.sql the
 //     second ORDER BY key was `(ownership_label = 'black_owned') DESC`, and the
@@ -45,7 +47,7 @@ import { describe, it, expect } from 'vitest'
 const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), 'utf8')
 
 const PAGE = 'app/(public)/how-ranking-works/page.tsx'
-const MIGRATION = 'supabase/migrations/20260923000000_activity_ranking.sql'
+const MIGRATION = 'supabase/migrations/20260924000000_type_shortcuts_relevance.sql'
 
 describe('how-ranking-works page', () => {
   const src = read(PAGE)
@@ -63,6 +65,7 @@ describe('how-ranking-works page', () => {
     expect(ids).toEqual([
       'sponsored',
       'match',
+      'featured',
       'activity',
       'subscription',
       'never',
@@ -103,15 +106,26 @@ describe('how-ranking-works page', () => {
     expect(copy).not.toMatch(/then the Allies/i)
   })
 
-  it('keeps sponsored placement first and labeled', () => {
-    expect(copy).toContain('Sponsored placements come first, and they are always labeled')
+  it('keeps sponsored placement labeled and off keyword searches', () => {
+    expect(copy).toContain(
+      'Sponsored placements are always labeled, and never appear on a keyword search'
+    )
+    expect(copy).toContain('When you type a search, there are no Sponsored slots at all.')
     expect(copy).toContain('If it does not say Sponsored, nobody paid to put it in that position.')
-    // Section 6: a chosen sort is honored, but sponsored still sits on top.
-    expect(copy).toContain('a labeled Sponsored placement stays at the top')
+    // Section 7: a chosen sort is honored, but sponsored and featured still sit on top.
+    expect(copy).toContain('a labeled Sponsored placement or a Featured business stays at the top')
+  })
+
+  it('says featured only breaks ties on a keyword search', () => {
+    expect(copy).toContain('featured businesses break ties')
+    expect(copy).toContain('A featured business never outranks a better match.')
+    expect(copy).toContain('ahead of one that only mentions them somewhere in its description')
   })
 
   it('bounds what a subscription buys', () => {
-    expect(copy).toContain('A subscription never outranks a better match, and never outranks a more')
+    expect(copy).toContain(
+      'A subscription never outranks a better match, and never outranks a more'
+    )
     expect(copy).toContain('It only applies when you actually searched for something.')
     expect(copy).toContain('Growth and Premium get exactly the same weight here.')
     expect(copy).toContain('Activity itself is not for sale.')
@@ -145,14 +159,23 @@ describe('the page matches the ORDER BY it describes', () => {
     expect(orderBy).not.toContain('ownership_label')
   })
 
-  it('orders sponsored, then match band, then activity, then paid tier', () => {
-    const at = (needle: string) => {
-      const i = orderBy.indexOf(needle)
+  it('orders featured (browse only), then match band, then featured, then activity, then paid tier', () => {
+    const at = (needle: string, from = 0) => {
+      const i = orderBy.indexOf(needle, from)
       expect(i, `${needle} missing from ORDER BY`).toBeGreaterThan(-1)
       return i
     }
-    expect(at('c.is_featured')).toBeLessThan(at('c.match_band'))
-    expect(at('c.match_band')).toBeLessThan(at('c.activity_score'))
+    // The first featured key sits inside a CASE that only fires without a
+    // keyword (or under a non-relevance sort), so it cannot beat a match.
+    const firstFeatured = at('c.is_featured')
+    expect(orderBy.slice(0, firstFeatured)).toMatch(
+      /CASE WHEN p_q IS NULL OR p_q = ''[^\n]*\n?[^\n]*THEN\s*$/
+    )
+    expect(firstFeatured).toBeLessThan(at('c.match_band'))
+    // The second one breaks ties inside a band, above activity.
+    const secondFeatured = at('c.is_featured', firstFeatured + 1)
+    expect(at('c.match_band')).toBeLessThan(secondFeatured)
+    expect(secondFeatured).toBeLessThan(at('c.activity_score'))
     expect(at('c.activity_score')).toBeLessThan(at('c.tier_weight'))
   })
 

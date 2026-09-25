@@ -3,11 +3,13 @@ import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import {
   resolveFacetParams,
   searchFacetedIds,
+  categoryWithChildren,
   hasUnresolved,
   SORT_KEYS,
   type SortKey,
   type UnresolvedFacets,
 } from '@/lib/listings/facets'
+import { typeOrFilter } from '@/lib/listings/type-shortcuts'
 import type { Json } from '@/lib/supabase/types'
 import type { SearchQueryParams } from '@/lib/validations/search'
 
@@ -184,9 +186,13 @@ export async function searchListings(
 
     let results: SearchResult[] = []
     if (faceted.ids.length > 0) {
-      const { data: facetRows } = await supabase.from('listings').select(SELECT).in('id', faceted.ids)
+      const { data: facetRows } = await supabase
+        .from('listings')
+        .select(SELECT)
+        .in('id', faceted.ids)
       const byId = new Map<string, SearchResult>()
-      for (const raw of (facetRows as unknown as RawSearchRow[]) ?? []) byId.set(raw.id, mapRow(raw))
+      for (const raw of (facetRows as unknown as RawSearchRow[]) ?? [])
+        byId.set(raw.id, mapRow(raw))
       // .in() does not preserve order — restore the RPC's ranking.
       results = faceted.ids.map((id) => byId.get(id)).filter((r): r is SearchResult => !!r)
     }
@@ -212,8 +218,18 @@ export async function searchListings(
     .eq('flag_status', 'none')
 
   if (cityId) query = query.eq('city_id', cityId)
-  if (categoryId) query = query.eq('category_id', categoryId)
-  if (params.type) query = query.eq('entity_type', params.type)
+  // A parent category means itself plus its subcategories, and a Type shortcut
+  // means its mapped categories and location types, both exactly as the RPC
+  // reads them. Browsing Food & Dining used to miss every listing filed under a
+  // Food & Dining subcategory, and ?type=restaurant matched nothing at all.
+  // [Decision — founder, 2026-09-24] "Type shortcuts map to categories."
+  if (categoryId) query = query.in('category_id', await categoryWithChildren(supabase, categoryId))
+  if (params.type) {
+    query =
+      resolved.p_type_category_ids || resolved.p_type_location_types
+        ? query.or(typeOrFilter(params.type, resolved.p_type_category_ids ?? []))
+        : query.eq('entity_type', params.type)
+  }
   if (params.trust_tier) query = query.eq('trust_tier', params.trust_tier)
   // `.in()` on a guarded length: `.in('x', [])` matches nothing, so an empty
   // array would empty the page rather than leave the filter off.
