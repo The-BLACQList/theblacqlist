@@ -14,6 +14,13 @@ interface BannerContent {
    * city renders the wash as a first-class outcome rather than a hole.
    */
   photo?: string
+  /**
+   * Never crop the photograph's sides. Below `md` the frame sits at the top at
+   * its own 3:2 shape, so the full width always shows and the ground continues
+   * under it where the title sits; from `md` up the box is wider than 3:2
+   * anyway, so the usual cover fill already shows the full width.
+   */
+  fullWidth?: boolean
 }
 
 const P = '/images/editorial/categories'
@@ -100,6 +107,8 @@ const BANNERS: Record<string, BannerContent> = {
     shot: 'street scene: shops, people, motion',
     tone: 'linear-gradient(130deg, #241c12 0%, #4a3a24 55%, #17110a 100%)',
     photo: '/images/editorial/discover-cover.webp',
+    // Founder, 2026-09-25: the whole width of this frame shows, edge to edge.
+    fullWidth: true,
   },
 }
 
@@ -146,14 +155,26 @@ export function DiscoverBanner({ type }: Props) {
           {/* Above the fold on the busiest route in the product, and the LCP
               element on it — so `priority`, and full-width `sizes` because the
               banner is edge-to-edge at every breakpoint. */}
-          <Image
-            src={banner.photo}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className={cn('object-cover', PHOTO_FOCAL[banner.photo])}
-          />
+          {/* The frame is 1920x1280. At 375px a 360px-tall cover fill would
+              cut about a third off its sides, so a `fullWidth` frame keeps its
+              3:2 box below `md` and fades into the ground under it. */}
+          <div
+            className={cn(
+              'absolute',
+              banner.fullWidth
+                ? 'inset-x-0 top-0 aspect-[3/2] [mask-image:linear-gradient(to_bottom,#000_70%,transparent)] md:inset-0 md:aspect-auto md:[mask-image:none]'
+                : 'inset-0'
+            )}
+          >
+            <Image
+              src={banner.photo}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className={cn('object-cover', PHOTO_FOCAL[banner.photo])}
+            />
+          </div>
           <div
             aria-hidden="true"
             className="absolute inset-0"
