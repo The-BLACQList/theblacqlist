@@ -67,7 +67,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['[data-tour="save-listing"]'],
     href: null,
     fallbackHref: '/discover',
-    hint: 'The Save control sits in the action row of any listing page.',
+    hint: 'The Save control sits beside the name at the top of any listing page, and on every result card.',
   },
   collection_browsed: {
     kind: 'page',
@@ -132,6 +132,26 @@ export function planSpotlight(target: TourTarget, found: boolean): SpotlightPlan
   if (target.href !== null) return { action: 'navigate', href: target.href }
   if (target.fallbackHref !== null) return { action: 'hint', href: target.fallbackHref }
   return { action: 'focus-rail' }
+}
+
+/**
+ * Which steps an interaction could count toward, given a way to test whether it
+ * touched a selector.
+ *
+ * Takes a predicate rather than an Event for the same reason `planSpotlight`
+ * takes a boolean: vitest has no DOM here. The caller does the `closest` or
+ * `querySelector` work and this decides what it means.
+ */
+export function evidenceStepKeys(touches: (selector: string) => boolean): TourStepKey[] {
+  return TOUR_STEPS.filter((key) =>
+    TOUR_STEP_TARGETS[key].selectors.some((selector) => {
+      try {
+        return touches(selector)
+      } catch {
+        return false
+      }
+    })
+  )
 }
 
 /** Every href this module can ever send a tester to. The route-safety test walks it. */

@@ -63,6 +63,35 @@ export function statusFingerprint(snapshot: ProgressSnapshot | null): string {
 }
 
 /**
+ * The status each watched step had when the tester acted, keyed by step.
+ * `undefined` means the rail had no payload yet, so there is nothing to diff.
+ */
+export type WatchBaseline = ReadonlyMap<string, ProgressStatus | undefined>
+
+/**
+ * Did any step the tester just acted on move since they acted?
+ *
+ * This is what the evidence chase stops on, and it is deliberately narrower
+ * than "did anything move". On a listing page the `listing_opened` witness is
+ * written in an `after()` callback, so it often lands a beat after the page
+ * loads. A chase that stopped on any movement saw that tick, stopped, and never
+ * read the save the tester had just made, which is why Save only seemed to
+ * count from /discover. Only the steps the click or submit could have touched
+ * get to end the chase.
+ *
+ * A step with no baseline never counts as moved: without a "before" there is
+ * no change to see, and the chase simply runs its full, bounded length.
+ */
+export function watchedStepMoved(baseline: WatchBaseline, next: ProgressSnapshot): boolean {
+  for (const [key, before] of baseline) {
+    if (before === undefined) continue
+    const now = next.steps.find((s) => s.key === key)?.status
+    if (now !== undefined && now !== before) return true
+  }
+  return false
+}
+
+/**
  * Steps that are un-gated, still not done, and therefore optional at the end.
  *
  * These are what the completion panel renders dimmed as "Optional — you never
