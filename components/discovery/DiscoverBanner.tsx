@@ -29,10 +29,11 @@ const P = '/images/editorial/categories'
 // the `<h1>` beneath already says what the bin is. Do not caption these, do not
 // attribute them to a listing, and do not reuse one on a listing page.
 //
-// The `tone` gradients stay. They are the ground the type was set against, they
-// still paint while the photograph decodes, and `default` has no frame at all —
-// "street scene: shops, people, motion" is the one brief that cannot be shot
-// without picking a city, so Discover keeps the gradient on purpose.
+// The `tone` gradients stay. They are the ground the type was set against, and
+// they still paint while the photograph decodes. `default` ran on its gradient
+// alone until 2026-09-25, when the founder supplied its frame (a shop owner at
+// the counter); the "street scene" brief was the one that could not be shot
+// without picking a city, so the frame answers it with a shop instead.
 const BANNERS: Record<string, BannerContent> = {
   business: {
     title: 'Brick & Mortar',
@@ -98,6 +99,7 @@ const BANNERS: Record<string, BannerContent> = {
     line: 'Every kind of Black-owned enterprise, one living index.',
     shot: 'street scene: shops, people, motion',
     tone: 'linear-gradient(130deg, #241c12 0%, #4a3a24 55%, #17110a 100%)',
+    photo: '/images/editorial/discover-cover.webp',
   },
 }
 
@@ -167,12 +169,13 @@ export function DiscoverBanner({ type }: Props) {
             'radial-gradient(110% 90% at 78% 20%, rgba(255,222,160,0.20), transparent 55%), linear-gradient(to top, rgba(4,4,5,0.55), transparent 60%)',
         }}
       />
-      {/* Height doubled 2026-09-21 (founder, pre-invite item 2): 220/300 to
-          440/600. At 375x667 the banner plus the search bar below it still
-          ends above the fold (header ~64 + 440 + ~56). Content stays pinned
-          to the bottom edge so the title sits at the same place relative to
-          the search bar as before; the extra room goes above it. */}
-      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-32 md:py-48 min-h-[440px] md:min-h-[600px] flex flex-col justify-end">
+      {/* Height doubled 2026-09-21 (founder, pre-invite item 2) to 440/600,
+          then cut back by about 200px on 2026-09-25 (founder) to 280/400, so
+          the results start sooner. The min-height sets the size; the padding
+          is only a floor, small enough never to push past it. Content stays
+          pinned to the bottom edge so the title keeps its place above the
+          search bar. */}
+      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pt-16 pb-10 md:pt-20 md:pb-14 min-h-[280px] md:min-h-[400px] flex flex-col justify-end">
         <h1 className="font-headline text-[34px] md:text-[52px] text-white text-balance">
           {banner.title}
         </h1>

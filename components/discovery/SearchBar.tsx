@@ -35,8 +35,11 @@ export function SearchBar({
       }
       // Navigate to targetPath preserving other filter params, or stay on
       // the current page if it's already the target path.
-      const dest = pathname === targetPath ? pathname : targetPath
-      router.push(`${dest}?${params.toString()}` as Route)
+      // Staying on the same page keeps the scroll position, like the filters
+      // do; arriving from another page starts at the top as usual.
+      const samePage = pathname === targetPath
+      const dest = samePage ? pathname : targetPath
+      router.push(`${dest}?${params.toString()}` as Route, { scroll: !samePage })
     },
     [query, searchParams, pathname, targetPath, router]
   )
