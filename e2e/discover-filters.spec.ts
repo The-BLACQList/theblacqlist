@@ -218,6 +218,8 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     // The control is labelled "Online only"; the value it writes is the stored
     // enum key `virtual`. Asserting on the label would have hidden a mismatch
     // between the two, so the URL assertion names the stored value.
+    // The section starts collapsed, so open it first.
+    await sidebar.locator('summary', { hasText: /^Where they operate$/ }).click()
     await sidebar.getByRole('button', { name: 'Online only', exact: true }).click()
     await page.waitForURL(/[?&]location_type=virtual/)
     expect(
@@ -243,20 +245,26 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
   })
 
   test('Category writes ?category', async ({ page }) => {
-    const select = page.getByLabel('Filter by category')
-    const value = await select.locator('option').nth(1).getAttribute('value')
-    test.skip(!value, 'no categories are active in this database')
+    const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
+    // Category starts collapsed (see FacetSidebar), so open it first.
+    await sidebar.locator('summary', { hasText: /^Category$/ }).click()
+    const tree = sidebar.getByRole('list', { name: 'Filter by category' })
+    const first = tree.getByRole('button', { pressed: false }).first()
+    test.skip((await first.count()) === 0, 'no categories are active in this database')
 
     const baseline = requireNumber(await resultTotal(page), '/discover')
-    await select.selectOption(value!)
-    await page.waitForURL(new RegExp(`[?&]category=${value}`))
+    await first.click()
+    await page.waitForURL(/[?&]category=/)
     expect(requireNumber(await resultTotal(page), '/discover?category=…')).toBeLessThanOrEqual(
       baseline
     )
   })
 
   test('a live price button writes ?price, and a dead one is a zero count', async ({ page }) => {
-    const group = page.getByRole('group', { name: 'Filter by price range' })
+    const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
+    // Price starts collapsed; its buttons are not rendered visible until opened.
+    await sidebar.locator('summary', { hasText: /^Price$/ }).click()
+    const group = sidebar.getByRole('group', { name: 'Filter by price range' })
     const enabled = group.getByRole('button').and(page.locator(':not([disabled])'))
     const n = await enabled.count()
     // Every price button is disabled when no published listing carries that

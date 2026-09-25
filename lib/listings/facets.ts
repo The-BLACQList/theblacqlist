@@ -85,6 +85,14 @@ export interface FacetCounts {
    * impersonate an answer.
    */
   countsUnavailable?: boolean
+  /**
+   * category slug → count, a parent including its subcategories, ignoring the
+   * current category pick. Undefined until the RPC returns it; the sidebar then
+   * shows every category with no badge rather than hiding them all.
+   */
+  category?: Record<string, number>
+  /** entity type → count, ignoring the current type pick. Same undefined rule. */
+  type?: Record<string, number>
 }
 
 /** Raw (URL) facet inputs before slug → id resolution. */
