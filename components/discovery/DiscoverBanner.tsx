@@ -170,12 +170,13 @@ export function DiscoverBanner({ type }: Props) {
         }}
       />
       {/* Height doubled 2026-09-21 (founder, pre-invite item 2) to 440/600,
-          then cut back by about 200px on 2026-09-25 (founder) to 280/400, so
-          the results start sooner. The min-height sets the size; the padding
+          then cut to 280/400 on 2026-09-25 (founder) so the results start
+          sooner, and given back 80px the same day (founder: too short) to
+          360/480. The min-height sets the size; the padding
           is only a floor, small enough never to push past it. Content stays
           pinned to the bottom edge so the title keeps its place above the
           search bar. */}
-      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pt-16 pb-10 md:pt-20 md:pb-14 min-h-[280px] md:min-h-[400px] flex flex-col justify-end">
+      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pt-16 pb-10 md:pt-20 md:pb-14 min-h-[360px] md:min-h-[480px] flex flex-col justify-end">
         <h1 className="font-headline text-[34px] md:text-[52px] text-white text-balance">
           {banner.title}
         </h1>

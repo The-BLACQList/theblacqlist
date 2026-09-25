@@ -307,7 +307,7 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/cities/los-angeles.webp': 'object-[50%_30%]',
 
   // Discover banners. Different geometry from everything above: the frame is a
-  // wide letterbox (~1440×400 at desktop) rather than a portrait-ish panel, so
+  // wide letterbox (~1440×480 at desktop) rather than a portrait-ish panel, so
   // `object-cover` crops *vertically* and hard, and the type sits over the
   // lower two thirds. Each value keeps the subject clear of that type band
   // rather than clear of the top edge.
