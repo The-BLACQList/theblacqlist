@@ -21,6 +21,7 @@ import { describe, it, expect } from 'vitest'
 
 import {
   buildLocationEscapeUrls,
+  canonicalOpenNowQuery,
   parseDiscoverParams,
   parsePage,
   type DiscoverSearchParams,
@@ -92,11 +93,18 @@ describe('parseDiscoverParams — every key reaches queryListings', () => {
     expect(parseDiscoverParams({ price: ',,' }).price).toBeUndefined()
   })
 
-  it('reads open_now only from the two affirmative spellings', () => {
+  it('reads open_now only from the affirmative spellings', () => {
     expect(parseDiscoverParams({ open_now: '1' }).open_now).toBe(true)
     expect(parseDiscoverParams({ open_now: 'true' }).open_now).toBe(true)
     expect(parseDiscoverParams({ open_now: '0' }).open_now).toBe(false)
     expect(parseDiscoverParams({}).open_now).toBe(false)
+  })
+
+  // The homepage "Open now" pill linked to ?open=now, which the parser never
+  // read, so the pill opened an unfiltered directory.
+  it('accepts the legacy open=now alias', () => {
+    expect(parseDiscoverParams({ open: 'now' }).open_now).toBe(true)
+    expect(parseDiscoverParams({ open: 'later' }).open_now).toBe(false)
   })
 
   // A partial or out-of-range triple is dropped whole: the RPC reads a NULL
@@ -125,6 +133,31 @@ describe('parseDiscoverParams — every key reaches queryListings', () => {
   it('only asks for facet counts when the caller renders a sidebar', () => {
     expect(parseDiscoverParams(EVERY_KEY).withFacets).toBeUndefined()
     expect(parseDiscoverParams(EVERY_KEY, { withFacets: true }).withFacets).toBe(true)
+  })
+})
+
+describe('canonicalOpenNowQuery', () => {
+  it('leaves canonical and absent spellings alone', () => {
+    expect(canonicalOpenNowQuery({ open_now: '1' })).toBeNull()
+    expect(canonicalOpenNowQuery({})).toBeNull()
+    expect(canonicalOpenNowQuery({ q: 'tacos', open_now: '0' })).toBeNull()
+  })
+
+  it('rewrites open=now and open_now=true to open_now=1, keeping other keys', () => {
+    expect(canonicalOpenNowQuery({ open: 'now' })).toBe('?open_now=1')
+    expect(canonicalOpenNowQuery({ open_now: 'true' })).toBe('?open_now=1')
+    const kept = canonicalOpenNowQuery({ open: 'now', q: 'tacos', page: '2' })
+    expect(Object.fromEntries(new URLSearchParams(kept!))).toEqual({
+      open_now: '1',
+      q: 'tacos',
+      page: '2',
+    })
+  })
+
+  it('drops an unrecognised open value instead of looping', () => {
+    const once = canonicalOpenNowQuery({ open: 'later', q: 'tacos' })
+    expect(once).toBe('?q=tacos')
+    expect(canonicalOpenNowQuery(Object.fromEntries(new URLSearchParams(once!)))).toBeNull()
   })
 })
 

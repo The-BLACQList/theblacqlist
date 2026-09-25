@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
+import { byName } from '@/lib/categories/sort'
 import { cn } from '@/lib/utils'
 import { MediaStep } from '@/app/add-business/_components/steps/MediaStep'
 import { CtaStep } from '@/app/add-business/_components/steps/CtaStep'
@@ -220,9 +221,11 @@ export function SubmitListingForm({ categories }: Props) {
     })
   }
 
-  const parentCategories = categories.filter((c) => c.parent_id === null)
+  // A to Z for the owner. display_order is a curation order for the public site,
+  // not a lookup order for someone hunting for their own category.
+  const parentCategories = categories.filter((c) => c.parent_id === null).sort(byName)
   const subcategories = fields.parent_category_id
-    ? categories.filter((c) => c.parent_id === fields.parent_category_id)
+    ? categories.filter((c) => c.parent_id === fields.parent_category_id).sort(byName)
     : []
 
   function onParentCategory(id: string) {

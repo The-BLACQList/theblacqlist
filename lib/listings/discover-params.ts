@@ -51,6 +51,13 @@ export type DiscoverSearchParams = {
   price?: string
   attrs?: string
   open_now?: string
+  /**
+   * Legacy spelling of `open_now=1`. The homepage "Open now" pill linked to
+   * `?open=now` until 2026-09-24 and the parser never read it, so the filter
+   * silently did nothing. Old links still circulate; see
+   * `canonicalOpenNowQuery`.
+   */
+  open?: string
   /** "Near You" — all three or none. See lib/listings/location-params.ts. */
   lat?: string
   lng?: string
@@ -70,6 +77,30 @@ function csv(raw: string | undefined): string[] | undefined {
 export function parsePage(raw: string | undefined): number {
   const page = parseInt(raw ?? '1', 10)
   return Number.isFinite(page) ? Math.max(1, page) : 1
+}
+
+/** Every spelling of "open now" that has ever been linked. */
+function isOpenNow(params: DiscoverSearchParams): boolean {
+  return params.open_now === '1' || params.open_now === 'true' || params.open === 'now'
+}
+
+/**
+ * The canonical query string when the URL spells "open now" a legacy way, or
+ * null when it is already canonical.
+ *
+ * The parser accepts every spelling, but the sidebar checkbox and the filter
+ * chip read `open_now === '1'` straight from the URL. A page answering
+ * `?open=now` would filter correctly while the checkbox sat unticked and no
+ * chip offered a way to clear it. Redirecting to `open_now=1` keeps the
+ * address bar, the controls and the results saying the same thing.
+ */
+export function canonicalOpenNowQuery(params: DiscoverSearchParams): string | null {
+  const legacy = params.open !== undefined || params.open_now === 'true'
+  if (!legacy) return null
+  return buildPageUrl(
+    { ...params, open: undefined, open_now: isOpenNow(params) ? '1' : undefined },
+    parsePage(params.page)
+  )
 }
 
 /**
@@ -99,7 +130,7 @@ export function parseDiscoverParams(
     ownership: params.ownership,
     price: csv(params.price),
     attrs: csv(params.attrs),
-    open_now: params.open_now === '1' || params.open_now === 'true',
+    open_now: isOpenNow(params),
     lat: location?.lat,
     lng: location?.lng,
     radius: location?.radius,

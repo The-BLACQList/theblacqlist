@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { createListingAction } from '@/lib/actions/listings/createListing'
+import { groupCategoriesByParent } from '@/lib/categories/sort'
 import { cn } from '@/lib/utils'
 import type { CategoryOption } from '@/app/add-business/page'
 
@@ -70,9 +71,20 @@ export function SubmitEventForm({ categories }: Props) {
           className={cn(inputCls('category_id'), 'appearance-none cursor-pointer')}
         >
           <option value="" disabled>Select a category</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
+          {/* A to Z, each category grouped with its own subcategories. The parent
+              itself stays selectable as the first entry in its group. */}
+          {groupCategoriesByParent(categories).map(({ parent, children }) =>
+            children.length === 0 ? (
+              <option key={parent.id} value={parent.id}>{parent.name}</option>
+            ) : (
+              <optgroup key={parent.id} label={parent.name}>
+                <option value={parent.id}>All {parent.name}</option>
+                {children.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
+            )
+          )}
         </select>
         {fieldErr('category_id') && <p role="alert" className={errCls}>{fieldErr('category_id')}</p>}
       </div>

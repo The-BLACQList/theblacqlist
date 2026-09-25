@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, FileText, Package, Briefcase, Sparkles, ChevronRight } from 'lucide-react'
 
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+
 interface Props {
   ownerEmail?: string
 }
@@ -34,11 +36,14 @@ export function DashboardSidebar({ ownerEmail }: Props) {
       <div className="px-5 py-5 border-b border-white/10">
         <Link
           href="/dashboard"
-          className="font-headline text-base text-gold leading-tight block"
+          className="font-headline text-base text-gold leading-tight flex items-center gap-3"
         >
-          BLACQList
-          <br />
-          <span className="text-xs text-white/60 font-subhead font-normal">Owner Dashboard</span>
+          <GoldBrandMark className="h-8 w-8 shrink-0" />
+          <span>
+            BLACQList
+            <br />
+            <span className="text-xs text-white/60 font-subhead font-normal">Owner Dashboard</span>
+          </span>
         </Link>
       </div>
 

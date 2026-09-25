@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { isFeatureEnabled } from '@/lib/env'
 import { Container } from '@/components/layout/container'
-import { BrandMark } from '@/components/ui/brand-mark'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 
 // ─── Inline SVG icons for social platforms not in this lucide-react version ──
 
@@ -158,7 +158,7 @@ export function PublicFooter() {
             aria-label="The BLACQList home"
             className="inline-flex items-center gap-2.5 mb-5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            <BrandMark className="h-8 w-8 text-gold" />
+            <GoldBrandMark className="h-8 w-8" />
             <span className="font-headline text-lg font-medium tracking-[0.14em] text-white">
               THE BLACQLIST
             </span>

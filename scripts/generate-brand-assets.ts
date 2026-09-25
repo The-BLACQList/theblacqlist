@@ -10,6 +10,8 @@
  *   public/icons/icon-192.png         192×192  PWA manifest, purpose "any"
  *   public/icons/icon-512.png         512×512  PWA manifest, purpose "any"
  *   public/icons/icon-maskable-512.png 512×512 PWA manifest, purpose "maskable"
+ *   public/brand/blacqlist-mark-gold-256.png  ≤256  logo spot (nav, footer, auth, sidebars)
+ *   public/brand/blacqlist-mark-gold-144.png  ≤144  same, for small fixed-size uses
  *
  * Why a committed PNG rather than a generated route
  * -------------------------------------------------
@@ -63,6 +65,13 @@ const LOCKUP_DARK = path.join(ROOT, 'public/brand/blacqlist-lockup-dark.svg')
  * with no filter/clipPath defs, which rasterizes cleaner at icon sizes.
  */
 const MARK = path.join(ROOT, 'app/icon.svg')
+/**
+ * The founder's gold artwork, used as-is in the logo spots (2026-09-24). Unlike
+ * app/icon.svg this is not flat paths: it is a masked, embedded raster with a
+ * gradient finish, 187 KB of SVG. Shipping that to every page is wasteful, so it
+ * is rasterized once here, trimmed to its ink, on a transparent ground.
+ */
+const GOLD_MARK = path.join(ROOT, 'public/brand/blacqlist-mark-gold.svg')
 
 /**
  * Render an SVG to a raster buffer that fits inside a box, trimmed to its ink.
@@ -150,7 +159,24 @@ const ASSETS: Asset[] = [
     note: 'purpose "maskable" — mark at ~55% for the safe zone',
     buffer: () => onCanvas(MARK, { width: 512, height: 512 }, 115),
   },
+  {
+    out: 'public/brand/blacqlist-mark-gold-256.png',
+    // Transparent, not on DEEP_BG: the logo spots sit on both dark and light
+    // grounds. 256 covers the largest spot (48px) at 3x with room to spare.
+    note: 'gold mark, transparent, trimmed',
+    buffer: () => renderSvg(GOLD_MARK, { width: 256, height: 256 }).then(compress),
+  },
+  {
+    out: 'public/brand/blacqlist-mark-gold-144.png',
+    note: 'gold mark, transparent, trimmed',
+    buffer: () => renderSvg(GOLD_MARK, { width: 144, height: 144 }).then(compress),
+  },
 ]
+
+/** Re-encode a rendered PNG at the highest zlib level; transparency is kept. */
+function compress(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer).png({ compressionLevel: 9, palette: true, quality: 90 }).toBuffer()
+}
 
 async function main() {
   await mkdir(path.join(ROOT, 'public/icons'), { recursive: true })
