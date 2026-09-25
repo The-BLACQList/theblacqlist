@@ -53,9 +53,12 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
 
   return (
     <>
-      {/* Mobile bar — fixed bottom, slides up */}
+      {/* Mobile bar — fixed bottom, slides up. `data-quick-bar` lets the
+          floating pills (tour rail, Report a problem) lift above it while it
+          shows; see `.lift-over-quick-bar` in app/globals.css. */}
       <div
         aria-hidden={!visible}
+        data-quick-bar={visible ? 'shown' : 'hidden'}
         className={cn(
           'md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-black border-t border-white/10',
           'transition-transform duration-300 ease-out',

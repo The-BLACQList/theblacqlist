@@ -195,7 +195,7 @@ export function TourRail() {
 
   if (collapsed) {
     return (
-      <div className="fixed bottom-4 right-4 z-40">
+      <div className="lift-over-quick-bar fixed bottom-4 right-4 z-40">
         <button
           type="button"
           onClick={() => writeCollapse(false)}
@@ -213,7 +213,7 @@ export function TourRail() {
   return (
     <aside
       aria-label="Tester Tour progress"
-      className="fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl"
+      className="lift-over-quick-bar fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl"
     >
       {/* ⚠ ALWAYS RENDERED, never conditionally mounted. A live region that
           appears at the same moment as its text is not announced — the browser
