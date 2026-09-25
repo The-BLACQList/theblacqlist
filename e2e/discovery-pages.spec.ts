@@ -13,7 +13,7 @@ import { FIXTURE_OWNED_SLUG, FIXTURE_OWNED_NAME, fixtureListingUrl } from './hel
  * suite keeps working against any seeded database instead of pinning one row.
  */
 
-const CATEGORY_SLUG = 'food-dining' // from the fixed CATEGORIES list in DiscoveryFilters
+const CATEGORY_SLUG = 'food-dining' // a seeded top-level category (supabase/seed.sql)
 
 async function firstCitySlug(page: import('@playwright/test').Page): Promise<string> {
   await page.goto('/cities')

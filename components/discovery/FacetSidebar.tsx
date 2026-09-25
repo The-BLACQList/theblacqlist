@@ -17,9 +17,18 @@ import {
   LOCATION_TYPES,
 } from '@/components/discovery/facetConstants'
 import { NearYouFilter } from '@/components/discovery/NearYouFilter'
+import { FilterSection } from '@/components/discovery/FilterSection'
+import { CategoryTree } from '@/components/discovery/CategoryTree'
+import type { TreeCategory } from '@/lib/categories/tree'
 
-const legendClass =
-  'font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2'
+function optionClass(isActive: boolean): string {
+  return cn(
+    'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
+    isActive
+      ? 'bg-brand-black text-white font-semibold'
+      : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
+  )
+}
 
 function CountTag({ n }: { n: number }) {
   return (
@@ -31,7 +40,11 @@ function CountTag({ n }: { n: number }) {
 
 export interface FacetSidebarProps {
   cities?: { name: string; slug: string }[]
-  categories?: { name: string; slug: string }[]
+  /**
+   * Every active category, parents and subcategories. The tree nests them; the
+   * chips need the subcategories too, or a picked child shows as its raw slug.
+   */
+  categories?: TreeCategory[]
   groups: FacetGroupData[]
   counts: FacetCounts
   hideCityFilter?: boolean
@@ -54,6 +67,8 @@ export function FacetSidebar({
   // Counts are an affordance; being able to filter at all is the feature. So
   // the badges go away and the controls stay live.
   const countsOff = counts.countsUnavailable === true
+  // Undefined until the RPC returns per-type counts: no badges, nothing disabled.
+  const typeCounts = countsOff ? undefined : counts.type
 
   const activeType = searchParams.get('type') ?? ''
   const activeCategory = searchParams.get('category') ?? ''
@@ -78,7 +93,7 @@ export function FacetSidebar({
   }
 
   return (
-    <aside aria-label="Discovery filters" className={cn('flex flex-col gap-5', className)}>
+    <aside aria-label="Discovery filters" className={cn('flex flex-col gap-3', className)}>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 font-subhead text-sm font-semibold text-brand-black">
           <SlidersHorizontal className="size-4" aria-hidden="true" />
@@ -111,9 +126,55 @@ export function FacetSidebar({
         {!countsOff && <CountTag n={counts.openNow} />}
       </label>
 
-      {/* Price */}
-      <fieldset>
-        <legend className={legendClass}>Price</legend>
+      {/* Type opens by default: it is what most visitors reach for first.
+          Ownership stays open too, being two buttons and the directory's
+          defining label. Everything else starts closed unless it holds an
+          active filter, which keeps the panel short. Category is closed on
+          purpose: open, the tree is two Tab stops per parent, and a keyboard
+          user would cross all of them to get from the search box to the
+          results (e2e/keyboard-a11y.spec.ts J7). */}
+      <FilterSection title="Type" defaultOpen active={!!activeType}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by type">
+          {ENTITY_TYPES.map(({ value, label }) => {
+            const isActive = activeType === value
+            const n = typeCounts ? (typeCounts[value] ?? 0) : null
+            const disabled = !countsOff && !isActive && n === 0
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isActive}
+                disabled={disabled}
+                onClick={() => setParam('type', isActive ? '' : value)}
+                className={cn(
+                  'flex items-center text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
+                  isActive
+                    ? 'bg-brand-black text-white font-semibold'
+                    : disabled
+                      ? 'text-charcoal-faint cursor-not-allowed'
+                      : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
+                )}
+              >
+                {label}
+                {!countsOff && n !== null && !isActive && <CountTag n={n} />}
+              </button>
+            )
+          })}
+        </div>
+      </FilterSection>
+
+      {categories.length > 0 && (
+        <FilterSection title="Category" active={!!activeCategory}>
+          <CategoryTree
+            categories={categories}
+            counts={countsOff ? undefined : counts.category}
+            activeSlug={activeCategory}
+            onSelect={(slug) => setParam('category', slug)}
+          />
+        </FilterSection>
+      )}
+
+      <FilterSection title="Price" active={selectedPrices.length > 0}>
         <div className="flex gap-1.5" role="group" aria-label="Filter by price range">
           {PRICE_RANGES.map((p) => {
             const isActive = selectedPrices.includes(p)
@@ -140,41 +201,33 @@ export function FacetSidebar({
             )
           })}
         </div>
-      </fieldset>
+      </FilterSection>
 
-      {/* Entity type */}
-      <fieldset>
-        <legend className={legendClass}>Type</legend>
-        <div className="flex flex-col gap-1">
-          {ENTITY_TYPES.map(({ value, label }) => {
-            const isActive = activeType === value
+      {/* Ownership (Black-Owned / Ally): authoritative label, no per-option counts */}
+      <FilterSection title="Ownership" defaultOpen active={!!activeOwnership}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by ownership">
+          {OWNERSHIP_LABELS.map(({ value, label }) => {
+            const isActive = activeOwnership === value
             return (
               <button
                 key={value}
                 type="button"
                 aria-pressed={isActive}
-                onClick={() => setParam('type', isActive ? '' : value)}
-                className={cn(
-                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
-                  isActive
-                    ? 'bg-brand-black text-white font-semibold'
-                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
-                )}
+                onClick={() => setParam('ownership', isActive ? '' : value)}
+                className={optionClass(isActive)}
               >
                 {label}
               </button>
             )
           })}
         </div>
-      </fieldset>
+      </FilterSection>
 
-      {/* Where they operate — the online-only / no-fixed-address axis. Deliberately
-          next to Type: together they answer "show me services, not storefronts".
-          Mirrors the owner-side "Where you operate" wording. No per-option counts,
-          matching Ownership and Trust Level. */}
-      <fieldset>
-        <legend className={legendClass}>Where they operate</legend>
-        <div className="flex flex-col gap-1">
+      {/* Where they operate: the online-only / no-fixed-address axis. Mirrors the
+          owner-side "Where you operate" wording. No per-option counts, matching
+          Ownership and Trust Level. */}
+      <FilterSection title="Where they operate" active={selectedLocationTypes.length > 0}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by where they operate">
           {LOCATION_TYPES.map(({ value, label }) => {
             const isActive = selectedLocationTypes.includes(value)
             return (
@@ -183,44 +236,17 @@ export function FacetSidebar({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => toggleCsv('location_type', value)}
-                className={cn(
-                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
-                  isActive
-                    ? 'bg-brand-black text-white font-semibold'
-                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
-                )}
+                className={optionClass(isActive)}
               >
                 {label}
               </button>
             )
           })}
         </div>
-      </fieldset>
+      </FilterSection>
 
-      {/* Category (DB-driven) */}
-      {categories.length > 0 && (
-        <fieldset>
-          <legend className={legendClass}>Category</legend>
-          <select
-            value={activeCategory}
-            onChange={(e) => setParam('category', e.target.value)}
-            aria-label="Filter by category"
-            className="w-full h-10 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
-          >
-            <option value="">All categories</option>
-            {categories.map(({ slug, name }) => (
-              <option key={slug} value={slug}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </fieldset>
-      )}
-
-      {/* City */}
       {!hideCityFilter && (
-        <fieldset>
-          <legend className={legendClass}>City</legend>
+        <FilterSection title="City" active={!!activeCity}>
           <select
             value={activeCity}
             onChange={(e) => setParam('city', e.target.value)}
@@ -234,40 +260,17 @@ export function FacetSidebar({
               </option>
             ))}
           </select>
-        </fieldset>
+        </FilterSection>
       )}
-
-      {/* Ownership (Black-Owned / Ally) — authoritative label, no per-option counts */}
-      <fieldset>
-        <legend className={legendClass}>Ownership</legend>
-        <div className="flex flex-col gap-1">
-          {OWNERSHIP_LABELS.map(({ value, label }) => {
-            const isActive = activeOwnership === value
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setParam('ownership', isActive ? '' : value)}
-                className={cn(
-                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
-                  isActive
-                    ? 'bg-brand-black text-white font-semibold'
-                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
-                )}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </fieldset>
 
       {/* Attribute groups (Identity & Ownership, Amenities, …) */}
       {groups.map((group) => (
-        <fieldset key={group.id}>
-          <legend className={legendClass}>{group.name}</legend>
-          <div className="flex flex-col gap-1">
+        <FilterSection
+          key={group.id}
+          title={group.name}
+          active={group.values.some((v) => selectedAttrs.includes(v.slug))}
+        >
+          <div className="flex flex-col gap-1" role="group" aria-label={group.name}>
             {group.values.map((value) => {
               const isActive = selectedAttrs.includes(value.slug)
               const n = counts.attribute[value.id] ?? 0
@@ -295,13 +298,11 @@ export function FacetSidebar({
               )
             })}
           </div>
-        </fieldset>
+        </FilterSection>
       ))}
 
-      {/* Trust level */}
-      <fieldset>
-        <legend className={legendClass}>Trust Level</legend>
-        <div className="flex flex-col gap-1">
+      <FilterSection title="Trust Level" active={!!activeTrust}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by trust level">
           {TRUST_TIERS.map(({ value, label }) => {
             const isActive = activeTrust === value
             return (
@@ -310,19 +311,14 @@ export function FacetSidebar({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => setParam('trust_tier', isActive ? '' : value)}
-                className={cn(
-                  'text-left px-3 py-1.5 rounded-lg text-sm font-subhead transition-colors',
-                  isActive
-                    ? 'bg-brand-black text-white font-semibold'
-                    : 'text-charcoal hover:bg-pale-lavender hover:text-brand-black'
-                )}
+                className={optionClass(isActive)}
               >
                 {label}
               </button>
             )
           })}
         </div>
-      </fieldset>
+      </FilterSection>
     </aside>
   )
 }

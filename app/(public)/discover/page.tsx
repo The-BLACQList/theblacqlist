@@ -54,12 +54,9 @@ async function DiscoverContent({
   const [result, { data: cities }, { data: categories }] = await Promise.all([
     queryListings(parseDiscoverParams(params, { withFacets: true })),
     supabase.from('cities').select('name, slug').order('name'),
-    supabase
-      .from('categories')
-      .select('name, slug')
-      .is('parent_id', null)
-      .eq('is_active', true)
-      .order('display_order'),
+    // Parents and subcategories both: the sidebar nests them into a tree, and
+    // the chips need a subcategory's name or they show its raw slug.
+    supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true),
   ])
 
   const groups = result.facets?.groups ?? []

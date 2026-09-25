@@ -16,7 +16,10 @@ import {
 } from '@/lib/listings/discover-params'
 import { Container } from '@/components/layout/container'
 import { SearchBar } from '@/components/discovery/SearchBar'
-import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters'
+import { FacetSidebar } from '@/components/discovery/FacetSidebar'
+import { MobileFilterSheet } from '@/components/discovery/MobileFilterSheet'
+import { SortDropdown } from '@/components/discovery/SortDropdown'
+import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -94,13 +97,21 @@ async function CityContent({
   const params = await searchParams
   const page = parsePage(params.page)
 
-  const result = await queryListings({
-    ...parseDiscoverParams(params),
-    // The route segment is the city, and it overrides whatever `?city=` says.
-    // A visitor on /discover/atlanta with a stale `?city=houston` in the URL is
-    // on the Atlanta page and gets Atlanta.
-    city: city.slug,
-  })
+  const supabase = await createClient()
+  const [result, { data: categories }] = await Promise.all([
+    queryListings({
+      ...parseDiscoverParams(params, { withFacets: true }),
+      // The route segment is the city, and it overrides whatever `?city=` says.
+      // A visitor on /discover/atlanta with a stale `?city=houston` in the URL is
+      // on the Atlanta page and gets Atlanta.
+      city: city.slug,
+    }),
+    // Same sidebar as /discover, so the same full category list.
+    supabase.from('categories').select('id, name, slug, parent_id').eq('is_active', true),
+  ])
+
+  const groups = result.facets?.groups ?? []
+  const counts = result.facets?.counts ?? { attribute: {}, price: {}, openNow: 0 }
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE
@@ -118,10 +129,29 @@ async function CityContent({
 
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
-      <div className="hidden md:block w-48 lg:w-56 shrink-0">
-        <DiscoveryFilters hideCityFilter cities={[]} />
+      {/* The same sidebar as /discover, minus the city picker: the route is the city. */}
+      <div className="hidden md:block w-56 lg:w-64 shrink-0">
+        <FacetSidebar hideCityFilter categories={categories ?? []} groups={groups} counts={counts} />
       </div>
       <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="md:hidden">
+            <MobileFilterSheet
+              hideCityFilter
+              categories={categories ?? []}
+              groups={groups}
+              counts={counts}
+            />
+          </div>
+          <div className="ml-auto">
+            <SortDropdown />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <ActiveFilterChips hideCityFilter groups={groups} categories={categories ?? []} />
+        </div>
+
         <DiscoveryGrid
           entities={result.entities}
           total={result.total}
@@ -182,15 +212,6 @@ export default async function CityPage({ params, searchParams }: PageProps) {
           {city.metro_area && (
             <p className="font-body text-sm text-charcoal-soft mt-1">{city.metro_area}</p>
           )}
-        </Container>
-      </div>
-
-      {/* Mobile filter note */}
-      <div className="md:hidden border-b border-charcoal/10 bg-white">
-        <Container className="py-3">
-          <p className="text-xs font-subhead text-charcoal-soft">
-            Filters available on desktop · Full mobile filters coming soon
-          </p>
         </Container>
       </div>
 
