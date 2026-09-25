@@ -3,9 +3,11 @@
  *
  *   pnpm brand:assets        (or: npx tsx scripts/generate-brand-assets.ts)
  *
- * Produces four PNGs that ship as committed files:
+ * Produces these files, all committed:
  *
  *   public/og-default.png            1200×630  site-wide social share card
+ *   app/favicon.ico                  16/32/48  browser tab icon (PNG-in-ICO)
+ *   app/icon.png                      192×192  <link rel="icon"> for modern browsers
  *   app/apple-icon.png                180×180  iOS home-screen icon
  *   public/icons/icon-192.png         192×192  PWA manifest, purpose "any"
  *   public/icons/icon-512.png         512×512  PWA manifest, purpose "any"
@@ -37,8 +39,7 @@
  * OG image sits close enough to a brand mark to stay clear of. Everything here
  * derives from our own SVGs.
  *
- * Re-run after any change to public/brand/*.svg or app/icon.svg and commit the
- * output.
+ * Re-run after any change to public/brand/*.svg and commit the output.
  */
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -60,16 +61,13 @@ const DEEP_BG = '#08080a'
 /** Wordmark + node-Q, white text on a dark ground. Outlined, no font needed. */
 const LOCKUP_DARK = path.join(ROOT, 'public/brand/blacqlist-lockup-dark.svg')
 /**
- * The standalone gold node-Q. app/icon.svg rather than
- * public/brand/blacqlist-mark-gold.svg: same artwork, but 6 lines of flat paths
- * with no filter/clipPath defs, which rasterizes cleaner at icon sizes.
- */
-const MARK = path.join(ROOT, 'app/icon.svg')
-/**
- * The founder's gold artwork, used as-is in the logo spots (2026-09-24). Unlike
- * app/icon.svg this is not flat paths: it is a masked, embedded raster with a
- * gradient finish, 187 KB of SVG. Shipping that to every page is wasteful, so it
- * is rasterized once here, trimmed to its ink, on a transparent ground.
+ * The founder's gold artwork: the logo spots since 2026-09-24, and every icon
+ * (favicon, app icon, apple icon, PWA) since 2026-09-25, when the founder asked
+ * for the favicon to match the logo. It replaced app/icon.svg, a flat vector Q
+ * in a single gold, and the favicon.ico that was still the framework default.
+ * This file is not flat paths: it is a masked, embedded raster with a gradient
+ * finish, 187 KB of SVG. Shipping that to every page is wasteful, so it is
+ * rasterized once here, trimmed to its ink.
  */
 const GOLD_MARK = path.join(ROOT, 'public/brand/blacqlist-mark-gold.svg')
 
@@ -121,6 +119,50 @@ async function onCanvas(
     .toBuffer()
 }
 
+/**
+ * The mark centered on an exact square with a transparent ground. Browser tab
+ * icons sit on light and dark tab strips alike, so they get no DEEP_BG plate;
+ * and an ICO entry must be square, which `fit: 'inside'` alone does not promise.
+ */
+async function squareMark(size: number): Promise<Buffer> {
+  const art = await renderSvg(GOLD_MARK, { width: size, height: size })
+  return sharp({
+    create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([{ input: art, gravity: 'centre' }])
+    .png({ compressionLevel: 9 })
+    .toBuffer()
+}
+
+/**
+ * Pack PNG images into one .ico. sharp cannot write ICO, but since Windows
+ * Vista the format accepts PNG payloads verbatim, so the container is just a
+ * 6-byte header plus a 16-byte directory entry per image.
+ */
+async function favicon(sizes: number[]): Promise<Buffer> {
+  const pngs = await Promise.all(sizes.map(squareMark))
+  const header = Buffer.alloc(6)
+  header.writeUInt16LE(0, 0) // reserved
+  header.writeUInt16LE(1, 2) // type: icon
+  header.writeUInt16LE(pngs.length, 4)
+  let offset = 6 + 16 * pngs.length
+  const entries = pngs.map((png, i) => {
+    const size = sizes[i]!
+    const entry = Buffer.alloc(16)
+    entry.writeUInt8(size >= 256 ? 0 : size, 0) // width (0 means 256)
+    entry.writeUInt8(size >= 256 ? 0 : size, 1) // height
+    entry.writeUInt8(0, 2) // palette colors
+    entry.writeUInt8(0, 3) // reserved
+    entry.writeUInt16LE(1, 4) // color planes
+    entry.writeUInt16LE(32, 6) // bits per pixel
+    entry.writeUInt32LE(png.byteLength, 8)
+    entry.writeUInt32LE(offset, 12)
+    offset += png.byteLength
+    return entry
+  })
+  return Buffer.concat([header, ...entries, ...pngs])
+}
+
 interface Asset {
   out: string
   buffer: () => Promise<Buffer>
@@ -137,19 +179,29 @@ const ASSETS: Asset[] = [
     buffer: () => onCanvas(LOCKUP_DARK, { width: 1200, height: 630 }, 200),
   },
   {
+    out: 'app/favicon.ico',
+    note: 'gold mark, transparent, 16/32/48',
+    buffer: () => favicon([16, 32, 48]),
+  },
+  {
+    out: 'app/icon.png',
+    note: 'gold mark, transparent',
+    buffer: () => squareMark(192).then(compress),
+  },
+  {
     out: 'app/apple-icon.png',
     note: 'mark at ~70% — iOS rounds corners, it does not mask',
-    buffer: () => onCanvas(MARK, { width: 180, height: 180 }, 27),
+    buffer: () => onCanvas(GOLD_MARK, { width: 180, height: 180 }, 27).then(compress),
   },
   {
     out: 'public/icons/icon-192.png',
     note: 'purpose "any"',
-    buffer: () => onCanvas(MARK, { width: 192, height: 192 }, 21),
+    buffer: () => onCanvas(GOLD_MARK, { width: 192, height: 192 }, 21).then(compress),
   },
   {
     out: 'public/icons/icon-512.png',
     note: 'purpose "any"',
-    buffer: () => onCanvas(MARK, { width: 512, height: 512 }, 56),
+    buffer: () => onCanvas(GOLD_MARK, { width: 512, height: 512 }, 56).then(compress),
   },
   {
     out: 'public/icons/icon-maskable-512.png',
@@ -157,7 +209,7 @@ const ASSETS: Asset[] = [
     // aggressively inside it. Holding the mark to ~55% of the canvas survives
     // every mask shape Android applies.
     note: 'purpose "maskable" — mark at ~55% for the safe zone',
-    buffer: () => onCanvas(MARK, { width: 512, height: 512 }, 115),
+    buffer: () => onCanvas(GOLD_MARK, { width: 512, height: 512 }, 115).then(compress),
   },
   {
     out: 'public/brand/blacqlist-mark-gold-256.png',
