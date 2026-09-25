@@ -97,12 +97,12 @@ function RadiusEmptyState({
       </p>
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
         {widerRadiusUrl && (
-          <Link href={widerRadiusUrl} className={linkClass}>
+          <Link scroll={false} href={widerRadiusUrl} className={linkClass}>
             Search a wider area
           </Link>
         )}
         {clearLocationUrl && (
-          <Link href={clearLocationUrl} className={linkClass}>
+          <Link scroll={false} href={clearLocationUrl} className={linkClass}>
             Browse every business
           </Link>
         )}
@@ -128,7 +128,7 @@ function RadiusUnavailableState({ clearLocationUrl }: { clearLocationUrl?: strin
         Try again in a moment, or browse without the location filter.
       </p>
       {clearLocationUrl && (
-        <Link href={clearLocationUrl} className={`${linkClass} mt-4`}>
+        <Link scroll={false} href={clearLocationUrl} className={`${linkClass} mt-4`}>
           Browse every business
         </Link>
       )}
@@ -155,7 +155,7 @@ function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string
         moment, or browse without those filters.
       </p>
       {clearFiltersUrl && (
-        <Link href={clearFiltersUrl} className={`${linkClass} mt-4`}>
+        <Link scroll={false} href={clearFiltersUrl} className={`${linkClass} mt-4`}>
           Browse every business
         </Link>
       )}

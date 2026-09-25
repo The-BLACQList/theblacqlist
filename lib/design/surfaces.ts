@@ -307,7 +307,7 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/cities/los-angeles.webp': 'object-[50%_30%]',
 
   // Discover banners. Different geometry from everything above: the frame is a
-  // wide letterbox (~1280×300 at desktop) rather than a portrait-ish panel, so
+  // wide letterbox (~1440×480 at desktop) rather than a portrait-ish panel, so
   // `object-cover` crops *vertically* and hard, and the type sits over the
   // lower two thirds. Each value keeps the subject clear of that type band
   // rather than clear of the top edge.
@@ -319,6 +319,9 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/categories/creatives.webp': 'object-[50%_40%]',
   '/images/editorial/categories/events.webp': 'object-[50%_45%]',
   '/images/editorial/categories/jobs.webp': 'object-[50%_35%]',
+  // Head and beard span ~25–55% of the source. At the ~42% desktop cut, 35%
+  // puts the band at ~20–62%, so the face stays whole.
+  '/images/editorial/discover-cover.webp': 'object-[50%_35%]',
 }
 
 /**

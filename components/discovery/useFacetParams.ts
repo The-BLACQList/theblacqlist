@@ -8,6 +8,11 @@ import type { Route } from 'next'
  * Shared URL-as-state helpers for the faceted discovery filters. The URL is the
  * single source of truth (shareable, SEO-friendly, survives refresh). Every
  * filter change resets pagination to page 1.
+ *
+ * Filter changes navigate with `scroll: false` (founder, 2026-09-25): the page
+ * stays where the visitor is and only the results change. Without it Next
+ * scrolls to the top on every push, which threw the visitor back past the
+ * banner each time they ticked a box halfway down the sidebar.
  */
 export function useFacetParams() {
   const router = useRouter()
@@ -18,7 +23,7 @@ export function useFacetParams() {
     (params: URLSearchParams) => {
       params.delete('page') // any filter change returns to the first page
       const qs = params.toString()
-      router.push((qs ? `${pathname}?${qs}` : pathname) as Route)
+      router.push((qs ? `${pathname}?${qs}` : pathname) as Route, { scroll: false })
     },
     [pathname, router]
   )
