@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 
 import { Container } from '@/components/layout/container'
 import { SearchBar } from '@/components/discovery/SearchBar'
@@ -14,6 +15,7 @@ import { buildPageUrl } from '@/lib/listings/pagination'
 import { parseLocationParams } from '@/lib/listings/location-params'
 import {
   buildLocationEscapeUrls,
+  canonicalOpenNowQuery,
   parseDiscoverParams,
   parsePage,
   type DiscoverSearchParams,
@@ -123,6 +125,12 @@ async function DiscoverContent({
 
 export default async function DiscoverPage({ searchParams }: DiscoverPageProps) {
   const params = await searchParams
+
+  // Old "Open now" links (`?open=now`, `?open_now=true`) land on the canonical
+  // `open_now=1` so the sidebar checkbox and chip match the results.
+  const canonical = canonicalOpenNowQuery(params)
+  if (canonical !== null) redirect(`/discover${canonical}`)
+
   return (
     <>
       {/* Avenue banner — swaps with the selected type */}

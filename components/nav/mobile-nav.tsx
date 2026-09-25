@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { BrandMark } from '@/components/ui/brand-mark'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 
@@ -75,7 +75,7 @@ export function MobileNav({ isSignedIn, isAdmin }: Props) {
             className="group flex items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
             onClick={() => setIsOpen(false)}
           >
-            <BrandMark className="h-7 w-7 text-gold" />
+            <GoldBrandMark className="h-7 w-7" />
             <span className="font-headline text-base font-medium tracking-[0.14em] text-white group-hover:text-gold transition-colors">
               THE BLACQLIST
             </span>

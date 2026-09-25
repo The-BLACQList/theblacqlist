@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { SearchBar } from '@/components/discovery/SearchBar'
 
 const QUICK_FILTERS = [
-  { label: 'Open now', href: '/discover?open=now' },
+  { label: 'Open now', href: '/discover?open_now=1' },
   { label: 'Restaurants', href: '/discover?category=food-dining' },
   { label: 'Beauty & Grooming', href: '/discover?category=beauty-grooming' },
   { label: 'Professionals', href: '/discover?category=professional-services' },

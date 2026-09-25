@@ -22,6 +22,7 @@ import {
   Megaphone,
   Mail,
 } from 'lucide-react'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -62,9 +63,12 @@ export function AdminSidebar({ role, counts }: Props) {
   return (
     <aside className="w-56 shrink-0 bg-brand-black min-h-screen flex flex-col">
       {/* Logo / brand */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <p className="font-headline text-white text-lg leading-tight">BLACQList</p>
-        <p className="font-subhead text-xs text-white/40 mt-0.5">Admin panel</p>
+      <div className="px-5 py-5 border-b border-white/10 flex items-center gap-3">
+        <GoldBrandMark className="h-8 w-8 shrink-0" />
+        <div>
+          <p className="font-headline text-white text-lg leading-tight">BLACQList</p>
+          <p className="font-subhead text-xs text-white/40 mt-0.5">Admin panel</p>
+        </div>
       </div>
 
       {/* Navigation */}

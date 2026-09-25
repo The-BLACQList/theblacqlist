@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { BrandMark } from '@/components/ui/brand-mark'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -22,7 +22,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             aria-label="The BLACQList home"
             className="group flex flex-col items-center gap-3 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
-            <BrandMark className="h-12 w-12 text-gold transition-colors group-hover:text-light-gold" />
+            <GoldBrandMark className="h-12 w-12 transition-[filter] group-hover:brightness-110" />
             <span className="font-headline text-xl font-medium tracking-[0.14em] text-white">
               THE BLACQLIST
             </span>

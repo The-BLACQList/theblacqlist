@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Search, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
-import { BrandMark } from '@/components/ui/brand-mark'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
@@ -40,7 +40,7 @@ export async function PublicHeader() {
             aria-label="The BLACQList home"
             className="group flex items-center gap-2 shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
           >
-            <BrandMark className="h-7 w-7 md:h-8 md:w-8 text-gold transition-colors" />
+            <GoldBrandMark className="h-7 w-7 md:h-8 md:w-8" preload />
             <span className="font-headline text-base md:text-lg font-medium tracking-[0.14em] text-white group-hover:text-gold transition-colors">
               THE BLACQLIST
             </span>

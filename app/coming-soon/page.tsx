@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 
-import { BrandMark } from '@/components/ui/brand-mark'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { ComingSoonForm } from './coming-soon-form'
 import { NodeNetworkBackground } from './node-network-background'
 
@@ -82,7 +82,7 @@ export default function ComingSoonPage() {
       <div className="relative z-10 w-full max-w-xl text-center">
         {/* Wordmark */}
         <div className="mb-12 flex items-center justify-center gap-2.5">
-          <BrandMark className="h-9 w-9 text-gold" title="The BLACQList" />
+          <GoldBrandMark className="h-9 w-9" title="The BLACQList" />
           <span className="font-headline text-lg font-medium tracking-[0.18em] text-white">THE BLACQLIST</span>
         </div>
 
