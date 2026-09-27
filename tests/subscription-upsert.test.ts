@@ -43,11 +43,17 @@ const h = vi.hoisted(() => {
     tierWriteError: { message: string } | null
     tierWriteMatches: boolean
     subscriptionWriteError: { message: string } | null
+    // Rows the live-sibling check reads back (another live subscription on the
+    // same listing), and an optional error for that read.
+    liveSiblings: { stripe_subscription_id: string; plans: { plan_key: string } | null }[]
+    siblingReadError: { message: string } | null
   } = {
     planRow: null,
     tierWriteError: null,
     tierWriteMatches: true,
     subscriptionWriteError: null,
+    liveSiblings: [],
+    siblingReadError: null,
   }
 
   // Captured writes, so tests can assert what the handler tried to persist.
@@ -76,7 +82,14 @@ import type Stripe from 'stripe'
 // accident.
 function makeFakeClient() {
   function from(table: string) {
+    // Whether this chain is a write (update/upsert) or a plain read. The only
+    // awaited plain read is the live-sibling check on `subscriptions`.
+    let isWrite = false
+
     const settleWrite = () => {
+      if (table === 'subscriptions' && !isWrite) {
+        return { data: h.state.siblingReadError ? null : h.state.liveSiblings, error: h.state.siblingReadError }
+      }
       if (table === 'listings') {
         if (h.state.tierWriteError) return { data: null, error: h.state.tierWriteError }
         // `.select('id')` returns the matched rows; an empty array is a filtered
@@ -92,6 +105,8 @@ function makeFakeClient() {
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: () => builder,
+      neq: () => builder,
+      in: () => builder,
       or: () => builder,
       is: () => builder,
       order: () => builder,
@@ -101,6 +116,7 @@ function makeFakeClient() {
         return Promise.resolve({ data: null, error: h.state.subscriptionWriteError })
       },
       update: (row: Record<string, unknown>) => {
+        isWrite = true
         if (table === 'listings') h.captured.listingUpdate = row
         if (table === 'subscriptions') h.captured.subscriptionUpdate = row
         return builder
@@ -168,6 +184,8 @@ beforeEach(() => {
   h.state.tierWriteError = null
   h.state.tierWriteMatches = true
   h.state.subscriptionWriteError = null
+  h.state.liveSiblings = []
+  h.state.siblingReadError = null
   h.captured.listingUpdate = null
   h.captured.subscriptionUpsert = null
   h.captured.subscriptionUpdate = null
@@ -357,3 +375,94 @@ describe('handleSubscriptionDeleted — the downgrade is observed, not assumed (
     expect(h.captured.listingUpdate).toBeNull()
   })
 })
+
+describe('a downgrade never strips a plan another subscription still pays for', () => {
+  function makeEndedSub(status: 'canceled' | 'incomplete_expired' = 'canceled'): Stripe.Subscription {
+    return {
+      ...makeSub('price_prem_yearly'),
+      id: 'sub_old_trial',
+      status,
+      canceled_at: 1_702_600_000,
+    } as unknown as Stripe.Subscription
+  }
+
+  it('deleted: keeps the live sibling\'s tier instead of dropping to free', async () => {
+    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'growth' } }]
+
+    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
+
+    expect(h.captured.subscriptionUpdate).toEqual(expect.objectContaining({ status: 'canceled' }))
+    expect(h.captured.listingUpdate).toEqual({ tier: 'growth' })
+    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        afterState: expect.objectContaining({ tier: 'growth', live_sibling: 'sub_paid' }),
+      })
+    )
+  })
+
+  it('deleted: still drops to free when no other live subscription exists', async () => {
+    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
+
+    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
+    const afterState = h.writeSystemAuditLog.mock.calls[0]?.[0].afterState
+    expect(afterState).not.toHaveProperty('live_sibling')
+  })
+
+  it('deleted: leaves the tier alone when the sibling\'s plan row is gone', async () => {
+    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: null }]
+
+    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
+
+    // Guessing either way is wrong: free strips a paying owner, any paid tier
+    // may be the wrong one. No write, a loud log, and an honest audit row.
+    expect(h.captured.listingUpdate).toBeNull()
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[webhook] live sibling has no plan row; tier left unchanged:',
+      expect.objectContaining({ siblingSubscriptionId: 'sub_paid' })
+    )
+    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        afterState: expect.objectContaining({ tier: 'growth', tier_write: 'skipped_live_sibling_unresolved' }),
+      })
+    )
+  })
+
+  it('deleted: throws when the sibling check errors, before touching the tier', async () => {
+    h.state.siblingReadError = { message: 'connection reset' }
+
+    await expect(handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())).rejects.toThrow(
+      /live sibling check failed/
+    )
+    expect(h.captured.listingUpdate).toBeNull()
+    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
+  })
+
+  it('upsert with a non-live status: keeps the live sibling\'s tier', async () => {
+    h.state.planRow = PREMIUM_ROW
+    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'starter' } }]
+
+    await handleSubscriptionUpsert(makeFakeClient(), makeEndedSub('incomplete_expired'))
+
+    expect(h.captured.subscriptionUpsert?.status).toBe('canceled')
+    expect(h.captured.listingUpdate).toEqual({ tier: 'starter' })
+  })
+
+  it('upsert with a non-live status and no sibling: drops to free as before', async () => {
+    h.state.planRow = PREMIUM_ROW
+
+    await handleSubscriptionUpsert(makeFakeClient(), makeEndedSub('incomplete_expired'))
+
+    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
+  })
+
+  it('upsert with a live status: never consults siblings, the live plan wins', async () => {
+    h.state.planRow = PREMIUM_ROW
+    // Even if the read would error, a live subscription does not need it.
+    h.state.siblingReadError = { message: 'should not be read' }
+
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
+
+    expect(h.captured.listingUpdate).toEqual({ tier: 'premium' })
+  })
+})
+

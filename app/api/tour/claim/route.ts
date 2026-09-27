@@ -43,6 +43,15 @@ const CLAIM_FAILED = {
   code: 'SERVER_ERROR',
 } as const
 
+const ALREADY_SUBSCRIBED = {
+  error: 'This listing already has a plan, so it doesn’t need the tour trial.',
+  code: 'ALREADY_SUBSCRIBED',
+} as const
+
+// Statuses that still hold paid access (mirrors KEEPS_ACCESS in
+// lib/services/billing/webhookHandlers.ts).
+const LIVE_STATUSES = ['active', 'trialing', 'past_due']
+
 const ALREADY_CLAIMED = {
   error: 'This tour’s trial has already been claimed.',
   code: 'ALREADY_CLAIMED',
@@ -131,6 +140,9 @@ export async function POST() {
       // Recovery paths fall through to the shared session create below. No
       // release-on-failure applies here — this request did not perform the
       // compare-and-set, so it owns no claim to give back.
+      const live = await listingHasLivePlan(serviceClient, viewer.enrollment.listingId)
+      if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
+      if (live) return NextResponse.json(ALREADY_SUBSCRIBED, { status: 409 })
       const response = await createTrialSession({
         enrollmentId,
         listingId: viewer.enrollment.listingId,
@@ -142,6 +154,17 @@ export async function POST() {
       })
       return response ?? NextResponse.json(CLAIM_FAILED, { status: 500 })
     }
+
+    // ── Trial vs paid, BEFORE the claim ──────────────────────────────────────
+    //
+    // A listing that already holds a live subscription must not get a trial
+    // on top of it. Two subscriptions would share one `listings.tier`, and the
+    // trial ending on day 30 would fire customer.subscription.deleted against a
+    // listing that is still paid for. Checked before the compare-and-set, like
+    // the plan guard, so a refusal costs the tester nothing.
+    const live = await listingHasLivePlan(serviceClient, viewer.enrollment.listingId)
+    if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
+    if (live) return NextResponse.json(ALREADY_SUBSCRIBED, { status: 409 })
 
     // ── The compare-and-set (§4.3.1): claim BEFORE Stripe ────────────────────
     const grantedAtIso = new Date().toISOString()
@@ -187,6 +210,21 @@ export async function POST() {
     console.error('Tour trial claim failed:', err)
     return NextResponse.json(CLAIM_FAILED, { status: 500 })
   }
+}
+
+/** true / false for a clear answer; null when the lookup itself failed. */
+async function listingHasLivePlan(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  listingId: string
+): Promise<boolean | null> {
+  const { data, error } = await serviceClient
+    .from('subscriptions')
+    .select('id')
+    .eq('listing_id', listingId)
+    .in('status', LIVE_STATUSES)
+    .limit(1)
+  if (error) return null
+  return (data?.length ?? 0) > 0
 }
 
 interface TrialSessionInput {

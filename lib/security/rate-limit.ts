@@ -21,7 +21,12 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 // `rate_limit_counters.bucket` is plain text with no CHECK, so adding a bucket
 // is a TypeScript change only; the ledger needs no migration.
-export type RateLimitBucket = 'search' | 'analytics_event' | 'problem_report'
+export type RateLimitBucket =
+  | 'search'
+  | 'analytics_event'
+  | 'problem_report'
+  | 'checkout'
+  | 'billing_portal'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

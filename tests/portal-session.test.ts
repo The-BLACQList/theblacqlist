@@ -9,6 +9,7 @@ const h = vi.hoisted(() => {
   } = { session: null, sub: null, error: null }
 
   const getOwnerSession = vi.fn(async () => state.session)
+  const checkRateLimit = vi.fn(async () => true)
 
   const createClient = vi.fn(async () => ({
     from() {
@@ -25,22 +26,26 @@ const h = vi.hoisted(() => {
     },
   }))
 
-  return { createPortal, state, getOwnerSession, createClient }
+  return { createPortal, state, getOwnerSession, checkRateLimit, createClient }
 })
 
 vi.mock('@/lib/dashboard/guard', () => ({ getOwnerSession: h.getOwnerSession }))
 vi.mock('@/lib/supabase/server', () => ({ createClient: h.createClient }))
+vi.mock('@/lib/security/rate-limit', () => ({ checkRateLimit: h.checkRateLimit }))
 vi.mock('@/lib/stripe/client', () => ({
   stripe: { billingPortal: { sessions: { create: h.createPortal } } },
 }))
 
 import { createPortalSession } from '@/lib/actions/billing/createPortalSession'
 
+const LISTING_ID = '3f1c2b9a-6d4e-4a7b-9c1d-2e5f8a0b7c64'
+
 beforeEach(() => {
   vi.clearAllMocks()
   h.state.session = { user: { id: 'u1', email: 'owner@example.com' } }
-  h.state.sub = { stripe_customer_id: 'cus_123', listing_id: 'l1', created_at: '2026-01-01' }
+  h.state.sub = { stripe_customer_id: 'cus_123', listing_id: LISTING_ID, created_at: '2026-01-01' }
   h.state.error = null
+  h.checkRateLimit.mockResolvedValue(true)
   h.createPortal.mockResolvedValue({ url: 'https://billing.stripe.test/portal' })
   process.env.NEXT_PUBLIC_APP_URL = 'https://app.test'
 })
@@ -54,7 +59,7 @@ describe('createPortalSession', () => {
   })
 
   it('returns a portal url for an owner with a Stripe customer', async () => {
-    const res = await createPortalSession({ listingId: 'l1' })
+    const res = await createPortalSession({ listingId: LISTING_ID })
     expect(res.ok).toBe(true)
     if (res.ok) expect(res.url).toBe('https://billing.stripe.test/portal')
     expect(h.createPortal).toHaveBeenCalledWith({
@@ -84,7 +89,7 @@ describe('createPortalSession', () => {
     vi.stubEnv('NEXT_PUBLIC_APP_URL', '')
     vi.stubEnv('VERCEL_URL', 'preview-abc123.vercel.app')
     try {
-      const res = await createPortalSession({ listingId: 'l1' })
+      const res = await createPortalSession({ listingId: LISTING_ID })
       expect(res.ok).toBe(true)
       expect(h.createPortal).toHaveBeenCalledWith({
         customer: 'cus_123',
@@ -93,5 +98,27 @@ describe('createPortalSession', () => {
     } finally {
       vi.unstubAllEnvs()
     }
+  })
+
+  it('returns VALIDATION_ERROR for an unknown key, before any lookup', async () => {
+    const res = await createPortalSession({ listingId: LISTING_ID, customer: 'cus_someone_else' } as never)
+    expect(res).toMatchObject({ ok: false, code: 'VALIDATION_ERROR' })
+    expect(h.createClient).not.toHaveBeenCalled()
+    expect(h.createPortal).not.toHaveBeenCalled()
+  })
+
+  it('returns VALIDATION_ERROR when listingId is not a uuid', async () => {
+    const res = await createPortalSession({ listingId: 'l1' })
+    expect(res).toMatchObject({ ok: false, code: 'VALIDATION_ERROR' })
+  })
+
+  it('returns RATE_LIMITED when the caller is over the portal limit', async () => {
+    h.checkRateLimit.mockResolvedValue(false)
+    const res = await createPortalSession({ listingId: LISTING_ID })
+    expect(res).toMatchObject({ ok: false, code: 'RATE_LIMITED' })
+    expect(h.checkRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ bucket: 'billing_portal', identifier: 'u1' })
+    )
+    expect(h.createPortal).not.toHaveBeenCalled()
   })
 })

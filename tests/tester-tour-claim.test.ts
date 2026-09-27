@@ -31,6 +31,8 @@ const h = vi.hoisted(() => {
       trial_granted_at: null as string | null,
       stripe_checkout_session_id: null as string | null,
     },
+    // subscriptions rows the live-plan guard sees for the listing.
+    liveSubs: [] as { id: string }[],
     updates: [] as UpdateRecord[],
     // Ordered log of the operations that matter: 'cas', 'stripe:create',
     // 'persist', 'release'. Pushed at execution time, so ordering assertions
@@ -83,6 +85,12 @@ const h = vi.hoisted(() => {
           q.filters.push({ kind: 'is', col, val })
           return q
         },
+        in() {
+          return q
+        },
+        limit() {
+          return q
+        },
         async maybeSingle() {
           if (q.table === 'plans') return { data: state.plan, error: null }
           if (q.table === 'tour_enrollments') {
@@ -101,6 +109,10 @@ const h = vi.hoisted(() => {
           onFulfilled?: (v: { data: unknown; error: null }) => unknown,
           onRejected?: (e: unknown) => unknown
         ) {
+          if (q.op === 'select' && q.table === 'subscriptions') {
+            state.log.push('live-check')
+            return Promise.resolve({ data: state.liveSubs, error: null }).then(onFulfilled, onRejected)
+          }
           return Promise.resolve(runUpdate(q)).then(onFulfilled, onRejected)
         },
       }
@@ -136,6 +148,7 @@ beforeEach(() => {
   }
   h.state.plan = { id: 'plan-starter', stripe_price_id_monthly: 'price_starter_monthly' }
   h.state.row = { id: 'enr-1', trial_granted_at: null, stripe_checkout_session_id: null }
+  h.state.liveSubs = []
   h.state.updates = []
   h.state.log = []
   h.createSession.mockImplementation(async () => {
@@ -172,6 +185,37 @@ describe('POST /api/tour/claim — gates before the claim', () => {
     // claim is intact and a later request can still succeed.
     expect(h.state.updates).toHaveLength(0)
     expect(h.state.row.trial_granted_at).toBeNull()
+  })
+})
+
+describe('POST /api/tour/claim — trial vs paid', () => {
+  it('409 ALREADY_SUBSCRIBED when the listing already has a live plan, WITHOUT burning the claim', async () => {
+    h.state.liveSubs = [{ id: 'sub-row-1' }]
+    const res = await POST()
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('ALREADY_SUBSCRIBED')
+    // The guard runs before the compare-and-set, so the claim is intact and
+    // Stripe was never called.
+    expect(h.state.log).not.toContain('cas')
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('runs the live-plan check before the compare-and-set', async () => {
+    const res = await POST()
+    expect(res.status).toBe(200)
+    expect(h.state.log.indexOf('live-check')).toBeLessThan(h.state.log.indexOf('cas'))
+  })
+
+  it('refuses a recovery-path trial too when the listing picked up a plan meanwhile', async () => {
+    h.state.viewer!.enrollment.trialGrantedAt = '2026-08-31T00:00:00Z'
+    h.state.row.trial_granted_at = '2026-08-31T00:00:00Z'
+    h.state.liveSubs = [{ id: 'sub-row-1' }]
+    const res = await POST()
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('ALREADY_SUBSCRIBED')
+    expect(h.createSession).not.toHaveBeenCalled()
   })
 })
 
@@ -232,7 +276,7 @@ describe('POST /api/tour/claim — release on failure', () => {
     expect(res.status).toBe(500)
 
     // The release ran, after the failed create…
-    expect(h.state.log).toEqual(['cas', 'stripe:create', 'release'])
+    expect(h.state.log).toEqual(['live-check', 'cas', 'stripe:create', 'release'])
     // …and actually returned the row to claimable.
     expect(h.state.row.trial_granted_at).toBeNull()
 

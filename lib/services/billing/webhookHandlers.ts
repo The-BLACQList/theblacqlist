@@ -45,6 +45,49 @@ type ServiceClient = ReturnType<typeof createServiceClient>
 // only a real cancellation drops them to free.
 const KEEPS_ACCESS = new Set<Stripe.Subscription.Status>(['active', 'trialing', 'past_due'])
 
+// The same three states as stored in `subscriptions.status` (normalizeStatus
+// maps `unpaid` onto past_due, so it is covered).
+const LIVE_DB_STATUSES = ['active', 'trialing', 'past_due']
+
+/**
+ * Before any downgrade to free: does the listing still hold ANOTHER live
+ * subscription?
+ *
+ * A listing can briefly carry two Stripe subscriptions (a tour trial that was
+ * claimed before a paid checkout, or a duplicate from before checkout refused a
+ * second plan). When the older one ends, an unconditional `tier: 'free'` would
+ * strip the plan the owner is still paying for. So a downgrade first looks for a
+ * sibling and, when one exists, the listing takes the sibling's tier instead.
+ *
+ * Returns null when there is no live sibling. `{ tier: null }` means a sibling
+ * exists but its plan row is gone (plans.id ON DELETE SET NULL); the caller then
+ * leaves the tier alone rather than guessing. A read error throws, so the route
+ * records it and Stripe retries, because a guess in either direction is wrong.
+ */
+async function findLiveSibling(
+  supabase: ServiceClient,
+  listingId: string,
+  excludeSubscriptionId: string
+): Promise<{ subscriptionId: string; tier: PlanSlug | null } | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('stripe_subscription_id, plans(plan_key)')
+    .eq('listing_id', listingId)
+    .neq('stripe_subscription_id', excludeSubscriptionId)
+    .in('status', LIVE_DB_STATUSES)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (error) {
+    throw new Error(`live sibling check failed for ${listingId}: ${error.message}`)
+  }
+
+  const row = data?.[0]
+  if (!row) return null
+  const planKey = (row.plans as { plan_key: string } | null)?.plan_key ?? null
+  return { subscriptionId: row.stripe_subscription_id ?? '', tier: planKey as PlanSlug | null }
+}
+
 // Maps Stripe's subscription status to the app's `subscriptions.status` CHECK
 // values ('active' | 'inactive' | 'canceled' | 'past_due' | 'trialing').
 export function normalizeStatus(stripeStatus: Stripe.Subscription.Status): string {
@@ -157,7 +200,33 @@ export async function handleSubscriptionUpsert(
     throw new Error(`subscriptions upsert failed for ${sub.id}: ${subError.message}`)
   }
 
-  const newTier = KEEPS_ACCESS.has(sub.status) ? planSlug : 'free'
+  // A non-live status would normally drop the listing to free, but not while
+  // another live subscription still pays for it (see findLiveSibling).
+  const sibling = KEEPS_ACCESS.has(sub.status) ? null : await findLiveSibling(supabase, listingId, sub.id)
+
+  if (sibling && sibling.tier === null) {
+    console.error('[webhook] live sibling has no plan row; tier left unchanged:', {
+      subscriptionId: sub.id,
+      siblingSubscriptionId: sibling.subscriptionId,
+      listingId,
+    })
+    await writeSystemAuditLog({
+      actorUserId: userId,
+      action: 'subscription_synced',
+      targetTable: 'subscriptions',
+      targetId: listingId,
+      beforeState: { tier: prevTier },
+      afterState: {
+        tier: prevTier,
+        status,
+        tier_write: 'skipped_live_sibling_unresolved',
+        live_sibling: sibling.subscriptionId,
+      },
+    })
+    return
+  }
+
+  const newTier: PlanSlug = KEEPS_ACCESS.has(sub.status) ? planSlug : (sibling?.tier ?? 'free')
 
   const { data: tierUpdated, error: tierError } = await supabase
     .from('listings')
@@ -197,6 +266,7 @@ export async function handleSubscriptionUpsert(
       status,
       plan_slug: planSlug,
       billing_cycle: billingCycle,
+      ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
       ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
     },
   })
@@ -230,10 +300,38 @@ export async function handleSubscriptionDeleted(
     .select('tier')
     .eq('id', listingId)
     .maybeSingle()
+  const prevTier = prevListing?.tier ?? null
+
+  // Ending one subscription must not strip a plan another one still pays for.
+  const sibling = await findLiveSibling(supabase, listingId, sub.id)
+
+  if (sibling && sibling.tier === null) {
+    console.error('[webhook] live sibling has no plan row; tier left unchanged:', {
+      subscriptionId: sub.id,
+      siblingSubscriptionId: sibling.subscriptionId,
+      listingId,
+    })
+    await writeSystemAuditLog({
+      actorUserId: userId,
+      action: 'subscription_canceled',
+      targetTable: 'subscriptions',
+      targetId: listingId,
+      beforeState: { tier: prevTier },
+      afterState: {
+        tier: prevTier,
+        status: 'canceled',
+        tier_write: 'skipped_live_sibling_unresolved',
+        live_sibling: sibling.subscriptionId,
+      },
+    })
+    return
+  }
+
+  const newTier: PlanSlug = sibling?.tier ?? 'free'
 
   const { data: tierUpdated, error: tierError } = await supabase
     .from('listings')
-    .update({ tier: 'free' })
+    .update({ tier: newTier })
     .eq('id', listingId)
     .select('id')
 
@@ -256,11 +354,12 @@ export async function handleSubscriptionDeleted(
     action: 'subscription_canceled',
     targetTable: 'subscriptions',
     targetId: listingId,
-    beforeState: { tier: prevListing?.tier ?? null },
+    beforeState: { tier: prevTier },
     afterState: {
-      tier: tierWritten ? 'free' : (prevListing?.tier ?? null),
+      tier: tierWritten ? newTier : prevTier,
       status: 'canceled',
-      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: 'free' }),
+      ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
+      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
     },
   })
 
