@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   TOUR_STEP_TARGETS,
+  evidenceStepKeys,
   planSpotlight,
   targetHrefs,
   type TourTarget,
@@ -193,5 +194,29 @@ describe('planSpotlight', () => {
     // All four branches are reachable from the real target table — a plan
     // shape nothing can produce is dead code pretending to be coverage.
     expect(actions).toEqual(new Set(['spotlight', 'navigate', 'hint', 'focus-rail']))
+  })
+})
+
+describe('evidenceStepKeys', () => {
+  it('maps a Save tap to the save step only', () => {
+    expect(evidenceStepKeys((sel) => sel === '[data-tour="save-listing"]')).toEqual([
+      'listing_saved',
+    ])
+  })
+
+  it('maps the review field to the review step', () => {
+    expect(evidenceStepKeys((sel) => sel === '#review-body')).toEqual(['review_or_correction'])
+  })
+
+  it('returns nothing when no target is touched', () => {
+    expect(evidenceStepKeys(() => false)).toEqual([])
+  })
+
+  it('treats a throwing selector check as not touched', () => {
+    expect(
+      evidenceStepKeys(() => {
+        throw new Error('bad selector')
+      })
+    ).toEqual([])
   })
 })

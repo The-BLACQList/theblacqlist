@@ -538,3 +538,22 @@
   border-width: 9px;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
 }
+
+/* The listing page's mobile quick-action bar (EntityQuickActionBar) is fixed to
+   the bottom edge below `md`, and the floating pills (Tester Tour rail, Report
+   a problem) sit at `bottom-4` over it: they covered its Save button, the very
+   control the tour's Save step points at. While the bar shows, lift them clear.
+   Unlayered on purpose so it beats the `bottom-4` utility. 48rem is `md`. */
+@media (width < 48rem) {
+  .lift-over-quick-bar {
+    transition: bottom 300ms ease-out;
+  }
+  body:has([data-quick-bar='shown']) .lift-over-quick-bar {
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift-over-quick-bar {
+    transition: none;
+  }
+}
