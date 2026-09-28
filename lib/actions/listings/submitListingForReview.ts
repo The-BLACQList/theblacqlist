@@ -144,5 +144,23 @@ export async function submitListingForReviewAction(
     }
   }
 
-  return await transitionToPendingReview(supabase, listingId, user.id)
+  // Jobs move draft→pending on the service role. The listings owner guard
+  // (supabase/migrations/20260926000000_listings_entitlement_guard.sql) refuses
+  // any job status change from a user session, so a job cannot be pushed into
+  // review with a hand-built PATCH that skips the payment ladder above. That
+  // makes this action the only user-reachable path, and it has already checked
+  // ownership, draft status and the posting entitlement. The transition itself
+  // still filters on owner_user_id. Applies whether or not paidPostings is on:
+  // the guard does not know about the flag.
+  // try/catch: createServiceClient() throws synchronously when the key is unset.
+  let client = supabase
+  if (listing.entity_type === 'job') {
+    try {
+      client = createServiceClient()
+    } catch {
+      return { error: 'Could not submit this job right now. Please try again.' }
+    }
+  }
+
+  return await transitionToPendingReview(client, listingId, user.id)
 }

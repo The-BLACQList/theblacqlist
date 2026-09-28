@@ -2,7 +2,24 @@ import { NextResponse } from 'next/server'
 import { getAppUrl } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
-import type { BillingCycle, PlanSlug } from '@/lib/stripe/plans'
+import type { BillingCycle } from '@/lib/stripe/plans'
+import { checkRateLimit } from '@/lib/security/rate-limit'
+import { z } from 'zod'
+
+const checkoutBodySchema = z
+  .object({
+    planSlug: z.enum(['starter', 'growth', 'premium']),
+    listingId: z.uuid(),
+    billingCycle: z.enum(['monthly', 'annual']).optional(),
+  })
+  .strict()
+
+// Statuses that still hold paid access (mirrors KEEPS_ACCESS in
+// lib/services/billing/webhookHandlers.ts).
+const LIVE_STATUSES = ['active', 'trialing', 'past_due']
+
+// A real owner clicks Upgrade a handful of times at most.
+const CHECKOUT_RATE_LIMIT = 10
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -14,9 +31,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
   }
 
-  let body: { planSlug: string; listingId: string; billingCycle?: string }
+  let raw: unknown
   try {
-    body = await request.json()
+    raw = await request.json()
   } catch {
     return NextResponse.json(
       { error: 'Invalid request body', code: 'VALIDATION_ERROR' },
@@ -24,25 +41,28 @@ export async function POST(request: Request) {
     )
   }
 
-  const { planSlug, listingId } = body
-  if (!planSlug || !listingId) {
+  // .strict() rejects any key we did not ask for. The price is never taken from
+  // the browser (it is looked up in `plans` below), so a body carrying `price`,
+  // `amount` or `priceId` is a tampered request and gets a 400, not a shrug.
+  const parsed = checkoutBodySchema.safeParse(raw)
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: 'planSlug and listingId are required', code: 'VALIDATION_ERROR' },
+      { error: 'Invalid checkout request', code: 'VALIDATION_ERROR' },
       { status: 400 }
     )
   }
+  const { planSlug, listingId } = parsed.data
+  const billingCycle: BillingCycle = parsed.data.billingCycle ?? 'monthly'
 
-  const VALID_PAID_SLUGS: PlanSlug[] = ['starter', 'growth', 'premium']
-  if (!VALID_PAID_SLUGS.includes(planSlug as PlanSlug)) {
-    return NextResponse.json({ error: 'Invalid plan', code: 'VALIDATION_ERROR' }, { status: 400 })
-  }
-
-  // Default to monthly when unspecified. Any other value is a client error.
-  const billingCycle: BillingCycle = body.billingCycle === 'annual' ? 'annual' : 'monthly'
-  if (body.billingCycle && body.billingCycle !== 'monthly' && body.billingCycle !== 'annual') {
+  const allowed = await checkRateLimit({
+    bucket: 'checkout',
+    identifier: user.id,
+    limit: CHECKOUT_RATE_LIMIT,
+  })
+  if (!allowed) {
     return NextResponse.json(
-      { error: 'Invalid billing cycle', code: 'VALIDATION_ERROR' },
-      { status: 400 }
+      { error: 'Too many checkout attempts. Please wait a minute and try again.', code: 'RATE_LIMITED' },
+      { status: 429 }
     )
   }
 
@@ -58,6 +78,49 @@ export async function POST(request: Request) {
   if (!listing) {
     return NextResponse.json({ error: 'Listing not found', code: 'NOT_FOUND' }, { status: 404 })
   }
+
+  // One live subscription per listing. A second one would leave two Stripe
+  // subscriptions fighting over `listings.tier`, and whichever ended first
+  // would downgrade the listing while the other was still paid. Plan changes go
+  // through the customer portal, which swaps the price on the existing
+  // subscription instead of adding one. RLS scopes this read to the caller's
+  // own rows; the webhook's live-sibling check covers anything else.
+  const { data: liveSubs, error: liveError } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('listing_id', listingId)
+    .in('status', LIVE_STATUSES)
+    .limit(1)
+
+  if (liveError) {
+    console.error('[create-checkout-session] subscription lookup failed:', liveError.message)
+    return NextResponse.json(
+      { error: 'Could not check your current plan. Please try again.', code: 'SERVER_ERROR' },
+      { status: 500 }
+    )
+  }
+  if (liveSubs && liveSubs.length > 0) {
+    return NextResponse.json(
+      {
+        error: 'This listing already has a plan. Use Manage subscription to change it.',
+        code: 'SUBSCRIPTION_EXISTS',
+      },
+      { status: 409 }
+    )
+  }
+
+  // Reuse the caller's Stripe customer when they already have one, so a second
+  // listing's plan lands on the same customer (one portal, one card on file)
+  // instead of minting a new customer per checkout.
+  const { data: priorSub } = await supabase
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('user_id', user.id)
+    .not('stripe_customer_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const customerId = priorSub?.stripe_customer_id ?? null
 
   // Get the Stripe price IDs for this plan from the DB
   const { data: plan } = await supabase
@@ -97,7 +160,7 @@ export async function POST(request: Request) {
       mode: 'subscription',
       // Do NOT set payment_method_types — let Stripe choose eligible methods dynamically.
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: user.email,
+      ...(customerId ? { customer: customerId } : { customer_email: user.email }),
       success_url: `${baseUrl}/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/dashboard/upgrade`,
       metadata,

@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // isolation.
 const h = vi.hoisted(() => {
   const constructEvent = vi.fn()
+  const retrieveSubscription = vi.fn(async (id: string) => ({ id, status: 'active', fresh: true }))
   const handleSubscriptionUpsert = vi.fn(async () => {})
   const handleSubscriptionDeleted = vi.fn(async () => {})
   const handlePaymentFailed = vi.fn(async () => {})
@@ -34,6 +35,7 @@ const h = vi.hoisted(() => {
 
   return {
     constructEvent,
+    retrieveSubscription,
     handleSubscriptionUpsert,
     handleSubscriptionDeleted,
     handlePaymentFailed,
@@ -45,7 +47,10 @@ const h = vi.hoisted(() => {
 })
 
 vi.mock('@/lib/stripe/client', () => ({
-  stripe: { webhooks: { constructEvent: h.constructEvent } },
+  stripe: {
+    webhooks: { constructEvent: h.constructEvent },
+    subscriptions: { retrieve: h.retrieveSubscription },
+  },
 }))
 vi.mock('@/lib/supabase/server', () => ({ createServiceClient: h.createServiceClient }))
 vi.mock('@/lib/services/billing/webhookHandlers', () => ({
@@ -71,6 +76,8 @@ beforeEach(() => {
   h.state.markInsertError = null
   h.inserts.length = 0
   process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test'
+  // A test-mode key, so test-mode events (livemode: false) are accepted.
+  process.env.STRIPE_SECRET_KEY = 'sk_test_placeholder'
 })
 
 describe('POST /api/stripe/webhook', () => {
@@ -92,6 +99,7 @@ describe('POST /api/stripe/webhook', () => {
     h.constructEvent.mockReturnValue({
       id: 'evt_dup',
       type: 'customer.subscription.updated',
+      livemode: false,
       data: { object: {} },
     })
     h.state.seen = { id: 'existing-row' }
@@ -108,6 +116,7 @@ describe('POST /api/stripe/webhook', () => {
     h.constructEvent.mockReturnValue({
       id: 'evt_1',
       type: 'customer.subscription.created',
+      livemode: false,
       data: { object: { id: 'sub_1' } },
     })
 
@@ -122,6 +131,7 @@ describe('POST /api/stripe/webhook', () => {
     h.constructEvent.mockReturnValue({
       id: 'evt_err',
       type: 'customer.subscription.deleted',
+      livemode: false,
       data: { object: { id: 'sub_1' } },
     })
     h.handleSubscriptionDeleted.mockRejectedValueOnce(new Error('db down'))
@@ -139,6 +149,7 @@ describe('POST /api/stripe/webhook', () => {
     h.constructEvent.mockReturnValue({
       id: 'evt_other',
       type: 'invoice.paid',
+      livemode: false,
       data: { object: {} },
     })
 
@@ -149,5 +160,81 @@ describe('POST /api/stripe/webhook', () => {
     expect(h.handlePaymentFailed).not.toHaveBeenCalled()
     // still marked processed so a redelivery short-circuits
     expect(h.inserts.some((i) => i.table === 'stripe_events_processed')).toBe(true)
+  })
+
+  it('ignores a live-mode event on a test-mode deployment, before any write', async () => {
+    h.constructEvent.mockReturnValue({
+      id: 'evt_live',
+      type: 'customer.subscription.updated',
+      livemode: true,
+      data: { object: { id: 'sub_1' } },
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await POST(makeReq())
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.ignored).toBe('livemode_mismatch')
+    expect(h.createServiceClient).not.toHaveBeenCalled()
+    expect(h.handleSubscriptionUpsert).not.toHaveBeenCalled()
+    expect(h.inserts).toHaveLength(0)
+    errorSpy.mockRestore()
+  })
+
+  it('ignores a test-mode event on a live deployment', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_live_placeholder'
+    h.constructEvent.mockReturnValue({
+      id: 'evt_test',
+      type: 'customer.subscription.deleted',
+      livemode: false,
+      data: { object: { id: 'sub_1' } },
+    })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await POST(makeReq())
+
+    expect(res.status).toBe(200)
+    expect(h.handleSubscriptionDeleted).not.toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
+
+  it('syncs from the subscription as it is now, not the event snapshot', async () => {
+    // An older event delivered late carries an old price. The handler must see
+    // the fetched subscription, so the late event cannot roll a plan back.
+    h.constructEvent.mockReturnValue({
+      id: 'evt_late',
+      type: 'customer.subscription.updated',
+      livemode: false,
+      data: { object: { id: 'sub_1', status: 'trialing', stale: true } },
+    })
+
+    const res = await POST(makeReq())
+
+    expect(res.status).toBe(200)
+    expect(h.retrieveSubscription).toHaveBeenCalledWith('sub_1')
+    expect(h.handleSubscriptionUpsert).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: 'sub_1', fresh: true })
+    )
+  })
+
+  it('returns 500 and records it when fetching the current subscription fails', async () => {
+    h.constructEvent.mockReturnValue({
+      id: 'evt_fetch_err',
+      type: 'customer.subscription.created',
+      livemode: false,
+      data: { object: { id: 'sub_1' } },
+    })
+    h.retrieveSubscription.mockRejectedValueOnce(new Error('stripe unavailable'))
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const res = await POST(makeReq())
+
+    expect(res.status).toBe(500)
+    expect(h.handleSubscriptionUpsert).not.toHaveBeenCalled()
+    expect(h.inserts.some((i) => i.table === 'failed_webhooks')).toBe(true)
+    expect(h.inserts.some((i) => i.table === 'stripe_events_processed')).toBe(false)
+    errorSpy.mockRestore()
   })
 })

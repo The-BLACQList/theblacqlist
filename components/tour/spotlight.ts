@@ -21,6 +21,12 @@ const PENDING_TTL_MS = 30_000
 /** Elements we gave a tabIndex to, so cleanup can take it back. */
 let borrowedTabIndex: Element | null = null
 let spotlit: Element | null = null
+/** The element whose inline scroll-margin-top we set, and what it was before. */
+let marginedEl: HTMLElement | null = null
+let marginBefore = ''
+
+/** Below `md` (48rem) the floating rail panel covers the lower screen. */
+const NARROW_QUERY = '(width < 48rem)'
 
 /**
  * The first VISIBLE element matching any selector, tried in list order.
@@ -72,8 +78,11 @@ function isVisible(el: HTMLElement): boolean {
  * Order and options are both load-bearing:
  *   * `focus({preventScroll:true})` FIRST — an unguarded `focus()` scrolls
  *     instantly and fights the smooth scroll that follows.
- *   * `block:'center'`, never `'start'` — the site header is `fixed z-50 h-14
- *     md:h-16` and would cover a start-aligned target.
+ *   * `block:'center'` on wide screens. On a phone the expanded rail panel
+ *     (up to 70vh, nearly full width) covers the middle and bottom of the
+ *     screen, so a centred target lands under it. There we align to the top
+ *     instead, with a temporary `scroll-margin-top` of 5rem so the fixed
+ *     `h-14` site header does not cover the target either.
  */
 export function applySpotlight(el: HTMLElement | null, reduceMotion: boolean): void {
   if (el === null) return
@@ -84,7 +93,16 @@ export function applySpotlight(el: HTMLElement | null, reduceMotion: boolean): v
       borrowedTabIndex = el
     }
     el.focus({ preventScroll: true })
-    el.scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' })
+    const narrow = isNarrow()
+    if (narrow) {
+      marginedEl = el
+      marginBefore = el.style.scrollMarginTop
+      el.style.scrollMarginTop = '5rem'
+    }
+    el.scrollIntoView({
+      block: narrow ? 'start' : 'center',
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    })
     el.classList.add(SPOTLIGHT_CLASS)
     spotlit = el
   } catch {
@@ -104,9 +122,22 @@ export function clearSpotlight(): void {
       borrowedTabIndex.removeAttribute('tabindex')
       borrowedTabIndex = null
     }
+    if (marginedEl !== null) {
+      marginedEl.style.scrollMarginTop = marginBefore
+      marginedEl = null
+    }
   } catch {
     spotlit = null
     borrowedTabIndex = null
+    marginedEl = null
+  }
+}
+
+function isNarrow(): boolean {
+  try {
+    return window.matchMedia(NARROW_QUERY).matches
+  } catch {
+    return false
   }
 }
 

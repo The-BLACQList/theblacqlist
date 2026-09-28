@@ -61,6 +61,12 @@ export async function updateListingStatusAction(
   if (listing.trust_tier === 'unclaimed') {
     return { error: 'This listing must be reviewed before it can be published.' }
   }
+  // Jobs always go through Submit for review, where the posting allowance and
+  // payment are checked. The listings owner guard refuses this update for a job
+  // anyway; saying so here gives the owner a clear message instead of a failure.
+  if (listing.entity_type === 'job') {
+    return { error: 'Job listings go live through Submit for review.' }
+  }
 
   const { error } = await supabase
     .from('listings')

@@ -7,7 +7,10 @@
 // Placement: the Tester Tour rail's collapsed pill sits at `bottom-4 right-4`
 // (components/tour/TourRail.tsx). This one sits at `bottom-4 left-4` so the
 // two never overlap on any viewport, and an enrolled tester sees both without
-// either covering the other. Hidden on the same routes the rail hides on
+// either covering the other. On a phone-width listing page both pills lift
+// above the quick-action bar while it shows (`.lift-over-quick-bar` in
+// app/globals.css), so neither covers its Save button. Hidden on the same
+// routes the rail hides on
 // (lib/tour/routes.ts): a report button floating over the admin console or the
 // sign-in form is noise, not help.
 
@@ -120,7 +123,7 @@ export function ReportProblemButton() {
   if (isHiddenPath(pathname)) return null
 
   return (
-    <div className="fixed bottom-4 left-4 z-40">
+    <div className="lift-over-quick-bar fixed bottom-4 left-4 z-40">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button

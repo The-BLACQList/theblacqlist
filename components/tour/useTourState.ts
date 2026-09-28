@@ -28,12 +28,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-import { TOUR_STEP_TARGETS } from '@/lib/tour/targets'
+import { evidenceStepKeys } from '@/lib/tour/targets'
 import {
   announceTransition,
   attentionStep,
   statusFingerprint,
+  watchedStepMoved,
   type ProgressSnapshot,
+  type ProgressStatus,
 } from '@/lib/tour/progress'
 
 // Mirrors the /api/tour/state response shape. Kept local so the client chunk
@@ -95,18 +97,17 @@ export interface TourStateHandle {
  * Every witness write happens in a Next.js `after()` callback, so the row does
  * not exist yet when the click handler returns — a single immediate refetch
  * reads the state from BEFORE the action and reports nothing changed. The chain
- * exits the moment the fingerprint moves, so the common case costs one fetch,
- * not three.
+ * exits the moment a step the tester acted on moves (see `watchedStepMoved`),
+ * so the common case costs one or two fetches, not four.
+ *
+ * The last rung is for a cold start: the Save request itself has to land
+ * before the read can see it, and on a cold function that can take a few
+ * seconds. The whole chain still ends about 11.5s after the tap.
  *
  * Bounded on purpose. An unbounded poll on a rail that lives in the root layout
  * is a request every N seconds for the entire session, per tester, forever.
  */
-const CHASE_DELAYS = [700, 1600, 3200] as const
-
-/** Every selector the tour cares about, flattened out of the target table. */
-const EVIDENCE_SELECTORS: readonly string[] = Object.values(TOUR_STEP_TARGETS).flatMap(
-  (t) => [...t.selectors]
-)
+const CHASE_DELAYS = [700, 1600, 3200, 6000] as const
 
 type ReadResult =
   | { kind: 'ok'; data: TourState }
@@ -132,6 +133,9 @@ export function useTourState(): TourStateHandle {
   const previous = useRef<ProgressSnapshot | null>(null)
   const fingerprint = useRef('')
   const chase = useRef<AbortController | null>(null)
+  // Steps the tester has acted on since the last chase ended, each with the
+  // status it had at that moment. The chase stops when one of THESE moves.
+  const watch = useRef<Map<string, ProgressStatus | undefined>>(new Map())
   const alive = useRef(true)
 
   useEffect(() => {
@@ -210,7 +214,15 @@ export function useTourState(): TourStateHandle {
   }, [routeKey, fetchKey, read, apply])
 
   /**
-   * Ask again a few times, backing off, stopping as soon as anything moves.
+   * Ask again a few times, backing off, stopping as soon as a watched step moves.
+   *
+   * Every payload is still applied, so a tick that lands mid-chase (the
+   * `listing_opened` witness, typically) shows up at once. It just does not end
+   * the chase: that was the bug where a Save on a listing page never counted
+   * until the tester went back to /discover.
+   *
+   * A new piece of evidence restarts the chain rather than being dropped, so a
+   * second tap resets the clock instead of riding out the tail of the first.
    *
    * ⚠ A failed read inside a chase does NOT set phase 'failed'. The rail
    * already has good state on screen and the tester never asked for this
@@ -219,7 +231,7 @@ export function useTourState(): TourStateHandle {
    * that is a few seconds stale.
    */
   const runChase = useCallback(async () => {
-    if (chase.current !== null) return // one chain at a time
+    chase.current?.abort() // one chain at a time: the newest evidence wins
     const controller = new AbortController()
     chase.current = controller
     setChecking(true)
@@ -234,13 +246,19 @@ export function useTourState(): TourStateHandle {
           return
         }
         if (result.kind === 'failed') continue
-        if (apply(result.data)) return // learned something — stop early
+        apply(result.data)
+        if (watchedStepMoved(watch.current, result.data)) return // stop early
       }
     } catch {
       // Aborts land here too. A chase that fails is silent by design.
     } finally {
-      if (chase.current === controller) chase.current = null
-      if (alive.current) setChecking(false)
+      // An aborted chain was replaced by a newer one, which now owns the
+      // watch list and the checking flag. Only the live chain clears them.
+      if (chase.current === controller) {
+        chase.current = null
+        watch.current = new Map()
+        if (alive.current) setChecking(false)
+      }
     }
   }, [read, apply])
 
@@ -257,7 +275,14 @@ export function useTourState(): TourStateHandle {
   // Capture means we observe before any handler can stopPropagation on us.
   useEffect(() => {
     const onEvidence = (event: Event) => {
-      if (!isEvidence(event)) return
+      const keys = evidenceKeys(event)
+      if (keys.length === 0) return
+      for (const key of keys) {
+        // Keep the first baseline: a second tap on the same step is still
+        // measured against where it stood before the first one.
+        if (watch.current.has(key)) continue
+        watch.current.set(key, previous.current?.steps.find((s) => s.key === key)?.status)
+      }
       void runChase()
     }
     document.addEventListener('click', onEvidence, { capture: true, passive: true })
@@ -286,31 +311,24 @@ export function useTourState(): TourStateHandle {
 }
 
 /**
- * Does this event plausibly touch something the tour watches?
+ * Which tour steps this event plausibly counts toward. Empty means none.
  *
  * Filtering matters: without it every click anywhere on the marketplace would
- * fire a three-request chase. The filter is DRIVEN BY the same target table the
+ * fire a four-request chase. The filter is DRIVEN BY the same target table the
  * spotlight uses, so a selector added there is watched here automatically.
  *
  * Clicks look UP (did the click land inside a Save button?); submits look DOWN
  * (does this form contain the review textarea?) — a submit event's target is
  * the form, which is an ancestor of the field, not a descendant.
  */
-function isEvidence(event: Event): boolean {
+function evidenceKeys(event: Event): string[] {
   const target = event.target
-  if (!(target instanceof Element)) return false
-  try {
-    for (const selector of EVIDENCE_SELECTORS) {
-      if (event.type === 'submit') {
-        if (target.querySelector(selector) !== null) return true
-      } else if (target.closest(selector) !== null) {
-        return true
-      }
-    }
-  } catch {
-    return false
-  }
-  return false
+  if (!(target instanceof Element)) return []
+  return evidenceStepKeys((selector) =>
+    event.type === 'submit'
+      ? target.querySelector(selector) !== null
+      : target.closest(selector) !== null
+  )
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {

@@ -17,6 +17,7 @@ import {
   pendingReflectionCount,
   rowMarker,
   statusFingerprint,
+  watchedStepMoved,
   type ProgressSnapshot,
   type ProgressStatus,
   type ProgressStep,
@@ -425,5 +426,36 @@ describe('announceTransition', () => {
     const prev = snapshot({ search_ran: 'done' })
     const next = snapshot({ search_ran: 'retry' })
     expect(announceTransition(prev, next)).toBeNull()
+  })
+})
+
+describe('watchedStepMoved', () => {
+  // The bug this guards: on a listing page, tapping Save started a chase, the
+  // `listing_opened` tick from the page view landed first, and the chase
+  // stopped before the save was ever read.
+  it('ignores a step the tester did not act on', () => {
+    const watch = new Map([['listing_saved', 'act' as ProgressStatus]])
+    const next = snapshot({ listing_opened: 'reflect' })
+    expect(watchedStepMoved(watch, next)).toBe(false)
+  })
+
+  it('stops once the watched step moves', () => {
+    const watch = new Map([['listing_saved', 'act' as ProgressStatus]])
+    const next = snapshot({ listing_opened: 'reflect', listing_saved: 'reflect' })
+    expect(watchedStepMoved(watch, next)).toBe(true)
+  })
+
+  it('never counts a step with no baseline as moved', () => {
+    const watch = new Map<string, ProgressStatus | undefined>([['listing_saved', undefined]])
+    expect(watchedStepMoved(watch, snapshot({ listing_saved: 'reflect' }))).toBe(false)
+  })
+
+  it('ignores a watched key the payload does not carry', () => {
+    const watch = new Map([['not_a_step', 'act' as ProgressStatus]])
+    expect(watchedStepMoved(watch, snapshot({ search_ran: 'done' }))).toBe(false)
+  })
+
+  it('is false for an empty watch list', () => {
+    expect(watchedStepMoved(new Map(), snapshot({ listing_saved: 'done' }))).toBe(false)
   })
 })
