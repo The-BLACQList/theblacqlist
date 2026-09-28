@@ -4,10 +4,25 @@ import { getAppUrl } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { stripe } from '@/lib/stripe/client'
+import { checkRateLimit } from '@/lib/security/rate-limit'
+import { z } from 'zod'
+
+// A server action's argument is whatever the browser sends, so it is parsed
+// like any other request body. Unknown keys are refused.
+const portalInputSchema = z
+  .object({ listingId: z.uuid().optional() })
+  .strict()
+  .optional()
+
+const PORTAL_RATE_LIMIT = 10
 
 export type PortalResult =
   | { ok: true; url: string }
-  | { ok: false; code: 'UNAUTHORIZED' | 'NO_CUSTOMER' | 'SERVER_ERROR'; message: string }
+  | {
+      ok: false
+      code: 'UNAUTHORIZED' | 'VALIDATION_ERROR' | 'RATE_LIMITED' | 'NO_CUSTOMER' | 'SERVER_ERROR'
+      message: string
+    }
 
 /**
  * Creates a Stripe Customer Portal session so an owner can manage their
@@ -17,12 +32,31 @@ export type PortalResult =
  * client: a user can only ever read rows where user_id = auth.uid(), so the
  * resolved stripe_customer_id always belongs to the caller.
  */
-export async function createPortalSession(input?: {
+export async function createPortalSession(rawInput?: {
   listingId?: string
 }): Promise<PortalResult> {
   const session = await getOwnerSession()
   if (!session) {
     return { ok: false, code: 'UNAUTHORIZED', message: 'You must be signed in.' }
+  }
+
+  const parsed = portalInputSchema.safeParse(rawInput)
+  if (!parsed.success) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'That request was not valid.' }
+  }
+  const input = parsed.data
+
+  const allowed = await checkRateLimit({
+    bucket: 'billing_portal',
+    identifier: session.user.id,
+    limit: PORTAL_RATE_LIMIT,
+  })
+  if (!allowed) {
+    return {
+      ok: false,
+      code: 'RATE_LIMITED',
+      message: 'Too many attempts. Please wait a minute and try again.',
+    }
   }
 
   const supabase = await createClient()

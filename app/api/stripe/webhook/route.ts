@@ -13,6 +13,12 @@ import type { Json } from '@/lib/supabase/types'
 // Next.js must NOT parse the body — Stripe signature verification requires the raw bytes.
 export const runtime = 'nodejs'
 
+// Which Stripe mode this deployment's key belongs to. Only the prefix is read;
+// the key itself is never logged. Restricted keys (`rk_live_`) count as live.
+function keyIsLive(): boolean {
+  return /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY ?? '')
+}
+
 export async function POST(request: Request) {
   const sig = request.headers.get('stripe-signature')
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -28,6 +34,19 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error('[stripe/webhook] Signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+  }
+
+  // A test-mode event reaching a live deployment (or the reverse) is someone
+  // else's traffic or a misconfigured endpoint. It must never change a real
+  // listing's tier. Acknowledge with 200 so Stripe stops retrying, and log it
+  // loudly: a mismatch on every event means the key and endpoint disagree.
+  if (event.livemode !== keyIsLive()) {
+    console.error('[stripe/webhook] livemode mismatch, event ignored:', {
+      eventId: event.id,
+      eventType: event.type,
+      eventLivemode: event.livemode,
+    })
+    return NextResponse.json({ received: true, ignored: 'livemode_mismatch' })
   }
 
   const supabase = createServiceClient()
@@ -48,9 +67,18 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case 'customer.subscription.created':
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpsert(supabase, event.data.object as Stripe.Subscription)
+      case 'customer.subscription.updated': {
+        // Stripe does not guarantee delivery order, and a retried event can
+        // arrive after a newer one. The event payload is a snapshot from when
+        // it was created, so syncing from it could roll a plan change back.
+        // Fetching the subscription now means every event writes current
+        // state, whatever order they land in. A fetch failure throws into the
+        // 500 path below, so Stripe retries.
+        const snapshot = event.data.object as Stripe.Subscription
+        const current = await stripe.subscriptions.retrieve(snapshot.id)
+        await handleSubscriptionUpsert(supabase, current)
         break
+      }
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(supabase, event.data.object as Stripe.Subscription)
         break
