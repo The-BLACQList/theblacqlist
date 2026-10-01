@@ -124,7 +124,9 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
   const params = await searchParams
 
   // Old "Open now" links (`?open=now`, `?open_now=true`) land on the canonical
-  // `open_now=1` so the sidebar checkbox and chip match the results.
+  // `open_now=1` so the sidebar checkbox and chip match the results. proxy.ts
+  // does this first as a real 307; this is the backstop, and it runs after the
+  // loading.tsx shell has streamed, so on its own it would be a client hop.
   const canonical = canonicalOpenNowQuery(params)
   if (canonical !== null) redirect(`/discover${canonical}`)
 
