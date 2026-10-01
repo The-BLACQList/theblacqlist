@@ -2766,6 +2766,71 @@ export type Database = {
         }
         Relationships: []
       }
+      tester_invites: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          expires_at: string
+          first_used_at: string | null
+          id: string
+          kind: string
+          label: string
+          last_used_at: string | null
+          listing_id: string | null
+          max_uses: number
+          revoked_at: string | null
+          tester_user_id: string | null
+          token_hash: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          first_used_at?: string | null
+          id?: string
+          kind: string
+          label: string
+          last_used_at?: string | null
+          listing_id?: string | null
+          max_uses?: number
+          revoked_at?: string | null
+          tester_user_id?: string | null
+          token_hash: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          first_used_at?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          last_used_at?: string | null
+          listing_id?: string | null
+          max_uses?: number
+          revoked_at?: string | null
+          tester_user_id?: string | null
+          token_hash?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tester_invites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tour_enrollments: {
         Row: {
           completed_at: string | null
@@ -2773,7 +2838,7 @@ export type Database = {
           ended_at: string | null
           id: string
           invited_by: string | null
-          listing_id: string
+          listing_id: string | null
           started_at: string
           stripe_checkout_session_id: string | null
           tester_user_id: string
@@ -2786,7 +2851,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           invited_by?: string | null
-          listing_id: string
+          listing_id?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
           tester_user_id: string
@@ -2799,7 +2864,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           invited_by?: string | null
-          listing_id?: string
+          listing_id?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
           tester_user_id?: string
@@ -2933,6 +2998,10 @@ export type Database = {
           facet_kind: string
         }[]
       }
+      find_auth_user_id_by_email: {
+        Args: { p_email: string }
+        Returns: string
+      }
       get_top_listings_by_views: {
         Args: { days_back?: number; limit_n?: number }
         Returns: {
@@ -2962,6 +3031,17 @@ export type Database = {
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }
       prune_launch_subscribe_attempts: { Args: never; Returns: undefined }
       prune_rate_limit_counters: { Args: never; Returns: undefined }
+      redeem_tester_invite: {
+        Args: { p_token_hash: string }
+        Returns: {
+          created_by: string | null
+          email: string | null
+          id: string
+          kind: string
+          listing_id: string | null
+          tester_user_id: string | null
+        }[]
+      }
       search_listings_faceted: {
         Args: {
           p_attribute_values?: string[]

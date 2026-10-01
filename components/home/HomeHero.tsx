@@ -45,7 +45,7 @@ export function HomeHero() {
 
         <div className="mt-7 max-w-xl">
           <Suspense fallback={<div className="h-12 rounded-full bg-white/90" aria-hidden="true" />}>
-            <SearchBar placeholder="Search businesses, food, services…" targetPath="/search" />
+            <SearchBar placeholder="Search businesses, food…" targetPath="/search" />
           </Suspense>
         </div>
 

@@ -174,7 +174,7 @@ interface DemoListing {
 
 /**
  * Three listings, chosen to exercise all three branches of the /vendors index
- * query at app/(public)/vendors/page.tsx:81-84.
+ * query at app/(public)/vendors/(index)/page.tsx:81-84.
  *
  * Offering counts are deliberately distinct — 4 / 3 / 2 — so the sort at
  * page.tsx:108 (offerings desc, then name) is itself checkable in the browser.

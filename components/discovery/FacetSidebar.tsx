@@ -30,9 +30,16 @@ function optionClass(isActive: boolean): string {
   )
 }
 
-function CountTag({ n }: { n: number }) {
+// `active` is for a count on the black selected pill, where charcoal is unreadable.
+function CountTag({ n, active = false }: { n: number; active?: boolean }) {
   return (
-    <span className="ml-auto text-[11px] tabular-nums text-charcoal-soft" aria-hidden="true">
+    <span
+      className={cn(
+        'ml-auto text-[11px] tabular-nums',
+        active ? 'text-white/80' : 'text-charcoal-soft'
+      )}
+      aria-hidden="true"
+    >
       {n}
     </span>
   )
@@ -156,7 +163,7 @@ export function FacetSidebar({
                 )}
               >
                 {label}
-                {!countsOff && n !== null && !isActive && <CountTag n={n} />}
+                {!countsOff && n !== null && <CountTag n={n} active={isActive} />}
               </button>
             )
           })}
