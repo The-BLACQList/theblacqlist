@@ -1,22 +1,87 @@
 import { layers, namedFlavor } from '@protomaps/basemaps'
-import type { StyleSpecification } from 'maplibre-gl'
+import type { LayerSpecification, StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 
 /**
  * "Photo Pins" basemap: a warm sand ground so the photo pins and ink dots carry
  * all the contrast. No dark ground and no glow on the map itself. Protomaps
- * light flavor with the sand palette laid over it. Fully self-hosted tiles
+ * light flavor with the sand palette laid over it. Parks, water, campuses and
+ * buildings each get their own step on that palette, and the labels have a
+ * hierarchy (neighborhoods over major roads over minor roads), so people can
+ * find their way by what they already know. Fully self-hosted tiles
  * (PMTiles in our own storage); fonts/sprites from the static basemaps-assets
  * bundle (TODO: copy into public/ for full self-hosting before scale).
  */
 export const SAND = {
   ground: '#efe5d3',
-  park: '#dfdfc6',
+  park: '#d3dbb4',
   minorRoad: '#f6efe2',
   majorRoad: '#fbf7ef',
   highway: '#e6cf9f',
-  water: '#c9d9da',
+  water: '#bcd3d6',
+  buildings: '#e2d5bf',
+  campus: '#eadcc2',
+  hospital: '#ecdacf',
+  industrial: '#e4dccb',
+  pedestrian: '#f3ebdc',
+  aerodrome: '#e6dccb',
+  railway: '#b5a68e',
   label: '#a0927c',
+  majorLabel: '#7d705c',
+  placeLabel: '#6e6150',
+  cityLabel: '#5a4e3f',
 } as const
+
+/** Landmark label inks: one warm ink, with green space in a muted green. */
+export const LANDMARK_INK = '#5a4e3f'
+export const LANDMARK_GREEN = '#4d6a3c'
+
+/**
+ * The basemap points we keep: places people navigate by. Restaurants, shops,
+ * schools, bus stops and the like are left out because our listings are the
+ * businesses on this map, and those would compete with them.
+ */
+export const LANDMARK_KINDS = [
+  'park',
+  'garden',
+  'zoo',
+  'stadium',
+  'university',
+  'museum',
+  'attraction',
+  'theatre',
+  'library',
+  'townhall',
+  'aerodrome',
+  'station',
+  'marina',
+  'beach',
+] as const
+
+const GREEN_KINDS = ['park', 'garden', 'zoo', 'marina', 'beach']
+
+/** The stock POI layer, narrowed to landmarks and sized for city zooms. */
+function landmarkPois(layer: SymbolLayerSpecification): SymbolLayerSpecification {
+  return {
+    ...layer,
+    filter: [
+      'all',
+      ['in', ['get', 'kind'], ['literal', [...LANDMARK_KINDS]]],
+      ['>=', ['zoom'], ['get', 'min_zoom']],
+    ],
+    layout: {
+      ...layer.layout,
+      'text-size': ['interpolate', ['linear'], ['zoom'], 12, 11, 15, 13, 18, 15],
+      'symbol-sort-key': ['get', 'min_zoom'],
+    },
+    paint: {
+      ...layer.paint,
+      'text-color': ['case', ['in', ['get', 'kind'], ['literal', GREEN_KINDS]], LANDMARK_GREEN, LANDMARK_INK],
+      'text-halo-color': SAND.ground,
+      'text-halo-width': 1.2,
+      'icon-opacity': 0.85,
+    },
+  }
+}
 
 export function buildMapStyle(tilesUrl: string): StyleSpecification {
   const base = namedFlavor('light')
@@ -30,7 +95,15 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
     wood_b: SAND.park,
     scrub_a: SAND.park,
     scrub_b: SAND.park,
+    zoo: SAND.park,
     water: SAND.water,
+    buildings: SAND.buildings,
+    school: SAND.campus,
+    hospital: SAND.hospital,
+    industrial: SAND.industrial,
+    pedestrian: SAND.pedestrian,
+    aerodrome: SAND.aerodrome,
+    railway: SAND.railway,
     minor_service: SAND.minorRoad,
     minor_a: SAND.minorRoad,
     minor_b: SAND.minorRoad,
@@ -38,9 +111,9 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
     major: SAND.majorRoad,
     highway: SAND.highway,
     roads_label_minor: SAND.label,
-    roads_label_major: SAND.label,
-    subplace_label: SAND.label,
-    city_label: SAND.label,
+    roads_label_major: SAND.majorLabel,
+    subplace_label: SAND.placeLabel,
+    city_label: SAND.cityLabel,
     ocean_label: SAND.label,
     country_label: SAND.label,
     roads_label_minor_halo: SAND.ground,
@@ -70,9 +143,11 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
       },
     },
-    // The photo pins are the points of interest, so the basemap's own POI
-    // icons are dropped rather than competing with them.
-    layers: layers('protomaps', flavor, { lang: 'en' }).filter((l) => l.id !== 'pois'),
+    // Landmarks only. Our own landmark list and the listings are added on top
+    // at runtime, so they win any label collision with these.
+    layers: layers('protomaps', flavor, { lang: 'en' }).map(
+      (l): LayerSpecification => (l.id === 'pois' && l.type === 'symbol' ? landmarkPois(l) : l)
+    ),
   }
 }
 

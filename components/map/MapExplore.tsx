@@ -6,7 +6,8 @@ import type { Map as MlMap, MapLayerMouseEvent } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { buildMapStyle, CITY_VIEWS } from '@/components/map/mapStyle'
-import { addListingLayers, DOT_LAYERS } from '@/components/map/mapLayers'
+import { addLandmarkLayers, addListingLayers, DOT_LAYERS } from '@/components/map/mapLayers'
+import { toLandmarkGeoJSON } from '@/lib/map/landmarks'
 import { MapDrawer } from '@/components/map/MapDrawer'
 import { MapPhoneBar } from '@/components/map/MapPhoneBar'
 import { MapControls } from '@/components/map/MapControls'
@@ -155,6 +156,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     }, 10000)
 
     m.on('load', () => {
+      addLandmarkLayers(m, toLandmarkGeoJSON())
       addListingLayers(m)
       m.on('click', 'clusters', (e: MapLayerMouseEvent) => {
         const feature = e.features?.[0]
