@@ -77,7 +77,7 @@ export default async function CollectionsPage() {
               href="/discover"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
             >
-              Explore all businesses
+              Browse all
             </Link>
           </div>
         </div>

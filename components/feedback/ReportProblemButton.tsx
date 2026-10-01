@@ -131,20 +131,27 @@ export function ReportProblemButton() {
             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-charcoal/15 bg-white px-4 py-2 font-subhead text-sm text-charcoal shadow-lg transition-colors hover:border-amber-gold/60 hover:text-brand-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
           >
             <MessageSquareWarning className="size-4 text-amber" aria-hidden="true" />
-            Report a problem
+            {/* Phones show just "Report" so the pill stays narrow enough to sit
+                beside the tour pill down to 320px; the name still contains
+                the visible text. */}
+            Report<span className="max-md:sr-only"> a problem</span>
           </button>
         </DialogTrigger>
         {/* key on pathname so a report started on one page does not carry
             its text to the next; a fresh form per page. */}
-        <DialogContent key={pathname}>
-          <DialogHeader>
-            <DialogTitle>Report a problem</DialogTitle>
-            <DialogDescription>
-              Something broken, confusing, or missing on this page? Tell us here. We read
-              every report and reply if we need more detail.
-            </DialogDescription>
-          </DialogHeader>
-          <ReportProblemForm pagePath={pathname} />
+        <DialogContent key={pathname} className="max-h-[90dvh] overflow-y-auto">
+          {/* p-6 matches DeleteAccountSection; pr-8 keeps the title clear of
+              the absolutely-positioned close button. */}
+          <div className="p-6">
+            <DialogHeader className="pr-8">
+              <DialogTitle>Report a problem</DialogTitle>
+              <DialogDescription>
+                Something broken, confusing, or missing on this page? Tell us here. We read
+                every report and reply if we need more detail.
+              </DialogDescription>
+            </DialogHeader>
+            <ReportProblemForm pagePath={pathname} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -36,7 +36,7 @@ test.describe('J. Accessibility — form labels (J14)', () => {
       .click()
     await page.waitForURL((url) => /^\/[^/]+\/[^/]+\/[^/]+/.test(url.pathname), { timeout: 60_000 })
     // Open the report-correction dialog so its inputs are present in the DOM.
-    await page.getByRole('button', { name: 'Report incorrect information' }).click()
+    await page.getByRole('button', { name: 'Report an error' }).click()
     await page.locator('[role="dialog"]').first().waitFor()
     await expectNoLabelViolations(page, 'J14 Report-correction form')
   })

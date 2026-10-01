@@ -97,6 +97,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Search bar */}
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-4">
+          {/* The page has no visible title (the search bar is the page), but
+              screen readers and the document outline still need an h1. */}
+          <h1 className="sr-only">Search businesses</h1>
           <Suspense>
             <SearchBar
               placeholder="Search businesses, categories, or cities…"

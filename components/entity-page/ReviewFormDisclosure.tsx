@@ -114,7 +114,7 @@ export function ReviewFormDisclosure({ listingId, listingName, criteria, hasRevi
       className="inline-flex h-11 items-center gap-2 rounded-lg bg-amber-gold px-5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/50"
     >
       <PenLine className="size-4" aria-hidden="true" />
-      {hasReviews ? 'Write a review' : 'Be the first to review'}
+      {hasReviews ? 'Write a review' : 'Write the first review'}
     </button>
   )
 }

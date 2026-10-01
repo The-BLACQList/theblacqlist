@@ -40,7 +40,7 @@ export function MobileFilterSheet(props: FacetSidebarProps) {
       <SheetTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-2 h-9 rounded-lg border border-charcoal/30 bg-white px-3 font-subhead text-sm font-semibold text-brand-black"
+          className="inline-flex items-center gap-2 h-11 rounded-lg border border-charcoal/30 bg-white px-3 font-subhead text-sm font-semibold text-brand-black"
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           Filters

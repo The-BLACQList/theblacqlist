@@ -29,3 +29,16 @@ export function isHiddenPath(pathname: string): boolean {
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
 }
+
+// Hidden for the RAIL only. The tour never walks the add-listing wizard, and a
+// 22rem panel over a phone form hides the inputs a tester is typing into. The
+// "Report a problem" pill deliberately stays here: a tester filling in a long
+// form is exactly who hits a problem, and the pill collapses to a small
+// "Report" on phones, so reporting stays one tap away.
+export const RAIL_ONLY_HIDDEN_PREFIXES = ['/add-business'] as const
+
+export function isRailHiddenPath(pathname: string): boolean {
+  return RAIL_ONLY_HIDDEN_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}

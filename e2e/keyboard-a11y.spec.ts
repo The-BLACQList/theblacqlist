@@ -165,7 +165,7 @@ test.describe('J. Accessibility — keyboard & focus', () => {
     await page.waitForURL((url) => /^\/[^/]+\/[^/]+\/[^/]+/.test(url.pathname), { timeout: 60_000 })
     await page.locator('main').first().waitFor()
     await assertModalFocusTrap(page, {
-      trigger: page.getByRole('button', { name: 'Report incorrect information' }),
+      trigger: page.getByRole('button', { name: 'Report an error' }),
       name: 'Report correction',
     })
   })

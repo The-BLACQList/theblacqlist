@@ -49,8 +49,8 @@ export function ClaimTrialButton({ claimed }: { claimed: boolean }) {
         {pending
           ? 'Opening checkout…'
           : claimed
-            ? 'Resume trial checkout'
-            : 'Claim your 30-day trial'}
+            ? 'Resume checkout'
+            : 'Start 30-day trial'}
       </button>
       {error && (
         <p role="alert" className="mt-2 font-subhead text-sm text-light-gold">

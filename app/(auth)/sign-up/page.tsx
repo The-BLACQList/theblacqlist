@@ -28,7 +28,7 @@ const ROLE_OPTIONS = [
   {
     value: 'vendor',
     dbRole: 'owner',
-    label: "I'm a vendor or seller",
+    label: "I sell products",
     description: 'List your products and services',
   },
   {
@@ -40,13 +40,13 @@ const ROLE_OPTIONS = [
   {
     value: 'job_poster',
     dbRole: 'owner',
-    label: "I'm hiring / posting jobs",
+    label: "I'm hiring",
     description: 'Connect with Black talent',
   },
   {
     value: 'sponsor',
     dbRole: 'owner',
-    label: "I'm interested in sponsoring",
+    label: "I want to sponsor",
     description: 'Partner with The BLACQList',
   },
 ] as const
@@ -59,11 +59,11 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      aria-label={pending ? 'Creating your account…' : 'Create account'}
+      aria-label={pending ? 'Creating account…' : 'Create account'}
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Creating your account…' : 'Create account'}
+      {pending ? 'Creating account…' : 'Create account'}
     </button>
   )
 }
@@ -250,7 +250,7 @@ function SignUpContent() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-soft hover:text-charcoal transition-colors"
+              className="absolute right-0 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-charcoal-soft hover:text-charcoal transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="size-4" aria-hidden="true" />
@@ -342,7 +342,7 @@ function SignUpContent() {
         Already have an account?{' '}
         <Link
           href={next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in'}
-          className="font-semibold text-brand-black hover:underline underline-offset-2"
+          className="inline-flex min-h-11 items-center font-semibold text-brand-black hover:underline underline-offset-2"
         >
           Sign in
         </Link>

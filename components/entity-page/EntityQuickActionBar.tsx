@@ -73,7 +73,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             <a
               href={ctaHref}
               tabIndex={visible ? 0 : -1}
-              className="flex-1 inline-flex items-center justify-center h-10 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
+              className="flex-1 inline-flex items-center justify-center h-11 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >
               {ctaLabel}
             </a>
@@ -83,13 +83,13 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             initialSaved={initialSaved}
             tabIndex={visible ? 0 : -1}
             surface="bar"
-            className="flex-shrink-0"
+            className="flex-shrink-0 size-11"
           />
           <ShareButton
             listingName={entity.name}
             listingId={entity.id}
             tabIndex={visible ? 0 : -1}
-            className="flex-shrink-0 size-10 bg-white/10 hover:bg-white/20 text-white"
+            className="flex-shrink-0 size-11 bg-white/10 hover:bg-white/20 text-white"
           />
         </div>
       </div>

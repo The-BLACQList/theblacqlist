@@ -130,7 +130,7 @@ function SignInContent() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-soft hover:text-charcoal transition-colors"
+              className="absolute right-0 top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-charcoal-soft hover:text-charcoal transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="size-4" aria-hidden="true" />
@@ -151,7 +151,7 @@ function SignInContent() {
           <div className="flex justify-end">
             <Link
               href="/forgot-password"
-              className="text-xs font-subhead text-charcoal hover:text-brand-black underline underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/20"
+              className="inline-flex min-h-11 items-center text-xs font-subhead text-charcoal hover:text-brand-black underline underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/20"
             >
               Forgot password?
             </Link>
@@ -169,7 +169,7 @@ function SignInContent() {
         Don&apos;t have an account?{' '}
         <Link
           href={next ? `/sign-up?next=${encodeURIComponent(next)}` : '/sign-up'}
-          className="font-semibold text-brand-black hover:underline underline-offset-2"
+          className="inline-flex min-h-11 items-center font-semibold text-brand-black hover:underline underline-offset-2"
         >
           Sign up, it&apos;s free
         </Link>

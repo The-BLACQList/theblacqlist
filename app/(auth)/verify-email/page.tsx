@@ -41,9 +41,9 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
         </Link>
         <Link
           href="/sign-up"
-          className="font-subhead text-sm text-charcoal hover:text-brand-black underline underline-offset-2"
+          className="inline-flex min-h-11 items-center justify-center font-subhead text-sm text-charcoal hover:text-brand-black underline underline-offset-2"
         >
-          Sign up with a different email
+          Use another email
         </Link>
       </div>
     </div>

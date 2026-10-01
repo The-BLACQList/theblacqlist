@@ -43,6 +43,8 @@ export interface TourTarget {
   fallbackHref: string | null
   /** WHERE the thing is. Never what to do — that is `step.message`. */
   hint: string
+  /** Short button text for the trip to `href`/`fallbackHref`. The hint is the helper text beside it. */
+  go: string
 }
 
 export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
@@ -51,6 +53,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['#discovery-search'],
     href: '/search',
     fallbackHref: '/search',
+    go: 'Go to search',
     hint: 'The search field sits at the top of the discovery page.',
   },
   listing_opened: {
@@ -60,6 +63,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['section[aria-label="Discovery results"]'],
     href: '/discover',
     fallbackHref: '/discover',
+    go: 'Go to Discover',
     hint: 'Listing cards fill the results grid below the filters.',
   },
   listing_saved: {
@@ -67,6 +71,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['[data-tour="save-listing"]'],
     href: null,
     fallbackHref: '/discover',
+    go: 'Find a listing',
     hint: 'The Save control sits beside the name at the top of any listing page, and on every result card.',
   },
   collection_browsed: {
@@ -76,6 +81,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['a[href^="/collections/"]'],
     href: '/collections',
     fallbackHref: '/collections',
+    go: 'Go to collections',
     hint: 'Collection cards are on the collections index.',
   },
   review_or_correction: {
@@ -92,6 +98,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: ['#review-body', '[data-tour="write-review"]', '[data-tour="report-correction"]'],
     href: null,
     fallbackHref: '/discover',
+    go: 'Find a listing',
     hint: 'The review box is near the bottom of a listing page; the correction link sits above it.',
   },
   final_reflection: {
@@ -99,6 +106,7 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: [],
     href: null,
     fallbackHref: null,
+    go: 'Stay here',
     hint: 'This last one is written right here in this panel.',
   },
 }

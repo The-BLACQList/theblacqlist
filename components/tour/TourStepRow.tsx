@@ -192,21 +192,26 @@ export function TourStepRow({
           )}
 
           {!done && awayFrom !== null && target !== undefined && (
-            <button
-              type="button"
-              onClick={travel}
-              className="mt-2 inline-flex items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
-            >
-              {target.hint}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
+            <>
+              {/* The button is the short action; the sentence of context
+                  stays visible beside it as helper text. */}
+              <p className="mt-1 font-subhead text-xs text-cream/60">{target.hint}</p>
+              <button
+                type="button"
+                onClick={travel}
+                className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+              >
+                {target.go}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </button>
+            </>
           )}
 
           {!done && awayFrom === null && target !== undefined && target.kind !== 'in-rail' && (
             <button
               type="button"
               onClick={locate}
-              className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 font-subhead text-sm text-cream transition-colors hover:border-amber-gold hover:text-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+              className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 font-subhead text-sm text-cream transition-colors hover:border-amber-gold hover:text-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
             >
               <Crosshair className="size-4" aria-hidden="true" />
               Show me

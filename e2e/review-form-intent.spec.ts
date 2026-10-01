@@ -32,7 +32,7 @@ test.describe('Review form mounts on intent', () => {
 
     await page.goto(LISTING_URL)
 
-    const trigger = page.getByRole('button', { name: /^(Write a review|Be the first to review)$/ })
+    const trigger = page.getByRole('button', { name: /^(Write a review|Write the first review)$/ })
     await expect(trigger).toBeVisible()
     // The form is genuinely absent, not hidden — a hidden form still mounts.
     await expect(page.locator('#review-body')).toHaveCount(0)

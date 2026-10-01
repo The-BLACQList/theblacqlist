@@ -215,7 +215,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                   href="/discover"
                   className="inline-flex items-center justify-center mt-5 h-10 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
                 >
-                  Explore all businesses
+                  Browse all
                 </Link>
               </div>
             ) : (

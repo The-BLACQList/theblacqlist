@@ -215,7 +215,7 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             id="reviews-heading"
             className="font-headline text-[22px] md:text-[28px] text-brand-black mb-8"
           >
-            Be the first to review
+            Write the first review
           </h2>
         )}
 

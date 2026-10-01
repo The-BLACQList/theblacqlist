@@ -65,6 +65,8 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
 
   const [step, setStep] = useState(1)
   const [selectedCity, setSelectedCity] = useState('')
+  // TODO(product): the category choice is collected but never submitted or
+  // saved anywhere; "personalize your experience" has no effect yet.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   const dbRole: 'supporter' | 'owner' = isOwner ? 'owner' : 'supporter'
@@ -115,15 +117,21 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
           <p className="font-headline text-2xl text-gold">The BLACQList</p>
           <p className="font-subhead text-sm text-white/50 mt-1">Step {step} of 2</p>
           {/* Progress bar */}
-          <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden w-48 mx-auto">
+          {/* The role sits on the track, not the fill, and runs 0..2 so the
+              value matches the bar: step 1 is half full, step 2 is full. */}
+          <div
+            role="progressbar"
+            aria-valuenow={step}
+            aria-valuemin={0}
+            aria-valuemax={2}
+            aria-valuetext={`Step ${step} of 2`}
+            aria-label="Onboarding progress"
+            className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden w-48 mx-auto"
+          >
             <div
+              aria-hidden="true"
               className="h-full bg-amber-gold rounded-full transition-all duration-300"
               style={{ width: step === 1 ? '50%' : '100%' }}
-              role="progressbar"
-              aria-valuenow={step}
-              aria-valuemin={1}
-              aria-valuemax={2}
-              aria-label={`Onboarding step ${step} of 2`}
             />
           </div>
         </div>
@@ -166,7 +174,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                   <button
                     type="button"
                     onClick={handleCitySkip}
-                    className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
+                    className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                   >
                     Skip for now
                   </button>
@@ -233,7 +241,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                 <button
                   type="button"
                   onClick={() => void handleFinalSubmit()}
-                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
+                  className="min-h-11 font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
                 >
                   I&apos;ll do this later
                 </button>
@@ -267,7 +275,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                       onClick={() => toggleCategory(cat)}
                       aria-pressed={active}
                       className={cn(
-                        'px-3 py-1.5 rounded-full text-xs font-subhead font-semibold border transition-colors',
+                        'min-h-11 px-4 py-1.5 rounded-full text-xs font-subhead font-semibold border transition-colors',
                         active
                           ? 'bg-brand-black text-white border-brand-black'
                           : 'bg-white text-charcoal border-charcoal/30 hover:border-charcoal/60'
@@ -297,7 +305,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                       router.push(getPostOnboardingDestination())
                     )
                   }}
-                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
+                  className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                 >
                   Skip
                 </button>
