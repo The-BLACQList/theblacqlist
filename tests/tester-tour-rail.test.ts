@@ -460,6 +460,19 @@ describe('reflect state — the middle status is visible on a collapsed row', ()
     expect(src).toMatch(/awaitingNote\s*&&\s*!expanded/)
   })
 
+  it('re-checks an open row when the page changes, without ringing anything', () => {
+    // An open row survives navigation. If it only checked on open, step 5
+    // opened on Discover kept sending a tester back to Discover from the
+    // listing page itself (founder, 2026-10-01).
+    const src = row()
+    expect(src).toContain('usePathname')
+    expect(src).toMatch(/\[pathname,\s*expanded,\s*step\.key\]/)
+    const effect = src.slice(src.indexOf('RECHECK_DELAYS_MS.map'))
+    const body = effect.slice(0, effect.indexOf('}, [pathname'))
+    expect(body).not.toContain('applySpotlight')
+    expect(body).not.toContain('router.push')
+  })
+
   it('counts pending reflections separately from done steps', () => {
     const src = rail()
     expect(src).toContain('pendingReflectionCount')

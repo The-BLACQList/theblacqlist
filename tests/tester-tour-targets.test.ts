@@ -13,6 +13,7 @@ import {
   evidenceStepKeys,
   planSpotlight,
   targetHrefs,
+  travelHref,
   type TourTarget,
 } from '@/lib/tour/targets'
 import { TOUR_STEPS, type TourStepKey } from '@/lib/tour/steps'
@@ -232,5 +233,27 @@ describe('evidenceStepKeys', () => {
         throw new Error('bad selector')
       })
     ).toEqual([])
+  })
+})
+
+describe('travelHref', () => {
+  const step5 = TOUR_STEP_TARGETS.review_or_correction
+
+  it('offers no trip on a listing page that holds the review box', () => {
+    // The founder's 2026-10-01 bug: on a listing page the row must offer
+    // "Show me", never "Find a listing" back to Discover.
+    expect(travelHref(planSpotlight(step5, true))).toBeNull()
+  })
+
+  it('offers Discover when the review box is not on the page', () => {
+    expect(travelHref(planSpotlight(step5, false))).toBe('/discover')
+  })
+
+  it('offers no trip for the in-rail step', () => {
+    expect(travelHref(planSpotlight(TOUR_STEP_TARGETS.final_reflection, false))).toBeNull()
+  })
+
+  it('offers the page route for a page-kind step that is elsewhere', () => {
+    expect(travelHref(planSpotlight(TOUR_STEP_TARGETS.search_ran, false))).toBe('/search')
   })
 })

@@ -142,6 +142,20 @@ export function planSpotlight(target: TourTarget, found: boolean): SpotlightPlan
 }
 
 /**
+ * Where the row's travel button should go for a plan, or null for no button.
+ *
+ * A row asks this TWICE in its life, not once: when the tester opens it, and
+ * again every time the page changes under it. The rail lives in the root
+ * layout, so an open row survives navigation. Answering only on open was the
+ * step-5 bug: open the row on Discover, tap into a listing, and the row still
+ * said "Find a listing" and sent the tester back to Discover from the very page
+ * that holds the review box.
+ */
+export function travelHref(plan: SpotlightPlan): string | null {
+  return plan.action === 'navigate' || plan.action === 'hint' ? plan.href : null
+}
+
+/**
  * Which steps an interaction could count toward, given a way to test whether it
  * touched a selector.
  *
