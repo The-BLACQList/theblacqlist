@@ -12,6 +12,8 @@
   --color-charcoal: #595758; /* neutral-700 — unchanged (7.2:1 on white) */
   --color-charcoal-soft: #6b6b6b; /* AA-passing muted text (5.3:1) — replaces text-charcoal/50–70 */
   --color-charcoal-faint: #737373; /* AA-passing faint/hint text (4.7:1) — replaces text-charcoal/30–40 */
+  --color-ink: #1d1c1d; /* map pins and chips: warm ink, softer than brand black */
+  --color-hairline: #ddd8d2; /* panel and chip borders on off-white */
   --color-ink-soft: #b5b5b7; /* dark-surface muted text (9.8:1 on ground) — the dark-side counterpart to charcoal-soft; replaces text-white/70 */
   --color-ground: #08080a; /* near-black ground */
   --color-deep-bg: #08080a; /* legacy name → ground */
@@ -186,32 +188,218 @@
   }
 }
 
-/* ─── Map explore: highlighted pin (gold glow + grow/bounce) ──────────────── */
-.blacq-map-highlight {
+/* ─── Map explore: Photo Pins ────────────────────────────────────────────────
+   Numbered photo pins are HTML markers. MapLibre owns the transform of the
+   marker element, so `.blacq-pin` is a zero-size anchor and the visible button
+   is centered on it. Size change on selection animates only when motion is
+   allowed; reduced-motion users get the size change instantly. */
+.blacq-pin {
+  width: 0;
+  height: 0;
+}
+.blacq-pin-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  /* The 32px fallback is under 44px, so the button pads the hit area out. */
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blacq-pin-btn:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 3px;
+}
+.blacq-pin-disc {
+  position: relative;
+  box-sizing: border-box;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  border: 3px solid #fff;
+  background: var(--color-ink);
+  box-shadow: 0 3px 10px rgba(29, 28, 29, 0.28);
+  color: #fff;
+  font-family: var(--font-headline);
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.blacq-pin-disc img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  display: block;
+}
+.blacq-pin-nophoto .blacq-pin-disc {
+  width: 32px;
+  height: 32px;
+  border-width: 2px;
+}
+.blacq-pin-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
-  background: var(--amber);
-  border: 3px solid var(--light-gold);
-  box-shadow: 0 0 0 6px rgba(255, 216, 103, 0.35), 0 0 22px rgba(255, 216, 103, 0.65);
-  animation: blacq-pin-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border-radius: 9999px;
+  background: #08080a;
+  color: #fff;
+  font-family: var(--font-headline);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The numbered fallback shows its number in the disc, not in a badge. */
+.blacq-pin-nophoto .blacq-pin-badge {
+  display: none;
+}
+.blacq-pin-selected .blacq-pin-disc {
+  width: 64px;
+  height: 64px;
+  border: 4px solid var(--color-gold);
+  box-shadow: 0 6px 18px rgba(29, 28, 29, 0.32);
+}
+.blacq-pin-selected.blacq-pin-nophoto .blacq-pin-disc {
+  width: 44px;
+  height: 44px;
+}
+.blacq-pin-selected .blacq-pin-badge {
+  background: var(--color-gold);
+  color: #08080a;
+}
+.blacq-pin-hover:not(.blacq-pin-selected) .blacq-pin-disc {
+  box-shadow: 0 0 0 3px var(--color-gold), 0 3px 10px rgba(29, 28, 29, 0.28);
+}
+.blacq-pin-name {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  max-width: 180px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #08080a;
+  color: #fff;
+  font-family: var(--font-headline);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
-.blacq-map-highlight-static {
-  animation: none;
-}
-@keyframes blacq-pin-pop {
-  from {
-    transform: scale(0.55);
-  }
-  to {
-    transform: scale(1);
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-pin-disc {
+    transition:
+      width 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      height 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 120ms ease-out;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .blacq-map-highlight {
-    animation: none;
-  }
+
+/* Preview card (maplibre popup). Scoped to our own wrapper class. */
+.blacq-map-popup-wrap .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 16px;
+  background: var(--color-off-white);
+  box-shadow: 0 12px 32px rgba(29, 28, 29, 0.24);
+}
+.blacq-map-popup-wrap .maplibregl-popup-tip {
+  display: none;
+}
+.blacq-map-popup-wrap .maplibregl-popup-close-button {
+  top: 6px;
+  right: 6px;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-ink);
+}
+.blacq-map-popup-wrap .maplibregl-popup-close-button:hover {
+  background: rgba(29, 28, 29, 0.08);
+}
+.blacq-map-popup-wrap .maplibregl-popup-close-button:focus-visible {
+  outline: 3px solid var(--color-amber);
+  outline-offset: -3px;
+}
+.blacq-popup {
+  width: 252px;
+  padding: 14px 14px 14px;
+}
+.blacq-popup-tier {
+  margin: 0 40px 4px 0;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-amber);
+}
+.blacq-popup-name {
+  margin: 0;
+  font-family: var(--font-headline);
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+.blacq-popup-meta {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-charcoal);
+}
+.blacq-popup-actions {
+  display: flex;
+  gap: 8px;
+}
+.blacq-popup-primary {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #08080a;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+.blacq-popup-secondary {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-hairline);
+  background: #fff;
+  color: var(--color-ink);
+}
+.blacq-popup-primary:focus-visible,
+.blacq-popup-secondary:focus-visible {
+  outline: 3px solid var(--color-amber);
+  outline-offset: 2px;
 }
 
 /* ─── Tester Tour: spotlight ring (components/tour) ─────────────────────────
@@ -410,259 +598,6 @@
       opacity: 1;
     }
   }
-}
-
-/* MapLibre popup close button: legible over the photo header */
-.blacq-map-popup-wrap .maplibregl-popup-close-button {
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(8, 8, 10, 0.72);
-  color: #fff;
-  font-size: 16px;
-  line-height: 1;
-  z-index: 3;
-}
-.blacq-map-popup-wrap .maplibregl-popup-close-button:hover {
-  background: rgba(8, 8, 10, 0.9);
-}
-
-/* Logo markers (map-presence ladder: claimed+ at street zoom) */
-.blacq-logo-marker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: none;
-  border: 0;
-  padding: 0;
-  min-width: 44px;
-  min-height: 44px;
-  justify-content: flex-end;
-  cursor: pointer;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .blacq-logo-marker {
-    animation: blacq-marker-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-  @keyframes blacq-marker-in {
-    from {
-      opacity: 0;
-      transform: scale(0.55);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-}
-/* Claimed = named pin: identity dot + name, no logo ring (logo is a
-   verified+ perk on the presence ladder) */
-.blacq-logo-marker-claimed .blacq-logo-marker-ring {
-  width: 18px;
-  height: 18px;
-  border-width: 2px;
-  border-color: #fff;
-  background: var(--amber);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-.blacq-logo-marker-claimed .blacq-logo-marker-tip {
-  background: var(--amber);
-}
-.blacq-logo-marker-ring {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 3px solid var(--gold);
-  background: #fff;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
-  transition:
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  font-family: var(--font-headline), sans-serif;
-  font-size: 16px;
-  color: var(--brand-black);
-}
-.blacq-logo-marker-ring img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.blacq-logo-marker-certified .blacq-logo-marker-ring {
-  border-color: var(--light-gold);
-  box-shadow:
-    0 0 0 4px rgba(255, 216, 103, 0.35),
-    0 3px 10px rgba(0, 0, 0, 0.28);
-}
-.blacq-logo-marker-tip {
-  width: 3px;
-  height: 8px;
-  background: var(--gold);
-  border-radius: 0 0 2px 2px;
-  margin-top: -1px;
-}
-.blacq-logo-marker-certified .blacq-logo-marker-tip {
-  background: var(--light-gold);
-}
-.blacq-logo-marker-label {
-  margin-top: 2px;
-  font-family: var(--font-body), sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #403a2e;
-  white-space: nowrap;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-shadow:
-    0 1px 2px #fff,
-    0 -1px 2px #fff,
-    1px 0 2px #fff,
-    -1px 0 2px #fff;
-}
-.blacq-logo-marker:focus-visible {
-  outline: 2px solid var(--amber);
-  outline-offset: 2px;
-  border-radius: 8px;
-}
-/* Selected/hovered identity marker. Replaces the center-anchored glow dot,
-   which on a 74px-tall marker landed on the name label instead of the ring. */
-.blacq-logo-marker-active {
-  z-index: 3;
-}
-.blacq-logo-marker-active .blacq-logo-marker-ring {
-  border-color: var(--light-gold);
-  box-shadow:
-    0 0 0 5px rgba(255, 216, 103, 0.45),
-    0 0 20px rgba(255, 216, 103, 0.6),
-    0 3px 10px rgba(0, 0, 0, 0.28);
-}
-.blacq-logo-marker-active .blacq-logo-marker-tip {
-  background: var(--light-gold);
-}
-.blacq-logo-marker-active .blacq-logo-marker-label {
-  color: var(--brand-black);
-}
-
-/* Map popup mini-card */
-.blacq-map-popup {
-  font-family: var(--font-body), sans-serif;
-}
-.blacq-map-popup-photo {
-  position: relative;
-  height: 104px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 10px 10px 0 0;
-  margin: -10px -10px 8px;
-}
-.blacq-map-popup-photo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent 55%);
-  border-radius: 10px 10px 0 0;
-}
-.blacq-map-popup-chips {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  display: flex;
-  gap: 5px;
-}
-.blacq-map-popup-chip {
-  background: var(--ground);
-  color: var(--gold);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  padding: 2.5px 9px;
-}
-.blacq-map-popup-photoname {
-  position: absolute;
-  left: 10px;
-  bottom: 7px;
-  right: 10px;
-  z-index: 2;
-  margin: 0;
-  font-family: var(--font-headline), sans-serif;
-  font-size: 16px;
-  color: #fff;
-}
-.blacq-map-popup-actions {
-  display: flex;
-  gap: 7px;
-  margin-top: 8px;
-}
-.blacq-map-popup-primary {
-  flex: 1;
-  text-align: center;
-  background: var(--brand-black);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 8px 0;
-  text-decoration: none;
-}
-.blacq-map-popup-primary:hover {
-  background: var(--charcoal);
-}
-.blacq-map-popup-secondary {
-  text-align: center;
-  border: 1.5px solid var(--brand-black);
-  color: var(--brand-black);
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 8px 14px;
-  text-decoration: none;
-}
-.blacq-map-popup-secondary:hover {
-  background: var(--pale-lavender);
-}
-.blacq-map-popup-tier {
-  margin: 0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--amber);
-}
-.blacq-map-popup-name {
-  margin: 1px 0 0;
-  font-family: var(--font-headline), sans-serif;
-  font-size: 15px;
-  color: var(--brand-black);
-}
-.blacq-map-popup-meta {
-  margin: 2px 0 6px;
-  font-size: 11.5px;
-  color: var(--charcoal);
-}
-.blacq-map-popup-body {
-  padding-top: 2px;
-}
-/* Scoped to our own popup — an unscoped .maplibregl-popup-content rule would
-   restyle every popup the map ever mounts, including MapLibre's own. */
-.blacq-map-popup-wrap .maplibregl-popup-content {
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-}
-/* The arrow joining the card to the pin. MapLibre colors the tip per anchor
-   via its own defaults; this only sizes it and gives it the card's shadow so
-   it reads as a pointer instead of a stray triangle. */
-.blacq-map-popup-wrap .maplibregl-popup-tip {
-  border-width: 9px;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
 }
 
 /* The listing page's mobile quick-action bar (EntityQuickActionBar) is fixed to
