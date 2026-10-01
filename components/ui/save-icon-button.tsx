@@ -131,7 +131,7 @@ export function SaveIconButton({
           isSaved
             ? // Solid gold, not gold-at-20%: over an arbitrary cover photo a
               // translucent tint is invisible. #000 on #c4a065 is 8.5:1.
-              'bg-amber-gold text-brand-black ring-2 ring-white/70 hover:bg-light-gold'
+              'bg-amber-gold text-brand-black ring-1 ring-white/70 hover:bg-light-gold'
             : 'bg-black/50 text-white hover:bg-black/70',
           failed && 'ring-2 ring-red-500',
           popping && 'blacq-save-pop',

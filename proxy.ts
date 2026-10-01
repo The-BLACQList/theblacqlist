@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { canonicalOpenNowQuery } from '@/lib/listings/discover-params'
+
 // Route prefixes that require a valid session.
 // Admin role checks (admin vs super_admin) are performed server-side
 // inside each /admin page — the Edge Runtime cannot make DB queries.
@@ -46,6 +48,10 @@ const COMING_SOON_ALLOWED_PATHS = [
   '/api',
   '/auth',
   '/join',
+  // One-tap tester links. The page holds no secret and opens nothing without a
+  // valid token, which lives in the URL fragment and never reaches this proxy.
+  // Same reasoning as /join: a tester must reach it while the gate is up.
+  '/t',
   '/sign-in',
   '/verify-email',
   '/forgot-password',
@@ -138,6 +144,18 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/account'
     return NextResponse.redirect(url)
+  }
+
+  // Legacy "Open now" links (`/discover?open=now`) → the canonical `open_now=1`.
+  // This used to be a redirect() inside the discover page. It moved here when
+  // discover got a loading.tsx: a loading boundary streams the page, the 200 is
+  // already sent by the time the page runs, and the redirect degraded to a
+  // client-side hop. Here it is still a real 307.
+  if (pathname === '/discover') {
+    const canonical = canonicalOpenNowQuery(Object.fromEntries(request.nextUrl.searchParams))
+    if (canonical !== null) {
+      return NextResponse.redirect(new URL(`/discover${canonical}`, request.url))
+    }
   }
 
   return supabaseResponse

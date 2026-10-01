@@ -112,6 +112,15 @@ const BANNERS: Record<string, BannerContent> = {
   },
 }
 
+/**
+ * The frame that heads a bin on /discover, for surfaces that link into that
+ * bin. The home avenue tiles use it so the picture on the tile is the picture
+ * the click lands on. Undefined when the bin has no frame yet.
+ */
+export function bannerPhotoFor(type: string): string | undefined {
+  return BANNERS[type]?.photo
+}
+
 interface Props {
   type?: string | null
 }

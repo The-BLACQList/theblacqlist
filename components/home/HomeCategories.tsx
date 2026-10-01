@@ -46,7 +46,7 @@ export function HomeCategories({ categories }: Props) {
             caption is content-height, so a two-line name ("Social Media &
             Marketing") makes it ~110px where a one-line name makes it ~78px.
             190/200 left the shortest picture ≥88px of open frame above the
-            band at every width. The feature tile spans two rows and clears
+            band at every width. The feature tile spans two rows from md and clears
             easily.
 
             210/232 is the one traded change in this pass rather than a free
@@ -61,7 +61,9 @@ export function HomeCategories({ categories }: Props) {
               href={`/discover?category=${category.slug}`}
               className={cn(
                 'group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
-                i === 0 && 'col-span-2 row-span-2'
+                // One row on phones, two from md. Spanning two 210px rows made the
+                // feature 430px tall at 375, most of a screen for one category.
+                i === 0 && 'col-span-2 md:row-span-2'
               )}
             >
               <PhotoPanelGround
@@ -74,7 +76,7 @@ export function HomeCategories({ categories }: Props) {
                 // hints described the box and shipped a soft image.
                 sizes={
                   i === 0
-                    ? '(max-width: 767px) 172vw, (max-width: 1023px) 93vw, (max-width: 1279px) 70vw, 720px'
+                    ? '(max-width: 767px) 90vw, (max-width: 1023px) 93vw, (max-width: 1279px) 70vw, 720px'
                     : '(max-width: 767px) 84vw, (max-width: 1023px) 46vw, (max-width: 1279px) 34vw, 350px'
                 }
               />

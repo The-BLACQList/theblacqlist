@@ -10,6 +10,8 @@ import {
   InviteTesterForm,
   EndEnrollmentButton,
 } from '@/components/admin/TesterTourActions'
+import { MintTesterLinkForm, RevokeLinkButton } from '@/components/admin/TesterLinkCard'
+import { testerLinkStatus, type TesterLinkStatus } from '@/lib/tester/links'
 
 export const metadata: Metadata = { title: 'Testers' }
 
@@ -36,7 +38,8 @@ function formatDateTime(iso: string) {
 interface EnrollmentRow {
   id: string
   tester_user_id: string
-  listing_id: string
+  // NULL is a supporter tester: no listing, a thank-you instead of a trial.
+  listing_id: string | null
   started_at: string
   completed_at: string | null
   trial_granted_at: string | null
@@ -62,6 +65,27 @@ interface ReflectionEntry {
 }
 
 type View = 'enrollments' | 'reflections'
+
+// One-tap links, without the email: the table only needs the label to tell
+// links apart, and leaving PII out of the page keeps it out of screenshots.
+interface TesterLinkRow {
+  id: string
+  kind: string
+  label: string
+  use_count: number
+  max_uses: number
+  expires_at: string
+  revoked_at: string | null
+  created_at: string
+}
+
+const LINK_STATUS_CLASS: Record<TesterLinkStatus['state'], string> = {
+  unused: 'bg-blue-50 text-blue-800 border-blue-200',
+  in_use: 'bg-green-50 text-green-800 border-green-200',
+  used_up: 'bg-charcoal/10 text-charcoal-soft border-charcoal/15',
+  expired: 'bg-charcoal/10 text-charcoal-soft border-charcoal/15',
+  revoked: 'bg-red-50 text-red-700 border-red-200',
+}
 
 function enrollmentStatus(row: EnrollmentRow): { label: string; className: string } {
   if (row.ended_at) {
@@ -101,6 +125,13 @@ export default async function AdminTestersPage({
     .order('started_at', { ascending: false })
 
   const enrollments = (enrollmentData ?? []) as EnrollmentRow[]
+
+  const { data: linkData } = await serviceClient
+    .from('tester_invites')
+    .select('id, kind, label, use_count, max_uses, expires_at, revoked_at, created_at')
+    .order('created_at', { ascending: false })
+
+  const links = (linkData ?? []) as TesterLinkRow[]
 
   // Progress and reflections come from the same rows. Tester scale, so one
   // query and no pagination. Reflections are what the founder actually reads:
@@ -166,9 +197,9 @@ export default async function AdminTestersPage({
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Testers</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Tester Tour enrollments and what testers wrote at each step.
-          Completing the tour unlocks a one-click 30-day Starter trial on the
-          tester&rsquo;s own listing.
+          Tester Tour enrollments and what testers wrote at each step. A
+          listing owner who completes the tour unlocks a one-click 30-day
+          Starter trial on their own listing. A supporter gets a thank-you.
         </p>
       </div>
 
@@ -189,6 +220,19 @@ export default async function AdminTestersPage({
         <div className="mt-3">
           <InviteTesterForm />
         </div>
+      </div>
+
+      <div className="rounded-xl border border-charcoal/10 bg-white p-5">
+        <h2 className="font-subhead text-sm font-bold text-brand-black uppercase tracking-wide">
+          Make a one-tap link
+        </h2>
+        <p className="font-body text-xs text-charcoal-soft mt-1">
+          One tap signs the tester in, enrolls them and opens the tour. No sign-up form.
+        </p>
+        <div className="mt-3">
+          <MintTesterLinkForm />
+        </div>
+        {links.length > 0 && <LinksTable links={links} />}
       </div>
 
       <nav aria-label="Tester views" className="flex flex-wrap gap-2">
@@ -215,8 +259,8 @@ export default async function AdminTestersPage({
       ) : enrollments.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal-soft">
-            No enrollments yet. Invite a listing owner above to start their
-            tour.
+            No enrollments yet. Invite a listing owner or send a one-tap link
+            above to start a tour.
           </p>
         </div>
       ) : (
@@ -292,7 +336,9 @@ function EnrollmentRows({
           <p className="font-subhead text-sm font-semibold text-brand-black">{tester}</p>
         </td>
         <td className="px-4 py-3">
-          {row.listings ? (
+          {row.listing_id === null ? (
+            <span className="font-body text-xs text-charcoal-soft">Supporter</span>
+          ) : row.listings ? (
             <Link
               href={`/admin/entities/${row.listing_id}`}
               className="font-subhead text-sm text-brand-black underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold"
@@ -367,6 +413,65 @@ function ReflectionItem({ entry, tester }: { entry: ReflectionEntry; tester?: st
       )}
       <p className="mt-2 font-body text-sm text-brand-black whitespace-pre-wrap">{entry.text}</p>
     </li>
+  )
+}
+
+// Every link ever made, newest first. Live ones get a Revoke button; the rest
+// stay listed so the founder can see what was sent and how it was used.
+function LinksTable({ links }: { links: TesterLinkRow[] }) {
+  const now = new Date()
+  return (
+    <div className="mt-5 overflow-x-auto rounded-lg border border-charcoal/10">
+      <table className="w-full text-sm">
+        <caption className="sr-only">One-tap links</caption>
+        <thead>
+          <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
+            <th className="text-left px-4 py-2 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
+              Label
+            </th>
+            <th className="text-left px-4 py-2 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
+              For
+            </th>
+            <th className="text-left px-4 py-2 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
+              Status
+            </th>
+            <th className="text-left px-4 py-2 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
+              Expires
+            </th>
+            <th className="px-4 py-2" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-charcoal/5">
+          {links.map((link) => {
+            const status = testerLinkStatus(link, now)
+            const live = status.state === 'unused' || status.state === 'in_use'
+            return (
+              <tr key={link.id}>
+                <td className="px-4 py-2 font-subhead text-sm font-semibold text-brand-black">
+                  {link.label}
+                </td>
+                <td className="px-4 py-2 font-body text-xs text-charcoal-soft">
+                  {link.kind === 'owner' ? 'Listing owner' : 'Supporter'}
+                </td>
+                <td className="px-4 py-2">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-semibold font-subhead ${LINK_STATUS_CLASS[status.state]}`}
+                  >
+                    {status.label}
+                  </span>
+                </td>
+                <td className="px-4 py-2 hidden md:table-cell font-body text-xs text-charcoal-soft">
+                  {formatDate(link.expires_at)}
+                </td>
+                <td className="px-4 py-2 text-right">
+                  {live && <RevokeLinkButton inviteId={link.id} />}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
