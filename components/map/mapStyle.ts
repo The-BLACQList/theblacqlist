@@ -2,23 +2,56 @@ import { layers, namedFlavor } from '@protomaps/basemaps'
 import type { StyleSpecification } from 'maplibre-gl'
 
 /**
- * Light, legible basemap (founder direction: "a map that looks more like a
- * map — easy to see, scan, and traverse my neighborhood"). Protomaps light
- * flavor tinted to brand neutrals; brand color lives in the pins and chrome,
- * not the ground. Fully self-hosted tiles (PMTiles in our own storage);
- * fonts/sprites from the static basemaps-assets bundle (TODO: copy into
- * public/ for full self-hosting before scale).
+ * "Photo Pins" basemap: a warm sand ground so the photo pins and ink dots carry
+ * all the contrast. No dark ground and no glow on the map itself. Protomaps
+ * light flavor with the sand palette laid over it. Fully self-hosted tiles
+ * (PMTiles in our own storage); fonts/sprites from the static basemaps-assets
+ * bundle (TODO: copy into public/ for full self-hosting before scale).
  */
+export const SAND = {
+  ground: '#efe5d3',
+  park: '#dfdfc6',
+  minorRoad: '#f6efe2',
+  majorRoad: '#fbf7ef',
+  highway: '#e6cf9f',
+  water: '#c9d9da',
+  label: '#a0927c',
+} as const
+
 export function buildMapStyle(tilesUrl: string): StyleSpecification {
+  const base = namedFlavor('light')
   const flavor = {
-    ...namedFlavor('light'),
-    background: '#f2f0ee', // pale-lavender ground
-    earth: '#f4f4f7', // off-white
-    // Founder: state lines must read clearly — darken admin boundaries and
-    // state labels from the flavor's faint greys to legible warm charcoal.
+    ...base,
+    background: SAND.ground,
+    earth: SAND.ground,
+    park_a: SAND.park,
+    park_b: SAND.park,
+    wood_a: SAND.park,
+    wood_b: SAND.park,
+    scrub_a: SAND.park,
+    scrub_b: SAND.park,
+    water: SAND.water,
+    minor_service: SAND.minorRoad,
+    minor_a: SAND.minorRoad,
+    minor_b: SAND.minorRoad,
+    link: SAND.minorRoad,
+    major: SAND.majorRoad,
+    highway: SAND.highway,
+    roads_label_minor: SAND.label,
+    roads_label_major: SAND.label,
+    subplace_label: SAND.label,
+    city_label: SAND.label,
+    ocean_label: SAND.label,
+    country_label: SAND.label,
+    roads_label_minor_halo: SAND.ground,
+    roads_label_major_halo: SAND.ground,
+    subplace_label_halo: SAND.ground,
+    city_label_halo: SAND.ground,
+    // Founder: state lines must read clearly. Kept a step darker than the
+    // place labels so they still read on sand.
     boundaries: '#8a8175',
-    state_label: '#6b6255',
-    state_label_halo: '#f4f4f7',
+    state_label: '#7d705c',
+    state_label_halo: SAND.ground,
   }
 
   return {
@@ -37,7 +70,9 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
       },
     },
-    layers: layers('protomaps', flavor, { lang: 'en' }),
+    // The photo pins are the points of interest, so the basemap's own POI
+    // icons are dropped rather than competing with them.
+    layers: layers('protomaps', flavor, { lang: 'en' }).filter((l) => l.id !== 'pois'),
   }
 }
 

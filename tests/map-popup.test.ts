@@ -1,144 +1,150 @@
 // =============================================================================
-// Map preview-card geometry + pin-layer ownership
+// Map popup geometry, pin numbering and list filtering
 // =============================================================================
-// Guards the two defects behind "clicking an upgraded pin does nothing / the
-// card covers the pin":
+// popupOffset(): MapLibre zeroes any anchor an offset object omits, so a partial
+// object puts the card on top of the pin when it flips near a viewport edge. The
+// card must also clear the 64px selected pin and its name pill.
 //
-//   • popupOffsetFor() — the card must clear whichever renderer is on screen.
-//     A scalar MapLibre offset normalizes to a radius, so 18px cleared a 3.5px
-//     dot and buried a 74px logo marker. A partial offset object is just as
-//     bad: MapLibre zeroes every anchor the object omits, so the card snaps
-//     onto the pin the moment it flips near a viewport edge.
-//
-//   • buildPinsFilter() — the circle layer used to switch off wholesale above
-//     z13 while DOM markers were capped at 60 per viewport, leaving the 61st
-//     claimed+ listing with no renderer at all. The filter now drops exactly
-//     the ids that got a marker, so coverage is a complement, not a guess.
+// rankListings / pinNumbers: the numbers on the map and the numbers on the cards
+// come from one ordering, and unclaimed listings never get a photo pin.
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
 
 import {
-  buildPinsFilter,
-  popupOffsetFor,
+  NAME_PILL_HEIGHT,
   POPUP_ANCHORS,
-  TIER_RADIUS,
-  type PopupAnchor,
-  type TrustTier,
+  SELECTED_PIN_RADIUS,
+  popupAnchor,
+  popupOffset,
 } from '@/lib/map/popupOffset'
+import { PIN_LIMIT, listingPhoto, pinNumbers, rankListings } from '@/lib/map/rankListings'
+import { NO_FILTERS, activeFilterCount, filterListings } from '@/lib/map/filterListings'
+import type { MapListing, TrustTier } from '@/lib/map/types'
 
-const ALL_TIERS: TrustTier[] = ['unclaimed', 'claimed', 'verified', 'certified']
-
-/** Upward clearance is what keeps the card off the pin — `bottom` anchor. */
-function clearance(tier: TrustTier, hasDomMarker: boolean): number {
-  return -popupOffsetFor(tier, hasDomMarker).bottom[1]
+function listing(id: string, trustTier: TrustTier, extra: Partial<MapListing> = {}): MapListing {
+  return {
+    id,
+    name: id,
+    entityType: 'business',
+    href: `/b/${id}`,
+    category: 'Beauty',
+    categorySlug: 'beauty',
+    citySlug: 'atlanta-ga',
+    cityName: 'Atlanta',
+    trustTier,
+    logoSrc: null,
+    ownershipLabel: 'black_owned',
+    avgRating: null,
+    reviewCount: 0,
+    isFeatured: false,
+    isSponsored: false,
+    priceRange: null,
+    hours: null,
+    coverSrc: null,
+    lng: -84.4,
+    lat: 33.7,
+    ...extra,
+  }
 }
 
-describe('popupOffsetFor', () => {
+describe('popupOffset', () => {
+  const offset = popupOffset()
+
   it('defines every anchor MapLibre can flip to', () => {
-    // Any anchor left out of the object is treated as [0, 0].
-    for (const tier of ALL_TIERS) {
-      for (const hasDomMarker of [false, true]) {
-        const offset = popupOffsetFor(tier, hasDomMarker)
-        expect(Object.keys(offset).sort()).toEqual([...POPUP_ANCHORS].sort())
-        for (const anchor of POPUP_ANCHORS as readonly PopupAnchor[]) {
-          expect(offset[anchor]).toHaveLength(2)
-          expect(Number.isFinite(offset[anchor][0])).toBe(true)
-          expect(Number.isFinite(offset[anchor][1])).toBe(true)
-        }
-      }
-    }
+    for (const anchor of POPUP_ANCHORS) expect(offset[anchor]).toBeDefined()
+    expect(Object.keys(offset).sort()).toEqual([...POPUP_ANCHORS].sort())
   })
 
-  it('clears the GL circle by its radius plus its stroke', () => {
-    // Tight enough that a 3.5px dot keeps the behavior the founder called
-    // correct, loose enough that the ring is never touched.
-    for (const tier of ALL_TIERS) {
-      const gap = clearance(tier, false) - TIER_RADIUS[tier]
-      expect(gap).toBeGreaterThanOrEqual(8)
-      expect(gap).toBeLessThanOrEqual(12)
-    }
+  it('clears the selected pin on every side', () => {
+    expect(offset.left[0]).toBeGreaterThan(SELECTED_PIN_RADIUS)
+    expect(-offset.right[0]).toBeGreaterThan(SELECTED_PIN_RADIUS)
+    expect(-offset.bottom[1]).toBeGreaterThan(SELECTED_PIN_RADIUS)
   })
 
-  it('clears the full height of a logo marker, which stacks above its point', () => {
-    // Ring 48 + tip 7 + label ~16 ≈ 74px of marker above the coordinate.
-    for (const tier of ['verified', 'certified'] as TrustTier[]) {
-      expect(clearance(tier, true)).toBeGreaterThanOrEqual(74)
-    }
-  })
-
-  it('clears the shorter claimed marker without over-shooting', () => {
-    // 18px dot + tip + label — a logo-sized offset here would float the card.
-    const claimed = clearance('claimed', true)
-    expect(claimed).toBeGreaterThanOrEqual(41)
-    expect(claimed).toBeLessThan(clearance('verified', true))
-  })
-
-  it('always clears a DOM marker by more than the circle it replaces', () => {
-    // The regression that produced the bug report: one offset for both.
-    for (const tier of ['claimed', 'verified', 'certified'] as TrustTier[]) {
-      expect(clearance(tier, true)).toBeGreaterThan(clearance(tier, false))
-    }
-  })
-
-  it('places the card above the point and never below it on the bottom anchor', () => {
-    for (const tier of ALL_TIERS) {
-      for (const hasDomMarker of [false, true]) {
-        expect(popupOffsetFor(tier, hasDomMarker).bottom[1]).toBeLessThan(0)
-        // The `top` anchor puts the card underneath, where nothing is drawn —
-        // it only needs the gap, not the marker height.
-        expect(popupOffsetFor(tier, hasDomMarker).top[1]).toBeGreaterThan(0)
-      }
-    }
-  })
-
-  it('mirrors the side anchors so an edge flip stays symmetric', () => {
-    const offset = popupOffsetFor('certified', true)
-    expect(offset.left[0]).toBeGreaterThan(0)
-    expect(offset.right[0]).toBe(-offset.left[0])
-    expect(offset['bottom-right'][0]).toBe(-offset['bottom-left'][0])
-    expect(offset['top-right'][0]).toBe(-offset['top-left'][0])
+  it('clears the name pill when the card sits below the pin', () => {
+    expect(offset.top[1]).toBeGreaterThan(SELECTED_PIN_RADIUS + NAME_PILL_HEIGHT)
   })
 })
 
-describe('buildPinsFilter', () => {
-  const BASE = [
-    'all',
-    ['!', ['has', 'point_count']],
-    ['!=', ['get', 'trustTier'], 'unclaimed'],
+describe('popupAnchor', () => {
+  it('opens beside the pin, to its right, by default', () => {
+    expect(popupAnchor(400, 400, 1000, 800)).toBe('left')
+  })
+  it('flips left near the right edge', () => {
+    expect(popupAnchor(900, 400, 1000, 800)).toBe('right')
+  })
+  it('shifts down near the top and up near the bottom', () => {
+    expect(popupAnchor(400, 40, 1000, 800)).toBe('top-left')
+    expect(popupAnchor(900, 780, 1000, 800)).toBe('bottom-right')
+  })
+})
+
+describe('rankListings', () => {
+  it('puts sponsored first, then higher trust, then name', () => {
+    const ranked = rankListings([
+      listing('b-claimed', 'claimed'),
+      listing('a-certified', 'certified'),
+      listing('c-sponsored', 'unclaimed', { isSponsored: true }),
+      listing('a-claimed', 'claimed'),
+    ])
+    expect(ranked.map((l) => l.id)).toEqual(['c-sponsored', 'a-certified', 'a-claimed', 'b-claimed'])
+  })
+
+  it('caps the list', () => {
+    const many = Array.from({ length: 80 }, (_, i) => listing(`l${i}`, 'claimed'))
+    expect(rankListings(many)).toHaveLength(60)
+  })
+})
+
+describe('pinNumbers', () => {
+  it('numbers in ranked order starting at 1', () => {
+    const nums = pinNumbers([listing('a', 'certified'), listing('b', 'verified')])
+    expect([...nums.entries()]).toEqual([
+      ['a', 1],
+      ['b', 2],
+    ])
+  })
+
+  it('never numbers an unclaimed listing and keeps numbers contiguous', () => {
+    const nums = pinNumbers([listing('a', 'claimed'), listing('u', 'unclaimed'), listing('b', 'claimed')])
+    expect(nums.has('u')).toBe(false)
+    expect(nums.get('b')).toBe(2)
+  })
+
+  it('stops at the pin limit', () => {
+    const many = Array.from({ length: 20 }, (_, i) => listing(`l${i}`, 'verified'))
+    expect(pinNumbers(many).size).toBe(PIN_LIMIT)
+  })
+})
+
+describe('listingPhoto', () => {
+  it('prefers the cover, falls back to the logo, then null', () => {
+    expect(listingPhoto({ coverSrc: 'c', logoSrc: 'l' })).toBe('c')
+    expect(listingPhoto({ coverSrc: null, logoSrc: 'l' })).toBe('l')
+    expect(listingPhoto({ coverSrc: null, logoSrc: null })).toBeNull()
+  })
+})
+
+describe('filterListings', () => {
+  const all = [
+    listing('Crown and Coil', 'verified'),
+    listing('Soul Kitchen', 'claimed', { category: 'Food', categorySlug: 'food', entityType: 'restaurant' }),
   ]
 
-  /**
-   * `FilterSpecification` is a wide union (it admits `false` and the legacy
-   * non-expression forms), so index into the result as a plain array here
-   * rather than sprinkling narrowing through every assertion.
-   */
-  function clauses(ids: readonly string[]): unknown[] {
-    return buildPinsFilter(ids) as unknown as unknown[]
-  }
-
-  it('is the plain claimed+ filter when no DOM markers are rendered', () => {
-    // Below z13 every claimed+ listing is a circle. An empty `in` clause here
-    // would be harmless but noisy; the layer spec stays minimal instead.
-    expect(clauses([])).toEqual(BASE)
+  it('returns everything with no filters', () => {
+    expect(filterListings(all, NO_FILTERS)).toHaveLength(2)
+    expect(activeFilterCount(NO_FILTERS)).toBe(0)
   })
 
-  it('excludes exactly the ids that got a marker', () => {
-    const filter = clauses(['a', 'b'])
-    expect(filter.slice(0, 3)).toEqual(BASE)
-    expect(filter[3]).toEqual(['!', ['in', ['get', 'id'], ['literal', ['a', 'b']]]])
+  it('searches name and category, ignoring case', () => {
+    expect(filterListings(all, { ...NO_FILTERS, query: 'crown' }).map((l) => l.id)).toEqual(['Crown and Coil'])
+    expect(filterListings(all, { ...NO_FILTERS, query: 'FOOD' }).map((l) => l.id)).toEqual(['Soul Kitchen'])
   })
 
-  it('still excludes unclaimed, which never gets a marker', () => {
-    // The circle layer is claimed+ only; unclaimed has its own layer with no
-    // zoom cutoff, and that is the path that always worked.
-    expect(clauses(['a'])).toContainEqual(['!=', ['get', 'trustTier'], 'unclaimed'])
-  })
-
-  it('copies the id list so a later mutation cannot rewrite a live filter', () => {
-    const ids = ['a']
-    const filter = clauses(ids)
-    ids.push('b')
-    expect(filter[3]).toEqual(['!', ['in', ['get', 'id'], ['literal', ['a']]]])
+  it('applies trust, category and type filters together', () => {
+    expect(filterListings(all, { ...NO_FILTERS, trustOnly: true })).toHaveLength(1)
+    expect(filterListings(all, { ...NO_FILTERS, categorySlug: 'food', entityType: 'restaurant' })).toHaveLength(1)
+    expect(activeFilterCount({ ...NO_FILTERS, trustOnly: true, categorySlug: 'food' })).toBe(2)
   })
 })
