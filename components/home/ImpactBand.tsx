@@ -57,7 +57,7 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
               href="/flow-map"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Explore the flow map
+              See the flow map
             </Link>
             <Link
               href="/account/receipts/new"
