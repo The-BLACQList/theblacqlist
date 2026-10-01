@@ -71,16 +71,23 @@ export function HomeTriptych() {
                 body wraps to a second line and the others do not; it lives on
                 the spacer now rather than the caption, because a caption that
                 grows would stretch the veil's solid zone away from the text it
-                is there to carry. */}
+                is there to carry.
+
+                Below lg the three stack full width, and at 16:9 each one was a
+                full phone screen of picture, about 211px at 375 and 432px at
+                768, so the three alone ran past two screens [Decision —
+                founder, 2026-10-01: "a bit smaller" on mobile]. 2:1 on phones
+                and 3:1 in the md band keeps the frame wide enough to read and
+                gives the scroll back. */}
             <span
               aria-hidden="true"
-              className="block grow min-h-0 aspect-[16/9] lg:aspect-[4/3] xl:aspect-[16/9]"
+              className="block grow min-h-0 aspect-[2/1] md:aspect-[3/1] lg:aspect-[4/3] xl:aspect-[16/9]"
             />
-            <PhotoPanelCaption className="p-6 md:p-8">
+            <PhotoPanelCaption className="p-5 md:p-8">
               <span className="font-subhead text-xs font-bold tracking-[0.16em] text-light-gold">
                 {panel.index}
               </span>
-              <span className="font-headline text-[26px] md:text-[30px] leading-tight text-white mt-1 group-hover:text-light-gold transition-colors duration-150">
+              <span className="font-headline text-[24px] md:text-[30px] leading-tight text-white mt-1 group-hover:text-light-gold transition-colors duration-150">
                 {panel.title}
               </span>
               <span className="font-body text-sm text-off-white/80 mt-1 max-w-[32ch]">

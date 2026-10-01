@@ -44,18 +44,24 @@ export function CityChapters({ cities }: Props) {
         {/* Three-across at lg, not sm. At 640 the old break gave each city a
             189px tile holding 50px of open skyline under a 75%-covered caption
             — the worst panel in the system, and a band the harness had never
-            sampled. Full width until 1024 costs scroll length and returns the
-            picture. `[Measured — scripts/measure-plate-contrast.ts, 2026-08-10]` */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+            sampled. `[Measured — scripts/measure-plate-contrast.ts, 2026-08-10]`
+
+            Below lg the cities are a swipe rail, not a stack. Six full-width
+            16:9 tiles cost about 1,700px of scroll at 375 and 2,400px at 768
+            for one idea repeated. A rail tile is 82% of the phone width, wider
+            than the 189px tile that failed above, so the skyline keeps its
+            picture and the next city peeks in to say there is more.
+            `[Decision — founder, 2026-10-01: mobile design pass]` */}
+        <div className="-mx-5 md:-mx-8 px-5 md:px-8 scroll-px-5 md:scroll-px-8 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 mt-6 lg:mx-0 lg:px-0 lg:pb-0 lg:grid lg:grid-cols-3 lg:overflow-visible">
           {live.map((city) => (
             <Link
               key={city.slug}
               href={`/discover/${city.slug}`}
-              className="group relative flex flex-col rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+              className="group relative flex flex-col shrink-0 w-[82%] md:w-[58%] lg:w-auto snap-start rounded-xl bg-deep-bg overflow-hidden focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber"
             >
               <PhotoPanelGround
                 src={CITY_PHOTOS[city.slug]}
-                sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 33vw, 400px"
+                sizes="(max-width: 767px) 82vw, (max-width: 1023px) 58vw, (max-width: 1279px) 33vw, 400px"
                 alt={`${city.name} skyline`}
               />
               {/* Spacer, not a wrapper — the frame fills the whole tile behind
