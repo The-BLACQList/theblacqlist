@@ -16,10 +16,10 @@
 // destination in its label, and the tester taps it.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Check, ChevronDown, Crosshair, Pencil } from 'lucide-react'
 
-import { TOUR_STEP_TARGETS, planSpotlight, type TourTarget } from '@/lib/tour/targets'
+import { TOUR_STEP_TARGETS, planSpotlight, travelHref, type TourTarget } from '@/lib/tour/targets'
 import { rowMarker } from '@/lib/tour/progress'
 import {
   applySpotlight,
@@ -29,6 +29,13 @@ import {
 } from './spotlight'
 import { TourReflectionForm } from './TourReflectionForm'
 import type { TourStepState } from './useTourState'
+
+/**
+ * When an open row re-checks the page after a navigation. More than one shot
+ * because a listing page streams: the review trigger can sit behind a Suspense
+ * boundary that has not resolved at first paint.
+ */
+const RECHECK_DELAYS_MS = [0, 400, 1200] as const
 
 /** `step.key` is widened to `string` in the API mirror; tolerate a miss. */
 function targetFor(key: string): TourTarget | undefined {
@@ -49,6 +56,7 @@ export function TourStepRow({
   onReflectionSaved: () => void
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [awayFrom, setAwayFrom] = useState<string | null>(null)
   const rowRef = useRef<HTMLLIElement | null>(null)
   const wasExpanded = useRef(expanded)
@@ -99,14 +107,33 @@ export function TourStepRow({
       setAwayFrom(null)
       return
     }
-    if (plan.action === 'navigate' || plan.action === 'hint') {
-      setAwayFrom(plan.href)
-      return
-    }
-    // 'focus-rail' — the final reflection has no page target. Expanding the row
-    // has already put the textarea on screen; nothing else to do.
-    setAwayFrom(null)
+    // 'navigate'/'hint' offer the trip; 'focus-rail' — the final reflection —
+    // has no page target, and expanding the row already put the textarea on
+    // screen.
+    setAwayFrom(travelHref(plan))
   }, [step.key])
+
+  // Re-ask "is the target on THIS page?" whenever the page changes under an
+  // open row, or a row opens without a click (follow-the-tour, a step that just
+  // moved). The rail survives navigation, so an answer from the last page goes
+  // stale: step 5 opened on Discover kept offering "Find a listing" on the
+  // listing page itself and sent the tester back to Discover.
+  //
+  // ⚠ This only updates which button the row offers. It never rings or focuses
+  // anything — moving focus because the page changed, not because the tester
+  // asked, is the same D-T3 / WCAG 3.2.5 problem as navigating on their behalf.
+  useEffect(() => {
+    if (!expanded) return
+    const target = targetFor(step.key)
+    if (target === undefined) return
+    const timers = RECHECK_DELAYS_MS.map((delay) =>
+      setTimeout(() => {
+        const found = resolveVisibleTarget(target.selectors) !== null
+        setAwayFrom(travelHref(planSpotlight(target, found)))
+      }, delay)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [pathname, expanded, step.key])
 
   const handleToggle = useCallback(() => {
     const opening = !expanded
