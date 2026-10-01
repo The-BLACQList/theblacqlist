@@ -46,6 +46,10 @@ const COMING_SOON_ALLOWED_PATHS = [
   '/api',
   '/auth',
   '/join',
+  // One-tap tester links. The page holds no secret and opens nothing without a
+  // valid token, which lives in the URL fragment and never reaches this proxy.
+  // Same reasoning as /join: a tester must reach it while the gate is up.
+  '/t',
   '/sign-in',
   '/verify-email',
   '/forgot-password',

@@ -20,7 +20,7 @@ const h = vi.hoisted(() => {
       email: string | null
       enrollment: {
         id: string
-        listingId: string
+        listingId: string | null
         completedAt: string | null
         trialGrantedAt: string | null
       }
@@ -174,6 +174,16 @@ describe('POST /api/tour/claim — gates before the claim', () => {
     expect((await res.json()).code).toBe('TOUR_NOT_COMPLETE')
     expect(h.createSession).not.toHaveBeenCalled()
     expect(h.state.updates).toHaveLength(0)
+  })
+
+  it('422 NO_LISTING_FOR_TRIAL for a supporter tester, touching nothing', async () => {
+    h.state.viewer!.enrollment.listingId = null
+    const res = await POST()
+    expect(res.status).toBe(422)
+    expect((await res.json()).code).toBe('NO_LISTING_FOR_TRIAL')
+    expect(h.state.log).toEqual([])
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.createSession).not.toHaveBeenCalled()
   })
 
   it('422 for a missing Starter price WITHOUT burning the claim (§4.3.2)', async () => {

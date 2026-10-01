@@ -67,6 +67,17 @@ export async function POST() {
 
   const enrollmentId = viewer.enrollment.id
 
+  // A supporter tester has no listing to put a trial on. Refused before the
+  // plan guard and the compare-and-set, so nothing is read or spent. The DB
+  // CHECK tour_enrollments_trial_requires_listing backs this up.
+  const listingId = viewer.enrollment.listingId
+  if (listingId === null) {
+    return NextResponse.json(
+      { error: 'This tour has no listing to put a trial on.', code: 'NO_LISTING_FOR_TRIAL' },
+      { status: 422 }
+    )
+  }
+
   // Completion is the reflection action's write-once stamp; this route only
   // reads it. 422, not 403: the business rule "finish the walk first" failed.
   if (viewer.enrollment.completedAt === null) {
@@ -140,12 +151,12 @@ export async function POST() {
       // Recovery paths fall through to the shared session create below. No
       // release-on-failure applies here — this request did not perform the
       // compare-and-set, so it owns no claim to give back.
-      const live = await listingHasLivePlan(serviceClient, viewer.enrollment.listingId)
+      const live = await listingHasLivePlan(serviceClient, listingId)
       if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
       if (live) return NextResponse.json(ALREADY_SUBSCRIBED, { status: 409 })
       const response = await createTrialSession({
         enrollmentId,
-        listingId: viewer.enrollment.listingId,
+        listingId,
         userId: viewer.userId,
         email: viewer.email,
         planId: plan.id,
@@ -162,7 +173,7 @@ export async function POST() {
     // trial ending on day 30 would fire customer.subscription.deleted against a
     // listing that is still paid for. Checked before the compare-and-set, like
     // the plan guard, so a refusal costs the tester nothing.
-    const live = await listingHasLivePlan(serviceClient, viewer.enrollment.listingId)
+    const live = await listingHasLivePlan(serviceClient, listingId)
     if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
     if (live) return NextResponse.json(ALREADY_SUBSCRIBED, { status: 409 })
 
@@ -186,7 +197,7 @@ export async function POST() {
     try {
       const response = await createTrialSession({
         enrollmentId,
-        listingId: viewer.enrollment.listingId,
+        listingId,
         userId: viewer.userId,
         email: viewer.email,
         planId: plan.id,

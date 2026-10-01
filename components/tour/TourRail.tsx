@@ -277,13 +277,17 @@ export function TourRail() {
                 <p className="font-subhead text-base font-bold text-amber-gold">
                   That&apos;s the walk. Thank you.
                 </p>
+                {/* D2: a supporter tester has no listing, so their finish is a
+                    thank-you with no trial and no claim button. */}
                 <p className="mt-1 font-subhead text-sm text-cream/80">
-                  {tour.trialGrantedAt === null
-                    ? 'You finished every written step. Your 30-day Starter trial is ready.'
-                    : 'Your trial claim is in — resume checkout if you didn’t finish it.'}
+                  {tour.kind === 'supporter'
+                    ? 'You finished the walk. Thank you, this shapes what we build next.'
+                    : tour.trialGrantedAt === null
+                      ? 'You finished every written step. Your 30-day Starter trial is ready.'
+                      : 'Your trial claim is in — resume checkout if you didn’t finish it.'}
                 </p>
 
-                {tour.canClaim || tour.trialGrantedAt !== null ? (
+                {tour.kind === 'supporter' ? null : tour.canClaim || tour.trialGrantedAt !== null ? (
                   <ClaimTrialButton claimed={tour.trialGrantedAt !== null} />
                 ) : (
                   // `canClaim` is the server's word, not ours. It can be false
