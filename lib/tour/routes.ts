@@ -35,7 +35,10 @@ export function isHiddenPath(pathname: string): boolean {
 // "Report a problem" pill deliberately stays here: a tester filling in a long
 // form is exactly who hits a problem, and the pill collapses to a small
 // "Report" on phones, so reporting stays one tap away.
-export const RAIL_ONLY_HIDDEN_PREFIXES = ['/add-business'] as const
+//
+// /account and everything under it is the signed-in settings area, which the
+// tour never walks either.
+export const RAIL_ONLY_HIDDEN_PREFIXES = ['/add-business', '/account'] as const
 
 export function isRailHiddenPath(pathname: string): boolean {
   return RAIL_ONLY_HIDDEN_PREFIXES.some(

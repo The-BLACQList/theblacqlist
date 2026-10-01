@@ -30,9 +30,14 @@ describe('TOUR_STEP_TARGETS — completeness', () => {
 
   it.each(TOUR_STEPS)('%s has a short travel-button label', (key) => {
     // The label is a button, the hint is helper text: a sentence here wraps to
-    // three lines on a phone.
-    expect(TOUR_STEP_TARGETS[key].go.trim().length).toBeGreaterThan(0)
-    expect(TOUR_STEP_TARGETS[key].go.length).toBeLessThanOrEqual(20)
+    // three lines on a phone. The in-rail step has nowhere to travel, so no label.
+    const { go, kind } = TOUR_STEP_TARGETS[key]
+    if (kind === 'in-rail') {
+      expect(go).toBeUndefined()
+      return
+    }
+    expect(go?.trim().length).toBeGreaterThan(0)
+    expect(go?.length).toBeLessThanOrEqual(20)
   })
 
   it('gives every page-kind target at least one selector', () => {
@@ -158,7 +163,6 @@ describe('planSpotlight', () => {
     selectors: [],
     href: null,
     fallbackHref: null,
-    go: 'Go',
     hint: 'here',
   }
 

@@ -44,7 +44,7 @@ export interface TourTarget {
   /** WHERE the thing is. Never what to do — that is `step.message`. */
   hint: string
   /** Short button text for the trip to `href`/`fallbackHref`. The hint is the helper text beside it. */
-  go: string
+  go?: string
 }
 
 export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
@@ -106,7 +106,6 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     selectors: [],
     href: null,
     fallbackHref: null,
-    go: 'Stay here',
     hint: 'This last one is written right here in this panel.',
   },
 }

@@ -191,7 +191,7 @@ export function TourStepRow({
             <p className="font-subhead text-sm text-cream/70">{step.message}</p>
           )}
 
-          {!done && awayFrom !== null && target !== undefined && (
+          {!done && awayFrom !== null && target?.go !== undefined && (
             <>
               {/* The button is the short action; the sentence of context
                   stays visible beside it as helper text. */}

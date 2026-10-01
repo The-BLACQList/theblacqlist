@@ -308,6 +308,15 @@ describe('isHiddenPath — prefix matching, segment-bounded', () => {
     expect(isRailHiddenPath('/add-business-guide')).toBe(false)
   })
 
+  it('hides the rail, but not the report pill, on /account and every path beneath it', () => {
+    expect(isRailHiddenPath('/account')).toBe(true)
+    expect(isRailHiddenPath('/account/saved')).toBe(true)
+    expect(isRailHiddenPath('/account/settings/privacy')).toBe(true)
+    expect(isHiddenPath('/account')).toBe(false)
+    expect(isRailHiddenPath('/accounts')).toBe(false)
+    expect(isRailHiddenPath('/account-help')).toBe(false)
+  })
+
   it('shows the rail on the surfaces the tour actually walks', () => {
     // Every step of the tour happens on one of these. If any becomes hidden,
     // the tour is unwalkable and nothing else fails.

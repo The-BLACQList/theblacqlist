@@ -7,20 +7,8 @@ import { Loader2, ChevronRight, Store, Search } from 'lucide-react'
 
 import { setOnboardingRoleAction } from '@/lib/actions/account/setOnboardingRole'
 import type { OnboardingRole } from '@/lib/auth/onboardingRole'
+import { ONBOARDING_INTERESTS } from '@/lib/onboarding/interests'
 import { cn } from '@/lib/utils'
-
-const CATEGORY_PILLS = [
-  'Food & Dining',
-  'Beauty & Grooming',
-  'Fashion & Apparel',
-  'Wellness & Health',
-  'Professional Services',
-  'Creative & Media',
-  'Events & Entertainment',
-  'Technology',
-  'Education',
-  'Retail & Gifts',
-]
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus()
@@ -65,8 +53,6 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
 
   const [step, setStep] = useState(1)
   const [selectedCity, setSelectedCity] = useState('')
-  // TODO(product): the category choice is collected but never submitted or
-  // saved anywhere; "personalize your experience" has no effect yet.
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   const dbRole: 'supporter' | 'owner' = isOwner ? 'owner' : 'supporter'
@@ -79,7 +65,18 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
     return '/account/saved'
   }
 
+  // Every exit builds its form data here, so the city is always saved.
+  // Interests are added only by "Get started".
+  function buildFormData(interests: string[] = []) {
+    const formData = new FormData()
+    formData.set('role', dbRole)
+    if (selectedCity) formData.set('city', selectedCity)
+    for (const slug of interests) formData.append('interests', slug)
+    return formData
+  }
+
   function handleCitySkip() {
+    setSelectedCity('')
     setStep(2)
   }
 
@@ -94,11 +91,8 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
   }
 
   async function handleFinalSubmit(overrideDest?: string) {
-    const formData = new FormData()
-    formData.set('role', dbRole)
-
-    // Fire role action — graceful no-op if schema not migrated yet
-    await setOnboardingRoleAction(null, formData)
+    // Best-effort: a failed save never blocks the redirect.
+    await setOnboardingRoleAction(null, buildFormData()).catch(() => null)
 
     const dest = overrideDest ?? getPostOnboardingDestination()
 
@@ -266,13 +260,13 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
               </p>
 
               <div className="flex flex-wrap gap-2 mb-6">
-                {CATEGORY_PILLS.map((cat) => {
-                  const active = selectedCategories.includes(cat)
+                {ONBOARDING_INTERESTS.map(({ slug, label }) => {
+                  const active = selectedCategories.includes(slug)
                   return (
                     <button
-                      key={cat}
+                      key={slug}
                       type="button"
-                      onClick={() => toggleCategory(cat)}
+                      onClick={() => toggleCategory(slug)}
                       aria-pressed={active}
                       className={cn(
                         'min-h-11 px-4 py-1.5 rounded-full text-xs font-subhead font-semibold border transition-colors',
@@ -281,7 +275,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                           : 'bg-white text-charcoal border-charcoal/30 hover:border-charcoal/60'
                       )}
                     >
-                      {cat}
+                      {label}
                     </button>
                   )
                 })}
@@ -289,9 +283,9 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
 
               <form
                 action={async () => {
-                  const formData = new FormData()
-                  formData.set('role', dbRole)
-                  await roleAction(formData)
+                  await Promise.resolve(roleAction(buildFormData(selectedCategories))).catch(
+                    () => null
+                  )
                   router.push(getPostOnboardingDestination())
                 }}
                 className="flex items-center justify-between"
@@ -299,11 +293,9 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const formData = new FormData()
-                    formData.set('role', dbRole)
-                    void setOnboardingRoleAction(null, formData).then(() =>
-                      router.push(getPostOnboardingDestination())
-                    )
+                    void setOnboardingRoleAction(null, buildFormData())
+                      .catch(() => null)
+                      .then(() => router.push(getPostOnboardingDestination()))
                   }}
                   className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                 >
