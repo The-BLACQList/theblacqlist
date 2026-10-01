@@ -152,10 +152,15 @@ export async function GET() {
     return NextResponse.json({
       data: {
         listingId: viewer.enrollment.listingId,
+        // A supporter tester came in by one-tap link with no listing. Their
+        // finish is a thank-you, so the rail never shows them a claim button.
+        kind: viewer.enrollment.listingId === null ? 'supporter' : 'owner',
         completedAt: viewer.enrollment.completedAt,
         trialGrantedAt: viewer.enrollment.trialGrantedAt,
         canClaim:
-          viewer.enrollment.completedAt !== null && viewer.enrollment.trialGrantedAt === null,
+          viewer.enrollment.completedAt !== null &&
+          viewer.enrollment.trialGrantedAt === null &&
+          viewer.enrollment.listingId !== null,
         steps,
       },
     })

@@ -27,6 +27,7 @@ export type RateLimitBucket =
   | 'problem_report'
   | 'checkout'
   | 'billing_portal'
+  | 'tester_link'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

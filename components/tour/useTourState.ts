@@ -52,7 +52,9 @@ export interface TourStepState {
 }
 
 export interface TourState {
-  listingId: string
+  /** Null for a supporter tester, who finishes with a thank-you, not a trial. */
+  listingId: string | null
+  kind: 'supporter' | 'owner'
   completedAt: string | null
   trialGrantedAt: string | null
   canClaim: boolean

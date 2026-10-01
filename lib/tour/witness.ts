@@ -46,7 +46,8 @@ export interface TourViewer {
   email: string | null
   enrollment: {
     id: string
-    listingId: string
+    /** Null for a supporter tester (one-tap link, D2): no listing, no trial. */
+    listingId: string | null
     completedAt: string | null
     trialGrantedAt: string | null
   }
