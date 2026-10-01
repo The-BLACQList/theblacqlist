@@ -7,6 +7,7 @@ import { SaveButton } from '@/components/entity-page/SaveButton'
 import { EmptyState } from '@/components/ui/empty-state'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { untyped } from '@/lib/actions/saved-lists/shared'
+import { INTERESTS_METADATA_KEY, readSavedInterests } from '@/lib/onboarding/interests'
 
 import { ListRail, type RailList } from './ListRail'
 import { ListPicker } from './ListPicker'
@@ -135,6 +136,9 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
     ? listings.filter((l) => (listsBySave.get(l.saveId) ?? []).includes(activeListId))
     : listings
 
+  // Empty list: offer the categories the supporter picked in onboarding.
+  const interests = readSavedInterests(user.user_metadata?.[INTERESTS_METADATA_KEY])
+
   const pickerLists = rawLists.map((l) => ({ id: l.id, name: l.name }))
 
   return (
@@ -152,13 +156,34 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
         )}
 
         {listings.length === 0 ? (
-          <EmptyState
-            level={2}
-            icon={Bookmark}
-            heading="No saved businesses yet"
-            body="Tap the heart icon on any listing to save it here for later."
-            action={{ label: 'Discover businesses', href: '/discover' }}
-          />
+          <>
+            <EmptyState
+              level={2}
+              icon={Bookmark}
+              heading="No saved businesses yet"
+              body="Tap the heart icon on any listing to save it here for later."
+              action={{ label: 'Discover businesses', href: '/discover' }}
+            />
+            {interests.length > 0 && (
+              <section aria-labelledby="interests-heading" className="text-center pb-8">
+                <h2 id="interests-heading" className="font-subhead text-sm text-charcoal-soft mb-3">
+                  Start with what you picked
+                </h2>
+                <ul className="flex flex-wrap justify-center gap-2">
+                  {interests.map((i) => (
+                    <li key={i.slug}>
+                      <Link
+                        href={`/discover?category=${i.slug}`}
+                        className="inline-flex min-h-11 items-center px-4 rounded-full border border-charcoal/30 bg-white font-subhead text-xs font-semibold text-charcoal hover:border-charcoal/60 transition-colors"
+                      >
+                        {i.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
         ) : visible.length === 0 ? (
           <EmptyState
             level={2}

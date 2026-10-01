@@ -25,7 +25,7 @@ import { ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
 // the tour walks (search, listings, collections, reviews) — not over the
 // admin console, the coming-soon gate, auth flows, or onboarding. The policy
 // lives in lib/tour/routes.ts so it is testable outside a client chunk.
-import { isHiddenPath } from '@/lib/tour/routes'
+import { isHiddenPath, isRailHiddenPath } from '@/lib/tour/routes'
 import { TOUR_STEP_TARGETS, type TourTarget } from '@/lib/tour/targets'
 import {
   currentStepKey,
@@ -59,32 +59,41 @@ const NO_STEPS: TourStepState[] = []
 // exist during SSR.
 //
 // useSyncExternalStore is the supported answer: it takes a separate SERVER
-// snapshot, so the server renders `false` (expanded) while the client reads the
+// snapshot, so the server renders 'default' while the client reads the
 // stored value during hydration, in one render, with no effect.
 
 const collapseListeners = new Set<() => void>()
-/** Cached so getSnapshot returns a stable value — required by the hook. */
-let collapseSnapshot: boolean | null = null
 
-function readCollapse(): boolean {
+// Three states, not two. 'default' means the tester has never chosen, and it
+// is what the SERVER renders: the rail then ships BOTH the open panel and the
+// pill, and CSS picks one by viewport (panel from md up, pill below it). That
+// is how a phone starts collapsed with no flash of a panel covering 64% of the
+// screen and no hydration mismatch — the choice never waits on JS.
+type CollapseState = 'default' | 'open' | 'closed'
+
+/** Cached so getSnapshot returns a stable value — required by the hook. */
+let collapseSnapshot: CollapseState | null = null
+
+function readCollapse(): CollapseState {
   if (collapseSnapshot === null) {
     try {
-      collapseSnapshot = localStorage.getItem(COLLAPSE_KEY) === '1'
+      const stored = localStorage.getItem(COLLAPSE_KEY)
+      collapseSnapshot = stored === '1' ? 'closed' : stored === '0' ? 'open' : 'default'
     } catch {
       // Safari private mode throws on access, not just on write.
-      collapseSnapshot = false
+      collapseSnapshot = 'default'
     }
   }
   return collapseSnapshot
 }
 
-/** The server has no storage; the rail always renders open there. */
-function serverCollapse(): boolean {
-  return false
+/** The server has no storage, so it never knows a preference. */
+function serverCollapse(): CollapseState {
+  return 'default'
 }
 
 function writeCollapse(next: boolean): void {
-  collapseSnapshot = next
+  collapseSnapshot = next ? 'closed' : 'open'
   try {
     localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0')
   } catch {
@@ -104,7 +113,7 @@ export function TourRail() {
   const pathname = usePathname()
   const router = useRouter()
   const { phase, tour, announcement, attention, checking, refresh, retry } = useTourState()
-  const collapsed = useSyncExternalStore(subscribeCollapse, readCollapse, serverCollapse)
+  const collapse = useSyncExternalStore(subscribeCollapse, readCollapse, serverCollapse)
   // null = "follow the tour" (the first unfinished step is open). A string
   // pins the tester's own choice; '' means they closed everything.
   const [openStep, setOpenStep] = useState<string | null>(null)
@@ -176,7 +185,7 @@ export function TourRail() {
     return () => clearTimeout(timer)
   }, [attentionKey, attentionSeq])
 
-  if (isHiddenPath(pathname) || phase === 'gone') return null
+  if (isHiddenPath(pathname) || isRailHiddenPath(pathname) || phase === 'gone') return null
 
   const done = doneCount(steps)
   const total = steps.length || 6
@@ -191,29 +200,43 @@ export function TourRail() {
   // neither number is inflated to make something appear to have happened.
   const pending = pendingReflectionCount(steps)
   const count = complete ? 'complete' : `${done}/${total}`
-  const countLine = pending > 0 ? `${count} · ${pending} to write` : count
+  const pendingPart = pending > 0 ? ` · ${pending} to write` : ''
+  const countLine = `${count}${pendingPart}`
 
-  if (collapsed) {
-    return (
-      <div className="lift-over-quick-bar fixed bottom-4 right-4 z-40">
-        <button
-          type="button"
-          onClick={() => writeCollapse(false)}
-          aria-expanded={false}
-          className="inline-flex items-center gap-2 rounded-full border border-amber-gold/40 bg-deep-bg px-4 py-2 font-subhead text-sm text-cream shadow-lg transition-colors hover:border-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
-        >
-          <span className="font-bold text-amber-gold">Tester Tour</span>
-          <span>{countLine}</span>
-          <ChevronUp className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-    )
-  }
+  // 'default' (no stored choice) renders both and lets the viewport decide.
+  const showPill = collapse !== 'open'
+  const showPanel = collapse !== 'closed'
+  const undecided = collapse === 'default'
 
-  return (
+  const pill = (
+    <div
+      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40${undecided ? ' md:hidden' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => writeCollapse(false)}
+        aria-expanded={false}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-gold/40 bg-deep-bg px-4 py-2 font-subhead text-sm text-cream shadow-lg transition-colors hover:border-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+      >
+        {/* Phones get "Tour 0/6" so this pill and Report a problem never
+            collide at 375; the full name and the to-write count stay in the
+            accessible name, which is why they are sr-only rather than gone. */}
+        <span className="font-bold text-amber-gold">
+          <span className="sr-only md:not-sr-only">Tester </span>Tour
+        </span>
+        <span>
+          {count}
+          <span className="max-md:sr-only">{countLine.slice(count.length)}</span>
+        </span>
+        <ChevronUp className="size-4" aria-hidden="true" />
+      </button>
+    </div>
+  )
+
+  const panel = (
     <aside
       aria-label="Tester Tour progress"
-      className="lift-over-quick-bar fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl"
+      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl${undecided ? ' max-md:hidden' : ''}`}
     >
       {/* ⚠ ALWAYS RENDERED, never conditionally mounted. A live region that
           appears at the same moment as its text is not announced — the browser
@@ -233,9 +256,9 @@ export function TourRail() {
           onClick={() => writeCollapse(true)}
           aria-expanded={true}
           aria-label="Collapse the tour panel"
-          className="rounded-full p-1 text-cream/70 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+          className="-my-2 -mr-3 inline-flex size-11 items-center justify-center rounded-full text-cream/70 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
         >
-          <ChevronDown className="size-4" aria-hidden="true" />
+          <ChevronDown className="size-5" aria-hidden="true" />
         </button>
       </div>
 
@@ -258,7 +281,7 @@ export function TourRail() {
             <button
               type="button"
               onClick={retry}
-              className="mt-2 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+              className="mt-2 min-h-11 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
             >
               Try again
             </button>
@@ -305,7 +328,7 @@ export function TourRail() {
                   type="button"
                   onClick={() => setReviewing((r) => !r)}
                   aria-expanded={reviewing}
-                  className="mt-4 inline-flex items-center gap-1.5 font-subhead text-sm text-cream/70 underline underline-offset-4 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+                  className="mt-3 inline-flex min-h-11 items-center gap-1.5 font-subhead text-sm text-cream/70 underline underline-offset-4 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
                 >
                   {reviewing ? 'Hide your walk' : 'Review your walk'}
                   <ChevronDown
@@ -344,19 +367,26 @@ export function TourRail() {
                 type="button"
                 onClick={refresh}
                 disabled={checking}
-                className="mt-3 inline-flex items-center gap-2 font-subhead text-xs text-cream/60 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold disabled:opacity-60"
+                className="mt-2 inline-flex min-h-11 items-center gap-2 font-subhead text-xs text-cream/60 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold disabled:opacity-60"
               >
                 <RefreshCw
                   aria-hidden="true"
                   className={`size-3.5 ${checking ? 'animate-spin' : ''}`}
                 />
-                {checking ? 'Checking…' : 'Did something? Check again'}
+                {checking ? 'Checking…' : 'Check again'}
               </button>
             )}
           </>
         )}
       </div>
     </aside>
+  )
+
+  return (
+    <>
+      {showPill && pill}
+      {showPanel && panel}
+    </>
   )
 }
 

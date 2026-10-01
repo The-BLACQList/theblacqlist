@@ -39,7 +39,7 @@ import {
 
 const A_URL = fixtureListingUrl(FIXTURE_CLAIMABLE_SLUG)
 const B_URL = fixtureListingUrl(FIXTURE_PENDING_CLAIM_SLUG)
-const TRIGGER = /^(Write a review|Be the first to review)$/
+const TRIGGER = /^(Write a review|Write the first review)$/
 
 /**
  * Client-side navigation to B. The fixtures share a category, so when the

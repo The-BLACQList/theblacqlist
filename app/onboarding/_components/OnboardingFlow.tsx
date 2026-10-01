@@ -7,20 +7,8 @@ import { Loader2, ChevronRight, Store, Search } from 'lucide-react'
 
 import { setOnboardingRoleAction } from '@/lib/actions/account/setOnboardingRole'
 import type { OnboardingRole } from '@/lib/auth/onboardingRole'
+import { ONBOARDING_INTERESTS } from '@/lib/onboarding/interests'
 import { cn } from '@/lib/utils'
-
-const CATEGORY_PILLS = [
-  'Food & Dining',
-  'Beauty & Grooming',
-  'Fashion & Apparel',
-  'Wellness & Health',
-  'Professional Services',
-  'Creative & Media',
-  'Events & Entertainment',
-  'Technology',
-  'Education',
-  'Retail & Gifts',
-]
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus()
@@ -77,7 +65,18 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
     return '/account/saved'
   }
 
+  // Every exit builds its form data here, so the city is always saved.
+  // Interests are added only by "Get started".
+  function buildFormData(interests: string[] = []) {
+    const formData = new FormData()
+    formData.set('role', dbRole)
+    if (selectedCity) formData.set('city', selectedCity)
+    for (const slug of interests) formData.append('interests', slug)
+    return formData
+  }
+
   function handleCitySkip() {
+    setSelectedCity('')
     setStep(2)
   }
 
@@ -92,11 +91,8 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
   }
 
   async function handleFinalSubmit(overrideDest?: string) {
-    const formData = new FormData()
-    formData.set('role', dbRole)
-
-    // Fire role action — graceful no-op if schema not migrated yet
-    await setOnboardingRoleAction(null, formData)
+    // Best-effort: a failed save never blocks the redirect.
+    await setOnboardingRoleAction(null, buildFormData()).catch(() => null)
 
     const dest = overrideDest ?? getPostOnboardingDestination()
 
@@ -115,15 +111,21 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
           <p className="font-headline text-2xl text-gold">The BLACQList</p>
           <p className="font-subhead text-sm text-white/50 mt-1">Step {step} of 2</p>
           {/* Progress bar */}
-          <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden w-48 mx-auto">
+          {/* The role sits on the track, not the fill, and runs 0..2 so the
+              value matches the bar: step 1 is half full, step 2 is full. */}
+          <div
+            role="progressbar"
+            aria-valuenow={step}
+            aria-valuemin={0}
+            aria-valuemax={2}
+            aria-valuetext={`Step ${step} of 2`}
+            aria-label="Onboarding progress"
+            className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden w-48 mx-auto"
+          >
             <div
+              aria-hidden="true"
               className="h-full bg-amber-gold rounded-full transition-all duration-300"
               style={{ width: step === 1 ? '50%' : '100%' }}
-              role="progressbar"
-              aria-valuenow={step}
-              aria-valuemin={1}
-              aria-valuemax={2}
-              aria-label={`Onboarding step ${step} of 2`}
             />
           </div>
         </div>
@@ -166,7 +168,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                   <button
                     type="button"
                     onClick={handleCitySkip}
-                    className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
+                    className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                   >
                     Skip for now
                   </button>
@@ -233,7 +235,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                 <button
                   type="button"
                   onClick={() => void handleFinalSubmit()}
-                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
+                  className="min-h-11 font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
                 >
                   I&apos;ll do this later
                 </button>
@@ -258,22 +260,22 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
               </p>
 
               <div className="flex flex-wrap gap-2 mb-6">
-                {CATEGORY_PILLS.map((cat) => {
-                  const active = selectedCategories.includes(cat)
+                {ONBOARDING_INTERESTS.map(({ slug, label }) => {
+                  const active = selectedCategories.includes(slug)
                   return (
                     <button
-                      key={cat}
+                      key={slug}
                       type="button"
-                      onClick={() => toggleCategory(cat)}
+                      onClick={() => toggleCategory(slug)}
                       aria-pressed={active}
                       className={cn(
-                        'px-3 py-1.5 rounded-full text-xs font-subhead font-semibold border transition-colors',
+                        'min-h-11 px-4 py-1.5 rounded-full text-xs font-subhead font-semibold border transition-colors',
                         active
                           ? 'bg-brand-black text-white border-brand-black'
                           : 'bg-white text-charcoal border-charcoal/30 hover:border-charcoal/60'
                       )}
                     >
-                      {cat}
+                      {label}
                     </button>
                   )
                 })}
@@ -281,9 +283,9 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
 
               <form
                 action={async () => {
-                  const formData = new FormData()
-                  formData.set('role', dbRole)
-                  await roleAction(formData)
+                  await Promise.resolve(roleAction(buildFormData(selectedCategories))).catch(
+                    () => null
+                  )
                   router.push(getPostOnboardingDestination())
                 }}
                 className="flex items-center justify-between"
@@ -291,13 +293,11 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const formData = new FormData()
-                    formData.set('role', dbRole)
-                    void setOnboardingRoleAction(null, formData).then(() =>
-                      router.push(getPostOnboardingDestination())
-                    )
+                    void setOnboardingRoleAction(null, buildFormData())
+                      .catch(() => null)
+                      .then(() => router.push(getPostOnboardingDestination()))
                   }}
-                  className="font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
+                  className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                 >
                   Skip
                 </button>

@@ -83,9 +83,12 @@ function UploadZone({
             type="button"
             onClick={onRemove}
             aria-label={`Remove ${label}`}
-            className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-black/70 text-white hover:bg-brand-black transition-colors"
+            className="group absolute top-0 right-0 flex size-11 items-center justify-center"
           >
-            <X className="size-3.5" aria-hidden="true" />
+            {/* 44px hit area, modest 28px visual */}
+            <span className="flex size-7 items-center justify-center rounded-full bg-brand-black/70 text-white transition-colors group-hover:bg-brand-black">
+              <X className="size-3.5" aria-hidden="true" />
+            </span>
           </button>
         </div>
       ) : (
@@ -122,7 +125,7 @@ function UploadZone({
             {state.status === 'uploading'
               ? 'Uploading…'
               : state.status === 'error'
-                ? 'Upload failed. Tap to retry'
+                ? 'Tap to retry'
                 : 'Tap to upload'}
           </span>
           {state.errorMsg && (
@@ -320,22 +323,24 @@ export function MediaStep({
                       type="button"
                       onClick={() => removeGalleryItem(item.localId)}
                       aria-label="Remove photo"
-                      className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-black/70 text-white hover:bg-brand-black transition-colors"
+                      className="group absolute top-0 right-0 flex size-11 items-center justify-center"
                     >
-                      <X className="size-3" aria-hidden="true" />
+                      <span className="flex size-6 items-center justify-center rounded-full bg-brand-black/70 text-white transition-colors group-hover:bg-brand-black">
+                        <X className="size-3" aria-hidden="true" />
+                      </span>
                     </button>
                   </>
                 )}
                 {item.status === 'error' && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
                     <ImageIcon className="size-4 text-red-400" />
-                    <span className="font-subhead text-[10px] text-red-500 text-center leading-tight">
+                    <span className="font-subhead text-xs text-red-500 text-center leading-tight">
                       Failed
                     </span>
                     <button
                       type="button"
                       onClick={() => removeGalleryItem(item.localId)}
-                      className="font-subhead text-[10px] text-charcoal-soft underline"
+                      className="min-h-11 px-3 font-subhead text-xs text-charcoal-soft underline"
                     >
                       Remove
                     </button>
@@ -353,7 +358,7 @@ export function MediaStep({
             className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-charcoal/25 bg-charcoal/3 font-subhead text-xs text-charcoal-soft hover:border-amber-gold hover:bg-amber-gold/5 hover:text-charcoal transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" />
-            Add photos ({12 - successCount} remaining)
+            Add photos · {12 - successCount} left
           </button>
         )}
 

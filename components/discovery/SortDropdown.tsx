@@ -25,7 +25,7 @@ export function SortDropdown() {
         value={current}
         onChange={(e) => setParam('sort', e.target.value === 'relevance' ? '' : e.target.value)}
         aria-label="Sort results"
-        className="h-9 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+        className="h-11 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

@@ -117,7 +117,7 @@ function buildFormData(snapshot: FormSnapshot): FormData {
 // Maps a server fieldError key → a human label + the step (1-indexed) it lives on,
 // so this final step can tell the user EXACTLY which field on which step to fix.
 const FIELD_INFO: Record<string, { label: string; step: number }> = {
-  ownership_label: { label: 'Business ownership (Black-Owned or Ally)', step: 0 },
+  ownership_label: { label: 'Black-Owned or Ally', step: 0 },
   entity_type: { label: 'Listing type', step: 1 },
   name: { label: 'Business name', step: 1 },
   tagline: { label: 'Short description', step: 1 },
@@ -134,6 +134,11 @@ const FIELD_INFO: Record<string, { label: string; step: number }> = {
   description: { label: 'About your business', step: 4 },
   cta_type: { label: 'Primary action', step: 6 },
   cta_url: { label: 'Action link', step: 6 },
+}
+
+/** Step 0 is the ownership gate before the numbered steps, so it has no number to show. */
+function stepSuffix(step: number): string {
+  return step > 0 ? ` · Step ${step}` : ''
 }
 
 export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
@@ -280,7 +285,7 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
           <button
             type="button"
             onClick={() => setShowFullPreview(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 h-9 px-4 rounded-lg bg-brand-black text-white font-subhead text-xs font-bold hover:bg-charcoal transition-colors"
+            className="inline-flex shrink-0 items-center justify-center gap-2 h-11 px-4 rounded-lg bg-brand-black text-white font-subhead text-xs font-bold hover:bg-charcoal transition-colors"
           >
             <Eye className="size-3.5" aria-hidden="true" />
             Preview full page
@@ -397,12 +402,12 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
                       <button
                         type="button"
                         onClick={() => onGoToStep(info.step)}
-                        className="font-semibold underline decoration-red-400 underline-offset-2 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded-sm"
+                        className="inline-flex min-h-11 items-center font-semibold underline decoration-red-400 underline-offset-2 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded-sm"
                       >
-                        {info.label} (Step {info.step})
+                        {info.label}{stepSuffix(info.step)}
                       </button>
                     ) : (
-                      info && <span className="font-semibold">{info.label} (Step {info.step})</span>
+                      info && <span className="font-semibold">{info.label}{stepSuffix(info.step)}</span>
                     )}
                     {info ? ': ' : ''}
                     {msg}
@@ -411,7 +416,7 @@ export function PreviewPublishStep({ snapshot, onSuccess, onGoToStep }: Props) {
               })}
             </ul>
             <p className="font-subhead text-xs text-red-600 mt-2">
-              {onGoToStep ? 'Click an error to jump to that step and fix it.' : 'Use the Back button to return to the step above and fix it.'}
+              {onGoToStep ? 'Select an error to jump to that step and fix it.' : 'Use the Back button to return to the step above and fix it.'}
             </p>
           </div>
         )}

@@ -618,3 +618,19 @@
     transition: none;
   }
 }
+
+/* ─── iOS focus-zoom guard ───────────────────────────────────────────────────
+   iOS Safari zooms the page when a focused field is under 16px, and the form
+   controls here are text-sm (14px). One rule instead of editing every input.
+   Unlayered on purpose, like .lift-over-quick-bar above: Tailwind utilities
+   live in @layer utilities, so only an unlayered rule beats `text-sm` without
+   !important. Phones only (48rem is `md`); checkbox, radio and friends are
+   excluded because they have no text to zoom for. No input in the app is
+   deliberately larger than 16px, so a flat 16px loses nothing. */
+@media (width < 48rem) {
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='submit'], [type='button']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

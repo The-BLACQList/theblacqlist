@@ -37,7 +37,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { HIDDEN_PREFIXES, isHiddenPath } from '@/lib/tour/routes'
+import { HIDDEN_PREFIXES, isHiddenPath, isRailHiddenPath } from '@/lib/tour/routes'
 
 const TESTER = 'tester-user-id'
 
@@ -299,6 +299,22 @@ describe('isHiddenPath — prefix matching, segment-bounded', () => {
     expect(isHiddenPath('/authors')).toBe(false)
     expect(isHiddenPath('/onboarding-guide')).toBe(false)
     expect(isHiddenPath('/sign-in-help')).toBe(false)
+  })
+
+  it('hides the rail, but not the report pill, over the add-listing wizard', () => {
+    expect(isRailHiddenPath('/add-business')).toBe(true)
+    expect(isRailHiddenPath('/add-business/submitted')).toBe(true)
+    expect(isHiddenPath('/add-business')).toBe(false)
+    expect(isRailHiddenPath('/add-business-guide')).toBe(false)
+  })
+
+  it('hides the rail, but not the report pill, on /account and every path beneath it', () => {
+    expect(isRailHiddenPath('/account')).toBe(true)
+    expect(isRailHiddenPath('/account/saved')).toBe(true)
+    expect(isRailHiddenPath('/account/settings/privacy')).toBe(true)
+    expect(isHiddenPath('/account')).toBe(false)
+    expect(isRailHiddenPath('/accounts')).toBe(false)
+    expect(isRailHiddenPath('/account-help')).toBe(false)
   })
 
   it('shows the rail on the surfaces the tour actually walks', () => {

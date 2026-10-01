@@ -32,7 +32,7 @@ interface Props {
 export function ReportCorrectionForm({
   listingId,
   triggerClassName,
-  triggerLabel = 'Report incorrect information',
+  triggerLabel = 'Report an error',
 }: Props) {
   const [open, setOpen] = useState(false)
   const [state, formAction, isPending] = useActionState(submitCorrectionAction, null)
@@ -73,7 +73,7 @@ export function ReportCorrectionForm({
 
       <DialogContent>
         <DialogHeader className="px-5 py-4 pr-12 border-b border-charcoal/10">
-          <DialogTitle>Report a problem with this listing</DialogTitle>
+          <DialogTitle>Report an error on this listing</DialogTitle>
           <DialogDescription className="sr-only">
             Select the issues you noticed with this listing and optionally describe the problem.
           </DialogDescription>
@@ -89,7 +89,7 @@ export function ReportCorrectionForm({
               Our team reviews all reports. We&apos;ll update the listing if the information is
               incorrect.
             </p>
-            <DialogClose className="inline-flex items-center h-9 px-5 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
+            <DialogClose className="inline-flex items-center h-11 px-5 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
               Close
             </DialogClose>
           </div>
@@ -160,13 +160,13 @@ export function ReportCorrectionForm({
             )}
 
             <div className="flex justify-end gap-2 pt-1">
-              <DialogClose className="inline-flex items-center h-9 px-4 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
+              <DialogClose className="inline-flex items-center h-11 px-4 rounded-lg bg-charcoal/8 text-brand-black font-subhead font-semibold text-sm hover:bg-charcoal/15 transition-colors">
                 Cancel
               </DialogClose>
               <button
                 type="submit"
                 disabled={isPending || selected.size === 0}
-                className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="inline-flex items-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
                 {isPending ? 'Submitting…' : 'Submit report'}

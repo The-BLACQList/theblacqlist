@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      aria-label={pending ? 'Sending reset link…' : 'Send reset link'}
+      aria-label={pending ? 'Sending…' : 'Send reset link'}
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
@@ -109,7 +109,7 @@ function ForgotPasswordContent() {
       <p className="text-center text-sm font-subhead text-charcoal mt-6">
         <Link
           href="/sign-in"
-          className="font-semibold text-brand-black hover:underline underline-offset-2"
+          className="inline-flex min-h-11 items-center font-semibold text-brand-black hover:underline underline-offset-2"
         >
           Back to sign in
         </Link>

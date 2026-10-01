@@ -20,7 +20,7 @@ function ReflectionSubmit() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-2 rounded-full bg-amber-gold px-4 py-1.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-gold px-4 py-1.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
       {pending ? 'Saving…' : 'Save reflection'}
