@@ -30,7 +30,7 @@ import {
 const read = (rel: string) => readFileSync(resolve(process.cwd(), rel), 'utf8')
 
 const PAGES = {
-  discover: 'app/(public)/discover/page.tsx',
+  discover: 'app/(public)/discover/(index)/page.tsx',
   city: 'app/(public)/discover/[citySlug]/page.tsx',
   search: 'app/(public)/search/page.tsx',
 } as const

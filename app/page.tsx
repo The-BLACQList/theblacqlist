@@ -236,7 +236,7 @@ export default async function HomePage() {
     tags: a.tags,
   }))
 
-  // Same `sectionMap` shape `app/(public)/guides/page.tsx` builds — one pass
+  // Same `sectionMap` shape `app/(public)/guides/(index)/page.tsx` builds — one pass
   // over the id column rather than a count query per guide.
   const sectionCounts = new Map<string, number>()
   for (const row of guideSectionsRes.data ?? []) {

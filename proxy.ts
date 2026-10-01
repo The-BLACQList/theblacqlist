@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { canonicalOpenNowQuery } from '@/lib/listings/discover-params'
+
 // Route prefixes that require a valid session.
 // Admin role checks (admin vs super_admin) are performed server-side
 // inside each /admin page — the Edge Runtime cannot make DB queries.
@@ -138,6 +140,18 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/account'
     return NextResponse.redirect(url)
+  }
+
+  // Legacy "Open now" links (`/discover?open=now`) → the canonical `open_now=1`.
+  // This used to be a redirect() inside the discover page. It moved here when
+  // discover got a loading.tsx: a loading boundary streams the page, the 200 is
+  // already sent by the time the page runs, and the redirect degraded to a
+  // client-side hop. Here it is still a real 307.
+  if (pathname === '/discover') {
+    const canonical = canonicalOpenNowQuery(Object.fromEntries(request.nextUrl.searchParams))
+    if (canonical !== null) {
+      return NextResponse.redirect(new URL(`/discover${canonical}`, request.url))
+    }
   }
 
   return supabaseResponse
