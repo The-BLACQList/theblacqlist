@@ -346,7 +346,7 @@ describe('absent facet counts do not impersonate zero', () => {
     // Every disabled computation and every count badge is guarded.
     expect(src).not.toMatch(/const disabled = !isActive && n === 0/)
     // The guard may be followed by further conditions (the Type badges also
-    // skip the active button), as long as it leads the expression.
+    // need a count to show), as long as it leads the expression.
     expect(src).not.toMatch(/(?<!\{!countsOff && [^{}<]*)<CountTag/)
   })
 })
