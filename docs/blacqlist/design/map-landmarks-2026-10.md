@@ -1,6 +1,7 @@
-# Map landmarks for review
+# Map landmarks
 
-**For:** the founder, to approve, cut or add before PR #159 merges.
+**For:** the founder and whoever edits the map next.
+**Status:** APPROVED by the founder 2026-10-01, all 26 entries as listed. The four flagged calls are kept: Chicago State as a PBI, Charles R. Drew as an HBGI, Victory Monument and Roberts Temple, and districts as single points.
 **Last updated:** 2026-10-01
 **Code:** `lib/map/landmarks.ts`. Change this doc and that file together.
 
