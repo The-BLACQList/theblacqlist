@@ -305,3 +305,40 @@ describe('waitlist source declarations match the allowlist', () => {
     }
   })
 })
+
+// Bot guards in front of the ledger (2026-10-01). The ledger fails open, so
+// these are what still stands when it is down.
+describe('subscribeLaunchAction bot guards', () => {
+  beforeEach(() => {
+    h.attemptCount = 0
+    h.countError = null
+    h.subscriberInsertError = null
+    h.captured.attemptInserts = []
+    h.captured.subscriberInserts = []
+    h.captured.subscriberUpdates = []
+    h.captured.countFilters = []
+    delete process.env.TURNSTILE_SECRET_KEY
+  })
+
+  it('answers a filled honeypot with success and writes nothing at all', async () => {
+    const fd = form('bot@example.test')
+    fd.set('leave_this_blank', 'https://spam.example')
+    expect(await subscribeLaunchAction(null, fd)).toEqual({ success: true })
+    expect(h.captured.countFilters).toHaveLength(0)
+    expect(h.captured.attemptInserts).toHaveLength(0)
+    expect(h.captured.subscriberInserts).toHaveLength(0)
+  })
+
+  it('refuses a missing Turnstile token once the secret is set, before touching the ledger', async () => {
+    process.env.TURNSTILE_SECRET_KEY = 'test-secret'
+    try {
+      expect(await subscribeLaunchAction(null, form('new@example.test'))).toEqual({
+        error: 'Verification failed. Please try again.',
+      })
+    } finally {
+      delete process.env.TURNSTILE_SECRET_KEY
+    }
+    expect(h.captured.attemptInserts).toHaveLength(0)
+    expect(h.captured.subscriberInserts).toHaveLength(0)
+  })
+})

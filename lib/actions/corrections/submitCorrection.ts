@@ -1,15 +1,55 @@
 'use server'
 
+import { headers } from 'next/headers'
+
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { CORRECTION_ISSUE_TYPES, type CorrectionIssueType } from '@/lib/constants/corrections'
+import { isHoneypotTripped } from '@/lib/security/honeypot'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
+import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 
 export type SubmitCorrectionState = { success: true } | { error: string } | null
+
+// This is the one public write that needs no account, and it lands in the admin
+// moderation queue with the service-role client, so it carries every anonymous
+// guard we have: honeypot, Turnstile, and a per-person limit.
+const RATE_LIMIT = 5
+const RATE_WINDOW_SECONDS = 10 * 60
 
 export async function submitCorrectionAction(
   _prev: SubmitCorrectionState,
   formData: FormData
 ): Promise<SubmitCorrectionState> {
+  // A bot that filled the hidden field gets the normal success screen and
+  // nothing is written.
+  if (isHoneypotTripped(formData)) return { success: true }
+
+  if (!(await verifyTurnstileFormData(formData))) {
+    return { error: TURNSTILE_ERROR }
+  }
+
   const supabase = await createClient()
+
+  // Attribution is best-effort and deliberately optional: corrections are
+  // accepted from signed-out visitors, so a missing user is a supported case,
+  // not a failure. Read from the request-scoped client, never from form data —
+  // a client-supplied user id would let anyone attribute a report to someone
+  // else.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Signed-in people are limited per account, signed-out visitors per IP.
+  // Charged before validation so malformed submissions still spend budget.
+  const allowed = await checkRateLimit({
+    bucket: 'correction',
+    identifier: user ? `user:${user.id}` : `ip:${getClientIp(await headers())}`,
+    limit: RATE_LIMIT,
+    windowSeconds: RATE_WINDOW_SECONDS,
+  })
+  if (!allowed) {
+    return { error: 'You have sent a few reports already. Give it a few minutes and try again.' }
+  }
 
   const listingId = formData.get('listing_id')?.toString().trim() ?? ''
   const issueTypes = formData.getAll('issue_type').map((v) => v.toString())
@@ -34,15 +74,6 @@ export async function submitCorrectionAction(
     .maybeSingle()
 
   if (!listing) return { error: 'Listing not found.' }
-
-  // Attribution is best-effort and deliberately optional: corrections are
-  // accepted from signed-out visitors, so a missing user is a supported case,
-  // not a failure. Read from the request-scoped client, never from form data —
-  // a client-supplied user id would let anyone attribute a report to someone
-  // else.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
   const serviceClient = createServiceClient()
 

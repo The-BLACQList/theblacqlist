@@ -3,6 +3,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 const REVIEW_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const REVIEW_PHOTO_MAX_BYTES = 5 * 1024 * 1024
@@ -20,6 +21,14 @@ export type CreateReviewState =
   | { error: string; field?: string }
   | null
 
+// Turnstile proves a person solved one challenge. This caps what one account
+// can do after that. Far above anyone reviewing places they actually visited.
+// Windows stay at an hour or less: prune_rate_limit_counters() deletes any
+// counter whose window started over an hour ago, so a longer window would
+// quietly reset partway through.
+const RATE_LIMIT = 10
+const RATE_WINDOW_SECONDS = 60 * 60
+
 export async function createReviewAction(
   _prev: CreateReviewState,
   formData: FormData
@@ -29,6 +38,17 @@ export async function createReviewAction(
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { error: 'You must be signed in to submit a review.' }
+
+  if (
+    !(await checkRateLimit({
+      bucket: 'review',
+      identifier: user.id,
+      limit: RATE_LIMIT,
+      windowSeconds: RATE_WINDOW_SECONDS,
+    }))
+  ) {
+    return { error: 'You have posted a lot of reviews in the last hour. Please try again later.' }
+  }
 
   // Reviews had the weakest protection of the three surfaces — a per-user
   // per-listing duplicate guard and nothing else. Runs after auth so an

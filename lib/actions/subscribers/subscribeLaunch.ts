@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
 
 import { SUBSCRIBE_RATE_LIMIT_SALT } from '@/lib/env'
+import { isHoneypotTripped } from '@/lib/security/honeypot'
+import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export type SubscribeState = { error: string } | { success: true } | null
@@ -53,6 +55,16 @@ export async function subscribeLaunchAction(
   _prev: SubscribeState,
   formData: FormData
 ): Promise<SubscribeState> {
+  // A bot that filled the hidden field sees the normal success message, and
+  // nothing is written, not even an attempt row.
+  if (isHoneypotTripped(formData)) return { success: true }
+
+  // The ledger below fails open, so Turnstile is what still stands when the
+  // ledger is down. It fails closed once TURNSTILE_SECRET_KEY is set.
+  if (!(await verifyTurnstileFormData(formData))) {
+    return { error: TURNSTILE_ERROR }
+  }
+
   const supabase = createServiceClient()
   const ipHash = hashIp(await getClientIp())
   const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString()

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 import { VALID_CTA_TYPES, VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,6 +37,15 @@ function isValidEmail(email: string): boolean {
 
 // ─── Server Action ────────────────────────────────────────────────────────────
 
+// One account adding many listings in an hour looks like a script, not a
+// business owner. Shared with the other listing action through the same
+// bucket, so switching actions does not reset the count.
+// Windows stay at an hour or less: prune_rate_limit_counters() deletes any
+// counter whose window started over an hour ago, so a longer window would
+// quietly reset partway through.
+const RATE_LIMIT = 10
+const RATE_WINDOW_SECONDS = 60 * 60
+
 export async function submitListingAction(
   _prev: SubmitListingState,
   formData: FormData
@@ -47,6 +57,17 @@ export async function submitListingAction(
 
   if (!user) {
     return { error: 'You must be signed in to submit a listing.' }
+  }
+
+  if (
+    !(await checkRateLimit({
+      bucket: 'listing_submit',
+      identifier: user.id,
+      limit: RATE_LIMIT,
+      windowSeconds: RATE_WINDOW_SECONDS,
+    }))
+  ) {
+    return { error: 'You have added a lot of listings in the last hour. Please try again later.' }
   }
 
   // ── Parse fields ────────────────────────────────────────────────────────────

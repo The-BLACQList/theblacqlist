@@ -803,7 +803,7 @@ No role required to create an account. If a user attempts to access `/dashboard`
 | Risk                                | Mitigation                                                                                                                                 |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Throwaway account creation for spam | Email verification required before session is active. Rate limit: 5 sign-up attempts per IP per hour. Supabase Auth handles bot detection. |
-| Automated account creation          | CAPTCHA consideration at MVP (not required if Supabase's built-in rate limiting is sufficient). Flag for V1 review if abuse is observed.   |
+| Automated account creation          | Cloudflare Turnstile on sign-up, verified by Supabase Auth, on top of Supabase's built-in auth rate limits. |
 | `next` URL parameter injection      | Validate `next` server-side — must be a same-origin relative URL. Reject absolute or external URLs.                                        |
 
 ### Analytics Events to Track

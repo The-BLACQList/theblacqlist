@@ -218,7 +218,7 @@ The middleware is the first line of defense. Server Actions and Route Handlers p
 
 - Sign-up, sign-in, password reset endpoints: 10 requests per minute per IP
 - Implemented via middleware for Next.js routes; Supabase Auth has its own rate limiting on auth API calls
-- CAPTCHA on auth forms: deferred to V1 (documented gap — see Section 17)
+- CAPTCHA on auth forms: Cloudflare Turnstile on sign-up, sign-in and forgot password, verified by Supabase Auth. See the CAPTCHA section
 
 ---
 
@@ -380,7 +380,7 @@ Business owners can flag a review they believe violates policy. A flagged review
 
 - One review per user per listing: enforced at the database level via a unique constraint on `(reviewer_user_id, listing_id)`
 - Rate limit: maximum 3 reviews per user per 24-hour window (enforced in the review submission Server Action before the insert)
-- CAPTCHA on review submission: deferred to V1 (documented gap)
+- CAPTCHA on review submission: Cloudflare Turnstile, verified in `createReview.ts`, plus a per-account limit of 10 an hour
 
 ---
 
@@ -579,11 +579,22 @@ Rate limit storage: Vercel KV (Redis) or an in-memory counter with IP extraction
 
 ### CAPTCHA
 
-CAPTCHA is not implemented at MVP. This is a documented known gap (see Section 17). At V1, CAPTCHA (hCaptcha or Cloudflare Turnstile) will be added to:
+Updated 2026-10-01. Cloudflare Turnstile is live. We use only Turnstile, not Cloudflare's proxy: the site is served by Vercel, and Vercel advises against putting another proxy in front of it.
 
-- Claim submission
-- Review submission
-- Sign-up form
+| Surface | Bot and spam guards |
+|---|---|
+| Sign-up, sign-in, forgot password | Turnstile, verified by Supabase Auth through the project CAPTCHA setting |
+| Claim submission | Turnstile, verified in `createClaim.ts` |
+| Review submission | Turnstile in `createReview.ts`, 10 reviews an hour per account |
+| Report a correction, no account needed | Honeypot, Turnstile, 5 reports per 10 minutes per account or per IP |
+| Launch waitlist on coming soon, pricing and for vendors | Honeypot, Turnstile, 5 tries per 10 minutes per IP |
+| Listing submission | 10 an hour per account, shared by both listing actions |
+| `/api/upload` | 60 uploads per 10 minutes per account, 429 `RATE_LIMITED` |
+| `/join` flyer code | 60 visits per 10 minutes per IP |
+
+Code: `lib/security/turnstile.ts`, which fails closed once `TURNSTILE_SECRET_KEY` is set, `lib/security/honeypot.ts`, `lib/security/rate-limit.ts`. Rate limit windows stay at an hour or less because the counter prune job deletes windows older than an hour.
+
+Still open: claims and reviews can be inserted straight through the database by a signed-in user, skipping these checks, because their RLS insert policies predate the actions. Closing that is a separate permissions change.
 
 ### Duplicate Listing Detection
 
@@ -818,7 +829,7 @@ This section documents security capabilities that are intentionally deferred bey
 
 | Gap                                       | Risk Level                                   | Interim Mitigation                                                                 | Target Phase                         |
 | ----------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------ |
-| No CAPTCHA on claim/review submission     | Medium                                       | Rate limiting (3/day) + email verification required                                | V1                                   |
+| ~~No CAPTCHA on claim/review submission~~ | Closed 2026-10-01                            | Turnstile on claims, reviews, corrections and the waitlist. See the CAPTCHA section | Done                                 |
 | No virus scanning on file uploads         | Medium                                       | MIME type allowlist + size limits block most vectors; no executable types accepted | V1 (ClamAV via Edge Function)        |
 | No Content Security Policy header         | Medium                                       | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy` — live since 2026-08-11, **not** at MVP as this row previously claimed | V4 (needs a report-only soak first)  |
 | `Permissions-Policy` not set              | Low                                          | The app calls no `getUserMedia` and no `getCurrentPosition`; the only camera surfaces are `capture="environment"` file inputs | Next — needs a measurement, not a guess (see Section 15) |
@@ -836,7 +847,7 @@ Before V2 (Stripe Connect, marketplace transactions) launches, the following mus
 
 - [ ] Formal penetration test of auth flows, RLS policies, file upload paths, and payment endpoints
 - [ ] Bug bounty or responsible disclosure program established
-- [ ] CAPTCHA on all submission forms (V1 completion)
+- [x] CAPTCHA on all submission forms, done 2026-10-01. See the CAPTCHA section
 - [ ] Virus scanning on all file upload paths (V1 completion)
 - [ ] CSP header enforced (not report-only) (V1 completion)
 - [ ] Receipt admin access escalation process documented and reviewed
