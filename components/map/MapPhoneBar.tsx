@@ -15,7 +15,7 @@ interface Props extends MapFilterProps {
 
 /** Floating search bar, chip row and locate button over the phone map. */
 export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
-  const { filters, onFilters, categories, entityTypes, citySlug, onCity } = filterProps
+  const { filters, onFilters, categories, entityTypes, citySlug, onCity, onNearMe, onRadius, locating } = filterProps
   const [extrasOpen, setExtrasOpen] = useState(false)
 
   return (
@@ -62,12 +62,19 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
         aria-label="Quick filters"
         className="pointer-events-auto -mx-3 flex gap-2 overflow-x-auto px-3 pb-1"
       >
-        <FilterChips filters={filters} onFilters={onFilters} entityTypes={entityTypes} />
+        <FilterChips
+          filters={filters}
+          onFilters={onFilters}
+          entityTypes={entityTypes}
+          onNearMe={onNearMe}
+          onRadius={onRadius}
+          locating={locating}
+        />
       </div>
       <button
         type="button"
         onClick={onLocate}
-        aria-label="Show my location"
+        aria-label="Near me, use my location"
         className="pointer-events-auto flex size-11 items-center justify-center self-end rounded-full bg-white text-ink shadow-[0_6px_20px_rgba(29,28,29,0.2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
       >
         <LocateFixed className="size-5" aria-hidden="true" />

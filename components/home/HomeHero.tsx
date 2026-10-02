@@ -1,7 +1,7 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { SearchBar } from '@/components/discovery/SearchBar'
+import { HeroQuickFilters } from '@/components/home/HeroQuickFilters'
 
 const QUICK_FILTERS = [
   { label: 'Open now', href: '/discover?open_now=1' },
@@ -13,6 +13,8 @@ const QUICK_FILTERS = [
 /**
  * HP-A "Immersive Search" hero: the platform's core action lives inside the
  * photographic hero — search bar + quick-filter chips over the cover image.
+ * Near me leads the chips; it is the one client piece, so the hero stays a
+ * server component.
  * The hero image is the page's only preloaded image (LCP guardrail).
  */
 export function HomeHero() {
@@ -49,18 +51,7 @@ export function HomeHero() {
           </Suspense>
         </div>
 
-        <ul className="flex flex-wrap gap-2 mt-4 list-none p-0 m-0" aria-label="Quick filters">
-          {QUICK_FILTERS.map((filter) => (
-            <li key={filter.label}>
-              <Link
-                href={filter.href}
-                className="inline-flex items-center min-h-11 px-4 rounded-full border border-off-white/40 bg-off-white/10 text-off-white font-subhead text-[13px] font-semibold backdrop-blur-sm hover:bg-off-white/20 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-              >
-                {filter.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <HeroQuickFilters filters={QUICK_FILTERS} />
       </div>
     </section>
   )

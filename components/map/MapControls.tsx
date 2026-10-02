@@ -31,7 +31,7 @@ export function MapControls({ onZoomIn, onZoomOut, onLocate }: Props) {
       <button
         type="button"
         onClick={onLocate}
-        aria-label="Show my location"
+        aria-label="Near me, use my location"
         className={`${BTN} rounded-xl shadow-[0_6px_20px_rgba(29,28,29,0.2)]`}
       >
         <LocateFixed className="size-5" aria-hidden="true" />

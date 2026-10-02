@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { widerRadius } from '@/lib/listings/location-params'
+import { distanceMiles } from '@/lib/map/distance'
 import { MapListingCard } from '@/components/map/MapListingCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { MapResultsProps } from '@/lib/map/types'
@@ -24,9 +26,12 @@ export function MapResultsList({
   selectedId,
   onHover,
   onSelect,
+  near,
+  onRadius,
   variant,
   className,
 }: Props) {
+  const wider = near ? widerRadius(near.radiusMiles) : null
   const message = loadError ? (
     <div className="p-4 text-center">
       <p className="text-sm text-charcoal">Couldn&apos;t load the map listings.</p>
@@ -36,6 +41,19 @@ export function MapResultsList({
       >
         Browse on Discover instead
       </Link>
+    </div>
+  ) : listings.length === 0 && !loading && near ? (
+    <div className="p-4 text-center">
+      <p className="text-sm text-charcoal">Nothing within {near.radiusMiles} miles in this view.</p>
+      {wider && (
+        <button
+          type="button"
+          onClick={() => onRadius(wider)}
+          className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-amber underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+        >
+          Show {wider} miles
+        </button>
+      )}
     </div>
   ) : listings.length === 0 && !loading ? (
     <p className="p-4 text-center text-sm text-charcoal">
@@ -70,6 +88,7 @@ export function MapResultsList({
                 number={numbers.get(listing.id) ?? null}
                 selected={listing.id === selectedId}
                 variant={variant}
+                distance={near ? distanceMiles(near, listing) : null}
                 onSelect={onSelect}
                 onHover={onHover}
               />
