@@ -33,6 +33,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 import { photoLimit } from '@/lib/stripe/features'
 import {
   matchesDeclaredType,
@@ -101,6 +102,11 @@ function buildStoragePath(
   return `claims/${entityId}/${uuid}.${ext}`
 }
 
+// Each upload can be 10 MB, so one account looping this endpoint fills storage
+// fast. 60 in ten minutes is well past a full listing gallery plus documents.
+const UPLOAD_RATE_LIMIT = 60
+const UPLOAD_RATE_WINDOW_SECONDS = 10 * 60
+
 function bad(error: string, code: string, status: number): NextResponse {
   return NextResponse.json({ error, code }, { status })
 }
@@ -113,6 +119,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   if (!user) {
     return bad('Authentication required.', 'AUTH_REQUIRED', 401)
+  }
+
+  if (
+    !(await checkRateLimit({
+      bucket: 'upload',
+      identifier: user.id,
+      limit: UPLOAD_RATE_LIMIT,
+      windowSeconds: UPLOAD_RATE_WINDOW_SECONDS,
+    }))
+  ) {
+    return bad('Too many uploads. Please wait a few minutes and try again.', 'RATE_LIMITED', 429)
   }
 
   let formData: FormData

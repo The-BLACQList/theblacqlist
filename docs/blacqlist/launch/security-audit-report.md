@@ -135,6 +135,8 @@ Direct-API IDOR probes (substituted user IDs, param injection) passed in the 202
 | A09 | Logging & Monitoring | `admin_audit_log` records admin mutations (immutable); Sentry configured with PII scrubbing (`lib/observability/sentry-scrub.ts`) | — | PASS |
 | A10 | SSRF | No server-side fetch of user-controlled URLs (spot-check); uploads go to Supabase Storage, not fetched by the server | — | PASS |
 
+> **Update 2026-10-01:** the CAPTCHA half of this is closed. Cloudflare Turnstile now guards sign-up, sign-in, forgot password, claims, reviews, corrections and the waitlist, with per-account and per-IP limits on top. See the CAPTCHA section of `security-and-privacy-plan.md`.
+
 **No CAPTCHA on sign-up/claim/review** and **no upload virus scanning** are documented MVP gaps (`security-and-privacy-plan.md`), mitigated by email verification + rate limiting and by MIME/size allowlists respectively — **Medium, accepted for MVP, pre-V2 hardening**.
 
 ---
@@ -158,7 +160,7 @@ Confirmed from `.env.example` (server secrets are **not** `NEXT_PUBLIC_`-prefixe
 |---|---|---|---|---|
 | S-01 | A06 Dependencies | High (build-time) / Low (runtime) | `next` <16.2.6 advisory — **✅ FIXED 2026-06-20: bumped to 16.2.6** (typecheck/lint/build/axe all green). Remaining `pnpm audit` items are deeper build-chain transitives (`postcss`, `@babel/core` via Sentry plugins, `js-yaml`, `@opentelemetry/core`) — build-time only, not runtime-exposed | **Partly resolved:** `next` bumped; refresh remaining build-chain transitives (`pnpm update` / upstream) pre-launch |
 | S-02 | A05/A08 | Medium | No Content-Security-Policy header at MVP | Accepted (MVP); CSP pre-V2 |
-| S-03 | A01-adjacent | Medium | No CAPTCHA on sign-up / claim / review | Accepted; mitigated by email-verify + rate limiting |
+| S-03 | A01-adjacent | Medium | No CAPTCHA on sign-up / claim / review | **Closed 2026-10-01:** Turnstile on every public form, plus rate limits |
 | S-04 | File upload | Medium | No virus scanning on uploads | Accepted; mitigated by MIME + size allowlists |
 | S-05 | Process | High (pre-V2) | No formal third-party penetration test | Required pre-V2 (not an MVP blocker) |
 | S-06 | RLS | — (condition) | Per-table RLS matrix verified at boundary on staging; not yet re-run on production | **Condition:** re-verify on prod (091) before launch |

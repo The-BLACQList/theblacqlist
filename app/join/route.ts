@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { codeMatches } from '@/lib/auth/flyer-code'
 import { TESTER_FLYER_CODE } from '@/lib/env'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 // Self-serve tester admission: the link printed on the flyer / behind the QR.
 //
@@ -29,9 +30,27 @@ const PREVIEW_COOKIE = 'bl_preview'
 const SOURCE_COOKIE = 'bl_src'
 const THIRTY_DAYS = 60 * 60 * 24 * 30
 
+// Caps code guessing per IP. Generous on purpose: a room full of people
+// scanning the flyer on one venue Wi-Fi shares an IP, and a blocked visit
+// lands on /coming-soon exactly like a wrong code. Every visit is charged,
+// right or wrong, because charging only wrong guesses would still let the
+// right guess through after the limit.
+const JOIN_RATE_LIMIT = 60
+const JOIN_RATE_WINDOW_SECONDS = 10 * 60
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { origin, searchParams } = request.nextUrl
   const candidate = searchParams.get('code') ?? ''
+
+  const allowed = await checkRateLimit({
+    bucket: 'join',
+    identifier: getClientIp(request.headers),
+    limit: JOIN_RATE_LIMIT,
+    windowSeconds: JOIN_RATE_WINDOW_SECONDS,
+  })
+  if (!allowed) {
+    return NextResponse.redirect(`${origin}/coming-soon`)
+  }
 
   if (!codeMatches(candidate, TESTER_FLYER_CODE)) {
     return NextResponse.redirect(`${origin}/coming-soon`)

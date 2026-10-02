@@ -28,6 +28,11 @@ export type RateLimitBucket =
   | 'checkout'
   | 'billing_portal'
   | 'tester_link'
+  | 'correction'
+  | 'review'
+  | 'listing_submit'
+  | 'upload'
+  | 'join'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

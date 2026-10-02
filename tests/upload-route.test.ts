@@ -31,12 +31,14 @@ const h = vi.hoisted(() => {
     photoCount: number
     uploadError: { message: string } | null
     insertError: { message: string } | null
+    rateLimited: boolean
   } = {
     user: null,
     listing: null,
     photoCount: 0,
     uploadError: null,
     insertError: null,
+    rateLimited: false,
   }
 
   // What actually reached Supabase. The path and content-type are the whole
@@ -71,6 +73,8 @@ const h = vi.hoisted(() => {
   }))
 
   const createServiceClient = vi.fn(() => ({
+    // check_rate_limit answers true while under the limit.
+    rpc: async () => ({ data: !state.rateLimited, error: null }),
     storage: {
       from(bucket: string) {
         return {
@@ -208,6 +212,7 @@ beforeEach(() => {
   h.state.photoCount = 0
   h.state.uploadError = null
   h.state.insertError = null
+  h.state.rateLimited = false
   h.calls.uploadBucket = null
   h.calls.uploadPath = null
   h.calls.uploadContentType = null
@@ -222,6 +227,19 @@ describe('authentication', () => {
     expect(res.status).toBe(401)
     expect((await body(res)).code).toBe('AUTH_REQUIRED')
     expect(h.calls.uploadBucket).toBeNull()
+  })
+})
+
+describe('rate limit', () => {
+  it('refuses with 429 RATE_LIMITED and stores nothing once the account is over the limit', async () => {
+    h.state.rateLimited = true
+    const res = await POST(listingMedia())
+    expect(res.status).toBe(429)
+    expect(await body(res)).toEqual({
+      error: 'Too many uploads. Please wait a few minutes and try again.',
+      code: 'RATE_LIMITED',
+    })
+    expect(h.calls.uploadPath).toBeNull()
   })
 })
 

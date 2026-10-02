@@ -5,6 +5,8 @@ import { useFormStatus } from 'react-dom'
 import { Check, Loader2 } from 'lucide-react'
 
 import { subscribeLaunchAction, type SubscribeState } from '@/lib/actions/subscribers/subscribeLaunch'
+import { HoneypotField } from '@/components/security/HoneypotField'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -44,6 +46,7 @@ export function ComingSoonForm() {
 
   return (
     <form action={action} noValidate>
+      <HoneypotField />
       <div className="flex flex-col gap-3 sm:flex-row">
         <label htmlFor="email" className="sr-only">
           Email address
@@ -61,6 +64,7 @@ export function ComingSoonForm() {
         />
         <SubmitButton />
       </div>
+      <TurnstileWidget theme="dark" resetKey={state} className="mt-3 flex justify-center" />
       {error && (
         <p id="subscribe-error" role="alert" className="mt-3 font-subhead text-sm text-light-gold">
           {error}

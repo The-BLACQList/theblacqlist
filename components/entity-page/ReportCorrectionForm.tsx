@@ -5,6 +5,8 @@ import { Loader2, Flag, CheckCircle } from 'lucide-react'
 import { submitCorrectionAction } from '@/lib/actions/corrections/submitCorrection'
 import { CORRECTION_ISSUE_TYPES, ISSUE_LABELS } from '@/lib/constants/corrections'
 import { cn } from '@/lib/utils'
+import { HoneypotField } from '@/components/security/HoneypotField'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import {
   Dialog,
   DialogTrigger,
@@ -96,6 +98,7 @@ export function ReportCorrectionForm({
         ) : (
           <form action={formAction} className="px-5 py-4 space-y-4">
             <input type="hidden" name="listing_id" value={listingId} />
+            <HoneypotField />
             <p className="font-body text-sm text-charcoal-soft">
               Help us keep The BLACQList accurate. Select all that apply.
             </p>
@@ -149,6 +152,9 @@ export function ReportCorrectionForm({
                 />
               </div>
             )}
+
+            {/* Mounts only while the dialog is open, so listing pages never load the script. */}
+            <TurnstileWidget resetKey={state} />
 
             {state && 'error' in state && (
               <p

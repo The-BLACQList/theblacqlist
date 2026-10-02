@@ -5,6 +5,8 @@ import { useFormStatus } from 'react-dom'
 import { Check, Loader2 } from 'lucide-react'
 
 import { subscribeLaunchAction, type SubscribeState } from '@/lib/actions/subscribers/subscribeLaunch'
+import { HoneypotField } from '@/components/security/HoneypotField'
+import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 
 // One shared waitlist below the plan grid rather than a form inside each
 // disabled card: four cards in a lg:grid-cols-4 row cannot each carry an email
@@ -87,6 +89,7 @@ export function LaunchWaitlist({
         </div>
       ) : (
         <form action={action} noValidate>
+          <HoneypotField />
           {options.length > 1 ? (
             <fieldset className="mb-5">
               <legend className="font-subhead text-sm font-semibold text-brand-black mb-3">
@@ -132,6 +135,8 @@ export function LaunchWaitlist({
             />
             <SubmitButton label={submitLabel} />
           </div>
+
+          <TurnstileWidget resetKey={state} className="mt-3" />
 
           {error && (
             <p id={errorId} role="alert" className="mt-3 font-subhead text-sm text-amber">
