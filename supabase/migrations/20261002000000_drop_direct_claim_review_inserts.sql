@@ -1,0 +1,83 @@
+-- ─── Drop direct claim and review inserts ───────────────────────────────────
+--
+-- Closes a direct-API bypass of the claim and review server actions.
+-- [Observed: audit, 2026-10-02]
+--
+-- createClaimAction (lib/actions/claims/createClaim.ts) and createReviewAction
+-- (lib/actions/reviews/createReview.ts) gate every submission: Turnstile, the
+-- 3-per-24h claim quota, the 10-per-hour review rate limit, the duplicate
+-- checks, the published-listing checks and "owners cannot review their own
+-- business". None of that lives in the database. Two RLS policies let any
+-- signed-in user holding their own session token skip all of it:
+--
+--   POST /rest/v1/claims   { "listing_id": "<any>", "claimant_user_id": "<me>" }
+--   POST /rest/v1/reviews  { "listing_id": "<my own>", "reviewer_user_id": "<me>",
+--                            "rating": 5, "status": "intake" }
+--
+-- The policies only checked the row's own fields (owner = auth.uid(), born
+-- pending / intake). They could not check quotas, CAPTCHA, or who owns the
+-- listing, so a script could flood the admin claim queue or self-review.
+--
+-- This migration drops both INSERT policies. With no INSERT policy, RLS refuses
+-- every insert from `authenticated` and `anon`. Both actions now insert through
+-- the service client (`service_role`, which bypasses RLS) after their checks,
+-- the same shape as submitProblemReport.ts and the tester_invites table.
+--
+-- The invariants the dropped policies enforced now live in the action code,
+-- which sets them explicitly on every insert:
+--   * claims:  claimant_user_id = user.id, status = 'pending', and never
+--              reviewed_at / reviewed_by / rejection_reason.
+--   * reviews: reviewer_user_id = user.id, status = 'intake'.
+-- tests/claim-review-service-insert.test.ts pins those literals.
+--
+-- ── What is NOT changed ─────────────────────────────────────────────────────
+--   * SELECT policies on claims and reviews (users still read their own rows,
+--     which the actions' duplicate and quota checks rely on).
+--   * "review_ratings: insert own review" (20260622000005). It checks that the
+--     review belongs to auth.uid() through the reviews SELECT policy, which is
+--     still true for a review the service client wrote with the user's id, so
+--     createReview.ts keeps that insert on the user client.
+--   * Withdraw, delete-own-review and owner-response UPDATE / DELETE policies.
+--   * Triggers. update_listing_review_stats() is SECURITY DEFINER
+--     (20260630000000) and does not read auth.uid(). No trigger on claims or
+--     reviews reads auth.uid().
+--
+-- ── Ordering: the app must be live first ────────────────────────────────────
+-- The companion app change (both actions on the service client) MUST be
+-- deployed to production before this migration runs there. Applied against the
+-- old code, every claim and every review submission fails with an RLS error
+-- until the new code ships. Applying it after the code is safe at any time:
+-- the new code never relied on these policies.
+--
+-- ── Down / rollback plan ────────────────────────────────────────────────────
+-- Nothing here changes data, so rollback is purely structural. Restoring the
+-- policies reopens the bypass, so only do it if the app change is reverted:
+--
+--   DROP POLICY IF EXISTS "claims: authenticated insert" ON claims;
+--   CREATE POLICY "claims: authenticated insert"
+--     ON claims FOR INSERT TO authenticated
+--     WITH CHECK (
+--       claimant_user_id = auth.uid()
+--       AND status = 'pending'
+--       AND reviewed_at IS NULL
+--       AND reviewed_by IS NULL
+--       AND rejection_reason IS NULL
+--     );
+--
+--   DROP POLICY IF EXISTS "reviews: authenticated insert" ON reviews;
+--   CREATE POLICY "reviews: authenticated insert"
+--     ON reviews FOR INSERT TO authenticated
+--     WITH CHECK (
+--       reviewer_user_id = auth.uid()
+--       AND status = 'intake'
+--     );
+--
+-- (Policy text restored verbatim from 20260926000000_listings_entitlement_guard.sql
+-- and 20260510000001_mvp_rls_policies.sql.)
+--
+-- Idempotent: both statements are DROP ... IF EXISTS.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DROP POLICY IF EXISTS "claims: authenticated insert" ON claims;
+
+DROP POLICY IF EXISTS "reviews: authenticated insert" ON reviews;
