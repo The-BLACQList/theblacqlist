@@ -4,6 +4,7 @@ import { getAppUrl } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { sendEmail } from '@/lib/email/resend'
+import { adminNotificationRecipients } from '@/lib/email/adminRecipients'
 import { ClaimSubmittedEmail } from '@/lib/email/templates/claim-submitted'
 import { ClaimAdminNotificationEmail } from '@/lib/email/templates/claim-admin-notification'
 
@@ -199,10 +200,10 @@ export async function createClaimAction(
   }
 
   // ── Admin notification (fire-and-forget) ────────────────────────────────────
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
-  if (adminEmail && user.email) {
+  const adminRecipients = adminNotificationRecipients()
+  if (adminRecipients.length > 0 && user.email) {
     void sendEmail({
-      to: adminEmail,
+      to: adminRecipients,
       subject: `New claim submitted: ${listing.name}`,
       react: ClaimAdminNotificationEmail({
         listingName: listing.name,
