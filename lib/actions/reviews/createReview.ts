@@ -127,7 +127,14 @@ export async function createReviewAction(
     return { error: 'You have already submitted a review for this business.' }
   }
 
-  const { data: review, error } = await supabase
+  // Signed-in users have no INSERT policy on reviews
+  // (20261002000000_drop_direct_claim_review_inserts.sql), so the Turnstile,
+  // rate limit, owner and duplicate checks above are the only way in. One
+  // service client serves this insert and the photo rows below.
+  const service = createServiceClient()
+
+  // Invariants the dropped RLS policy enforced: own user id, born 'intake'.
+  const { data: review, error } = await service
     .from('reviews')
     .insert({
       listing_id: listingId,
@@ -168,7 +175,6 @@ export async function createReviewAction(
   // publishes the review. Best-effort: a photo failure must not fail the saved review.
   if (photoFiles.length > 0) {
     try {
-      const service = createServiceClient()
       const mediaRows: {
         entity_type: string
         entity_id: string

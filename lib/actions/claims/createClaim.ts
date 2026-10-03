@@ -133,8 +133,16 @@ export async function createClaimAction(
     }
   }
 
-  // ── Insert claim ────────────────────────────────────────────────────────────
-  const { data: claim, error: claimError } = await supabase
+  // ── Insert claim (service role) ─────────────────────────────────────────────
+  // Signed-in users have no INSERT policy on claims
+  // (20261002000000_drop_direct_claim_review_inserts.sql), so the checks above
+  // are the only way in. The service client also writes the admin-only rows
+  // below, so one instance serves the whole action.
+  const serviceClient = createServiceClient()
+
+  // Invariants the dropped RLS policy enforced: own user id, born pending, and
+  // never reviewed_at / reviewed_by / rejection_reason.
+  const { data: claim, error: claimError } = await serviceClient
     .from('claims')
     .insert({
       listing_id: listingId,
@@ -156,8 +164,6 @@ export async function createClaimAction(
   }
 
   // ── Moderation queue (service role — queue is admin-only) ───────────────────
-  const serviceClient = createServiceClient()
-
   await serviceClient.from('moderation_queue').insert({
     entity_id: claim.id,
     entity_type: 'claim',
