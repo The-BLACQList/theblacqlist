@@ -461,11 +461,17 @@ describe('the plan photo limit', () => {
     expect(res.status).toBe(201)
   })
 
-  it('cannot enforce a limit before the listing exists, and does not pretend to', async () => {
+  // Ticket 119. Before the listing row exists (add-business), the listing will
+  // start on Free, so the Free limit applies to the photos uploaded there.
+  it('applies the Free limit before the listing exists', async () => {
     h.state.listing = null
-    h.state.photoCount = 99
+    h.state.photoCount = 0
+    expect((await POST(listingMedia())).status).toBe(201)
+
+    h.state.photoCount = 1
     const res = await POST(listingMedia())
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(400)
+    expect((await body(res)).code).toBe('PLAN_LIMIT')
   })
 })
 

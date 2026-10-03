@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { byName } from '@/lib/categories/sort'
 import { cn } from '@/lib/utils'
+import { descriptionCharLimit } from '@/lib/stripe/features'
 import { MediaStep } from '@/app/add-business/_components/steps/MediaStep'
 import { CtaStep } from '@/app/add-business/_components/steps/CtaStep'
 import { PreviewPublishStep } from '@/app/add-business/_components/steps/PreviewPublishStep'
@@ -17,6 +18,10 @@ import {
 } from '@/lib/constants/listing'
 
 const DRAFT_KEY = 'draft-add-business'
+
+// A new page starts on Free, so the Free description limit applies here.
+// createListing enforces the same number (ticket 119).
+const DESCRIPTION_MAX = descriptionCharLimit('free') ?? 2000
 
 // These option values MUST match the live DB CHECK constraints
 // (migration 20260524000001 + 20260622000007) — see lib/constants/listing.ts.
@@ -166,6 +171,9 @@ export function SubmitListingForm({ categories }: Props) {
           parsed.location_type = ''
         if (parsed.cta_type && !(VALID_CTA_TYPES as readonly string[]).includes(parsed.cta_type))
           parsed.cta_type = ''
+        // Social links moved to Starter. Drop any saved in an older draft so the
+        // preview never shows links the page will not get.
+        for (const [key] of SOCIAL_FIELDS) parsed[key] = ''
         // Safe: runs once on mount to hydrate draft from localStorage — avoids SSR mismatch
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setFields({ ...INITIAL, ...parsed })
@@ -260,6 +268,8 @@ export function SubmitListingForm({ categories }: Props) {
     } else if (s === 4) {
       if (fields.description.trim().length < 20)
         e.description = 'Description must be at least 20 characters.'
+      else if (fields.description.trim().length > DESCRIPTION_MAX)
+        e.description = `Description must be ${DESCRIPTION_MAX} characters or fewer.`
     } else if (s === 6) {
       if (!CTA_STEP6_VALUES.includes(fields.cta_type)) {
         e.cta_step6 = 'Select how customers should reach you.'
@@ -953,43 +963,14 @@ export function SubmitListingForm({ categories }: Props) {
             </div>
           </div>
 
-          {/* Social links */}
+          {/* Social links are a Starter feature (ticket 119). A new page starts on
+              Free, so they are added from the dashboard after an upgrade. */}
           <div>
-            <p className="font-subhead text-sm font-semibold text-brand-black mb-3">
-              Social links
-              <span className="font-normal text-charcoal-soft ml-1.5 text-xs">(optional)</span>
+            <p className="font-subhead text-sm font-semibold text-brand-black">Social links</p>
+            <p className="font-subhead text-xs text-charcoal-soft mt-1">
+              Social links are part of Starter. Once your page is live, you can upgrade and add them
+              from your dashboard.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {SOCIAL_FIELDS.map(([key, label]) => (
-                <div key={key} className="flex flex-col gap-1">
-                  <label
-                    htmlFor={key}
-                    className="font-subhead text-xs font-semibold text-charcoal-soft"
-                  >
-                    {label}
-                  </label>
-                  <input
-                    id={key}
-                    type="url"
-                    value={fields[key]}
-                    onChange={(e) => set(key, e.target.value)}
-                    aria-describedby={err(key) ? `${key}-error` : undefined}
-                    aria-invalid={!!err(key)}
-                    className={inputCls(key)}
-                    placeholder="https://"
-                  />
-                  {err(key) && (
-                    <p
-                      id={`${key}-error`}
-                      role="alert"
-                      className="text-xs font-subhead text-red-600"
-                    >
-                      {err(key)}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -1010,13 +991,13 @@ export function SubmitListingForm({ categories }: Props) {
                 </span>
               </label>
               <span className="text-xs font-subhead text-charcoal-faint" aria-hidden="true">
-                {fields.description.length}/2000
+                {fields.description.length}/{DESCRIPTION_MAX}
               </span>
             </div>
             <textarea
               id="description"
               rows={6}
-              maxLength={2000}
+              maxLength={DESCRIPTION_MAX}
               value={fields.description}
               onChange={(e) => set('description', e.target.value)}
               aria-describedby={cn(
@@ -1028,7 +1009,8 @@ export function SubmitListingForm({ categories }: Props) {
               placeholder="Tell people what makes your business unique, what you offer, and who you serve."
             />
             <p id="description-hint" className="text-xs font-subhead text-charcoal-faint">
-              20–2000 characters. Shown on your full listing page.
+              20 to {DESCRIPTION_MAX} characters on the free plan. Starter has no length limit.
+              Shown on your full listing page.
             </p>
             {err('description') && (
               <p

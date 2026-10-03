@@ -3,15 +3,23 @@
 import { useActionState, useState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
+import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 
 interface Props {
   listingId: string
   description: string | null
+  /** Plan character limit, or null for no limit (ticket 119). */
+  charLimit: number | null
+  showUpgrade: boolean
 }
 
-export function AboutSection({ listingId, description }: Props) {
+export function AboutSection({ listingId, description, charLimit, showUpgrade }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
   const [chars, setChars] = useState(description?.length ?? 0)
+  // A description saved before the limit existed stays as it is. Only an edit
+  // has to fit, so say that plainly instead of letting the save fail.
+  const savedOverLimit = charLimit !== null && (description?.length ?? 0) > charLimit
+  const overLimit = charLimit !== null && chars > charLimit
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -37,11 +45,25 @@ export function AboutSection({ listingId, description }: Props) {
             rows={6}
             defaultValue={description ?? ''}
             onChange={(e) => setChars(e.target.value.length)}
+            aria-describedby="about-description-count"
             placeholder="Describe your business, its history, and what makes it special…"
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
           />
-          <p className="font-body text-xs text-charcoal-faint text-right mt-0.5">{chars} characters</p>
+          <p
+            id="about-description-count"
+            className={`font-body text-xs text-right mt-0.5 ${overLimit ? 'text-red-700' : 'text-charcoal-faint'}`}
+          >
+            {charLimit === null ? `${chars} characters` : `${chars} of ${charLimit} characters`}
+          </p>
         </div>
+
+        {charLimit !== null && (savedOverLimit || overLimit) && (
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            {savedOverLimit
+              ? `Your description is longer than your plan's ${charLimit} characters. It stays on your page as it is. To change it, shorten it to ${charLimit} or fewer, or upgrade for no limit.`
+              : `Your plan includes a description of up to ${charLimit} characters. Shorten it, or upgrade for no limit.`}
+          </PlanLimitNote>
+        )}
 
         {state && 'error' in state && (
           <div

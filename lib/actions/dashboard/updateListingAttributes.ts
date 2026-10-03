@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { checkAttributeCount } from '@/lib/stripe/planChecks'
 
 export type UpdateListingAttributesState =
   | { success: true; savedAt: string }
@@ -32,7 +33,7 @@ export async function updateListingAttributesAction(
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, entity_type, cities(slug)')
+    .select('id, slug, entity_type, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -57,6 +58,15 @@ export async function updateListingAttributesAction(
       .eq('is_active', true)
     validIds = ((valid as { id: string }[] | null) ?? []).map((r) => r.id)
   }
+
+  // Plan limit (ticket 119). A listing already over the limit can keep its
+  // set or trim it, but not grow it.
+  const { count: previousCount } = await sb
+    .from('listing_attributes')
+    .select('value_id', { count: 'exact', head: true })
+    .eq('listing_id', listingId)
+  const limitError = checkAttributeCount(listing.tier, validIds.length, previousCount ?? 0)
+  if (limitError) return { error: limitError }
 
   // Replace the full set: delete existing, then insert the new selection.
   const { error: delError } = await sb.from('listing_attributes').delete().eq('listing_id', listingId)

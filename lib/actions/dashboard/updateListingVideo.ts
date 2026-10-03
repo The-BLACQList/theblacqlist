@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { checkVideo } from '@/lib/stripe/planChecks'
 
 export type UpdateListingVideoState =
   | { success: true; savedAt: string }
@@ -42,7 +43,7 @@ export async function updateListingVideoAction(
   const supabase = await createClient()
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, entity_type, cities(slug)')
+    .select('id, slug, entity_type, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -51,6 +52,20 @@ export async function updateListingVideoAction(
   if (!listing) return { error: 'Listing not found or you do not have permission to edit it.' }
 
   const sb = supabase as unknown as SupabaseClient
+
+  // Plan gate (ticket 119): adding or changing a video is Starter. Removing
+  // one, or saving the same link again, is always allowed.
+  if (value) {
+    const { data: current } = await sb
+      .from('listing_details_business')
+      .select('video_embed_url')
+      .eq('listing_id', listingId)
+      .maybeSingle()
+    const previous = (current as { video_embed_url: string | null } | null)?.video_embed_url
+    const limitError = checkVideo(listing.tier, value, previous)
+    if (limitError) return { error: limitError }
+  }
+
   const { error } = await sb
     .from('listing_details_business')
     .update({ video_embed_url: value })

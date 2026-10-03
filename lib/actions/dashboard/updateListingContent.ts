@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { geocodeAddress } from '@/lib/listings/geocode'
+import { checkDescription, checkSocialLinks, SOCIAL_FIELDS } from '@/lib/stripe/planChecks'
 
 export type UpdateListingContentState =
   | { success: true; savedAt: string }
@@ -26,7 +27,7 @@ export async function updateListingContentAction(
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, city_id, cities(slug)')
+    .select('id, slug, status, entity_type, city_id, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -77,6 +78,36 @@ export async function updateListingContentAction(
   const socialTiktok = formData.get('social_tiktok')?.toString().trim()
   const socialYoutube = formData.get('social_youtube')?.toString().trim()
   const socialTwitter = formData.get('social_twitter')?.toString().trim()
+
+  // ── Plan limits (ticket 119). Read what is saved now, so an unchanged
+  //    description or link never blocks an unrelated save. ──────────────────
+  const socialNext = {
+    social_instagram: socialInstagram,
+    social_facebook: socialFacebook,
+    social_linkedin: socialLinkedin,
+    social_tiktok: socialTiktok,
+    social_youtube: socialYoutube,
+    social_twitter: socialTwitter,
+  }
+  const touchesSocial = SOCIAL_FIELDS.some((f) => socialNext[f] !== undefined)
+  if (description !== undefined || touchesSocial) {
+    const { data: current } = await supabase
+      .from('listing_details_business')
+      .select(
+        'description, social_instagram, social_facebook, social_linkedin, social_tiktok, social_youtube, social_twitter'
+      )
+      .eq('listing_id', listingId)
+      .maybeSingle()
+
+    if (description !== undefined) {
+      const limitError = checkDescription(listing.tier, description, current?.description)
+      if (limitError) return { error: limitError }
+    }
+    if (touchesSocial) {
+      const limitError = checkSocialLinks(listing.tier, socialNext, current)
+      if (limitError) return { error: limitError }
+    }
+  }
 
   if (description !== undefined) detailsUpdate.description = description || null
   if (phone !== undefined) detailsUpdate.phone = phone || null

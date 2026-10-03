@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { checkFaqAdd } from '@/lib/stripe/planChecks'
 
 export type AddListingFaqState = { success: true } | { error: string } | null
 
@@ -28,7 +29,7 @@ export async function addListingFaqAction(
   const supabase = await createClient()
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, cities(slug)')
+    .select('id, slug, status, entity_type, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -38,6 +39,15 @@ export async function addListingFaqAction(
 
   // listing_faqs is not in the generated types yet — use the untyped client.
   const sb = supabase as unknown as SupabaseClient
+
+  // Plan limit (ticket 119): Free has none, Starter has 5.
+  const { count: faqCount } = await sb
+    .from('listing_faqs')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_id', listingId)
+  const limitError = checkFaqAdd(listing.tier, faqCount ?? 0)
+  if (limitError) return { error: limitError }
+
   const { data: lastFaq } = await sb
     .from('listing_faqs')
     .select('display_order')
