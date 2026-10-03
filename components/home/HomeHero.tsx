@@ -19,17 +19,30 @@ const QUICK_FILTERS = [
  */
 export function HomeHero() {
   return (
-    <section aria-label="Search The BLACQList" className="relative min-h-[480px] md:min-h-[72vh] flex items-center">
+    <section
+      aria-label="Search The BLACQList"
+      className="relative min-h-[480px] md:min-h-[72vh] flex items-end md:items-center"
+    >
       <Image
         src="/images/hero-bg.jpg"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="object-cover object-[center_20%]"
+        className="object-cover object-[80%_0%] md:object-[center_20%]"
+      />
+      {/* Phones: the photo is cropped onto her and the copy sits below her face,
+          so the shade rises from the bottom and leaves her face clear. */}
+      <div
+        className="absolute inset-0 md:hidden"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(4,4,5,0.15) 0%, rgba(4,4,5,0.3) 22%, rgba(4,4,5,0.8) 42%, rgba(4,4,5,0.9) 100%)',
+        }}
+        aria-hidden="true"
       />
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 hidden md:block"
         style={{
           background:
             'linear-gradient(to right, rgba(4,4,5,0.82) 0%, rgba(4,4,5,0.55) 55%, rgba(4,4,5,0.25) 100%)',
@@ -37,7 +50,7 @@ export function HomeHero() {
         aria-hidden="true"
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-20">
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pt-[200px] pb-10 md:py-20">
         <h1 className="font-headline text-[42px] md:text-[60px] lg:text-[68px] text-white leading-[1.05] text-balance max-w-[16ch]">
           Find &amp; Be Found.
         </h1>
