@@ -4,6 +4,8 @@ import { useActionState, useRef, useEffect } from 'react'
 import { Loader2, Plus, AlertCircle, Trash2 } from 'lucide-react'
 import { addListingFaqAction } from '@/lib/actions/dashboard/addListingFaq'
 import { deleteListingFaqAction } from '@/lib/actions/dashboard/deleteListingFaq'
+import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import { faqLimit } from '@/lib/stripe/features'
 
 interface FaqRow {
   id: string
@@ -14,6 +16,9 @@ interface FaqRow {
 interface Props {
   listingId: string
   faqs: FaqRow[]
+  /** Plan FAQ limit, or null for no limit (ticket 119). */
+  limit: number | null
+  showUpgrade: boolean
 }
 
 function DeleteFaqButton({ faqId }: { faqId: string }) {
@@ -40,13 +45,17 @@ function DeleteFaqButton({ faqId }: { faqId: string }) {
   )
 }
 
-export function FaqSection({ listingId, faqs }: Props) {
+export function FaqSection({ listingId, faqs, limit, showUpgrade }: Props) {
   const [state, formAction, isPending] = useActionState(addListingFaqAction, null)
   const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     if (state && 'success' in state) formRef.current?.reset()
   }, [state])
+
+  // Questions saved before the limit existed stay and can be deleted. The add
+  // form only shows while there is room for one more.
+  const full = limit !== null && faqs.length >= limit
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -79,68 +88,82 @@ export function FaqSection({ listingId, faqs }: Props) {
           </ul>
         )}
 
-        <form ref={formRef} action={formAction} className="space-y-3 border-t border-charcoal/8 pt-4">
-          <input type="hidden" name="listing_id" value={listingId} />
-          <div>
-            <label
-              htmlFor="faq-question"
-              className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
-            >
-              Question
-            </label>
-            <input
-              id="faq-question"
-              name="question"
-              type="text"
-              required
-              maxLength={300}
-              placeholder="e.g. Do you take walk-ins?"
-              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="faq-answer"
-              className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
-            >
-              Answer
-            </label>
-            <textarea
-              id="faq-answer"
-              name="answer"
-              required
-              maxLength={2000}
-              rows={3}
-              placeholder="Keep it short and clear."
-              className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-y"
-            />
-          </div>
+        {full && (
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            {limit === 0
+              ? `Common questions are part of Starter. Upgrade to add up to ${faqLimit('starter')} to your page.`
+              : `Your plan includes up to ${limit} common questions. Delete one to add another.`}
+          </PlanLimitNote>
+        )}
 
-          {state && 'error' in state && (
-            <div
-              role="alert"
-              className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
-            >
-              <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
-              <p className="font-body text-sm text-red-700">{state.error}</p>
+        {!full && (
+          <form
+            ref={formRef}
+            action={formAction}
+            className="space-y-3 border-t border-charcoal/8 pt-4"
+          >
+            <input type="hidden" name="listing_id" value={listingId} />
+            <div>
+              <label
+                htmlFor="faq-question"
+                className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
+              >
+                Question
+              </label>
+              <input
+                id="faq-question"
+                name="question"
+                type="text"
+                required
+                maxLength={300}
+                placeholder="e.g. Do you take walk-ins?"
+                className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+              />
             </div>
-          )}
+            <div>
+              <label
+                htmlFor="faq-answer"
+                className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
+              >
+                Answer
+              </label>
+              <textarea
+                id="faq-answer"
+                name="answer"
+                required
+                maxLength={2000}
+                rows={3}
+                placeholder="Keep it short and clear."
+                className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-y"
+              />
+            </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isPending ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Plus className="size-4" aria-hidden="true" />
-              )}
-              {isPending ? 'Adding…' : 'Add question'}
-            </button>
-          </div>
-        </form>
+            {state && 'error' in state && (
+              <div
+                role="alert"
+                className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2"
+              >
+                <AlertCircle className="size-4 text-red-500 shrink-0" aria-hidden="true" />
+                <p className="font-body text-sm text-red-700">{state.error}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isPending ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Plus className="size-4" aria-hidden="true" />
+                )}
+                {isPending ? 'Adding…' : 'Add question'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   )

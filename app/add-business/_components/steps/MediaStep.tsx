@@ -4,6 +4,12 @@ import { useRef, useState, useEffect } from 'react'
 import { Upload, X, Loader2, ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { photoLimit } from '@/lib/stripe/features'
+import { discardDraftPhotoAction } from '@/lib/actions/listings/discardDraftPhoto'
+
+// A new listing always starts on Free, so add-business offers the Free gallery
+// limit. The upload route enforces the same number (ticket 119).
+const GALLERY_LIMIT = photoLimit('free') ?? 1
 
 interface UploadState {
   status: 'idle' | 'uploading' | 'success' | 'error'
@@ -16,6 +22,7 @@ const IDLE: UploadState = { status: 'idle', path: null, cdnUrl: null, errorMsg: 
 
 interface GalleryItem extends UploadState {
   localId: string
+  mediaId?: string
 }
 
 interface Props {
@@ -37,7 +44,7 @@ async function uploadFile(
   file: File,
   tempEntityId: string,
   mediaRole: 'logo' | 'cover' | 'gallery'
-): Promise<{ path: string } | { error: string }> {
+): Promise<{ path: string; mediaId?: string } | { error: string }> {
   const fd = new FormData()
   fd.append('file', file)
   fd.append('bucket', 'listing-media')
@@ -45,12 +52,12 @@ async function uploadFile(
   fd.append('media_role', mediaRole)
 
   const res = await fetch('/api/upload', { method: 'POST', body: fd })
-  const json = (await res.json()) as { data?: { path: string }; error?: string }
+  const json = (await res.json()) as { data?: { path: string; mediaId?: string }; error?: string }
 
   if (!res.ok || !json.data?.path) {
     return { error: json.error ?? 'Upload failed. Please try again.' }
   }
-  return { path: json.data.path }
+  return { path: json.data.path, mediaId: json.data.mediaId }
 }
 
 function UploadZone({
@@ -208,7 +215,7 @@ export function MediaStep({
   }
 
   async function handleGalleryFiles(files: FileList) {
-    const remaining = 12 - gallery.filter((g) => g.status === 'success').length
+    const remaining = GALLERY_LIMIT - gallery.filter((g) => g.status === 'success').length
     const allFiles = Array.from(files).slice(0, remaining)
     const validFiles = allFiles.filter((f) => f.size <= 3 * 1024 * 1024)
     const oversizedFiles = allFiles.filter((f) => f.size > 3 * 1024 * 1024)
@@ -245,6 +252,7 @@ export function MediaStep({
               ...g,
               status: 'success' as const,
               path: result.path,
+              mediaId: result.mediaId,
               cdnUrl: getPublicUrl(result.path),
             }
           })
@@ -254,11 +262,15 @@ export function MediaStep({
   }
 
   function removeGalleryItem(localId: string) {
+    const item = gallery.find((g) => g.localId === localId)
     setGallery((prev) => prev.filter((g) => g.localId !== localId))
+    // The upload already saved a record. Drop it too, or the photo still lands
+    // on the page and keeps counting against the photo limit.
+    if (item?.mediaId) void discardDraftPhotoAction(item.mediaId)
   }
 
   const successCount = gallery.filter((g) => g.status === 'success').length
-  const canAddMore = successCount < 12
+  const canAddMore = successCount < GALLERY_LIMIT
 
   return (
     <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-6">
@@ -297,10 +309,10 @@ export function MediaStep({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <p className="font-subhead text-sm font-semibold text-brand-black">Gallery photos</p>
-          <span className="font-subhead text-xs text-charcoal-faint">{successCount}/12</span>
+          <span className="font-subhead text-xs text-charcoal-faint">{successCount}/{GALLERY_LIMIT}</span>
         </div>
         <p className="font-subhead text-xs text-charcoal-soft -mt-1">
-          Up to 12 photos, 3 MB each. JPG, PNG, or WebP.
+          {GALLERY_LIMIT === 1 ? '1 photo' : `Up to ${GALLERY_LIMIT} photos`} on the free plan, 3 MB each. JPG, PNG, or WebP. Starter lets you add up to {photoLimit('starter')}.
         </p>
 
         {gallery.length > 0 && (
@@ -358,7 +370,7 @@ export function MediaStep({
             className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-charcoal/25 bg-charcoal/3 font-subhead text-xs text-charcoal-soft hover:border-amber-gold hover:bg-amber-gold/5 hover:text-charcoal transition-colors"
           >
             <Upload className="size-4" aria-hidden="true" />
-            Add photos · {12 - successCount} left
+            {GALLERY_LIMIT === 1 ? 'Add a photo' : `Add photos · ${GALLERY_LIMIT - successCount} left`}
           </button>
         )}
 
@@ -366,7 +378,7 @@ export function MediaStep({
           ref={galleryInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          multiple
+          multiple={GALLERY_LIMIT > 1}
           className="sr-only"
           aria-hidden="true"
           onChange={(e) => {

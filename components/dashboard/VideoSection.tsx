@@ -3,14 +3,33 @@
 import { useActionState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingVideoAction } from '@/lib/actions/dashboard/updateListingVideo'
+import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 
 interface Props {
   listingId: string
   videoEmbedUrl: string | null
+  /** A video is a Starter feature (ticket 119). */
+  locked: boolean
+  showUpgrade: boolean
 }
 
-export function VideoSection({ listingId, videoEmbedUrl }: Props) {
+export function VideoSection({ listingId, videoEmbedUrl, locked, showUpgrade }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingVideoAction, null)
+
+  if (locked && !videoEmbedUrl) {
+    return (
+      <div className="rounded-xl border border-charcoal/10 bg-white">
+        <div className="px-5 py-4 border-b border-charcoal/8">
+          <h2 className="font-headline text-base text-brand-black">Video</h2>
+        </div>
+        <div className="px-5 py-4">
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            A video is part of Starter. Upgrade to add a YouTube or Vimeo player to your page.
+          </PlanLimitNote>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -22,6 +41,13 @@ export function VideoSection({ listingId, videoEmbedUrl }: Props) {
       </div>
       <form action={formAction} className="px-5 py-4 space-y-3">
         <input type="hidden" name="listing_id" value={listingId} />
+
+        {locked && (
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            A video is part of Starter. You can keep or remove the one you have. Changing it needs
+            Starter.
+          </PlanLimitNote>
+        )}
 
         <div>
           <label

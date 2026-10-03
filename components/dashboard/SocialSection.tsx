@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
+import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 
 interface Props {
   listingId: string
@@ -12,6 +13,9 @@ interface Props {
   socialTiktok: string | null
   socialYoutube: string | null
   socialTwitter: string | null
+  /** Social links are a Starter feature (ticket 119). */
+  locked: boolean
+  showUpgrade: boolean
 }
 
 const SOCIAL_FIELDS = [
@@ -61,6 +65,8 @@ export function SocialSection({
   socialTiktok,
   socialYoutube,
   socialTwitter,
+  locked,
+  showUpgrade,
 }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
 
@@ -71,6 +77,27 @@ export function SocialSection({
     social_tiktok: socialTiktok,
     social_youtube: socialYoutube,
     social_twitter: socialTwitter,
+  }
+
+  // On a plan without social links, a link saved earlier stays and can be
+  // cleared. Only the saved ones are shown, so there is no empty box that
+  // would fail on save.
+  const fields = locked ? SOCIAL_FIELDS.filter(({ name }) => values[name]) : SOCIAL_FIELDS
+
+  if (locked && fields.length === 0) {
+    return (
+      <div className="rounded-xl border border-charcoal/10 bg-white">
+        <div className="px-5 py-4 border-b border-charcoal/8">
+          <h2 className="font-headline text-base text-brand-black">Social links</h2>
+        </div>
+        <div className="px-5 py-4">
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            Social links are part of Starter. Upgrade to add your Instagram, Facebook, and more to
+            your page.
+          </PlanLimitNote>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -84,7 +111,14 @@ export function SocialSection({
       <form action={formAction} className="px-5 py-4 space-y-3">
         <input type="hidden" name="listing_id" value={listingId} />
 
-        {SOCIAL_FIELDS.map(({ id, name, label, placeholder }) => (
+        {locked && (
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            Social links are part of Starter. You can keep or remove the links you have. Adding or
+            changing one needs Starter.
+          </PlanLimitNote>
+        )}
+
+        {fields.map(({ id, name, label, placeholder }) => (
           <div key={name}>
             <label
               htmlFor={id}

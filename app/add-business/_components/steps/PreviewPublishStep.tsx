@@ -101,12 +101,7 @@ function buildFormData(snapshot: FormSnapshot): FormData {
   fd.append('phone', snapshot.phone.trim())
   fd.append('cta_type', snapshot.cta_type)
   fd.append('cta_url', snapshot.cta_url.trim())
-  fd.append('social_instagram', snapshot.social_instagram.trim())
-  fd.append('social_facebook', snapshot.social_facebook.trim())
-  fd.append('social_twitter', snapshot.social_twitter.trim())
-  fd.append('social_tiktok', snapshot.social_tiktok.trim())
-  fd.append('social_linkedin', snapshot.social_linkedin.trim())
-  fd.append('social_youtube', snapshot.social_youtube.trim())
+  // Social links are a Starter feature, added from the dashboard (ticket 119).
   fd.append('description', snapshot.description.trim())
   fd.append('founder_story', snapshot.founder_story.trim())
   if (snapshot.logo_path) fd.append('logo_path', snapshot.logo_path)

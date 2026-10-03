@@ -1,10 +1,11 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 
 import type { FacetGroupData } from '@/lib/listings/facets'
 import { updateListingAttributesAction } from '@/lib/actions/dashboard/updateListingAttributes'
+import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 
 interface Props {
   listingId: string
@@ -12,13 +13,36 @@ interface Props {
   groups: FacetGroupData[]
   /** Currently-selected attribute value ids. */
   selectedValueIds: string[]
+  /** Plan limit on selected details, or null for no limit (ticket 119). */
+  limit: number | null
+  showUpgrade: boolean
 }
 
-export function AttributesSection({ listingId, groups, selectedValueIds }: Props) {
+export function AttributesSection({
+  listingId,
+  groups,
+  selectedValueIds,
+  limit,
+  showUpgrade,
+}: Props) {
   const [state, formAction, isPending] = useActionState(updateListingAttributesAction, null)
-  const selected = new Set(selectedValueIds)
+  const [selected, setSelected] = useState(() => new Set(selectedValueIds))
 
   if (groups.length === 0) return null
+
+  // Same rule as checkAttributeCount: a listing that already had more than the
+  // limit keeps them, and can swap one for another, but cannot add more.
+  const ceiling = limit === null ? null : Math.max(limit, selectedValueIds.length)
+  const full = ceiling !== null && selected.size >= ceiling
+
+  function toggle(id: string, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -26,10 +50,17 @@ export function AttributesSection({ listingId, groups, selectedValueIds }: Props
         <h2 className="font-headline text-base text-brand-black">Attributes &amp; amenities</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Help shoppers find you. These power the filters on Discover.
+          {limit !== null && ` ${selected.size} of ${limit} chosen.`}
         </p>
       </div>
       <form action={formAction} className="px-5 py-4 space-y-5">
         <input type="hidden" name="listing_id" value={listingId} />
+
+        {full && (
+          <PlanLimitNote showUpgrade={showUpgrade}>
+            {`Your plan includes up to ${limit} details customers filter by. Uncheck one to pick another${showUpgrade ? ', or upgrade for more' : ''}.`}
+          </PlanLimitNote>
+        )}
 
         {groups.map((group) => (
           <fieldset key={group.id}>
@@ -40,13 +71,15 @@ export function AttributesSection({ listingId, groups, selectedValueIds }: Props
               {group.values.map((value) => (
                 <label
                   key={value.id}
-                  className="flex items-center gap-2 text-sm font-subhead text-charcoal cursor-pointer select-none"
+                  className="flex items-center gap-2 text-sm font-subhead text-charcoal cursor-pointer select-none has-[:disabled]:cursor-not-allowed has-[:disabled]:text-charcoal-faint"
                 >
                   <input
                     type="checkbox"
                     name="attr"
                     value={value.id}
-                    defaultChecked={selected.has(value.id)}
+                    checked={selected.has(value.id)}
+                    disabled={full && !selected.has(value.id)}
+                    onChange={(e) => toggle(value.id, e.target.checked)}
                     className="rounded border-charcoal/30 text-brand-black focus:ring-amber-gold/40"
                   />
                   {value.name}

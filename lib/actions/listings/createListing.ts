@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { isFeatureEnabled } from '@/lib/env'
 import { trackServerEvent } from '@/lib/analytics/server'
+import { checkDescription, checkSocialLinks } from '@/lib/stripe/planChecks'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -310,6 +311,17 @@ export async function createListingAction(
       if (val && !isValidUrl(val)) {
         fieldErrors[key] = 'Must be a valid URL starting with https://'
       }
+    }
+
+    // Plan limits (ticket 119). Every new listing starts on Free. Jobs and
+    // events write their own details tables and are not covered here.
+    if (!fieldErrors.description) {
+      const descriptionError = checkDescription('free', description, null)
+      if (descriptionError) fieldErrors.description = descriptionError
+    }
+    const socialError = checkSocialLinks('free', Object.fromEntries(socialFields), null)
+    if (socialError) {
+      for (const [key, val] of socialFields) if (val) fieldErrors[key] = socialError
     }
   }
 

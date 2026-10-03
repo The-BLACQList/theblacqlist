@@ -13,6 +13,13 @@ import {
 } from '@/lib/stripe/jobPostings'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { loadAttributeGroups } from '@/lib/listings/facets'
+import {
+  attributeLimit,
+  canAccess,
+  descriptionCharLimit,
+  faqLimit,
+  TIER_RANK,
+} from '@/lib/stripe/features'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
 import { AboutSection } from '@/components/dashboard/AboutSection'
 import { ContactSection } from '@/components/dashboard/ContactSection'
@@ -41,7 +48,7 @@ export default async function EditPage({ params }: Props) {
     .from('listings')
     .select(
       `
-      id, name, slug, status, trust_tier, entity_type, tagline, meta_title, meta_description,
+      id, name, slug, status, trust_tier, entity_type, tier, tagline, meta_title, meta_description,
       created_at,
       cities(slug, name),
       listing_details_business(
@@ -289,25 +296,25 @@ export default async function EditPage({ params }: Props) {
     { data: linkRows },
     { data: faqRows },
   ] = await Promise.all([
-      loadAttributeGroups(supabase, listing.entity_type),
-      sb.from('listing_attributes').select('value_id').eq('listing_id', listing.id),
-      sb
-        .from('listing_details_business')
-        .select('video_embed_url')
-        .eq('listing_id', listing.id)
-        .maybeSingle(),
-      sb
-        .from('listing_links')
-        .select('id, link_type, url, label')
-        .eq('listing_id', listing.id)
-        .order('display_order', { ascending: true }),
-      // Fail-soft: listing_faqs may not be migrated yet.
-      sb
-        .from('listing_faqs')
-        .select('id, question, answer')
-        .eq('listing_id', listing.id)
-        .order('display_order', { ascending: true }),
-    ])
+    loadAttributeGroups(supabase, listing.entity_type),
+    sb.from('listing_attributes').select('value_id').eq('listing_id', listing.id),
+    sb
+      .from('listing_details_business')
+      .select('video_embed_url')
+      .eq('listing_id', listing.id)
+      .maybeSingle(),
+    sb
+      .from('listing_links')
+      .select('id, link_type, url, label')
+      .eq('listing_id', listing.id)
+      .order('display_order', { ascending: true }),
+    // Fail-soft: listing_faqs may not be migrated yet.
+    sb
+      .from('listing_faqs')
+      .select('id, question, answer')
+      .eq('listing_id', listing.id)
+      .order('display_order', { ascending: true }),
+  ])
   const selectedValueIds = ((selectedAttrRows as { value_id: string }[] | null) ?? []).map(
     (r) => r.value_id
   )
@@ -316,8 +323,7 @@ export default async function EditPage({ params }: Props) {
   const links =
     (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
     []
-  const faqs =
-    (faqRows as { id: string; question: string; answer: string }[] | null) ?? []
+  const faqs = (faqRows as { id: string; question: string; answer: string }[] | null) ?? []
 
   const details = listing.listing_details_business as {
     description: string | null
@@ -339,6 +345,11 @@ export default async function EditPage({ params }: Props) {
     cta_label_override: string | null
     hours: Record<string, { open: string; close: string; closed: boolean }> | null
   } | null
+
+  // Plan limits (ticket 119). The server actions enforce them; these props let
+  // each section say so up front instead of failing on save.
+  const tier = listing.tier
+  const showUpgrade = (TIER_RANK[tier ?? 'free'] ?? 0) === 0
 
   const city = listing.cities as { slug: string; name: string } | null
   const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
@@ -385,7 +396,12 @@ export default async function EditPage({ params }: Props) {
 
       <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
 
-      <AboutSection listingId={listing.id} description={details?.description ?? null} />
+      <AboutSection
+        listingId={listing.id}
+        description={details?.description ?? null}
+        charLimit={descriptionCharLimit(tier)}
+        showUpgrade={showUpgrade}
+      />
 
       <ContactSection
         listingId={listing.id}
@@ -408,19 +424,33 @@ export default async function EditPage({ params }: Props) {
         socialTiktok={details?.social_tiktok ?? null}
         socialYoutube={details?.social_youtube ?? null}
         socialTwitter={details?.social_twitter ?? null}
+        locked={!canAccess(tier, 'social_links')}
+        showUpgrade={showUpgrade}
       />
 
       <AttributesSection
         listingId={listing.id}
         groups={attributeGroups}
         selectedValueIds={selectedValueIds}
+        limit={attributeLimit(tier)}
+        showUpgrade={showUpgrade}
       />
 
-      <VideoSection listingId={listing.id} videoEmbedUrl={videoEmbedUrl} />
+      <VideoSection
+        listingId={listing.id}
+        videoEmbedUrl={videoEmbedUrl}
+        locked={!canAccess(tier, 'listing_video')}
+        showUpgrade={showUpgrade}
+      />
 
       <LinksSection listingId={listing.id} links={links} />
 
-      <FaqSection listingId={listing.id} faqs={faqs} />
+      <FaqSection
+        listingId={listing.id}
+        faqs={faqs}
+        limit={faqLimit(tier)}
+        showUpgrade={showUpgrade}
+      />
 
       <CtaSection
         listingId={listing.id}

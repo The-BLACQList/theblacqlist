@@ -34,7 +34,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
-import { photoLimit } from '@/lib/stripe/features'
+import { checkPhotoAdd } from '@/lib/stripe/planChecks'
 import {
   matchesDeclaredType,
   readSignatureHeader,
@@ -226,26 +226,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const isGallery = bucket === 'listing-media' && (mediaRole === 'gallery' || mediaRole === null)
 
-  // Plan photo limit — enforced server-side, and only once the listing exists.
-  // During add-business there is no row to read a tier from and no gallery to
-  // overflow yet; the limit is re-checked on every dashboard upload after that.
-  if (isGallery && listing) {
-    const limit = photoLimit(listing.tier)
-    if (limit !== null) {
-      const { count } = await serviceClient
-        .from('media_attachments')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_type', 'listing')
-        .eq('entity_id', entityId)
+  // Plan photo limit (ticket 119), counted on gallery photos only. The logo and
+  // cover never get a media_attachments row, so they never count. During
+  // add-business there is no listing row yet, and a new listing always starts
+  // on Free, so the Free limit applies to the photos uploaded there too.
+  if (isGallery) {
+    const { count } = await serviceClient
+      .from('media_attachments')
+      .select('id', { count: 'exact', head: true })
+      .eq('entity_type', 'listing')
+      .eq('entity_id', entityId)
 
-      if ((count ?? 0) >= limit) {
-        return bad(
-          `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. Upgrade to add more.`,
-          'PLAN_LIMIT',
-          400
-        )
-      }
-    }
+    const limitError = checkPhotoAdd(listing?.tier ?? 'free', count ?? 0)
+    if (limitError) return bad(limitError, 'PLAN_LIMIT', 400)
   }
 
   const ext = MIME_EXT[file.type] ?? 'bin'
