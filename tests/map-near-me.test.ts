@@ -153,6 +153,21 @@ describe('Near me placement', () => {
     expect(chips).toContain('nearMeHref(pos.coords.latitude, pos.coords.longitude)')
   })
 
+  // Founder 2026-10-03: no settings message between the visitor and results.
+  it('a blocked or failed location still opens Discover, with no settings message', () => {
+    const chips = read('components/home/HeroQuickFilters.tsx')
+    expect(chips).toContain("const FALLBACK_HREF = '/discover'")
+    expect(chips).toContain('() => router.push(FALLBACK_HREF)')
+    expect(chips).not.toMatch(/browser settings/i)
+  })
+
+  it('on phones the hero copy sits below her face', () => {
+    const hero = read('components/home/HomeHero.tsx')
+    expect(hero).toContain('flex items-end md:items-center')
+    expect(hero).toContain('object-[80%_0%] md:object-[center_20%]')
+    expect(hero).toContain('pt-[200px] pb-10 md:py-20')
+  })
+
   it('leads the map quick filters as a pressed toggle', () => {
     const src = read('components/map/MapFilterControls.tsx')
     expect(src).toMatch(/aria-pressed=\{near !== null\}/)

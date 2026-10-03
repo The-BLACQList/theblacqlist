@@ -6,14 +6,8 @@ import { useRouter } from 'next/navigation'
 import { LoaderCircle, MapPin } from 'lucide-react'
 import { nearMeHref } from '@/lib/listings/location-params'
 
-type LocateState = 'idle' | 'locating' | 'denied' | 'unavailable' | 'unsupported'
-
-/** Same wording as the Discover Near You filter, pointed at the city browse instead. */
-const FAILURE_COPY: Record<'denied' | 'unavailable' | 'unsupported', string> = {
-  denied: 'Location is off for this site. Turn it on in your browser settings, or browse by city.',
-  unavailable: 'We could not get your location just now. Try again, or browse by city.',
-  unsupported: 'This browser cannot share a location. Browse by city instead.',
-}
+/** Where Near me lands when there is no position to use. */
+const FALLBACK_HREF = '/discover'
 
 const CHIP =
   'inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full border border-off-white/40 bg-off-white/10 text-off-white font-subhead text-[13px] font-semibold backdrop-blur-sm hover:bg-off-white/20 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
@@ -23,29 +17,29 @@ interface Props {
 }
 
 /**
- * The hero's quick filters, led by Near me. Near me asks the browser for a
- * position and opens Discover nearest first. The position is only rounded and
- * put in that URL; it is never logged or stored here.
+ * The hero's quick filters, led by Near me. A tap asks the browser for a
+ * position, which shows the browser's own Allow prompt the first time. With a
+ * position it opens Discover nearest first. Without one (blocked, unsupported,
+ * timed out) it still opens Discover, so the visitor never hits a dead end or
+ * a settings message on the home page. The position is only rounded and put
+ * in that URL; it is never logged or stored here.
  */
 export function HeroQuickFilters({ filters }: Props) {
   const router = useRouter()
-  const [state, setState] = useState<LocateState>('idle')
+  const [locating, setLocating] = useState(false)
 
   function findNearMe() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setState('unsupported')
+      router.push(FALLBACK_HREF)
       return
     }
-    setState('locating')
+    setLocating(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => router.push(nearMeHref(pos.coords.latitude, pos.coords.longitude)),
-      (err) => setState(err.code === err.PERMISSION_DENIED ? 'denied' : 'unavailable'),
+      () => router.push(FALLBACK_HREF),
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
     )
   }
-
-  const locating = state === 'locating'
-  const failure = state === 'denied' || state === 'unavailable' || state === 'unsupported' ? state : null
 
   return (
     <>
@@ -74,18 +68,8 @@ export function HeroQuickFilters({ filters }: Props) {
           </li>
         ))}
       </ul>
-      <p role="status" className="mt-3 max-w-[46ch] font-body text-sm text-off-white/90 empty:hidden">
-        {failure && (
-          <>
-            {FAILURE_COPY[failure]}{' '}
-            <Link
-              href="/discover"
-              className="font-semibold text-gold underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
-            >
-              Browse by city
-            </Link>
-          </>
-        )}
+      <p role="status" className="sr-only">
+        {locating ? 'Finding businesses near you' : ''}
       </p>
     </>
   )
