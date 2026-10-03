@@ -10,8 +10,8 @@ import { signOutAction } from '@/lib/actions/auth/signOut'
 const desktopNavLinks = [
   { label: 'Discover', href: '/discover' },
   { label: 'Map', href: '/map' },
-  { label: 'The Collective', href: '/flow-map' },
   { label: 'Cities', href: '/cities' },
+  { label: 'The Collective', href: '/flow-map' },
   { label: 'For Business', href: '/for-business' },
 ] as const
 
