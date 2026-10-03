@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { BadgeCheck, ShieldCheck } from 'lucide-react'
 import { isOpenNow } from '@/lib/listings/openStatus'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
+import { formatMiles } from '@/lib/map/distance'
 import { listingPhoto } from '@/lib/map/rankListings'
 import { TIER_LABEL, type MapListing } from '@/lib/map/types'
 import { cn } from '@/lib/utils'
@@ -16,6 +17,8 @@ interface Props {
   selected: boolean
   /** strip = fixed 250px card in the phone carousel. grid = fills its cell. */
   variant: 'grid' | 'strip'
+  /** Miles from the visitor while Near me is on, else null. */
+  distance: number | null
   onSelect: (listing: MapListing) => void
   onHover: (id: string | null) => void
 }
@@ -40,7 +43,7 @@ function TierMark({ tier }: { tier: MapListing['trustTier'] }) {
  * One business as a photo card. The whole card selects its pin; the page link
  * appears once the card is selected so a keyboard user always has a way in.
  */
-export function MapListingCard({ listing, number, selected, variant, onSelect, onHover }: Props) {
+export function MapListingCard({ listing, number, selected, variant, distance, onSelect, onHover }: Props) {
   const photo = resolveRemoteImage(listingPhoto(listing))
   const open = listing.hours ? isOpenNow(listing.hours) : null
   const hasRating = listing.avgRating !== null && listing.reviewCount > 0
@@ -95,7 +98,9 @@ export function MapListingCard({ listing, number, selected, variant, onSelect, o
             {listing.name}
           </span>
           <span className="mt-0.5 block truncate text-[13px] text-charcoal">
-            {[listing.category, open?.label].filter(Boolean).join(' · ')}
+            {[distance !== null ? formatMiles(distance) : null, listing.category, open?.label]
+              .filter(Boolean)
+              .join(' · ')}
           </span>
           <span className="mt-1 flex items-center gap-1.5 text-[12.5px] font-semibold text-amber">
             <TierMark tier={listing.trustTier} />

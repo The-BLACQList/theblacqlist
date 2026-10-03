@@ -17,9 +17,12 @@ import { useIsDesktop } from '@/components/map/useIsDesktop'
 import { useMapListings } from '@/components/map/useMapListings'
 import { usePinMarkers } from '@/components/map/usePinMarkers'
 import { useSelectionPopup } from '@/components/map/useSelectionPopup'
-import { NO_FILTERS, filterListings } from '@/lib/map/filterListings'
+import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
+import { radiusBounds } from '@/lib/map/distance'
+import { NO_FILTERS, filterListings, sortByDistance } from '@/lib/map/filterListings'
 import { PIN_LIMIT, pinNumbers, rankListings } from '@/lib/map/rankListings'
-import type { MapFilters, MapListing } from '@/lib/map/types'
+import type { MapFilters, MapListing, NearMe } from '@/lib/map/types'
+import { useNearMeOverlay } from '@/components/map/useNearMeOverlay'
 
 export type { MapListing }
 
@@ -48,6 +51,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const [mapReady, setMapReady] = useState(false)
   const [tilesStalled, setTilesStalled] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [locating, setLocating] = useState(false)
   const [viewNonce, setViewNonce] = useState(0)
   const { listings, loading, loadError } = useMapListings()
   const isDesktop = useIsDesktop()
@@ -84,9 +88,11 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   const inView = useMemo(() => {
     if (!mapReady || !map) return []
     const bounds = map.getBounds()
-    return rankListings(filtered.filter((l) => bounds.contains([l.lng, l.lat])))
+    const visible = filtered.filter((l) => bounds.contains([l.lng, l.lat]))
+    // Near me answers "what is closest", so distance wins over trust order.
+    return filters.near ? sortByDistance(visible, filters.near) : rankListings(visible)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, map, mapReady, viewNonce])
+  }, [filtered, filters.near, map, mapReady, viewNonce])
   const numbers = useMemo(() => pinNumbers(inView, PIN_LIMIT), [inView])
 
   const pins = useMemo<PinSpec[]>(() => {
@@ -127,6 +133,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   )
 
   usePinMarkers({ map, ready: mapReady, pins, hoverId, onSelect: (l) => setSelectedId(l.id) })
+  useNearMeOverlay({ map, ready: mapReady, near: filters.near })
   useSelectionPopup({
     map,
     listing: useMemo(() => filtered.find((l) => l.id === selectedId) ?? null, [filtered, selectedId]),
@@ -220,19 +227,47 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     if (view) moveTo(view.center, view.zoom)
   }
 
-  function locate() {
+  /** Frames the whole radius, leaving room for the phone bar and sheet. */
+  function fitNear(near: NearMe) {
+    const m = mapRef.current
+    if (!m) return
+    const padding = isDesktop ? 40 : { top: 150, bottom: 280, left: 20, right: 20 }
+    m.fitBounds(radiusBounds(near, near.radiusMiles), { padding, duration: reduceMotion ? 0 : 1200 })
+  }
+
+  // The position stays in this component's state. It is never logged, sent,
+  // or written to the URL.
+  function findNearMe() {
     if (!navigator.geolocation) {
       setNotice('Your browser can’t share its location.')
       return
     }
+    setLocating(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        setLocating(false)
         setNotice(null)
-        moveTo([pos.coords.longitude, pos.coords.latitude], 14)
+        const near = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          radiusMiles: filters.near?.radiusMiles ?? DEFAULT_RADIUS_MILES,
+        }
+        setFilters((f) => ({ ...f, near }))
+        fitNear(near)
       },
-      () => setNotice('We couldn’t get your location. Check that location access is allowed for this site.'),
-      { timeout: 10000 }
+      () => {
+        setLocating(false)
+        setNotice('We couldn’t get your location. Check that location access is allowed for this site.')
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
     )
+  }
+
+  function setRadius(radiusMiles: number) {
+    if (!filters.near) return
+    const near = { ...filters.near, radiusMiles }
+    setFilters((f) => ({ ...f, near }))
+    fitNear(near)
   }
 
   const filterProps = {
@@ -242,6 +277,9 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     entityTypes,
     citySlug,
     onCity: flyToCity,
+    onNearMe: findNearMe,
+    onRadius: setRadius,
+    locating,
   }
   const drawerProps = {
     ...filterProps,
@@ -256,6 +294,7 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
     selectedId,
     onHover: setHoverId,
     onSelect: focusListing,
+    near: filters.near,
   }
   const message = notice ?? (tilesStalled ? 'Map imagery is taking a while. The list is live.' : null)
 
@@ -270,11 +309,11 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
             <MapControls
               onZoomIn={() => mapRef.current?.zoomIn()}
               onZoomOut={() => mapRef.current?.zoomOut()}
-              onLocate={locate}
+              onLocate={findNearMe}
             />
           </>
         ) : (
-          <MapPhoneBar {...filterProps} onLocate={locate} />
+          <MapPhoneBar {...filterProps} onLocate={findNearMe} />
         )}
         {message && (
           <p

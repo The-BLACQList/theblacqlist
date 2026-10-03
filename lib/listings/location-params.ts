@@ -101,3 +101,18 @@ export function parseLocationFromQuery(
 export function widerRadius(current: number): number | null {
   return RADIUS_OPTIONS.find((option) => option > current) ?? null
 }
+
+/**
+ * Where the home hero's "Near me" chip sends a visitor once the browser hands
+ * over a position: Discover, filtered to the default radius, nearest first. The
+ * coordinates are rounded here so the unrounded fix never reaches a URL.
+ */
+export function nearMeHref(lat: number, lng: number): string {
+  const params = new URLSearchParams({
+    lat: String(roundCoord(lat)),
+    lng: String(roundCoord(lng)),
+    radius: String(DEFAULT_RADIUS_MILES),
+    sort: 'distance',
+  })
+  return `/discover?${params.toString()}`
+}

@@ -1,6 +1,7 @@
 'use client'
 
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, LoaderCircle, MapPin } from 'lucide-react'
+import { RADIUS_OPTIONS } from '@/lib/listings/location-params'
 import { NO_FILTERS, activeFilterCount } from '@/lib/map/filterListings'
 import type { MapFilterProps } from '@/lib/map/types'
 import { cn } from '@/lib/utils'
@@ -15,11 +16,46 @@ export function chipClass(active: boolean): string {
 }
 
 type ChipProps = Pick<MapFilterProps, 'filters' | 'onFilters' | 'entityTypes'>
+type NearChipProps = ChipProps & Pick<MapFilterProps, 'onNearMe' | 'onRadius' | 'locating'>
 
-/** Quick filters: apply on tap, no submit. Active chips are filled and pressed. */
-export function FilterChips({ filters, onFilters, entityTypes }: ChipProps) {
+/**
+ * Quick filters: apply on tap, no submit. Active chips are filled and pressed.
+ * Near me comes first; once it is on, the radius chips sit right beside it.
+ */
+export function FilterChips({ filters, onFilters, entityTypes, onNearMe, onRadius, locating }: NearChipProps) {
+  const near = filters.near
   return (
     <>
+      <button
+        type="button"
+        aria-pressed={near !== null}
+        aria-busy={locating}
+        disabled={locating}
+        onClick={() => (near ? onFilters({ near: null }) : onNearMe())}
+        className={cn(chipClass(near !== null), 'gap-1.5 disabled:cursor-wait')}
+      >
+        {locating ? (
+          <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+        ) : (
+          <MapPin className="size-4" aria-hidden="true" />
+        )}
+        {locating ? 'Finding you…' : 'Near me'}
+      </button>
+      {near && (
+        <div role="group" aria-label="Distance" className="flex shrink-0 gap-2">
+          {RADIUS_OPTIONS.map((miles) => (
+            <button
+              key={miles}
+              type="button"
+              aria-pressed={near.radiusMiles === miles}
+              onClick={() => onRadius(miles)}
+              className={chipClass(near.radiusMiles === miles)}
+            >
+              {miles} mi
+            </button>
+          ))}
+        </div>
+      )}
       <button
         type="button"
         aria-pressed={filters.openNow}

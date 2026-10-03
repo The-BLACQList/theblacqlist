@@ -21,7 +21,7 @@ interface Props extends MapFilterProps, MapResultsProps {
  * canvas is an enhancement, never the only way in.
  */
 export function MapPanel(props: Props) {
-  const { filters, onFilters, categories, entityTypes, citySlug, onCity } = props
+  const { filters, onFilters, categories, entityTypes, citySlug, onCity, onNearMe, onRadius, locating } = props
   const { cityTotal, reduceMotion, selectedId, loading, loadError, inViewCount } = props
   const [extrasOpen, setExtrasOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -70,13 +70,27 @@ export function MapPanel(props: Props) {
           </div>
         )}
         <div className="flex flex-wrap gap-2" role="group" aria-label="Quick filters">
-          <FilterChips filters={filters} onFilters={onFilters} entityTypes={entityTypes} />
+          <FilterChips
+            filters={filters}
+            onFilters={onFilters}
+            entityTypes={entityTypes}
+            onNearMe={onNearMe}
+            onRadius={onRadius}
+            locating={locating}
+          />
         </div>
         {!loadError && (
-          <p className="text-[13px] text-charcoal" aria-live="polite">
-            <span className="font-headline text-[17px] text-ink">{inViewCount} in view</span>
-            {' · trusted first'}
-          </p>
+          <div aria-live="polite">
+            <p className="text-[13px] text-charcoal">
+              <span className="font-headline text-[17px] text-ink">
+                {filters.near ? `${inViewCount} within ${filters.near.radiusMiles} mi` : `${inViewCount} in view`}
+              </span>
+              {filters.near ? ' · nearest first' : ' · trusted first'}
+            </p>
+            {filters.near && (
+              <p className="mt-1 text-[12.5px] text-charcoal">Only businesses with a map pin show here.</p>
+            )}
+          </div>
         )}
       </div>
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
