@@ -31,7 +31,8 @@ export async function sendEmail({
   subject,
   react,
 }: {
-  to: string
+  /** One address, or several for the admin notifications. */
+  to: string | string[]
   subject: string
   react: ReactElement
 }): Promise<void> {

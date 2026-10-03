@@ -5,6 +5,7 @@ import { getAppUrl } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { sendEmail } from '@/lib/email/resend'
+import { adminNotificationRecipients } from '@/lib/email/adminRecipients'
 import { VerificationSubmittedEmail } from '@/lib/email/templates/verification-submitted'
 import { VerificationAdminNotificationEmail } from '@/lib/email/templates/verification-admin-notification'
 
@@ -106,10 +107,10 @@ export async function submitVerificationRequest(
     })
   }
 
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
-  if (adminEmail && session.user.email) {
+  const adminRecipients = adminNotificationRecipients()
+  if (adminRecipients.length > 0 && session.user.email) {
     void sendEmail({
-      to: adminEmail,
+      to: adminRecipients,
       subject: `Verification requested: ${listing.name}`,
       react: VerificationAdminNotificationEmail({
         listingName: listing.name,
