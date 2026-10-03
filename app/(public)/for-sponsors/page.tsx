@@ -117,9 +117,7 @@ export default function ForSponsorsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           {HOW_IT_WORKS.map((step) => (
             <div key={step.step} className="flex flex-col gap-3">
-              <span className="font-headline text-4xl text-gold leading-none">
-                {step.step}
-              </span>
+              <span className="font-headline text-4xl text-gold leading-none">{step.step}</span>
               <h3 className="font-subhead text-base font-semibold text-brand-black">
                 {step.title}
               </h3>
@@ -135,23 +133,19 @@ export default function ForSponsorsPage() {
           Placement options
         </SectionHeading>
 
+        {/* No price on either card, matching /pricing. Both used to print one
+            ($299 to $999 a month, $49 to $99 per 30 days) with nothing anyone
+            could buy behind it. The prices come back when the products do. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl">
           {/* Sponsored Spotlight */}
           <div className="rounded-xl border border-charcoal/15 p-6">
             <span className="inline-block rounded-full bg-amber-gold/15 text-gold text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
-              Limited Inventory
+              Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
-            <p className="font-subhead text-sm text-charcoal mb-3">
+            <p className="font-subhead text-sm text-charcoal mb-4">
               High-visibility placement on the BLACQList homepage, city pages, and category views.
-              Limited slots available per placement zone.
-            </p>
-            <p className="font-headline text-2xl text-brand-black mb-1">
-              $299–$999
-              <span className="font-subhead text-sm text-charcoal-soft ml-1">/mo</span>
-            </p>
-            <p className="font-body text-xs text-charcoal-soft mb-4">
-              Pricing varies by zone and inventory
+              Limited inventory. Pricing will be published when it opens.
             </p>
             <Button
               asChild
@@ -164,25 +158,19 @@ export default function ForSponsorsPage() {
           {/* BLACQ Boost */}
           <div className="rounded-xl border border-charcoal/15 p-6">
             <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
-              Pay Once
+              Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">BLACQ Boost</h3>
-            <p className="font-subhead text-sm text-charcoal mb-3">
-              Boost an individual listing in search results and relevant category pages for a
-              focused 30-day window.
-            </p>
-            <p className="font-headline text-2xl text-brand-black mb-1">
-              $49–$99
-              <span className="font-subhead text-sm text-charcoal-soft ml-1">/ 30 days</span>
-            </p>
-            <p className="font-body text-xs text-charcoal-soft mb-4">
-              Coming soon. Join the waitlist.
+            <p className="font-subhead text-sm text-charcoal mb-4">
+              Boost your listing in search results and category pages for a focused 30-day window.
+              Pay once, no subscription. Pricing will be published when it opens.
             </p>
             <Button
               asChild
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
-              <Link href="/sign-up">Join the Waitlist</Link>
+              {/* Was /sign-up, which made an account and recorded no interest. */}
+              <Link href="/pricing#pricing-waitlist">Join the waitlist</Link>
             </Button>
           </div>
         </div>

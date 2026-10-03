@@ -95,7 +95,7 @@ export const PLANS: PlanMeta[] = [
   {
     slug: 'premium',
     name: 'Premium',
-    tagline: 'Own the category.',
+    tagline: 'Keep customers coming back.',
     price_monthly: 99,
     price_yearly: 950,
     features: [
