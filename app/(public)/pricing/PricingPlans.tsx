@@ -22,7 +22,22 @@ const CTA_HREF: Record<string, string> = {
 // tier with no Stripe price ID renders as an inert Coming Soon button — sending
 // a visitor through sign-in to a disabled upgrade button was the exact dead end
 // the launch truth pass exists to remove.
-export function PricingPlans({ availability }: { availability: PlanAvailability }) {
+interface Props {
+  availability: PlanAvailability
+  /** Show the "Most Popular" flag on the highlighted plan. /for-business turns it off. */
+  showFeatured?: boolean
+  /** Where the Free card's button goes. Defaults to /for-business. */
+  freeHref?: string
+  /** Where "Tell us you want {plan}" goes. Only /pricing has the waitlist on the page. */
+  waitlistHref?: string
+}
+
+export function PricingPlans({
+  availability,
+  showFeatured = true,
+  freeHref = '/for-business',
+  waitlistHref = '#pricing-waitlist',
+}: Props) {
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
   const starter = PLANS.find((p) => p.slug === 'starter')!
   const savingsPct = annualSavingsPct(starter)
@@ -40,13 +55,17 @@ export function PricingPlans({ availability }: { availability: PlanAvailability 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
         {PLANS.map((plan) => {
           const isFree = plan.slug === 'free'
-          const price = isFree ? '$0' : cycle === 'annual' ? `$${plan.price_yearly}` : `$${plan.price_monthly}`
+          const price = isFree
+            ? '$0'
+            : cycle === 'annual'
+              ? `$${plan.price_yearly}`
+              : `$${plan.price_monthly}`
           const period = isFree ? 'forever' : cycle === 'annual' ? '/yr' : '/mo'
           const comingSoon = !isFree && !isPlanPurchasable(availability, plan.slug, cycle)
           // "Most Popular" on a tier nobody can buy is the same dishonesty as a
           // live CTA on it. Growth carries the flag in lib/stripe/plans.ts and is
           // the tier most likely to be withheld, so this is load-bearing.
-          const featured = plan.highlighted && !comingSoon
+          const featured = showFeatured && plan.highlighted && !comingSoon
 
           return (
             <div
@@ -73,20 +92,27 @@ export function PricingPlans({ availability }: { availability: PlanAvailability 
                 )}
               </div>
 
-              <ul className="space-y-2 mb-6 flex-1">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 font-subhead text-sm text-charcoal"
-                  >
-                    <span
-                      className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+              {/* A tier nobody can buy lists nothing. Its bullets describe
+                  work that is not built yet, so the card stops at name, price
+                  and Coming Soon (plan-features audit, 2026-10-03). */}
+              {comingSoon ? (
+                <div className="mb-6 flex-1" />
+              ) : (
+                <ul className="space-y-2 mb-6 flex-1">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2 font-subhead text-sm text-charcoal"
+                    >
+                      <span
+                        className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
+                        aria-hidden="true"
+                      />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {comingSoon ? (
                 <div className="space-y-2">
@@ -102,7 +128,7 @@ export function PricingPlans({ availability }: { availability: PlanAvailability 
                     Coming Soon
                   </button>
                   <a
-                    href="#pricing-waitlist"
+                    href={waitlistHref}
                     className="block text-center font-subhead text-xs text-charcoal underline underline-offset-2 hover:text-brand-black"
                   >
                     Tell us you want {plan.name}
@@ -119,7 +145,9 @@ export function PricingPlans({ availability }: { availability: PlanAvailability 
                         : 'border border-brand-black bg-white text-brand-black hover:bg-brand-black hover:text-white transition-colors'
                   }`}
                 >
-                  <Link href={CTA_HREF[plan.slug] ?? '/for-business'}>{plan.cta}</Link>
+                  <Link href={isFree ? freeHref : (CTA_HREF[plan.slug] ?? '/for-business')}>
+                    {plan.cta}
+                  </Link>
                 </Button>
               )}
             </div>

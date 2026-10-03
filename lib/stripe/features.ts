@@ -23,8 +23,10 @@ import type { PlanSlug } from '@/lib/stripe/plans'
 // `certified` must never become a `GatedFeature`; a badge that can be bought is not a trust signal,
 // and the flow-map moat is built on that signal being credible.
 //
-// `verified_badge` below IS tier-gated, and that is a different thing: paying gates the identity
-// *attestation check*, not its outcome or any ownership claim.
+// `verified_badge` below is listed at tier 1, but nothing reads it, on purpose. Verified is free for
+// every claimed owner: the dashboard verification flow never checks the tier, and the plan copy says
+// so ([Decision — founder, 2026-10-03], plan-features audit). Do not wire this gate up without a new
+// decision; it would turn an earned badge into a paid one.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type GatedFeature =

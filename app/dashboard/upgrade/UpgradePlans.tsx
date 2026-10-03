@@ -3,12 +3,7 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import {
-  PLANS,
-  annualSavingsPct,
-  type BillingCycle,
-  type PlanSlug,
-} from '@/lib/stripe/plans'
+import { PLANS, annualSavingsPct, type BillingCycle, type PlanSlug } from '@/lib/stripe/plans'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
 import { CheckoutButton } from './CheckoutButton'
@@ -50,6 +45,10 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
           // cannot drift into disagreeing about what is for sale.
           const hasPrice = isPlanPurchasable(availability, plan.slug, cycle)
           const isPurchasable = isUpgrade && hasPrice && !!primaryListingId
+          // A tier nobody can buy shows no bullets and no "Most Popular" flag,
+          // same as /pricing (plan-features audit, 2026-10-03). A listing that
+          // is already on it still sees what it has.
+          const withheld = !isFree && !hasPrice && !isCurrent
 
           const price = isFree
             ? '$0'
@@ -65,7 +64,7 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
                 'relative rounded-xl border p-5 flex flex-col',
                 isCurrent
                   ? 'border-amber-gold ring-1 ring-amber-gold bg-amber-gold/5'
-                  : plan.highlighted
+                  : plan.highlighted && !withheld
                     ? 'border-amber-gold/40 bg-amber-gold/5'
                     : 'border-charcoal/10 bg-white'
               )}
@@ -75,7 +74,8 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
                   Current plan
                 </span>
               ) : (
-                plan.highlighted && (
+                plan.highlighted &&
+                !withheld && (
                   <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-0.5">
                     Most Popular
                   </span>
@@ -93,24 +93,30 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
                 )}
               </div>
 
-              <ul className="space-y-1.5 mb-5 flex-1">
-                {plan.features.map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
-                  >
-                    <span
-                      className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
-                      aria-hidden="true"
-                    />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              {withheld ? (
+                <div className="mb-5 flex-1" />
+              ) : (
+                <ul className="space-y-1.5 mb-5 flex-1">
+                  {plan.features.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
+                    >
+                      <span
+                        className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
+                        aria-hidden="true"
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {isCurrent ? (
                 <div className="flex flex-col gap-2">
-                  <span className="font-subhead text-xs text-charcoal-faint">Your current plan</span>
+                  <span className="font-subhead text-xs text-charcoal-faint">
+                    Your current plan
+                  </span>
                   {!isFree && canManage && (
                     <ManageSubscriptionButton listingId={primaryListingId} />
                   )}
