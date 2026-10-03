@@ -19,7 +19,7 @@ Not picked: Account B (the ledger), Business B (anatomy of your page), BLACQLigh
 
 ## Band C: shipped as copy
 
-Applied to the code on branch `feat/nav-the-collective` (not committed yet):
+Committed as `e54474c` on branch `feat/the-collective-band`, in draft PR #169 (https://github.com/The-BLACQList/theblacqlist/pull/169). Not merged:
 
 - `components/home/ImpactBand.tsx`: eyebrow "The Collective", heading "Join The Collective.", new body, Track a receipt as the main button, empty state "The Collective is waiting on its first dollar."
 - The related renames: the footer "Flow Map" link is now "The Collective", and the dead "Community Impact" link (`/impact`, never built) is gone. The `/flow-map` page title, badge, heading and intro now say The Collective, and the two receipt pages say "add your spend to The Collective".
@@ -33,4 +33,4 @@ Applied to the code on branch `feat/nav-the-collective` (not committed yet):
 
 ## Not decided / next
 
-The three page concepts are design direction only. Nothing is built. Building them should start from a spec and tickets (per page: sections, data each section reads, empty and loading states, mobile layout), then a draft PR per page.
+The three page concepts are design direction only. Nothing is built yet. The build spec is [page-workshop-2026-10-spec.md](page-workshop-2026-10-spec.md), with tickets 114 to 118. The founder accepted all five recommendations in §5 on 2026-10-03. Next: one draft PR per page.

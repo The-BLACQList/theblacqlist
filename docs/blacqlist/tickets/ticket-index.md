@@ -121,3 +121,8 @@
 | [111](111-category-exclusivity.md) | Category exclusivity (Premium tier) | V1.5 | P3 | 105, 077 | After deps | First-come-first-served, publicly visible; must not suppress competing listings |
 | [112](112-owner-spend-impact-panel.md) | Owner spend-impact panel (Premium tier) | V1.5 | P2 | 105 | After deps | Aggregates only, 5-consumer minimum cohort; the one Premium benefit a competitor cannot copy |
 | [113](113-city-imagery.md) | City imagery — city tiles + `/[citySlug]` hero | V1.5 | P3 | — | Needs decision | `cities` has **no image column** (GATE-DATA to add); no city photography exists; recommend narrowing to ATL/HOU/CHI |
+| [114](114-my-account-a.md) | My Account A: "Your corner of The Collective" | V1.5 | P2 | — | Ready | Founder pick 2026-10-03; own-data Collective panel, no migration |
+| [115](115-for-business-a.md) | For Business A: "Documentary" | V1.5 | P2 | — | Ready | Q1 + Q2 answered 2026-10-03; plans reuse `PricingPlans` |
+| [116](116-blacqlight-index-a.md) | The BLACQLight index A: "Cover story" | V1.5 | P2 | — | Ready | Kind from tags, computed read time, directory strip from body links |
+| [117](117-blacqlight-article-a.md) | The BLACQLight article page | V1.5 | P2 | 116 | Ready | Same PR as 116; markdown links in the renderer; adding links to live stories is GATE-PUBLISH |
+| [118](118-editorial-article-fields.md) | Editorial fields: photo credit + linked businesses | Later | P3 | 116, 117 | Later | GATE-DATA; spec Q3 option B, approved as the later path |
