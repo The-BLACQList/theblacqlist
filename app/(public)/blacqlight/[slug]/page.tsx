@@ -1,14 +1,33 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { Container } from '@/components/layout/container'
+import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { editorialKind } from '@/lib/editorial/kind'
+import { readMinutes } from '@/lib/editorial/readTime'
+import { loadLinkedListings, type LinkedListing } from '@/lib/editorial/linkedListings'
+import {
+  OWNERSHIP_LABEL_META,
+  TRUST_TIER_META,
+  type OwnershipLabel,
+  type TrustTier,
+} from '@/lib/constants/listing'
+
+// Ticket 117, the BLACQLight article page. Spec:
+// docs/blacqlist/design/page-workshop-2026-10-spec.md §3 "Article page changes".
 
 interface Props {
   params: Promise<{ slug: string }>
 }
+
+const FEATURED_MAX = 3
+const MORE_COUNT = 3
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -39,99 +58,197 @@ function formatDate(iso: string) {
   })
 }
 
+const pill =
+  'inline-flex min-h-[48px] items-center justify-center px-6 rounded-full font-subhead text-[15px] font-semibold transition-colors duration-150'
+
 export default async function ArticleDetailPage({ params }: Props) {
   const { slug } = await params
   const supabase = await createClient()
 
   const { data: article } = await supabase
     .from('editorial_articles')
-    .select('id, title, slug, subtitle, body, author_name, published_at, tags')
+    .select('id, title, slug, subtitle, body, author_name, published_at, tags, cover_image_path')
     .eq('slug', slug)
     .eq('status', 'published')
     .single()
 
   if (!article) notFound()
 
+  const [featured, { data: others }] = await Promise.all([
+    loadLinkedListings(supabase, [article.body], FEATURED_MAX),
+    supabase
+      .from('editorial_articles')
+      .select('id, title, slug, subtitle, body, author_name, tags, cover_image_path')
+      .eq('status', 'published')
+      .neq('id', article.id)
+      .order('published_at', { ascending: false })
+      .limit(MORE_COUNT),
+  ])
+
+  const kind = editorialKind(article.tags)
+  const cover = resolveMediaPath(article.cover_image_path)
+
   return (
-    <main className="min-h-screen bg-pale-lavender">
+    <main className="min-h-screen bg-off-white">
       {/* Header */}
-      <section className="px-4 py-12 md:py-16 max-w-[720px] mx-auto">
-        <Link
-          href="/blacqlight"
-          className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-6 transition-colors"
-        >
-          <ArrowLeft className="size-3.5" aria-hidden="true" />
-          The BLACQLight
-        </Link>
-
-        {article.tags && article.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {article.tags.slice(0, 4).map((tag) => (
-              <span
-                key={tag}
-                className="inline-block rounded-full bg-white border border-charcoal/10 text-charcoal font-subhead text-xs px-2.5 py-0.5"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <h1 className="font-headline text-3xl md:text-4xl text-brand-black leading-tight mb-3">
-          {article.title}
-        </h1>
-        {article.subtitle && (
-          <p className="font-body text-lg text-charcoal-soft leading-relaxed mb-4">
-            {article.subtitle}
+      <section className="bg-pale-lavender">
+        <Container className="max-w-[880px] pt-10 md:pt-14 pb-10 md:pb-14 flex flex-col items-center gap-4 text-center">
+          <Link
+            href="/blacqlight"
+            className="self-start inline-flex min-h-[44px] items-center gap-1.5 font-subhead text-sm font-semibold text-charcoal-soft hover:text-amber transition-colors"
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            The BLACQLight
+          </Link>
+          {kind && (
+            <p className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber">
+              {kind}
+            </p>
+          )}
+          <h1 className="font-headline font-medium text-[clamp(36px,5.5vw,72px)] leading-[1.05] tracking-[-0.01em] text-brand-black text-balance">
+            {article.title}
+          </h1>
+          {article.subtitle && (
+            <p className="font-body text-lg md:text-xl leading-relaxed text-charcoal max-w-[56ch]">
+              {article.subtitle}
+            </p>
+          )}
+          <p className="font-subhead text-sm text-charcoal-soft">
+            By <span className="font-semibold text-brand-black">{article.author_name}</span>
+            {article.published_at && (
+              <>
+                {' · '}
+                <time dateTime={article.published_at}>{formatDate(article.published_at)}</time>
+              </>
+            )}
+            {' · '}
+            {readMinutes(article.body)} min read
           </p>
-        )}
-
-        <div className="flex items-center gap-2">
-          {article.author_name && (
-            <span className="font-subhead text-sm font-semibold text-brand-black">
-              {article.author_name}
-            </span>
-          )}
-          {article.author_name && article.published_at && (
-            <span className="text-charcoal-faint" aria-hidden="true">
-              ·
-            </span>
-          )}
-          {article.published_at && (
-            <time dateTime={article.published_at} className="font-subhead text-xs text-charcoal-soft">
-              {formatDate(article.published_at)}
-            </time>
-          )}
-        </div>
+        </Container>
       </section>
 
+      {/* Cover. No caption until there is a column for one (ticket 118). */}
+      {cover && (
+        <Container className="max-w-[1120px] -mb-2 pt-0">
+          <figure className="relative aspect-[16/9] overflow-hidden rounded-[3px] bg-deep-bg">
+            <Image
+              src={cover}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 1120px) 1120px, 100vw"
+              className="object-cover"
+            />
+          </figure>
+        </Container>
+      )}
+
       {/* Body */}
-      <section className="bg-white px-4 py-12">
-        <div className="max-w-[720px] mx-auto">
+      <section className="bg-off-white">
+        <Container className="max-w-[720px] py-12 md:py-16">
           {article.body ? (
-            <EditorialRichTextDisplay body={article.body} />
+            <EditorialRichTextDisplay body={article.body} variant="story" />
           ) : (
             <p className="font-body text-sm text-charcoal-soft text-center py-8">
               Article content coming soon.
             </p>
           )}
 
+          {featured.length > 0 && <FeaturedInStory listings={featured} />}
+
           <div className="mt-12 pt-8 border-t border-charcoal/10 flex flex-col sm:flex-row gap-3">
             <Link
               href="/blacqlight"
-              className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
+              className={`${pill} border border-brand-black text-brand-black hover:bg-brand-black hover:text-white`}
             >
               More stories
             </Link>
             <Link
               href="/discover"
-              className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
+              className={`${pill} bg-gold text-brand-black hover:bg-light-gold`}
             >
               Explore businesses
             </Link>
           </div>
-        </div>
+        </Container>
       </section>
+
+      {others && others.length > 0 && (
+        <section className="bg-white" aria-labelledby="more-heading">
+          <Container className="py-14 md:py-20 flex flex-col gap-8">
+            <h2
+              id="more-heading"
+              className="font-headline font-medium text-[28px] md:text-[36px] leading-[1.1] text-ink"
+            >
+              More stories
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {others.map((a) => (
+                <BlogPostCard
+                  key={a.id}
+                  title={a.title}
+                  slug={a.slug}
+                  subtitle={a.subtitle}
+                  authorName={a.author_name}
+                  headingLevel="h3"
+                  kind={editorialKind(a.tags)}
+                  readMinutes={readMinutes(a.body)}
+                  coverSrc={resolveMediaPath(a.cover_image_path)}
+                />
+              ))}
+            </div>
+          </Container>
+        </section>
+      )}
     </main>
+  )
+}
+
+function tierLabel(tier: string): string {
+  return TRUST_TIER_META[tier as TrustTier]?.label ?? tier
+}
+
+function ownershipLabel(label: string): string {
+  return OWNERSHIP_LABEL_META[label as OwnershipLabel]?.label ?? label
+}
+
+/** One card per published listing the story links to (max 3). */
+function FeaturedInStory({ listings }: { listings: LinkedListing[] }) {
+  return (
+    <section className="mt-12 flex flex-col gap-4" aria-labelledby="featured-heading">
+      <h2
+        id="featured-heading"
+        className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber"
+      >
+        Featured in this story
+      </h2>
+      <ul className="flex flex-col gap-4 list-none m-0 p-0">
+        {listings.map((l) => (
+          <li
+            key={l.id}
+            className="flex flex-col gap-4 rounded-[3px] bg-deep-bg p-6 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex flex-col gap-1">
+              <p className="font-headline text-[22px] leading-tight text-off-white">{l.name}</p>
+              {(l.category || l.city) && (
+                <p className="font-body text-sm text-ink-soft">
+                  {[l.category, l.city].filter(Boolean).join(' · ')}
+                </p>
+              )}
+              <p className="font-subhead text-xs font-semibold uppercase tracking-[0.1em] text-gold">
+                {tierLabel(l.trustTier)} · {ownershipLabel(l.ownershipLabel)}
+              </p>
+            </div>
+            <Link
+              href={l.href}
+              className={`${pill} shrink-0 bg-gold text-brand-black hover:bg-light-gold`}
+              aria-label={`Visit ${l.name}'s page`}
+            >
+              Visit their page
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
