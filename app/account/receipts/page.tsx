@@ -117,7 +117,7 @@ export default async function MyReceiptsPage({
             <div className="px-6 py-12 text-center">
               <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                Submit a receipt to start tracking your community impact.
+                Submit a receipt to add your spend to The Collective.
               </p>
               <Link
                 href="/account/receipts/new"

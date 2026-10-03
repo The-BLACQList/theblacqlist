@@ -11,9 +11,9 @@ import { FlowMapNetwork } from '@/components/flow-map/FlowMapNetwork'
 import { FlowMapFilters } from '@/components/flow-map/FlowMapFilters'
 
 export const metadata: Metadata = {
-  title: 'Community Dollar Flow | The BLACQList',
+  title: 'The Collective | The BLACQList',
   description:
-    'See how the BLACQList community is directing dollars to Black-owned businesses. All data is anonymized. No buyer identities exposed.',
+    'The Collective is one live map of what the BLACQList community spends with the businesses on the list. Shown in aggregate only. No buyer identities exposed.',
 }
 
 // Revalidate every hour — same cadence as /api/flow-map/summary
@@ -301,7 +301,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <div className="pt-6">
           <div className="inline-flex items-center gap-1.5 bg-amber-gold/10 text-amber-700 rounded-full px-3 py-1 font-subhead text-xs font-semibold mb-4">
-            Community Dollar Flow · Beta
+            The Collective · Beta
           </div>
           {/*
             The figure is labeled for what it measures. One approved receipt is
@@ -313,13 +313,12 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           */}
           <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight">
             {hasAnyData
-              ? `${formatDollars(totalAmountCents)} spent with Black-owned businesses`
+              ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
               : 'Where does our money go?'}
           </h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-3 max-w-[520px] leading-relaxed">
-            Every receipt submitted to The BLACQList becomes an anonymized data point in our
-            community dollar-flow map. No buyer names. No private data. Just the collective movement
-            of dollars.
+            Every receipt submitted to The BLACQList becomes an anonymized data point in The
+            Collective. No buyer names. No private data. Just where our money goes, together.
           </p>
           <div className="flex items-center gap-3 mt-6">
             <Link
