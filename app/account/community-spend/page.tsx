@@ -7,8 +7,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 export const metadata: Metadata = {
-  title: 'Community Spend | The BLACQList',
-  description: 'See how much our community has spent at Black-owned businesses on The BLACQList.',
+  title: 'The Collective | The BLACQList',
+  description: 'See how much our community has spent with the businesses on The BLACQList.',
 }
 
 interface SpendNode {
@@ -180,10 +180,10 @@ export default async function CommunitySpendPage() {
       <div className="max-w-[720px] mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="font-headline text-3xl text-brand-black">Community spend</h1>
+          <h1 className="font-headline text-3xl text-brand-black">The Collective</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-1 max-w-[480px]">
-            Anonymized community data showing how BLACQList users are supporting Black-owned
-            businesses. No personal data is attached to these totals.
+            Anonymized community data showing how BLACQList users are supporting the businesses
+            on the list. No personal data is attached to these totals.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export default async function CommunitySpendPage() {
           {hasData ? (
             <>
               <p className="font-subhead text-sm text-white/50 font-semibold uppercase tracking-wide">
-                Total community spend
+                Total spent by The Collective
               </p>
               <p className="font-headline text-5xl mt-2">{formatDollars(totalAmountCents)}</p>
               <p className="font-body text-sm text-white/50 mt-2">
@@ -203,12 +203,11 @@ export default async function CommunitySpendPage() {
           ) : (
             <>
               <p className="font-subhead text-sm text-white/50 font-semibold uppercase tracking-wide">
-                Community spend tracker
+                The Collective
               </p>
               <p className="font-headline text-3xl mt-2">Be the first to contribute</p>
               <p className="font-body text-sm text-white/50 mt-2">
-                Submit a receipt from a Black-owned business to start building our community spend
-                map.
+                Submit a receipt from a business on the list to start building The Collective.
               </p>
             </>
           )}

@@ -84,9 +84,10 @@ export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin 
         { href: '/account/reviews', label: 'Reviews', count: counts.reviews },
         { href: '/account/receipts', label: 'Receipts', count: counts.receipts },
         // Receipts (what you submit) -> My spending (your own rollup) ->
-        // Community spend (everyone's). The order is the widening scope.
+        // The Collective (everyone's, aggregate only). The order is the
+        // widening scope. Renamed from "Community spend" (spec Q5, 2026-10-03).
         { href: '/account/spending', label: 'My spending' },
-        { href: '/account/community-spend', label: 'Community spend' },
+        { href: '/account/community-spend', label: 'The Collective' },
       ],
     },
     ...(isOwner
