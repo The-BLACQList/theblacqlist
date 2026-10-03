@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/container'
 import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
-import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { resolveStoryCover } from '@/lib/editorial/cover'
 import { editorialKind } from '@/lib/editorial/kind'
 import { readMinutes } from '@/lib/editorial/readTime'
 import { loadLinkedListings, type LinkedListing } from '@/lib/editorial/linkedListings'
@@ -86,7 +86,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   ])
 
   const kind = editorialKind(article.tags)
-  const cover = resolveMediaPath(article.cover_image_path)
+  const cover = resolveStoryCover(article.cover_image_path)
 
   return (
     <main className="min-h-screen bg-off-white">
@@ -193,7 +193,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                   headingLevel="h3"
                   kind={editorialKind(a.tags)}
                   readMinutes={readMinutes(a.body)}
-                  coverSrc={resolveMediaPath(a.cover_image_path)}
+                  coverSrc={resolveStoryCover(a.cover_image_path)}
                 />
               ))}
             </div>
