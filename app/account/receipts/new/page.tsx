@@ -28,7 +28,7 @@ export default async function NewReceiptPage() {
           </Link>
           <h1 className="font-headline text-2xl text-brand-black">Submit a receipt</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-            Record a purchase at a Black-owned business to track your community impact.
+            Record a purchase at a business on the list to add your spend to The Collective.
           </p>
         </div>
 

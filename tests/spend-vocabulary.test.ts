@@ -58,7 +58,7 @@ describe('community-spend vocabulary', () => {
 
   it('labels the flow-map figure for the one hop it measures', () => {
     const source = read('app/(public)/flow-map/page.tsx')
-    expect(source).toContain('spent with Black-owned businesses')
+    expect(source).toContain('spent with businesses on the list')
   })
 
   it('does not call admin-approved receipts "verified"', () => {

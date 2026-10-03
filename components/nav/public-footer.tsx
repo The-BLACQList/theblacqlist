@@ -86,7 +86,7 @@ const columns: FooterColumn[] = [
       { label: 'Events', href: '/events', active: true },
       { label: 'Jobs', href: '/jobs', active: true },
       { label: 'Marketplace', href: '/marketplace', active: true },
-      { label: 'Flow Map', href: '/flow-map', active: true },
+      { label: 'The Collective', href: '/flow-map', active: true },
       { label: 'BLACQLight', href: '/blacqlight', active: true },
     ],
   },
@@ -114,7 +114,6 @@ const columns: FooterColumn[] = [
     links: [
       { label: 'The BLACQLight', href: '/blacqlight', active: true },
       { label: 'City Guides', href: '/guides', active: true },
-      { label: 'Community Impact', href: '/impact', active: false },
     ],
   },
 ]

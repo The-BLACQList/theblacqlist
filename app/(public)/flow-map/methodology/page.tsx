@@ -314,7 +314,7 @@ export default function FlowMapMethodologyPage() {
               </Link>
               . You can see the figures themselves on the{' '}
               <Link href="/flow-map" className="text-amber hover:underline">
-                community dollar flow map
+                The Collective map
               </Link>
               , and how we order search results on{' '}
               <Link href="/how-ranking-works" className="text-amber hover:underline">

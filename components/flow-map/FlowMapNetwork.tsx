@@ -66,7 +66,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
       ) : (
         <svg
           viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-          aria-label="Community dollar flow network. Businesses shown as nodes connected to a central community node"
+          aria-label="The Collective network. Businesses shown as nodes connected to a central community node"
           role="img"
           className="w-full"
         >

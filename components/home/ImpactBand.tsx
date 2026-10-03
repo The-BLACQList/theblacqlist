@@ -14,9 +14,9 @@ function formatDollars(cents: number): string {
 }
 
 /**
- * Community impact band wired to the LIVE flow-map data (no more
- * "Coming Soon" on a shipped feature). With no tracked spend yet, the
- * band invites the first receipt instead of showing zeros as impact.
+ * The Collective band, wired to the LIVE flow-map data. It leads with
+ * tracking a receipt (joining) and links out to The Collective map. With no
+ * tracked spend yet, it invites the first receipt instead of showing zeros.
  */
 export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusinesses }: Props) {
   const hasData = totalAmountCents > 0
@@ -43,27 +43,27 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
       <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div>
           <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-gold mb-1.5">
-            Community impact
+            The Collective
           </p>
           <h2 id="impact-heading" className="font-headline text-[26px] md:text-[32px] text-white max-w-[20ch] text-balance">
-            Watch the money move
+            Join The Collective.
           </h2>
           <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
-            Every tracked receipt keeps money moving through Black-owned business. The flow map
-            shows the network in motion, live.
+            Track a receipt and your spend joins everyone else&apos;s on one live map. Together it
+            shows where our money goes.
           </p>
           <div className="flex gap-3 flex-wrap mt-6">
             <Link
-              href="/flow-map"
+              href="/account/receipts/new"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              See the flow map
+              Track a receipt
             </Link>
             <Link
-              href="/account/receipts/new"
+              href="/flow-map"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full border border-off-white/40 bg-off-white/10 hover:bg-off-white/20 text-white font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Track a receipt
+              See The Collective
             </Link>
           </div>
         </div>
@@ -93,10 +93,10 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
           ) : (
             <div className="col-span-3 border-t-2 border-gold pt-3">
               <dd className="font-headline text-[20px] text-white m-0">
-                The map is waiting on its first dollar.
+                The Collective is waiting on its first dollar.
               </dd>
               <dt className="font-subhead text-xs text-off-white/70 mt-1">
-                Track a receipt and start the flow.
+                Track a receipt and be the first in.
               </dt>
             </div>
           )}
