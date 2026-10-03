@@ -40,9 +40,19 @@ describe('/for-business copy', () => {
     expect(page).toMatch(/title: 'Reviews you can answer',[\s\S]{0,120}starter: true/)
   })
 
-  it('marks the Verified check as Starter and up', () => {
-    expect(canAccess('free', 'verified_badge')).toBe(false)
-    expect(page).toContain('we checked them by hand. Available on Starter and up.')
+  // Verified is free for every claimed owner (founder, 2026-10-03). The
+  // `verified_badge` gate exists in features.ts but nothing reads it.
+  it('says Verified is free, not a Starter perk', () => {
+    expect(page).toContain('we checked it by hand. Free for every owner.')
+    expect(page).not.toMatch(/Available on Starter/)
+  })
+
+  it('names only Starter extras that features.ts actually gates', () => {
+    expect(canAccess('free', 'listing_video')).toBe(false)
+    expect(canAccess('starter', 'listing_video')).toBe(true)
+    expect(canAccess('free', 'social_links')).toBe(false)
+    expect(page).toContain('Add more photos, a video, and common questions on Starter.')
+    expect(page).toContain("title: 'Hours, website, and contact'")
   })
 
   it('uses the shared plans component with no Most Popular flag', () => {

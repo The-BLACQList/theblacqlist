@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 import { Container } from '@/components/layout/container'
 import { createClient } from '@/lib/supabase/server'
-import { getPlanAvailability } from '@/lib/stripe/availability'
+import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
 import { PricingPlans } from '../pricing/PricingPlans'
 
 // Plan availability comes from the live `plans` table, same as /pricing. A
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'For Business | The BLACQList',
   description:
-    'Claim your page on The BLACQList, keep it right, and see who finds you. Free to start, and open to every business, labeled Black-Owned or Ally.',
+    'Claim your page for free, keep your details right, and see how people find you. Open to every business, labeled Black-Owned or Ally.',
 }
 
 // Ticket 115, For Business A ("Documentary"). Spec:
@@ -27,7 +27,7 @@ const STEPS = [
   },
   {
     title: "Show it's yours",
-    body: 'Send a quick claim. We check it by hand, so only real owners run a page.',
+    body: 'Send a claim. A real person checks it, so only the owner runs the page.',
   },
   {
     title: 'Make it yours',
@@ -36,14 +36,17 @@ const STEPS = [
 ]
 
 // `starter` marks the items gated in lib/stripe/features.ts: `review_response`
-// and `analytics` are both tier 1, so Free gets neither.
+// and `analytics` are both tier 1, so Free gets neither. The story row names
+// the Starter extras enforced by ticket 119 (photos, video, common questions).
+// Social links are Starter too, which is why the contact row no longer says
+// "links".
 const WHAT_YOU_GET = [
   {
     title: 'Your story and photos',
-    body: 'Tell people who you are, in your words, with your pictures.',
+    body: 'Tell people who you are, in your words. Add more photos, a video, and common questions on Starter.',
   },
   {
-    title: 'Hours, links, and contact',
+    title: 'Hours, website, and contact',
     body: 'Keep the basics right so customers never show up to a locked door.',
   },
   {
@@ -53,12 +56,12 @@ const WHAT_YOU_GET = [
   },
   {
     title: 'See who finds you',
-    body: 'Views, saves, and taps on your page, all in one place.',
+    body: 'Views, saves, and taps on your page over the last 30 days.',
     starter: true,
   },
   {
     title: 'A place in The Collective',
-    body: 'Once customers track 5 or more receipts with you, your business shows up on our live map of community spending.',
+    body: 'Once customers log 5 or more receipts with you, your business can appear by name on our map of where the community spends.',
   },
 ]
 
@@ -68,7 +71,7 @@ const LADDER = [
   { tier: 'Claimed', line: 'An owner claimed it and we approved the claim.' },
   {
     tier: 'Verified',
-    line: 'The owner sent documents and we checked them by hand. Available on Starter and up.',
+    line: 'The owner sent proof, like a business license, and we checked it by hand. Free for every owner.',
   },
   {
     tier: 'Certified',
@@ -101,6 +104,12 @@ function OwnerButtons() {
 export default async function ForBusinessPage() {
   const supabase = await createClient()
   const availability = await getPlanAvailability(supabase)
+  // Only true while Starter is the one paid tier on sale. Read from the same
+  // availability the cards use, so the line disappears when a tier opens.
+  const onlyStarterOpen =
+    isPlanPurchasable(availability, 'starter', 'monthly') &&
+    !isPlanPurchasable(availability, 'growth', 'monthly') &&
+    !isPlanPurchasable(availability, 'premium', 'monthly')
 
   return (
     <>
@@ -122,8 +131,8 @@ export default async function ForBusinessPage() {
               Your page. Your story. Your customers.
             </h1>
             <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[52ch]">
-              Claim your page on The BLACQList, keep it right, and see who finds you. Free to start,
-              and open to every business, labeled Black-Owned or Ally.
+              Claim your page for free, keep your details right, and see how people find you. Open
+              to every business, labeled Black-Owned or Ally.
             </p>
             <div className="pt-2">
               <OwnerButtons />
@@ -240,6 +249,11 @@ export default async function ForBusinessPage() {
             <h2 id="plans-heading" className={`${h2} text-ink`}>
               Start free. Grow when you&apos;re ready.
             </h2>
+            {onlyStarterOpen && (
+              <p className="font-body text-lg leading-relaxed text-charcoal max-w-[52ch]">
+                Starter is open now. Growth and Premium open once everything in them works.
+              </p>
+            )}
           </div>
           <PricingPlans
             availability={availability}
@@ -275,7 +289,8 @@ export default async function ForBusinessPage() {
               Your page is waiting for you.
             </h2>
             <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[48ch]">
-              Claiming is free and takes a few minutes. You can upgrade any time, or never.
+              Claiming is free. Sending a claim takes a few minutes, and we review it by hand.
+              Upgrade any time, or never.
             </p>
             <div className="pt-2">
               <OwnerButtons />

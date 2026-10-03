@@ -42,15 +42,15 @@ const WAITLIST_SOURCE: Record<string, string> = {
 const FAQ_ITEMS = [
   {
     q: 'Is listing my business really free?',
-    a: 'Yes. A full BLACQList Page is free forever: your profile, hours, contact info, social links, and marketplace listings. No credit card required.',
+    a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, a photo, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
   },
   {
     q: 'What does Starter add?',
-    a: 'Starter unlocks your verified badge, more photos and video, an FAQ section, review responses, and your analytics dashboard. It is the paid plan available today.',
+    a: 'Starter adds up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps. It is the paid plan available today.',
   },
   {
     q: 'When are Growth and Premium available?',
-    a: 'Not yet. Growth will add priority search placement, a products-and-services storefront, events and team members, featured collection and BLACQLight eligibility, full analytics, and priority support. Premium will add coupons, booking requests, multiple locations, homepage featured placement, and category exclusivity. We are not selling either until every feature on the list actually works — join the waitlist and we will tell you the day it does.',
+    a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
   },
   {
     q: 'How does annual billing work?',

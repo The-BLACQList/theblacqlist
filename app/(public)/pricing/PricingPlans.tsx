@@ -92,20 +92,27 @@ export function PricingPlans({
                 )}
               </div>
 
-              <ul className="space-y-2 mb-6 flex-1">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2 font-subhead text-sm text-charcoal"
-                  >
-                    <span
-                      className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
-                      aria-hidden="true"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+              {/* A tier nobody can buy lists nothing. Its bullets describe
+                  work that is not built yet, so the card stops at name, price
+                  and Coming Soon (plan-features audit, 2026-10-03). */}
+              {comingSoon ? (
+                <div className="mb-6 flex-1" />
+              ) : (
+                <ul className="space-y-2 mb-6 flex-1">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-2 font-subhead text-sm text-charcoal"
+                    >
+                      <span
+                        className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
+                        aria-hidden="true"
+                      />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               {comingSoon ? (
                 <div className="space-y-2">
