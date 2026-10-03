@@ -50,7 +50,8 @@ export type GatedFeature =
   | 'editorial_eligibility'
   | 'analytics_advanced'
   | 'priority_support'
-  // ── Premium — "Own the category": the growth-engine tier
+  // ── Premium — "Keep customers coming back": coupons, booking, and the spend view.
+  //    Renamed 2026-10-03; "Own the category" read as exclusivity, which is not sold.
   | 'coupons'
   | 'booking_requests'
   | 'multi_location'

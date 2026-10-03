@@ -150,6 +150,14 @@ export async function handleSubscriptionUpsert(
   const livePriceId =
     typeof firstItem?.price === 'string' ? firstItem.price : (firstItem?.price?.id ?? null)
 
+  // Set when the subscription sits on a price no `plans` row carries. Withholding a
+  // tier nulls its price IDs (lib/stripe/availability.ts), so a Customer Portal
+  // switch into Growth or Premium lands here: Stripe bills the new price while the
+  // listing keeps the checkout-time tier. That needs a person, not a guess, so it
+  // is logged loudly and stamped on the audit row. The real block is the portal
+  // configuration offering only purchasable products (founder step, 2026-10-03).
+  let unresolvedPriceId: string | null = null
+
   if (livePriceId) {
     const { data: planRow } = await supabase
       .from('plans')
@@ -160,6 +168,14 @@ export async function handleSubscriptionUpsert(
       planId = planRow.id
       planSlug = planRow.plan_key as PlanSlug
       billingCycle = planRow.stripe_price_id_yearly === livePriceId ? 'annual' : 'monthly'
+    } else {
+      unresolvedPriceId = livePriceId
+      console.error('[webhook] subscription is on a price no plan sells:', {
+        subscriptionId: sub.id,
+        listingId,
+        priceId: livePriceId,
+        fallbackTier: planSlug,
+      })
     }
   }
 
@@ -202,7 +218,9 @@ export async function handleSubscriptionUpsert(
 
   // A non-live status would normally drop the listing to free, but not while
   // another live subscription still pays for it (see findLiveSibling).
-  const sibling = KEEPS_ACCESS.has(sub.status) ? null : await findLiveSibling(supabase, listingId, sub.id)
+  const sibling = KEEPS_ACCESS.has(sub.status)
+    ? null
+    : await findLiveSibling(supabase, listingId, sub.id)
 
   if (sibling && sibling.tier === null) {
     console.error('[webhook] live sibling has no plan row; tier left unchanged:', {
@@ -268,6 +286,7 @@ export async function handleSubscriptionUpsert(
       billing_cycle: billingCycle,
       ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
       ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
+      ...(unresolvedPriceId ? { price_unresolved: unresolvedPriceId } : {}),
     },
   })
 
@@ -464,7 +483,9 @@ export async function handleCheckoutSessionCompleted(
   const listingId = meta.listing_id
   const userId = meta.user_id
   if (!listingId || !userId) {
-    throw new Error(`checkout.session.completed ${session.id} is missing listing_id/user_id metadata`)
+    throw new Error(
+      `checkout.session.completed ${session.id} is missing listing_id/user_id metadata`
+    )
   }
 
   const paidAt = new Date()
@@ -484,22 +505,22 @@ export async function handleCheckoutSessionCompleted(
   const { error: purchaseError } = await (supabase as unknown as SupabaseClient)
     .from('job_posting_purchases')
     .upsert(
-    {
-      listing_id: listingId,
-      purchased_by: userId,
-      stripe_checkout_session_id: session.id,
-      stripe_payment_intent_id: paymentIntentId,
-      // Never a hardcoded amount — what Stripe says was charged is what gets
-      // recorded, so a dashboard price change cannot desync the ledger.
-      amount_cents: session.amount_total ?? 0,
-      currency: session.currency ?? 'usd',
-      status: 'paid',
-      paid_at: paidAt.toISOString(),
-      expires_at: jobPostingExpiryFrom(paidAt),
-      updated_at: paidAt.toISOString(),
-    },
-    { onConflict: 'stripe_checkout_session_id' }
-  )
+      {
+        listing_id: listingId,
+        purchased_by: userId,
+        stripe_checkout_session_id: session.id,
+        stripe_payment_intent_id: paymentIntentId,
+        // Never a hardcoded amount — what Stripe says was charged is what gets
+        // recorded, so a dashboard price change cannot desync the ledger.
+        amount_cents: session.amount_total ?? 0,
+        currency: session.currency ?? 'usd',
+        status: 'paid',
+        paid_at: paidAt.toISOString(),
+        expires_at: jobPostingExpiryFrom(paidAt),
+        updated_at: paidAt.toISOString(),
+      },
+      { onConflict: 'stripe_checkout_session_id' }
+    )
 
   if (purchaseError) {
     throw new Error(`Failed to record job posting purchase: ${purchaseError.message}`)

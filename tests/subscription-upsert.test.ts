@@ -70,7 +70,10 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/email/resend', () => ({ sendEmail: vi.fn(async () => {}) }))
 vi.mock('@/lib/audit/system', () => ({ writeSystemAuditLog: h.writeSystemAuditLog }))
 
-import { handleSubscriptionUpsert, handleSubscriptionDeleted } from '@/lib/services/billing/webhookHandlers'
+import {
+  handleSubscriptionUpsert,
+  handleSubscriptionDeleted,
+} from '@/lib/services/billing/webhookHandlers'
 import type Stripe from 'stripe'
 
 // A minimal awaitable, table-aware fake of the Supabase service client.
@@ -88,7 +91,10 @@ function makeFakeClient() {
 
     const settleWrite = () => {
       if (table === 'subscriptions' && !isWrite) {
-        return { data: h.state.siblingReadError ? null : h.state.liveSiblings, error: h.state.siblingReadError }
+        return {
+          data: h.state.siblingReadError ? null : h.state.liveSiblings,
+          error: h.state.siblingReadError,
+        }
       }
       if (table === 'listings') {
         if (h.state.tierWriteError) return { data: null, error: h.state.tierWriteError }
@@ -128,13 +134,20 @@ function makeFakeClient() {
           // (.status / .slug / .entity_type / .cities). status !== 'published'
           // keeps revalidatePath a no-op regardless.
           return {
-            data: { tier: 'growth', status: 'draft', slug: null, entity_type: 'business', cities: null },
+            data: {
+              tier: 'growth',
+              status: 'draft',
+              slug: null,
+              entity_type: 'business',
+              cities: null,
+            },
             error: null,
           }
         }
         return { data: null, error: null }
       },
-      then: (onFulfilled: (v: unknown) => unknown) => Promise.resolve(settleWrite()).then(onFulfilled),
+      then: (onFulfilled: (v: unknown) => unknown) =>
+        Promise.resolve(settleWrite()).then(onFulfilled),
     }
     return builder
   }
@@ -230,6 +243,33 @@ describe('handleSubscriptionUpsert — tier follows the live price (Finding 3)',
       })
     )
   })
+
+  // A Customer Portal switch onto a withheld tier lands on a price whose plans
+  // row has been nulled. Stripe bills it; the tier stays put. It must be loud.
+  it('flags a live price no plan sells, in the error log and on the audit row', async () => {
+    h.state.planRow = null
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_unknown'))
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[webhook] subscription is on a price no plan sells:',
+      expect.objectContaining({ priceId: 'price_unknown', fallbackTier: 'growth' })
+    )
+    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        afterState: expect.objectContaining({ price_unresolved: 'price_unknown' }),
+      })
+    )
+  })
+
+  it('does not flag a price that resolves to a plan', async () => {
+    h.state.planRow = PREMIUM_ROW
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
+
+    const audit = h.writeSystemAuditLog.mock.calls.at(-1)?.[0] as {
+      afterState: Record<string, unknown>
+    }
+    expect(audit.afterState).not.toHaveProperty('price_unresolved')
+  })
 })
 
 describe('handleSubscriptionUpsert — the tier write is observed, not assumed (E-7)', () => {
@@ -237,16 +277,18 @@ describe('handleSubscriptionUpsert — the tier write is observed, not assumed (
     h.state.planRow = PREMIUM_ROW
     h.state.tierWriteError = { message: 'connection reset' }
 
-    await expect(handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))).rejects.toThrow(
-      /listing tier write failed/
-    )
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
+    ).rejects.toThrow(/listing tier write failed/)
   })
 
   it('writes no audit row at all when the tier write errors', async () => {
     h.state.planRow = PREMIUM_ROW
     h.state.tierWriteError = { message: 'connection reset' }
 
-    await expect(handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))).rejects.toThrow()
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
+    ).rejects.toThrow()
 
     // The throw happens before the audit write. An audit row here would claim a
     // tier change that definitively did not happen, and the Stripe retry would
@@ -258,9 +300,9 @@ describe('handleSubscriptionUpsert — the tier write is observed, not assumed (
     h.state.planRow = PREMIUM_ROW
     h.state.subscriptionWriteError = { message: 'unique violation' }
 
-    await expect(handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))).rejects.toThrow(
-      /subscriptions upsert failed/
-    )
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
+    ).rejects.toThrow(/subscriptions upsert failed/)
     expect(h.captured.listingUpdate).toBeNull()
   })
 
@@ -324,9 +366,7 @@ describe('handleSubscriptionDeleted — the downgrade is observed, not assumed (
   it('downgrades the listing to free on the happy path', async () => {
     await handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())
 
-    expect(h.captured.subscriptionUpdate).toEqual(
-      expect.objectContaining({ status: 'canceled' })
-    )
+    expect(h.captured.subscriptionUpdate).toEqual(expect.objectContaining({ status: 'canceled' }))
     expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
     expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -349,7 +389,9 @@ describe('handleSubscriptionDeleted — the downgrade is observed, not assumed (
   it('records honestly when the downgrade matches no listing', async () => {
     h.state.tierWriteMatches = false
 
-    await expect(handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())).resolves.toBeUndefined()
+    await expect(
+      handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())
+    ).resolves.toBeUndefined()
 
     expect(errorSpy).toHaveBeenCalledWith(
       '[webhook] downgrade matched no listing:',
@@ -377,7 +419,9 @@ describe('handleSubscriptionDeleted — the downgrade is observed, not assumed (
 })
 
 describe('a downgrade never strips a plan another subscription still pays for', () => {
-  function makeEndedSub(status: 'canceled' | 'incomplete_expired' = 'canceled'): Stripe.Subscription {
+  function makeEndedSub(
+    status: 'canceled' | 'incomplete_expired' = 'canceled'
+  ): Stripe.Subscription {
     return {
       ...makeSub('price_prem_yearly'),
       id: 'sub_old_trial',
@@ -386,7 +430,7 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     } as unknown as Stripe.Subscription
   }
 
-  it('deleted: keeps the live sibling\'s tier instead of dropping to free', async () => {
+  it("deleted: keeps the live sibling's tier instead of dropping to free", async () => {
     h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'growth' } }]
 
     await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
@@ -408,7 +452,7 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     expect(afterState).not.toHaveProperty('live_sibling')
   })
 
-  it('deleted: leaves the tier alone when the sibling\'s plan row is gone', async () => {
+  it("deleted: leaves the tier alone when the sibling's plan row is gone", async () => {
     h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: null }]
 
     await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
@@ -422,7 +466,10 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     )
     expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
       expect.objectContaining({
-        afterState: expect.objectContaining({ tier: 'growth', tier_write: 'skipped_live_sibling_unresolved' }),
+        afterState: expect.objectContaining({
+          tier: 'growth',
+          tier_write: 'skipped_live_sibling_unresolved',
+        }),
       })
     )
   })
@@ -437,7 +484,7 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
   })
 
-  it('upsert with a non-live status: keeps the live sibling\'s tier', async () => {
+  it("upsert with a non-live status: keeps the live sibling's tier", async () => {
     h.state.planRow = PREMIUM_ROW
     h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'starter' } }]
 
@@ -465,4 +512,3 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     expect(h.captured.listingUpdate).toEqual({ tier: 'premium' })
   })
 })
-

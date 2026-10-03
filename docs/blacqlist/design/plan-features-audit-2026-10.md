@@ -18,26 +18,26 @@ What we found `[Observed — code read, 2026-10-03]`:
 
 ## Founder decisions
 
-| # | Decision | Label |
-|---|---|---|
-| 1 | Verified is free for every claimed owner. It moves off the Starter card. Badges are earned, never sold. | `[Decision — founder, 2026-10-03]` |
-| 2 | Enforce the Free and Starter limits that already exist in `TIER_LIMITS` (ticket 119, PR #173). | `[Decision — founder, 2026-10-03]` |
-| 3 | Drop every AI line until a real model is switched on. | `[Decision — founder, 2026-10-03]` |
-| 4 | Hide Growth and Premium bullets while they can't be bought. The card shows name, tagline, price, and Coming Soon. | `[Decision — founder, 2026-10-03]` |
+| #   | Decision                                                                                                          | Label                              |
+| --- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1   | Verified is free for every claimed owner. It moves off the Starter card. Badges are earned, never sold.           | `[Decision — founder, 2026-10-03]` |
+| 2   | Enforce the Free and Starter limits that already exist in `TIER_LIMITS` (ticket 119, PR #173).                    | `[Decision — founder, 2026-10-03]` |
+| 3   | Drop every AI line until a real model is switched on.                                                             | `[Decision — founder, 2026-10-03]` |
+| 4   | Hide Growth and Premium bullets while they can't be bought. The card shows name, tagline, price, and Coming Soon. | `[Decision — founder, 2026-10-03]` |
 
 ## Starter, line by line
 
-| Old bullet | What was true | Now |
-|---|---|---|
-| Verified badge | Free for any claimed owner (checked by hand). The `verified_badge` gate is never read. | Moved to Free: "Claim it and get Verified, free" |
-| Up to 10 photos and 1 video | Photos enforced. The video link was open to everyone. | "Up to 10 photos" and "A video from YouTube or Vimeo", video gated to Starter (PR #173) |
-| Full-length description and 10 tags | Not enforced | Free: 300 characters, 3 filter details. Starter: no length limit, 10 filter details (PR #173) |
-| FAQ section (up to 5) | Not enforced | Free 0, Starter 5 (PR #173) |
-| Social links | Not gated | Starter only (PR #173) |
-| Reply to reviews | Enforced | Same: "Reply to reviews in public" |
-| Owner analytics (30-day) | Enforced | Same: "See your views, saves, and taps over the last 30 days" |
-| 10 AI assists a month | Mock output, and the real limit was 10 per day | **Cut** |
-| Remove the "Powered by" badge | The badge doesn't exist | **Cut** |
+| Old bullet                          | What was true                                                                          | Now                                                                                           |
+| ----------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Verified badge                      | Free for any claimed owner (checked by hand). The `verified_badge` gate is never read. | Moved to Free: "Claim it and get Verified, free"                                              |
+| Up to 10 photos and 1 video         | Photos enforced. The video link was open to everyone.                                  | "Up to 10 photos" and "A video from YouTube or Vimeo", video gated to Starter (PR #173)       |
+| Full-length description and 10 tags | Not enforced                                                                           | Free: 300 characters, 3 filter details. Starter: no length limit, 10 filter details (PR #173) |
+| FAQ section (up to 5)               | Not enforced                                                                           | Free 0, Starter 5 (PR #173)                                                                   |
+| Social links                        | Not gated                                                                              | Starter only (PR #173)                                                                        |
+| Reply to reviews                    | Enforced                                                                               | Same: "Reply to reviews in public"                                                            |
+| Owner analytics (30-day)            | Enforced                                                                               | Same: "See your views, saves, and taps over the last 30 days"                                 |
+| 10 AI assists a month               | Mock output, and the real limit was 10 per day                                         | **Cut**                                                                                       |
+| Remove the "Powered by" badge       | The badge doesn't exist                                                                | **Cut**                                                                                       |
 
 ## Free, as it reads now
 
@@ -58,16 +58,16 @@ The bullets don't render while the tier can't be bought. The lists in `plans.ts`
 
 **Cut from both:** the $299 Spotlight value, category exclusivity, homepage, editorial, and priority placement, unlimited or 3 videos, AI, and anything Free already has.
 
-| Growth | Premium |
-|---|---|
-| Up to 25 photos | Up to 50 photos |
-| A storefront for up to 25 products and services | Unlimited products, services, and events |
-| Up to 3 events at a time | 3 job postings every 30 days |
-| 1 job posting every 30 days | Coupons and deals |
-| The search terms that found you, with 12 months of history | Booking requests |
-| Up to 5 team members | Up to 3 locations on one account |
-| Support replies within 1 business day | Your community spend view, once 5 or more receipts are logged |
-| | A named support contact |
+| Growth                                                     | Premium                                                       |
+| ---------------------------------------------------------- | ------------------------------------------------------------- |
+| Up to 25 photos                                            | Up to 50 photos                                               |
+| A storefront for up to 25 products and services            | Unlimited products, services, and events                      |
+| Up to 3 events at a time                                   | 3 job postings every 30 days                                  |
+| 1 job posting every 30 days                                | Coupons and deals                                             |
+| The search terms that found you, with 12 months of history | Booking requests                                              |
+| Up to 5 team members                                       | Up to 3 locations on one account                              |
+| Support replies within 1 business day                      | Your community spend view, once 5 or more receipts are logged |
+|                                                            | A named support contact                                       |
 
 Before either tier goes on sale, every one of these lines needs the same trace Starter got. Coupons, booking requests, multi-location, and the support promises have no code behind them yet `[Observed — code read, 2026-10-03]`.
 
@@ -75,15 +75,15 @@ Before either tier goes on sale, every one of these lines needs the same trace S
 
 Policy: keep what exists and block new additions. A check runs only when the owner adds or changes that thing. Nothing is deleted or hidden, so no data operation is needed.
 
-| Free listings already over a limit | Count |
-|---|---|
-| Listings total / on Free | 550 / 547 |
-| Have FAQs | 0 |
-| Description over 300 characters | 4 |
-| More than 3 filter details | 0 |
-| Have a video link | 2 |
-| Have social links | 100 |
-| More than 1 gallery photo | 2 |
+| Free listings already over a limit | Count     |
+| ---------------------------------- | --------- |
+| Listings total / on Free           | 550 / 547 |
+| Have FAQs                          | 0         |
+| Description over 300 characters    | 4         |
+| More than 3 filter details         | 0         |
+| Have a video link                  | 2         |
+| Have social links                  | 100       |
+| More than 1 gallery photo          | 2         |
 
 Source: `[Measured — staging Supabase via Management API, 2026-10-03]`. Production counts are `[Unknown]` (a production read needs the founder's OK).
 
@@ -96,10 +96,10 @@ Source: `[Measured — staging Supabase via Management API, 2026-10-03]`. Produc
 ## Open items (not in these PRs)
 
 1. **Downgrade gap.** Content over the limit stays after a downgrade.
-2. **`tier_weight` in search ranking** still ranks paid tiers higher. Needs a founder call against the Black-Owned centering rule.
-3. **/for-sponsors** still prints $299 to $999.
+2. **`tier_weight` in search ranking.** Closed 2026-10-03, no change. The founder already decided ranking (2026-09-21, refined 2026-09-23/24): sponsored first, then match quality, then page activity and positive interaction. The paid tier only breaks ties on keyword searches, and the ownership label plays no part. `/how-ranking-works` says the same.
+3. **/for-sponsors prices.** Fixed on `fix/plan-loose-ends`. Both cards now read Coming Soon with no price, matching /pricing, and the Boost button goes to the /pricing waitlist instead of sign-up. A test pins it.
 4. **Marketplace flags.** Confirm `paidPostings` and `postingSubmissions` before Growth or Premium go on sale.
-5. **Stripe Customer Portal catalog.** A Starter subscriber might be able to switch into Premium there.
+5. **Stripe Customer Portal catalog.** Backstop on `fix/plan-loose-ends`: the webhook now logs an error and writes `price_unresolved` on the audit row when a subscription sits on a price no plan sells, so a portal switch onto a withheld tier cannot pass silently. The real block is a founder step in the Stripe Dashboard (Settings → Billing → Customer portal → Subscriptions): offer only Starter, or turn plan switching off. Current portal setting is [Unknown] until someone looks.
 6. **Existing Starter subscribers**, if any, lose nothing they actually had (AI was a mock, the badge never existed). A heads-up would go through GATE-COMMS.
 7. **Map pins.** 26% of listings have no map pin, which is why the Free line says "once your address is confirmed."
-8. **Premium tagline.** "Own the category." reads like exclusivity now that exclusivity is cut. It still shows on the Coming Soon card. Worth a reword before Premium opens.
+8. **Premium tagline.** Fixed on `fix/plan-loose-ends`: now "Keep customers coming back." A test blocks any tagline that promises owning a category.

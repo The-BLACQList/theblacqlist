@@ -9,10 +9,7 @@ import { z } from 'zod'
 
 // A server action's argument is whatever the browser sends, so it is parsed
 // like any other request body. Unknown keys are refused.
-const portalInputSchema = z
-  .object({ listingId: z.uuid().optional() })
-  .strict()
-  .optional()
+const portalInputSchema = z.object({ listingId: z.uuid().optional() }).strict().optional()
 
 const PORTAL_RATE_LIMIT = 10
 
@@ -27,6 +24,12 @@ export type PortalResult =
 /**
  * Creates a Stripe Customer Portal session so an owner can manage their
  * subscription (update payment method, switch plan, cancel) — self-service.
+ *
+ * Which plans the portal offers is set in the Stripe Dashboard portal
+ * configuration, not here. It must list only products we sell (Starter today);
+ * a switch onto a withheld tier bills the new price while the listing keeps its
+ * old tier. handleSubscriptionUpsert flags that case (`price_unresolved`), but
+ * the configuration is the real block.
  *
  * Ownership is enforced by querying `subscriptions` through the RLS-scoped
  * client: a user can only ever read rows where user_id = auth.uid(), so the

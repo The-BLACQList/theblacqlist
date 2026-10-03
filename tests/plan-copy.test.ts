@@ -9,6 +9,8 @@
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 import { PLANS, getPlanMeta } from '@/lib/stripe/plans'
 import {
@@ -40,6 +42,10 @@ describe('PLANS copy', () => {
       expect(line).not.toMatch(/\bAI\b/)
       expect(line).not.toMatch(/homepage/i)
     }
+  })
+
+  it('has no tagline that promises owning or locking a category', () => {
+    for (const plan of PLANS) expect(plan.tagline).not.toMatch(/own the|category/i)
   })
 
   it('does not sell Verified: it is on Free', () => {
@@ -116,5 +122,25 @@ describe('Growth and Premium lists match their limits', () => {
     expect(jobLimit('premium')).toBe(3)
     expect(locationLimit('premium')).toBe(3)
     expect(premium).toContain('Up to 3 locations on one account')
+  })
+})
+
+// /for-sponsors printed $299 to $999 and $49 to $99 for two add-ons nobody can
+// buy. /pricing already dropped them; this keeps the two pages in step.
+describe('/for-sponsors prints no price for an add-on that is not on sale', () => {
+  const page = readFileSync(path.join(process.cwd(), 'app/(public)/for-sponsors/page.tsx'), 'utf8')
+  const rendered = page.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+
+  it('shows no dollar amounts', () => {
+    expect(rendered).not.toMatch(/\$\d/)
+  })
+
+  it('labels both add-ons Coming Soon', () => {
+    expect(rendered.match(/Coming Soon/g)?.length).toBe(2)
+  })
+
+  it('sends the waitlist button to the form that records interest', () => {
+    expect(rendered).toContain('href="/pricing#pricing-waitlist"')
+    expect(rendered).not.toContain('href="/sign-up"')
   })
 })
