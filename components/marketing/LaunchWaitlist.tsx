@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom'
 import { Check, Loader2 } from 'lucide-react'
 
 import { subscribeLaunchAction, type SubscribeState } from '@/lib/actions/subscribers/subscribeLaunch'
+import { appendAttribution, readBrowserAttribution } from '@/lib/marketing/launch-attribution'
 import { HoneypotField } from '@/components/security/HoneypotField'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 
@@ -59,8 +60,10 @@ export function LaunchWaitlist({
   submitLabel = 'Join the waitlist',
   successMessage = "You're on the list. We'll email you the day it opens.",
 }: Props) {
-  const [state, action] = useActionState<SubscribeState, FormData>(subscribeLaunchAction, null)
+  const [state, dispatch] = useActionState<SubscribeState, FormData>(subscribeLaunchAction, null)
   const [source, setSource] = useState(options[0]?.value ?? '')
+  // Controlled, so React 19's post-action form reset keeps the address on an error.
+  const [email, setEmail] = useState('')
 
   // Nothing left to wait for — every tier and add-on shipped. The section
   // removes itself rather than becoming a form with no subject.
@@ -75,6 +78,13 @@ export function LaunchWaitlist({
   const emailId = `${id}-email`
   const errorId = `${id}-error`
 
+  // UTM values and the referrer origin, read at submit (pre-launch R2). The
+  // server re-validates them.
+  function formAction(formData: FormData) {
+    appendAttribution(formData, readBrowserAttribution())
+    dispatch(formData)
+  }
+
   return (
     <div id={id} className="mt-8 max-w-2xl scroll-mt-24">
       {isSuccess ? (
@@ -88,7 +98,7 @@ export function LaunchWaitlist({
           <p className="font-subhead text-sm text-brand-black">{successMessage}</p>
         </div>
       ) : (
-        <form action={action} noValidate>
+        <form action={formAction} noValidate>
           <HoneypotField />
           {options.length > 1 ? (
             <fieldset className="mb-5">
@@ -129,6 +139,8 @@ export function LaunchWaitlist({
               required
               autoComplete="email"
               placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               aria-invalid={!!error}
               aria-describedby={error ? errorId : undefined}
               className="h-12 w-full rounded-full border border-charcoal/25 bg-white px-5 font-subhead text-sm text-brand-black placeholder:text-charcoal-faint focus:border-amber-gold focus:outline-none focus:ring-2 focus:ring-amber-gold/40"

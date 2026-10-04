@@ -34,6 +34,14 @@ export const ANALYTICS_EVENTS = {
   CLAIM_SUBMITTED: 'claim_submitted',
   LISTING_SUBMITTED: 'listing_submitted',
   RECEIPT_SUBMITTED: 'receipt_submitted',
+
+  // ── Pre-launch (coming-soon) ──────────────────────────────────────────────
+  // Pre-launch request R6 (marketing OS, WF-034 capture.md section 9). The
+  // success event is the fifth and is server-only; see SERVER_ONLY_EVENTS.
+  COMING_SOON_VIEW: 'coming_soon_view',
+  LAUNCH_LIST_SUBMIT_ERROR: 'launch_list_submit_error',
+  LAUNCH_LIST_SHARE_CLICK: 'launch_list_share_click',
+  INSTAGRAM_FOLLOW_CLICK: 'instagram_follow_click',
 } as const
 
 /**
@@ -46,12 +54,19 @@ export const ANALYTICS_EVENTS = {
  * Emitters: createListing.ts:314, createProduct.ts:164, createService.ts:144,
  * and signUp.ts for sign_up_completed (properties.source is 'flyer' when the
  * account came in through /join, else 'invite'; no user_id, no email).
+ *
+ * launch_list_submit_success is emitted by subscribeLaunch.ts only when a NEW
+ * launch_subscribers row is written (not for a repeat address, not for a
+ * honeypot hit). It is server-only because a browser could otherwise inflate
+ * the launch-list count by POSTing it. Properties: source, the four UTM values,
+ * referrer (origin only) and role. No email.
  */
 export const SERVER_ONLY_EVENTS = {
   LISTING_DRAFT_CREATED: 'listing_draft_created',
   PRODUCT_CREATED: 'product_created',
   SERVICE_CREATED: 'service_created',
   SIGN_UP_COMPLETED: 'sign_up_completed',
+  LAUNCH_LIST_SUBMIT_SUCCESS: 'launch_list_submit_success',
 } as const
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS]
@@ -104,6 +119,13 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *
  *   Added 2026-08-15 and emitted from the same commit: sponsored_impression,
  *   sponsored_click (components/entities/SponsoredTracking.tsx).
+ *
+ *   Added 2026-10-04 and emitted from the same commit (pre-launch R6):
+ *   coming_soon_view, launch_list_submit_error, launch_list_share_click
+ *   (app/coming-soon/coming-soon-form.tsx), instagram_follow_click
+ *   (app/coming-soon/instagram-follow-link.tsx), and the server-only
+ *   launch_list_submit_success (lib/actions/subscribers/subscribeLaunch.ts).
+ *   coming_soon_view carries UTM values and referrer ORIGIN only.
  *
  * Wire an emitter before surfacing any of the second group in a UI.
  */
@@ -207,6 +229,23 @@ export interface CollectionViewedProperties {
   collection_slug?: string
 }
 
+export interface LaunchAttributionProperties {
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  utm_content?: string | null
+  referrer?: string | null // origin only (https://l.instagram.com), never the full URL
+}
+
+export interface LaunchListSubmitSuccessProperties extends LaunchAttributionProperties {
+  source?: string
+  role?: 'owner' | 'supporter' | null
+}
+
+export interface LaunchListSubmitErrorProperties {
+  error_type?: string // 'invalid_email' | 'missing_email' | 'rate_limited' | 'turnstile' | 'server'
+}
+
 // Convenience union for callers that accept any allowed properties object.
 export type AnyEventProperties =
   | SearchPerformedProperties
@@ -223,4 +262,7 @@ export type AnyEventProperties =
   | SponsoredDeliveryProperties
   | GuidViewedProperties
   | CollectionViewedProperties
+  | LaunchAttributionProperties
+  | LaunchListSubmitSuccessProperties
+  | LaunchListSubmitErrorProperties
   | Record<string, string | number | boolean | null | undefined>

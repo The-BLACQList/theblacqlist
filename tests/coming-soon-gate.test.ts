@@ -125,9 +125,41 @@ describe('the gate is still a gate', () => {
     expect(redirectedTo(res)).toBe('/coming-soon')
   })
 
-  it('drops the query string when it does bounce', async () => {
-    const res = await proxy(request('/pricing?utm_source=somewhere'))
+  it('drops every non-UTM query parameter when it does bounce', async () => {
+    // A wrong preview token, an auth code or any other parameter must not ride
+    // along to /coming-soon.
+    const res = await proxy(request('/pricing?code=abc&next=/dashboard&fbclid=xyz', { token: 'wrong-token' }))
     expect(res.headers.get('location')).toBe('https://theblacqlist.com/coming-soon')
+  })
+
+  it('keeps the UTM parameters through the bounce (pre-launch R5)', async () => {
+    // Instagram links point at theblacqlist.com/?utm_..., and the gate sends
+    // that to /coming-soon. Dropping the UTMs here would lose the attribution
+    // the launch-list form records.
+    const res = await proxy(
+      request(
+        '/?utm_source=instagram&utm_medium=social&utm_campaign=pre-launch&utm_content=bio-link&utm_term=x&fbclid=drop-me'
+      )
+    )
+    const location = new URL(res.headers.get('location') ?? '')
+    expect(location.pathname).toBe('/coming-soon')
+    expect(Object.fromEntries(location.searchParams)).toEqual({
+      utm_source: 'instagram',
+      utm_medium: 'social',
+      utm_campaign: 'pre-launch',
+      utm_content: 'bio-link',
+      utm_term: 'x',
+    })
+  })
+
+  it('opens /privacy, which the launch-list consent line links to (pre-launch R7)', async () => {
+    const res = await proxy(request('/privacy'))
+    expect(redirectedTo(res)).toBeNull()
+  })
+
+  it('does not open a near-miss of /privacy', async () => {
+    const res = await proxy(request('/privacy-settings'))
+    expect(redirectedTo(res)).toBe('/coming-soon')
   })
 })
 

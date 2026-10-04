@@ -14,6 +14,7 @@
  *   public/icons/icon-maskable-512.png 512×512 PWA manifest, purpose "maskable"
  *   public/brand/blacqlist-mark-gold-256.png  ≤256  logo spot (nav, footer, auth, sidebars)
  *   public/brand/blacqlist-mark-gold-144.png  ≤144  same, for small fixed-size uses
+ *   public/brand/blacqlist-lockup-email.png  440×152  launch-email header (shown at 220×76)
  *
  * Why a committed PNG rather than a generated route
  * -------------------------------------------------
@@ -222,6 +223,16 @@ const ASSETS: Asset[] = [
     out: 'public/brand/blacqlist-mark-gold-144.png',
     note: 'gold mark, transparent, trimmed',
     buffer: () => renderSvg(GOLD_MARK, { width: 144, height: 144 }).then(compress),
+  },
+  {
+    out: 'public/brand/blacqlist-lockup-email.png',
+    // Launch-list email header (lib/email/templates/launch-layout.tsx). Email
+    // clients cannot be trusted with SVG, so the lockup ships as a PNG at 2x of
+    // its 220×76 display size. It is flattened onto DEEP_BG rather than left
+    // transparent: Outlook and Gmail dark modes recolor the header cell behind a
+    // transparent image, and the white wordmark would vanish on a light repaint.
+    note: 'lockup on deep bg, 2x of 220×76',
+    buffer: () => onCanvas(LOCKUP_DARK, { width: 440, height: 152 }, 20).then(compress),
   },
 ]
 

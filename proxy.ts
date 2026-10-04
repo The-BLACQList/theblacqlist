@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { canonicalOpenNowQuery } from '@/lib/listings/discover-params'
+import { preservedRedirectSearch } from '@/lib/marketing/launch-attribution'
 
 // Route prefixes that require a valid session.
 // Admin role checks (admin vs super_admin) are performed server-side
@@ -56,6 +57,10 @@ const COMING_SOON_ALLOWED_PATHS = [
   '/verify-email',
   '/forgot-password',
   '/reset-password',
+  // /privacy IS here (2026-10-04, pre-launch R7). The launch-list form links to
+  // the Privacy Policy beside its consent line; without this the link bounced
+  // back to /coming-soon. The page is static legal text and opens nothing else.
+  '/privacy',
 ]
 
 export async function proxy(request: NextRequest) {
@@ -121,7 +126,10 @@ export async function proxy(request: NextRequest) {
     if (!bypass && !isAllowed) {
       const url = request.nextUrl.clone()
       url.pathname = '/coming-soon'
-      url.search = ''
+      // Keep the UTM keys and drop everything else (pre-launch R5). A visitor
+      // from theblacqlist.com/?utm_source=instagram lands on /coming-soon with
+      // that attribution intact, so the signup is credited to its source.
+      url.search = preservedRedirectSearch(request.nextUrl.searchParams)
       return NextResponse.redirect(url)
     }
   }

@@ -42,6 +42,14 @@ vi.mock('next/headers', () => ({
 
 vi.mock('@/lib/env', () => ({ SUBSCRIBE_RATE_LIMIT_SALT: 'test-salt' }))
 
+// Pre-launch additions (2026-10-04): a new row fires a server analytics event
+// and may schedule the W0 confirmation through next/server's after(). Neither
+// has a request scope here, so both are stubbed. tests/subscribe-launch-
+// attribution.test.ts covers what they are called with.
+vi.mock('@/lib/analytics/server', () => ({ trackServerEvent: vi.fn() }))
+vi.mock('@/lib/email/sendLaunchConfirmation', () => ({ sendLaunchConfirmation: vi.fn() }))
+vi.mock('next/server', () => ({ after: vi.fn() }))
+
 vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
     from(table: string) {
@@ -138,7 +146,8 @@ describe('subscribeLaunchAction rate limiting', () => {
     h.attemptCount = 0
     const result = await subscribeLaunchAction(null, form('not-an-email'))
 
-    expect(result).toEqual({ error: 'Please enter a valid email address.' })
+    // Wording from capture.md section 6 (pre-launch, 2026-10-04).
+    expect(result).toEqual({ error: 'Please check that email address.' })
     // If validation ran first, an attacker would bypass the limit entirely by
     // sending garbage — every rejected request would cost them nothing.
     expect(h.captured.attemptInserts).toHaveLength(1)

@@ -36,6 +36,14 @@ const SURFACES = [
     label: 'email preview (a pasted preview link must survive a rejected audience)',
     file: 'components/admin/EmailPreviewForm.tsx',
   },
+  {
+    label: 'launch-list form (the email and role must survive a rejected address)',
+    file: 'app/coming-soon/coming-soon-form.tsx',
+  },
+  {
+    label: 'tier waitlist on /pricing and /for-vendors (the email must survive a rejection)',
+    file: 'components/marketing/LaunchWaitlist.tsx',
+  },
 ] as const
 
 /** Element types a user cannot type into, or that React cannot control. */

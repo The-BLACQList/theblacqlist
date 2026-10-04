@@ -3,12 +3,18 @@ import Link from 'next/link'
 import { X } from 'lucide-react'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { COMING_SOON_COPY, resolveOwnerHeadline } from '@/lib/marketing/coming-soon-copy'
 import { ComingSoonForm } from './coming-soon-form'
+import { InstagramFollowLink } from './instagram-follow-link'
 import { NodeNetworkBackground } from './node-network-background'
+
+// COMING_SOON_OWNER_HEADLINE (a | b | off) is read per request. A static
+// prerender would bake the build-time value in and ignore a later change.
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Launching soon',
-  description: 'The BLACQList is launching soon. Find & Be Found. The directory for Black-owned businesses.',
+  description: COMING_SOON_COPY.supporterLine,
 }
 
 // Inline social glyphs for platforms not in this lucide-react version (mirrors the footer).
@@ -68,6 +74,7 @@ const socials = [
 ]
 
 export default function ComingSoonPage() {
+  const ownerHeadline = resolveOwnerHeadline()
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-deep-bg px-6 py-16 text-white">
       {/* Interactive Gold Node Network — moves with the cursor, ripples on click */}
@@ -82,22 +89,45 @@ export default function ComingSoonPage() {
       <div className="relative z-10 w-full max-w-xl text-center">
         {/* Wordmark */}
         <div className="mb-12 flex items-center justify-center gap-2.5">
-          <GoldBrandMark className="h-9 w-9" title="The BLACQList" />
-          <span className="font-headline text-lg font-medium tracking-[0.18em] text-white">THE BLACQLIST</span>
+          <GoldBrandMark className="h-9 w-9" title={COMING_SOON_COPY.name} />
+          <span className="font-headline text-lg font-medium uppercase tracking-[0.18em] text-white">
+            {COMING_SOON_COPY.name}
+          </span>
         </div>
 
-        <p className="mb-4 font-subhead text-xs uppercase tracking-[0.25em] text-gold">Launching soon</p>
-        <h1 className="mb-5 font-headline text-5xl leading-[1.05] text-white md:text-6xl">Find &amp; Be Found.</h1>
+        {/* Copy: run_20261002_36bd2a/outputs/capture.md section 3, verbatim (R1). */}
+        <h1 className="mb-5 font-headline text-5xl leading-[1.05] text-white md:text-6xl">
+          {COMING_SOON_COPY.headline}
+        </h1>
         <p className="mx-auto mb-9 max-w-md font-subhead text-base leading-relaxed text-pale-lavender/80 md:text-lg">
-          The directory for Black-owned businesses. Drop your email and we&apos;ll let you know the moment we go live.
+          {COMING_SOON_COPY.supporterLine}
         </p>
 
         <div className="mx-auto max-w-md">
           <ComingSoonForm />
         </div>
 
+        {/* Owner block. The headline row stays off until positioning is approved. */}
+        <section aria-label="For business owners" className="mx-auto mt-12 max-w-md">
+          {ownerHeadline && (
+            <h2 className="mb-3 font-headline text-2xl leading-tight text-white md:text-3xl">{ownerHeadline}</h2>
+          )}
+          <p className="font-subhead text-sm leading-relaxed text-pale-lavender/80 md:text-base">
+            {COMING_SOON_COPY.ownerLine}
+          </p>
+          <p className="mt-2 font-subhead text-sm leading-relaxed text-pale-lavender/70">
+            {COMING_SOON_COPY.ownerFallback}
+          </p>
+        </section>
+
+        <p className="mx-auto mt-6 max-w-md font-subhead text-sm text-pale-lavender/70">{COMING_SOON_COPY.allyLine}</p>
+
+        <div className="mt-12">
+          <InstagramFollowLink />
+        </div>
+
         {/* Social */}
-        <div className="mt-14 flex items-center justify-center gap-6">
+        <div className="mt-5 flex items-center justify-center gap-6">
           {socials.map(({ label, href, Icon }) => (
             <Link
               key={label}

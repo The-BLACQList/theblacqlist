@@ -2,10 +2,21 @@
 
 import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
+import { after } from 'next/server'
 
+import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { SUBSCRIBE_ERRORS } from '@/lib/actions/subscribers/subscribeErrors'
+import { sendLaunchConfirmation } from '@/lib/email/sendLaunchConfirmation'
 import { SUBSCRIBE_RATE_LIMIT_SALT } from '@/lib/env'
+import {
+  attributionFromFormData,
+  parseSignupRole,
+  type LaunchAttribution,
+  type SignupRole,
+} from '@/lib/marketing/launch-attribution'
 import { isHoneypotTripped } from '@/lib/security/honeypot'
-import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
+import { verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export type SubscribeState = { error: string } | { success: true } | null
@@ -51,6 +62,40 @@ function hashIp(ip: string): string {
   return createHash('sha256').update(`${SUBSCRIBE_RATE_LIMIT_SALT}${ip}`).digest('hex')
 }
 
+// ── Attribution columns (pre-launch R2 / R3) ─────────────────────────────────
+// utm_source, utm_medium, utm_campaign, utm_content, referrer and signup_role
+// are added by supabase/migrations/20261004000000_launch_subscribers_attribution.sql.
+// The code merge (GATE-DEPLOY) and that migration (GATE-DATA) are separate
+// decisions, so this action has to work on a table that does not have them yet.
+//
+// Two things make that true:
+//   1. Only non-null values are sent. A signup with no UTMs and no role posts
+//      exactly { email, source }, which the old table accepts.
+//   2. If the insert is rejected because a column is missing, it is retried
+//      once with { email, source } alone. The signup is kept; the attribution
+//      for that one row is lost, and a warning says why.
+//
+// PGRST204: PostgREST "could not find the column in the schema cache".
+// 42703:    Postgres undefined_column, if the request ever reaches the database.
+const MISSING_COLUMN_CODES = new Set(['PGRST204', '42703'])
+
+let missingColumnWarned = false
+
+type AttributionColumns = Partial<Record<keyof LaunchAttribution | 'signup_role', string>>
+
+function attributionColumns(
+  attribution: LaunchAttribution,
+  role: SignupRole | null
+): AttributionColumns {
+  const columns: AttributionColumns = {}
+  for (const key of Object.keys(attribution) as (keyof LaunchAttribution)[]) {
+    const value = attribution[key]
+    if (value) columns[key] = value
+  }
+  if (role) columns.signup_role = role
+  return columns
+}
+
 export async function subscribeLaunchAction(
   _prev: SubscribeState,
   formData: FormData
@@ -62,7 +107,7 @@ export async function subscribeLaunchAction(
   // The ledger below fails open, so Turnstile is what still stands when the
   // ledger is down. It fails closed once TURNSTILE_SECRET_KEY is set.
   if (!(await verifyTurnstileFormData(formData))) {
-    return { error: TURNSTILE_ERROR }
+    return { error: SUBSCRIBE_ERRORS.TURNSTILE }
   }
 
   const supabase = createServiceClient()
@@ -83,7 +128,7 @@ export async function subscribeLaunchAction(
   // where this runs before launch_subscribe_attempts exists. A limiter outage
   // must not take the capture form down with it.
   if (!countError && (count ?? 0) >= RATE_LIMIT_MAX) {
-    return { error: 'Too many attempts. Please try again in a few minutes.' }
+    return { error: SUBSCRIBE_ERRORS.RATE_LIMITED }
   }
 
   // Record the attempt before validating, so malformed submissions still consume
@@ -94,15 +139,32 @@ export async function subscribeLaunchAction(
 
   const email = formData.get('email')?.toString().trim().toLowerCase() ?? ''
 
-  if (!email) return { error: 'Please enter your email address.' }
+  if (!email) return { error: SUBSCRIBE_ERRORS.MISSING_EMAIL }
   if (email.length > 254 || !EMAIL_RE.test(email)) {
-    return { error: 'Please enter a valid email address.' }
+    return { error: SUBSCRIBE_ERRORS.INVALID_EMAIL }
   }
 
   const rawSource = formData.get('source')?.toString() ?? DEFAULT_SOURCE
   const source = ALLOWED_SOURCES.has(rawSource) ? rawSource : DEFAULT_SOURCE
 
-  const { error } = await supabase.from('launch_subscribers').insert({ email, source })
+  // Re-validated here whatever the browser posted: UTM values to a short
+  // plain character set, the referrer to its origin, the role to one of two.
+  const attribution = attributionFromFormData(formData)
+  const role = parseSignupRole(formData.get('signup_role')?.toString())
+  const extra = attributionColumns(attribution, role)
+
+  let { error } = await supabase.from('launch_subscribers').insert({ email, source, ...extra })
+
+  if (error && MISSING_COLUMN_CODES.has(error.code) && Object.keys(extra).length > 0) {
+    if (!missingColumnWarned) {
+      missingColumnWarned = true
+      console.warn(
+        '[subscribeLaunch] launch_subscribers has no attribution columns yet ' +
+          '(migration 20261004000000 not applied). Saving the signup without them.'
+      )
+    }
+    ;({ error } = await supabase.from('launch_subscribers').insert({ email, source }))
+  }
 
   if (error) {
     // A repeat subscriber is told they are on the list, not that they already
@@ -126,9 +188,36 @@ export async function subscribeLaunchAction(
           .eq('email', email)
           .eq('source', DEFAULT_SOURCE)
       }
+      // A repeat signup that now says who they are fills in a role that was
+      // never given. Guarded on null so it never overwrites an earlier answer,
+      // and best-effort: before the migration the column does not exist and
+      // the error is ignored. UTM values are first-touch and are not updated.
+      if (role) {
+        await supabase
+          .from('launch_subscribers')
+          .update({ signup_role: role })
+          .eq('email', email)
+          .is('signup_role', null)
+      }
       return { success: true }
     }
-    return { error: 'Something went wrong. Please try again.' }
+    return { error: SUBSCRIBE_ERRORS.SERVER }
+  }
+
+  // ── A new row was written ──────────────────────────────────────────────────
+  // launch_list_submit_success (R6) is server-side so a browser cannot inflate
+  // the count. No email in the properties; the referrer is an origin only.
+  trackServerEvent({
+    event_name: SERVER_ONLY_EVENTS.LAUNCH_LIST_SUBMIT_SUCCESS,
+    properties: { source, ...attribution, role },
+  })
+
+  // W0 confirmation, coming-soon signups only: its copy is about the launch
+  // list, not the tier waitlists on /pricing and /for-vendors. Off unless
+  // LAUNCH_CONFIRMATION_EMAIL_ENABLED is 'true' (see sendLaunchConfirmation).
+  // Runs after the response so a slow email API never delays the form.
+  if (source === DEFAULT_SOURCE) {
+    after(() => sendLaunchConfirmation(email))
   }
 
   return { success: true }

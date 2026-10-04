@@ -73,3 +73,7 @@ testassets/
 # into public/ for a second selection pass, it cannot be committed by accident.
 public/images/BL-image-sourcing/
 public/images/city-images/
+
+# Local launch-email previews from `pnpm email:export` (rendered HTML/text for
+# review and for pasting into a Resend broadcast). Regenerated on demand.
+/email-previews/

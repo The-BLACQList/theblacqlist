@@ -21,6 +21,7 @@
     "test:gates": "playwright test e2e/launch-gates.spec.ts",
     "images:editorial": "npx tsx scripts/optimize-editorial-images.ts",
     "brand:assets": "npx tsx scripts/generate-brand-assets.ts",
+    "email:export": "npx tsx scripts/export-launch-emails.tsx",
     "seed:launch": "npx tsx scripts/seed-launch-listings.ts",
     "seed:editorial": "npx tsx scripts/seed-editorial-launch.ts",
     "seed:marketplace-demo": "npx tsx scripts/seed-marketplace-demo.ts",
