@@ -68,7 +68,7 @@ export const W0_COPY: LaunchEmailCopy = {
   body: [
     p("You're on the list for The BLACQList. Thank you for joining."),
     p(
-      "BLACQList is where you'll find Black-owned businesses across six cities, and the Ally businesses beside them, all in one place."
+      "BLACQList is where you'll find Black-owned businesses across six cities, in one place."
     ),
     p('We will email you when we open. Before then, you may get one short first look at what is coming.'),
     p('Until then, the best place to watch it come together is our Instagram.'),
@@ -82,13 +82,13 @@ export function w1Copy(opening: W1Opening): LaunchEmailCopy {
     id: 'w1',
     subjects: ['A first look at The BLACQList', "What you'll find when we open"],
     preheader:
-      'Black-owned businesses, the Ally businesses beside them, six cities, and one small favor.',
+      'Black-owned businesses, six cities, and one small favor.',
     greeting: 'Hi,',
     body: [
       p(W1_OPENING_LINES[opening]),
       p('Here is a first look at what you will be able to do when The BLACQList opens.'),
       p(
-        'Find Black-owned businesses, and the Ally businesses listed beside them, in Atlanta, Chicago, Houston, Los Angeles, New Orleans and Washington DC. Hundreds of businesses across those six cities already have a Page.'
+        'Find Black-owned businesses in Atlanta, Chicago, Houston, Los Angeles, New Orleans and Washington DC. Hundreds of businesses across those six cities already have a Page.'
       ),
       p('Save the places you love with a free account, so they are there when you need them.'),
       p('Read reviews, and leave your own.'),
@@ -104,7 +104,7 @@ export function w1Copy(opening: W1Opening): LaunchEmailCopy {
       p('Ready to paste:'),
       {
         kind: 'quote',
-        text: `The BLACQList is coming: Black-Owned Anything, plus the Ally businesses beside them, in six cities. Get on the list to hear when it opens: ${W1_SHARE_URL}`,
+        text: `The BLACQList is coming: find Black-Owned Anything in six cities. Get on the list to hear when it opens: ${W1_SHARE_URL}`,
       },
       p('We will email you when we open.'),
     ],
@@ -116,15 +116,12 @@ export function w1Copy(opening: W1Opening): LaunchEmailCopy {
 export const E1_COPY: LaunchEmailCopy = {
   id: 'e1',
   subjects: ['The BLACQList is open', 'Find & Be Found starts today'],
-  preheader: 'Six cities, hundreds of Black-owned and ally businesses, and one place to start.',
+  preheader: 'Six cities, hundreds of businesses, Black-owned front and center, and one place to start.',
   greeting: 'Hi,',
   body: [
     p('You asked us to tell you when The BLACQList opened. Today it is open to everyone.'),
-    // OPEN COPY ITEM (handoff doc): the closing parenthetical reads like an
-    // internal source note. Kept verbatim because the copy rule forbids edits
-    // here; the marketing OS decides whether it stays before E1 is approved.
     p(
-      'BLACQList is a national place to find Black-owned businesses and the allies who list beside them. We are starting in six cities: Atlanta, Chicago, Houston, Los Angeles, New Orleans and Washington DC. More than 370 businesses were on the map before launch (source: decision log, measured 4 Sep 2026).'
+      'BLACQList is a national place to find Black-owned businesses. We are starting in six cities: Atlanta, Chicago, Houston, Los Angeles, New Orleans and Washington DC. More than 370 businesses were on the map before launch.'
     ),
     p(
       'If you are not sure where to begin, start with our first collection, Where to Shop Black in Atlanta. Then search your own city and see who is already here.'
@@ -155,7 +152,7 @@ export const E2_COPY: LaunchEmailCopy = {
       'Before The BLACQList opened, we added businesses in Atlanta, Chicago, Houston, Los Angeles, New Orleans and Washington DC so supporters would have places to find on day one. Yours may be one of them.'
     ),
     p(
-      "Claiming your Page is free. New Pages choose their label, Black-Owned or Ally. If the label on your Page is wrong, tell us and we'll correct it. Our team reviews each claim to make sure the right person gets the Page."
+      "Claiming your Page is free. If anything on your Page is wrong, tell us and we'll correct it. Our team reviews each claim to make sure the right person gets the Page."
     ),
     p('If your business is not there yet, you can add it for free.'),
     p('Search for your business name and claim it today.'),

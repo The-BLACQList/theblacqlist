@@ -120,8 +120,6 @@ export default function ComingSoonPage() {
           </p>
         </section>
 
-        <p className="mx-auto mt-6 max-w-md font-subhead text-sm text-pale-lavender/70">{COMING_SOON_COPY.allyLine}</p>
-
         <div className="mt-12">
           <InstagramFollowLink />
         </div>

@@ -11,6 +11,10 @@
 //     (capture.md R3 has an earlier "I'm here to discover"; qualification.md is
 //     the later, specific request and is what the operator brief names)
 //
+//   supporterLine (and the retired allyLine field):
+//     projects/theblacqlist/08_content/REFRESH_PLAN.md (v2 copy, WF-057
+//     run_20261004_ff06c3), which supersedes capture.md for these two fields
+//
 // Straight apostrophes are kept as written in the sources.
 // =============================================================================
 
@@ -18,12 +22,11 @@ export const COMING_SOON_COPY = {
   name: 'The BLACQList',
   headline: 'Find & Be Found.',
   supporterLine:
-    'Black-owned businesses across six cities, and the Ally businesses beside them, all in one place. The BLACQList opens soon. Join the launch list to hear first.',
+    'Black-owned businesses, front and center, across six cities. The BLACQList opens soon. Join the launch list to hear first.',
   cta: 'Join the launch list',
   ownerLine:
     'Own a business in Atlanta, Chicago, Houston, Los Angeles, New Orleans or DC? It may already have a Page on The BLACQList. Join the list to be the first to know when you can claim it, free.',
   ownerFallback: "Not listed yet? You'll be able to create your Page, free.",
-  allyLine: 'Ally businesses and Ally supporters are welcome on BLACQList too.',
   instagramFollow: 'Follow @theblacqlist',
 } as const
 

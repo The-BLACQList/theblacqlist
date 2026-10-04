@@ -42,13 +42,12 @@ test.describe('/coming-soon', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Find & Be Found.')
     await expect(
       page.getByText(
-        'Black-owned businesses across six cities, and the Ally businesses beside them, all in one place. The BLACQList opens soon. Join the launch list to hear first.'
+        'Black-owned businesses, front and center, across six cities. The BLACQList opens soon. Join the launch list to hear first.'
       )
     ).toBeVisible()
     await expect(page.getByRole('button', { name: 'Join the launch list' })).toBeVisible()
     await expect(page.getByText(/^Own a business in Atlanta, Chicago, Houston, Los Angeles, New Orleans or DC\?/)).toBeVisible()
     await expect(page.getByText("Not listed yet? You'll be able to create your Page, free.")).toBeVisible()
-    await expect(page.getByText('Ally businesses and Ally supporters are welcome on BLACQList too.')).toBeVisible()
     await expect(page.getByRole('link', { name: 'Follow @theblacqlist' })).toHaveAttribute(
       'href',
       'https://www.instagram.com/theblacqlist/'
