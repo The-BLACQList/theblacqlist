@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto'
 import { headers } from 'next/headers'
 
 import { SUBSCRIBE_RATE_LIMIT_SALT } from '@/lib/env'
+import { GMAIL_DOT_TRICK_ERROR, isGmailDotTrick } from '@/lib/security/gmail-dot-trick'
 import { isHoneypotTripped } from '@/lib/security/honeypot'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -98,6 +99,10 @@ export async function subscribeLaunchAction(
   if (email.length > 254 || !EMAIL_RE.test(email)) {
     return { error: 'Please enter a valid email address.' }
   }
+  // After the ledger insert, so a rejected address still spends budget. A
+  // visible error rather than a fake success: a real person can drop the dots
+  // and still get our mail.
+  if (isGmailDotTrick(email)) return { error: GMAIL_DOT_TRICK_ERROR }
 
   const rawSource = formData.get('source')?.toString() ?? DEFAULT_SOURCE
   const source = ALLOWED_SOURCES.has(rawSource) ? rawSource : DEFAULT_SOURCE

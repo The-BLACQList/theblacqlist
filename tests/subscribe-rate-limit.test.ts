@@ -329,6 +329,19 @@ describe('subscribeLaunchAction bot guards', () => {
     expect(h.captured.subscriberInserts).toHaveLength(0)
   })
 
+  it('rejects a Gmail dot-trick address, spends budget, and writes no subscriber', async () => {
+    expect(await subscribeLaunchAction(null, form('a.bc.d.ef12@gmail.com'))).toEqual({
+      error: 'Gmail ignores dots in addresses. Please enter yours without the extra dots.',
+    })
+    expect(h.captured.attemptInserts).toHaveLength(1)
+    expect(h.captured.subscriberInserts).toHaveLength(0)
+  })
+
+  it('still accepts an ordinary dotted Gmail address', async () => {
+    expect(await subscribeLaunchAction(null, form('first.last@gmail.com'))).toEqual({ success: true })
+    expect(h.captured.subscriberInserts).toHaveLength(1)
+  })
+
   it('refuses a missing Turnstile token once the secret is set, before touching the ledger', async () => {
     process.env.TURNSTILE_SECRET_KEY = 'test-secret'
     try {
