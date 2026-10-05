@@ -131,3 +131,4 @@
 | [122](122-opening-soon-covers.md) | Opening-soon covers: Marketplace, Jobs, The Collective | V1.5 | P1 | — | Ready | Flags off in prod by default; proxy rewrites to /soon, APIs 403, receipt actions refuse; nav keeps links with a Soon pill |
 | [123](123-earned-weekly-featured.md) | Earned weekly Featured: one winner per listing type | V1.5 | P1 | — | Ready | GATE-DATA migration + flag flip clears 27 seeded flags; contact taps tracked; cron Mon 09:00 UTC |
 | [124](124-featured-badge-and-copy.md) | Featured badge and copy say "earned" | V1.5 | P1 | 123 | Ready | Same PR as 123; hero "Featured this week" + bucket line; Featured removed from plans and sponsor copy |
+| [125](125-category-sorting-guide.md) | "Help me choose" category guide on /add-business | V1.5 | P1 | — | Ready | Two questions or a search suggest type, category and location type; rules in lib/categories/sorting-guide.ts, slugs checked against the seed; multi-category is 5b |

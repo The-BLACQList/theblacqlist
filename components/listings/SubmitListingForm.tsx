@@ -9,7 +9,9 @@ import { descriptionCharLimit } from '@/lib/stripe/features'
 import { MediaStep } from '@/app/add-business/_components/steps/MediaStep'
 import { CtaStep } from '@/app/add-business/_components/steps/CtaStep'
 import { PreviewPublishStep } from '@/app/add-business/_components/steps/PreviewPublishStep'
+import { CategoryGuide } from '@/app/add-business/_components/CategoryGuide'
 import type { CategoryOption } from '@/app/add-business/page'
+import type { GuidePick } from '@/lib/categories/sorting-guide'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -248,6 +250,32 @@ export function SubmitListingForm({ categories }: Props) {
     setErrors((prev) => {
       const next = { ...prev }
       delete next.category_id
+      return next
+    })
+  }
+
+  // The "Help me choose" guide fills type, category and where-you-work in one
+  // go. Location type is left alone when the owner searched instead of
+  // answering "Where", so a choice made by hand isn't wiped.
+  function applyGuidePick(pick: GuidePick) {
+    setFields((prev) => {
+      const next: FormFields = {
+        ...prev,
+        entity_type: pick.entityType,
+        parent_category_id: pick.parentCategoryId,
+        category_id: pick.categoryId,
+        location_type: pick.locationType ?? prev.location_type,
+      }
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.entity_type
+      delete next.category_id
+      if (pick.locationType) delete next.location_type
       return next
     })
   }
@@ -492,6 +520,12 @@ export function SubmitListingForm({ categories }: Props) {
       {/* Step 1 — About your business */}
       {step === 1 && (
         <div className="bg-white rounded-2xl border border-charcoal/10 p-6 flex flex-col gap-5">
+          <CategoryGuide
+            categories={categories}
+            defaultOpen={!fields.category_id && !fields.parent_category_id}
+            onPick={applyGuidePick}
+          />
+
           {/* Entity type */}
           <div className="flex flex-col gap-2">
             <p className="font-subhead text-sm font-semibold text-brand-black">
