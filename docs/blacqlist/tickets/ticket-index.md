@@ -127,3 +127,4 @@
 | [117](117-blacqlight-article-a.md) | The BLACQLight article page | V1.5 | P2 | 116 | Ready | Same PR as 116; markdown links in the renderer; adding links to live stories is GATE-PUBLISH |
 | [118](118-editorial-article-fields.md) | Editorial fields: photo credit + linked businesses | Later | P3 | 116, 117 | Later | GATE-DATA; spec Q3 option B, approved as the later path |
 | [120](120-twisted-soul-website.md) | Fix the Twisted Soul Cookhouse website | V1 | P1 | — | Ready | Seed files + declared correction; prod write is GATE-DATA; skips claimed listings |
+| [121](121-home-story-cover.md) | Story cover on the homepage | V1.5 | P2 | 116, 117 | Ready | Feature block + rail cards; ember wash stays as the fallback |

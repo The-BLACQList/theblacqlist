@@ -4,6 +4,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
+import { resolveStoryCover } from '@/lib/editorial/cover'
 import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 import { expandTypeCategoryIds, listingMatchesType } from '@/lib/listings/type-shortcuts'
 import { HomeHero } from '@/components/home/HomeHero'
@@ -98,7 +99,7 @@ export default async function HomePage() {
     // `(status, published_at DESC)` index from the foundation migration.
     supabase
       .from('editorial_articles')
-      .select('title, slug, subtitle, author_name, published_at, tags')
+      .select('title, slug, subtitle, author_name, published_at, tags, cover_image_path')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .limit(5),
@@ -224,6 +225,7 @@ export default async function HomePage() {
         subtitle: featured.subtitle,
         authorName: featured.author_name,
         publishedAt: featured.published_at,
+        coverSrc: resolveStoryCover(featured.cover_image_path),
       }
     : null
 
@@ -234,6 +236,7 @@ export default async function HomePage() {
     authorName: a.author_name,
     publishedAt: a.published_at,
     tags: a.tags,
+    coverSrc: resolveStoryCover(a.cover_image_path),
   }))
 
   // Same `sectionMap` shape `app/(public)/guides/(index)/page.tsx` builds — one pass
