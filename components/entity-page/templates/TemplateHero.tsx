@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
@@ -10,6 +11,8 @@ import type { EntityPageData } from '@/types'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
+import { ContactLink } from '@/components/entity-page/ContactLink'
+import { bucketLabel } from '@/lib/featured/buckets'
 
 /**
  * One hero per template. `professional` and `creative` are the two Living
@@ -98,11 +101,12 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
 
       {/* Ported from EntityPageHero — the only place is_featured surfaces on a
           listing page. Deleting that component without this was a silent
-          regression on every featured storefront. */}
+          regression on every featured storefront. Featured is earned weekly,
+          never bought (ticket 124); the "why" line sits under the badges. */}
       {entity.is_featured && (
         <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
           <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-gold text-brand-black font-subhead text-xs font-semibold leading-none">
-            Featured
+            Featured this week
           </span>
         </div>
       )}
@@ -121,6 +125,19 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             {typeLabel}
           </span>
         </div>
+
+        {entity.is_featured && entity.featured_bucket && (
+          <p className="font-body text-xs md:text-[13px] text-off-white/85 mb-3 max-w-xl">
+            Earned by the most saves, reviews, shares and visits among{' '}
+            {bucketLabel(entity.featured_bucket)} this week.{' '}
+            <Link
+              href="/how-ranking-works#featured"
+              className="underline underline-offset-2 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            >
+              How Featured works
+            </Link>
+          </p>
+        )}
 
         <h1 className={cn('font-headline text-white leading-tight text-balance', HEADING_SIZES[variant])}>
           {entity.name}
@@ -175,13 +192,15 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           {/* id="hero-cta" is EntityQuickActionBar's IntersectionObserver target;
               the bar no-ops when the element is absent (no real CTA destination) */}
           {ctaHref && (
-            <a
+            <ContactLink
               id="hero-cta"
               href={ctaHref}
+              listingId={entity.id}
+              source="hero"
               className="inline-flex items-center justify-center h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold min-w-[140px]"
             >
               {ctaLabel}
-            </a>
+            </ContactLink>
           )}
 
           {isCreative && entity.images.length > 0 && (

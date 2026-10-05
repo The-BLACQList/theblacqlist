@@ -17,6 +17,9 @@ export const config: VercelConfig = {
     // window, and unpublish job postings whose paid window has closed.
     // See lib/services/expiry/sweeps.ts.
     { path: '/api/cron/expiry', schedule: '0 8 * * *' },
+    // 09:00 UTC Monday, roughly 5am ET: award the weekly Featured badge for
+    // the week that just ended. See lib/featured/award.ts.
+    { path: '/api/cron/featured', schedule: '0 9 * * 1' },
   ],
 }
 

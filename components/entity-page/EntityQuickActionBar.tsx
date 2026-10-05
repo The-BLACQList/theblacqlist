@@ -7,6 +7,7 @@ import { getCtaLabel } from '@/types'
 import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
+import { trackContactTap } from '@/lib/analytics/contactTap'
 import type { EntityPageData } from '@/types'
 
 interface Props {
@@ -51,6 +52,10 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
       )}`
     : null
 
+  // Website, call and directions taps count toward the weekly Featured score.
+  const tap = (href: string) => () => trackContactTap(entity.id, href, 'action_bar')
+  const phoneHref = entity.details.phone ? `tel:${entity.details.phone.replace(/\D/g, '')}` : null
+
   return (
     <>
       {/* Mobile bar — fixed bottom, slides up. `data-quick-bar` lets the
@@ -72,6 +77,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
           {ctaHref && (
             <a
               href={ctaHref}
+              onClick={tap(ctaHref)}
               tabIndex={visible ? 0 : -1}
               className="flex-1 inline-flex items-center justify-center h-11 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >
@@ -108,9 +114,10 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             {entity.name}
           </span>
 
-          {entity.details.phone && (
+          {phoneHref && (
             <a
-              href={`tel:${entity.details.phone.replace(/\D/g, '')}`}
+              href={phoneHref}
+              onClick={tap(phoneHref)}
               tabIndex={visible ? 0 : -1}
               className="inline-flex items-center gap-1.5 font-subhead text-sm text-white/70 hover:text-white transition-colors"
               aria-label={`Call ${entity.name}: ${entity.details.phone}`}
@@ -123,6 +130,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
           {mapsHref && (
             <a
               href={mapsHref}
+              onClick={tap(mapsHref)}
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={visible ? 0 : -1}
@@ -137,6 +145,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
           {ctaHref && (
             <a
               href={ctaHref}
+              onClick={tap(ctaHref)}
               tabIndex={visible ? 0 : -1}
               className="inline-flex items-center justify-center h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >

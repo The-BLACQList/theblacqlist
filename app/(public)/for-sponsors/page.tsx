@@ -22,7 +22,7 @@ const SPONSOR_TYPES = [
   {
     title: 'City Spotlight',
     description:
-      'Brands and organizations targeting a specific metropolitan area. Get featured placement on BLACQList city pages where your audience already looks.',
+      'Brands and organizations targeting a specific metropolitan area. Get a labeled Sponsored placement on BLACQList city pages where your audience already looks.',
     badge: 'Regional',
   },
   {

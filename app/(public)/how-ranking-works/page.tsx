@@ -46,6 +46,8 @@ export const revalidate = false
  * longer spliced into keyword results (lib/listings/query.ts injectSponsored).
  * Featured got its own section because it and Sponsored were described as one
  * thing before; they are two ("Featured" badge vs the "Sponsored" chip).
+ * Since 2026-10-05 Featured is awarded weekly by award_weekly_featured
+ * (ticket 123); the section says how, and section 6 says it is not for sale.
  * [Decision — founder, 2026-09-24] relevance first on a keyword search.
  */
 export default function HowRankingWorksPage() {
@@ -105,7 +107,18 @@ export default function HowRankingWorksPage() {
               3. Then: featured businesses break ties
             </h2>
             <p>
-              Some businesses carry a visible <span className="font-semibold">Featured</span> badge.
+              Featured is earned, never bought. Each week, one business in each listing type
+              (Restaurants, Services, Professionals, Creatives, Vendors, Events and Businesses) earns
+              a <span className="font-semibold">Featured</span> badge. It goes to the one with the
+              most positive activity from Monday to Sunday: saves, reviews rated 4 or 5 stars,
+              shares, and taps on its website, call or directions buttons.
+            </p>
+            <p>
+              The owner&rsquo;s own activity does not count. A business needs a minimum amount of
+              activity to win, so some weeks a type has no Featured business at all. The badge
+              moves every Monday. No plan, payment, or sponsorship can buy it.
+            </p>
+            <p>
               When you are browsing, featured businesses are listed first. When you search, being
               featured only decides the order between businesses that matched your search equally
               well. A featured business never outranks a better match.
@@ -209,6 +222,11 @@ export default function HowRankingWorksPage() {
                 <span className="font-semibold">Reviews and ratings are not for sale.</span> A paid
                 plan does not remove, hide, or reweight a review, and it does not change how a
                 review counts toward the activity above. A negative but genuine review stays.
+              </li>
+              <li>
+                <span className="font-semibold">Featured is not for sale.</span> The badge is won
+                each week by activity, as described above. No plan includes it and no payment
+                moves it.
               </li>
               <li>
                 <span className="font-semibold">Activity itself is not for sale.</span> Saves,

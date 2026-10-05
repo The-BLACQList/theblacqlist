@@ -69,7 +69,8 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  * confident zero, which is worse than an absent metric.
  *
  *   Emitted: page_view, search_performed, cta_click, save_toggled,
- *            share_initiated, claim_submitted, listing_submitted
+ *            share_initiated, claim_submitted, listing_submitted,
+ *            hero_cta_click, action_bar_cta_click
  *            + the three SERVER_ONLY_EVENTS above.
  *
  *   cta_click IS NOT ONE EVENT WITH ONE SHAPE. Two emitters write it, and they
@@ -78,9 +79,11 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *       /api/marketplace/cta-click) — entity_type 'product' | 'service',
  *       entity_id = the product/service id, listing in properties.listing_id.
  *       All four current call sites are marketplace surfaces.
- *     · Listing pages — entity_type 'listing', entity_id = the listing id.
- *       DECLARED BUT UNEMITTED: no component passes entityType='listing' today,
- *       so in practice every cta_click row in the table is marketplace-scoped.
+ *     · Listing pages — entity_type 'listing', entity_id = the listing id,
+ *       properties { kind: 'website' | 'call' | 'directions', source }.
+ *       Emitted since 2026-10-05 by the At a Glance contact links through
+ *       lib/analytics/contactTap.ts. Rows before that date are all
+ *       marketplace-scoped.
  *   Any per-listing count must therefore query BOTH entity_id and
  *   properties->>listing_id, filtered by entity_type so neither is double
  *   counted. app/dashboard/pages/[entityId]/analytics/page.tsx does this; it
@@ -91,8 +94,14 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *   affordances (hero + both quick-action bars) were placeholder buttons with
  *   no onClick. Wiring them is what made this line true.
  *
+ *   hero_cta_click and action_bar_cta_click are emitted since 2026-10-05 by
+ *   the listing hero button and the quick-action bar (phone, directions, CTA),
+ *   same shape as a listing cta_click. Only website, call and directions taps
+ *   are sent; email and #visit are not. They feed the weekly Featured score
+ *   (award_weekly_featured), so changing their shape changes who wins.
+ *
  *   Declared, nothing emits them yet: filter_applied, collection_viewed,
- *            guide_viewed, hero_cta_click, action_bar_cta_click,
+ *            guide_viewed,
  *            marketplace_product_viewed, marketplace_cta_click,
  *            review_submitted, claim_started, receipt_submitted.
  *

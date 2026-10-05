@@ -116,6 +116,13 @@ describe('how-ranking-works page', () => {
     expect(copy).toContain('a labeled Sponsored placement or a Featured business stays at the top')
   })
 
+  it('says Featured is earned each week and never sold', () => {
+    expect(copy).toContain('Featured is earned, never bought.')
+    expect(copy).toContain('saves, reviews rated 4 or 5 stars')
+    expect(copy).toContain('No plan, payment, or sponsorship can buy it.')
+    expect(copy).toContain('Featured is not for sale.')
+  })
+
   it('says featured only breaks ties on a keyword search', () => {
     expect(copy).toContain('featured businesses break ties')
     expect(copy).toContain('A featured business never outranks a better match.')

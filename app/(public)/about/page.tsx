@@ -135,7 +135,7 @@ export default function AboutPage() {
               <strong>Black-Owned</strong> means a business in which Black or African American
               individual(s) hold majority ownership (&ge;51%) and exercise meaningful operational
               control or management authority. Black-owned businesses are what the platform is
-              built around. They are featured first across the directory.
+              built around.
             </p>
             <p>
               <strong>Ally</strong> means a business that supports Black-owned businesses and the

@@ -114,8 +114,9 @@ export default function TermsPage() {
               business in which Black or African American individual(s) hold majority ownership
               (≥51%) and exercise meaningful operational control or management authority.
               &ldquo;Ally&rdquo; means a business that supports Black-owned businesses but is not
-              itself majority Black-owned. How listings are presented, prioritized, and featured is
-              an editorial decision. We reserve the right to decline, remove, or re-label any
+              itself majority Black-owned. How listings are presented and prioritized is an
+              editorial decision. The weekly Featured badge is earned by activity, as described on
+              our How Ranking Works page. We reserve the right to decline, remove, or re-label any
               submission, and to exercise that discretion without prior notice and without liability.
             </p>
             <p>Business owners who create or claim listings represent and warrant that:</p>

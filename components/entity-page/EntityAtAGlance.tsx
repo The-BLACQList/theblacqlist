@@ -6,6 +6,7 @@
 
 import { Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { trackContactTap } from '@/lib/analytics/contactTap'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
 import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
@@ -155,6 +156,7 @@ export function EntityAtAGlance({ entity }: Props) {
                 {hasAddress && mapsHref ? (
                   <a
                     href={mapsHref}
+                    onClick={() => trackContactTap(entity.id, mapsHref, 'at_a_glance')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-start gap-2 font-body text-sm text-charcoal hover:text-brand-black group"
@@ -215,6 +217,9 @@ export function EntityAtAGlance({ entity }: Props) {
                   {details.phone && (
                     <a
                       href={`tel:${details.phone.replace(/\D/g, '')}`}
+                      onClick={(e) =>
+                        trackContactTap(entity.id, e.currentTarget.href, 'at_a_glance')
+                      }
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black"
                     >
                       <Phone className="size-4 text-amber flex-shrink-0" aria-hidden="true" />
@@ -233,6 +238,9 @@ export function EntityAtAGlance({ entity }: Props) {
                   {details.website_url && (
                     <a
                       href={details.website_url}
+                      onClick={(e) =>
+                        trackContactTap(entity.id, e.currentTarget.href, 'at_a_glance')
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 font-body text-sm text-charcoal hover:text-brand-black break-all"
