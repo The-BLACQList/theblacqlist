@@ -46,7 +46,6 @@ export type GatedFeature =
   | 'service_menu_pricing'
   | 'events'
   | 'team_members'
-  | 'featured_collection'
   | 'editorial_eligibility'
   | 'analytics_advanced'
   | 'priority_support'
@@ -55,7 +54,6 @@ export type GatedFeature =
   | 'coupons'
   | 'booking_requests'
   | 'multi_location'
-  | 'homepage_featured'
   | 'category_exclusivity'
   | 'spend_impact_panel'
   | 'sonnet_agents'
@@ -90,7 +88,6 @@ const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   service_menu_pricing: 2,
   events: 2,
   team_members: 2,
-  featured_collection: 2,
   editorial_eligibility: 2,
   analytics_advanced: 2,
   priority_support: 2,
@@ -98,7 +95,6 @@ const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   coupons: 3,
   booking_requests: 3,
   multi_location: 3,
-  homepage_featured: 3,
   category_exclusivity: 3,
   spend_impact_panel: 3,
   sonnet_agents: 3,

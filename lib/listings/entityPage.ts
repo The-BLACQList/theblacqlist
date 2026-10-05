@@ -650,6 +650,21 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     }
   }
 
+  // Which listing type the Featured badge was earned in (ticket 124). Only
+  // asked for featured listings. Fail-soft: no row (seeded flag, or the table
+  // isn't migrated yet) leaves the badge without its "among X" line.
+  let featuredBucket: string | null = null
+  if (raw.is_featured) {
+    const { data: award } = await sb
+      .from('featured_awards')
+      .select('bucket')
+      .eq('listing_id', raw.id)
+      .order('week_start', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    featuredBucket = (award as { bucket: string } | null)?.bucket ?? null
+  }
+
   return {
     id: raw.id,
     slug: raw.slug,
@@ -661,6 +676,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     tier: raw.tier as EntityPageData['tier'],
     ownership_label: raw.ownership_label as EntityPageData['ownership_label'],
     is_featured: raw.is_featured,
+    featured_bucket: featuredBucket,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
     cover_image_path: raw.cover_image_path,

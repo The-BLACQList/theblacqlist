@@ -285,6 +285,12 @@ export interface EntityPageData {
   tier: Tier
   ownership_label: OwnershipLabel
   is_featured: boolean
+  /**
+   * The bucket the listing won Featured in, from its latest featured_awards
+   * row ('restaurant', 'professional', ...). Null when it isn't featured, or
+   * when the flag came from seed data rather than a weekly award.
+   */
+  featured_bucket?: string | null
   is_sponsored: boolean
   logo_path: string | null
   cover_image_path: string | null

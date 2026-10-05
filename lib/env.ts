@@ -66,6 +66,7 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 export type FeatureFlag =
   | 'aiBeta'
   | 'collectiveOpen'
+  | 'earnedFeatured'
   | 'jobsOpen'
   | 'marketplaceOpen'
   | 'ocrExtraction'
@@ -86,6 +87,11 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   collectiveOpen: 'FEATURE_COLLECTIVE_OPEN',
   jobsOpen: 'FEATURE_JOBS_OPEN',
   marketplaceOpen: 'FEATURE_MARKETPLACE_OPEN',
+  // Gates the weekly Featured job (app/api/cron/featured). Off, the cron does
+  // nothing and the seeded is_featured flags stay as they are. Turning it on in
+  // production is the GATE-DATA write: the first run clears every flag that
+  // was not earned that week (27 seeded rows at the time of writing).
+  earnedFeatured: 'FEATURE_EARNED_FEATURED',
   ocrExtraction: 'FEATURE_OCR_EXTRACTION',
   // E-2. Covers BOTH halves of the monetization change — charging for job
   // postings and enforcing the events cap — on purpose, even though they are

@@ -149,9 +149,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       .eq('event_name', ANALYTICS_EVENTS.PAGE_VIEW)
       .gte('created_at', sinceIso),
 
-    // Listing-scoped CTA clicks. HERO_CTA_CLICK and ACTION_BAR_CTA_CLICK are
-    // included for forward-compatibility and currently have no emitter — see
-    // the emission table in lib/analytics/constants.ts. MARKETPLACE_CTA_CLICK
+    // Listing-scoped CTA clicks: website, call and directions taps from the
+    // hero, the quick-action bar and At a Glance (lib/analytics/contactTap.ts),
+    // emitted since 2026-10-05. MARKETPLACE_CTA_CLICK
     // is deliberately NOT in this list: the marketplace emits plain
     // `cta_click` (app/api/marketplace/cta-click/route.ts), so asking for
     // `marketplace_cta_click` here matched nothing and the constant's presence
