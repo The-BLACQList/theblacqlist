@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { EMBER_WASH } from '@/lib/design/surfaces'
 
@@ -7,6 +8,8 @@ export interface FeaturedArticle {
   subtitle: string | null
   authorName: string | null
   publishedAt: string | null
+  /** Resolved story cover, or null to fall back to the ember wash. */
+  coverSrc: string | null
 }
 
 interface Props {
@@ -31,17 +34,30 @@ export function BlacqlightFeature({ article }: Props) {
 
   return (
     <section aria-labelledby="blacqlight-heading" className="bg-pale-lavender py-12 md:py-16">
-      <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-8 items-center">
+      <div className="group max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-[2fr_3fr] gap-8 items-center">
         <div className="relative rounded-xl bg-deep-bg aspect-[4/3] md:aspect-[4/5] overflow-hidden">
-          {/* TODO: article cover imagery once BLACQLight covers render platform-wide */}
-          <span
-            className="absolute inset-0"
-            aria-hidden="true"
-            style={{ background: EMBER_WASH }}
-          />
-          <span className="absolute left-5 bottom-5 font-headline text-[42px] text-gold leading-none select-none" aria-hidden="true">
-            &ldquo;
-          </span>
+          {article.coverSrc ? (
+            // Same treatment as the lead card on /blacqlight: grayscale at rest,
+            // colour on hover. alt="" because the headline sits right beside it.
+            <Image
+              src={article.coverSrc}
+              alt=""
+              fill
+              sizes="(min-width: 768px) 40vw, 100vw"
+              className="object-cover grayscale transition duration-300 group-hover:grayscale-0 motion-reduce:transition-none"
+            />
+          ) : (
+            <>
+              <span
+                className="absolute inset-0"
+                aria-hidden="true"
+                style={{ background: EMBER_WASH }}
+              />
+              <span className="absolute left-5 bottom-5 font-headline text-[42px] text-gold leading-none select-none" aria-hidden="true">
+                &ldquo;
+              </span>
+            </>
+          )}
         </div>
 
         <div>

@@ -11,6 +11,7 @@ export interface RailArticle {
   authorName: string
   publishedAt: string | null
   tags: string[] | null
+  coverSrc: string | null
 }
 
 export interface RailGuide {
@@ -96,6 +97,7 @@ export function EditorialRail({ articles, guides }: Props) {
                   authorName={a.authorName}
                   publishedAt={a.publishedAt}
                   tags={a.tags}
+                  coverSrc={a.coverSrc}
                 />
               )),
               ...guides.map((g) => (
