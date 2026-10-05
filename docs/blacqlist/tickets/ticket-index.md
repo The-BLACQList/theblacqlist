@@ -129,3 +129,4 @@
 | [120](120-twisted-soul-website.md) | Fix the Twisted Soul Cookhouse website | V1 | P1 | — | Ready | Seed files + declared correction; prod write is GATE-DATA; skips claimed listings |
 | [121](121-home-story-cover.md) | Story cover on the homepage | V1.5 | P2 | 116, 117 | Ready | Feature block + rail cards; ember wash stays as the fallback |
 | [122](122-opening-soon-covers.md) | Opening-soon covers: Marketplace, Jobs, The Collective | V1.5 | P1 | — | Ready | Flags off in prod by default; proxy rewrites to /soon, APIs 403, receipt actions refuse; nav keeps links with a Soon pill |
+| [125](125-category-sorting-guide.md) | "Help me choose" category guide on /add-business | V1.5 | P1 | — | Ready | Two questions or a search suggest type, category and location type; rules in lib/categories/sorting-guide.ts, slugs checked against the seed; multi-category is 5b |
