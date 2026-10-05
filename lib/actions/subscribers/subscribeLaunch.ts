@@ -28,6 +28,10 @@ const ALLOWED_SOURCES = new Set([
   // sale (decision D-M, 2026-09-01), so the page captures vendor interest
   // instead of routing to a checkout that would 422.
   'for-vendors',
+  // Opening-soon covers (ticket 122). Kept in step with SOON_FEATURES.source.
+  'soon-marketplace',
+  'soon-jobs',
+  'soon-collective',
 ])
 
 // Durable throttle. This action is unauthenticated and writes with the

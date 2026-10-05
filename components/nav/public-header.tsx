@@ -6,6 +6,8 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
+import { isCovered } from '@/lib/features/covered'
+import { SoonPill } from '@/components/ui/soon-pill'
 
 const desktopNavLinks = [
   { label: 'Discover', href: '/discover' },
@@ -26,6 +28,7 @@ export async function PublicHeader() {
   // is already dynamic because of getUser(), so this adds a query, not a
   // rendering-strategy change. Admins had no way into /admin except typing it.
   const isAdmin = user ? (await getAdminRole(user.id)) !== null : false
+  const collectiveSoon = isCovered('collective')
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-deep-bg h-14 md:h-16">
@@ -52,9 +55,10 @@ export async function PublicHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
+                  className="inline-flex items-center gap-1.5 font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm"
                 >
                   {link.label}
+                  {link.href === '/flow-map' && collectiveSoon && <SoonPill />}
                 </Link>
               </li>
             ))}
@@ -123,7 +127,7 @@ export async function PublicHeader() {
             >
               <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
-            <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} />
+            <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} collectiveSoon={collectiveSoon} />
           </div>
         </nav>
       </Container>

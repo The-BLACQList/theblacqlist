@@ -1,9 +1,18 @@
 import Link from 'next/link'
 
+import { LaunchWaitlist } from '@/components/marketing/LaunchWaitlist'
+import { SOON_FEATURES } from '@/lib/features/opening-soon'
+
 interface Props {
   totalAmountCents: number
   totalTransactions: number
   uniqueBusinesses: number
+  /**
+   * The Collective isn't open yet (ticket 122). The band keeps its place on the
+   * homepage but trades the receipt and map buttons, and the live totals, for a
+   * waitlist.
+   */
+  covered: boolean
 }
 
 function formatDollars(cents: number): string {
@@ -18,8 +27,15 @@ function formatDollars(cents: number): string {
  * tracking a receipt (joining) and links out to The Collective map. With no
  * tracked spend yet, it invites the first receipt instead of showing zeros.
  */
-export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusinesses }: Props) {
+export function ImpactBand({
+  totalAmountCents,
+  totalTransactions,
+  uniqueBusinesses,
+  covered,
+}: Props) {
   const hasData = totalAmountCents > 0
+
+  if (covered) return <CoveredBand />
 
   return (
     <section
@@ -101,6 +117,48 @@ export function ImpactBand({ totalAmountCents, totalTransactions, uniqueBusiness
             </div>
           )}
         </dl>
+      </div>
+    </section>
+  )
+}
+
+const COLLECTIVE = SOON_FEATURES.collective
+
+function CoveredBand() {
+  return (
+    <section
+      aria-labelledby="impact-heading"
+      className="relative bg-deep-bg py-14 md:py-16 overflow-hidden"
+    >
+      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div>
+          <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-gold mb-1.5">
+            The Collective &middot; Opening soon
+          </p>
+          <h2
+            id="impact-heading"
+            className="font-headline text-[26px] md:text-[32px] text-white max-w-[20ch] text-balance"
+          >
+            See where our money goes.
+          </h2>
+          <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
+            Soon you&apos;ll be able to track what you spend with businesses on the list and watch
+            it add up with everyone else&apos;s. We&apos;re still building it.
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-off-white p-5 md:p-6">
+          <p className="font-subhead text-sm font-semibold text-brand-black">
+            Want to know the day it opens?
+          </p>
+          <LaunchWaitlist
+            options={[{ value: COLLECTIVE.source, label: COLLECTIVE.name }]}
+            id="home-collective-waitlist"
+            className="mt-3 max-w-none"
+            submitLabel="Tell me when it opens"
+            successMessage="You're on the list. We'll email you the day The Collective opens."
+          />
+        </div>
       </div>
     </section>
   )

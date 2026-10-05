@@ -16,6 +16,7 @@ import { CityChapters, type CityChapter } from '@/components/home/CityChapters'
 import { MicrositeShowcase } from '@/components/home/MicrositeShowcase'
 import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
+import { isCovered } from '@/lib/features/covered'
 import { BlacqlightFeature, type FeaturedArticle } from '@/components/home/BlacqlightFeature'
 import { EditorialRail, type RailArticle, type RailGuide } from '@/components/home/EditorialRail'
 import { OwnerCta } from '@/components/home/OwnerCta'
@@ -212,6 +213,7 @@ export default async function HomePage() {
   }))
 
   const spendRows = spendRes.data ?? []
+  const collectiveSoon = isCovered('collective')
   const totalAmountCents = spendRows.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0)
   const uniqueBusinesses = new Set(spendRows.map((r) => r.listing_id)).size
 
@@ -280,6 +282,7 @@ export default async function HomePage() {
           totalAmountCents={totalAmountCents}
           totalTransactions={spendRows.length}
           uniqueBusinesses={uniqueBusinesses}
+          covered={collectiveSoon}
         />
       </Reveal>
       <Reveal>

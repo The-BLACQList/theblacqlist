@@ -17,7 +17,12 @@ import {
 } from '@/lib/constants/listing'
 import { EGO_MAX_NODES_WIDE, summarizeEgoSpend, type EgoReceipt } from '@/lib/account/egoNetwork'
 import { formatDollars } from '@/lib/spend/personal-spend'
-import { CollectivePanel, type CollectiveBusiness } from '@/components/account/CollectivePanel'
+import {
+  CollectivePanel,
+  CollectiveSoonPanel,
+  type CollectiveBusiness,
+} from '@/components/account/CollectivePanel'
+import { isCovered } from '@/lib/features/covered'
 
 export const metadata: Metadata = { title: 'My Account | The BLACQList' }
 
@@ -240,7 +245,11 @@ export default async function AccountOverviewPage() {
     })
   }
 
-  const stats: Array<{ value: string; label: string; href: string; gold?: boolean; cta?: string }> = [
+  // The Collective isn't open yet (ticket 122): drop its two stats and swap its
+  // panel for the opening-soon note. Receipts already submitted stay put.
+  const collectiveSoon = isCovered('collective')
+
+  const allStats: Array<{ value: string; label: string; href: string; gold?: boolean; cta?: string }> = [
     { value: savedCount === null ? '–' : String(savedCount), label: 'Saved places', href: '/account/saved' },
     {
       value: reviewsCount === null ? '–' : String(reviewsCount),
@@ -260,6 +269,7 @@ export default async function AccountOverviewPage() {
       cta: spend && spend.totalCents === 0 ? 'Track a receipt' : undefined,
     },
   ]
+  const stats = collectiveSoon ? allStats.slice(0, 2) : allStats
 
   return (
     <main className="max-w-[960px] flex flex-col gap-12">
@@ -310,7 +320,9 @@ export default async function AccountOverviewPage() {
           )
         )}
 
-        <dl className="mt-8 grid grid-cols-2 lg:grid-cols-4 border-t border-[#2a2a2d]">
+        <dl
+          className={`mt-8 grid grid-cols-2 border-t border-[#2a2a2d] ${stats.length === 4 ? 'lg:grid-cols-4' : ''}`}
+        >
           {stats.map((stat, i) => (
             // Value above label on screen; dt stays first in the markup.
             <div
@@ -343,7 +355,9 @@ export default async function AccountOverviewPage() {
       </section>
 
       {/* 4. Your place in The Collective */}
-      {spend === null || listingsError ? (
+      {collectiveSoon ? (
+        <CollectiveSoonPanel />
+      ) : spend === null || listingsError ? (
         <section aria-label="Your place in The Collective">
           <p className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber mb-2">
             Your place in The Collective
@@ -472,15 +486,21 @@ export default async function AccountOverviewPage() {
               href="/account/receipts"
               label="My receipts"
               meta={
-                spend && spend.pendingReceiptCount > 0
+                collectiveSoon
+                  ? 'Opening soon'
+                  : spend && spend.pendingReceiptCount > 0
                   ? `${spend.pendingReceiptCount} pending`
-                  : receiptsCount
-                    ? String(receiptsCount)
-                    : null
+                    : receiptsCount
+                      ? String(receiptsCount)
+                      : null
               }
-              metaStrong={Boolean(spend && spend.pendingReceiptCount > 0)}
+              metaStrong={!collectiveSoon && Boolean(spend && spend.pendingReceiptCount > 0)}
             />
-            <RowLink href="/account/community-spend" label="The Collective" />
+            <RowLink
+              href="/account/community-spend"
+              label="The Collective"
+              meta={collectiveSoon ? 'Opening soon' : null}
+            />
           </ul>
         </section>
       </div>

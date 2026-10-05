@@ -24,6 +24,14 @@ if (!process.env.PLAYWRIGHT_USE_REAL_TURNSTILE) {
   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = '1x00000000000000000000AA'
 }
 
+// The opening-soon covers are closed by default on every deployment (lib/env.ts),
+// so the server Playwright starts opens them and the rest of the suite sees the
+// real pages. `??=` keeps an explicit value, which is how e2e/opening-soon.spec.ts
+// gets the covered state. Same caveat as above: a reused dev server keeps its own.
+for (const name of ['FEATURE_COLLECTIVE_OPEN', 'FEATURE_JOBS_OPEN', 'FEATURE_MARKETPLACE_OPEN']) {
+  process.env[name] ??= 'true'
+}
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export default defineConfig({

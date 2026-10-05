@@ -5,6 +5,9 @@ import { cn } from '@/lib/utils'
 import { isFeatureEnabled } from '@/lib/env'
 import { Container } from '@/components/layout/container'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { SoonPill } from '@/components/ui/soon-pill'
+import { isCovered } from '@/lib/features/covered'
+import type { SoonFeature } from '@/lib/features/opening-soon'
 
 // ─── Inline SVG icons for social platforms not in this lucide-react version ──
 
@@ -68,6 +71,8 @@ interface FooterLink {
   label: string
   href: string
   active: boolean
+  /** Built but not open yet (ticket 122). The link stays and gets a "Soon" pill while covered. */
+  soon?: SoonFeature
 }
 
 interface FooterColumn {
@@ -84,9 +89,9 @@ const columns: FooterColumn[] = [
       { label: 'Search', href: '/search', active: true },
       { label: 'Collections', href: '/collections', active: true },
       { label: 'Events', href: '/events', active: true },
-      { label: 'Jobs', href: '/jobs', active: true },
-      { label: 'Marketplace', href: '/marketplace', active: true },
-      { label: 'The Collective', href: '/flow-map', active: true },
+      { label: 'Jobs', href: '/jobs', active: true, soon: 'jobs' },
+      { label: 'Marketplace', href: '/marketplace', active: true, soon: 'marketplace' },
+      { label: 'The Collective', href: '/flow-map', active: true, soon: 'collective' },
       { label: 'BLACQLight', href: '/blacqlight', active: true },
     ],
   },
@@ -135,7 +140,7 @@ function resolveColumns(canPost: boolean): FooterColumn[] {
           links: [
             ...col.links,
             { label: 'Post an Event', href: '/add-event', active: true },
-            { label: 'Post a Job', href: '/add-job', active: true },
+            { label: 'Post a Job', href: '/add-job', active: true, soon: 'jobs' },
           ],
         }
       : col
@@ -223,9 +228,10 @@ export function PublicFooter() {
                     <li key={link.label}>
                       <Link
                         href={link.href}
-                        className="text-gray-400 hover:text-white text-sm font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                        className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white text-sm font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                       >
                         {link.label}
+                        {link.soon && isCovered(link.soon) && <SoonPill />}
                       </Link>
                     </li>
                   ) : (

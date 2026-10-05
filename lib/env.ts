@@ -65,6 +65,9 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 // handler, a server action, or a request-scoped Server Component).
 export type FeatureFlag =
   | 'aiBeta'
+  | 'collectiveOpen'
+  | 'jobsOpen'
+  | 'marketplaceOpen'
   | 'ocrExtraction'
   | 'paidPostings'
   | 'postingSubmissions'
@@ -74,6 +77,15 @@ export type FeatureFlag =
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   aiBeta: 'FEATURE_AI_BETA',
+  // Opening-soon covers (ticket 122). While one is off, proxy.ts shows
+  // /soon/<feature> in place of the feature's pages and its public data APIs
+  // answer 403. The full list of covered paths is lib/features/opening-soon.ts.
+  // Off EVERYWHERE by default, Previews included (see CLOSED_BY_DEFAULT below),
+  // so the cover is what every deployment shows; set =true and redeploy to open
+  // one.
+  collectiveOpen: 'FEATURE_COLLECTIVE_OPEN',
+  jobsOpen: 'FEATURE_JOBS_OPEN',
+  marketplaceOpen: 'FEATURE_MARKETPLACE_OPEN',
   ocrExtraction: 'FEATURE_OCR_EXTRACTION',
   // E-2. Covers BOTH halves of the monetization change — charging for job
   // postings and enforcing the events cap — on purpose, even though they are
@@ -104,6 +116,16 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // real Stripe subscriptions and must be cancelled deliberately, not by flag.
   testerTour: 'FEATURE_TESTER_TOUR',
 }
+
+// Flags that default to off on EVERY deployment, not just production. The
+// opening-soon covers are the thing under review here: if they defaulted open on
+// Previews, the cover would be invisible exactly where the founder checks it
+// (2026-10-05). Each still opens with an explicit `=true`.
+const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
+  'collectiveOpen',
+  'jobsOpen',
+  'marketplaceOpen',
+])
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a
 // value we don't recognize — and the caller falls back to the per-environment
@@ -137,6 +159,7 @@ function parseFlagValue(raw: string | undefined): boolean | undefined {
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
   const explicit = parseFlagValue(process.env[FEATURE_FLAG_ENV_VARS[flag]])
   if (explicit !== undefined) return explicit
+  if (CLOSED_BY_DEFAULT.has(flag)) return false
   return !IS_PRODUCTION
 }
 

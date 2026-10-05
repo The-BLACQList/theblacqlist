@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { isCovered } from '@/lib/features/covered'
+import { matchSoonFeature } from '@/lib/features/opening-soon'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
 
@@ -104,5 +106,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticRoutes, ...cityRoutes, ...listingRoutes, ...collectionRoutes]
+  // Covered features (ticket 122) render a noindex cover, so don't point
+  // crawlers at them. They come back on their own once the flag is on.
+  return [...staticRoutes, ...cityRoutes, ...listingRoutes, ...collectionRoutes].filter(
+    (entry) => {
+      const match = matchSoonFeature(new URL(entry.url).pathname)
+      return !match || !isCovered(match.feature)
+    }
+  )
 }
