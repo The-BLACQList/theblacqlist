@@ -431,8 +431,8 @@ INSERT INTO listing_details_business (
   ('00a00001-0000-0000-0000-000000000002',
    'Chef Deborah VanTrece''s award-winning restaurant where Southern soul food meets global culinary traditions. Expect creative plates, inventive cocktails, and a dining experience that honors Atlanta''s rich cultural identity.',
    '1133 Huff Rd NW','Atlanta','GA','30318',
-   NULL,'https://twistedsoulcookhouseandpours.com',NULL,
-   'book','https://twistedsoulcookhouseandpours.com','$$$',2019),
+   NULL,'https://www.twistedsoulatl.com/',NULL,
+   'book','https://www.twistedsoulatl.com/','$$$',2019),
 
   ('00a00001-0000-0000-0000-000000000003',
    'A downtown Atlanta institution famous for massive, flavor-packed breakfast plates served all day. With bold décor and an energetic vibe, Atlanta Breakfast Club has become a must-visit spot for locals and visitors alike.',

@@ -80,6 +80,24 @@ const CORRECTIONS: Correction[] = [
       'on branch feat/city-corpus-la-dc-nola. The seeder cannot propagate that fix (ignoreDuplicates), ' +
       'so the database still holds the typo. [Measured — scripts/data/listings-atlanta.json, 2026-08-14]',
   },
+  {
+    slug: 'twisted-soul-cookhouse',
+    table: 'listing_details_business',
+    column: 'website_url',
+    expected: 'https://www.twistedsoulatl.com/',
+    reason:
+      'Seeded as https://twistedsoulcookhouseandpours.com, which is not the restaurant\'s site. ' +
+      'Founder confirmed the correct address on 2026-10-05 (ticket 120). Corpus and SQL seed corrected ' +
+      'on branch fix/twisted-soul-website.',
+  },
+  {
+    slug: 'twisted-soul-cookhouse',
+    table: 'listing_details_business',
+    column: 'cta_url',
+    expected: 'https://www.twistedsoulatl.com/',
+    reason:
+      'The "Book" button pointed at the same wrong domain as website_url. Same source as above (ticket 120).',
+  },
 ]
 
 /**
@@ -111,7 +129,7 @@ assertTargetConfirmed(SUPABASE_URL)
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-type Outcome = 'corrected' | 'already-correct' | 'would-correct' | 'missing' | 'error'
+type Outcome = 'corrected' | 'already-correct' | 'would-correct' | 'missing' | 'claimed' | 'error'
 
 async function applyCorrection(c: Correction): Promise<Outcome> {
   // Resolve the slug to a listing id first. `listing_details_business` is keyed
@@ -120,7 +138,7 @@ async function applyCorrection(c: Correction): Promise<Outcome> {
   // here rather than silently matching nothing.
   const { data: listing, error: listingErr } = await supabase
     .from('listings')
-    .select('id, slug')
+    .select('id, slug, trust_tier')
     .eq('slug', c.slug)
     .maybeSingle()
 
@@ -131,6 +149,13 @@ async function applyCorrection(c: Correction): Promise<Outcome> {
   if (!listing) {
     console.warn(`  ? ${c.slug} — no listing with this slug in the target project`)
     return 'missing'
+  }
+
+  // A claimed listing belongs to its owner, and what they entered wins over
+  // our seed. Never overwrite it from here; raise it with the founder instead.
+  if (listing.trust_tier !== 'unclaimed') {
+    console.warn(`  ! ${c.slug} — listing is ${listing.trust_tier}, owner data wins, skipping`)
+    return 'claimed'
   }
 
   const listingId = listing.id as string
@@ -193,6 +218,7 @@ async function main(): Promise<void> {
     'already-correct': 0,
     'would-correct': 0,
     missing: 0,
+    claimed: 0,
     error: 0,
   }
 
@@ -206,7 +232,8 @@ async function main(): Promise<void> {
   console.log('─'.repeat(60))
   console.log(
     `Corrected: ${tally.corrected}  ·  Already correct: ${tally['already-correct']}  ·  ` +
-      `Would correct: ${tally['would-correct']}  ·  Missing: ${tally.missing}  ·  Errors: ${tally.error}`
+      `Would correct: ${tally['would-correct']}  ·  Missing: ${tally.missing}  ·  ` +
+      `Skipped (claimed): ${tally.claimed}  ·  Errors: ${tally.error}`
   )
 
   if (!APPLY && tally['would-correct'] > 0) {
