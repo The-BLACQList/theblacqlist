@@ -147,6 +147,8 @@ describe('footer navigation', () => {
     // sr-only " (coming soon)" suffix. Both pages work now, so announcing
     // that to a screen-reader user is simply false.
     expect(footerSrc).toContain("{ label: 'Events', href: '/events', active: true }")
-    expect(footerSrc).toContain("{ label: 'Jobs', href: '/jobs', active: true }")
+    // Jobs also carries `soon: 'jobs'` while it is covered (ticket 122). That
+    // adds a visible "Soon" pill; the link itself stays active.
+    expect(footerSrc).toContain("{ label: 'Jobs', href: '/jobs', active: true")
   })
 })

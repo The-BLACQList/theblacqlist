@@ -156,6 +156,35 @@ export function CollectivePanel({ summary, businesses }: Props) {
   )
 }
 
+/**
+ * Stands in for the panel while The Collective is covered (ticket 122). Points
+ * at the cover page, which carries the waitlist.
+ */
+export function CollectiveSoonPanel() {
+  return (
+    <section aria-labelledby="collective-heading" className="flex flex-col gap-3.5">
+      <p className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber">
+        The Collective &middot; Opening soon
+      </p>
+      <h2
+        id="collective-heading"
+        className="font-headline font-medium text-[26px] md:text-[32px] leading-[1.15] text-ink text-balance"
+      >
+        The Collective isn&apos;t open yet.
+      </h2>
+      <p className="font-body text-base leading-relaxed text-charcoal max-w-[52ch]">
+        Soon you&apos;ll be able to track what you spend with businesses on the list and see it add
+        up with everyone else&apos;s. We&apos;re still building it.
+      </p>
+      <div className="pt-1.5">
+        <Link href="/flow-map" className={`${buttonBase} border border-ink text-ink hover:bg-ink/5`}>
+          Tell me when it opens
+        </Link>
+      </div>
+    </section>
+  )
+}
+
 /** "+{k} more" beyond the ring, with the narrow and wide caps. */
 function MoreLinks({ total }: { total: number }) {
   const narrowExtra = total - EGO_MAX_NODES_NARROW

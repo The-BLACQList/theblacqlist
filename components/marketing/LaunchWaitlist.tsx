@@ -7,6 +7,7 @@ import { Check, Loader2 } from 'lucide-react'
 import { subscribeLaunchAction, type SubscribeState } from '@/lib/actions/subscribers/subscribeLaunch'
 import { HoneypotField } from '@/components/security/HoneypotField'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
+import { cn } from '@/lib/utils'
 
 // One shared waitlist below the plan grid rather than a form inside each
 // disabled card: four cards in a lg:grid-cols-4 row cannot each carry an email
@@ -36,6 +37,8 @@ interface Props {
   legend?: string
   submitLabel?: string
   successMessage?: string
+  /** Replaces the default top margin and width, for embedding in a card. */
+  className?: string
 }
 
 function SubmitButton({ label }: { label: string }) {
@@ -58,6 +61,7 @@ export function LaunchWaitlist({
   legend = 'What are you waiting on?',
   submitLabel = 'Join the waitlist',
   successMessage = "You're on the list. We'll email you the day it opens.",
+  className,
 }: Props) {
   const [state, action] = useActionState<SubscribeState, FormData>(subscribeLaunchAction, null)
   const [source, setSource] = useState(options[0]?.value ?? '')
@@ -76,7 +80,7 @@ export function LaunchWaitlist({
   const errorId = `${id}-error`
 
   return (
-    <div id={id} className="mt-8 max-w-2xl scroll-mt-24">
+    <div id={id} className={cn('mt-8 max-w-2xl scroll-mt-24', className)}>
       {isSuccess ? (
         <div
           role="status"

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
+import { SoonPill } from '@/components/ui/soon-pill'
 
 const navLinks = [
   { label: 'Discover', href: '/discover' },
@@ -29,9 +30,11 @@ interface Props {
   isSignedIn: boolean
   /** Resolved server-side in PublicHeader. Gates the link only — /admin still guards itself. */
   isAdmin: boolean
+  /** The Collective isn't open yet (ticket 122). Its link stays, with a "Soon" pill. */
+  collectiveSoon: boolean
 }
 
-export function MobileNav({ isSignedIn, isAdmin }: Props) {
+export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -100,6 +103,7 @@ export function MobileNav({ isSignedIn, isAdmin }: Props) {
                     )}
                   >
                     {link.label}
+                    {link.href === '/flow-map' && collectiveSoon && <SoonPill className="ml-2" />}
                   </Link>
                 </li>
               ))}

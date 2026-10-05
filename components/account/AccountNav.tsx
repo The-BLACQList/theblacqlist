@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
+import { SoonPill } from '@/components/ui/soon-pill'
 
 const NAV_PREF_KEY = 'blacq-account-nav'
 
@@ -33,6 +34,8 @@ interface Props {
   isOwner: boolean
   /** Resolved server-side in the account layout. Gates the group only — /admin still guards itself. */
   isAdmin: boolean
+  /** The Collective isn't open yet (ticket 122). Its links stay, with a "Soon" pill. */
+  collectiveSoon: boolean
 }
 
 interface NavItem {
@@ -40,6 +43,7 @@ interface NavItem {
   label: string
   count?: number
   badge?: number
+  soon?: boolean
 }
 
 interface NavGroup {
@@ -52,7 +56,14 @@ interface NavGroup {
  * (identity block, live counts, no back-links anywhere), horizontal
  * scroll-nav on mobile.
  */
-export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin }: Props) {
+export function AccountNav({
+  displayName,
+  memberSince,
+  counts,
+  isOwner,
+  isAdmin,
+  collectiveSoon,
+}: Props) {
   const pathname = usePathname()
 
   // The sidebar is the user's choice: collapsed state persists across visits.
@@ -82,12 +93,12 @@ export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin 
       items: [
         { href: '/account/claims', label: 'Claims', count: counts.claims, badge: counts.claimsPending },
         { href: '/account/reviews', label: 'Reviews', count: counts.reviews },
-        { href: '/account/receipts', label: 'Receipts', count: counts.receipts },
+        { href: '/account/receipts', label: 'Receipts', count: counts.receipts, soon: collectiveSoon },
         // Receipts (what you submit) -> My spending (your own rollup) ->
         // The Collective (everyone's, aggregate only). The order is the
         // widening scope. Renamed from "Community spend" (spec Q5, 2026-10-03).
-        { href: '/account/spending', label: 'My spending' },
-        { href: '/account/community-spend', label: 'The Collective' },
+        { href: '/account/spending', label: 'My spending', soon: collectiveSoon },
+        { href: '/account/community-spend', label: 'The Collective', soon: collectiveSoon },
       ],
     },
     ...(isOwner
@@ -184,7 +195,9 @@ export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin 
                         className={linkClasses(isActive(item.href))}
                       >
                         <span>{item.label}</span>
-                        {item.badge ? (
+                        {item.soon ? (
+                          <SoonPill tone="light" />
+                        ) : item.badge ? (
                           <span className="rounded-full bg-light-gold/30 border border-amber/40 text-amber text-[10.5px] font-bold px-1.5 py-px">
                             {item.badge}
                           </span>
@@ -232,7 +245,9 @@ export function AccountNav({ displayName, memberSince, counts, isOwner, isAdmin 
                 )}
               >
                 {item.label}
-                {item.badge ? (
+                {item.soon ? (
+                  <SoonPill tone="light" />
+                ) : item.badge ? (
                   <span className="rounded-full bg-light-gold/30 border border-amber/40 text-amber text-[10px] font-bold px-1.5 py-px">
                     {item.badge}
                   </span>

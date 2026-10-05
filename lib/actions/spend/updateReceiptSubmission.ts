@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
   parseReceiptFields,
@@ -35,6 +36,10 @@ export async function updateReceiptSubmissionAction(
   _prev: ReceiptCorrectionState,
   formData: FormData
 ): Promise<ReceiptCorrectionState> {
+  // The Collective is covered until it opens (ticket 122). proxy.ts covers the
+  // pages; this stops a direct call to the action.
+  if (!isFeatureEnabled('collectiveOpen')) return { error: "The Collective isn't open yet." }
+
   const supabase = await createClient()
   const {
     data: { user },

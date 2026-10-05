@@ -65,6 +65,9 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 // handler, a server action, or a request-scoped Server Component).
 export type FeatureFlag =
   | 'aiBeta'
+  | 'collectiveOpen'
+  | 'jobsOpen'
+  | 'marketplaceOpen'
   | 'ocrExtraction'
   | 'paidPostings'
   | 'postingSubmissions'
@@ -74,6 +77,14 @@ export type FeatureFlag =
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   aiBeta: 'FEATURE_AI_BETA',
+  // Opening-soon covers (ticket 122). While one is off, proxy.ts shows
+  // /soon/<feature> in place of the feature's pages and its public data APIs
+  // answer 403. The full list of covered paths is lib/features/opening-soon.ts.
+  // Off in production by default, so merging covers them; set =true and
+  // redeploy to open one.
+  collectiveOpen: 'FEATURE_COLLECTIVE_OPEN',
+  jobsOpen: 'FEATURE_JOBS_OPEN',
+  marketplaceOpen: 'FEATURE_MARKETPLACE_OPEN',
   ocrExtraction: 'FEATURE_OCR_EXTRACTION',
   // E-2. Covers BOTH halves of the monetization change — charging for job
   // postings and enforcing the events cap — on purpose, even though they are

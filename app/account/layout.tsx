@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
 import { AccountNav, type AccountNavCounts } from '@/components/account/AccountNav'
+import { isCovered } from '@/lib/features/covered'
 
 /**
  * AC-AB account shell: persistent grouped sidebar (desktop) / horizontal
@@ -68,6 +69,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
           counts={counts}
           isOwner={(owned.count ?? 0) > 0}
           isAdmin={adminRole !== null}
+          collectiveSoon={isCovered('collective')}
         />
         <div className="min-w-0 flex-1 py-6 lg:py-0">{children}</div>
       </div>

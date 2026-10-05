@@ -41,6 +41,9 @@ beforeEach(() => {
   delete process.env.FEATURE_PAID_POSTINGS
   delete process.env.FEATURE_POSTING_SUBMISSIONS
   delete process.env.FEATURE_TESTER_TOUR
+  delete process.env.FEATURE_COLLECTIVE_OPEN
+  delete process.env.FEATURE_JOBS_OPEN
+  delete process.env.FEATURE_MARKETPLACE_OPEN
 })
 
 afterEach(() => {
@@ -178,6 +181,9 @@ describe('getEnabledFeatures', () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',
+      'collectiveOpen',
+      'jobsOpen',
+      'marketplaceOpen',
       'ocrExtraction',
       'paidPostings',
       'postingSubmissions',

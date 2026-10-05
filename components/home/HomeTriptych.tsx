@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { PhotoPanelCaption } from '@/components/media/PhotoPanelCaption'
 import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
+import { SoonPill } from '@/components/ui/soon-pill'
+import { isCovered } from '@/lib/features/covered'
 
 // Each panel is grounded in a licensed editorial photograph [Decision —
 // 2026-08-09], which overrides row 1 of the placement table in
@@ -12,7 +14,16 @@ import { PhotoPanelGround } from '@/components/media/PhotoPanelGround'
 //   Connect  → two people collaborating
 // None of these three appear in CATEGORY_PHOTOS: the bento renders in the same
 // scroll, and a repeated frame reads as a bug.
-const PANELS = [
+interface Panel {
+  index: string
+  title: string
+  body: string
+  href: string
+  photo: string
+  soon?: 'collective'
+}
+
+const PANELS: readonly Panel[] = [
   {
     index: '01',
     title: 'Discover',
@@ -26,6 +37,8 @@ const PANELS = [
     body: 'Track the dollars you keep in community.',
     href: '/flow-map',
     photo: '/images/editorial/peach-and-rye-kitchen.webp',
+    // Support is The Collective, which is covered until it opens (ticket 122).
+    soon: 'collective',
   },
   {
     index: '03',
@@ -34,10 +47,12 @@ const PANELS = [
     href: '/blacqlight',
     photo: '/images/editorial/diaspora-creative-agency.webp',
   },
-] as const
+]
 
 /** Discover / Support / Connect triptych — three tall editorial panels. */
 export function HomeTriptych() {
+  const collectiveSoon = isCovered('collective')
+
   return (
     <section aria-label="What The BLACQList does" className="bg-brand-black">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-px">
@@ -84,8 +99,9 @@ export function HomeTriptych() {
               className="block grow min-h-0 aspect-[2/1] md:aspect-[3/1] lg:aspect-[4/3] xl:aspect-[16/9]"
             />
             <PhotoPanelCaption className="p-5 md:p-8">
-              <span className="font-subhead text-xs font-bold tracking-[0.16em] text-light-gold">
+              <span className="flex items-center gap-2 font-subhead text-xs font-bold tracking-[0.16em] text-light-gold">
                 {panel.index}
+                {panel.soon && collectiveSoon && <SoonPill />}
               </span>
               <span className="font-headline text-[24px] md:text-[30px] leading-tight text-white mt-1 group-hover:text-light-gold transition-colors duration-150">
                 {panel.title}

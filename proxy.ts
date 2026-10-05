@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import { isFeatureEnabled } from '@/lib/env'
+import { SOON_FEATURES, isSoonFeature, matchSoonFeature } from '@/lib/features/opening-soon'
 import { canonicalOpenNowQuery } from '@/lib/listings/discover-params'
 
 // Route prefixes that require a valid session.
@@ -123,6 +125,41 @@ export async function proxy(request: NextRequest) {
       url.pathname = '/coming-soon'
       url.search = ''
       return NextResponse.redirect(url)
+    }
+  }
+
+  // ─── Opening-soon covers (ticket 122) ───────────────────────────────────────
+  // Marketplace, Jobs and The Collective are built but not open. While a flag is
+  // off, the feature's pages render the /soon/<feature> cover in place (a
+  // rewrite, so the address bar keeps the link people followed) and its public
+  // data APIs answer 403. This runs before the auth check on purpose: someone
+  // signed out who follows a link to /account/receipts should see what is coming,
+  // not a sign-in wall for something they can't use yet.
+  //
+  // It lives here rather than in the pages because several of them are static or
+  // ISR, and a flag read during prerendering is frozen at build (lib/env.ts).
+  const covered = matchSoonFeature(pathname)
+  if (covered && !isFeatureEnabled(SOON_FEATURES[covered.feature].flag)) {
+    if (covered.kind === 'api') {
+      return NextResponse.json(
+        { error: `${SOON_FEATURES[covered.feature].name} isn't open yet.`, code: 'FEATURE_NOT_OPEN' },
+        { status: 403 }
+      )
+    }
+    const url = request.nextUrl.clone()
+    url.pathname = `/soon/${covered.feature}`
+    url.search = ''
+    const rewrite = NextResponse.rewrite(url, { request })
+    // Keep any refreshed session cookie getUser() just set.
+    supabaseResponse.cookies.getAll().forEach((cookie) => rewrite.cookies.set(cookie))
+    return rewrite
+  }
+
+  // Once a feature opens, its cover page sends people to the real thing.
+  if (pathname.startsWith('/soon/')) {
+    const feature = pathname.split('/')[2] ?? ''
+    if (isSoonFeature(feature) && isFeatureEnabled(SOON_FEATURES[feature].flag)) {
+      return NextResponse.redirect(new URL(SOON_FEATURES[feature].home, request.url))
     }
   }
 
