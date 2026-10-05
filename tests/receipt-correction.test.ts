@@ -155,6 +155,9 @@ let errorSpy: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // The Collective is covered by default (lib/env.ts), so open it for the
+  // action's own behavior. The closed case has its own test below.
+  vi.stubEnv('FEATURE_COLLECTIVE_OPEN', 'true')
   h.state.user = { id: USER_ID }
   h.state.existing = { id: RECEIPT_ID, status: 'pending_review', file_path: EXISTING_PATH }
   h.state.uploadError = null
@@ -171,6 +174,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.unstubAllEnvs()
   errorSpy.mockRestore()
 })
 
@@ -373,5 +377,14 @@ describe('update failures', () => {
     await updateReceiptSubmissionAction(null, form({ notes: 'private note' }))
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain('private note')
     expect(JSON.stringify(errorSpy.mock.calls)).not.toContain("Sylvia's Kitchen")
+  })
+})
+
+describe('while The Collective is covered', () => {
+  it('refuses before touching auth or storage', async () => {
+    vi.stubEnv('FEATURE_COLLECTIVE_OPEN', 'false')
+    const res = await updateReceiptSubmissionAction(null, form())
+    expect(res).toMatchObject({ error: "The Collective isn't open yet." })
+    expect(h.calls.uploadPath).toBeNull()
   })
 })

@@ -171,19 +171,35 @@ describe('isFeatureEnabled — flags are independent', () => {
   })
 })
 
+describe('opening-soon covers', () => {
+  const COVERS = ['collectiveOpen', 'jobsOpen', 'marketplaceOpen'] as const
+
+  it.each(['production', 'preview', 'development'])('stay closed in a bare %s deployment', async (env) => {
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: env })
+    for (const flag of COVERS) expect(isFeatureEnabled(flag), flag).toBe(false)
+  })
+
+  it('open only when set to true', async () => {
+    const { isFeatureEnabled } = await loadEnv({
+      VERCEL_ENV: 'preview',
+      FEATURE_JOBS_OPEN: 'true',
+    })
+    expect(isFeatureEnabled('jobsOpen')).toBe(true)
+    expect(isFeatureEnabled('collectiveOpen')).toBe(false)
+    expect(isFeatureEnabled('marketplaceOpen')).toBe(false)
+  })
+})
+
 describe('getEnabledFeatures', () => {
   it('lists nothing in a bare production deployment', async () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'production' })
     expect(getEnabledFeatures()).toEqual([])
   })
 
-  it('lists every flag in a bare preview deployment', async () => {
+  it('lists every flag but the opening-soon covers in a bare preview deployment', async () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',
-      'collectiveOpen',
-      'jobsOpen',
-      'marketplaceOpen',
       'ocrExtraction',
       'paidPostings',
       'postingSubmissions',

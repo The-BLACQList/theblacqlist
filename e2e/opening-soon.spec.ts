@@ -4,12 +4,12 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 // behind FEATURE_*_OPEN flags. Off, proxy.ts shows the cover at the feature's
 // own address and its data APIs answer 403. On, the real pages come back.
 //
-// Flags default ON under `pnpm dev`, which is what Playwright boots, so the
-// rest of the suite keeps seeing the real pages. To exercise the covers, start
-// the server yourself with the flags off and let Playwright reuse it:
+// The flags default OFF everywhere, but playwright.config.ts opens them for the
+// server it boots so the rest of the suite keeps seeing the real pages. To
+// exercise the covers, keep them closed explicitly:
 //
 //   FEATURE_COLLECTIVE_OPEN=false FEATURE_JOBS_OPEN=false \
-//   FEATURE_MARKETPLACE_OPEN=false pnpm dev
+//   FEATURE_MARKETPLACE_OPEN=false pnpm exec playwright test e2e/opening-soon.spec.ts
 //
 // Each test probes the server first and runs the branch that matches, so the
 // spec passes in either state and never asserts the wrong one.
