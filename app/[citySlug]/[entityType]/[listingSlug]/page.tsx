@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { listingMetaText } from '@/lib/listings/seo'
 import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
 import { resolveCoverImage, resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
@@ -31,13 +32,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
   const canonicalUrl = `${BASE_URL}${buildEntityUrl(entityType, citySlug, listingSlug)}`
 
-  const locationLabel = entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : 'Online'
-
-  // Taglines are owner-written and land here both with and without terminal
-  // punctuation, so trim it before adding our own period. Without this, a
-  // tagline like "...since 1947." renders "since 1947.. Food & Dining".
-  const tagline = entity.tagline.replace(/[.!?]+\s*$/, '')
-  const description = `${tagline}. ${entity.category.name} in ${locationLabel}. Discover and support Black-owned businesses on The BLACQList.`
+  const locationLabel = entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null
+  // The owner's own search text wins when set (ticket 126).
+  const { title, description } = listingMetaText({
+    name: entity.name,
+    tagline: entity.tagline,
+    categoryName: entity.category.name,
+    locationLabel,
+    metaTitle: entity.meta_title,
+    metaDescription: entity.meta_description,
+  })
 
   // An owner cover resolves to an absolute Storage URL, already OG-ready. With
   // no cover there is no OG image — the F-1 fallback is a render-time CSS tile,
@@ -46,9 +50,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const ogImage = cover.src ?? undefined
 
   return {
-    title: `${entity.name} in ${locationLabel}`,
+    title,
     description,
     alternates: { canonical: canonicalUrl },
+    ...(entity.noindex && { robots: { index: false, follow: true } }),
     openGraph: {
       title: entity.name,
       description: entity.tagline,

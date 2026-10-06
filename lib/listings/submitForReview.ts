@@ -40,15 +40,22 @@ export async function transitionToPendingReview(
     return { error: 'Failed to submit listing for review. Please try again.' }
   }
 
-  const serviceClient = createServiceClient()
+  // The queue row is what a moderator sees. Until 2026-10-06 the queue_type
+  // CHECK rejected 'new_submission' and this insert's error was ignored, so
+  // every submitted listing sat in `pending` with no reviewer. A failed insert
+  // now puts the listing back to draft and reports it, so a retry (the owner's,
+  // or Stripe's redelivery for a paid job) starts from a clean state.
+  const queued = await queueNewSubmission(listingId)
+  if (!queued) {
+    await supabase
+      .from('listings')
+      .update({ status: 'draft' })
+      .eq('id', listingId)
+      .eq('owner_user_id', userId)
+    return { error: 'Failed to submit listing for review. Please try again.' }
+  }
 
-  await serviceClient.from('moderation_queue').insert({
-    entity_id: listingId,
-    entity_type: 'listing',
-    queue_type: 'new_submission',
-    status: 'pending',
-    priority: 0,
-  })
+  const serviceClient = createServiceClient()
 
   void serviceClient.from('analytics_events').insert({
     event_name: 'listing_submitted',
@@ -59,4 +66,39 @@ export async function transitionToPendingReview(
   })
 
   return { success: true }
+}
+
+/**
+ * Put a listing in the moderation queue once. Returns false on any failure,
+ * including a missing service-role key (createServiceClient throws).
+ * An open row (pending or assigned) already there counts as queued.
+ */
+export async function queueNewSubmission(listingId: string): Promise<boolean> {
+  try {
+    const serviceClient = createServiceClient()
+    const { data: open, error: readError } = await serviceClient
+      .from('moderation_queue')
+      .select('id')
+      .eq('queue_type', 'new_submission')
+      .eq('entity_id', listingId)
+      .in('status', ['pending', 'assigned'])
+      .limit(1)
+    if (readError) return false
+    if (open && open.length > 0) return true
+
+    const { error } = await serviceClient.from('moderation_queue').insert({
+      entity_id: listingId,
+      entity_type: 'listing',
+      queue_type: 'new_submission',
+      status: 'pending',
+      priority: 0,
+    })
+    if (error) {
+      console.error(JSON.stringify({ level: 'error', op: 'queue_new_submission', listingId, code: error.code }))
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
 }

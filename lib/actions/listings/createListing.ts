@@ -6,6 +6,7 @@ import { checkRateLimit } from '@/lib/security/rate-limit'
 import { isFeatureEnabled } from '@/lib/env'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { checkDescription, checkSocialLinks } from '@/lib/stripe/planChecks'
+import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -20,8 +21,17 @@ type FieldErrors = Partial<Record<string, string>>
 
 export type CreateListingState =
   | { error: string; fieldErrors?: FieldErrors }
-  | { success: true; listingId: string; listingName: string; slug: string }
+  | {
+      success: true
+      listingId: string
+      listingName: string
+      slug: string
+      /** Set when the draft saved but the "suggest a category" request did not. */
+      warning?: string
+    }
   | null
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function generateSlug(name: string): string {
   return name
@@ -91,12 +101,23 @@ export async function createListingAction(
     return { error: 'Event and job submissions are not open yet.' }
   }
 
+  const isBusinessPath = entityType !== 'event' && entityType !== 'job'
+
   const name = formData.get('name')?.toString().trim() ?? ''
-  const tagline = formData.get('tagline')?.toString().trim() ?? ''
   const categoryId = formData.get('category_id')?.toString().trim() ?? ''
-  const description = formData.get('description')?.toString().trim() ?? ''
+  const rawDescription = formData.get('description')?.toString().trim() ?? ''
+  // Business path (ticket 126): the founder story joins the about text instead
+  // of being dropped, and an empty one line is seeded from the first sentence.
+  const description = isBusinessPath
+    ? foldFounderStory(rawDescription, formData.get('founder_story')?.toString() ?? null)
+    : rawDescription
+  const taglineRaw = formData.get('tagline')?.toString().trim() ?? ''
+  const tagline = isBusinessPath && !taglineRaw ? firstSentence(rawDescription) : taglineRaw
   const locationType = formData.get('location_type')?.toString().trim() ?? ''
-  const cityText = formData.get('city_text')?.toString().trim() || null
+  const cityIdRaw = formData.get('city_id')?.toString().trim() || null
+  const categoryRequestWords = formData.get('category_request_words')?.toString().trim() || null
+  const categoryRequestName = formData.get('category_request_name')?.toString().trim() || null
+  let cityText = formData.get('city_text')?.toString().trim() || null
   const stateText = formData.get('state_text')?.toString().trim() || null
   const serviceAreaDescription = formData.get('service_area_description')?.toString().trim() || null
   const shipsNationwide = formData.get('ships_nationwide') === 'true'
@@ -159,8 +180,11 @@ export async function createListingAction(
     fieldErrors.name = 'Name must be 120 characters or fewer.'
   }
 
-  if (tagline.length < 10) {
-    fieldErrors.tagline = 'Short description must be at least 10 characters.'
+  // A business one line is seeded from the description when left empty, so
+  // only a typed one that is too short is an error there.
+  const taglineMin = isBusinessPath ? 5 : 10
+  if (tagline.length < taglineMin) {
+    fieldErrors.tagline = `Short description must be at least ${taglineMin} characters.`
   } else if (tagline.length > 120) {
     fieldErrors.tagline = 'Short description must be 120 characters or fewer.'
   }
@@ -169,8 +193,10 @@ export async function createListingAction(
     fieldErrors.category_id = 'Select a category.'
   }
 
-  if (description.length < 20) {
-    fieldErrors.description = 'Description must be at least 20 characters.'
+  // "What do you do?" asks for one to three sentences, so a business can be short.
+  const descriptionMin = isBusinessPath ? 15 : 20
+  if (description.length < descriptionMin) {
+    fieldErrors.description = `Description must be at least ${descriptionMin} characters.`
   } else if (description.length > 2000) {
     fieldErrors.description = 'Description must be 2000 characters or fewer.'
   }
@@ -317,11 +343,33 @@ export async function createListingAction(
     // events write their own details tables and are not covered here.
     if (!fieldErrors.description) {
       const descriptionError = checkDescription('free', description, null)
-      if (descriptionError) fieldErrors.description = descriptionError
+      // When only the folded-in founder story pushes it over, say so on the
+      // story box, not on an about box that is within the limit by itself.
+      if (descriptionError) {
+        if (description !== rawDescription && !checkDescription('free', rawDescription, null)) {
+          fieldErrors.founder_story = `${descriptionError} Your story is added to it, so shorten one of them.`
+        } else {
+          fieldErrors.description = descriptionError
+        }
+      }
     }
     const socialError = checkSocialLinks('free', Object.fromEntries(socialFields), null)
     if (socialError) {
       for (const [key, val] of socialFields) if (val) fieldErrors[key] = socialError
+    }
+
+    // "Suggest a new category": the listing is saved under the closest group
+    // (category_id) and the request goes to the team. Limits match the table.
+    if (categoryRequestName !== null) {
+      if (categoryRequestName.length < 2 || categoryRequestName.length > 60) {
+        fieldErrors.category_request_name = 'Category name must be 2 to 60 characters.'
+      }
+      if (categoryRequestWords && categoryRequestWords.length > 500) {
+        fieldErrors.category_request_words = 'Keep this to 500 characters or fewer.'
+      }
+    }
+    if (cityIdRaw && !UUID_RE.test(cityIdRaw)) {
+      fieldErrors.city_id = 'Pick your city from the list.'
     }
   }
 
@@ -340,6 +388,31 @@ export async function createListingAction(
     return {
       error: 'Please fix the errors below.',
       fieldErrors: { category_id: 'Invalid category. Please select again.' },
+    }
+  }
+
+  // City (ticket 126). Until now no listing got a city_id, so every page URL
+  // fell back to /online/. Prefer the picked id; otherwise match the typed city
+  // name to an active city. An unknown city stays as text only.
+  let cityId: string | null = null
+  if (isBusinessPath && effectiveLocationType !== 'virtual') {
+    const cityQuery = supabase.from('cities').select('id, name').eq('is_active', true)
+    const { data: cities } = cityIdRaw
+      ? await cityQuery.eq('id', cityIdRaw).limit(1)
+      : cityText
+        ? await cityQuery.ilike('name', cityText.replace(/[%_\\]/g, '\\$&')).limit(2)
+        : { data: null }
+    // Two active cities with the same name (Columbus GA and OH) is ambiguous by
+    // name alone; leave it for the owner to pick on the finish page.
+    const onlyCity = cities && cities.length === 1 ? cities[0] : undefined
+    if (onlyCity) {
+      cityId = onlyCity.id
+      cityText = cityText ?? onlyCity.name
+    } else if (cityIdRaw) {
+      return {
+        error: 'Please fix the errors below.',
+        fieldErrors: { city_id: 'That city is not on our list yet. Pick another or type it in.' },
+      }
     }
   }
 
@@ -365,6 +438,7 @@ export async function createListingAction(
       name,
       entity_type: entityType,
       category_id: categoryId,
+      ...(cityId ? { city_id: cityId } : {}),
       location_type: effectiveLocationType,
       status: 'draft',
       source: 'owner',
@@ -459,13 +533,38 @@ export async function createListingAction(
     }
   }
 
+  // The draft is already saved, so a failed request is reported, not undone.
+  let warning: string | undefined
+  if (isBusinessPath && categoryRequestName) {
+    const { error: requestError } = await supabase.from('category_requests').insert({
+      listing_id: listing.id,
+      requested_by: user.id,
+      owner_words: (categoryRequestWords || rawDescription).slice(0, 500),
+      proposed_name: categoryRequestName,
+      parent_category_id: categoryId,
+    })
+    if (requestError) {
+      console.error(
+        JSON.stringify({ level: 'error', op: 'create_listing_category_request', listingId: listing.id, code: requestError.code })
+      )
+      warning =
+        'Your draft is saved, but your new category suggestion did not go through. You can suggest it again from your page.'
+    }
+  }
+
   trackServerEvent({
     event_name: 'listing_draft_created',
     entity_id: listing.id,
     entity_type: 'listing',
     user_id: user.id,
-    properties: { entity_type: entityType, category_id: categoryId, source: 'web_form' },
+    properties: {
+      entity_type: entityType,
+      category_id: categoryId,
+      source: 'web_form',
+      has_city: cityId !== null,
+      category_requested: Boolean(categoryRequestName) && !warning,
+    },
   })
 
-  return { success: true, listingId: listing.id, listingName: name, slug }
+  return { success: true, listingId: listing.id, listingName: name, slug, ...(warning ? { warning } : {}) }
 }

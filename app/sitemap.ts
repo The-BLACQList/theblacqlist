@@ -17,6 +17,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select('slug, entity_type, updated_at, cities!listings_city_id_fkey(slug)')
     .eq('status', 'published')
     .is('deleted_at', null)
+    // Owners can hide a page from search engines (ticket 126).
+    .eq('noindex', false)
 
   // Fetch all active cities
   const { data: cities } = await supabase

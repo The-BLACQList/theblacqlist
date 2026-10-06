@@ -1,6 +1,9 @@
 // Rule-based page optimization checklist.
 // Zero external calls — pure function over listing data fetched server-side.
-// Used by /dashboard/pages/[entityId]/ai-suggestions to compute a page score.
+// Used by /dashboard/pages/[entityId]/ai-suggestions to compute a page score,
+// and (with a tier) by the add-business finish page meter (ticket 126).
+
+import { canAccess, photoLimit } from '@/lib/stripe/features'
 
 export type ChecklistCategory = 'required' | 'recommended' | 'seo' | 'engagement'
 
@@ -17,6 +20,8 @@ export interface ChecklistResult {
   items: ChecklistItem[]
   score: number
   maxScore: number
+  /** score / maxScore as a whole number, 0 to 100. */
+  percent: number
   grade: 'strong' | 'good' | 'needs-work'
 }
 
@@ -51,7 +56,13 @@ export function computePageChecklist(
   details: DetailsFields | null,
   mediaCount: number,
   serviceCount: number,
-  hoursCount: number
+  hoursCount: number,
+  /**
+   * The listing's plan. When given, items the plan cannot reach are left out,
+   * so a Free page can hit 100%: the gallery needs 3 photos (Free allows 1) and
+   * social links need Starter. Omit it to score every item, as before.
+   */
+  tier?: string | null
 ): ChecklistResult {
   const hasSocialLink = !!(
     details?.social_instagram ||
@@ -163,13 +174,28 @@ export function computePageChecklist(
     },
   ]
 
-  const maxScore = items.reduce((sum, item) => sum + item.weight, 0)
-  const score = items.filter((i) => i.passed).reduce((sum, i) => sum + i.weight, 0)
+  const reachable = tier === undefined ? items : items.filter((i) => isReachable(i.id, tier))
 
+  const maxScore = reachable.reduce((sum, item) => sum + item.weight, 0)
+  const score = reachable.filter((i) => i.passed).reduce((sum, i) => sum + i.weight, 0)
+  const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0
+
+  // Same cut points as the old 80 / 50 out of 108, as shares, so a plan with
+  // fewer items is graded on the same curve.
+  const share = maxScore > 0 ? score / maxScore : 0
   const grade: ChecklistResult['grade'] =
-    score >= 80 ? 'strong' : score >= 50 ? 'good' : 'needs-work'
+    share >= 0.74 ? 'strong' : share >= 0.46 ? 'good' : 'needs-work'
 
-  return { items, score, maxScore, grade }
+  return { items: reachable, score, maxScore, percent, grade }
+}
+
+function isReachable(id: string, tier: string | null): boolean {
+  if (id === 'gallery') {
+    const limit = photoLimit(tier)
+    return limit === null || limit >= 3
+  }
+  if (id === 'social') return canAccess(tier, 'social_links')
+  return true
 }
 
 export const CATEGORY_LABELS: Record<ChecklistCategory, string> = {
