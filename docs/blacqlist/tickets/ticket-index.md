@@ -1,6 +1,6 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 126
+**Total tickets:** 128
 **Phases:** 0–18, plus V1 / V1.5 monetization work
 **Last updated:** 2026-10-06
 
