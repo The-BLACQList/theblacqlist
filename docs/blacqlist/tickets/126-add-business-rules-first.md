@@ -31,6 +31,7 @@ New category promise: the listing sits under the closest group until the team ad
 |---|---|
 | Saving the draft | `createListingAction` (`lib/actions/listings/createListing.ts`) |
 | Finish sections | `updateListingContent`, `updateListingAttributes`, `updateCta`, `addService`, the media actions |
+| Finish view | Build it as one shared component with a new-owner mode and an edit mode. Ticket 129 mounts the edit mode on the dashboard edit page (founder, 2026-10-06), so don't tie it to /add-business state |
 | Strength meter | `computePageChecklist` (`lib/ai/checklist.ts`), moved out of the paid-only page. It scores against the owner's plan, so a Free page can reach 100 |
 | Submitting | `submitListingForReviewAction`, reachable from the finish page and from the dashboard `PublishSection` |
 

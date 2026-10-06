@@ -57,6 +57,8 @@ The workshop page also showed "With AI" and "Rules only" side by side. Rules onl
 - Import v1 reads websites and link-in-bio pages only. Instagram needs Meta app review and Google Business Profile is a paid API, so both come later.
 - #181 (the category guide, ticket 125 part 5a) closes into the ticket 126 PR. Its `lib/categories/sorting-guide.ts` logic is reused.
 
+`[Decision — founder, 2026-10-06]` Any edit to a business owner's page uses the same finish view: edit fields on one side, the live page filling in on the other. Photos and services fold into it. Event and job listings keep today's editor. See [ticket 129](../tickets/129-edit-page-finish-view.md).
+
 ## Bugs the round 2 checks caught
 
 Ticket 126 covers each in its acceptance criteria.
@@ -86,5 +88,6 @@ The critic passed round 2 with these deferred. Each has a recommendation.
 | [126](../tickets/126-add-business-rules-first.md) | Rules-first flow, finish page, form bug fixes, category requests | none |
 | [127](../tickets/127-add-business-site-import.md) | Bring in what you already have (websites and link-in-bio pages) | `FEATURE_SITE_IMPORT` |
 | [128](../tickets/128-add-business-ai-drafts.md) | AI drafts and category help | `FEATURE_AI_ONBOARDING`, off by default |
+| [129](../tickets/129-edit-page-finish-view.md) | Owners edit their page in the same finish view | none |
 
-127 and 128 depend on 126.
+127, 128 and 129 depend on 126.
