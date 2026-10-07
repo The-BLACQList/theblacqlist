@@ -168,12 +168,16 @@ export function DiscoverBanner({ type }: Props) {
               banner is edge-to-edge at every breakpoint. */}
           {/* The frame is 3:2 (2400x1600). At 375px a 360px-tall cover fill would
               cut about a third off its sides, so a `fullWidth` frame keeps its
-              3:2 box below `md` and fades into the ground under it. */}
+              3:2 box below `md` and fades into the ground under it. From `lg`
+              the band gets as wide as 4:1, which would show only a strip of the
+              frame (the grower's head cut off, his face behind the headline),
+              so the frame sits in the right 64% and fades into the ground
+              where the title sits (founder, 2026-10-07). */}
           <div
             className={cn(
               'absolute',
               banner.fullWidth
-                ? 'inset-x-0 top-0 aspect-[3/2] [mask-image:linear-gradient(to_bottom,#000_70%,transparent)] md:inset-0 md:aspect-auto md:[mask-image:none]'
+                ? 'inset-x-0 top-0 aspect-[3/2] [mask-image:linear-gradient(to_bottom,#000_70%,transparent)] md:inset-0 md:aspect-auto md:[mask-image:none] lg:left-auto lg:w-[64%] lg:[mask-image:linear-gradient(to_right,transparent,#000_22%)]'
                 : 'inset-0'
             )}
           >
