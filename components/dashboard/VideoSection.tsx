@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingVideoAction } from '@/lib/actions/dashboard/updateListingVideo'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
@@ -15,6 +16,7 @@ interface Props {
 
 export function VideoSection({ listingId, videoEmbedUrl, locked, showUpgrade }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingVideoAction, null)
+  const saveLabel = useSaveLabel()
 
   if (locked && !videoEmbedUrl) {
     return (
@@ -89,7 +91,7 @@ export function VideoSection({ listingId, videoEmbedUrl, locked, showUpgrade }: 
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? 'Saving…' : saveLabel}
           </button>
         </div>
       </form>

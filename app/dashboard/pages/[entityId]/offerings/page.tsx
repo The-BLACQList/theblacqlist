@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
@@ -16,13 +16,17 @@ export default async function OfferingsPage({ params }: Props) {
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name')
+    .select('id, name, entity_type')
     .eq('id', entityId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) notFound()
+  // Business-shaped pages edit everything in one finish view (ticket 129);
+  // old links land on the matching section there.
+  if (listing.entity_type !== 'event' && listing.entity_type !== 'job')
+    redirect(`/dashboard/pages/${listing.id}/edit#services`)
 
   // group_label fetched fail-soft (separate query) so a not-yet-migrated column
   // can't break the offerings editor.

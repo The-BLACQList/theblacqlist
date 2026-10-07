@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { Loader2, Trash2, Pencil, Star, CheckCircle, AlertCircle, X } from 'lucide-react'
 import { updateServiceAction } from '@/lib/actions/dashboard/updateService'
 import { deleteServiceAction } from '@/lib/actions/dashboard/deleteService'
@@ -52,6 +53,7 @@ function DeleteServiceButton({ serviceId }: { serviceId: string }) {
 function ServiceRow({ service }: { service: Service }) {
   const [editing, setEditing] = useState(false)
   const [state, formAction, isPending] = useActionState(updateServiceAction, null)
+  const saveLabel = useSaveLabel()
 
   if (editing) {
     return (
@@ -132,7 +134,7 @@ function ServiceRow({ service }: { service: Service }) {
               className="inline-flex items-center gap-1.5 h-8 px-4 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-xs hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isPending && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
-              {isPending ? 'Saving…' : 'Save'}
+              {isPending ? 'Saving…' : saveLabel}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { useActionState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
@@ -37,6 +38,7 @@ interface Props {
 export function HoursSection({ listingId, hours: initialHours }: Props) {
   const [hours, setHours] = useState<WeeklyHours>(() => buildDefault(initialHours))
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
+  const saveLabel = useSaveLabel('Save hours')
 
   function setDay(day: Day, patch: Partial<DayHours>) {
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }))
@@ -122,7 +124,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save hours'}
+            {isPending ? 'Saving…' : saveLabel}
           </button>
         </div>
       </form>

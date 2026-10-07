@@ -10,9 +10,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!owner) redirect('/sign-in?next=/dashboard')
 
   return (
-    <div className="flex min-h-screen bg-pale-lavender">
+    <div className="flex min-h-screen flex-col bg-pale-lavender md:flex-row">
       <DashboardSidebar ownerEmail={owner.user.email} />
-      <main className="flex-1 min-w-0 p-6 md:p-8">{children}</main>
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8">{children}</main>
     </div>
   )
 }

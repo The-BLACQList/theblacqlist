@@ -51,8 +51,9 @@ export function LivePagePreview({
     >
       <div
         className={cn(
-          'relative w-full overflow-hidden bg-gradient-to-br from-charcoal/70 to-brand-black',
-          compact ? 'h-[132px]' : 'h-[220px]'
+          // Grows with a long name instead of pushing it up under the badge.
+          'relative flex w-full flex-col justify-end overflow-hidden bg-gradient-to-br from-charcoal/70 to-brand-black',
+          compact ? 'min-h-[132px]' : 'min-h-[220px]'
         )}
       >
         {coverUrl && (
@@ -76,7 +77,7 @@ export function LivePagePreview({
             {ownershipLabel}
           </span>
         )}
-        <div className={cn('absolute inset-x-0 bottom-0', compact ? 'px-4 pb-3' : 'px-5 pb-5')}>
+        <div className={cn('relative', compact ? 'px-4 pt-11 pb-3' : 'px-5 pt-12 pb-5')}>
           <p
             className={cn(
               'font-headline leading-tight text-white break-words',

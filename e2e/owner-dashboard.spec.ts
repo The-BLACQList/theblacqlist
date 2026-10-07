@@ -118,7 +118,7 @@ test.describe('owner dashboard', () => {
     // has already committed 200 by the time notFound() fires. The 404 page is
     // what the user gets either way; the status code is not the contract here.
     await page.goto(`/dashboard/pages/${FIXTURE_CLAIMABLE_ID}/analytics`)
-    await expect(page.getByRole('heading', { name: '404', level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /isn.t on the list/, level: 1 })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Analytics', level: 1 })).toHaveCount(0)
   })
 

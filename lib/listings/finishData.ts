@@ -93,9 +93,10 @@ export function countOpenDays(hours: FinishDetails['hours']): number {
 }
 
 /**
- * Load one business page the signed-in owner owns. Returns null when the page
- * does not exist, is deleted, belongs to someone else, or is not a business
- * (events and jobs keep their own editors).
+ * Load one business-shaped page (business, creative, service provider, vendor)
+ * the signed-in owner owns. Returns null when the page does not exist, is
+ * deleted, belongs to someone else, or is an event or job (those keep their
+ * own editors).
  */
 export async function loadFinishData(
   supabase: SupabaseClient,
@@ -116,7 +117,7 @@ export async function loadFinishData(
     .is('deleted_at', null)
     .maybeSingle()
 
-  if (!row || row.entity_type !== 'business') return null
+  if (!row || row.entity_type === 'event' || row.entity_type === 'job') return null
 
   // Fail-soft reads: a section with no rows (or a table not yet migrated on a
   // branch database) shows empty instead of breaking the page.
