@@ -420,8 +420,8 @@ describe('ownership', () => {
   })
 
   it('allows listing media before the listing row exists — the add-business case', async () => {
-    // MediaStep uploads against a client-generated id and creates the listing
-    // with that same id afterwards. A missing row here is normal.
+    // The old add-business form uploaded against a client-generated id and
+    // created the listing with that id afterwards. A missing row is allowed.
     h.state.listing = null
     const res = await POST(listingMedia())
     expect(res.status).toBe(201)

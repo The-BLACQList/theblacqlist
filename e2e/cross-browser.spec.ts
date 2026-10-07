@@ -67,7 +67,7 @@ test.describe('L. Cross-browser critical paths', () => {
     // Black-owned, but supports Black-owned businesses", so a plain
     // 'Black-Owned' name matches both cards.
     await page.getByText(/^Black-Owned$/).click()
-    await page.getByRole('button', { name: 'Next' }).click()
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
     await expect(page.locator('#qs-name')).toBeVisible()
 
     expect(errors(), `[${testInfo.project.name}] console errors during Add Business`).toEqual([])

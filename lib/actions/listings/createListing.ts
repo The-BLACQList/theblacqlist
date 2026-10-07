@@ -92,7 +92,7 @@ export async function createListingAction(
   // without the page that renders the form, so 404'ing /add-event and /add-job
   // closes the door but leaves the window open. This closes the window — and
   // ONLY for the two entity types behind the flag, because the shipped
-  // /add-business flow calls this same action (PreviewPublishStep.tsx) and must
+  // /add-business quick start calls this same action (QuickStart.tsx) and must
   // keep working.
   if (
     (entityType === 'event' || entityType === 'job') &&

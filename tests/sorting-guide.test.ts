@@ -214,31 +214,3 @@ describe('buildGuidePick', () => {
     for (const line of copy) expect(line).not.toMatch(/—/)
   })
 })
-
-// No DOM in this suite, so the component is checked as server-rendered HTML:
-// what the owner sees on arrival, before any click.
-describe('CategoryGuide first render', async () => {
-  const { createElement } = await import('react')
-  const { renderToStaticMarkup } = await import('react-dom/server')
-  const { CategoryGuide } = await import('@/app/add-business/_components/CategoryGuide')
-  const render = (defaultOpen: boolean) =>
-    renderToStaticMarkup(
-      createElement(CategoryGuide, { categories: CATS, defaultOpen, onPick: () => {} })
-    )
-
-  it('opens with the search, the first question and a way out', () => {
-    const html = render(true)
-    expect(html).toContain('Type what you do')
-    expect(html).toContain('What do customers come to you for?')
-    expect(html).toContain('Skip, I&#x27;ll pick myself')
-    expect(html.match(/aria-pressed="false"/g)).toHaveLength(GUIDE_ANSWERS.length)
-    expect(html).not.toContain('Where do they get it?')
-    expect(html).not.toMatch(/>Continue</)
-  })
-
-  it('stays a single link when the owner already has a category', () => {
-    const html = render(false)
-    expect(html).toContain('Help me choose')
-    expect(html).not.toContain('What do customers come to you for?')
-  })
-})
