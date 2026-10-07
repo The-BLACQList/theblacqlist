@@ -5,7 +5,16 @@ import { useState } from 'react'
 import { GUIDE_WHERE, type GuideWhereId } from '@/lib/categories/sorting-guide'
 import { FIELD_IDS } from '@/lib/listings/quickStart'
 import { ChoiceCards } from './ChoiceCards'
-import { ERROR_ID, HINT_CLASS, LABEL_CLASS, StepError, StepIntro, fieldA11y, inputClass, type StepProps } from './shared'
+import {
+  ERROR_ID,
+  HINT_CLASS,
+  LABEL_CLASS,
+  StepError,
+  StepIntro,
+  fieldA11y,
+  inputClass,
+  type StepProps,
+} from './shared'
 
 export interface CityOption {
   id: string

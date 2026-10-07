@@ -87,7 +87,10 @@ export function rulesSeo(f: ListingSeoFields): { title: string; description: str
   // A long lead can fill the budget alone; cut it to fit instead of dropping it.
   if (!description) description = fit(parts[0] ?? '', SEO_DESCRIPTION_MAX)
   if (description.length < SEO_DESCRIPTION_MIN) {
-    description = fit(`${description} Support Black-owned and ally businesses on The BLACQList.`.trim(), SEO_DESCRIPTION_MAX)
+    description = fit(
+      `${description} Support Black-owned and ally businesses on The BLACQList.`.trim(),
+      SEO_DESCRIPTION_MAX
+    )
   }
   return { title, description }
 }

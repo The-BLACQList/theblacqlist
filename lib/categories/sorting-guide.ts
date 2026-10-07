@@ -458,8 +458,29 @@ export const GUIDE_SEARCH_WORDS: Readonly<Record<string, readonly string[]>> = {
 
 /** Words that never narrow a search ("I make candles" is just "candles"). */
 const STOP_WORDS = new Set([
-  'a', 'an', 'and', 'the', 'i', 'im', 'my', 'we', 'our', 'of', 'for', 'to', 'in',
-  'on', 'at', 'do', 'own', 'run', 'make', 'sell', 'business', 'services', 'service',
+  'a',
+  'an',
+  'and',
+  'the',
+  'i',
+  'im',
+  'my',
+  'we',
+  'our',
+  'of',
+  'for',
+  'to',
+  'in',
+  'on',
+  'at',
+  'do',
+  'own',
+  'run',
+  'make',
+  'sell',
+  'business',
+  'services',
+  'service',
 ])
 
 function normalize(text: string): string[] {

@@ -76,7 +76,9 @@ export function StepIntro({ title, children }: { title: string; children?: React
       >
         {title}
       </h2>
-      {children && <div className="font-subhead text-base leading-relaxed text-charcoal">{children}</div>}
+      {children && (
+        <div className="font-subhead text-base leading-relaxed text-charcoal">{children}</div>
+      )}
     </div>
   )
 }

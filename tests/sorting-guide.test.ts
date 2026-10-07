@@ -69,7 +69,9 @@ describe('the questions', () => {
   it('give every answer a real choice and unique ids', () => {
     for (const answer of GUIDE_ANSWERS) {
       expect(answer.candidates.length).toBeGreaterThanOrEqual(2)
-      expect(new Set(answer.candidates.map((cand) => cand.slug)).size).toBe(answer.candidates.length)
+      expect(new Set(answer.candidates.map((cand) => cand.slug)).size).toBe(
+        answer.candidates.length
+      )
     }
     expect(new Set(GUIDE_ANSWERS.map((a) => a.id)).size).toBe(GUIDE_ANSWERS.length)
   })
@@ -94,9 +96,7 @@ describe('suggestCategories', () => {
 
   it('puts the best fits for "where" first', () => {
     expect(suggestCategories(food, 'popups', CATS).best[0]?.slug).toBe('food-trucks')
-    expect(suggestCategories(food, 'come_to_them', CATS).best[0]?.slug).toBe(
-      'catering-events-food'
-    )
+    expect(suggestCategories(food, 'come_to_them', CATS).best[0]?.slug).toBe('catering-events-food')
     expect(suggestCategories(food, 'visit', CATS).best[0]?.slug).toBe('restaurants')
   })
 
@@ -149,7 +149,13 @@ describe('searchGuide', () => {
 describe('suggestEntityType', () => {
   it.each([
     ['a barber people visit', 'barber-shops', 'beauty', 'visit', 'business'],
-    ['a braider who comes to you', 'braiding-extensions', 'beauty', 'come_to_them', 'service_provider'],
+    [
+      'a braider who comes to you',
+      'braiding-extensions',
+      'beauty',
+      'come_to_them',
+      'service_provider',
+    ],
     ['a food truck', 'food-trucks', 'food', 'popups', 'vendor'],
     ['a restaurant', 'restaurants', 'food', 'visit', 'restaurant'],
     ['a caterer', 'catering-events-food', 'food', 'come_to_them', 'restaurant'],
@@ -216,7 +222,9 @@ describe('CategoryGuide first render', async () => {
   const { renderToStaticMarkup } = await import('react-dom/server')
   const { CategoryGuide } = await import('@/app/add-business/_components/CategoryGuide')
   const render = (defaultOpen: boolean) =>
-    renderToStaticMarkup(createElement(CategoryGuide, { categories: CATS, defaultOpen, onPick: () => {} }))
+    renderToStaticMarkup(
+      createElement(CategoryGuide, { categories: CATS, defaultOpen, onPick: () => {} })
+    )
 
   it('opens with the search, the first question and a way out', () => {
     const html = render(true)

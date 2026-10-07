@@ -40,11 +40,14 @@ function builder(table: string) {
   }
   chain.delete = self
   chain.maybeSingle = async () =>
-    table === 'categories' ? { data: { id: CATEGORY_ID }, error: null } : { data: null, error: null }
+    table === 'categories'
+      ? { data: { id: CATEGORY_ID }, error: null }
+      : { data: null, error: null }
   chain.single = async () => ({ data: { id: 'listing-1' }, error: null })
   chain.then = (resolve: (v: unknown) => unknown) => {
     if (table === 'cities') return resolve({ data: h.state.cities, error: null })
-    if (table === 'category_requests' && op === 'insert') return resolve({ error: h.state.requestError })
+    if (table === 'category_requests' && op === 'insert')
+      return resolve({ error: h.state.requestError })
     return resolve({ data: null, error: null })
   }
   return chain
@@ -157,7 +160,10 @@ describe('createListingAction, business path', () => {
   it('saves a category suggestion with the owner words', async () => {
     const res = await createListingAction(
       null,
-      form({ category_request_name: 'Sourdough bakery', category_request_words: 'bread, sourdough' })
+      form({
+        category_request_name: 'Sourdough bakery',
+        category_request_words: 'bread, sourdough',
+      })
     )
     expect(res).toMatchObject({ success: true })
     expect(res).not.toHaveProperty('warning')

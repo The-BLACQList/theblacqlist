@@ -34,7 +34,8 @@ interface Props {
 const chip =
   'rounded-lg border px-3 py-2 text-left font-subhead text-sm transition-colors min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
 const chipOn = 'border-brand-black bg-brand-black text-white'
-const chipOff = 'border-hairline bg-white text-charcoal hover:border-charcoal/50 hover:text-brand-black'
+const chipOff =
+  'border-hairline bg-white text-charcoal hover:border-charcoal/50 hover:text-brand-black'
 
 export function CategoryGuide({ categories, defaultOpen, onPick }: Props) {
   const [open, setOpen] = useState(defaultOpen)
@@ -65,7 +66,12 @@ export function CategoryGuide({ categories, defaultOpen, onPick }: Props) {
   function renderCategory(cat: GuideCategory, from: 'search' | 'questions') {
     const parent = parentName(cat)
     return (
-      <button key={cat.id} type="button" onClick={() => choose(cat, from)} className={cn(chip, chipOff)}>
+      <button
+        key={cat.id}
+        type="button"
+        onClick={() => choose(cat, from)}
+        className={cn(chip, chipOff)}
+      >
         <span className="block font-semibold text-brand-black">{cat.name}</span>
         {parent && <span className="block text-xs text-charcoal-soft">in {parent}</span>}
       </button>
@@ -138,7 +144,10 @@ export function CategoryGuide({ categories, defaultOpen, onPick }: Props) {
 
       {/* Search */}
       <div className="flex flex-col gap-2">
-        <label htmlFor={`${ids}-search`} className="font-subhead text-sm font-semibold text-brand-black">
+        <label
+          htmlFor={`${ids}-search`}
+          className="font-subhead text-sm font-semibold text-brand-black"
+        >
           Type what you do
         </label>
         <div className="relative">
@@ -238,7 +247,10 @@ export function CategoryGuide({ categories, defaultOpen, onPick }: Props) {
           <p className="font-subhead text-sm font-semibold text-brand-black">
             Which fits best?
             {findWhere(whereId) ? null : (
-              <span className="font-normal text-charcoal-soft"> Answer the question above to sort these.</span>
+              <span className="font-normal text-charcoal-soft">
+                {' '}
+                Answer the question above to sort these.
+              </span>
             )}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

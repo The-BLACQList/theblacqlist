@@ -196,7 +196,11 @@ function QuickStartFlow({ categories, cities, email }: Props) {
       for (const [field, reason] of Object.entries(errors)) {
         const target = stepForServerField(field)
         if (!target || !reason) continue
-        goTo(QUICK_STEPS.indexOf(target), { step: target, fieldId: serverFieldId(target, field), reason })
+        goTo(QUICK_STEPS.indexOf(target), {
+          step: target,
+          fieldId: serverFieldId(target, field),
+          reason,
+        })
         return
       }
       setFormError(result?.error ?? 'Something went wrong. Please try again.')
@@ -207,9 +211,11 @@ function QuickStartFlow({ categories, cities, email }: Props) {
   const preview = useMemo(() => {
     const fit = answers.fit
     let categoryName: string | null = null
-    if (fit?.kind === 'category') categoryName = categories.find((c) => c.id === fit.categoryId)?.name ?? null
+    if (fit?.kind === 'category')
+      categoryName = categories.find((c) => c.id === fit.categoryId)?.name ?? null
     if (fit?.kind === 'request')
-      categoryName = fit.proposedName.trim() || categories.find((c) => c.id === fit.parentId)?.name || null
+      categoryName =
+        fit.proposedName.trim() || categories.find((c) => c.id === fit.parentId)?.name || null
     return {
       name: answers.name.trim(),
       tagline: answers.tagline.trim() || firstSentence(answers.about),
@@ -256,7 +262,10 @@ function QuickStartFlow({ categories, cities, email }: Props) {
         </div>
 
         {formError && (
-          <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 font-subhead text-sm font-semibold text-red-700">
+          <p
+            role="alert"
+            className="rounded-lg bg-red-50 px-4 py-3 font-subhead text-sm font-semibold text-red-700"
+          >
             {formError}
           </p>
         )}
@@ -278,7 +287,9 @@ function QuickStartFlow({ categories, cities, email }: Props) {
             disabled={pending}
             className={cn(
               'ml-auto inline-flex h-12 min-w-[9rem] items-center justify-center gap-2 rounded-full px-6 font-subhead text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2 disabled:opacity-70',
-              isLast ? 'bg-amber-gold text-brand-black hover:brightness-95' : 'bg-brand-black text-white hover:bg-charcoal'
+              isLast
+                ? 'bg-amber-gold text-brand-black hover:brightness-95'
+                : 'bg-brand-black text-white hover:bg-charcoal'
             )}
           >
             {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
@@ -332,7 +343,10 @@ function Progress({ index }: { index: number }) {
         {QUICK_STEPS.map((s, i) => (
           <span
             key={s}
-            className={cn('h-1.5 flex-1 rounded-full', i <= index ? 'bg-brand-black' : 'bg-charcoal/15')}
+            className={cn(
+              'h-1.5 flex-1 rounded-full',
+              i <= index ? 'bg-brand-black' : 'bg-charcoal/15'
+            )}
           />
         ))}
       </div>
@@ -342,7 +356,10 @@ function Progress({ index }: { index: number }) {
 
 function QuickStartSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10" aria-busy="true">
+    <div
+      className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10"
+      aria-busy="true"
+    >
       <div className="flex flex-col gap-6">
         <div className="h-5 w-28 motion-safe:animate-pulse rounded bg-charcoal/10" />
         <div className="h-8 w-3/4 motion-safe:animate-pulse rounded bg-charcoal/10" />

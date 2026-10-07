@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 import { FIELD_IDS, NAME_MAX, NAME_MIN } from '@/lib/listings/quickStart'
-import { HINT_CLASS, LABEL_CLASS, StepError, StepIntro, fieldA11y, inputClass, type StepProps } from './shared'
+import {
+  HINT_CLASS,
+  LABEL_CLASS,
+  StepError,
+  StepIntro,
+  fieldA11y,
+  inputClass,
+  type StepProps,
+} from './shared'
 
 interface Match {
   id: string

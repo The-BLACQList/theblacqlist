@@ -68,7 +68,10 @@ describe('rulesSeo', () => {
   })
 
   it('shortens a long name to fit the title', () => {
-    const out = rulesSeo({ ...BASE, name: 'The Very Long Name Bakery and Coffee House of Southwest Atlanta' })
+    const out = rulesSeo({
+      ...BASE,
+      name: 'The Very Long Name Bakery and Coffee House of Southwest Atlanta',
+    })
     expect(out.title.length).toBeLessThanOrEqual(SEO_TITLE_MAX)
   })
 

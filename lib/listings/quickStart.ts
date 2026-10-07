@@ -162,7 +162,8 @@ export function ctaValueProblem(ctaType: string, value: string): string | null {
   if (!cta) return 'Pick what the main button does.'
   if (!v) return `Add your ${cta.inputLabel.toLowerCase()}.`
   if (cta.input === 'email') return EMAIL_RE.test(v) ? null : 'Enter a valid email address.'
-  if (cta.input === 'tel') return /\d{7,}/.test(v.replace(/\D/g, '')) ? null : 'Enter a phone number.'
+  if (cta.input === 'tel')
+    return /\d{7,}/.test(v.replace(/\D/g, '')) ? null : 'Enter a phone number.'
   return /^https?:\/\//.test(v) ? null : 'Links start with https://'
 }
 

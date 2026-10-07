@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
-import { suggestCategories, type GuideAnswer, type GuideCategory } from '@/lib/categories/sorting-guide'
+import {
+  suggestCategories,
+  type GuideAnswer,
+  type GuideCategory,
+} from '@/lib/categories/sorting-guide'
 import {
   FIELD_IDS,
   REQUEST_NAME_MAX,
@@ -94,12 +98,12 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
     layer === 'chosen' || layer === 'best'
       ? "Here's how we'd list you"
       : layer === 'more'
-          ? 'Maybe one of these?'
-          : layer === 'groups'
-            ? group
-              ? group.label
-              : 'Which of these is closest?'
-            : 'Suggest a new category'
+        ? 'Maybe one of these?'
+        : layer === 'groups'
+          ? group
+            ? group.label
+            : 'Which of these is closest?'
+          : 'Suggest a new category'
 
   const subGroup = group ? suggestCategories(group, answers.where || null, categories) : null
 
@@ -117,7 +121,11 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
         )}
       </StepIntro>
 
-      <div id={FIELD_IDS.fit} tabIndex={-1} className="flex shrink-0 flex-col gap-3 focus:outline-none">
+      <div
+        id={FIELD_IDS.fit}
+        tabIndex={-1}
+        className="flex shrink-0 flex-col gap-3 focus:outline-none"
+      >
         {layer === 'chosen' && chosen && (
           <div className="flex flex-col gap-3 rounded-xl border border-brand-black bg-white p-4">
             <CategoryName {...label(chosen)} />
@@ -133,7 +141,11 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
           <div className="flex flex-col gap-4 rounded-xl border border-charcoal/20 bg-white p-4">
             <CategoryName {...label(options.best)} />
             <div className="flex flex-wrap gap-2">
-              <button type="button" className={PRIMARY_CLASS} onClick={() => choose(options.best as GuideCategory)}>
+              <button
+                type="button"
+                className={PRIMARY_CLASS}
+                onClick={() => choose(options.best as GuideCategory)}
+              >
                 Yes, list me here
               </button>
               <button type="button" className={QUIET_CLASS} onClick={notQuite}>
@@ -166,7 +178,9 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
               {options.groups.map((g) => (
                 <li key={g.id} className="flex">
                   <button type="button" className={OPTION_CLASS} onClick={() => setGroup(g)}>
-                    <span className="font-subhead text-base font-bold text-brand-black">{g.label}</span>
+                    <span className="font-subhead text-base font-bold text-brand-black">
+                      {g.label}
+                    </span>
                     <span className="font-subhead text-sm text-charcoal-soft">{g.hint}</span>
                   </button>
                 </li>
@@ -183,7 +197,11 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
             <ul className="flex flex-col gap-2">
               {[...subGroup.best, ...subGroup.more].map((cat) => (
                 <li key={cat.id}>
-                  <button type="button" className={OPTION_CLASS} onClick={() => choose(cat, group.id)}>
+                  <button
+                    type="button"
+                    className={OPTION_CLASS}
+                    onClick={() => choose(cat, group.id)}
+                  >
                     <CategoryName {...label(cat)} />
                   </button>
                 </li>

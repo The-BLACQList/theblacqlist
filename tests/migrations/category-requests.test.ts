@@ -23,7 +23,15 @@
 
 import { describe, it, expect } from 'vitest'
 import path from 'node:path'
-import { DB_REACHABLE, MIGRATIONS_DIR, applyFile, exec, query, raises, withScratchDb } from './helpers'
+import {
+  DB_REACHABLE,
+  MIGRATIONS_DIR,
+  applyFile,
+  exec,
+  query,
+  raises,
+  withScratchDb,
+} from './helpers'
 
 const MIGRATION = path.join(MIGRATIONS_DIR, '20261006000000_category_requests.sql')
 
@@ -142,7 +150,10 @@ describe.skipIf(!DB_REACHABLE)('20261006000000_category_requests', () => {
     await withScratchDb('catreq_before', (url) => {
       exec(url, FIXTURE)
       expect(
-        raises(url, `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${MINE}', 'listing');`),
+        raises(
+          url,
+          `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${MINE}', 'listing');`
+        )
       ).toBe(true)
     })
   })
@@ -152,26 +163,38 @@ describe.skipIf(!DB_REACHABLE)('20261006000000_category_requests', () => {
       exec(url, FIXTURE)
       // PENDING_B is already queued; the backfill must not add a second row.
       exec(url, `ALTER TABLE moderation_queue DROP CONSTRAINT moderation_queue_queue_type_check;`)
-      exec(url, `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${PENDING_B}', 'listing');`)
-      exec(url, `ALTER TABLE moderation_queue ADD CONSTRAINT moderation_queue_queue_type_check
-                   CHECK (queue_type IN ('claim','correction','review','flagged_listing','verification','new_submission'));`)
+      exec(
+        url,
+        `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${PENDING_B}', 'listing');`
+      )
+      exec(
+        url,
+        `ALTER TABLE moderation_queue ADD CONSTRAINT moderation_queue_queue_type_check
+                   CHECK (queue_type IN ('claim','correction','review','flagged_listing','verification','new_submission'));`
+      )
 
       applyFile(url, MIGRATION)
 
       const rows = query<{ entity_id: string; n: number }>(
         url,
         `SELECT entity_id, count(*)::int AS n FROM moderation_queue
-          WHERE queue_type = 'new_submission' GROUP BY entity_id ORDER BY entity_id`,
+          WHERE queue_type = 'new_submission' GROUP BY entity_id ORDER BY entity_id`
       )
       expect(rows).toEqual([
         { entity_id: PENDING_A, n: 1 },
         { entity_id: PENDING_B, n: 1 },
       ])
       expect(
-        raises(url, `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${MINE}', 'listing');`),
+        raises(
+          url,
+          `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('new_submission', '${MINE}', 'listing');`
+        )
       ).toBe(false)
       expect(
-        raises(url, `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('made_up', '${MINE}', 'listing');`),
+        raises(
+          url,
+          `INSERT INTO moderation_queue (queue_type, entity_id, entity_type) VALUES ('made_up', '${MINE}', 'listing');`
+        )
       ).toBe(true)
     })
   })
@@ -189,7 +212,9 @@ describe.skipIf(!DB_REACHABLE)('20261006000000_category_requests', () => {
       // Filing it in someone else's name.
       expect(raises(url, as('authenticated', OTHER, request(MINE, OWNER)))).toBe(true)
       // Approving their own request on the way in.
-      expect(raises(url, as('authenticated', OTHER, request(THEIRS, OTHER, ", 'approved', now()")))).toBe(true)
+      expect(
+        raises(url, as('authenticated', OTHER, request(THEIRS, OTHER, ", 'approved', now()")))
+      ).toBe(true)
       // Anonymous.
       expect(raises(url, as('anon', null, request(MINE, OWNER)))).toBe(true)
     })
@@ -217,7 +242,7 @@ describe.skipIf(!DB_REACHABLE)('20261006000000_category_requests', () => {
         url,
         `SELECT grantee, privilege_type FROM information_schema.role_table_grants
           WHERE table_name = 'category_requests' AND grantee IN ('anon', 'authenticated')
-          ORDER BY grantee, privilege_type`,
+          ORDER BY grantee, privilege_type`
       )
       expect(grants).toEqual([
         { grantee: 'authenticated', privilege_type: 'INSERT' },
@@ -226,7 +251,12 @@ describe.skipIf(!DB_REACHABLE)('20261006000000_category_requests', () => {
       expect(raises(url, as('authenticated', OWNER, 'TRUNCATE category_requests;'))).toBe(true)
 
       // Reviewed rows must carry reviewed_at, and a new pending request is allowed after review.
-      expect(raises(url, `UPDATE category_requests SET status = 'declined', reviewed_at = NULL WHERE listing_id = '${THEIRS}';`)).toBe(true)
+      expect(
+        raises(
+          url,
+          `UPDATE category_requests SET status = 'declined', reviewed_at = NULL WHERE listing_id = '${THEIRS}';`
+        )
+      ).toBe(true)
       expect(raises(url, as('authenticated', OWNER, request(MINE, OWNER)))).toBe(false)
     })
   })

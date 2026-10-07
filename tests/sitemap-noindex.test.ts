@@ -12,7 +12,19 @@ function builder(table: string) {
       ;(calls[table] ??= []).push([method, args])
       return chain
     }
-  for (const m of ['select', 'eq', 'is', 'in', 'neq', 'not', 'order', 'limit', 'gte', 'lte', 'or']) {
+  for (const m of [
+    'select',
+    'eq',
+    'is',
+    'in',
+    'neq',
+    'not',
+    'order',
+    'limit',
+    'gte',
+    'lte',
+    'or',
+  ]) {
     chain[m] = record(m)
   }
   chain.then = (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null })

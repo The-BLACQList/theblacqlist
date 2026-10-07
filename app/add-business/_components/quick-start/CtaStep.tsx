@@ -2,7 +2,15 @@
 
 import { FIELD_IDS, QUICK_CTAS, findCta } from '@/lib/listings/quickStart'
 import { ChoiceCards } from './ChoiceCards'
-import { ERROR_ID, LABEL_CLASS, StepError, StepIntro, fieldA11y, inputClass, type StepProps } from './shared'
+import {
+  ERROR_ID,
+  LABEL_CLASS,
+  StepError,
+  StepIntro,
+  fieldA11y,
+  inputClass,
+  type StepProps,
+} from './shared'
 
 const CTA_CHOICES = QUICK_CTAS.map((c) => ({ value: c.value, title: c.label }))
 

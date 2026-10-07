@@ -44,7 +44,7 @@ test.describe('L. Cross-browser critical paths', () => {
     expect(errors(), `[${testInfo.project.name}] console errors during Discovery`).toEqual([])
   })
 
-  test('C — Add Business flow (sign in → /add-business → step 1 renders)', async ({
+  test('C — Add Business flow (sign in → /add-business → quick start advances)', async ({
     page,
   }, testInfo) => {
     const errors = trackConsoleErrors(page)
@@ -54,18 +54,21 @@ test.describe('L. Cross-browser critical paths', () => {
     await page.locator('main').first().waitFor()
     await expect(page.getByRole('heading', { name: 'Add your business' })).toBeVisible()
 
-    // Walk step 0 → step 1. A heading assertion alone would pass on a page
-    // whose form never mounted; advancing a step proves the wizard is live.
-    // (Not `page.locator('form').first()` — the site header carries its own
+    // Walk step 1 → step 2 of the quick start (ticket 126). A heading
+    // assertion alone would pass on a page whose form never mounted; advancing
+    // a step proves the quick start is live. Nothing is saved: the listing is
+    // only created on the last step, so this path leaves no draft behind.
+    // (Not `page.locator('form').first()`: the site header carries its own
     // search form, which is collapsed at 375px and would fail the mobile cell
     // for a reason that has nothing to do with this path.)
     await expect(page.getByRole('group', { name: 'Business ownership' })).toBeVisible()
-    // Anchored regex, not a substring: the Ally option's description reads
-    // "Not Black-owned, but supports Black-owned businesses", so a plain
-    // 'Black-Owned' name matches both buttons.
-    await page.getByRole('button', { name: /^Black-Owned/ }).click()
-    await page.getByRole('button', { name: 'Continue' }).click()
-    await expect(page.locator('#name')).toBeVisible()
+    // The radios are visually hidden inside their cards, so click the label.
+    // Anchored regex, not a substring: the Ally card's hint reads "Not
+    // Black-owned, but supports Black-owned businesses", so a plain
+    // 'Black-Owned' name matches both cards.
+    await page.getByText(/^Black-Owned$/).click()
+    await page.getByRole('button', { name: 'Next' }).click()
+    await expect(page.locator('#qs-name')).toBeVisible()
 
     expect(errors(), `[${testInfo.project.name}] console errors during Add Business`).toEqual([])
   })

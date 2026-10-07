@@ -151,7 +151,8 @@ describe('Save my draft', () => {
   })
 
   it('every step has a check', () => {
-    for (const step of QUICK_STEPS) expect(stepProblem(step, EMPTY_ANSWERS)?.step ?? step).toBe(step)
+    for (const step of QUICK_STEPS)
+      expect(stepProblem(step, EMPTY_ANSWERS)?.step ?? step).toBe(step)
   })
 })
 
@@ -179,12 +180,12 @@ describe('server field errors', () => {
 describe('the live page', () => {
   const cities = [{ id: 'c1', name: 'Atlanta', stateCode: 'GA' }]
   it('labels the place', () => {
-    expect(locationLabel({ where: 'visit', cityId: 'c1', cityText: '', stateText: '' }, cities)).toBe(
-      'Atlanta, GA'
-    )
-    expect(locationLabel({ where: 'online', cityId: '', cityText: '', stateText: '' }, cities)).toBe(
-      'Online'
-    )
+    expect(
+      locationLabel({ where: 'visit', cityId: 'c1', cityText: '', stateText: '' }, cities)
+    ).toBe('Atlanta, GA')
+    expect(
+      locationLabel({ where: 'online', cityId: '', cityText: '', stateText: '' }, cities)
+    ).toBe('Online')
     expect(
       locationLabel({ where: 'visit', cityId: '', cityText: 'Macon', stateText: 'GA' }, cities)
     ).toBe('Macon, GA')

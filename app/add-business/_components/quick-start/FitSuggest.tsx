@@ -1,7 +1,12 @@
 'use client'
 
 import type { GuideCategory } from '@/lib/categories/sorting-guide'
-import { FIELD_IDS, REQUEST_WORDS_MAX, type FitChoice, type Missing } from '@/lib/listings/quickStart'
+import {
+  FIELD_IDS,
+  REQUEST_WORDS_MAX,
+  type FitChoice,
+  type Missing,
+} from '@/lib/listings/quickStart'
 import {
   CharCount,
   HINT_CLASS,
@@ -70,7 +75,8 @@ export function FitSuggest({ fit, parents, problem, onChange, onBack, maxName }:
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="qs-request-words" className={LABEL_CLASS}>
-          Anything we should know? <span className="font-normal text-charcoal-soft">(optional)</span>
+          Anything we should know?{' '}
+          <span className="font-normal text-charcoal-soft">(optional)</span>
         </label>
         <textarea
           id="qs-request-words"
