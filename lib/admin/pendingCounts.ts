@@ -34,6 +34,8 @@ export interface PendingCounts {
   reflections: number
   /** Problem reports nobody has looked at yet (`problem_reports.status = 'new'`). */
   feedback: number
+  /** New categories owners asked for on /add-business (`category_requests.status = 'pending'`). */
+  categoryRequests: number
 }
 
 /** The window the Testers pill counts over, in days. */
@@ -45,8 +47,17 @@ export async function getPendingCounts(): Promise<PendingCounts> {
     Date.now() - REFLECTION_RECENT_DAYS * 24 * 60 * 60 * 1000
   ).toISOString()
 
-  const [entities, claims, verifications, reports, receipts, reviews, reflections, feedback] =
-    await Promise.all([
+  const [
+    entities,
+    claims,
+    verifications,
+    reports,
+    receipts,
+    reviews,
+    reflections,
+    feedback,
+    categoryRequests,
+  ] = await Promise.all([
     serviceClient
       .from('listings')
       .select('id', { count: 'exact', head: true })
@@ -92,6 +103,10 @@ export async function getPendingCounts(): Promise<PendingCounts> {
       .from('problem_reports')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'new'),
+    serviceClient
+      .from('category_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
   ])
 
   return {
@@ -103,6 +118,7 @@ export async function getPendingCounts(): Promise<PendingCounts> {
     reviews: reviews.count ?? 0,
     reflections: reflections.count ?? 0,
     feedback: feedback.count ?? 0,
+    categoryRequests: categoryRequests.count ?? 0,
   }
 }
 
@@ -121,5 +137,6 @@ export function toSidebarCounts(counts: PendingCounts): Record<string, number> {
     '/admin/receipts': counts.receipts,
     '/admin/testers': counts.reflections,
     '/admin/feedback': counts.feedback,
+    '/admin/category-requests': counts.categoryRequests,
   }
 }
