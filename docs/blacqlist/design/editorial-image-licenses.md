@@ -5,8 +5,10 @@ photographs are cleared outright — the original twelve, the six added on 2026-
 in PR #23, the two bento fills, `suit-and-ledger`, and the **three city skylines
 added on 2026-09-03**. **Seven** frames added the same day carry an inferred
 clearance that needs one word from the founder — see
-[The 2026-09-03 additions](#the-2026-09-03-additions).
-**Last updated:** 2026-09-03
+[The 2026-09-03 additions](#the-2026-09-03-additions). **Eight more** were added on
+2026-10-07 and are cleared by name, Canva Pro — see
+[The 2026-10-07 additions](#the-2026-10-07-additions).
+**Last updated:** 2026-10-07
 
 `.claude/rules/3d-assets.md` requires a recorded license per asset before it enters
 the product: source, author, license name, and commercial-use confirmation.
@@ -115,11 +117,11 @@ marked `Canva Pro [Assumption]` because the founder's clearance statement named 
 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
-| `afrofuturist-bookshop.webp` | 110 KB | `/about` hero + category bento — `books-publishing` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `sable-fitness-collective.webp` | 95 KB | `/about` pull band + category bento — `wellness-health` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `afrofuturist-bookshop.webp` | 110 KB | `/about` hero (bento tile moved to `notebook-skyline`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `sable-fitness-collective.webp` | 95 KB | `/about` pull band (bento tile moved to `quiet-moment`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `asha-osei-photography.webp` | 104 KB | homepage triptych — 01 Discover | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `calabash-candles.webp` | 53 KB | category bento — `retail-gifts` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `crown-and-coil-studio.webp` | 83 KB | category bento — `beauty-grooming` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `crown-and-coil-studio.webp` | 83 KB | `/for-business` closing band (bento tile moved to `braiding-chair`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `diaspora-creative-agency.webp` | 80 KB | homepage triptych — 03 Connect | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `melanin-law-group.webp` | 40 KB | category bento — `legal-financial` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `peach-and-rye-kitchen.webp` | 88 KB | homepage triptych — 02 Support | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
@@ -139,13 +141,21 @@ marked `Canva Pro [Assumption]` because the founder's clearance statement named 
 | `cities/dc.webp` | 127 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `cities/los-angeles.webp` | 196 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `cities/new-orleans.webp` | 167 KB | city chapters (home) + `/cities` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `categories/brick-and-mortar.webp` | 98 KB | `/discover` banner — `?type=business` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `categories/brick-and-mortar.webp` | 98 KB | **Retired 2026-10-07** — no longer referenced; replaced by `counter-handoff` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/restaurants.webp` | 103 KB | `/discover` banner — `?type=restaurant` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/products-and-services.webp` | 136 KB | `/discover` banner — `?type=service_provider` **and** `?type=vendor` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/professionals.webp` | 59 KB | `/discover` banner — `?type=professional` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/creatives.webp` | 64 KB | `/discover` banner — `?type=creative` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/events.webp` | 78 KB | `/discover` banner — `?type=event` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/jobs.webp` | 42 KB | `/discover` banner — `?type=job` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
+| `counter-handoff.webp` | 209 KB | `/discover` banner — `?type=business` + homepage Brick & Mortar avenue tile | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `citrus-harvest.webp` | 315 KB | `/discover` default banner (no type) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cafe-planning.webp` | 125 KB | `/for-business` hero | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `braiding-chair.webp` | 119 KB | category bento — `beauty-grooming` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `quiet-moment.webp` | 53 KB | category bento — `wellness-health` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `notebook-skyline.webp` | 77 KB | category bento — `books-publishing` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `notebook-and-laptop.webp` | 114 KB | story cover — *The list we could not find* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `desk-paperwork.webp` | 83 KB | story cover — *A page, not a listing* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 
 Rows 13–18 are the PR #23 additions, rows 19–21 the bento fill and
 `professional-services`, and the last ten the 2026-09-03 additions. Only the
@@ -552,6 +562,66 @@ Two measurements govern how they are used, both recorded in the component:
 
 ---
 
+## The 2026-10-07 additions
+
+The founder added eleven PNGs (`public/images/editorial/84.png`–`94.png`,
+2880×1920) and asked for two things: stop repeating photos where a new one fits,
+and fix the `/discover` Businesses banner, which looked soft next to the others
+`[Decision — founder, 2026-10-07]`.
+
+**License.** All eleven are **Canva Pro**, Content License Pro, no attribution
+required — *"Canva Pro"*, answering a direct question about these files
+`[Decision — founder, 2026-10-07]`. All three restrictions below apply.
+
+**Why the Businesses banner looked poor.** `categories/brick-and-mortar.webp` was
+1600×1067. A 1440×480 banner on a 2x screen needs about 2880 device pixels across,
+so the frame was stretched about 1.8×, and it was AI-made (see the ⚠ note above).
+The two new banner frames are exported at **2400px wide** (budget 320 KB) instead of
+1600, which `next/image` serves at `w=3840` on 2x screens. The optimizer now takes a
+width and a KB budget: `pnpm images:editorial <src> <out> 2400 320`.
+
+### Source-frame mapping
+
+| File | Size | Source | Width | Where used | Replaces (the repeat) |
+|---|---|---|---|---|---|
+| `counter-handoff.webp` | 209 KB | `84.png` | 2400 | `/discover?type=business` banner + Brick & Mortar avenue tile | `categories/brick-and-mortar.webp` |
+| `citrus-harvest.webp` | 315 KB | `94.png` | 2400 | `/discover` default banner | `discover-cover.webp` (same AI scene as brick-and-mortar) |
+| `cafe-planning.webp` | 125 KB | `90.png` | 1600 | `/for-business` hero | `peach-and-rye-kitchen` (also homepage triptych 02) |
+| `braiding-chair.webp` | 119 KB | `91.png` | 1600 | bento `beauty-grooming` | `crown-and-coil-studio` (also `/for-business` closing band) |
+| `quiet-moment.webp` | 53 KB | `87.png` | 1600 | bento `wellness-health` | `sable-fitness-collective` (also `/about` band) |
+| `notebook-skyline.webp` | 77 KB | `88.png` | 1600 | bento `books-publishing` | `afrofuturist-bookshop` (also `/about` hero) |
+| `notebook-and-laptop.webp` | 114 KB | `86.png` | 1600 | story cover, *The list we could not find* | `hands-and-drums` (also bento `arts-culture`) |
+| `desk-paperwork.webp` | 83 KB | `85.png` | 1600 | story cover, *A page, not a listing* | `calabash-candles` (also bento `retail-gifts`) |
+
+Sizes `[Measured — ls, 2026-10-07]`. The two story covers live in
+`editorial_articles.cover_image_path`, a DB value, so they change only after the
+files are live, through GATE-DATA (staging, then prod).
+
+**Not used:** `89.png` (fabric shop) has a cut-out subject with a visible halo and
+is upscaled; `92.png` shows a child, and minors appear only on the
+`childcare-family` tile (see [The one frame depicting a minor](#the-one-frame-depicting-a-minor));
+`93.png` (cattle farmer) is spare.
+
+**Kept as a repeat, on purpose:** `bbq-plate` (food tile and the *spending on
+purpose* cover), because none of the new frames is food; the banner and avenue-tile
+pairs, because each tile shows the photo its click lands on; and the shared
+`service_provider` / `vendor` banner.
+
+**Retired:** `categories/brick-and-mortar.webp` and `discover-cover.webp` are no
+longer referenced. They stay in the repo until the founder OKs deleting them.
+
+### Restriction 2
+
+Every new frame shows identifiable adults: a counter hand-off between two women, a
+grower picking oranges, a woman writing at a café table, a stylist braiding a
+client's hair, a woman with eyes closed, a young person with a notebook against a skyline, a
+woman with a notebook and laptop, a man at a desk with paperwork
+`[Observed — visual inspection, 2026-10-07]`. Each is placed with `alt=""` or a
+plain description (the `/for-business` hero), heads a category, banner or story,
+and never sits beside a named business, so restriction 2 holds.
+
+---
+
 ## Canva Pro restrictions that bind us
 
 The Canva Content License is permissive on the two things we needed — **commercial
@@ -622,7 +692,7 @@ Two deviations from the approved plan's Track 3, both deliberate:
 
 | Surface | Plan said | What shipped | Why |
 |---|---|---|---|
-| `/for-business` | Place a photo | **No photo** | `photographic-style-direction.md` Priority 6 specifies a *"Product screenshot or mockup"* for this slot, not a licensed photograph. Substituting stock there would violate the doc's own spec for the surface. Left for a real product shot. |
+| `/for-business` | Place a photo | **No photo** (superseded: the hero later took `peach-and-rye-kitchen`, and on 2026-10-07 `cafe-planning`) | `photographic-style-direction.md` Priority 6 specifies a *"Product screenshot or mockup"* for this slot, not a licensed photograph. Substituting stock there would violate the doc's own spec for the surface. Left for a real product shot. |
 | `/collections` | Place a photo | **Image slot wired, no value written** | Priority 4 is *"1 photo per collection"* — that lives in `collections.cover_image_path`, a production DB write and therefore **GATE-DATA**. `CollectionCard` now renders a 3:2 `CoverImage` that reads the column and falls back to the F-1 tile; the founder fills the column through `/admin/collections`, where the form field already exists. |
 
 Homepage hero (Priority 1) was already done before this work —

@@ -3,12 +3,17 @@
  *
  *   pnpm images:editorial                    listings/ → editorial/
  *   pnpm images:editorial <src> <out>        any pair of directories
+ *   pnpm images:editorial <src> <out> 2400 320   wider output, bigger budget
  *
  * The directory pair is an optional argument so a second batch — the city
  * photographs in `public/images/cities/` — runs through the same encoder and the
  * same 150 KB budget instead of being hand-converted. Both paths are resolved
  * relative to the repo root. Defaults are unchanged, so the bare command and the
  * `images:editorial` script keep working exactly as before.
+ *
+ * Width and KB budget are optional too. A full-width banner cropped to a 3:1
+ * box on a 2x screen needs more than 1600px, or it looks soft next to the rest
+ * (the /discover Businesses banner, 2026-10-07), so those export at 2400.
  *
  * Reads every JPEG/PNG in the source, resizes to TARGET_WIDTH preserving the
  * aspect ratio, and writes WebP into OUT_DIR. Run it once when photos are added;
@@ -34,14 +39,14 @@ import path from 'node:path'
 import sharp from 'sharp'
 
 const ROOT = process.cwd()
-const [srcArg, outArg] = process.argv.slice(2)
+const [srcArg, outArg, widthArg, kbArg] = process.argv.slice(2)
 const SRC_DIR = path.resolve(ROOT, srcArg ?? 'public/images/listings')
 const OUT_DIR = path.resolve(ROOT, outArg ?? 'public/images/editorial')
 
-/** Wide enough for a full-bleed hero on a 2x laptop without going 4K. */
-const TARGET_WIDTH = 1600
+/** Wide enough for a card or a 3:2 hero on a 2x laptop without going 4K. */
+const TARGET_WIDTH = widthArg ? Number(widthArg) : 1600
 /** Budget per file. Quality steps down until the file fits. */
-const MAX_BYTES = 150 * 1024
+const MAX_BYTES = (kbArg ? Number(kbArg) : 150) * 1024
 const QUALITY_LADDER = [82, 76, 70, 64, 58]
 
 async function optimize(file: string): Promise<{ name: string; bytes: number; quality: number }> {
@@ -67,6 +72,11 @@ async function optimize(file: string): Promise<{ name: string; bytes: number; qu
 }
 
 async function main() {
+  if (!Number.isInteger(TARGET_WIDTH) || TARGET_WIDTH <= 0 || !(MAX_BYTES > 0)) {
+    console.error('Width and KB budget must be positive numbers.')
+    process.exit(1)
+  }
+
   if (!existsSync(SRC_DIR)) {
     console.error(`Source directory not found: ${path.relative(ROOT, SRC_DIR)}`)
     process.exit(1)
