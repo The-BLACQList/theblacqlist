@@ -11,9 +11,17 @@ interface Props {
   /** Plan character limit, or null for no limit (ticket 119). */
   charLimit: number | null
   showUpgrade: boolean
+  /** Unsaved typing, for a live preview beside the form (ticket 129). */
+  onDraftChange?: (patch: { description: string }) => void
 }
 
-export function AboutSection({ listingId, description, charLimit, showUpgrade }: Props) {
+export function AboutSection({
+  listingId,
+  description,
+  charLimit,
+  showUpgrade,
+  onDraftChange,
+}: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
   const [chars, setChars] = useState(description?.length ?? 0)
   // A description saved before the limit existed stays as it is. Only an edit
@@ -44,7 +52,10 @@ export function AboutSection({ listingId, description, charLimit, showUpgrade }:
             name="description"
             rows={6}
             defaultValue={description ?? ''}
-            onChange={(e) => setChars(e.target.value.length)}
+            onChange={(e) => {
+              setChars(e.target.value.length)
+              onDraftChange?.({ description: e.target.value })
+            }}
             aria-describedby="about-description-count"
             placeholder="Describe your business, its history, and what makes it special…"
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"

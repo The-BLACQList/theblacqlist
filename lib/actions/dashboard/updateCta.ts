@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { VALID_CTA_TYPES } from '@/lib/constants/listing'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -80,6 +81,8 @@ export async function updateCtaAction(
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
     }
   }
+
+  revalidateOwnerEditors(listingId)
 
   const now = new Date().toISOString()
   return { success: true, savedAt: now }

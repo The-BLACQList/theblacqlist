@@ -6,11 +6,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkVideo } from '@/lib/stripe/planChecks'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
-export type UpdateListingVideoState =
-  | { success: true; savedAt: string }
-  | { error: string }
-  | null
+export type UpdateListingVideoState = { success: true; savedAt: string } | { error: string } | null
 
 const VIDEO_HOSTS = ['youtube.com', 'm.youtube.com', 'youtu.be', 'vimeo.com', 'player.vimeo.com']
 
@@ -76,7 +74,7 @@ export async function updateListingVideoAction(
   const city = listing.cities as { slug: string } | null
   const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
   if (publicUrl) revalidatePath(publicUrl)
-  revalidatePath(`/dashboard/pages/${listingId}/edit`)
+  revalidateOwnerEditors(listingId)
 
   return { success: true, savedAt: new Date().toISOString() }
 }

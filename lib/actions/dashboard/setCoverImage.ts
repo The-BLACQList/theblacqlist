@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type SetCoverImageState = { success: true } | { error: string } | null
 
@@ -74,6 +75,8 @@ export async function setCoverImageAction(
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
     }
   }
+
+  revalidateOwnerEditors(listingId)
 
   return { success: true }
 }

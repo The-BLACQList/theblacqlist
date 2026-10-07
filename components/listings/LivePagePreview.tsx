@@ -61,7 +61,9 @@ export function LivePagePreview({
         )}
         <div
           className="absolute inset-0"
-          style={{ background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%)' }}
+          style={{
+            background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.75) 100%)',
+          }}
           aria-hidden="true"
         />
         {ownershipLabel && (
@@ -100,7 +102,9 @@ export function LivePagePreview({
             <span
               className={cn(
                 'mt-3 inline-flex h-10 items-center rounded-full px-5 font-subhead text-sm font-bold',
-                ctaLabel ? 'bg-amber-gold text-brand-black' : 'border border-dashed border-white/50 text-white/60',
+                ctaLabel
+                  ? 'bg-amber-gold text-brand-black'
+                  : 'border border-dashed border-white/50 text-white/60',
                 mark(highlight === 'cta')
               )}
             >

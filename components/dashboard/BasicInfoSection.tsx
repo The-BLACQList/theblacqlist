@@ -8,9 +8,11 @@ interface Props {
   listingId: string
   name: string
   tagline: string | null
+  /** Unsaved typing, for a live preview beside the form (ticket 129). */
+  onDraftChange?: (patch: { name?: string; tagline?: string }) => void
 }
 
-export function BasicInfoSection({ listingId, name, tagline }: Props) {
+export function BasicInfoSection({ listingId, name, tagline, onDraftChange }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
 
   return (
@@ -36,6 +38,7 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
             name="name"
             type="text"
             defaultValue={name}
+            onChange={(e) => onDraftChange?.({ name: e.target.value })}
             required
             maxLength={200}
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
@@ -54,6 +57,7 @@ export function BasicInfoSection({ listingId, name, tagline }: Props) {
             name="tagline"
             type="text"
             defaultValue={tagline ?? ''}
+            onChange={(e) => onDraftChange?.({ tagline: e.target.value })}
             maxLength={140}
             placeholder="One-line description of your business"
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"

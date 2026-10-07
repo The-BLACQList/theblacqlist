@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkFaqAdd } from '@/lib/stripe/planChecks'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type AddListingFaqState = { success: true } | { error: string } | null
 
@@ -69,9 +70,10 @@ export async function addListingFaqAction(
 
   if (listing.status === 'published') {
     const citySlug = (listing.cities as { slug: string } | null)?.slug
-    if (citySlug && listing.slug) revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
+    if (citySlug && listing.slug)
+      revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
   }
-  revalidatePath(`/dashboard/pages/${listingId}/edit`)
+  revalidateOwnerEditors(listingId)
 
   return { success: true }
 }
