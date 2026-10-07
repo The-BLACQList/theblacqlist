@@ -6,6 +6,8 @@ import { getOwnerSession } from '@/lib/dashboard/guard'
 import { VALID_CTA_TYPES } from '@/lib/constants/listing'
 import { buildEntityUrl } from '@/lib/listings/url'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export type UpdateCtaState = { success: true; savedAt: string } | { error: string } | null
 
 export async function updateCtaAction(
@@ -26,10 +28,23 @@ export async function updateCtaAction(
     return { error: 'Invalid CTA type.' }
   }
   if (ctaType !== 'call' && !ctaUrl) {
-    return { error: 'A URL is required for this CTA type.' }
+    return {
+      error:
+        ctaType === 'message'
+          ? 'An email address is required for this button.'
+          : 'A URL is required for this CTA type.',
+    }
   }
-  if (ctaUrl && !ctaUrl.startsWith('https://')) {
-    return { error: 'CTA URL must start with https://' }
+  // "Send a message" takes an email (the quick start saves one) or a contact
+  // page link. Every other type takes an https link.
+  const isMessageEmail = ctaType === 'message' && !!ctaUrl && EMAIL_RE.test(ctaUrl)
+  if (ctaUrl && !isMessageEmail && !ctaUrl.startsWith('https://')) {
+    return {
+      error:
+        ctaType === 'message'
+          ? 'Enter an email address, or a link that starts with https://'
+          : 'CTA URL must start with https://',
+    }
   }
   if (ctaLabelOverride && ctaLabelOverride.length > 50) {
     return { error: 'Button label must be 50 characters or fewer.' }
