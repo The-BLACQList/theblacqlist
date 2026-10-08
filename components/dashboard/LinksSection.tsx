@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useRef, useEffect } from 'react'
+import { startTransition, useActionState, useEffect, useRef } from 'react'
 import { Loader2, Plus, AlertCircle, Trash2 } from 'lucide-react'
 import { addListingLinkAction } from '@/lib/actions/dashboard/addListingLink'
 import { deleteListingLinkAction } from '@/lib/actions/dashboard/deleteListingLink'
@@ -64,6 +64,15 @@ export function LinksSection({ listingId, links }: Props) {
     if (state && 'success' in state) formRef.current?.reset()
   }, [state])
 
+  // Submit through onSubmit, not `action`, so React does not clear the fields
+  // when the server refuses a link (ticket 133: a Free business adding
+  // Instagram keeps what it typed). Success still resets above.
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    startTransition(() => formAction(fd))
+  }
+
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
@@ -94,7 +103,11 @@ export function LinksSection({ listingId, links }: Props) {
           </ul>
         )}
 
-        <form ref={formRef} action={formAction} className="space-y-3 border-t border-charcoal/8 pt-4">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="space-y-3 border-t border-charcoal/8 pt-4"
+        >
           <input type="hidden" name="listing_id" value={listingId} />
           <div className="flex gap-2">
             <div>

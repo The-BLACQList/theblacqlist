@@ -235,7 +235,7 @@ export async function loadFinishData(
     trustTier: row.trust_tier,
     entityType: row.entity_type,
     tier: row.tier ?? null,
-    socialsShowOnPage: socialLinksShowOnPage(row.source ?? null, row.tier ?? null),
+    socialsShowOnPage: socialLinksShowOnPage(row.source ?? null, row.tier ?? null, row.entity_type),
     tagline: row.tagline ?? null,
     metaTitle: row.meta_title ?? null,
     metaDescription: row.meta_description ?? null,

@@ -423,7 +423,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
 
   const det = raw.listing_details_business
   const cityData = raw.cities
-  const showSocials = socialLinksShowOnPage(raw.source, raw.tier)
+  const showSocials = socialLinksShowOnPage(raw.source, raw.tier, raw.entity_type)
 
   const details: BusinessDetails = {
     description: det?.description ?? '',

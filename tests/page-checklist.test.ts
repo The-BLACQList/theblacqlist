@@ -9,6 +9,7 @@ type ChecklistListing = {
   meta_title: string | null
   meta_description: string | null
   cover_image_path: string | null
+  entity_type?: string | null
 }
 
 const EMPTY_LISTING: ChecklistListing = {
@@ -19,13 +20,7 @@ const EMPTY_LISTING: ChecklistListing = {
 }
 
 function coverItem(listing: Partial<ChecklistListing>, mediaCount = 0) {
-  const result = computePageChecklist(
-    { ...EMPTY_LISTING, ...listing },
-    null,
-    mediaCount,
-    0,
-    0
-  )
+  const result = computePageChecklist({ ...EMPTY_LISTING, ...listing }, null, mediaCount, 0, 0)
   const item = result.items.find((i) => i.id === 'cover')
   if (!item) throw new Error('cover item missing from the checklist')
   return item
@@ -104,6 +99,22 @@ describe('page checklist — plan aware', () => {
     const result = computePageChecklist(FULL_LISTING, FULL_DETAILS, 1, 1, 1, 'starter')
     expect(result.items.map((i) => i.id)).toEqual(expect.arrayContaining(['gallery', 'social']))
     expect(result.percent).toBeLessThan(100)
+  })
+
+  // Ticket 133: socials are free on creator pages, so a Free creator keeps them.
+  it('keeps social for a Free creator and passes it with socials and no phone or website', () => {
+    const creator = { ...FULL_LISTING, entity_type: 'creator' }
+    const details = { ...FULL_DETAILS, phone: null, social_tiktok: 'https://tiktok.com/@x' }
+    const social = computePageChecklist(creator, details, 1, 1, 1, 'free').items.find(
+      (i) => i.id === 'social'
+    )
+    expect(social?.passed).toBe(true)
+  })
+
+  it('still leaves social out for a Free business that sends its type', () => {
+    const business = { ...FULL_LISTING, entity_type: 'business' }
+    const result = computePageChecklist(business, FULL_DETAILS, 1, 1, 1, 'free')
+    expect(result.items.map((i) => i.id)).not.toContain('social')
   })
 
   it('scores every item when no tier is given', () => {

@@ -11,6 +11,7 @@ import {
   eventLimit,
   locationLimit,
   analyticsHistoryDays,
+  socialLinksShowOnPage,
   PHOTO_LIMITS,
   TIER_LIMITS,
   type GatedFeature,
@@ -241,5 +242,21 @@ describe('isAtLimit', () => {
   it('blocks immediately on a zero limit', () => {
     expect(isAtLimit('free', 'videos', 0)).toBe(true)
     expect(isAtLimit('starter', 'products', 0)).toBe(true)
+  })
+})
+
+describe('socialLinksShowOnPage', () => {
+  it('hides an owner business page\'s socials on Free and shows them from Starter', () => {
+    expect(socialLinksShowOnPage('owner', 'free', 'listing')).toBe(false)
+    expect(socialLinksShowOnPage('owner', 'starter', 'listing')).toBe(true)
+  })
+
+  it('shows a creator page\'s socials on any plan (ticket 133)', () => {
+    expect(socialLinksShowOnPage('owner', 'free', 'creator')).toBe(true)
+    expect(socialLinksShowOnPage('owner', null, 'creator')).toBe(true)
+  })
+
+  it('shows socials on pages we added from public sources', () => {
+    expect(socialLinksShowOnPage('seed', 'free')).toBe(true)
   })
 })
