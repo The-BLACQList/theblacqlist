@@ -43,11 +43,21 @@ export const TYPE_CATEGORY_SLUGS: Readonly<Partial<Record<EntityType, readonly s
  * Children a mapped parent does NOT bring along. A grocery store sits under
  * Food & Dining for shoppers browsing categories, but it is not a restaurant,
  * so it stays out of the Restaurants chip.
+ *
+ * A bank sits under Legal & Financial, but it is a place you visit, not a
+ * professional, so it stays out of the Professionals chip. An online-only bank
+ * still reaches Services through its `virtual` location type. Individual
+ * bankers and financial advisors list under Financial Planning & Wealth and
+ * stay in Professionals.
+ * [Decision - founder, 2026-10-08] "Banks are a brick and mortar, unless online
+ * only. Then they are a service. Bankers or personal people who work in
+ * finance go in professionals."
  */
 export const TYPE_CATEGORY_EXCLUDED_SLUGS: Readonly<
   Partial<Record<EntityType, readonly string[]>>
 > = {
   restaurant: ['grocery-markets'],
+  professional: ['banks-credit-unions'],
 }
 
 /**

@@ -118,7 +118,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-los-angeles.json',
     minPublished: 40,
     center: [-118.243683, 34.052235],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -130,7 +130,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-washington-dc.json',
     minPublished: 40,
     center: [-77.036873, 38.907192],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -142,7 +142,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-new-orleans.json',
     minPublished: 40,
     center: [-90.071533, 29.951065],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
 ]

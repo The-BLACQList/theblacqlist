@@ -1665,7 +1665,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "physical",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": "2301 Gallier St",
@@ -1688,7 +1688,7 @@
         "https://blackfarmersindex.com/region-6-louisiana",
         "https://bizneworleans.com/les-dames-descoffier-names-2026-honorees/"
       ],
-      "note": "Named a Les Dames d'Escoffier 2026 honoree (Mar 2026); Black ownership comes from the Black Farmers Index and a 2024 Via Nola Vie story on Black urban farms. Ownership mainly from the Black Farmers Index; the Via Nola Vie piece (May 2024) covers Black urban farms but does not state the owners' race directly. A 2023 NOLA Family article listed the market as Saturdays 10 to 1 except the first Saturday; not current, so hours left blank. The Black Farmers Index website link points to an unrelated shop, so no website is listed."
+      "note": "Named a Les Dames d'Escoffier 2026 honoree (Mar 2026); Black ownership comes from the Black Farmers Index and a 2024 Via Nola Vie story on Black urban farms. Ownership mainly from the Black Farmers Index; the Via Nola Vie piece (May 2024) covers Black urban farms but does not state the owners' race directly. A 2023 NOLA Family article listed the market as Saturdays 10 to 1 except the first Saturday; not current, so hours left blank. The Black Farmers Index website link points to an unrelated shop, so no website is listed. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {
@@ -1771,7 +1771,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "physical",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": "1820 Muse Rd",
@@ -1794,7 +1794,7 @@
         "https://blackfarmersindex.com/region-6-louisiana",
         "https://www.suagcenter.com/news/dr-orlando-mcmeans-tours-muse-3-farm-with-the-board-of-regents-and-the-lsu-ag-center"
       ],
-      "note": "Southern University Ag Center reported a June 2026 tour of the farm; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported), plus a long working tie with the Southern University Ag Center (an HBCU). Farm store is listed as 9am to 5pm but the days are not stated, so hours are blank. The phone on the site is a placeholder, so no phone is listed. The Advocate covered the farm in April 2025."
+      "note": "Southern University Ag Center reported a June 2026 tour of the farm; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported), plus a long working tie with the Southern University Ag Center (an HBCU). Farm store is listed as 9am to 5pm but the days are not stated, so hours are blank. The phone on the site is a placeholder, so no phone is listed. The Advocate covered the farm in April 2025. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {
@@ -1806,7 +1806,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "service_area",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": null,
@@ -1829,7 +1829,7 @@
         "https://blackfarmersindex.com/region-6-louisiana",
         "https://ccffarm.com/"
       ],
-      "note": "Website relaunched with blog posts from August to October 2026; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). The site lists 6400 Perkins Rd, which looks like a market location rather than the farm, so it is left off. The Black Farmers Index lists the Instagram as chriscamillefamilyfarm while the site links ccffarm; confirm which is current. Email info@ccffarm.com."
+      "note": "Website relaunched with blog posts from August to October 2026; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). The site lists 6400 Perkins Rd, which looks like a market location rather than the farm, so it is left off. The Black Farmers Index lists the Instagram as chriscamillefamilyfarm while the site links ccffarm; confirm which is current. Email info@ccffarm.com. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {
@@ -1841,7 +1841,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "service_area",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": null,
@@ -1865,7 +1865,7 @@
         "https://seedsoffaithgarden.com/",
         "https://www.youtube.com/@SeedsofFaithGarden"
       ],
-      "note": "Site is selling a current Fall/Winter CSA with a 2024 to 2026 copyright; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). Delivery covers East Baton Rouge Parish only, so it serves Baton Rouge more than New Orleans. Owner name not shown on the site."
+      "note": "Site is selling a current Fall/Winter CSA with a 2024 to 2026 copyright; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). Delivery covers East Baton Rouge Parish only, so it serves Baton Rouge more than New Orleans. Owner name not shown on the site. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {
@@ -1877,7 +1877,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "service_area",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": null,
@@ -1900,7 +1900,7 @@
         "https://blackfarmersindex.com/region-6-louisiana",
         "http://www.landyacrefarms.com/markets"
       ],
-      "note": "Site lists market dates for October and December 2026; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Markets are on set dates rather than weekly; the October 3, 2026 market was cancelled. Phone and email landy@landyacrefarms.com come from the farm's contact page. Near the edge of the 100 mile range."
+      "note": "Site lists market dates for October and December 2026; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Markets are on set dates rather than weekly; the October 3, 2026 market was cancelled. Phone and email landy@landyacrefarms.com come from the farm's contact page. Near the edge of the 100 mile range. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {
@@ -1912,7 +1912,7 @@
     "city_slug": "new-orleans-la",
     "category_slug": "farms-farm-stands",
     "location_type": "service_area",
-    "status": "draft",
+    "status": "published",
     "is_featured": false,
     "ownership_label": "black_owned",
     "address_line_1": null,
@@ -1936,7 +1936,7 @@
         "https://www.instagram.com/trijbeef/",
         "https://www.trijcattle.com/"
       ],
-      "note": "Online beef shop has items in stock and Instagram shows posts from 2025 including December 2025; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Pickup or delivery details are not on the site; buyers use the contact form. Several cuts are out of stock."
+      "note": "Online beef shop has items in stock and Instagram shows posts from 2025 including December 2025; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Pickup or delivery details are not on the site; buyers use the contact form. Several cuts are out of stock. Published 2026-10-08 on the founder's call (\"the Black Farmers Index is enough for now\")."
     }
   },
   {

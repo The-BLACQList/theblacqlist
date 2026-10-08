@@ -120,6 +120,42 @@ describe('expandTypeCategoryIds', () => {
   })
 })
 
+describe('banks are not professionals [Decision - founder, 2026-10-08]', () => {
+  const PRO = 'pro-0000'
+  const ADVISOR = 'pro-fpw'
+  const LEGAL = 'legal-000'
+  const MORTGAGE = 'legal-mort'
+  const BANK = 'legal-bank'
+  const FIN: CategoryNode[] = [
+    { id: PRO, slug: 'professional-services', parent_id: null },
+    { id: ADVISOR, slug: 'financial-planning-wealth', parent_id: PRO },
+    { id: LEGAL, slug: 'legal-financial', parent_id: null },
+    { id: MORTGAGE, slug: 'mortgage-lending', parent_id: LEGAL },
+    { id: BANK, slug: 'banks-credit-unions', parent_id: LEGAL },
+  ]
+  const pro = expandTypeCategoryIds('professional', FIN)
+
+  it('leaves the bank category out of Professionals and keeps its siblings', () => {
+    expect(pro.sort()).toEqual([ADVISOR, LEGAL, MORTGAGE, PRO].sort())
+  })
+
+  it('a branch bank matches neither Professionals nor Services', () => {
+    const branch = listing('business', BANK, 'physical')
+    expect(listingMatchesType('professional', branch, pro)).toBe(false)
+    expect(listingMatchesType('service_provider', branch, [])).toBe(false)
+  })
+
+  it('an online-only bank is a service', () => {
+    const online = listing('business', BANK, 'virtual')
+    expect(listingMatchesType('service_provider', online, [])).toBe(true)
+    expect(listingMatchesType('professional', online, pro)).toBe(false)
+  })
+
+  it('a banker or financial advisor stays in Professionals', () => {
+    expect(listingMatchesType('professional', listing('business', ADVISOR), pro)).toBe(true)
+  })
+})
+
 describe('listingMatchesType', () => {
   const food = expandTypeCategoryIds('restaurant', CATS)
 

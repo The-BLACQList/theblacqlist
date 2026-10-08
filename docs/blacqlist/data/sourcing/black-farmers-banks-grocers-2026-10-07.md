@@ -248,6 +248,12 @@ Every entry above was checked again, one at a time, for two things: a source tha
 
 Three farms whose only address looks like a home (Kimbleland, Swanson, Taylor Made Farm TX) are listed as "serves the area" with no street address.
 
+### Founder calls on the drafts (2026-10-08)
+
+- **Published (16):** the 12 with the Black Farmers Index as the only source ("its enough for now") and the 4 with indirect proof ("indirect proof it enough"): Eightfold Farms, Agape Farm, 804 Cattle Company, Orun Field Family Farm, Barcelo Gardens, Muse 3 Farm, Chris & Camille's Family Farm, Seeds of Faith Garden, Landy Acre Farms, Tri J Cattle, Sweetwater Farms, Kansas City Aquaponics, Swanson Family Farm, Kimbleland Farm, Lettuce Live Urban Farm, Nelson Farms.
+- **Kept off (26):** the 24 Black-led rows ("keep them off"), The Farmer Ken and GN Bank ("leave it off"). They stay as drafts.
+- **Bank rule:** a bank is a place you visit unless it is online only, and then it is a service. Bankers and other people in finance go in Professionals. Banks no longer show under the Professionals chip.
+
 ### Held (21), with the one thing each needs
 
 | City | Business | Needs |

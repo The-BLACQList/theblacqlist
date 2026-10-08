@@ -128,6 +128,10 @@ describe('searchGuide', () => {
     ['grocery store', 'grocery-markets'],
     ['credit union', 'banks-credit-unions'],
     ['bank', 'banks-credit-unions'],
+    ['banker', 'financial-planning-wealth'],
+    ['personal banker', 'financial-planning-wealth'],
+    ['financial advisor', 'financial-planning-wealth'],
+    ['loan officer', 'mortgage-lending'],
     ['family farm', 'farms-farm-stands'],
   ])('"%s" finds %s first', (query, slug) => {
     expect(searchGuide(query, CATS)[0]?.slug).toBe(slug)
@@ -169,7 +173,15 @@ describe('suggestEntityType', () => {
     ['a candle maker online', 'candles-home-fragrance', 'make_sell', 'online', 'vendor'],
     ['a plumber', 'plumbing', 'home', 'come_to_them', 'service_provider'],
     ['a grocery store, not a restaurant', 'grocery-markets', 'food', 'visit', 'business'],
-    ['a bank branch', 'banks-credit-unions', 'money_law', 'visit', 'professional'],
+    ['a bank branch is a business', 'banks-credit-unions', 'money_law', 'visit', 'business'],
+    [
+      'an online-only bank is a service',
+      'banks-credit-unions',
+      'money_law',
+      'online',
+      'service_provider',
+    ],
+    ['a financial advisor', 'financial-planning-wealth', 'money_law', 'online', 'professional'],
   ] as const)('%s', (_name, slug, answerId, where, type) => {
     expect(suggestEntityType(bySlug(slug), CATS, findAnswer(answerId), where)).toBe(type)
   })
