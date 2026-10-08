@@ -13,10 +13,41 @@ import {
   CATEGORY_LABELS,
   CATEGORY_ORDER,
   type ChecklistCategory,
+  type CreatorChecklistFacts,
 } from '@/lib/ai/checklist'
 
 interface Props {
   params: Promise<{ entityId: string }>
+}
+
+type Supabase = Awaited<ReturnType<typeof createClient>>
+
+/** Niche count and sample post or video for a creator page's checklist (ticket 132). */
+async function loadCreatorChecklistFacts(
+  supabase: Supabase,
+  listingId: string
+): Promise<CreatorChecklistFacts> {
+  const [{ data: attrRows }, { count: linkCount }, { data: video }] = await Promise.all([
+    supabase
+      .from('listing_attributes')
+      .select('value_id, attribute_values(attribute_groups(slug))')
+      .eq('listing_id', listingId),
+    supabase
+      .from('listing_links')
+      .select('id', { count: 'exact', head: true })
+      .eq('listing_id', listingId),
+    // '*' so a database without video_path (ticket 130) still loads.
+    supabase.from('listing_details_business').select('*').eq('listing_id', listingId).maybeSingle(),
+  ])
+  const rows = (attrRows ?? []) as unknown as {
+    attribute_values: { attribute_groups: { slug: string } | null } | null
+  }[]
+  const v = video as { video_embed_url?: string | null; video_path?: string | null } | null
+  return {
+    nicheCount: rows.filter((r) => r.attribute_values?.attribute_groups?.slug === 'creator-niche')
+      .length,
+    hasSample: !!(v?.video_embed_url || v?.video_path || (linkCount ?? 0) > 0),
+  }
 }
 
 // `isFeatureEnabled` is read below. No `export const dynamic` is needed here
@@ -65,7 +96,7 @@ export default async function AiSuggestionsPage({ params }: Props) {
     .from('listings')
     .select(
       `
-      id, name, tier, tagline, meta_title, meta_description, cover_image_path,
+      id, name, tier, entity_type, tagline, meta_title, meta_description, cover_image_path,
       listing_details_business(
         description, phone, website_url,
         social_instagram, social_facebook, social_tiktok,
@@ -153,6 +184,8 @@ export default async function AiSuggestionsPage({ params }: Props) {
   const hoursCount = hoursResult.count ?? 0
   const suggestions = suggestionsResult.data ?? []
   const aiBetaEnabled = isFeatureEnabled('aiBeta')
+  const creatorFacts =
+    listing.entity_type === 'creator' ? await loadCreatorChecklistFacts(supabase, entityId) : null
 
   const checklist = computePageChecklist(
     {
@@ -164,7 +197,9 @@ export default async function AiSuggestionsPage({ params }: Props) {
     details,
     mediaCount,
     serviceCount,
-    hoursCount
+    hoursCount,
+    undefined,
+    creatorFacts
   )
 
   const groupedItems = CATEGORY_ORDER.reduce<Record<ChecklistCategory, typeof checklist.items>>(

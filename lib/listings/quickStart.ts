@@ -12,6 +12,11 @@
  *   - what is still missing when the owner taps "Save my draft" early
  *   - which step a server field error belongs to
  *
+ * Creators use the same flow through `/add-business?as=creator` (ticket 132):
+ * the same steps, worded for a person, a creator format in place of the
+ * category guide, an optional city, and "I'm 18 or older" on the last step.
+ * Every rule below that differs takes the `mode`.
+ *
  * Rules only, no AI. Pure and client-safe.
  */
 
@@ -41,6 +46,13 @@ export const QUICK_STEPS = [
 
 export type QuickStep = (typeof QUICK_STEPS)[number]
 
+/** Who the quick start is for. `creator` comes from `?as=creator`. */
+export type QuickStartMode = 'business' | 'creator'
+
+export function quickStartMode(as: string | string[] | undefined): QuickStartMode {
+  return as === 'creator' ? 'creator' : 'business'
+}
+
 export type FitChoice =
   /** `answerId` is the group the owner tapped, when they came through the groups. */
   | { kind: 'category'; categoryId: string; answerId?: string }
@@ -61,6 +73,8 @@ export interface QuickStartAnswers {
   /** Empty means "use the first sentence of about". */
   tagline: string
   attested: boolean
+  /** Creators only: "I'm 18 or older". */
+  ageAttested: boolean
 }
 
 export const EMPTY_ANSWERS: QuickStartAnswers = {
@@ -76,6 +90,7 @@ export const EMPTY_ANSWERS: QuickStartAnswers = {
   ctaUrl: '',
   tagline: '',
   attested: false,
+  ageAttested: false,
 }
 
 export const ABOUT_MIN = 15
@@ -97,10 +112,12 @@ export function aboutMax(): number {
 export type QuickCtaInput = 'url' | 'tel' | 'email'
 
 export interface QuickCta {
-  value: 'book' | 'order' | 'call' | 'visit' | 'message'
+  value: 'book' | 'order' | 'call' | 'visit' | 'message' | 'subscribe' | 'inquire'
   label: string
   /** What the button says on the live page. */
   buttonLabel: string
+  /** Saved as cta_label_override when the type's own label would read wrong. */
+  labelOverride?: string
   input: QuickCtaInput
   inputLabel: string
   placeholder: string
@@ -149,16 +166,55 @@ export const QUICK_CTAS: readonly QuickCta[] = [
   },
 ]
 
-export function findCta(value: string): QuickCta | undefined {
-  return QUICK_CTAS.find((c) => c.value === value)
+// Creator buttons reuse existing CTA types with a person-worded label, so the
+// live page, the finish view and the CTA editor all read them without changes.
+export const CREATOR_CTAS: readonly QuickCta[] = [
+  {
+    value: 'message',
+    label: 'Message',
+    buttonLabel: 'Send a message',
+    input: 'email',
+    inputLabel: 'Email for messages',
+    placeholder: 'hello@yourname.com',
+  },
+  {
+    value: 'subscribe',
+    label: 'Follow',
+    buttonLabel: 'Follow me',
+    labelOverride: 'Follow me',
+    input: 'url',
+    inputLabel: 'Link to the profile you want people to follow',
+    placeholder: 'https://www.instagram.com/yourname',
+  },
+  {
+    value: 'inquire',
+    label: 'Work with me',
+    buttonLabel: 'Work with me',
+    labelOverride: 'Work with me',
+    input: 'url',
+    inputLabel: 'Link to your rates, media kit or booking page',
+    placeholder: 'https://yourname.com/work-with-me',
+  },
+]
+
+export function ctasFor(mode: QuickStartMode): readonly QuickCta[] {
+  return mode === 'creator' ? CREATOR_CTAS : QUICK_CTAS
+}
+
+export function findCta(value: string, mode: QuickStartMode = 'business'): QuickCta | undefined {
+  return ctasFor(mode).find((c) => c.value === value)
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /** The same checks createListingAction runs on cta_url. */
-export function ctaValueProblem(ctaType: string, value: string): string | null {
+export function ctaValueProblem(
+  ctaType: string,
+  value: string,
+  mode: QuickStartMode = 'business'
+): string | null {
   const v = value.trim()
-  const cta = findCta(ctaType)
+  const cta = findCta(ctaType, mode)
   if (!cta) return 'Pick what the main button does.'
   if (!v) return `Add your ${cta.inputLabel.toLowerCase()}.`
   if (cta.input === 'email') return EMAIL_RE.test(v) ? null : 'Enter a valid email address.'
@@ -281,18 +337,33 @@ export const FIELD_IDS = {
   ctaUrl: 'qs-cta-value',
   tagline: 'qs-tagline',
   attest: 'qs-attest',
+  age: 'qs-age',
 } as const
 
 /** The first problem on one step, or null when the step is done. */
-export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | null {
+export function stepProblem(
+  step: QuickStep,
+  a: QuickStartAnswers,
+  mode: QuickStartMode = 'business'
+): Missing | null {
+  const creator = mode === 'creator'
   switch (step) {
     case 'ownership':
       return a.ownership
         ? null
-        : { step, fieldId: FIELD_IDS.ownership, reason: 'Pick Black-Owned or Ally.' }
+        : {
+            step,
+            fieldId: FIELD_IDS.ownership,
+            reason: creator ? 'Pick Black Creator or Ally Creator.' : 'Pick Black-Owned or Ally.',
+          }
     case 'name': {
       const n = a.name.trim().length
-      if (n < NAME_MIN) return { step, fieldId: FIELD_IDS.name, reason: 'Add your business name.' }
+      if (n < NAME_MIN)
+        return {
+          step,
+          fieldId: FIELD_IDS.name,
+          reason: creator ? 'Add the name people know you by.' : 'Add your business name.',
+        }
       if (n > NAME_MAX)
         return { step, fieldId: FIELD_IDS.name, reason: `Keep the name to ${NAME_MAX} characters.` }
       return null
@@ -314,7 +385,12 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
       return null
     }
     case 'fit': {
-      if (!a.fit) return { step, fieldId: FIELD_IDS.fit, reason: 'Pick where your page is listed.' }
+      if (!a.fit)
+        return {
+          step,
+          fieldId: FIELD_IDS.fit,
+          reason: creator ? 'Pick what you make most.' : 'Pick where your page is listed.',
+        }
       if (a.fit.kind === 'request') {
         if (!a.fit.parentId)
           return { step, fieldId: FIELD_IDS.fit, reason: 'Pick the closest group.' }
@@ -335,6 +411,8 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
       return null
     }
     case 'where':
+      // A creator's city is optional. None means the page is listed as Online.
+      if (creator) return null
       if (!a.where)
         return { step, fieldId: FIELD_IDS.where, reason: 'Pick where customers get what you do.' }
       if (a.where !== 'online' && !a.cityId && !a.cityText.trim())
@@ -345,9 +423,9 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
         }
       return null
     case 'cta': {
-      if (!findCta(a.ctaType))
+      if (!findCta(a.ctaType, mode))
         return { step, fieldId: FIELD_IDS.ctaType, reason: 'Pick what the main button does.' }
-      const problem = ctaValueProblem(a.ctaType, a.ctaUrl)
+      const problem = ctaValueProblem(a.ctaType, a.ctaUrl, mode)
       return problem ? { step, fieldId: FIELD_IDS.ctaUrl, reason: problem } : null
     }
     case 'tagline': {
@@ -364,20 +442,27 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
       return null
     }
     case 'attest':
-      return a.attested
-        ? null
-        : {
-            step,
-            fieldId: FIELD_IDS.attest,
-            reason: 'Confirm you own or run this business.',
-          }
+      if (!a.attested)
+        return {
+          step,
+          fieldId: FIELD_IDS.attest,
+          reason: creator
+            ? 'Confirm this page is about you.'
+            : 'Confirm you own or run this business.',
+        }
+      if (creator && !a.ageAttested)
+        return { step, fieldId: FIELD_IDS.age, reason: 'Confirm you are 18 or older.' }
+      return null
   }
 }
 
 /** The first missing item across every step, in step order. */
-export function firstMissing(a: QuickStartAnswers): Missing | null {
+export function firstMissing(
+  a: QuickStartAnswers,
+  mode: QuickStartMode = 'business'
+): Missing | null {
   for (const step of QUICK_STEPS) {
-    const problem = stepProblem(step, a)
+    const problem = stepProblem(step, a, mode)
     if (problem) return problem
   }
   return null
@@ -393,6 +478,7 @@ export function stepForServerField(field: string): QuickStep | null {
     return 'fit'
   if (field === 'location_type' || field === 'city_id') return 'where'
   if (field === 'cta_type' || field === 'cta_url' || field === 'phone') return 'cta'
+  if (field === 'age_attested' || field === 'ownership_attested') return 'attest'
   return null
 }
 
@@ -401,16 +487,26 @@ export function stepForServerField(field: string): QuickStep | null {
 /** "Atlanta, GA", "Online", or null while unknown. */
 export function locationLabel(
   a: Pick<QuickStartAnswers, 'where' | 'cityId' | 'cityText' | 'stateText'>,
-  cities: readonly { id: string; name: string; stateCode: string | null }[]
+  cities: readonly { id: string; name: string; stateCode: string | null }[],
+  mode: QuickStartMode = 'business'
 ): string | null {
-  if (a.where === 'online') return 'Online'
+  if (mode === 'business' && a.where === 'online') return 'Online'
   const city = cities.find((c) => c.id === a.cityId)
   if (city) return city.stateCode ? `${city.name}, ${city.stateCode}` : city.name
   const typed = a.cityText.trim()
   if (typed) return a.stateText.trim() ? `${typed}, ${a.stateText.trim()}` : typed
-  return null
+  return mode === 'creator' ? 'Online' : null
 }
 
-export function whereLocationType(where: QuickStartAnswers['where']): string {
+/**
+ * A creator's work lives online wherever they are based, so a creator page is
+ * always `virtual`. A city, when given, only places the page in that city's
+ * listings and URL.
+ */
+export function whereLocationType(
+  where: QuickStartAnswers['where'],
+  mode: QuickStartMode = 'business'
+): string {
+  if (mode === 'creator') return 'virtual'
   return findWhere(where || null)?.locationType ?? ''
 }

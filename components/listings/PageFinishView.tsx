@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
+import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import {
   TIER_RANK,
   attributeLimit,
@@ -22,6 +23,7 @@ import { HoursSection } from '@/components/dashboard/HoursSection'
 import { OfferingsList } from '@/components/dashboard/OfferingsList'
 import { AddOfferingForm } from '@/components/dashboard/AddOfferingForm'
 import { AttributesSection } from '@/components/dashboard/AttributesSection'
+import { PartnershipSection } from '@/components/dashboard/PartnershipSection'
 import { SocialSection } from '@/components/dashboard/SocialSection'
 import { VideoSection } from '@/components/dashboard/VideoSection'
 import { LinksSection } from '@/components/dashboard/LinksSection'
@@ -116,7 +118,8 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
     data.media.length,
     data.services.length,
     data.hoursCount,
-    tier ?? undefined
+    tier ?? undefined,
+    data.entityType === 'creator' ? creatorChecklistFacts(data) : null
   )
   const missing = checklist.items.filter((i) => !i.passed).map((i) => itemLabel(i.id, i.label))
 
@@ -226,9 +229,11 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
             />
           </Anchor>
 
-          <Anchor id="hours">
-            <HoursSection listingId={data.id} hours={d?.hours ?? null} />
-          </Anchor>
+          {data.entityType !== 'creator' && (
+            <Anchor id="hours">
+              <HoursSection listingId={data.id} hours={d?.hours ?? null} />
+            </Anchor>
+          )}
 
           <Anchor id="services">
             <div className="flex flex-col gap-4">
@@ -256,6 +261,15 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               selectedValueIds={data.selectedValueIds}
               limit={attributeLimit(tier)}
               showUpgrade={showUpgrade}
+              entityType={data.entityType}
+            />
+          </Anchor>
+
+          <Anchor id="partnerships">
+            <PartnershipSection
+              listingId={data.id}
+              entityType={data.entityType}
+              openToPartnerships={data.openToPartnerships}
             />
           </Anchor>
 
@@ -273,14 +287,16 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
             />
           </Anchor>
 
-          <VideoSection
-            listingId={data.id}
-            videoEmbedUrl={data.videoEmbedUrl}
-            videoPath={data.videoPath}
-            storageUrl={storageUrl}
-            locked={!canAccess(tier, 'listing_video')}
-            showUpgrade={showUpgrade}
-          />
+          <Anchor id="video">
+            <VideoSection
+              listingId={data.id}
+              videoEmbedUrl={data.videoEmbedUrl}
+              videoPath={data.videoPath}
+              storageUrl={storageUrl}
+              locked={!canAccess(tier, 'listing_video')}
+              showUpgrade={showUpgrade}
+            />
+          </Anchor>
 
           <LinksSection listingId={data.id} links={data.links} />
 

@@ -126,3 +126,41 @@ describe('page checklist — plan aware', () => {
     expect(percent).toBeGreaterThan(0)
   })
 })
+
+// Ticket 132: a creator page drops hours and phone/website, and adds a niche
+// and a sample post or video.
+describe('page checklist — creator pages', () => {
+  const facts = { nicheCount: 0, hasSample: false }
+  const ids = (creator: typeof facts | null) =>
+    computePageChecklist(EMPTY_LISTING, null, 0, 0, 0, undefined, creator).items.map((i) => i.id)
+
+  it('drops contact and hours and adds niche and sample', () => {
+    const list = ids(facts)
+    expect(list).not.toContain('contact')
+    expect(list).not.toContain('hours')
+    expect(list).toContain('niche')
+    expect(list).toContain('sample')
+  })
+
+  it('leaves the business checklist unchanged without creator facts', () => {
+    const list = ids(null)
+    expect(list).toContain('contact')
+    expect(list).toContain('hours')
+    expect(list).not.toContain('niche')
+  })
+
+  it('passes niche and sample from the facts', () => {
+    const items = computePageChecklist(EMPTY_LISTING, null, 0, 0, 0, undefined, {
+      nicheCount: 2,
+      hasSample: true,
+    }).items
+    expect(items.find((i) => i.id === 'niche')?.passed).toBe(true)
+    expect(items.find((i) => i.id === 'sample')?.passed).toBe(true)
+  })
+
+  it('words the description and photo for a person', () => {
+    const items = computePageChecklist(EMPTY_LISTING, null, 0, 0, 0, undefined, facts).items
+    expect(items.find((i) => i.id === 'description')?.label).toBe('About you (100+ characters)')
+    expect(items.find((i) => i.id === 'logo')?.label).toBe('Profile photo uploaded')
+  })
+})

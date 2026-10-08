@@ -120,7 +120,11 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         )}
 
         <div className="flex items-center gap-2 flex-wrap mb-3">
-          <OwnershipBadge label={entity.ownership_label} size="small" />
+          <OwnershipBadge
+            label={entity.ownership_label}
+            entityType={entity.entity_type}
+            size="small"
+          />
           <StatusBadge tier={entity.trust_tier} size="small" />
           <span className="inline-flex items-center h-[26px] px-2.5 rounded-full border border-off-white/40 font-subhead text-[12px] font-semibold text-off-white">
             {typeLabel}

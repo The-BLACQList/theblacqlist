@@ -53,6 +53,30 @@ When a listing reaches `status = pending`, it appears in the admin queue at `/ad
 
 ---
 
+## Creator Pages
+
+Ticket 132. Creator pages (`entity_type = 'creator'`) arrive in the same `new_submission` queue as every other page. There is no separate queue. Review them with the steps above, plus these checks. The creator terms are in `/terms#creator-listings` and are pending legal review.
+
+### What to check on a creator page
+
+1. **It is one real person's page.** The page is about the person who submitted it. A page about someone else, a fan page, or a parody account is rejected with "Unverifiable information."
+
+2. **Linked profiles exist and belong to them.** Open at least one linked social profile. It should exist, be active, and match the name or handle on the page. If none of the links work, or they plainly belong to someone else, use "Unverifiable information."
+
+3. **Audience size is plausible.** The range is self-reported and shown that way on the page, so close enough is fine. Only act when it is far off from the linked profiles (for example "1M+" on accounts with a few hundred followers). Send it back with "Incomplete information" and ask them to pick the range that fits, or escalate.
+
+4. **The creator is an adult.** Creators attest they are 18 or older at sign-up. If the page, photos, or linked profiles suggest the creator is a minor, do not approve. Escalate to the editorial lead.
+
+5. **No minors shown as the creator.** The profile photo and sample content should not present a child as the creator, including "kid influencer" accounts run by a parent. Escalate these rather than approving.
+
+6. **The label is the one they attested.** "Black Creator" or "Ally Creator" is the creator's own attestation, just like the business label. The "What NOT to check" rules above apply in full: do not investigate or guess anyone's race from photos or names. Escalate only when the creator's own public profiles directly say something different from the label they chose.
+
+### Partnership switch
+
+The "Open to brand deals" switch is the creator's own statement. Do not check it, and do not reject a page because of it. The BLACQList makes no introductions.
+
+---
+
 ## Rejection Reasons — Approved Language
 
 Always use one of the approved reason codes. These are available as presets in the admin rejection form.

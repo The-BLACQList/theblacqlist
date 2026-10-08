@@ -1,6 +1,6 @@
 'use client'
 
-import { FIELD_IDS, QUICK_CTAS, findCta } from '@/lib/listings/quickStart'
+import { FIELD_IDS, ctasFor, findCta } from '@/lib/listings/quickStart'
 import { ChoiceCards } from './ChoiceCards'
 import {
   ERROR_ID,
@@ -12,8 +12,6 @@ import {
   type StepProps,
 } from './shared'
 
-const CTA_CHOICES = QUICK_CTAS.map((c) => ({ value: c.value, title: c.label }))
-
 const INPUT_TYPE = { url: 'url', tel: 'tel', email: 'email' } as const
 const AUTOCOMPLETE = { url: 'url', tel: 'tel', email: 'email' } as const
 
@@ -22,8 +20,9 @@ interface Props extends StepProps {
   email: string
 }
 
-export function CtaStep({ answers, onChange, problem, email }: Props) {
-  const cta = findCta(answers.ctaType)
+export function CtaStep({ answers, onChange, problem, email, mode = 'business' }: Props) {
+  const cta = findCta(answers.ctaType, mode)
+  const choices = ctasFor(mode).map((c) => ({ value: c.value, title: c.label }))
   const typeProblem = problem?.fieldId === FIELD_IDS.ctaType ? problem : null
 
   return (
@@ -35,7 +34,7 @@ export function CtaStep({ answers, onChange, problem, email }: Props) {
         name="cta"
         legend="Main button"
         idPrefix="qs-cta"
-        choices={CTA_CHOICES}
+        choices={choices}
         value={answers.ctaType}
         onChange={(v) => {
           if (v === answers.ctaType) return

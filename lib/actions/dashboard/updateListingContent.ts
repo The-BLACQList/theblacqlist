@@ -62,6 +62,15 @@ export async function updateListingContentAction(
     listingsUpdate.meta_description = metaDescription || null
   }
 
+  // The partner switch (ticket 132). A hidden marker says the form sent it, so
+  // an unticked box saves as off. Event and job pages don't have one.
+  if (formData.get('open_to_partnerships_field') !== null) {
+    if (listing.entity_type === 'event' || listing.entity_type === 'job') {
+      return { error: 'This kind of page does not have a partnership setting.' }
+    }
+    listingsUpdate.open_to_partnerships = formData.get('open_to_partnerships') === 'true'
+  }
+
   // ── Collect listing_details_business fields ────────────────────────────────
   const detailsUpdate: Record<string, unknown> = {}
   const description = formData.get('description')?.toString().trim()

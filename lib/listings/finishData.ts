@@ -1,7 +1,7 @@
 import 'server-only'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { OWNERSHIP_LABEL_META, type OwnershipLabel } from '@/lib/constants/listing'
+import { ownershipLabelText, type OwnershipLabel } from '@/lib/constants/listing'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { loadAttributeGroups, type FacetGroupData } from '@/lib/listings/facets'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -77,6 +77,8 @@ export interface FinishData {
   videoPath: string | null
   links: { id: string; link_type: string; url: string; label: string | null }[]
   faqs: { id: string; question: string; answer: string }[]
+  /** The partner switch (ticket 132). False when the column is not there yet. */
+  openToPartnerships: boolean
 }
 
 const DETAIL_COLUMNS = `
@@ -132,6 +134,7 @@ export async function loadFinishData(
     { data: mediaRows },
     { data: serviceRows },
     { data: groupRows },
+    { data: partnerRow },
   ] = await Promise.all([
     loadAttributeGroups(supabase, row.entity_type),
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
@@ -163,6 +166,8 @@ export async function loadFinishData(
       .eq('listing_id', row.id)
       .order('display_order', { ascending: true }),
     supabase.from('services').select('id, group_label').eq('listing_id', row.id),
+    // '*' so a database without open_to_partnerships (ticket 131) still loads.
+    supabase.from('listings').select('*').eq('id', row.id).maybeSingle(),
   ])
 
   // One-to-one embeds come back as an object; guard the array shape too.
@@ -204,7 +209,10 @@ export async function loadFinishData(
     metaDescription: row.meta_description ?? null,
     coverImagePath: row.cover_image_path ?? null,
     coverUrl: resolveMediaPath(row.cover_image_path),
-    ownershipLabel: ownership ? (OWNERSHIP_LABEL_META[ownership]?.label ?? null) : null,
+    ownershipLabel:
+      ownership === 'black_owned' || ownership === 'ally'
+        ? ownershipLabelText(ownership, row.entity_type)
+        : null,
     categoryName: category?.name ?? null,
     locationLabel: typedCity ?? textCity,
     publicUrl: buildEntityUrl(row.entity_type, city?.slug, row.slug),
@@ -220,5 +228,7 @@ export async function loadFinishData(
       (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
       [],
     faqs: (faqRows as { id: string; question: string; answer: string }[] | null) ?? [],
+    openToPartnerships:
+      (partnerRow as { open_to_partnerships?: boolean } | null)?.open_to_partnerships === true,
   }
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { ownershipLabelText } from '@/lib/constants/listing'
 import type { EntityPageData } from '@/types'
 
 const TIER_DESCRIPTIONS: Record<EntityPageData['trust_tier'], string> = {
@@ -9,11 +10,6 @@ const TIER_DESCRIPTIONS: Record<EntityPageData['trust_tier'], string> = {
   verified: 'This business has been reviewed and verified by The BLACQList team.',
   certified:
     'This business has met all certification standards set by The BLACQList, including documentation review and community standing.',
-}
-
-const OWNERSHIP_TEXT: Record<EntityPageData['ownership_label'], string> = {
-  black_owned: 'Black-Owned',
-  ally: 'Ally',
 }
 
 interface Props {
@@ -27,6 +23,7 @@ interface Props {
  */
 export function TemplateTrustPanel({ entity }: Props) {
   const isUnclaimed = entity.trust_tier === 'unclaimed'
+  const isCreator = entity.entity_type === 'creator'
 
   return (
     <div className="lg:sticky lg:top-32 bg-pale-lavender border-t-[3px] border-gold rounded-b-xl p-5 md:p-6">
@@ -41,8 +38,8 @@ export function TemplateTrustPanel({ entity }: Props) {
       <div className="divide-y divide-charcoal/10 font-body text-[13.5px] text-charcoal">
         <p className="py-2.5">{TIER_DESCRIPTIONS[entity.trust_tier]}</p>
         <p className="py-2.5">
-          Ownership label:{' '}
-          <strong className="text-brand-black">{OWNERSHIP_TEXT[entity.ownership_label]}</strong>
+          {isCreator ? 'Label' : 'Ownership label'}:{' '}
+          <strong className="text-brand-black">{ownershipLabelText(entity.ownership_label, entity.entity_type)}</strong>
         </p>
         {entity.review_count > 0 && (
           <p className="py-2.5">
@@ -54,7 +51,7 @@ export function TemplateTrustPanel({ entity }: Props) {
         )}
         {isUnclaimed && (
           <p className="py-2.5">
-            Is this your business?{' '}
+            {isCreator ? 'Is this you?' : 'Is this your business?'}{' '}
             <Link
               href={`/claim/${entity.id}`}
               className="font-subhead font-semibold text-amber hover:text-brand-black underline underline-offset-2 transition-colors duration-150"

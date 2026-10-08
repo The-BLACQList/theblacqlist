@@ -33,6 +33,21 @@ export const OWNERSHIP_LABEL_META: Record<
   ally: { label: 'Ally', shortLabel: 'Ally' },
 }
 
+// [Decision — founder, 2026-10-08] Creator pages use the same two labels,
+// worded for a person: "Black Creator / Ally Creator". Stored values are the
+// same, so filters and counts treat creators like every other page.
+export const CREATOR_OWNERSHIP_LABEL_TEXT: Record<OwnershipLabel, string> = {
+  black_owned: 'Black Creator',
+  ally: 'Ally Creator',
+}
+
+/** The ownership label as a page of this type shows it. */
+export function ownershipLabelText(label: OwnershipLabel, entityType?: string | null): string {
+  return entityType === 'creator'
+    ? CREATOR_OWNERSHIP_LABEL_TEXT[label]
+    : OWNERSHIP_LABEL_META[label].label
+}
+
 // Trust ladder (listings.trust_tier CHECK, set by the initial schema
 // `20260510000000_initial_blacqlist_mvp_schema` and never superseded — verified
 // against every later migration that touches trust_tier). Order is meaningful:
