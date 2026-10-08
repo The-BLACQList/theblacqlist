@@ -271,11 +271,9 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/peach-and-rye-kitchen.webp': 'object-[50%_40%]',
   // Hard hat at 16%.
   '/images/editorial/ujima-construction.webp': 'object-[50%_40%]',
-  // Category tiles added 2026-10-07. All three put a head near the top edge.
+  // Category tiles added 2026-10-07. Both put a head near the top edge.
   // The braider's head runs off the top; the braids and hands sit ~30–65%.
   '/images/editorial/braiding-chair.webp': 'object-[50%_35%]',
-  // Hair at the top edge, face and folded hands ~20–60%.
-  '/images/editorial/quiet-moment.webp': 'object-[50%_30%]',
   // Locs top out at ~2%, face ~10–30%.
   '/images/editorial/notebook-skyline.webp': 'object-[50%_15%]',
 
@@ -328,10 +326,11 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/categories/creatives.webp': 'object-[50%_40%]',
   '/images/editorial/categories/events.webp': 'object-[50%_45%]',
   '/images/editorial/categories/jobs.webp': 'object-[50%_35%]',
-  // Hair touches the top edge of the source and the face runs to ~45%, so this
-  // banner biases almost all the way up. Below `md` it shows the whole 3:2
-  // frame (`fullWidth`), so the value only matters on desktop.
-  '/images/editorial/citrus-harvest.webp': 'object-[50%_5%]',
+  // Hat brim to chin sits ~13–50% of the frame. At 4:1 (1914px wide) the band
+  // shows ~37% of the height, and 25% lands it on hat, face and smile with the
+  // cows' horns on the left under the headline. Below `md` it shows the whole
+  // 3:2 frame (`fullWidth`), so the value only matters from `md` up.
+  '/images/editorial/farmer-and-cattle.webp': 'object-[50%_25%]',
 }
 
 /**
@@ -458,7 +457,7 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   'construction-trades': '/images/editorial/ujima-construction.webp',
   'retail-gifts': '/images/editorial/calabash-candles.webp',
   'childcare-family': '/images/editorial/soleil-kidswear.webp',
-  'wellness-health': '/images/editorial/quiet-moment.webp',
+  'wellness-health': '/images/editorial/sable-fitness-collective.webp',
   'books-publishing': '/images/editorial/notebook-skyline.webp',
   healthcare: '/images/editorial/physician-portrait.webp',
   'social-media-marketing': '/images/editorial/agency-desk.webp',
