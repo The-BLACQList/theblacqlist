@@ -327,10 +327,11 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/categories/events.webp': 'object-[50%_45%]',
   '/images/editorial/categories/jobs.webp': 'object-[50%_35%]',
   // Hat brim to chin sits ~13–50% of the frame. At 4:1 (1914px wide) the band
-  // shows ~37% of the height, and 25% lands it on hat, face and smile with the
-  // cows' horns on the left under the headline. Below `md` it shows the whole
-  // 3:2 frame (`fullWidth`), so the value only matters from `md` up.
-  '/images/editorial/farmer-and-cattle.webp': 'object-[50%_25%]',
+  // shows ~37% of the height, and 34% keeps his whole chin and smile, giving up
+  // the top of the hat (founder, 2026-10-07), with the cows' horns on the left
+  // under the headline. Below `md` it shows the whole 3:2 frame (`fullWidth`),
+  // so the value only matters from `md` up.
+  '/images/editorial/farmer-and-cattle.webp': 'object-[50%_34%]',
 }
 
 /**
