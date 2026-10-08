@@ -361,7 +361,12 @@ export async function createListingAction(
         }
       }
     }
-    const socialError = checkSocialLinks('free', Object.fromEntries(socialFields), null)
+    const socialError = checkSocialLinks(
+      'free',
+      Object.fromEntries(socialFields),
+      null,
+      entityType
+    )
     if (socialError) {
       for (const [key, val] of socialFields) if (val) fieldErrors[key] = socialError
     }

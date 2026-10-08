@@ -29,6 +29,30 @@ export const SOCIAL_FIELDS = [
 
 export type SocialField = (typeof SOCIAL_FIELDS)[number]
 
+/** listing_links types that are social profiles. The rest (website, menu, booking...) are not gated. */
+export const SOCIAL_LINK_TYPES = [
+  'instagram',
+  'facebook',
+  'linkedin',
+  'tiktok',
+  'youtube',
+  'twitter',
+] as const
+
+export function isSocialLinkType(linkType: string): boolean {
+  return (SOCIAL_LINK_TYPES as readonly string[]).includes(linkType)
+}
+
+/**
+ * Social links are Starter for businesses and free on creator pages (ticket
+ * 133, founder decision 2026-10-08): for a creator, socials are the page.
+ */
+export function socialLinksAllowed(tier: string | null, entityType?: string | null): boolean {
+  return entityType === 'creator' || canAccess(tier, 'social_links')
+}
+
+const SOCIAL_UPGRADE = 'Social links are part of Starter. Upgrade to add them to your page.'
+
 function norm(value: string | null | undefined): string {
   return (value ?? '').trim()
 }
@@ -46,24 +70,40 @@ export function checkDescription(
 }
 
 /**
- * Social links are a Starter feature. On Free, clearing a link is fine and an
- * unchanged link is fine. Adding or changing one is not.
+ * Social links are a Starter feature, free on creator pages. On Free, clearing a
+ * link is fine and an unchanged link is fine. Adding or changing one is not.
  */
 export function checkSocialLinks(
   tier: string | null,
   next: Partial<Record<SocialField, string | undefined>>,
-  previous: Partial<Record<SocialField, string | null>> | null | undefined
+  previous: Partial<Record<SocialField, string | null>> | null | undefined,
+  entityType?: string | null
 ): string | null {
-  if (canAccess(tier, 'social_links')) return null
+  if (socialLinksAllowed(tier, entityType)) return null
   for (const field of SOCIAL_FIELDS) {
     const value = next[field]
     if (value === undefined) continue
     if (!norm(value)) continue
     if (norm(value) !== norm(previous?.[field])) {
-      return 'Social links are part of Starter. Upgrade to add them to your page.'
+      return SOCIAL_UPGRADE
     }
   }
   return null
+}
+
+/**
+ * Adding one row in the Links section. A social profile added there gets the
+ * same plan check as the Social section, so the Links section is not a way
+ * around it. Other link types keep today's rules.
+ */
+export function checkLinkAdd(
+  tier: string | null,
+  linkType: string,
+  entityType?: string | null
+): string | null {
+  if (!isSocialLinkType(linkType)) return null
+  if (socialLinksAllowed(tier, entityType)) return null
+  return SOCIAL_UPGRADE
 }
 
 /**

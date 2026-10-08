@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
+import { socialLinksAllowed } from '@/lib/stripe/planChecks'
 import {
   TIER_RANK,
   attributeLimit,
@@ -111,6 +112,7 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
       meta_title: data.metaTitle,
       meta_description: data.metaDescription,
       cover_image_path: data.coverImagePath,
+      entity_type: data.entityType,
     },
     d ? { ...d, description: draft.description || null } : null,
     data.media.length,
@@ -268,7 +270,7 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               socialTiktok={d?.social_tiktok ?? null}
               socialYoutube={d?.social_youtube ?? null}
               socialTwitter={d?.social_twitter ?? null}
-              locked={!canAccess(tier, 'social_links')}
+              locked={!socialLinksAllowed(tier, data.entityType)}
               showUpgrade={showUpgrade}
             />
           </Anchor>

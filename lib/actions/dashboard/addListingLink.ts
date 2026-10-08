@@ -6,6 +6,7 @@ import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { LINK_TYPES } from '@/lib/constants/listing'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
+import { checkLinkAdd } from '@/lib/stripe/planChecks'
 
 export type AddListingLinkState = { success: true } | { error: string } | null
 
@@ -33,13 +34,17 @@ export async function addListingLinkAction(
   const supabase = await createClient()
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, cities(slug)')
+    .select('id, slug, status, entity_type, tier, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) return { error: 'Listing not found or you do not have permission to edit it.' }
+
+  // Ticket 133: social profiles added here follow the Social section's plan rule.
+  const planError = checkLinkAdd(listing.tier, linkType, listing.entity_type)
+  if (planError) return { error: planError }
 
   const { data: lastLink } = await supabase
     .from('listing_links')
