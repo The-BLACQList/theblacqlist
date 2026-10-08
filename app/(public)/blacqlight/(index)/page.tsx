@@ -6,6 +6,8 @@ import { Container } from '@/components/layout/container'
 import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { createClient } from '@/lib/supabase/server'
 import { resolveStoryCover } from '@/lib/editorial/cover'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
+import { cn } from '@/lib/utils'
 import { editorialKind } from '@/lib/editorial/kind'
 import { readMinutes } from '@/lib/editorial/readTime'
 import { firstPullQuote } from '@/lib/editorial/inline'
@@ -97,7 +99,10 @@ export default async function BLACQLightPage({ searchParams }: Props) {
                       fill
                       priority
                       sizes="(min-width: 1024px) 50vw, 100vw"
-                      className="object-cover grayscale transition duration-300 group-hover:grayscale-0 motion-reduce:transition-none"
+                      className={cn(
+                        'object-cover grayscale transition duration-300 group-hover:grayscale-0 motion-reduce:transition-none',
+                        PHOTO_FOCAL[leadCover]
+                      )}
                     />
                   </div>
                 )}

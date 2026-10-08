@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { EMBER_WASH } from '@/lib/design/surfaces'
+import { cn } from '@/lib/utils'
+import { EMBER_WASH, PHOTO_FOCAL } from '@/lib/design/surfaces'
 
 export interface FeaturedArticle {
   title: string
@@ -44,7 +45,10 @@ export function BlacqlightFeature({ article }: Props) {
               alt=""
               fill
               sizes="(min-width: 768px) 40vw, 100vw"
-              className="object-cover grayscale transition duration-300 group-hover:grayscale-0 motion-reduce:transition-none"
+              className={cn(
+                'object-cover grayscale transition duration-300 group-hover:grayscale-0 motion-reduce:transition-none',
+                PHOTO_FOCAL[article.coverSrc]
+              )}
             />
           ) : (
             <>
