@@ -92,6 +92,14 @@ const BANNERS: Record<string, BannerContent> = {
     tone: 'linear-gradient(160deg, #2e2c3a 0%, #5a4a63 55%, #1d1a24 100%)',
     photo: `${P}/creatives.webp`,
   },
+  // No frame yet: the founder picks one from the kept library in ticket 135.
+  // Until then the tone gradient is the finished ground.
+  creator: {
+    title: 'Creators',
+    line: 'Voices worth following, and the partners brands are looking for.',
+    shot: 'creator mid-take, phone on a tripod, ring light',
+    tone: 'linear-gradient(155deg, #3a2a1c 0%, #6b4a2e 55%, #1f160e 100%)',
+  },
   event: {
     title: 'Events',
     line: 'Pull up. The culture is live.',
@@ -132,7 +140,7 @@ interface Props {
 
 /**
  * Photographic banner atop /discover that swaps with the selected avenue
- * (?type=) — eight type banners plus the default. Discovery UI continues
+ * (?type=) — nine type banners plus the default. Discovery UI continues
  * unchanged below it.
  *
  * ## Why this one lays a tint across the photograph

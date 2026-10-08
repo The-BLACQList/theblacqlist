@@ -1,7 +1,7 @@
 // Canonical value sets — these MUST match the LIVE DB CHECK constraints, which
 // are set by migration `20260524000001_fix_entity_location_cta_constraints`
-// (+ `20260622000007` re-adding 'event' and `20260813000000` re-adding 'job' to
-// entity_type). NOTE: these differ from the original `20260510000000` schema —
+// (+ `20260622000007` re-adding 'event', `20260813000000` re-adding 'job' and
+// `20261008010000` adding 'creator' to entity_type). NOTE: these differ from the original `20260510000000` schema —
 // that earlier constraint was superseded.
 // Do not "reconcile" against the initial schema; 20260524000001 is the truth.
 export const VALID_ENTITY_TYPES = [
@@ -13,6 +13,7 @@ export const VALID_ENTITY_TYPES = [
   'vendor',
   'event',
   'job',
+  'creator',
 ] as const
 
 // Authoritative business ownership label (listings.ownership_label CHECK, set by

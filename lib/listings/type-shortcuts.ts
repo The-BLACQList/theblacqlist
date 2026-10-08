@@ -37,6 +37,9 @@ export const TYPE_CATEGORY_SLUGS: Readonly<Partial<Record<EntityType, readonly s
     'books-publishing',
     'social-media-marketing',
   ],
+  // Its own parent (ticket 131), kept apart from Creatives: a creative is
+  // someone you commission, a creator is someone you follow or partner with.
+  creator: ['creators-influencers'],
 }
 
 /**

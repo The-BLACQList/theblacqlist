@@ -70,8 +70,8 @@ describe('lib/constants/listing.ts matches the migrations', () => {
     expect([...VALID_LOCATION_TYPES].sort()).toEqual([...fromSql].sort())
   })
 
-  it('VALID_ENTITY_TYPES is exactly the 20260813000000 CHECK — the newest one', () => {
-    const fromSql = checkValues(migration('20260813000000_job_entity.sql'), 'entity_type')
+  it('VALID_ENTITY_TYPES is exactly the 20261008010000 CHECK — the newest one', () => {
+    const fromSql = checkValues(migration('20261008010000_creator_entity.sql'), 'entity_type')
     expect([...VALID_ENTITY_TYPES].sort()).toEqual([...fromSql].sort())
   })
 

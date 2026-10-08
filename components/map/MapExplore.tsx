@@ -35,6 +35,7 @@ const TYPE_LABELS: Record<string, string> = {
   creative: 'Creatives',
   event: 'Events',
   job: 'Jobs',
+  creator: 'Creators',
 }
 
 /**

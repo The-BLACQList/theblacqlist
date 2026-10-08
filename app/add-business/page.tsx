@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { withoutCreatorCategories } from '@/lib/listings/creatorCategories'
 import { QuickStart } from './_components/quick-start/QuickStart'
 
 export const metadata = {
@@ -58,7 +59,11 @@ export default async function AddBusinessPage() {
           </p>
         </div>
 
-        <QuickStart categories={categories ?? []} cities={cities} email={user.email ?? ''} />
+        <QuickStart
+          categories={withoutCreatorCategories(categories ?? [])}
+          cities={cities}
+          email={user.email ?? ''}
+        />
       </div>
     </main>
   )

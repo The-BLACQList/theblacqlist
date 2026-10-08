@@ -2,7 +2,7 @@
 -- Seed File: supabase/seed.sql
 -- Product: The BLACQList
 -- Description: Reference data for all environments (dev, staging, production).
---              Covers states (51), cities (13), categories (25 top-level +
+--              Covers states (51), cities (13), categories (26 top-level +
 --              subcategories), and plans (3).
 --              Does NOT include test users, listings, media, or collections —
 --              those belong in supabase/seeds/005+ files (dev/staging only).
@@ -196,7 +196,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000001-0000-0000-0000-000000000022', 'Retail & Gifts',               'retail-gifts',                NULL, 22, true),
   ('c0000001-0000-0000-0000-000000000023', 'Photography & Videography',    'photography-videography',     NULL, 23, true),
   ('c0000001-0000-0000-0000-000000000024', 'Social Media & Marketing',     'social-media-marketing',      NULL, 24, true),
-  ('c0000001-0000-0000-0000-000000000025', 'Staffing & Workforce',         'staffing-workforce',          NULL, 25, true)
+  ('c0000001-0000-0000-0000-000000000025', 'Staffing & Workforce',         'staffing-workforce',          NULL, 25, true),
+  ('c0000001-0000-0000-0000-000000000026', 'Creators & Influencers',       'creators-influencers',        NULL, 26, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -544,6 +545,20 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
 ON CONFLICT (slug) DO NOTHING;
 
 
+-- ---------------------------------------------------------------------------
+-- SUBCATEGORIES — Creators & Influencers (parent: c0000001-0000-0000-0000-000000000026)
+-- Formats only. Niche is a filter (attribute group creator-niche), not a
+-- category. Mirrors migration 20261008010000_creator_entity.sql.
+-- ---------------------------------------------------------------------------
+INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VALUES
+  ('c0000002-0026-0000-0000-000000000001', 'Influencers',           'influencers',         'c0000001-0000-0000-0000-000000000026', 1, true),
+  ('c0000002-0026-0000-0000-000000000002', 'Video Creators',        'video-creators',      'c0000001-0000-0000-0000-000000000026', 2, true),
+  ('c0000002-0026-0000-0000-000000000003', 'Podcasters',            'podcasters',          'c0000001-0000-0000-0000-000000000026', 3, true),
+  ('c0000002-0026-0000-0000-000000000004', 'Streamers',             'streamers',           'c0000001-0000-0000-0000-000000000026', 4, true),
+  ('c0000002-0026-0000-0000-000000000005', 'Writers & Newsletters', 'writers-newsletters', 'c0000001-0000-0000-0000-000000000026', 5, true)
+ON CONFLICT (slug) DO NOTHING;
+
+
 -- =============================================================================
 -- SECTION 4: PLANS
 -- Four tier records: free, starter, growth, premium (see monetization-spec.md).
@@ -617,7 +632,10 @@ INSERT INTO attribute_groups (id, name, slug, description, input_type, applies_t
   ('a1000000-0000-0000-0000-000000000003', 'Accessibility',        'accessibility',      'Accessibility features at this business.',    'checkbox', '{}',                3, true, true),
   ('a1000000-0000-0000-0000-000000000004', 'Payment',              'payment',            'Accepted payment methods.',                   'checkbox', '{}',                4, true, true),
   ('a1000000-0000-0000-0000-000000000005', 'Amenities',            'amenities',          'On-site amenities.',                          'checkbox', '{}',                5, true, true),
-  ('a1000000-0000-0000-0000-000000000006', 'Dietary',              'dietary',            'Dietary options offered.',                    'checkbox', '{business,vendor}', 6, true, true)
+  ('a1000000-0000-0000-0000-000000000006', 'Dietary',              'dietary',            'Dietary options offered.',                    'checkbox', '{business,vendor}', 6, true, true),
+  ('a1000000-0000-0000-0000-000000000007', 'Niche',                         'creator-niche',     'What this creator makes content about.',                       'checkbox', '{creator}', 7, true, true),
+  ('a1000000-0000-0000-0000-000000000008', 'Platforms',                     'creator-platforms', 'Where this creator posts.',                                    'checkbox', '{creator}', 8, true, true),
+  ('a1000000-0000-0000-0000-000000000009', 'Audience size (self-reported)', 'audience-size',     'Total followers across platforms, as the creator reports it.', 'radio',    '{creator}', 9, true, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -693,20 +711,62 @@ INSERT INTO attribute_values (id, group_id, name, slug, display_order, is_active
   ('a2000000-0006-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000006', 'Organic',       'organic',       6, true)
 ON CONFLICT (group_id, slug) DO NOTHING;
 
+-- Creator niche (creator pages only)
+INSERT INTO attribute_values (id, group_id, name, slug, display_order, is_active) VALUES
+  ('a2000000-0007-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000007', 'Food & Drink',         'food-drink',        1, true),
+  ('a2000000-0007-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000007', 'Beauty',               'beauty',            2, true),
+  ('a2000000-0007-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000007', 'Fashion',              'fashion',           3, true),
+  ('a2000000-0007-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000007', 'Fitness & Wellness',   'fitness-wellness',  4, true),
+  ('a2000000-0007-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000007', 'Travel',               'travel',            5, true),
+  ('a2000000-0007-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000007', 'Parenting & Family',   'parenting-family',  6, true),
+  ('a2000000-0007-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000007', 'Money & Business',     'money-business',    7, true),
+  ('a2000000-0007-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000007', 'Tech',                 'tech',              8, true),
+  ('a2000000-0007-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000007', 'Gaming',               'gaming',            9, true),
+  ('a2000000-0007-0000-0000-000000000010', 'a1000000-0000-0000-0000-000000000007', 'Music',                'music',             10, true),
+  ('a2000000-0007-0000-0000-000000000011', 'a1000000-0000-0000-0000-000000000007', 'Comedy',               'comedy',            11, true),
+  ('a2000000-0007-0000-0000-000000000012', 'a1000000-0000-0000-0000-000000000007', 'Lifestyle',            'lifestyle',         12, true),
+  ('a2000000-0007-0000-0000-000000000013', 'a1000000-0000-0000-0000-000000000007', 'Faith',                'faith',             13, true),
+  ('a2000000-0007-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000007', 'Education',            'education',         14, true),
+  ('a2000000-0007-0000-0000-000000000015', 'a1000000-0000-0000-0000-000000000007', 'Culture & History',    'culture-history',   15, true),
+  ('a2000000-0007-0000-0000-000000000016', 'a1000000-0000-0000-0000-000000000007', 'Home & DIY',           'home-diy',          16, true)
+ON CONFLICT (group_id, slug) DO NOTHING;
+
+-- Creator platforms (creator pages only)
+INSERT INTO attribute_values (id, group_id, name, slug, display_order, is_active) VALUES
+  ('a2000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 'Instagram',            'instagram',         1, true),
+  ('a2000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 'TikTok',               'tiktok',            2, true),
+  ('a2000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 'YouTube',              'youtube',           3, true),
+  ('a2000000-0008-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000008', 'Podcast',              'podcast',           4, true),
+  ('a2000000-0008-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000008', 'Twitch',               'twitch',            5, true),
+  ('a2000000-0008-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000008', 'Facebook',             'facebook',          6, true),
+  ('a2000000-0008-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000008', 'X',                    'x',                 7, true),
+  ('a2000000-0008-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000008', 'LinkedIn',             'linkedin',          8, true),
+  ('a2000000-0008-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000008', 'Substack / Blog',      'substack-blog',     9, true)
+ON CONFLICT (group_id, slug) DO NOTHING;
+
+-- Audience size, self-reported (creator pages only; radio, pick one)
+INSERT INTO attribute_values (id, group_id, name, slug, display_order, is_active) VALUES
+  ('a2000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 'Under 10K',            'under-10k',         1, true),
+  ('a2000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', '10K to 50K',           '10k-50k',           2, true),
+  ('a2000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', '50K to 250K',          '50k-250k',          3, true),
+  ('a2000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', '250K to 1M',           '250k-1m',           4, true),
+  ('a2000000-0009-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000009', '1M+',                  '1m-plus',           5, true)
+ON CONFLICT (group_id, slug) DO NOTHING;
+
 
 -- =============================================================================
 -- SEED COMPLETE
 -- Summary:
 --   states:     51 rows (50 US states + DC)
 --   cities:     13 rows (3 primary launch + 10 secondary)
---   categories: 25 top-level + 163 subcategories = 188 total rows
+--   categories: 26 top-level + 174 subcategories = 200 total rows
 --   plans:      4 rows (free, starter, growth, premium)
---   attribute_groups: 6 rows; attribute_values: 41 rows
+--   attribute_groups: 9 rows; attribute_values: 72 rows
 --
 -- NEXT STEPS:
 --   1. Verify row counts: SELECT COUNT(*) FROM states; -- expect 51
 --   2. Verify row counts: SELECT COUNT(*) FROM cities; -- expect 13
---   3. Verify row counts: SELECT COUNT(*) FROM categories; -- expect 188
+--   3. Verify row counts: SELECT COUNT(*) FROM categories; -- expect 200
 --   4. Verify row counts: SELECT COUNT(*) FROM plans;  -- expect 3
 --   5. For dev/staging: run supabase/seeds/005_test_users.sql and 006_test_user_roles.sql
 --   6. For staging/production: run supabase/seeds/007_listings.sql and following files

@@ -60,6 +60,7 @@ describe('mapping', () => {
     expect(isMappedType('professional')).toBe(true)
     expect(isMappedType('creative')).toBe(true)
     expect(isMappedType('service_provider')).toBe(true)
+    expect(isMappedType('creator')).toBe(true)
     for (const exact of ['business', 'event', 'job', 'vendor', '', null, undefined]) {
       expect(isMappedType(exact)).toBe(false)
     }
@@ -153,6 +154,37 @@ describe('banks are not professionals [Decision - founder, 2026-10-08]', () => {
 
   it('a banker or financial advisor stays in Professionals', () => {
     expect(listingMatchesType('professional', listing('business', ADVISOR), pro)).toBe(true)
+  })
+})
+
+describe('creators stay apart from creatives (ticket 131)', () => {
+  const ART = 'art-0000'
+  const PAINT = 'art-paint'
+  const CREATORS = 'cre-0000'
+  const PODCAST = 'cre-pod'
+  const TREE: CategoryNode[] = [
+    { id: ART, slug: 'arts-culture', parent_id: null },
+    { id: PAINT, slug: 'visual-art-illustration', parent_id: ART },
+    { id: CREATORS, slug: 'creators-influencers', parent_id: null },
+    { id: PODCAST, slug: 'podcasters', parent_id: CREATORS },
+  ]
+  const creator = expandTypeCategoryIds('creator', TREE)
+  const creative = expandTypeCategoryIds('creative', TREE)
+
+  it('the Creators chip brings the new parent and its children only', () => {
+    expect(creator.sort()).toEqual([CREATORS, PODCAST].sort())
+  })
+
+  it('the Creatives chip does not reach the Creators category', () => {
+    expect(creative).not.toContain(CREATORS)
+    expect(creative).not.toContain(PODCAST)
+  })
+
+  it('a creator page matches Creators by its own type', () => {
+    expect(listingMatchesType('creator', listing('creator', PODCAST, 'virtual'), creator)).toBe(true)
+    expect(listingMatchesType('creative', listing('creator', PODCAST, 'virtual'), creative)).toBe(
+      false
+    )
   })
 })
 

@@ -7,6 +7,7 @@ export const ENTITY_TYPES: { value: EntityType; label: string }[] = [
   { value: 'service_provider', label: 'Services' },
   { value: 'professional', label: 'Professionals' },
   { value: 'creative', label: 'Creatives' },
+  { value: 'creator', label: 'Creators' },
   { value: 'event', label: 'Events' },
   { value: 'job', label: 'Jobs' },
   { value: 'vendor', label: 'Vendors' },

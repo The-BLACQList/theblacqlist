@@ -54,6 +54,34 @@ describe('buildBucketRules', () => {
   })
 })
 
+describe('creators (ticket 131)', () => {
+  const CREATORS = 'cre-0000'
+  const STREAM = 'cre-stream'
+  const withCreators = buildBucketRules([
+    ...CATS,
+    { id: CREATORS, slug: 'creators-influencers', parent_id: null },
+    { id: STREAM, slug: 'streamers', parent_id: CREATORS },
+  ])
+
+  it('checks Creators after Creatives and before Services', () => {
+    expect(withCreators.map((r) => r.bucket)).toEqual([
+      'restaurant',
+      'professional',
+      'creative',
+      'creator',
+      'service_provider',
+    ])
+  })
+
+  it('a creator page competes with creators', () => {
+    expect(resolveBucket(listing('creator', STREAM, 'virtual'), withCreators)).toBe('creator')
+  })
+
+  it('a business row in a Creators category is a creator, not an online service', () => {
+    expect(resolveBucket(listing('business', STREAM, 'virtual'), withCreators)).toBe('creator')
+  })
+})
+
 describe('resolveBucket', () => {
   it.each([
     ['a real restaurant row keeps its own type', listing('restaurant', RETAIL), 'restaurant'],
@@ -67,11 +95,7 @@ describe('resolveBucket', () => {
       listing('business', RETAIL, 'service_area'),
       'service_provider',
     ],
-    [
-      'category wins over location type',
-      listing('business', FOOD, 'traveling'),
-      'restaurant',
-    ],
+    ['category wins over location type', listing('business', FOOD, 'traveling'), 'restaurant'],
     ['an unmapped storefront is a business', listing('business', RETAIL), 'business'],
     ['no category and a storefront is a business', listing('business', null), 'business'],
     ['no location type is a business', listing('business', null, null), 'business'],

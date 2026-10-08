@@ -97,7 +97,11 @@ export async function submitListingAction(
   // ── Validate ────────────────────────────────────────────────────────────────
   const fieldErrors: FieldErrors = {}
 
-  if (!VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number])) {
+  if (
+    !VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number]) ||
+    // Creator pages only come through the creator path (ticket 132).
+    entityType === 'creator'
+  ) {
     fieldErrors.entity_type = 'Select a listing type.'
   }
 
