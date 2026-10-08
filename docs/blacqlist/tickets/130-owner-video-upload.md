@@ -1,8 +1,8 @@
 # Ticket 130: Owners upload their own page video
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR, 2026-10-07)
+**Phase:** V1.5 · **Priority:** P1 · **Status:** Done (2026-10-07)
 **Depends on:** 119 (plan limits), 129 (finish view, where the video section lives)
-**Gates:** GATE-DATA. Migration `20261007000000_listing_video_upload` adds a column, two CHECKs and a storage bucket. Apply on staging, then prod, each with a founder OK, before merge.
+**Gates:** GATE-DATA. Migration `20261007000000_listing_video_upload` adds a column, two CHECKs and a storage bucket. Apply on staging, then prod, each with a founder OK, before merge. **Applied 2026-10-07** (founder OK) to staging, then prod, through the Management API, with ledger rows on both. Staging probe before prod: CORS preflight from theblacqlist.com 200, signed PUT 200 with no apikey header, storage metadata and the first-bytes read both correct, wrong type refused (400), test files removed.
 
 ---
 
