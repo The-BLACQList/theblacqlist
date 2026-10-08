@@ -88,7 +88,7 @@ export function checkFaqAdd(tier: string | null, existingCount: number): string 
   return `Your plan includes up to ${limit} common questions. Remove one, or upgrade for more.`
 }
 
-/** Video link. Clearing is always allowed, and so is saving the same link. */
+/** Page video, a link or an upload. Clearing is always allowed, and so is saving the same one. */
 export function checkVideo(
   tier: string | null,
   next: string | null,

@@ -467,6 +467,7 @@ Available for Business only. Gallery renders as a responsive uniform grid: 3 col
 
 - Beta: Media available for Professional (portfolio grid), Creative (portfolio as the primary feature, occupying the largest visual space on the page), Event (event photo gallery).
 - V1: Video embeds added — owner can provide YouTube or Vimeo URLs; these render as embedded players within the gallery in a mixed grid of images and video thumbnails. Maximum 3 video embeds per Page at V1.
+- Shipped instead (ticket 130, 2026-10-07): one video per Page in its own section, either a YouTube or Vimeo link or a file the owner uploads (MP4, MOV or WebM, up to 50 MB).
 - V2: Product images for Product sub-pages support a dedicated carousel at the top of the product Page (separate from the hero treatment).
 
 **Empty state:**

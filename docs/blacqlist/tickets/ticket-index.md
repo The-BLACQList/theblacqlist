@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 128
+**Total tickets:** 130
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-07
 
 ---
 
@@ -126,6 +126,7 @@
 | [116](116-blacqlight-index-a.md) | The BLACQLight index A: "Cover story" | V1.5 | P2 | — | Ready | Kind from tags, computed read time, directory strip from body links |
 | [117](117-blacqlight-article-a.md) | The BLACQLight article page | V1.5 | P2 | 116 | Ready | Same PR as 116; markdown links in the renderer; adding links to live stories is GATE-PUBLISH |
 | [118](118-editorial-article-fields.md) | Editorial fields: photo credit + linked businesses | Later | P3 | 116, 117 | Later | GATE-DATA; spec Q3 option B, approved as the later path |
+| [119](119-plan-limits-enforcement.md) | Enforce the Free and Starter plan limits | V1.5 | P1 | — | Done | Founder 2026-10-03 "Enforce the limits"; LIVE via #173; row added 2026-10-07 (was missing) |
 | [120](120-twisted-soul-website.md) | Fix the Twisted Soul Cookhouse website | V1 | P1 | — | Ready | Seed files + declared correction; prod write is GATE-DATA; skips claimed listings |
 | [121](121-home-story-cover.md) | Story cover on the homepage | V1.5 | P2 | 116, 117 | Ready | Feature block + rail cards; ember wash stays as the fallback |
 | [122](122-opening-soon-covers.md) | Opening-soon covers: Marketplace, Jobs, The Collective | V1.5 | P1 | — | Ready | Flags off in prod by default; proxy rewrites to /soon, APIs 403, receipt actions refuse; nav keeps links with a Soon pill |
@@ -136,3 +137,4 @@
 | [127](127-add-business-site-import.md) | Bring in what you already have (site import) | V1.5 | P1 | 126 | Needs approval | Behind FEATURE_SITE_IMPORT; safe fetcher + reader + photo import; needs HTML parser and sharp-to-dependencies approval |
 | [128](128-add-business-ai-drafts.md) | AI drafts and category help on /add-business | V2 | P2 | 126, 127 | Blocked | Behind FEATURE_AI_ONBOARDING, off by default; GATE-SPEND, safety-plan exception, six AI launch gates |
 | [129](129-edit-page-finish-view.md) | Owners edit their page in the finish view | V1.5 | P1 | 126 | In review | Founder 2026-10-06: every business page edit uses the side-by-side finish view; 2026-10-07: creative, service provider and vendor too; photos + services fold in; events/jobs unchanged; no migration |
+| [130](130-owner-video-upload.md) | Owners upload their own page video | V1.5 | P1 | 119, 129 | Done | Migration on staging + prod 2026-10-07. Founder 2026-10-07: video not limited to YouTube/Vimeo; MP4/MOV/WebM up to 50 MB, one video per page; GATE-DATA (video_path column + listing-video bucket) |

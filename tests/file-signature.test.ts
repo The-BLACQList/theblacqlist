@@ -126,3 +126,49 @@ describe('readSignatureHeader', () => {
     }
   })
 })
+
+// Page videos (ticket 130). Kept out of the cross-type matrix above on purpose:
+// an MP4 is a valid QuickTime file by design, so mp4 bytes declared as
+// video/quicktime must pass.
+describe('page video signatures', () => {
+  const ftyp = (brand: string) =>
+    new Uint8Array([0x00, 0x00, 0x00, 0x20, ...Array.from(`ftyp${brand}`, (c) => c.charCodeAt(0))])
+  const atom = (name: string) =>
+    new Uint8Array([0x00, 0x00, 0x00, 0x08, ...Array.from(name, (c) => c.charCodeAt(0)), 0, 0, 0, 0])
+  const webm = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81, 0x01, 0x42, 0xf7, 0x81])
+
+  it('accepts an MP4 by its ftyp box', () => {
+    expect(matchesDeclaredType(ftyp('isom'), 'video/mp4')).toBe(true)
+    expect(matchesDeclaredType(ftyp('mp42'), 'video/mp4')).toBe(true)
+  })
+
+  it('accepts a phone .mov (ftyp qt) and an older one that opens with moov or wide', () => {
+    expect(matchesDeclaredType(ftyp('qt  '), 'video/quicktime')).toBe(true)
+    expect(matchesDeclaredType(atom('moov'), 'video/quicktime')).toBe(true)
+    expect(matchesDeclaredType(atom('wide'), 'video/quicktime')).toBe(true)
+  })
+
+  it('does not take a bare moov file as MP4', () => {
+    expect(matchesDeclaredType(atom('moov'), 'video/mp4')).toBe(false)
+  })
+
+  it('accepts WebM by its EBML header', () => {
+    expect(matchesDeclaredType(webm, 'video/webm')).toBe(true)
+  })
+
+  it('rejects images, PDFs and zeroes declared as video', () => {
+    for (const video of ['video/mp4', 'video/quicktime', 'video/webm']) {
+      for (const type of TYPES) expect(matchesDeclaredType(header(type), video)).toBe(false)
+      expect(matchesDeclaredType(new Uint8Array(SIGNATURE_HEADER_BYTES), video)).toBe(false)
+    }
+  })
+
+  it('rejects video bytes declared as an image', () => {
+    expect(matchesDeclaredType(ftyp('isom'), 'image/png')).toBe(false)
+    expect(matchesDeclaredType(webm, 'image/webp')).toBe(false)
+  })
+
+  it('does not match WebM on a shifted header', () => {
+    expect(matchesDeclaredType(new Uint8Array([0, ...webm]), 'video/webm')).toBe(false)
+  })
+})

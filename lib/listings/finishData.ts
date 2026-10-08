@@ -73,6 +73,8 @@ export interface FinishData {
   attributeGroups: FacetGroupData[]
   selectedValueIds: string[]
   videoEmbedUrl: string | null
+  /** Storage path of an uploaded video (ticket 130). A page has a link or a file, not both. */
+  videoPath: string | null
   links: { id: string; link_type: string; url: string; label: string | null }[]
   faqs: { id: string; question: string; answer: string }[]
 }
@@ -135,7 +137,8 @@ export async function loadFinishData(
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
     supabase
       .from('listing_details_business')
-      .select('video_embed_url')
+      // '*' so a database without video_path (ticket 130) still loads the link.
+      .select('*')
       .eq('listing_id', row.id)
       .maybeSingle(),
     supabase
@@ -211,7 +214,8 @@ export async function loadFinishData(
     hoursCount: countOpenDays(details?.hours ?? null),
     attributeGroups,
     selectedValueIds: ((attrRows as { value_id: string }[] | null) ?? []).map((r) => r.value_id),
-    videoEmbedUrl: (videoRow as { video_embed_url: string | null } | null)?.video_embed_url ?? null,
+    videoEmbedUrl: (videoRow as { video_embed_url?: string | null } | null)?.video_embed_url ?? null,
+    videoPath: (videoRow as { video_path?: string | null } | null)?.video_path ?? null,
     links:
       (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
       [],
