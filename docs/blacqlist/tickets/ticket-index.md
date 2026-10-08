@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 130
+**Total tickets:** 135
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-10-07
+**Last updated:** 2026-10-08
 
 ---
 
@@ -138,3 +138,8 @@
 | [128](128-add-business-ai-drafts.md) | AI drafts and category help on /add-business | V2 | P2 | 126, 127 | Blocked | Behind FEATURE_AI_ONBOARDING, off by default; GATE-SPEND, safety-plan exception, six AI launch gates |
 | [129](129-edit-page-finish-view.md) | Owners edit their page in the finish view | V1.5 | P1 | 126 | In review | Founder 2026-10-06: every business page edit uses the side-by-side finish view; 2026-10-07: creative, service provider and vendor too; photos + services fold in; events/jobs unchanged; no migration |
 | [130](130-owner-video-upload.md) | Owners upload their own page video | V1.5 | P1 | 119, 129 | Done | Migration on staging + prod 2026-10-07. Founder 2026-10-07: video not limited to YouTube/Vimeo; MP4/MOV/WebM up to 50 MB, one video per page; GATE-DATA (video_path column + listing-video bucket) |
+| [131](131-creator-entity-and-category.md) | Creator listing type, category and filters | V1.5 | P1 | — | Ready | Founder 2026-10-08: creators easy to find as a group, niche as a filter; GATE-DATA (type CHECK, Creators & Influencers category, 3 creator-only groups, open_to_partnerships, RPC param) |
+| [132](132-creator-sign-up-path.md) | Creator sign-up path | V1.5 | P1 | 131, 126, 129 | Ready | /add-business?as=creator; Black Creator / Ally Creator + 18+; creator tags outside the Free cap; copy needs founder + legal sign-off; no invites |
+| [133](133-creator-social-links-and-link-paywall-fix.md) | Free social links for creators, and close the Links paywall hole | V1.5 | P1 | 131, 119 | Ready | Socials free on creator pages only; addListingLink gets the social plan check |
+| [134](134-partners-filter-and-badges.md) | "Open to partnerships" filter and badges | V1.5 | P1 | 131, 132 | Ready | partners=1 on Discover; badge text + icon; no messaging or introductions |
+| [135](135-home-creators-band.md) | Creators on the home page | V1.5 | P1 | 131, 132 | Needs approval | Hero chip, Creators band (invitation under 4 creators), Avenues tile; round-1 workshop for tile + photo picks |
