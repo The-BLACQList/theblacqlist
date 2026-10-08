@@ -105,7 +105,7 @@ export async function updateListingContentAction(
       if (limitError) return { error: limitError }
     }
     if (touchesSocial) {
-      const limitError = checkSocialLinks(listing.tier, socialNext, current)
+      const limitError = checkSocialLinks(listing.tier, socialNext, current, listing.entity_type)
       if (limitError) return { error: limitError }
     }
   }

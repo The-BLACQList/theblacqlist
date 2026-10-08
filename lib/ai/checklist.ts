@@ -3,7 +3,8 @@
 // Used by /dashboard/pages/[entityId]/ai-suggestions to compute a page score,
 // and (with a tier) by the add-business finish page meter (ticket 126).
 
-import { canAccess, photoLimit } from '@/lib/stripe/features'
+import { photoLimit } from '@/lib/stripe/features'
+import { socialLinksAllowed } from '@/lib/stripe/planChecks'
 
 export type ChecklistCategory = 'required' | 'recommended' | 'seo' | 'engagement'
 
@@ -36,6 +37,8 @@ interface ListingFields {
    * drive cover uploads unable to see whether a cover exists.
    */
   cover_image_path: string | null
+  /** Socials are free on creator pages (ticket 133), so they stay reachable on Free. */
+  entity_type?: string | null
 }
 
 interface DetailsFields {
@@ -174,7 +177,8 @@ export function computePageChecklist(
     },
   ]
 
-  const reachable = tier === undefined ? items : items.filter((i) => isReachable(i.id, tier))
+  const reachable =
+    tier === undefined ? items : items.filter((i) => isReachable(i.id, tier, listing.entity_type))
 
   const maxScore = reachable.reduce((sum, item) => sum + item.weight, 0)
   const score = reachable.filter((i) => i.passed).reduce((sum, i) => sum + i.weight, 0)
@@ -189,12 +193,12 @@ export function computePageChecklist(
   return { items: reachable, score, maxScore, percent, grade }
 }
 
-function isReachable(id: string, tier: string | null): boolean {
+function isReachable(id: string, tier: string | null, entityType?: string | null): boolean {
   if (id === 'gallery') {
     const limit = photoLimit(tier)
     return limit === null || limit >= 3
   }
-  if (id === 'social') return canAccess(tier, 'social_links')
+  if (id === 'social') return socialLinksAllowed(tier, entityType)
   return true
 }
 
