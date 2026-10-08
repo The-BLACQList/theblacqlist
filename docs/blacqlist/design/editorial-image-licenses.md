@@ -149,12 +149,12 @@ marked `Canva Pro [Assumption]` because the founder's clearance statement named 
 | `categories/events.webp` | 78 KB | `/discover` banner — `?type=event` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/jobs.webp` | 42 KB | `/discover` banner — `?type=job` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `counter-handoff.webp` | 209 KB | `/discover` banner — `?type=business` + homepage Brick & Mortar avenue tile | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `citrus-harvest.webp` | 315 KB | Not used (was the `/discover` default banner for a day; too tall a subject for a 4:1 band) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `cafe-planning.webp` | 125 KB | `/for-business` hero | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `citrus-harvest.webp` | 315 KB | `/for-business` hero (since 2026-10-07; too tall a subject for the 4:1 `/discover` band, fits the 4:3 hero) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `cafe-planning.webp` | 125 KB | story cover — *The list we could not find* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `braiding-chair.webp` | 119 KB | category bento — `beauty-grooming` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `quiet-moment.webp` | 53 KB | Not used (founder put the exercising women back on `wellness-health`) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `notebook-skyline.webp` | 77 KB | category bento — `books-publishing` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `notebook-and-laptop.webp` | 114 KB | story cover — *The list we could not find* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `notebook-and-laptop.webp` | 114 KB | Not used (was planned for the *The list we could not find* cover) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `desk-paperwork.webp` | 83 KB | story cover — *A page, not a listing* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `farmer-and-cattle.webp` | 256 KB | `/discover` default banner (no type) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 
@@ -586,12 +586,12 @@ width and a KB budget: `pnpm images:editorial <src> <out> 2400 320`.
 | File | Size | Source | Width | Where used | Replaces (the repeat) |
 |---|---|---|---|---|---|
 | `counter-handoff.webp` | 209 KB | `84.png` | 2400 | `/discover?type=business` banner + Brick & Mortar avenue tile | `categories/brick-and-mortar.webp` |
-| `citrus-harvest.webp` | 315 KB | `94.png` | 2400 | not used, see the follow-up below | `discover-cover.webp` (same AI scene as brick-and-mortar) |
-| `cafe-planning.webp` | 125 KB | `90.png` | 1600 | `/for-business` hero | `peach-and-rye-kitchen` (also homepage triptych 02) |
+| `citrus-harvest.webp` | 315 KB | `94.png` | 2400 | `/for-business` hero, see the follow-ups below | `discover-cover.webp` (same AI scene as brick-and-mortar) |
+| `cafe-planning.webp` | 125 KB | `90.png` | 1600 | story cover, *The list we could not find* (was the `/for-business` hero) | `peach-and-rye-kitchen` (also homepage triptych 02) |
 | `braiding-chair.webp` | 119 KB | `91.png` | 1600 | bento `beauty-grooming` | `crown-and-coil-studio` (also `/for-business` closing band) |
 | `quiet-moment.webp` | 53 KB | `87.png` | 1600 | not used, see the follow-up below | `sable-fitness-collective` (also `/about` band) |
 | `notebook-skyline.webp` | 77 KB | `88.png` | 1600 | bento `books-publishing` | `afrofuturist-bookshop` (also `/about` hero) |
-| `notebook-and-laptop.webp` | 114 KB | `86.png` | 1600 | story cover, *The list we could not find* | `hands-and-drums` (also bento `arts-culture`) |
+| `notebook-and-laptop.webp` | 114 KB | `86.png` | 1600 | not used, see the follow-ups below | `hands-and-drums` (also bento `arts-culture`) |
 | `desk-paperwork.webp` | 83 KB | `85.png` | 1600 | story cover, *A page, not a listing* | `calabash-candles` (also bento `retail-gifts`) |
 
 Sizes `[Measured — ls, 2026-10-07]`. The two story covers live in
@@ -624,6 +624,16 @@ longer referenced. They stay in the repo until the founder OKs deleting them.
   women), so it repeats the `/about` band again, by the founder's choice.
 - `citrus-harvest` and `quiet-moment` are no longer used. They stay in the repo until
   the founder OKs deleting them.
+
+**Second follow-up (founder, 2026-10-07).**
+
+- `cafe-planning` (the woman writing at a café table) becomes the cover of *The list
+  we could not find*, in place of the planned `notebook-and-laptop`. That is still a
+  DB value, so it changes through GATE-DATA. The file is already live.
+- The `/for-business` hero takes `citrus-harvest`, an owner at work. Its 4:3 box
+  shows the grower whole, which the 4:1 `/discover` strip could not.
+- `notebook-and-laptop` is no longer planned for anything. It stays in the repo for
+  later use, such as a blog.
 
 ### Restriction 2
 
@@ -707,7 +717,7 @@ Two deviations from the approved plan's Track 3, both deliberate:
 
 | Surface | Plan said | What shipped | Why |
 |---|---|---|---|
-| `/for-business` | Place a photo | **No photo** (superseded: the hero later took `peach-and-rye-kitchen`, and on 2026-10-07 `cafe-planning`) | `photographic-style-direction.md` Priority 6 specifies a *"Product screenshot or mockup"* for this slot, not a licensed photograph. Substituting stock there would violate the doc's own spec for the surface. Left for a real product shot. |
+| `/for-business` | Place a photo | **No photo** (superseded: the hero later took `peach-and-rye-kitchen`, on 2026-10-07 `cafe-planning`, then `citrus-harvest`) | `photographic-style-direction.md` Priority 6 specifies a *"Product screenshot or mockup"* for this slot, not a licensed photograph. Substituting stock there would violate the doc's own spec for the surface. Left for a real product shot. |
 | `/collections` | Place a photo | **Image slot wired, no value written** | Priority 4 is *"1 photo per collection"* — that lives in `collections.cover_image_path`, a production DB write and therefore **GATE-DATA**. `CollectionCard` now renders a 3:2 `CoverImage` that reads the column and falls back to the F-1 tile; the founder fills the column through `/admin/collections`, where the form field already exists. |
 
 Homepage hero (Priority 1) was already done before this work —
