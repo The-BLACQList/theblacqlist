@@ -9,6 +9,8 @@ import { Container } from '@/components/layout/container'
 import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 import { resolveStoryCover } from '@/lib/editorial/cover'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
+import { cn } from '@/lib/utils'
 import { editorialKind } from '@/lib/editorial/kind'
 import { readMinutes } from '@/lib/editorial/readTime'
 import { loadLinkedListings, type LinkedListing } from '@/lib/editorial/linkedListings'
@@ -137,7 +139,7 @@ export default async function ArticleDetailPage({ params }: Props) {
               fill
               priority
               sizes="(min-width: 1120px) 1120px, 100vw"
-              className="object-cover"
+              className={cn('object-cover', PHOTO_FOCAL[cover])}
             />
           </figure>
         </Container>

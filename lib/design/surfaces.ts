@@ -285,6 +285,14 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // bottom; centered clips the raised hand that makes it read as drumming.
   '/images/editorial/hands-and-drums.webp': 'object-[50%_38%]',
 
+  // Story cover for The List We Could Not Find. The one horizontal entry: the
+  // tablet sits at the right edge of the frame (~71-98%) and the teacup left of
+  // center, and the founder ruled the tablet matters more (2026-10-08). Only
+  // frames narrower than 3:2 crop sideways (the home feature tile at 4:5 and
+  // the BLACQLight lead at 4:3). 95% keeps the whole tablet and the hand on it;
+  // 100% starts to clip the writing hand on the left.
+  '/images/editorial/cafe-planning.webp': 'object-[95%_50%]',
+
   // Skylines. Each value is set from the highest structure in the frame. They
   // were tuned against the pre-plate city tile (~2.53:1, a ~41% cut, centered
   // landing at [20.5%, 79.5%] and shearing the tower tops); the photo region is
