@@ -111,7 +111,7 @@ const BANNERS: Record<string, BannerContent> = {
     line: 'Every kind of Black-owned enterprise, one living index.',
     shot: 'street scene: shops, people, motion',
     tone: 'linear-gradient(130deg, #241c12 0%, #4a3a24 55%, #17110a 100%)',
-    photo: '/images/editorial/citrus-harvest.webp',
+    photo: '/images/editorial/farmer-and-cattle.webp',
     // Founder, 2026-09-25: the whole width of this frame shows, edge to edge.
     fullWidth: true,
   },
@@ -168,16 +168,16 @@ export function DiscoverBanner({ type }: Props) {
               banner is edge-to-edge at every breakpoint. */}
           {/* The frame is 3:2 (2400x1600). At 375px a 360px-tall cover fill would
               cut about a third off its sides, so a `fullWidth` frame keeps its
-              3:2 box below `md` and fades into the ground under it. From `lg`
-              the band gets as wide as 4:1, which would show only a strip of the
-              frame (the grower's head cut off, his face behind the headline),
-              so the frame sits in the right 64% and fades into the ground
-              where the title sits (founder, 2026-10-07). */}
+              3:2 box below `md` and fades into the ground under it. From `md`
+              up the photo fills the whole band edge to edge (founder,
+              2026-10-07: all image, no side fade). At 1914px the band is 4:1
+              and shows ~37% of the frame's height, so a default frame has to
+              be one whose subject fits a strip that thin. */}
           <div
             className={cn(
               'absolute',
               banner.fullWidth
-                ? 'inset-x-0 top-0 aspect-[3/2] [mask-image:linear-gradient(to_bottom,#000_70%,transparent)] md:inset-0 md:aspect-auto md:[mask-image:none] lg:left-auto lg:w-[64%] lg:[mask-image:linear-gradient(to_right,transparent,#000_22%)]'
+                ? 'inset-x-0 top-0 aspect-[3/2] [mask-image:linear-gradient(to_bottom,#000_70%,transparent)] md:inset-0 md:aspect-auto md:[mask-image:none]'
                 : 'inset-0'
             )}
           >

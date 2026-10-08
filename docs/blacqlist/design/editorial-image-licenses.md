@@ -5,7 +5,7 @@ photographs are cleared outright — the original twelve, the six added on 2026-
 in PR #23, the two bento fills, `suit-and-ledger`, and the **three city skylines
 added on 2026-09-03**. **Seven** frames added the same day carry an inferred
 clearance that needs one word from the founder — see
-[The 2026-09-03 additions](#the-2026-09-03-additions). **Eight more** were added on
+[The 2026-09-03 additions](#the-2026-09-03-additions). **Nine more** were added on
 2026-10-07 and are cleared by name, Canva Pro — see
 [The 2026-10-07 additions](#the-2026-10-07-additions).
 **Last updated:** 2026-10-07
@@ -118,7 +118,7 @@ marked `Canva Pro [Assumption]` because the founder's clearance statement named 
 | File | Size | Where used | Source | Author / rights holder | License | Commercial use | Attribution required |
 |---|---|---|---|---|---|---|---|
 | `afrofuturist-bookshop.webp` | 110 KB | `/about` hero (bento tile moved to `notebook-skyline`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `sable-fitness-collective.webp` | 95 KB | `/about` pull band (bento tile moved to `quiet-moment`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `sable-fitness-collective.webp` | 95 KB | `/about` pull band + category bento — `wellness-health` (moved to `quiet-moment` and back the same day, founder 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `asha-osei-photography.webp` | 104 KB | homepage triptych — 01 Discover | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `calabash-candles.webp` | 53 KB | category bento — `retail-gifts` | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `crown-and-coil-studio.webp` | 83 KB | `/for-business` closing band (bento tile moved to `braiding-chair`, 2026-10-07) | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
@@ -149,13 +149,14 @@ marked `Canva Pro [Assumption]` because the founder's clearance statement named 
 | `categories/events.webp` | 78 KB | `/discover` banner — `?type=event` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `categories/jobs.webp` | 42 KB | `/discover` banner — `?type=job` | Canva Pro `[Assumption]` | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) `[Assumption]` | Yes, with restrictions below | No |
 | `counter-handoff.webp` | 209 KB | `/discover` banner — `?type=business` + homepage Brick & Mortar avenue tile | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `citrus-harvest.webp` | 315 KB | `/discover` default banner (no type) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `citrus-harvest.webp` | 315 KB | Not used (was the `/discover` default banner for a day; too tall a subject for a 4:1 band) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `cafe-planning.webp` | 125 KB | `/for-business` hero | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `braiding-chair.webp` | 119 KB | category bento — `beauty-grooming` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
-| `quiet-moment.webp` | 53 KB | category bento — `wellness-health` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `quiet-moment.webp` | 53 KB | Not used (founder put the exercising women back on `wellness-health`) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `notebook-skyline.webp` | 77 KB | category bento — `books-publishing` | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `notebook-and-laptop.webp` | 114 KB | story cover — *The list we could not find* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 | `desk-paperwork.webp` | 83 KB | story cover — *A page, not a listing* (DB value, see below) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
+| `farmer-and-cattle.webp` | 256 KB | `/discover` default banner (no type) | | Canva Pro | Canva contributor — `[Unknown]`, see note | Canva Content License (Pro) | Yes, with restrictions below | No |
 
 Rows 13–18 are the PR #23 additions, rows 19–21 the bento fill and
 `professional-services`, and the last ten the 2026-09-03 additions. Only the
@@ -585,10 +586,10 @@ width and a KB budget: `pnpm images:editorial <src> <out> 2400 320`.
 | File | Size | Source | Width | Where used | Replaces (the repeat) |
 |---|---|---|---|---|---|
 | `counter-handoff.webp` | 209 KB | `84.png` | 2400 | `/discover?type=business` banner + Brick & Mortar avenue tile | `categories/brick-and-mortar.webp` |
-| `citrus-harvest.webp` | 315 KB | `94.png` | 2400 | `/discover` default banner | `discover-cover.webp` (same AI scene as brick-and-mortar) |
+| `citrus-harvest.webp` | 315 KB | `94.png` | 2400 | not used, see the follow-up below | `discover-cover.webp` (same AI scene as brick-and-mortar) |
 | `cafe-planning.webp` | 125 KB | `90.png` | 1600 | `/for-business` hero | `peach-and-rye-kitchen` (also homepage triptych 02) |
 | `braiding-chair.webp` | 119 KB | `91.png` | 1600 | bento `beauty-grooming` | `crown-and-coil-studio` (also `/for-business` closing band) |
-| `quiet-moment.webp` | 53 KB | `87.png` | 1600 | bento `wellness-health` | `sable-fitness-collective` (also `/about` band) |
+| `quiet-moment.webp` | 53 KB | `87.png` | 1600 | not used, see the follow-up below | `sable-fitness-collective` (also `/about` band) |
 | `notebook-skyline.webp` | 77 KB | `88.png` | 1600 | bento `books-publishing` | `afrofuturist-bookshop` (also `/about` hero) |
 | `notebook-and-laptop.webp` | 114 KB | `86.png` | 1600 | story cover, *The list we could not find* | `hands-and-drums` (also bento `arts-culture`) |
 | `desk-paperwork.webp` | 83 KB | `85.png` | 1600 | story cover, *A page, not a listing* | `calabash-candles` (also bento `retail-gifts`) |
@@ -600,7 +601,8 @@ files are live, through GATE-DATA (staging, then prod).
 **Not used:** `89.png` (fabric shop) has a cut-out subject with a visible halo and
 is upscaled; `92.png` shows a child, and minors appear only on the
 `childcare-family` tile (see [The one frame depicting a minor](#the-one-frame-depicting-a-minor));
-`93.png` (cattle farmer) is spare.
+`93.png` (cattle farmer) was spare at first and became the default banner the same
+day (see the follow-up below).
 
 **Kept as a repeat, on purpose:** `bbq-plate` (food tile and the *spending on
 purpose* cover), because none of the new frames is food; the banner and avenue-tile
@@ -610,10 +612,23 @@ pairs, because each tile shows the photo its click lands on; and the shared
 **Retired:** `categories/brick-and-mortar.webp` and `discover-cover.webp` are no
 longer referenced. They stay in the repo until the founder OKs deleting them.
 
+**Same-day follow-up (founder, 2026-10-07).**
+
+- The `/discover` default banner moved from `citrus-harvest` to `farmer-and-cattle`
+  (`93.png`, 2400px, 256 KB). The banner is 480px tall at every desktop width, so at
+  1914px it is a 4:1 strip showing about 37% of the frame's height. The grower's head
+  and face take up nearly half his frame, so no crop kept him whole. A half-width
+  layout with a side fade fixed the crop, but the founder wants the photo edge to
+  edge. The farmer's hat, face and smile fit a 4:1 strip.
+- The `wellness-health` tile went back to `sable-fitness-collective` (the exercising
+  women), so it repeats the `/about` band again, by the founder's choice.
+- `citrus-harvest` and `quiet-moment` are no longer used. They stay in the repo until
+  the founder OKs deleting them.
+
 ### Restriction 2
 
 Every new frame shows identifiable adults: a counter hand-off between two women, a
-grower picking oranges, a woman writing at a café table, a stylist braiding a
+grower picking oranges, a farmer feeding cattle, a woman writing at a café table, a stylist braiding a
 client's hair, a woman with eyes closed, a young person with a notebook against a skyline, a
 woman with a notebook and laptop, a man at a desk with paperwork
 `[Observed — visual inspection, 2026-10-07]`. Each is placed with `alt=""` or a
