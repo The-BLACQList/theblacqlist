@@ -40,6 +40,17 @@ export const TYPE_CATEGORY_SLUGS: Readonly<Partial<Record<EntityType, readonly s
 }
 
 /**
+ * Children a mapped parent does NOT bring along. A grocery store sits under
+ * Food & Dining for shoppers browsing categories, but it is not a restaurant,
+ * so it stays out of the Restaurants chip.
+ */
+export const TYPE_CATEGORY_EXCLUDED_SLUGS: Readonly<
+  Partial<Record<EntityType, readonly string[]>>
+> = {
+  restaurant: ['grocery-markets'],
+}
+
+/**
  * Location types per type. Services is the same axis as the homepage's
  * Products & Services avenue, so the two read the same constant.
  */
@@ -74,16 +85,23 @@ export function isMappedType(type: string | null | undefined): boolean {
   return typeCategorySlugs(type).length > 0 || typeLocationTypes(type).length > 0
 }
 
-/** The mapped parent category ids plus every child of those parents. */
+export function typeExcludedSlugs(type: string | null | undefined): readonly string[] {
+  if (!type) return []
+  return TYPE_CATEGORY_EXCLUDED_SLUGS[type as EntityType] ?? []
+}
+
+/** The mapped parent category ids plus every child of those parents, minus exclusions. */
 export function expandTypeCategoryIds(
   type: string | null | undefined,
   categories: readonly CategoryNode[]
 ): string[] {
   const slugs = new Set(typeCategorySlugs(type))
   if (slugs.size === 0) return []
+  const excluded = new Set(typeExcludedSlugs(type))
   const parentIds = new Set(categories.filter((c) => slugs.has(c.slug)).map((c) => c.id))
   return categories
     .filter((c) => parentIds.has(c.id) || (c.parent_id !== null && parentIds.has(c.parent_id)))
+    .filter((c) => !excluded.has(c.slug))
     .map((c) => c.id)
 }
 

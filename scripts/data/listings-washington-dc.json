@@ -1448,5 +1448,727 @@
       ],
       "note": "THINNEST ROW IN THIS BATCH, and deliberately so. Address and ZIP are sourced through the village; ownership is sourced three ways (technical.ly, Black Enterprise, AFRO all state every Sycamore & Oak tenant is Black-owned). But NO PHONE and NO FIRST-PARTY URL were returned. The other tenants' sycamoreandoak.com pages came back as real URLs in search results; this one did not, so I did NOT construct one from the pattern — a guessed URL that 404s is worse than no URL. Founder: one look at the village directory fills both fields."
     }
+  },
+  {
+    "name": "City First Bank",
+    "slug": "city-first-bank-washington-dc",
+    "tagline": "Mission-driven community bank and CDFI headquartered on U Street",
+    "description": "City First Bank is a CDFI and minority depository institution headquartered on U Street NW in Washington, DC, with branches in Los Angeles. It formed from the 2021 combination of City First Bank of DC and Broadway Federal Bank of Los Angeles. It focuses on lending in low and moderate income communities.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1432 U Street NW",
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": "20009",
+    "phone": "(202) 243-7100",
+    "website_url": "https://www.cityfirstbank.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.cityfirstbank.com/locations",
+    "price_range": null,
+    "founded_year": 1998,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_bank",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.cityfirstbank.com/wp-content/uploads/2026/07/Broadway-Financial-Corp.-Second-Quarter-2026-Earnings-Presentation-V.Final_.pdf",
+        "https://api.fdic.gov/banks/locations?filters=CERT:34352",
+        "https://www.cityfirstbank.com/locations"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as code 6, majority African American board serving a minority community, and its parent reported Q2 2026 results. FDIC MDI code 6: majority of the board is African American and the bank serves a minority community. It is Black-led, not listed as Black-owned, so label carefully. Parent company is Broadway Financial Corporation. Founded year is the FDIC date for the City First charter; the Broadway Federal side dates to 1947. Weekend hours not published."
+    }
+  },
+  {
+    "name": "Industrial Bank",
+    "slug": "industrial-bank",
+    "tagline": "Black-owned bank serving Washington, DC since 1934",
+    "description": "Industrial Bank is a Black-owned commercial bank founded in Washington, DC in 1934, with its main office on Georgia Avenue NW. It has branches in DC, Maryland, Newark and Harlem. It offers personal and business banking and lending.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "4812 Georgia Ave NW",
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": "20011",
+    "phone": "(202) 722-2000",
+    "website_url": "https://industrial-bank.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://industrial-bank.com/home/my-banking-center/atm-locations",
+    "price_range": null,
+    "founded_year": 1934,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "09:00",
+        "close_time": "13:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://api.fdic.gov/banks/locations?filters=CERT:14679",
+        "https://industrial-bank.com/home/my-banking-center/atm-locations",
+        "https://industrial-bank.com"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and FDIC shows a new branch opened in March 2026. Lobby hours for the Georgia Avenue main office. Other DC branches: U Street (2000 11th St NW), Anacostia Gateway (1800 Martin Luther King Jr Ave SE), and Northeast (3443 Benning Rd NE). Also branches in Oxon Hill and Forestville MD, two in Newark NJ, and Harlem NY (opened March 2026 per FDIC). Sunday hours not published. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "Three Part Harmony Farm",
+    "slug": "three-part-harmony-farm",
+    "tagline": "Ward 5 urban farm growing vegetables, herbs and flowers for a DC CSA",
+    "description": "Three Part Harmony Farm grows vegetables, herbs and flowers on land in Ward 5 in Northeast DC. People buy through a seasonal CSA share. Gail Taylor started the farm in 2012, and it now runs as the nonprofit Three Part Harmony Center for Agriculture, Food and Learning.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://threepartharmonyfarm.org",
+    "social_instagram": "https://instagram.com/3phfarm",
+    "cta_type": "subscribe",
+    "cta_url": "https://threepartharmonyfarm.org",
+    "price_range": null,
+    "founded_year": 2012,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://www.chesapeakebay.net/news/blog/three-part-harmony-farm-nourishes-d-c-community",
+        "https://threepartharmonyfarm.org",
+        "https://civileats.com/?p=59679",
+        "https://blackfarmersindex.com/region-3-washington-dc"
+      ],
+      "note": "Chesapeake Bay Program (Mar 2026) names founder Gail Taylor as a Black woman farmer, and the farm is taking 2026 CSA signups. Now organized as a nonprofit center. Farm address not published, so listed as a service area. Also sells through the Mid-Atlantic Black Farmers Caucus online marketplace."
+    }
+  },
+  {
+    "name": "Deep Roots Farm",
+    "slug": "deep-roots-farm",
+    "tagline": "Black and woman-owned Maryland farm selling produce, sauces and eggs in DC",
+    "description": "Deep Roots Farm grows vegetables, including Guyanese heritage crops, on 56 acres in Upper Marlboro, Maryland, and also sells sauces and eggs. People buy through a CSA, an online shop, and FRESHFARM markets at Dupont Circle on Sundays and H Street NE on Saturdays. Farmer Gale Livingstone started the farm in 2013.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Upper Marlboro",
+    "state": "MD",
+    "zip": "20772",
+    "phone": "(240) 244-9649",
+    "website_url": "https://deeprootsfarm.us",
+    "social_instagram": "https://instagram.com/deeprootsfarm",
+    "cta_type": "shop",
+    "cta_url": "https://deeprootsfarm.us",
+    "price_range": null,
+    "founded_year": 2013,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://deeprootsfarm.us/about",
+        "https://www.freshfarm.org/farmers/deep-roots-farm",
+        "https://blackfarmersindex.com/reg-3-maryland"
+      ],
+      "note": "The farm's own About page calls it Black-owned and women-owned, and it holds current FRESHFARM market slots and a CSA. The site shows a farm road address, but it is not clear customers visit the farm, so the address is left off. Accepts WIC and senior market checks. Dupont Circle market runs year-round, H Street NE runs April to December."
+    }
+  },
+  {
+    "name": "Eightfold Farms DC",
+    "slug": "eightfold-farms-dc",
+    "tagline": "Mobile mushroom farm in Wards 7 and 8 selling fresh and dried mushrooms",
+    "description": "Eightfold Farms grows gourmet mushrooms such as lion's mane, oyster and shiitake, and makes mushroom powders and infused honey. People buy online, through a CSA, and at the FRESHFARM Mount Vernon Triangle market on Saturdays. Calvin Hines Jr. runs the farm as a mobile operation serving Wards 7 and 8.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": null,
+    "phone": "(202) 681-8817",
+    "website_url": "https://www.eightfoldfarmsdc.com/",
+    "social_instagram": "https://instagram.com/eightfoldfarmsdc",
+    "cta_type": "shop",
+    "cta_url": "https://www.eightfoldfarmsdc.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-3-washington-dc",
+        "https://www.mountvernontriangle.org/blog/meet-the-market-spotlight-on-new-freshfarm-mvt-vendor-eightfold-farms/"
+      ],
+      "note": "Featured as a new FRESHFARM Mount Vernon Triangle vendor in April 2026; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). Market is at 5th and I St NW, Saturdays 9 to 1. Axios covered the farm in May 2024."
+    }
+  },
+  {
+    "name": "Dreaming Out Loud",
+    "slug": "dreaming-out-loud",
+    "tagline": "Ward 7 and 8 urban farms plus a community grocery and food hub in Anacostia",
+    "description": "Dreaming Out Loud is a nonprofit that runs urban farms at Kelly Miller in Ward 7 and Fort Stanton in Ward 8 and sells CSA boxes. In September 2025 it opened the Marion Barry Avenue Market, a grocery, food hub and cafe at 1303 Marion Barry Ave SE. Christopher Bradshaw founded the group in 2008.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "hybrid",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1303 Marion Barry Ave SE",
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://dreamingoutloud.org",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://dreamingoutloud.org",
+    "price_range": null,
+    "founded_year": 2008,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://washingtonian.com/2025/10/10/new-anacostia-market-is-a-dream-come-true-for-community/",
+        "https://washingtonian.com/2025/10/10/new-anacostia-market-is-a-dream-come-true-for-community/"
+      ],
+      "note": "Opened the Marion Barry Avenue Market in September 2025, and Washingtonian (Oct 2025) and Blavity describe it as Black-owned. Nonprofit. The Washingtonian Black-owned mention is a visitor quote; Blavity listed it among Black-owned urban farms in 2017. Market hours and ZIP not confirmed, so left blank. Could also be listed as a grocery."
+    }
+  },
+  {
+    "name": "Ad Astra Farms",
+    "slug": "ad-astra-farms",
+    "tagline": "Woman-owned Prince George's County farm with a May to October CSA",
+    "description": "Ad Astra Farms is a woman-owned vegetable farm in Prince George's County, Maryland, run by Mac Russell. People buy through a May to October CSA, an online shop, and the Hollywood Farmers Market in College Park on Saturdays. The farm also runs a mutual aid produce program.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Temple Hills",
+    "state": "MD",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://adastrafarmsmd.com",
+    "social_instagram": "https://instagram.com/adastrafarms.md",
+    "cta_type": "subscribe",
+    "cta_url": "https://adastrafarmsmd.com",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmers.localfoodmarketplace.com/Producer/fddeddb2-2502-4d9b-a4f4-c91ec43c791e",
+        "https://adastrafarmsmd.com",
+        "https://blackfarmersindex.com/reg-3-maryland"
+      ],
+      "note": "Listed by the Mid-Atlantic Black Farmers Caucus marketplace and the Black Farmers Index, with 2026 CSA signups open. Farm says no walk-in visits, so the street address on Maryland's Best is not used. Contact email contact@adastrafarmsmd.com. Hollywood Farmers Market is Saturdays 10 to 2."
+    }
+  },
+  {
+    "name": "Agape Farm",
+    "slug": "agape-farm",
+    "tagline": "Woman-owned cut flower farm with a Bloom Club subscription in Prince George's County",
+    "description": "Agape Farm grows cut flowers in Prince George's County, Maryland. People buy through the Bloom Club flower subscription, an online shop, and the Bowie Farmers Market on Sundays. The farmer, Melanie, is also a school garden educator.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Bowie",
+    "state": "MD",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://www.agapefarmmd.com/",
+    "social_instagram": "https://instagram.com/agapefarmmd",
+    "cta_type": "subscribe",
+    "cta_url": "https://www.agapefarmmd.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/reg-3-maryland",
+        "https://www.agapefarmmd.com/"
+      ],
+      "note": "Running a 2026 Bloom Club flower subscription and online shop; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). City set to Bowie because the farm sells at the Bowie market; exact farm town not confirmed."
+    }
+  },
+  {
+    "name": "804 Cattle Company",
+    "slug": "804-cattle-company",
+    "tagline": "Pasture-raised beef sold by the quarter and half from Upper Marlboro, MD",
+    "description": "804 Cattle Company raises pasture-raised beef cattle on 33 acres in Upper Marlboro, Maryland. Customers pre-order beef by the quarter or half. The farm started in 2016 and received a Southern Maryland Agricultural Development Commission mini-grant in 2017.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Upper Marlboro",
+    "state": "MD",
+    "zip": "20774",
+    "phone": "(301) 579-3698",
+    "website_url": "https://www.804cattle.com/",
+    "social_instagram": "https://instagram.com/804cattle",
+    "cta_type": "order",
+    "cta_url": "https://www.804cattle.com/",
+    "price_range": null,
+    "founded_year": 2016,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/reg-3-maryland",
+        "https://www.804cattle.com/"
+      ],
+      "note": "Site says 2026 quarters and halves are sold out, showing current sales; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). 2026 quarters and halves sold out, so new orders may wait for next season. A road address appears on the site but is not clearly a customer pickup site, so it is left off."
+    }
+  },
+  {
+    "name": "Orun Field & Family Farm",
+    "slug": "orun-field-family-farm",
+    "tagline": "Eight-acre educational farm in Upper Marlboro offering tours, events and eggs",
+    "description": "Orun Field and Family Farm is an eight-acre farm in Upper Marlboro, Maryland focused on education, tours and events about Afro-ecology. It supports veterans and also sells eggs. A related nonprofit, Orun Field and Family Farm Foundation Inc., supports the programs.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Upper Marlboro",
+    "state": "MD",
+    "zip": null,
+    "phone": null,
+    "website_url": "http://www.orunfield.com/",
+    "social_instagram": "https://instagram.com/theorunfield",
+    "cta_type": "contact",
+    "cta_url": "http://www.orunfield.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/reg-3-maryland",
+        "https://www.instagram.com/theorunfield/"
+      ],
+      "note": "Instagram posts run through September 2025; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). Mostly an education and events farm rather than a produce seller. Latest dated activity is September 2025, so worth a quick check before publishing. Email info@orunfield.com."
+    }
+  },
+  {
+    "name": "Dodo Farms",
+    "slug": "dodo-farms",
+    "tagline": "Nigerian-African, Black-owned farm selling produce at DC and Silver Spring markets",
+    "description": "Dodo Farms is a Certified Naturally Grown farm in Mount Airy, Maryland run by Niyi Balogun and Tope Fajingbesi. It grows greens, mushrooms, squash and tomatoes, and sells through a CSA, an online shop, FRESHFARM Silver Spring on Saturdays and FRESHFARM Dupont Circle on Sundays. The farm started in 2018 and bought its 10-acre Mount Airy land in 2024.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Mount Airy",
+    "state": "MD",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://dodofarmsmd.com",
+    "social_instagram": "https://instagram.com/dodofarms",
+    "cta_type": "subscribe",
+    "cta_url": "https://dodofarmsmd.com",
+    "price_range": null,
+    "founded_year": 2018,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://dodofarmsmd.com",
+        "https://www.instagram.com/dodofarms/",
+        "https://blackfarmersindex.com/reg-3-maryland"
+      ],
+      "note": "The farm's own site and Instagram call it Black-owned, with Instagram posts from September and October 2026. Sells only at markets, CSA and online; no farm stand found."
+    }
+  },
+  {
+    "name": "Blackbird Farms",
+    "slug": "blackbird-farms",
+    "tagline": "Virginia pasture farm selling poultry, eggs, beef, pork and lamb by delivery",
+    "description": "Blackbird Farms, formerly Sylvanaqua Farms, raises pastured poultry, eggs, beef, pork and lamb in Westmoreland County, Virginia. It sells through memberships, local delivery in its Virginia area and nationwide shipping of some products. Chris Newman leads the farm as a founding partnership.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Westmoreland County",
+    "state": "VA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://blackbirdcoop.com/",
+    "social_instagram": null,
+    "cta_type": "order",
+    "cta_url": "https://blackbirdcoop.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://wordinblack.com/2024/01/the-truth-about-being-a-black-farmer/",
+        "https://blackbirdcoop.com/",
+        "https://blackfarmersindex.com/reg-3-virginia-%2B-w-va"
+      ],
+      "note": "Founder Chris Newman is a Black and Piscataway farmer (Word In Black, 2024), and the farm is taking current pre-orders online. Renamed from Sylvanaqua Farms. Site describes a founding partnership, so ownership may be shared. DC delivery not verified; the delivery page link was broken."
+    }
+  },
+  {
+    "name": "The Carter Farms",
+    "slug": "the-carter-farms",
+    "tagline": "Century family farm in Orange County, VA growing African and Caribbean vegetables",
+    "description": "The Carter Farms is a 150-acre family farm in Unionville, Virginia, in the family since 1910. Michael Carter Jr. grows African, Caribbean and Asian specialty vegetables and shares what is available through an email fresh sheet. The family also runs Carter Brothers seeds and the Africulture education work.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Unionville",
+    "state": "VA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://thecarterfarms.com",
+    "social_instagram": "https://instagram.com/carterfarmsva",
+    "cta_type": "contact",
+    "cta_url": "https://thecarterfarms.com",
+    "price_range": null,
+    "founded_year": 1910,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://vinegarhillmagazine.com/carter-farms-a-growing-agent-of-change-in-the-state-of-virginia/",
+        "https://thecarterfarms.com",
+        "https://blackfarmersindex.com/reg-3-virginia-%2B-w-va"
+      ],
+      "note": "Vinegar Hill Magazine and the farm's own site describe it as a Black-owned century farm, with 2025 workshops and a site update in 2026. Founded year is when the family land began (1910). Buying is by email fresh sheet, so contact is the main step."
+    }
+  },
+  {
+    "name": "Black Dirt Farm Collective",
+    "slug": "black-dirt-farm-collective",
+    "tagline": "Collective of Black farmers and educators teaching Afroecology in Maryland",
+    "description": "Black Dirt Farm Collective is a group of Black farmers, educators, organizers, seedkeepers, chefs and researchers based in Prince George's County, Maryland. It runs Afroecology trainings, organizing and community events on its land. In August 2026 it hosted an Under the Stars concert and camping event.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Upper Marlboro",
+    "state": "MD",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "contact",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://happeningnext.com/event/under-the-stars-concert-andamp-camping-presented-by-black-dirt-farm-collective-eid1ef0l192mdda",
+        "https://happeningnext.com/event/under-the-stars-concert-andamp-camping-presented-by-black-dirt-farm-collective-eid1ef0l192mdda"
+      ],
+      "note": "An August 2026 event page calls it a collective of Black farmers and organizers and lists an event on its land. Education and organizing collective, not a produce seller. No website or Instagram found, so there is no contact link yet; ask the founder how they want to be reached. Event land address appears on an event page but is not listed here."
+    }
+  },
+  {
+    "name": "Marion Barry Avenue Market & Cafe",
+    "slug": "marion-barry-avenue-market-cafe",
+    "tagline": "Neighborhood grocery and soul food cafe in Anacostia run by Dreaming Out Loud",
+    "description": "Grocery and cafe selling produce, meats, dry goods, grab-and-go food and products from local food entrepreneurs, with a soul food cafe menu. Dreaming Out Loud, founded in 2008 and led by Christopher Bradshaw, opened it in September 2025.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1303 Marion Barry Ave SE",
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": "20020",
+    "phone": null,
+    "website_url": "https://dreamingoutloud.org/marion-barry-avenue-market/",
+    "social_instagram": "https://instagram.com/dolmarkets",
+    "cta_type": "visit",
+    "cta_url": "https://dreamingoutloud.org/marion-barry-avenue-market/",
+    "price_range": null,
+    "founded_year": 2025,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "08:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 1,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 2,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 3,
+        "open_time": "08:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "08:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "08:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "08:00",
+        "close_time": "19:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://washingtonian.com/2025/10/10/new-anacostia-market-is-a-dream-come-true-for-community/",
+        "https://civileats.com/2026/05/13/in-d-c-an-innovative-neighborhood-grocery-store/"
+      ],
+      "note": "Opened Sep 2025 with 2026 coverage; run by Dreaming Out Loud, a Black-led food justice nonprofit. Nonprofit-run store. Its page lists Wed to Sun 8 to 7; Monday and Tuesday are not listed, so they are entered as closed. The Washingtonian piece quotes a shopper calling it Black-owned; the description of Dreaming Out Loud as a Black-led food justice social enterprise comes from a search result snippet (DC Central Kitchen / Guidestar), so open a direct source before publishing. Online grocery orders run through dolgrocery.org. Dreaming Out Loud also runs farms."
+    }
+  },
+  {
+    "name": "Fresh Food Factory Market",
+    "slug": "fresh-food-factory-market",
+    "tagline": "Black-owned fresh and ethnic food market in Congress Heights, Ward 8",
+    "description": "Market selling fresh local and ethnic foods, with wellness education and training for food entrepreneurs. Owner Amanda Stephenson opened it at the Anacostia Arts Center in 2019 and moved to the Sycamore & Oak retail village in 2023.",
+    "listing_type": "business",
+    "city_slug": "washington-dc",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1110 Oak Dr SE",
+    "city_text": "Washington",
+    "state": "DC",
+    "zip": "20032",
+    "phone": "(202) 744-1873",
+    "website_url": "https://www.thefreshfoodfactory.com",
+    "social_instagram": "https://instagram.com/thefreshfoodfactory",
+    "cta_type": "visit",
+    "cta_url": "https://www.sycamoreandoak.com/fresh-food-factory",
+    "price_range": null,
+    "founded_year": 2019,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "12:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "11:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "11:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "11:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "11:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "11:00",
+        "close_time": "19:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://dcist.com/story/23/06/15/dc-sycamore-oak-black-owned-shopping/",
+        "https://www.congressheightsontherise.com/blog/aug-22-fresh-food-factory-market-hosts-fresh-food-as-medicine-wellness-panel",
+        "https://www.sycamoreandoak.com/fresh-food-factory",
+        "https://www.eventbrite.com/e/in-their-element-featuring-amanda-stephenson-with-the-fresh-food-factory-tickets-1987856043939",
+        "https://www.washingtoninformer.com/fresh-food-factory-opens-in-anacostia/"
+      ],
+      "note": "Black-owned shop in the all Black-owned Sycamore & Oak village, with events dated Jun and Aug 2026. New in pass 2. Hours come from the Sycamore & Oak shop page, which lists Monday as flexible, so Monday is left out. The same site footer shows shorter village hours, so confirm. The phone is from a search result snippet, not the owner's site, so confirm it. thefreshfoodfactory.com blocked our automated check, so open it by hand before publishing. Also sells takeout bowls through Toast."
+    }
   }
 ]

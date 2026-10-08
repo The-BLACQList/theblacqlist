@@ -1338,5 +1338,679 @@
     "name": "Doshi House",
     "slug": "doshi-house",
     "city_slug": "houston-tx"
+  },
+  {
+    "name": "Unity National Bank",
+    "slug": "unity-national-bank",
+    "tagline": "Black-owned national bank with branches in Houston and Missouri City",
+    "description": "Unity National Bank of Houston is a Black-owned national bank with its main office on Blodgett Street in Houston's Third Ward and a second branch in Missouri City. It offers personal and business banking and lending. The bank traces its charter to Riverside National Bank.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "2602 Blodgett St",
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77004",
+    "phone": "(713) 387-7400",
+    "website_url": "https://unitybanktexas.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://unitybanktexas.com/locations/",
+    "price_range": null,
+    "founded_year": 1985,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://unitybanktexas.com/locations/",
+        "https://api.fdic.gov/banks/locations?filters=CERT:26351",
+        "https://unitybanktexas.com"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and its site and FDIC data show the Houston branch open in October 2026. Lobby hours shown. The drive-thru is also open Saturday 09:00 to 13:00. Second branch: 1661 Texas Parkway, Missouri City TX 77489, (281) 835-2400. There is NO Atlanta branch: neither the bank's site nor FDIC lists one, so drop any Atlanta listing from the first pass. Founded year 1985 is the FDIC establishment date; the bank's site says Riverside National Bank, now Unity, was founded August 16, 1963. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "Light Commerce Credit Union",
+    "slug": "light-commerce-credit-union",
+    "tagline": "Faith-based credit union and CDFI started by New Light Church",
+    "description": "Light Commerce Credit Union is a state-chartered credit union and certified CDFI in north Houston, started as a ministry of New Light Church. It opened on January 31, 2004.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1535 Greensmark Drive",
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77067",
+    "phone": "(281) 876-7576",
+    "website_url": "https://www.lightcommercecu.org",
+    "social_instagram": "https://instagram.com/lightcommercecreditunion",
+    "cta_type": "visit",
+    "cta_url": "https://www.lightcommercecu.org",
+    "price_range": null,
+    "founded_year": 2004,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "10:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "10:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "10:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "10:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "10:00",
+        "close_time": "16:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://www.lightcommercecu.org",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/68529"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active per NCUA, and its site is current for 2026. Who can join: New Light Church members, A.I.M. pastors, and residents and employees of Faith Village Apartments. Once someone is a member, their relatives by blood or marriage and their friends may join. The distance figure is approximate (north Houston near Greenspoint)."
+    }
+  },
+  {
+    "name": "Empowerment Community Development Federal Credit Union",
+    "slug": "empowerment-community-development-fcu",
+    "tagline": "Small community credit union serving southwest Houston",
+    "description": "Empowerment Community Development Federal Credit Union is a small, low-income designated community credit union on West Orem Drive in southwest Houston. It was chartered in 2006 and serves people who live, work or worship in its service area.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "6011 West Orem Drive",
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77085",
+    "phone": "(713) 726-2515",
+    "website_url": "https://ecdfcu.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://ecdfcu.com/about-us/who-can-join/",
+    "price_range": null,
+    "founded_year": 2006,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "15:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "15:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "15:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "15:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "15:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/24769",
+        "https://ecdfcu.com/about-us/who-can-join/"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active per NCUA, with published address and hours. Who can join: people who live, work, worship, attend school or belong to a group in a southwest Houston area bounded by Loop 610, I-45, Main Street, the S. Sam Houston Tollway and SR 288. The contact page shows short office hours, Monday to Friday 15:00 to 17:00; call to confirm. Its site footer says 2019, so activity rests on NCUA reporting as of June 30, 2026."
+    }
+  },
+  {
+    "name": "Fresh Houwse Grocery",
+    "slug": "fresh-houwse-grocery",
+    "tagline": "Black farmer-owned grocery on Cullen Blvd stocking food from Black growers",
+    "description": "Farm-to-table grocery run by farmers Ivy Lawrence-Walls (Ivy Leaf Farms) and Jeremy Peaches (Fresh Life Organic Produce), stocking produce from Black farmers and goods from other Black businesses. Opened in November 2022 and later moved from Reed Rd to Cullen Blvd. Accepts SNAP with produce dollar matching.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "9441 Cullen Blvd Ste A-6",
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77051",
+    "phone": "(713) 419-9976",
+    "website_url": "https://www.blackfarmerbox.com/fresh-houwse-grocery",
+    "social_instagram": "https://instagram.com/freshhouwse",
+    "cta_type": "visit",
+    "cta_url": "https://www.blackfarmerbox.com/fresh-houwse-grocery",
+    "price_range": null,
+    "founded_year": 2022,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "10:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 1,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "10:00",
+        "close_time": "19:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackenterprise.com/two-farmers-make-history-open-houstons-newest-black-owned-farmer-operated-grocery-store/",
+        "https://defendernetwork.com/community/underappreciated-houston-black-gems/"
+      ],
+      "note": "Owned by two Black farmers per Black Enterprise, with 2025 Defender coverage and current Instagram and listings. Address and ZIP follow the store's Instagram bio. A Giftly listing (Sep 2026) shows Ste 9 and ZIP 77033, so confirm the suite and ZIP with the owners. Ivy Leaf Farms supplies the store."
+    }
+  },
+  {
+    "name": "Ivy Leaf Farms",
+    "slug": "ivy-leaf-farms",
+    "tagline": "Urban farm in Sunnyside growing fresh produce for Houston neighborhoods",
+    "description": "Ivy Leaf Farms is a five-acre urban farm in Houston's Sunnyside neighborhood, started in 2020 by Ivy Walls on family land. It sells produce and goods through an online store and community programs. Walls also co-founded Black Farmer Box and Fresh Houwse Grocery.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://ivyleaffarms.com",
+    "social_instagram": "https://instagram.com/ivyleaffarms",
+    "cta_type": "shop",
+    "cta_url": "https://ivyleaffarms.com/store",
+    "price_range": null,
+    "founded_year": 2020,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://capitol.texas.gov/tlodocs/89R/billtext/html/HR00621F.htm",
+        "https://defendernetwork.com/news/local-state/houston-black-farmers-food-justice/",
+        "https://www.pvamu.edu/alumni/post/alumna-ivy-walls-receives-small-business-grant-from-beyonce-and-naacp/",
+        "https://blackenterprise.com/two-farmers-make-history-open-houstons-newest-black-owned-farmer-operated-grocery-store/"
+      ],
+      "note": "Texas House Resolution 621 (April 2025) honors founder Ivy Walls, and 2025 press names her farm among Houston's Black farmers. Farm sits on land owned by the founder's parents, so no street address is listed. Fresh Houwse Grocery (9441 Cullen Blvd) is a separate business handled in the grocery slice. 2025 Texas Legislative Black Caucus Outstanding Texan Award."
+    }
+  },
+  {
+    "name": "Taylor Made Farm TX",
+    "slug": "taylor-made-farm-tx",
+    "tagline": "Veteran-owned family farm in Conroe with a monthly Saturday farm stand",
+    "description": "Taylor Made Farm is a 4.24-acre family farm in Conroe run by veterans Jazzmon and DeShaun Taylor. It sells produce, preserves, plant-based goods and children's books at an on-farm stand held every third Saturday. The family is working toward a CSA.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Conroe",
+    "state": "TX",
+    "zip": "77306",
+    "phone": "(713) 703-1091",
+    "website_url": "https://www.taylormadefarmtx.com/",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.taylormadefarmtx.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.taylormadefarmtx.com/",
+        "https://www.taylormadefarmtx.com/",
+        "https://defendernetwork.com/news/local-state/houston-black-farmers-food-justice/"
+      ],
+      "note": "The farm's own site says it is 100% Black owned and veteran owned, and it lists stand dates into October 2026. Stand is open every third Saturday, 11:30 to 14:30 (next listed Oct 17, 2026), so hours are left empty because they are not weekly. The farm asks for no visits without notice: gates are locked and guard dogs are on site. Some products are sold on Amazon."
+    }
+  },
+  {
+    "name": "Sweetwater Farms HTX",
+    "slug": "sweetwater-farms-htx",
+    "tagline": "Six-acre regenerative urban farm inside the Loop, known for okra and greens",
+    "description": "Sweetwater Farms HTX is a six-acre regenerative farm in a Houston food desert, founded in 2014 by Chaz Daughtry. It grows okra, collards, peppers and herbs and sells through a farm stand, local chefs and markets. Farm visits and education programs are by reservation.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": "https://instagram.com/sweetwaterfarmshtx",
+    "cta_type": "contact",
+    "cta_url": "https://linktr.ee/sweetwaterfarmshtx",
+    "price_range": null,
+    "founded_year": 2014,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-texas",
+        "https://instagram.com/sweetwaterfarmshtx",
+        "https://linktr.ee/sweetwaterfarmshtx",
+        "https://foodtank.com/news/2024/08/sweetwater-farms-cultivating-knowledge-in-houston/",
+        "https://bobcat.com/na/en/company/news-media/bobcat-stories/houston-based-sweetwater-farms-htx-combines-agriculture-with-education",
+        "https://rollingout.com/2020/04/24/urban-farmer-chaz-hammonds-grows-fresh-foods-and-spices-to-combat-diabetes/"
+      ],
+      "note": "Instagram posts run through September 2026, and ownership rests on the BFI listing plus founder Chaz Daughtry's BeyGood Black-owned business fund feature. No news source states race outright. Ownership rests on BFI plus the farm's BeyGood (Black-owned business fund) recipient feature and Rolling Out coverage. sweetwaterfarmshtx.com is a blank template site and the Square shop redirects to it, so website is null. Visits by reservation only."
+    }
+  },
+  {
+    "name": "The Ranch Houston",
+    "slug": "the-ranch-houston",
+    "tagline": "Houston flower farm with a weekly flower CSA, event florals and garden design",
+    "description": "The Ranch Houston (TRH Flora) is a flower farm founded in 2020 by Tamika Caston-Miller. It sells cut flowers, bouquets, wedding and event florals and garden design, plus a six-month weekly flower CSA picked up at its Sunday flower stand. It also hosts yoga, art events and seasonal retreats.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": null,
+    "phone": null,
+    "website_url": "http://www.theranchhouston.com/",
+    "social_instagram": null,
+    "cta_type": "subscribe",
+    "cta_url": "http://www.theranchhouston.com/csa",
+    "price_range": null,
+    "founded_year": 2020,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "http://www.theranchhouston.com/",
+        "http://www.theranchhouston.com/"
+      ],
+      "note": "The business site says it is Black-owned, woman-owned, LGBTQ+-owned and veteran-owned, with events in 2025 and posts into 2026. An event page lists an address on Fuqua St, but the farm's own site does not publish an address, so none is shown. Contact email on site: theranchhtx@gmail.com. Has an online Mercantile shop. Founder should confirm the Instagram handle."
+    }
+  },
+  {
+    "name": "The Metallic Sunflower Foundation",
+    "slug": "the-metallic-sunflower-foundation",
+    "tagline": "Nonprofit hydroponic farm in Acres Homes selling fresh greens and produce boxes",
+    "description": "The Metallic Sunflower Foundation is a 501(c)(3) hydroponic farm in Acres Homes led by CC Brooks. It grows leafy greens and sells produce boxes from $25 to $100, picked up by appointment at the Acres Home Chamber or partner sites. It launched in May 2025 and also runs a community garden.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "hybrid",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "6112 Wheatley St",
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77091",
+    "phone": null,
+    "website_url": "https://www.tmsf-inc.org",
+    "social_instagram": "https://instagram.com/themetallicsunflowerfoundation",
+    "cta_type": "order",
+    "cta_url": "https://www.tmsf-inc.org",
+    "price_range": null,
+    "founded_year": 2025,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://www.outsmartmagazine.com/2026/04/cc-brooks-hydroponics/",
+        "https://instagram.com/themetallicsunflowerfoundation",
+        "https://defendernetwork.com/community/acres-homes-hydroponic-farm/"
+      ],
+      "note": "OutSmart (April 2026) profiles founder CC Brooks as a Black hydroponic farmer, and the farm launched in Acres Homes in May 2025. Nonprofit. Address shown is the published pickup site (Acres Home Chamber), by appointment. Site says Mon to Sat 8 AM to 6 PM for produce availability, which is unclear, so hours are left empty. Partner pickups at JR Watermelon Produce, Royal Ave Tattoo and Gristworkz. Email cc@tmsf-inc.org."
+    }
+  },
+  {
+    "name": "Chapelton Vineyards and Winery",
+    "slug": "chapelton-vineyards",
+    "tagline": "Family vineyard and tasting room in Washington County, open Friday to Sunday",
+    "description": "Chapelton Vineyards is a family vineyard and winery near Washington, Texas, owned by Kurt and Michelle Lyn and named after a town in Jamaica. The couple bought the land in 2018, planted vines in 2019 and 2020, and opened the tasting room in April 2022. Wines are sold at the tasting room and online.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "15040 Whitman Road",
+    "city_text": "Washington",
+    "state": "TX",
+    "zip": "77880",
+    "phone": "(979) 330-7641",
+    "website_url": "https://www.chapeltonvineyards.com/",
+    "social_instagram": "https://instagram.com/chapeltonvineyards",
+    "cta_type": "visit",
+    "cta_url": "https://www.chapeltonvineyards.com/",
+    "price_range": null,
+    "founded_year": 2022,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://travelnoire.com/this-black-couple-created-a-unique-vineyard-in-texas",
+        "https://www.chapeltonvineyards.com/collection/wines/"
+      ],
+      "note": "Travel Noire identifies owners Kurt and Michelle Lyn as a Black couple, and the winery is selling 2025 vintages with a 2026 site. About 75 miles from Houston, at the edge of the radius. founded_year uses the 2022 tasting room opening (land bought 2018). Online wine shop at /collection/wines/."
+    }
+  },
+  {
+    "name": "Prince Beef",
+    "slug": "prince-beef",
+    "tagline": "Family cattle ranch near Houston selling beef cuts and whole or half cows",
+    "description": "Prince Beef is a family cattle ranch of about 1,000 acres outside Houston, run by cousins Lloyd and James Prince. It sells beef cuts at farmers markets and whole or half cows through its online shop. The ranch says it was established in 1996.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": null,
+    "phone": "(281) 300-5934",
+    "website_url": "https://www.prince-beef.com/",
+    "social_instagram": "https://instagram.com/prince_beef",
+    "cta_type": "shop",
+    "cta_url": "https://www.prince-beef.com/shop",
+    "price_range": null,
+    "founded_year": 1996,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://lifeandthyme.com/?p=18491",
+        "https://instagram.com/prince_beef",
+        "https://www.prince-beef.com/shop"
+      ],
+      "note": "Life & Thyme calls it a Black-owned ranch run by cousins Lloyd and James Prince, and Instagram shows posts through September 2026. Owners settled: Lloyd Prince and cousin James Prince. Ranch town not found, so distance is null. founded_year is from the Instagram bio (Est. 1996). Sells at farmers markets plus online orders."
+    }
+  },
+  {
+    "name": "Lettuce Live Urban Farm",
+    "slug": "lettuce-live-urban-farm",
+    "tagline": "Missouri City urban farm offering a farm share, workshops and edible garden design",
+    "description": "Lettuce Live Urban Farm was started by Karena Poke after she became a Master Gardener in 2014. It offers a farm share, gardening workshops and edible garden design for homes. Poke also founded the Black Growers Association in 2021.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Missouri City",
+    "state": "TX",
+    "zip": "77489",
+    "phone": "(713) 936-3072",
+    "website_url": "https://www.lettucelive.org/",
+    "social_instagram": "https://instagram.com/lettuceliveurbanfarm",
+    "cta_type": "contact",
+    "cta_url": "https://www.lettucelive.org/",
+    "price_range": null,
+    "founded_year": 2014,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.motherearthnews.com/speakers/karena-poke/",
+        "https://instagram.com/lettuceliveurbanfarm",
+        "https://blackfarmersindex.com/region-6-texas"
+      ],
+      "note": "Posting in 2026, and founder Karena Poke is listed on BFI and founded the Black Growers Association in 2021. No source states race outright; basis is BFI plus her founding of the Black Growers Association. The site lists a physical address in what looks like a residential subdivision, so it is not shown. founded_year 2014 is approximate (Master Gardener year, then launch). Could also be a hold if the founder wants a stronger ownership source."
+    }
+  },
+  {
+    "name": "Nelson Farms",
+    "slug": "nelson-farms-tx",
+    "tagline": "Montgomery County family farm selling pasture beef boxes and seasonal muscadines",
+    "description": "Nelson Farms is a family farm in Montgomery, Texas, bought in 2022 by NFL cornerback Steven Nelson. It sells beef packages online and at the 1488 Farmers Market, along with seasonal muscadines. The family also published a children's book, Farmer Steven and Family.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Montgomery",
+    "state": "TX",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://nelson-farms.net",
+    "social_instagram": "https://instagram.com/nelsonfarms_21",
+    "cta_type": "order",
+    "cta_url": "https://nelson-farms.net",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.houstontexans.com/news/how-steven-nelson-balances-football-and-farming",
+        "https://instagram.com/nelsonfarms_21",
+        "https://blackfarmersindex.com/region-6-texas",
+        "https://nelson-farms.net"
+      ],
+      "note": "Owned by NFL cornerback Steven Nelson per the Houston Texans (2022), listed on BFI, and selling beef and posting market days through October 2026. The Texans article confirms Steven Nelson owns it; the explicit Black-owned label comes from BFI. NEVER use nelson-farms.com (spam). The real store is nelson-farms.net. Bought January 2022; no founded year published."
+    }
+  },
+  {
+    "name": "Socialites AgriVersity",
+    "slug": "socialites-agriversity",
+    "tagline": "South Houston nonprofit farm offering garden tours, horse rides and farm goods",
+    "description": "Socialites AgriVersity is a nonprofit farm on family-owned land in south Houston, run by The Socialites Riding Network and founder Della Holden. It offers garden tours, horse rides, honey and sea moss lemonade through its online farm store. It hosts community events such as a fall farm festival.",
+    "listing_type": "business",
+    "city_slug": "houston-tx",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Houston",
+    "state": "TX",
+    "zip": "77048",
+    "phone": "(713) 502-0071",
+    "website_url": "https://socialitesridingnetwork.com/",
+    "social_instagram": "https://instagram.com/socialitesridingnetwork",
+    "cta_type": "shop",
+    "cta_url": "https://www.zeffy.com/en-US/ticketing/socialites-agriversitys-farm-store",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://defendernetwork.com/news/local-state/houston-black-farmers-food-justice/",
+        "https://www.zeffy.com/organizations/the-socialites",
+        "https://www.zeffy.com/en-US/ticketing/socialites-agriversitys-farm-store"
+      ],
+      "note": "The Defender (December 2025) features founder Della Holden among Houston's Black farmers, and a Fall Farm Fest is scheduled for November 2026. Nonprofit (The Socialites Riding Network Inc.). Its donation page lists a Martindale Rd location, but the farm is on family land, so the founder should confirm before an address is shown. Mailing: PO Box 21684, Houston 77226. socialitesag.org redirects to the main site."
+    }
   }
 ]

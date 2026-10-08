@@ -1478,5 +1478,447 @@
       ],
       "note": "Street address, phone and first-party domain confirmed together; the current Leimert Park location opened October 2024. ZIP REASONING, STATED SO IT CAN BE CHECKED: no source returned a ZIP for 4311 Degnan Blvd. I did not infer one from a single nearby row. This corpus already carries six sourced Degnan Blvd addresses — 4305, 4317, 4319, 4321, 4334 and 4336 — all at 90008, which brackets 4311 on both sides within the same block. That is a measured range enclosing the number rather than a guess, but it is the one field on this row that no source states directly, so treat it as verify-before-publish. OWNERSHIP TIER: the load-bearing source is the LA Sentinel, Black press, covering the opening, supported by a Black-owned-LA directory listing. Editorial plus peer directory, not a first-party ownership statement — the same tier as The LAB Fitness DC, and worth the founder's tick. Adds home-living as a tenth LA category. Also found while sourcing this row: Folia Collective (5052 Eagle Rock Blvd) reads CLOSED on Yelp as of May 2026 and was NOT drafted."
     }
+  },
+  {
+    "name": "City First Bank",
+    "slug": "city-first-bank-los-angeles",
+    "tagline": "Community bank and CDFI with branches in Exposition Park and Inglewood",
+    "description": "City First Bank is a CDFI and minority depository institution with Los Angeles branches in Exposition Park and Inglewood. The LA branches come from Broadway Federal Bank, whose roots go back to 1947, which combined with City First Bank of DC in 2021.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "4001 South Figueroa Street",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90037",
+    "phone": "(323) 232-4271",
+    "website_url": "https://www.cityfirstbank.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.cityfirstbank.com/locations",
+    "price_range": null,
+    "founded_year": 1998,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "09:00",
+        "close_time": "13:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_bank",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.cityfirstbank.com/locations",
+        "https://api.fdic.gov/banks/locations?filters=CERT:34352",
+        "https://www.cityfirstbank.com/wp-content/uploads/2026/07/Broadway-Financial-Corp.-Second-Quarter-2026-Earnings-Presentation-V.Final_.pdf"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as code 6, majority African American board, and its site lists the Exposition Park branch in October 2026. Other LA-area branch: Inglewood, 170 N Market St, Inglewood CA 90301, (310) 412-3280. FDIC MDI code 6 (Black-led board, not listed as Black-owned). Founded year is the FDIC date for the City First charter."
+    }
+  },
+  {
+    "name": "OneUnited Bank",
+    "slug": "oneunited-bank",
+    "tagline": "Black-owned bank with branches on Crenshaw Boulevard and in Compton",
+    "description": "OneUnited Bank is a Black-owned bank headquartered in Boston with branches in Los Angeles, Compton, Boston and Miami. It offers checking, savings and lending. Its Crenshaw Boulevard branch serves South Los Angeles.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "3683 Crenshaw Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90016",
+    "phone": "(877) 663-8648",
+    "website_url": "https://www.oneunited.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.oneunited.com/locations/",
+    "price_range": null,
+    "founded_year": 1982,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.oneunited.com/locations/",
+        "https://api.fdic.gov/banks/locations?filters=CERT:23966"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and its locations page lists the Crenshaw branch in October 2026. Phone is the bank's toll-free line; no separate branch number found. Other LA-area branch: Compton, 1495 N Wilmington Ave, Compton CA 90222. Headquarters in Boston; other branches in Dorchester MA and Miami FL. Sunday hours not published. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "Bloom Ranch of Acton",
+    "slug": "bloom-ranch-of-acton",
+    "tagline": "Black-owned ranch in Acton with U-pick, a farm store and produce boxes",
+    "description": "Bloom Ranch of Acton is a 250-acre ranch in Acton that sells through an online shop, the Bloom Box, an on-site store, U-pick and tours. Dr. Bill Releford bought it in 2023, and the land has been ranched since 1891. It calls itself Los Angeles County's largest Black-owned ranch.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "farms-farm-stands",
+    "location_type": "hybrid",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "31880 Aliso Canyon Rd",
+    "city_text": "Acton",
+    "state": "CA",
+    "zip": "93510",
+    "phone": null,
+    "website_url": "https://bloomranchofacton.com/",
+    "social_instagram": "https://instagram.com/bloomranch",
+    "cta_type": "shop",
+    "cta_url": "https://bloomranchofacton.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.aol.com/articles/l-countys-largest-black-owned-110000332.html",
+        "https://bloomranchofacton.com/",
+        "https://www.buyblack.org/"
+      ],
+      "note": "The LA Times reported in February 2026 on LA County's largest Black-owned ranch, and the ranch has 2026 events. Ranch history dates to 1891; current ownership since 2023, so founded year left empty. An Instagram post suggested store hours of 10 to 5 daily, but the site does not confirm them, so hours left empty."
+    }
+  },
+  {
+    "name": "Crop Swap LA",
+    "slug": "crop-swap-la",
+    "tagline": "Leimert Park microfarms with a Sunday farm stand and seasonal membership",
+    "description": "Crop Swap LA grows food on front-yard microfarms in South LA and shares it with about 80 member families. Jamiah Hargins founded it in 2018. It runs a Sunday farm stand in Leimert Park and sells seasonal memberships.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "3753 Degnan Blvd",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": null,
+    "phone": "(213) 878-2752",
+    "website_url": "https://www.cropswapla.org/",
+    "social_instagram": "https://instagram.com/lacropswap",
+    "cta_type": "subscribe",
+    "cta_url": "https://www.cropswapla.org/seasonalmembership",
+    "price_range": null,
+    "founded_year": 2018,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "11:00",
+        "close_time": "14:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://lataco.com/black-owned-businesses-grocers",
+        "https://www.cropswapla.org/"
+      ],
+      "note": "LA Taco lists it among Black LA businesses fighting food deserts, and its Spring 2026 digest shows current operations. Nonprofit. Address is the published farm stand location, open Sundays 11am to 2pm. ZIP not confirmed. Also won the Adidas Honoring Black Excellence award in 2022."
+    }
+  },
+  {
+    "name": "The Farmer Ken",
+    "slug": "the-farmer-ken",
+    "tagline": "Inland Empire farmer selling harvest boxes, fruit, seeds and eggs online",
+    "description": "The Farmer Ken is Kenneth Sparks II's farm near Hemet, selling seasonal harvest boxes, fruit boxes, seeds and eggs through an online shop. He was featured by Capital B in 2025 in coverage of Black farmers and USDA funding cuts.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Hemet",
+    "state": "CA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://thefarmerken.com/",
+    "social_instagram": "https://instagram.com/farmerkenofficial",
+    "cta_type": "shop",
+    "cta_url": "https://thefarmerken.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://capitalbnews.org/black-farmers-usda-funding-cuts/",
+        "https://thefarmerken.com/"
+      ],
+      "note": "Own site says BIPOC-owned with a 2026 shop, and Capital B featured Kenneth Sparks II in a July 2025 Black farmers story. About 80 to 85 miles from LA, outside the 70 mile target. Site says BIPOC-owned; Capital B features him in a Black farmers story but does not state his race in words. Farm address not published."
+    }
+  },
+  {
+    "name": "IGH Gardens",
+    "slug": "igh-gardens",
+    "tagline": "Veteran-run garden nonprofit growing food to support homeless shelters",
+    "description": "IGH Gardens (In God's Hands) is run by Farmer Charles, a US Air Force veteran, and grows more than 3,900 pounds of produce a year. It started in 2014 at the Salvation Army Bell Shelter, and proceeds support homeless shelters. Its current garden site is in Long Beach.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "750 Via Carmelitos",
+    "city_text": "Long Beach",
+    "state": "CA",
+    "zip": "90805",
+    "phone": "(562) 513-9216",
+    "website_url": "https://www.ighgardens.org/",
+    "social_instagram": "https://instagram.com/ighgardens",
+    "cta_type": "visit",
+    "cta_url": "https://www.ighgardens.org/",
+    "price_range": null,
+    "founded_year": 2014,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://lataco.com/black-owned-businesses-grocers",
+        "https://www.ighgardens.org/",
+        "https://caff.org/farms/united-states/california/bell/vegetables/igh-gardens/"
+      ],
+      "note": "LA Taco's July 2026 list of Black LA food businesses includes it, and its site and Instagram are current in 2026. Nonprofit. CAFF lists it as Farmer of Color-owned. Address and hours come from current Instagram and site; it moved from Bell, so confirm the site before publishing."
+    }
+  },
+  {
+    "name": "Logan's Gardens",
+    "slug": "logans-gardens",
+    "tagline": "Father and son selling rare heirloom edible plants at Santa Monica markets",
+    "description": "Logan's Gardens sells more than 1,000 rare and heirloom edible plant starts at the Santa Monica Wednesday and Saturday farmers markets and a Sunday Main Street market. It is run by Jimmy Williams and his son Logan, who are Gullah descendants. They also design and build home gardens.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": "https://instagram.com/logansgardens",
+    "cta_type": "contact",
+    "cta_url": "https://instagram.com/logansgardens",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.smdp.com/fresh-finds-logans-garden/",
+        "https://instagram.com/logansgardens"
+      ],
+      "note": "Santa Monica Daily Press profiled the Black father-and-son owners, and Instagram shows posts from October 2025 into 2026. Markets only, no farm address. Based in Silver Lake. SMDP article first published 2021-07, updated 2024-12."
+    }
+  },
+  {
+    "name": "SÜPRMARKT",
+    "slug": "suprmarkt",
+    "tagline": "Black-owned affordable organic grocer on Slauson Ave in South LA",
+    "description": "Organic, plant-based grocer that accepts EBT, with deep produce discounts for EBT shoppers and a produce subscription called SÜPRFRESH. Olympia Auset started it as a pop-up in July 2016 to bring low-cost organic food to South LA, then opened a storefront on Slauson Ave.",
+    "listing_type": "business",
+    "city_slug": "los-angeles-ca",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "3526 W Slauson Ave",
+    "city_text": "Los Angeles",
+    "state": "CA",
+    "zip": "90043",
+    "phone": "(323) 903-6900",
+    "website_url": "https://www.suprmarkt.la/",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.suprmarkt.la/",
+    "price_range": null,
+    "founded_year": 2016,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 1,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "12:00",
+        "close_time": "19:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.suprmarkt.la/",
+        "https://www.suprmarkt.la/",
+        "https://lamag.com/urbandevelopment/suprmarkt-slauson/",
+        "https://lataco.com/keep-slauson-fresh-olympia-auset-organic-store"
+      ],
+      "note": "Says it is a Black Owned Brand on its own site, current in 2026, with a South LA storefront. New in pass 2. Fills the LA gap. The site footer gives 3526 W Slauson Ave and Mon to Sat 12 to 7, but its pickup widget shows 3256 W Slauson Ave and different pickup hours (Mon to Fri 9 to 5, Sat 10 to 1). We used the footer and press address; confirm hours with the owner."
+    }
   }
 ]

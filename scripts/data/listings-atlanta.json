@@ -836,7 +836,7 @@
     "description": "The world's first AI-powered frictionless Black-owned grocery store, serving Southwest Atlanta with fresh produce, healthy staples, and the convenience of checkout-free shopping. A landmark in food access innovation and community investment on Cascade Road.",
     "listing_type": "business",
     "city_slug": "atlanta-ga",
-    "category_slug": "food-dining",
+    "category_slug": "grocery-markets",
     "location_type": "physical",
     "status": "published",
     "is_featured": true,
@@ -3818,5 +3818,707 @@
     "name": "Slim & Husky's Pizza Beeria",
     "slug": "slim-and-huskys-atlanta",
     "city_slug": "atlanta-ga"
+  },
+  {
+    "name": "Atlanta Harvest",
+    "slug": "atlanta-harvest",
+    "tagline": "Family-run urban farm and market in Ellenwood selling produce, online and at the farm",
+    "description": "Atlanta Harvest is a family-run urban farm and wellness center in Ellenwood, south of Atlanta, led by owner EliYahu Ben Asa. Customers can shop at the farm market, order online, or join the farm's CSA. In July 2026 the community turned out to support the farm after a racial slur was found carved into a watermelon there.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "3529 Anvilblock Rd",
+    "city_text": "Ellenwood",
+    "state": "GA",
+    "zip": "30294",
+    "phone": "(678) 653-6246",
+    "website_url": "https://www.atlantaharvest.com/",
+    "social_instagram": "https://instagram.com/atlantaharvest",
+    "cta_type": "visit",
+    "cta_url": "https://www.atlantaharvest.com/",
+    "price_range": null,
+    "founded_year": 2013,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "11:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 0,
+        "open_time": "09:00",
+        "close_time": "18:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://hoodline.com/2026/07/sick-slur-sweet-support-ellenwood-shoppers-pack-black-owned-market-after-watermelon-hate-carving/",
+        "https://hoodline.com/2026/07/sick-slur-sweet-support-ellenwood-shoppers-pack-black-owned-market-after-watermelon-hate-carving/",
+        "https://shop.atlantaharvest.com",
+        "https://atlanta-harvest.localline.ca"
+      ],
+      "note": "July 2026 news coverage describes it as an operating family-run Black-owned farm and market in Ellenwood. Address is the farm stand the business publishes. Saturday hours were not stated on the site, so Saturday is left out rather than guessed. Online shop is https://shop.atlantaharvest.com and CSA signup is https://atlanta-harvest.localline.ca. Same family runs Local Lands in Dublin GA."
+    }
+  },
+  {
+    "name": "Patchwork City Farms",
+    "slug": "patchwork-city-farms",
+    "tagline": "Certified Naturally Grown urban farm in southwest Atlanta with weekly pre-orders",
+    "description": "Patchwork City Farms is a 1.2 acre Certified Naturally Grown urban farm run by Jamila Norman, who started it in 2010 in Atlanta's West End. Customers pre-order weekly through the farm shop and pick up Fridays at the farm or Saturdays at market. In 2026 the farm sells at Oakhurst Farmers Market and Piedmont Green Market, and its Friday farm market doubles EBT through Georgia Fresh for Less.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://patchworkcityfarms.com/",
+    "social_instagram": "https://www.instagram.com/patchworkcityfarms/",
+    "cta_type": "order",
+    "cta_url": "https://patchworkcityfarms.com/market-csa",
+    "price_range": null,
+    "founded_year": 2010,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://thehub.news/legacy-and-land-jamila-norman-and-urban-farmers-are-transforming-communities",
+        "https://patchworkcityfarms.com/market-csa",
+        "https://organicgrower.info/article/urban-oasis-patchwork-city-farms-feeds-impoverished-atlantans/"
+      ],
+      "note": "The farm's own site lists a 2026 market and pickup schedule, and news coverage profiles Black farmer and owner Jamila Norman. Farm is in the Oakland City and Gresham Park area. Farm address not published as a public stand, so left null. Friday farm market (Farm Fresh Fridays, Fri 3 to 6pm, Apr to Dec 2026) is held at the farm; founder may want to add it as hours if the farm confirms a public address. No business phone published, email only. Owner hosts Magnolia Network's Homegrown."
+    }
+  },
+  {
+    "name": "Bread and Butter Farms",
+    "slug": "bread-and-butter-farms",
+    "tagline": "Five acre natural farm in Sparta, Georgia with a CSA and farm general store",
+    "description": "Bread and Butter Farms is a five acre farm in Sparta, Georgia started in 2012 by Musa and Micole Hasan. It grows produce without chemicals using Korean and Japanese natural farming methods. Customers can join the CSA or buy through the farm's general store.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Sparta",
+    "state": "GA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://breadandbutterfarms.com/",
+    "social_instagram": "https://instagram.com/bread.and.butter.farm.to.table",
+    "cta_type": "subscribe",
+    "cta_url": "https://breadandbutterfarms.com/csa-membership",
+    "price_range": null,
+    "founded_year": 2012,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.uatl.com/news/2026/02/rooted-in-resilience-black-georgia-farmers-talk-land-and-legacy/",
+        "https://www.uatl.com/news/2026/02/rooted-in-resilience-black-georgia-farmers-talk-land-and-legacy/",
+        "https://breadandbutterfarms.com/general-store"
+      ],
+      "note": "A February 2026 UATL feature describes the farm as Black-owned and quotes owner Musa Hasan. Sparta is in Hancock County, about 100 miles from Atlanta, at the edge of the radius. No phone or public farm address published."
+    }
+  },
+  {
+    "name": "Swanson Family Farm",
+    "slug": "swanson-family-farm",
+    "tagline": "Hampton family farm raising grass-finished beef, lamb, pastured pork and chicken",
+    "description": "Swanson Family Farm is a 32 acre farm in Hampton, Henry County, run by Wayne Swanson Jr. and his family since 2008. It raises grass-finished beef and lamb and pastured pork and chicken. Customers buy through the online store, reserve bulk beef shares, or arrange farm visits.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Hampton",
+    "state": "GA",
+    "zip": null,
+    "phone": "(404) 358-8132",
+    "website_url": "https://swansonfamilyfarmllc.com/",
+    "social_instagram": null,
+    "cta_type": "shop",
+    "cta_url": "https://swansonfamilyfarmllc.com/collections/all",
+    "price_range": null,
+    "founded_year": 2008,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://house-press.com/?p=10262",
+        "https://swansonfamilyfarmllc.com/collections/bulk-beef",
+        "https://amresproject.org/podcast/2024/3/4/episode-9-wayne-swanson-farm-coach-with-swanson-family-farms-hampton-georgia/",
+        "https://modernfarmer.com/2022/02/19-families-freedom-georgia-initiative/"
+      ],
+      "note": "The farm sells Winter 2026/2027 beef shares on its own site, and owner Wayne Swanson Jr. co-founded and hosted Georgia's Black-owned farms tour. Ownership basis is indirect: Wayne Swanson co-founded the Georgia Black-Owned Farms Tour and co-hosted the 2022 tour with Rep. Kendrick, and he is a Morris Brown College alum. No source found that says Black-owned about the farm in those words. Address is published by the farm as its farm location and the farm offers visits, but no regular hours are posted, so the founder may prefer service_area with the address hidden. ZIP not confirmed."
+    }
+  },
+  {
+    "name": "Grow Where You Are",
+    "slug": "grow-where-you-are",
+    "tagline": "Atlanta veganic farming collective growing food and teaching people to grow their own",
+    "description": "Grow Where You Are is an Atlanta farming collective led by Eugene Cooke, JoVonna Cooke and Nicole Bluh. It uses veganic methods to turn urban land into food for underserved neighborhoods and runs workshops and consulting. Its farm is Certified Naturally Grown, with peer inspections recorded in 2021, 2023 and 2025.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://growwhereyouare.farm/",
+    "social_instagram": null,
+    "cta_type": "contact",
+    "cta_url": "https://growwhereyouare.farm/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://vegnews.com/interviews/vegnews-celebrates-black-history-month-eugene-cooke",
+        "https://www.naturallygrown.org/cng_farm/grow-where-you-are/",
+        "https://www.atlantamagazine.com/list/ones-watch-new-guard-shaping-atlantas-food-scene-2018/the-farmer-eugene-cooke/"
+      ],
+      "note": "Certified Naturally Grown records a February 2025 inspection, and news features profile Black co-founder Eugene Cooke. The CNG record lists a residential Atlanta address, which is left out. The first pass placed the farm in Fairburn; not confirmed, so city is Atlanta. The website loads but shows little beyond a title. Market sales (Freedom Farmers Market) not verified for 2025 or 2026. Founded around 2012 per secondary sources, left null."
+    }
+  },
+  {
+    "name": "Kimbleland Farm",
+    "slug": "kimbleland-farm",
+    "tagline": "Fayetteville farm selling raw honey, pasture-raised eggs, vegetables, sheep and goats",
+    "description": "Kimbleland Farm is a small farm in Fayetteville, Georgia started by Wilson Kimble in 2019. It sells raw wildflower honey, pasture-raised eggs and vegetables and raises Katahdin sheep and goats. Customers order through the online shop and pick up at the farm.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Fayetteville",
+    "state": "GA",
+    "zip": null,
+    "phone": "(470) 781-6457",
+    "website_url": "https://kimblelandfarm.com/",
+    "social_instagram": "https://instagram.com/kimblelandfarm",
+    "cta_type": "shop",
+    "cta_url": "https://www.kimblelandfarm.com/shop-products",
+    "price_range": null,
+    "founded_year": 2019,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://kimblelandfarm.com/",
+        "https://kimblelandfarm.com/"
+      ],
+      "note": "The farm's own site describes it as Black-owned and shows 2026 activity, including a honey sale ending 7/31/26. Ownership source is the business's own words (#blackowned, #blackfarmers) on its site; no third-party news found. Address is published by the farm as its pickup site but sits on a residential street, so the founder may prefer to hide it. Pickup is by message, no regular hours. ZIP not published."
+    }
+  },
+  {
+    "name": "Kansas City Aquaponics (UltraBlack Farm)",
+    "slug": "kansas-city-aquaponics",
+    "tagline": "Certified organic Conyers farm at Decatur and East Atlanta Village markets, plus a CSA",
+    "description": "Kansas City Aquaponics, also known as UltraBlack Farm, is a certified organic farm based in Conyers, Georgia. It sells at the Decatur Farmers Market on Wednesdays and the East Atlanta Village Farmers Market on Thursdays and offers a CSA. The farm also teaches paid garden classes.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Conyers",
+    "state": "GA",
+    "zip": "30012",
+    "phone": "(706) 907-7900",
+    "website_url": "https://kansascityaquaponics.com/",
+    "social_instagram": "https://instagram.com/kansascity.aquaponics.in.atl",
+    "cta_type": "subscribe",
+    "cta_url": "https://kansascityaquaponics.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.instagram.com/kansascity.aquaponics.in.atl/",
+        "https://kansascityaquaponics.com/"
+      ],
+      "note": "The farm's site lists a 2026 market schedule and its Instagram shows 2026 posts, and it describes itself as an Afro agrarian business under the UltraBlack Farm name. Ownership source is the business's own words (Afro Agrarian consultation business, UltraBlack Farm branding) plus the Black Farmers Index; no news coverage found and owner name not found. Markets only, so hours left empty (Decatur Wed 4 to 7pm, East Atlanta Village Thu 4 to 7pm). CSA signup is on the homepage."
+    }
+  },
+  {
+    "name": "Metro Atlanta Urban Farm",
+    "slug": "metro-atlanta-urban-farm",
+    "tagline": "Five acre nonprofit urban farm in College Park with a farm stand and food pantry",
+    "description": "Metro Atlanta Urban Farm is a five acre Certified Naturally Grown nonprofit farm in College Park, co-founded in 2009 by CEO Bobby L. Wilson, a 2022 CNN Hero. It grows produce for the community, runs a food pantry, and trains new growers. It hosts community events and the PLANTED conference.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "3271 Main St",
+    "city_text": "College Park",
+    "state": "GA",
+    "zip": "30337",
+    "phone": "(404) 788-2432",
+    "website_url": "https://www.themetroatlantaurbanfarm.org/",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.themetroatlantaurbanfarm.org/",
+    "price_range": null,
+    "founded_year": 2009,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://creativeloafing.com/business-2021-metro-atlanta-urban-farm",
+        "https://nabjmonitor.com/2026/growing-food-and-fellowship/",
+        "https://foodfirst.org/team/bobby-l-wilson/",
+        "https://www.cnn.com/2022/07/07/us/georgia-urban-farming-hunger-food-deserts-cnnheroes"
+      ],
+      "note": "An August 2026 NABJ Monitor story covers its current work, and Creative Loafing lists it as Black-owned with co-founder Bobby L. Wilson. Nonprofit. Farm stand hours (Mon to Sat 9 to 5) appear only on a third-party food help site and the food pantry runs Tue and Thu 1 to 4, so hours are left empty until confirmed by the farm."
+    }
+  },
+  {
+    "name": "Citizens Trust Bank",
+    "slug": "citizens-trust-bank",
+    "tagline": "Black-owned community bank serving Atlanta since 1921",
+    "description": "Citizens Trust Bank is a Black-owned commercial bank and certified CDFI headquartered in Atlanta, with branches across metro Atlanta and in Alabama. It offers personal and business checking, savings and lending. Its Westside branch on Martin Luther King Jr. Drive is the bank's FDIC main office.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "965 Martin Luther King Jr. Drive NW",
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": "30314",
+    "phone": "(678) 406-4000",
+    "website_url": "https://ctbconnect.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://ctbconnect.com/contact-us-locations/",
+    "price_range": null,
+    "founded_year": 1921,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://ctbconnect.com/contact-us-locations/",
+        "https://api.fdic.gov/banks/locations?filters=CERT:8033",
+        "https://ctbconnect.com"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and the bank's live locations data lists its Atlanta branches in October 2026. Phone is the corporate line; the bank also publishes a 24-hour line, (888) 214-3099. Corporate office is at 230 Peachtree St (not a branch). Other metro branches: Cascade (3705 Cascade Rd SW, Atlanta), East Point (2840 East Point St), Panola (2727 Panola Rd, Lithonia), Rockbridge (5771 Rockbridge Rd, Stone Mountain). Also branches in Birmingham and Eutaw, AL. FDIC MDI code 1 (Black-owned). Also a CDFI."
+    }
+  },
+  {
+    "name": "Credit Union of Atlanta",
+    "slug": "credit-union-of-atlanta",
+    "tagline": "Atlanta credit union and CDFI serving city workers and partner groups since 1928",
+    "description": "Credit Union of Atlanta is a member-owned, state-chartered credit union founded in 1928, with its main office on Metropolitan Parkway SW. It serves employees of the City of Atlanta, Fulton County and other partner groups, and became a certified CDFI in 2019. It offers savings, checking, loans and financial education.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "670 Metropolitan Parkway SW",
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": "30310",
+    "phone": "(404) 658-6465",
+    "website_url": "https://www.cuatlanta.org",
+    "social_instagram": "https://instagram.com/thecreditunionofatlanta",
+    "cta_type": "visit",
+    "cta_url": "https://www.cuatlanta.org/join/locations-hours.html",
+    "price_range": null,
+    "founded_year": 1928,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "08:30",
+        "close_time": "17:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://www.cuatlanta.org/join/locations-hours.html",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/67383",
+        "https://www.cuatlanta.org"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active per NCUA, and its site shows 2026 content. Who can join: membership is limited to named groups, not the general public. These include employees of the City of Atlanta and affiliated agencies, Atlanta Public Schools, Fulton County Government, Zoo Atlanta, the Atlanta Development Authority, and members of several churches (Wheat Street Baptist, Nebo Baptist, Victory Tabernacle, Cathedral of Faith COGIC, Calvary Baptist in Madison GA). Family members also qualify. NCUA charter 67383. Black leadership is based on NCUA MDI status, so describe it as a minority depository institution, not Black-owned."
+    }
+  },
+  {
+    "name": "HOPE Credit Union",
+    "slug": "hope-credit-union-atlanta",
+    "tagline": "Community development credit union with a branch on Auburn Avenue",
+    "description": "HOPE is a community development credit union headquartered in Jackson, Mississippi, with branches across the Deep South. In Atlanta it has a branch on historic Auburn Avenue and one inside Grady Memorial Hospital. It offers checking, savings, loans and business accounts.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "315 Auburn Avenue",
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": "30303",
+    "phone": "(404) 832-5800",
+    "website_url": "https://www.hopecu.org",
+    "social_instagram": "https://instagram.com/hopecreditunion",
+    "cta_type": "visit",
+    "cta_url": "https://www.hopecu.org/branches/auburn-avenue/",
+    "price_range": null,
+    "founded_year": 1995,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "08:30",
+        "close_time": "16:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://www.hopecu.org/branches/auburn-avenue/",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/24829",
+        "https://www.hopecu.org/branches/"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active, and its site lists two Atlanta branches in October 2026. Extra entry not in the first pass. It was found while checking HOPE's New Orleans branches. Second Atlanta branch: Grady Memorial Hospital, 80 Jesse Hill Jr. Drive, 2nd Floor, Atlanta GA 30302. Who can join: residents and businesses of AL, AR, GA, LA, MS and TN for all products. Savings-type accounts are open to anyone. Founded year is the NCUA charter year."
+    }
+  },
+  {
+    "name": "Nourish + Bloom Market (Fayetteville)",
+    "slug": "nourish-bloom-market-fayetteville",
+    "tagline": "Black-owned autonomous grocery at Trilith, open around the clock",
+    "description": "Self-checkout grocery with natural and locally sourced foods, shopped through an app, plus a bistro. Jilea and Jamie Hemmings opened this first store at Trilith in 2022. The stores accept SNAP/EBT.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "300 Trilith Pkwy Ste 250",
+    "city_text": "Fayetteville",
+    "state": "GA",
+    "zip": "30214",
+    "phone": null,
+    "website_url": "https://www.nourishandbloommarket.com",
+    "social_instagram": "https://instagram.com/nourishandbloommarket",
+    "cta_type": "visit",
+    "cta_url": "https://www.nourishandbloommarket.com/pages/locations",
+    "price_range": null,
+    "founded_year": 2022,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 1,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.nourishandbloommarket.com/pages/about-us",
+        "https://www.foodrepublic.com/1907887/nourish-and-bloom-market-shark-tank-now",
+        "https://www.nourishandbloommarket.com/pages/locations"
+      ],
+      "note": "Listed on the store's own locations page and in Jul 2026 coverage; the owners describe it as African American owned. Grocery is open 24/7; hours are entered as 00:00 to 23:59 every day. The bistro keeps shorter hours (Tue to Sat, 12 to 5). One of several Nourish + Bloom stores, each listed separately."
+    }
+  },
+  {
+    "name": "Nourish + Bloom Market (Pittsburgh Yards)",
+    "slug": "nourish-bloom-market-pittsburgh-yards",
+    "tagline": "Black-owned 24/7 shipping-container grocery at Pittsburgh Yards",
+    "description": "App-based autonomous grocery built in a shipping container at Pittsburgh Yards, along the Beltline Southside Trail. It opened in June 2026 with help from a $600K Invest Atlanta grant. Accepts SNAP/EBT.",
+    "listing_type": "business",
+    "city_slug": "atlanta-ga",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "352 University Ave SW",
+    "city_text": "Atlanta",
+    "state": "GA",
+    "zip": "30310",
+    "phone": null,
+    "website_url": "https://www.nourishandbloommarket.com",
+    "social_instagram": "https://instagram.com/nourishandbloommarket",
+    "cta_type": "visit",
+    "cta_url": "https://www.nourishandbloommarket.com/pages/locations",
+    "price_range": null,
+    "founded_year": 2026,
+    "hours": [
+      {
+        "day": 0,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 1,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "00:00",
+        "close_time": "23:59",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.nourishandbloommarket.com/pages/about-us",
+        "https://www.atlantanewsfirst.com/2026/06/25/ai-powered-container-grocery-store-opens-atlantas-pittsburgh-yards/",
+        "https://www.pittsburghyards.com/nourish-and-bloom/a-new-grocery-option-opens-at-pittsburgh-yards-bringing-fresh-food-and-innovation-to-southwest-atlanta-nourish-and-bloom/",
+        "https://beltline.org/blog/now-opened-along-the-beltline-july-2026/",
+        "https://www.cbsnews.com/atlanta/news/ai-powered-grocery-store-opens-at-atlantas-pittsburgh-yards-to-improve-food-access/"
+      ],
+      "note": "Opened Jun 25 2026 per local news and the Pittsburgh Yards site; owners describe the company as African American owned. Open 24/7; hours entered as 00:00 to 23:59 every day. The Beltline July 2026 post calls this the Southside Trail location."
+    }
   }
 ]

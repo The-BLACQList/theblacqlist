@@ -30,6 +30,7 @@ import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 
 const FOOD = 'food-0000'
 const BAKERY = 'food-bake'
+const GROCERY = 'food-groc'
 const PHOTO = 'photo-000'
 const RETAIL = 'retail-000'
 const HEALTH = 'health-000'
@@ -37,6 +38,7 @@ const HEALTH = 'health-000'
 const CATS: CategoryNode[] = [
   { id: FOOD, slug: 'food-dining', parent_id: null },
   { id: BAKERY, slug: 'bakeries', parent_id: FOOD },
+  { id: GROCERY, slug: 'grocery-markets', parent_id: FOOD },
   { id: PHOTO, slug: 'photography-videography', parent_id: null },
   { id: RETAIL, slug: 'retail-gifts', parent_id: null },
   { id: HEALTH, slug: 'healthcare', parent_id: null },
@@ -99,6 +101,17 @@ describe('expandTypeCategoryIds', () => {
     expect(expandTypeCategoryIds('business', CATS)).toEqual([])
     expect(expandTypeCategoryIds('service_provider', CATS)).toEqual([])
     expect(expandTypeCategoryIds(null, CATS)).toEqual([])
+  })
+
+  it('leaves an excluded child out (a grocery store is not a restaurant)', () => {
+    expect(expandTypeCategoryIds('restaurant', CATS)).not.toContain(GROCERY)
+    expect(
+      listingMatchesType(
+        'restaurant',
+        listing('business', GROCERY),
+        expandTypeCategoryIds('restaurant', CATS)
+      )
+    ).toBe(false)
   })
 
   it('skips mapped slugs missing from the category list', () => {

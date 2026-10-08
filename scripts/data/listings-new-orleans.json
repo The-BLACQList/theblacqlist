@@ -1507,5 +1507,471 @@
       ],
       "note": "Address, ZIP and phone confirmed; the domain comes from the boutique's own Instagram post rather than a search summary. Ownership sourced to an Essence feature on Black retailers at Essence Festival — editorial, same tier as the DC spa rows. buyblack.org also lists it, but that is a peer directory and does not carry the claim on its own."
     }
+  },
+  {
+    "name": "Liberty Bank and Trust",
+    "slug": "liberty-bank-and-trust-new-orleans",
+    "tagline": "Black-owned bank founded in New Orleans in 1972, with five branches in the city",
+    "description": "Liberty Bank and Trust is a Black-owned bank headquartered in New Orleans, with branches in Louisiana and several other states. It offers personal and business banking, mortgages and small business loans. The bank was founded in New Orleans in 1972.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "2714 Canal Street",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70119",
+    "phone": "(504) 827-0060",
+    "website_url": "https://www.libertybank.net",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.libertybank.net/locations/",
+    "price_range": null,
+    "founded_year": 1972,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.libertybank.net/locations/",
+        "https://api.fdic.gov/banks/locations?filters=CERT:20856",
+        "https://www.libertybank.net/locations/la/new-orleans/canal-street"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and its locations pages list the New Orleans branches in October 2026. Canal Street branch used as the flagship because the 6600 Plaza Dr headquarters is an administrative office, not a branch. Drive-up hours match the lobby hours. Other New Orleans branches: Gentilly (3002 Gentilly Blvd), New Orleans East (7200 Crowder Blvd), De Gaulle (3535 General De Gaulle Dr), and 20 McAlister Dr Suite 103 near Tulane. Liberty also runs loan production offices (not branches) in Houston and in Brookhaven near Atlanta. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "HOPE Credit Union",
+    "slug": "hope-credit-union-new-orleans",
+    "tagline": "Community development credit union with a branch on O. C. Haley Blvd",
+    "description": "HOPE (Hope Enterprise Corporation and Hope Credit Union) is a community development credit union headquartered in Jackson, Mississippi, with branches across the Deep South. Its New Orleans branch is in Central City on O. C. Haley Boulevard. It offers checking, savings, loans, business accounts and free financial counseling.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1726 Oretha Castle Haley Blvd",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70113",
+    "phone": "(504) 527-0688",
+    "website_url": "https://www.hopecu.org",
+    "social_instagram": "https://instagram.com/hopecreditunion",
+    "cta_type": "visit",
+    "cta_url": "https://www.hopecu.org/branches/central-city-branch/",
+    "price_range": null,
+    "founded_year": 1995,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:30",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:30",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:30",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:30",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://www.hopecu.org/branches/central-city-branch/",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/24829",
+        "https://www.hopecu.org/branches/"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active, and its site lists the Central City branch in October 2026. The Elysian Fields branch is no longer listed: its page now redirects to the branch index, and Central City is the only Louisiana branch shown. Drop Elysian Fields. Who can join: all products are open to people and businesses in Alabama, Arkansas, Georgia, Louisiana, Mississippi and Tennessee. People outside that area can open savings, certificate or money market accounts. Founded year is the NCUA charter year. NCUA charter 24829, a federal credit union. HOPE also has two Atlanta branches (see hope-credit-union-atlanta)."
+    }
+  },
+  {
+    "name": "Barcelo Gardens",
+    "slug": "barcelo-gardens",
+    "tagline": "Upper Ninth Ward community garden with a Saturday produce market",
+    "description": "Barcelo Gardens is a community garden in the Upper Ninth Ward of New Orleans that grows local produce. It holds a neighborhood market at the garden on Gallier Street. Ashley Webb and Andres Barcelo-Sanchez started the garden in 2017 and held the first market in July 2020.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "2301 Gallier St",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": "https://www.instagram.com/barcelogardens/",
+    "cta_type": "visit",
+    "cta_url": "https://www.instagram.com/barcelogardens/",
+    "price_range": null,
+    "founded_year": 2017,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "https://bizneworleans.com/les-dames-descoffier-names-2026-honorees/"
+      ],
+      "note": "Named a Les Dames d'Escoffier 2026 honoree (Mar 2026); Black ownership comes from the Black Farmers Index and a 2024 Via Nola Vie story on Black urban farms. Ownership mainly from the Black Farmers Index; the Via Nola Vie piece (May 2024) covers Black urban farms but does not state the owners' race directly. A 2023 NOLA Family article listed the market as Saturdays 10 to 1 except the first Saturday; not current, so hours left blank. The Black Farmers Index website link points to an unrelated shop, so no website is listed."
+    }
+  },
+  {
+    "name": "Petit Jardin",
+    "slug": "petit-jardin",
+    "tagline": "Small Central City urban homestead selling vegetables, herbs and moringa",
+    "description": "Petit Jardin is a small urban homestead in Central City, New Orleans run by Erica Sage. It sells vegetables, fruit, eggs, pickles, moringa powder, dried herbs, edible flowers and soaps through its online shop and the Crescent City Farmers Market. Sage started it in 2020.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://www.petitjardinshop.com/",
+    "social_instagram": "https://www.instagram.com/its.petit.jardin/",
+    "cta_type": "shop",
+    "cta_url": "https://www.petitjardinshop.com/",
+    "price_range": null,
+    "founded_year": 2020,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.crescentcityfarmersmarket.org/news/744/42/Petit-Jardin",
+        "https://www.instagram.com/its.petit.jardin/",
+        "https://blackfarmersindex.com/region-6-louisiana"
+      ],
+      "note": "Crescent City Farmers Market vendor page calls it Black-owned, and its Instagram has posts through August 2026. Also woman-owned and mom-owned per the market page. Not on the current week's market roster, so market days may be occasional."
+    }
+  },
+  {
+    "name": "Indian Springs Farmers Association",
+    "slug": "indian-springs-farmers-association",
+    "tagline": "Co-op of 30+ Black-owned Mississippi farms selling at New Orleans markets",
+    "description": "Indian Springs Farmers Association is a cooperative of more than 30 small Black-owned farms based in Petal, Mississippi. Members grow greens, sweet potatoes, peas, beans, peanuts, tomatoes, peppers and watermelons, sold at Crescent City Farmers Market in New Orleans. The co-op started in 1976 and belongs to the Federation of Southern Cooperatives.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Petal",
+    "state": "MS",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.crescentcityfarmersmarket.org/vendors/who",
+    "price_range": null,
+    "founded_year": 1976,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://www.crescentcityfarmersmarket.com/news/15/42/Indian-Springs-Farmers-Association",
+        "https://www.crescentcityfarmersmarket.org/vendors/who"
+      ],
+      "note": "Crescent City Farmers Market describes it as 30+ small Black-owned Mississippi farms, and it is on the October 2026 market roster. Sells only at markets: Uptown Tuesday, Mid-City Thursday and City Park Sunday. The market page lists personal phone numbers for members, so no phone is included. No website found. Kept on New Orleans because that is where it sells."
+    }
+  },
+  {
+    "name": "Muse 3 Farm",
+    "slug": "muse-3-farm",
+    "tagline": "Family livestock farm in Greensburg, LA with an on-farm store and online shop",
+    "description": "Muse 3 Farm is a family farm of more than 200 acres in Greensburg, Louisiana raising beef, chicken, lamb, goat and eggs, plus produce and hibiscus tea. Customers buy at the farm store, through an online store, and at Southern University's JagFresh market. The Muse family has held the land since 1920 and began the farm business in 2015.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1820 Muse Rd",
+    "city_text": "Greensburg",
+    "state": "LA",
+    "zip": "70441",
+    "phone": null,
+    "website_url": "https://www.muse3farm.com/",
+    "social_instagram": "https://instagram.com/muse3farm",
+    "cta_type": "visit",
+    "cta_url": "https://www.muse3farm.com/",
+    "price_range": null,
+    "founded_year": 2015,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "https://www.suagcenter.com/news/dr-orlando-mcmeans-tours-muse-3-farm-with-the-board-of-regents-and-the-lsu-ag-center"
+      ],
+      "note": "Southern University Ag Center reported a June 2026 tour of the farm; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported), plus a long working tie with the Southern University Ag Center (an HBCU). Farm store is listed as 9am to 5pm but the days are not stated, so hours are blank. The phone on the site is a placeholder, so no phone is listed. The Advocate covered the farm in April 2025."
+    }
+  },
+  {
+    "name": "Chris & Camille's Family Farm",
+    "slug": "chris-camilles-family-farm",
+    "tagline": "Baton Rouge family farm selling microgreens, greens and oyster mushrooms",
+    "description": "Chris and Camille's Family Farm grows greens, microgreens and oyster mushrooms in the Scotlandville area of Baton Rouge and also makes freeze-dried supplements. Customers buy at the Red Stick Farmers Market on Thursdays, at Matherne's Market, and through an online store with pickup. The farm holds USDA GAP and Louisiana Grown certifications.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Baton Rouge",
+    "state": "LA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://ccffarm.com/",
+    "social_instagram": "https://www.instagram.com/ccffarm/",
+    "cta_type": "shop",
+    "cta_url": "https://ccffarm.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "https://ccffarm.com/"
+      ],
+      "note": "Website relaunched with blog posts from August to October 2026; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). The site lists 6400 Perkins Rd, which looks like a market location rather than the farm, so it is left off. The Black Farmers Index lists the Instagram as chriscamillefamilyfarm while the site links ccffarm; confirm which is current. Email info@ccffarm.com."
+    }
+  },
+  {
+    "name": "Seeds of Faith Garden",
+    "slug": "seeds-of-faith-garden",
+    "tagline": "Slaughter, LA garden with a chemical-free Fall/Winter produce CSA",
+    "description": "Seeds of Faith Garden grows seasonal vegetables without synthetic chemicals in Slaughter, Louisiana. It sells a biweekly produce box CSA from mid-October to mid-December, with free delivery in East Baton Rouge Parish. The garden posts farm updates on its YouTube channel.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Slaughter",
+    "state": "LA",
+    "zip": null,
+    "phone": null,
+    "website_url": "https://seedsoffaithgarden.com/",
+    "social_instagram": null,
+    "cta_type": "subscribe",
+    "cta_url": "https://seedsoffaithgarden.com/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "https://seedsoffaithgarden.com/",
+        "https://www.youtube.com/@SeedsofFaithGarden"
+      ],
+      "note": "Site is selling a current Fall/Winter CSA with a 2024 to 2026 copyright; Black ownership source is the Black Farmers Index only. Ownership source: Black Farmers Index only (self-reported). Delivery covers East Baton Rouge Parish only, so it serves Baton Rouge more than New Orleans. Owner name not shown on the site."
+    }
+  },
+  {
+    "name": "LandY Acre Farms",
+    "slug": "landy-acre-farms",
+    "tagline": "Slaughter, LA cattle farm selling beef and eggs raised birth to butcher",
+    "description": "LandY Acre Farms raises cattle on its farm in Slaughter, Louisiana and sells beef and eggs. It describes its beef as raised on the farm from birth to butcher. It sells at markets at Duplessis Park in Prairieville, with dates set for October and December 2026.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Slaughter",
+    "state": "LA",
+    "zip": null,
+    "phone": "(225) 245-4806",
+    "website_url": "http://www.landyacrefarms.com/",
+    "social_instagram": "https://www.instagram.com/landyacrefarms",
+    "cta_type": "contact",
+    "cta_url": "http://www.landyacrefarms.com/contact-us",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "http://www.landyacrefarms.com/markets"
+      ],
+      "note": "Site lists market dates for October and December 2026; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Markets are on set dates rather than weekly; the October 3, 2026 market was cancelled. Phone and email landy@landyacrefarms.com come from the farm's contact page. Near the edge of the 100 mile range."
+    }
+  },
+  {
+    "name": "Tri J Cattle",
+    "slug": "tri-j-cattle",
+    "tagline": "Waggaman, LA family cattle farm selling Angus-sired beef online",
+    "description": "Tri J Cattle raises Angus-sired beef cattle with no added hormones in Waggaman, Louisiana, just outside New Orleans. Customers buy steaks, ground beef and other cuts through the farm's online shop. Jonathan Jones runs the farm with his family.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Waggaman",
+    "state": "LA",
+    "zip": "70094",
+    "phone": null,
+    "website_url": "https://www.trijcattle.com/",
+    "social_instagram": "https://www.instagram.com/trijbeef/",
+    "cta_type": "shop",
+    "cta_url": "https://www.trijcattle.com/category/all-products",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blackfarmersindex.com/region-6-louisiana",
+        "https://www.instagram.com/trijbeef/",
+        "https://www.trijcattle.com/"
+      ],
+      "note": "Online beef shop has items in stock and Instagram shows posts from 2025 including December 2025; Black ownership source is the Black Farmers Index only. New in pass 2. Ownership source: Black Farmers Index only (self-reported). Pickup or delivery details are not on the site; buyers use the contact form. Several cuts are out of stock."
+    }
+  },
+  {
+    "name": "Burnell's Lower 9th Ward Market",
+    "slug": "burnells-lower-9th-ward-market",
+    "tagline": "Corner grocery, laundry and barbershop serving the Lower 9th Ward",
+    "description": "Small neighborhood market selling fresh produce, canned goods and personal items, with a laundry and barbershop on site. Army veteran Burnell Cotlon opened it after Hurricane Katrina left the Lower 9th Ward without a grocery.",
+    "listing_type": "business",
+    "city_slug": "new-orleans-la",
+    "category_slug": "grocery-markets",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "2036 Fats Domino Ave",
+    "city_text": "New Orleans",
+    "state": "LA",
+    "zip": "70117",
+    "phone": "(504) 319-8855",
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.buyblack.org/united-states/new-orleans/food/lower-9th-ward-market",
+        "https://www.hppr.org/npr-news/2025-08-26/20-years-after-hurricane-katrina-the-lower-ninth-ward-in-new-orleans-still-lags-behind"
+      ],
+      "note": "Listed as Black-owned on BuyBlack and covered by NPR in Aug 2025 as the Lower 9th Ward's only grocery. The street was renamed from Caffin Ave to Fats Domino Ave; older listings use 2036 Caffin Ave. NPR (Aug 2025) says it is no longer open every day, so hours are left empty. Press says it opened around 2014, not confirmed, so founded_year is null. Phone is from the BuyBlack business listing."
+    }
   }
 ]
