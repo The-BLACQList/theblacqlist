@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type SetCoverImageState = { success: true } | { error: string } | null
 
@@ -11,7 +12,7 @@ export type SetCoverImageState = { success: true } | { error: string } | null
  * Promote an already-uploaded photo to the listing cover, or clear the cover.
  *
  * `listings.cover_image_path` was previously written only at creation time
- * (createListing / SubmitListingForm / PreviewPublishStep), so an owner who
+ * (createListing, called by the add-business quick start), so an owner who
  * claimed a seeded listing had no way to ever get a cover onto it. Rather than
  * add a second upload flow, this promotes a row that already came through
  * POST /api/media/upload — same bucket, same path convention, same plan limits.
@@ -74,6 +75,8 @@ export async function setCoverImageAction(
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
     }
   }
+
+  revalidateOwnerEditors(listingId)
 
   return { success: true }
 }

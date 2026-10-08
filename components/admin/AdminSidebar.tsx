@@ -21,6 +21,7 @@ import {
   Users,
   Megaphone,
   Mail,
+  Tags,
 } from 'lucide-react'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
   { href: '/admin/verification', label: 'Verification', icon: BadgeCheck, exact: false },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, exact: false },
   { href: '/admin/reports', label: 'Reports', icon: Flag, exact: false },
+  { href: '/admin/category-requests', label: 'Category requests', icon: Tags, exact: false },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, exact: false },
   { href: '/admin/collections', label: 'Collections', icon: Layers, exact: false },
   { href: '/admin/guides', label: 'Guides', icon: BookOpen, exact: false },

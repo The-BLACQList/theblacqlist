@@ -89,6 +89,18 @@ describe('getCtaHref — resolution ladder', () => {
     )
   })
 
+  it('turns a bare email on the "message" CTA into mailto:', () => {
+    expect(getCtaHref(entity({ cta_type: 'message', cta_url: 'hi@example.com' }))).toBe(
+      'mailto:hi@example.com'
+    )
+  })
+
+  it('keeps a full link on the "message" CTA as-is', () => {
+    expect(getCtaHref(entity({ cta_type: 'message', cta_url: 'https://example.com/contact' }))).toBe(
+      'https://example.com/contact'
+    )
+  })
+
   it('uses the owner-configured cta_url for every other CTA type', () => {
     expect(getCtaHref(entity({ cta_type: 'shop', cta_url: 'https://shop.example.com' }))).toBe(
       'https://shop.example.com'

@@ -278,6 +278,11 @@ export interface EntityPageData {
   name: string
   slug: string
   tagline: string
+  /** Owner-set search text (ticket 126). The page metadata prefers these when set. */
+  meta_title?: string | null
+  meta_description?: string | null
+  /** True keeps the page out of search engines and the sitemap. */
+  noindex?: boolean
   category: { name: string; slug: string }
   city: { name: string; slug: string; state_abbr: string } | null
   location_type: LocationType

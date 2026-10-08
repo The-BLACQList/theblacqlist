@@ -94,14 +94,18 @@ export function PublishSection({
           {isPending_ && (
             <>
               <Clock className="size-4 text-amber-600 shrink-0" aria-hidden="true" />
-              <span className="font-subhead text-sm font-semibold text-amber-700">Under review</span>
+              <span className="font-subhead text-sm font-semibold text-amber-700">
+                Under review
+              </span>
             </>
           )}
           {(isDraftReviewable || isDraftUnsubmitted || isDraftSelfSubmit) && (
             <>
               <EyeOff className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
               <span className="font-subhead text-sm font-semibold text-charcoal-soft">Draft</span>
-              <span className="font-body text-xs text-charcoal-faint">· not visible to the public</span>
+              <span className="font-body text-xs text-charcoal-faint">
+                · not visible to the public
+              </span>
             </>
           )}
         </div>
@@ -114,52 +118,55 @@ export function PublishSection({
           </p>
         )}
 
-        {/* Draft + unclaimed — submit for review */}
+        {/* Draft business — submit for review here, or finish the page first (ticket 126) */}
         {isDraftUnsubmitted && (
           <p className="font-body text-sm text-charcoal-soft leading-relaxed">
-            This listing hasn&apos;t been submitted for review yet.{' '}
+            This page hasn&apos;t been sent for review yet. Send it and The BLACQList team will
+            review it before it goes live. Want to add more first?{' '}
             <Link
-              href="/add-business"
+              href={`/add-business/finish/${listingId}`}
               className="font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
-              Complete your listing
-            </Link>{' '}
-            to submit it for review and go live.
+              Finish your page
+            </Link>
           </p>
         )}
 
         {/* Draft job/event — submit for review directly */}
         {isDraftSelfSubmit && (
-          <>
-            <p className="font-body text-sm text-charcoal-soft leading-relaxed">
-              This {entityType === 'job' ? 'job' : 'event'} hasn&apos;t been submitted for review
-              yet. Submit it and The BLACQList team will review it before it goes live.
-            </p>
-            {jobQuota && (
-              <p className="font-body text-sm text-charcoal-soft leading-relaxed">
-                {jobQuota.limit === 0 ? (
-                  <>
-                    Job postings are {jobQuota.priceDisplay} for 30 days. Submitting takes you
-                    to checkout.{' '}
-                    <Link href="/dashboard/upgrade" className="underline hover:text-brand-black">
-                      Growth and Premium plans include free postings
-                    </Link>
-                    .
-                  </>
-                ) : jobQuota.atLimit ? (
-                  <>
-                    {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
-                    additional postings {jobQuota.priceDisplay} for 30 days. Submitting takes
-                    you to checkout.
-                  </>
-                ) : (
-                  <>
-                    {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
-                    this one is included. It stays live for 30 days.
-                  </>
-                )}
-              </p>
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
+            This {entityType === 'job' ? 'job' : 'event'} hasn&apos;t been submitted for review yet.
+            Submit it and The BLACQList team will review it before it goes live.
+          </p>
+        )}
+        {isDraftSelfSubmit && jobQuota && (
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
+            {jobQuota.limit === 0 ? (
+              <>
+                Job postings are {jobQuota.priceDisplay} for 30 days. Submitting takes you to
+                checkout.{' '}
+                <Link href="/dashboard/upgrade" className="underline hover:text-brand-black">
+                  Growth and Premium plans include free postings
+                </Link>
+                .
+              </>
+            ) : jobQuota.atLimit ? (
+              <>
+                {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
+                additional postings {jobQuota.priceDisplay} for 30 days. Submitting takes you to
+                checkout.
+              </>
+            ) : (
+              <>
+                {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
+                this one is included. It stays live for 30 days.
+              </>
             )}
+          </p>
+        )}
+
+        {(isDraftSelfSubmit || isDraftUnsubmitted) && (
+          <>
             {submitState && 'error' in submitState && (
               <div
                 role="alert"

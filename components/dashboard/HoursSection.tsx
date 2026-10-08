@@ -76,13 +76,13 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
                 </label>
 
                 {!day.closed && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <input
                       type="time"
                       value={day.open}
                       onChange={(e) => setDay(key, { open: e.target.value })}
                       aria-label={`${label} opening time`}
-                      className="w-28 px-2 py-1.5 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+                      className="w-28 min-w-0 px-2 py-1.5 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
                     />
                     <span className="font-body text-xs text-charcoal-faint">–</span>
                     <input
@@ -90,7 +90,7 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
                       value={day.close}
                       onChange={(e) => setDay(key, { close: e.target.value })}
                       aria-label={`${label} closing time`}
-                      className="w-28 px-2 py-1.5 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+                      className="w-28 min-w-0 px-2 py-1.5 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
                     />
                   </div>
                 )}

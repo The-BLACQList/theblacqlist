@@ -71,3 +71,58 @@ describe('page checklist — scoring', () => {
     expect(after.maxScore).toBe(before.maxScore)
   })
 })
+
+const FULL_DETAILS = {
+  description: 'A'.repeat(120),
+  phone: '555-0100',
+  website_url: null,
+  social_instagram: null,
+  social_facebook: null,
+  social_tiktok: null,
+  social_youtube: null,
+  social_twitter: null,
+  social_linkedin: null,
+  cta_type: 'call',
+}
+
+const FULL_LISTING: ChecklistListing = {
+  tagline: 'Fresh bread daily',
+  meta_title: 'Bakery in Atlanta',
+  meta_description: 'Fresh bread daily in Atlanta.',
+  cover_image_path: 'x/cover.jpg',
+}
+
+describe('page checklist — plan aware', () => {
+  it('lets a Free page reach 100% with one photo and no social links', () => {
+    const result = computePageChecklist(FULL_LISTING, FULL_DETAILS, 1, 1, 1, 'free')
+    expect(result.percent).toBe(100)
+    expect(result.items.map((i) => i.id)).not.toContain('gallery')
+    expect(result.items.map((i) => i.id)).not.toContain('social')
+  })
+
+  it('keeps gallery and social for Starter', () => {
+    const result = computePageChecklist(FULL_LISTING, FULL_DETAILS, 1, 1, 1, 'starter')
+    expect(result.items.map((i) => i.id)).toEqual(expect.arrayContaining(['gallery', 'social']))
+    expect(result.percent).toBeLessThan(100)
+  })
+
+  it('scores every item when no tier is given', () => {
+    const withTier = computePageChecklist(EMPTY_LISTING, null, 0, 0, 0, 'premium')
+    const without = computePageChecklist(EMPTY_LISTING, null, 0, 0, 0)
+    expect(without.items).toHaveLength(withTier.items.length)
+    expect(without.maxScore).toBe(withTier.maxScore)
+  })
+
+  it('reports percent as a whole number', () => {
+    const { percent } = computePageChecklist(
+      { ...EMPTY_LISTING, tagline: 'x' },
+      null,
+      0,
+      0,
+      0,
+      'free'
+    )
+    expect(Number.isInteger(percent)).toBe(true)
+    expect(percent).toBeGreaterThan(0)
+  })
+})

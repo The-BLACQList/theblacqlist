@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type DeleteListingLinkState = { success: true } | { error: string } | null
 
@@ -45,7 +46,7 @@ export async function deleteListingLinkAction(
   if (listing.status === 'published' && listing.cities?.slug && listing.slug) {
     revalidatePath(buildEntityUrl(listing.entity_type, listing.cities.slug, listing.slug))
   }
-  revalidatePath(`/dashboard/pages/${listing.id}/edit`)
+  revalidateOwnerEditors(listing.id)
 
   return { success: true }
 }

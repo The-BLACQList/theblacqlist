@@ -37,6 +37,8 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
 
   const selectedOption = CTA_OPTIONS.find((o) => o.value === selectedType)
   const requiresUrl = selectedOption?.requiresUrl ?? true
+  // "Send a message" takes an email address, the same as the quick start.
+  const isMessage = selectedType === 'message'
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -81,14 +83,17 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
               htmlFor="cta-url"
               className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
             >
-              Destination URL <span aria-hidden="true">*</span>
+              {isMessage ? 'Email for messages' : 'Destination URL'}{' '}
+              <span aria-hidden="true">*</span>
             </label>
             <input
+              key={isMessage ? 'email' : 'url'}
               id="cta-url"
               name="cta_url"
-              type="url"
+              type={isMessage ? 'email' : 'url'}
+              autoComplete={isMessage ? 'email' : 'url'}
               defaultValue={ctaUrl ?? ''}
-              placeholder="https://example.com/book"
+              placeholder={isMessage ? 'you@yourbusiness.com' : 'https://example.com/book'}
               required={requiresUrl}
               className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
             />

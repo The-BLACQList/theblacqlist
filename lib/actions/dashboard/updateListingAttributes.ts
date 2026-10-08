@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkAttributeCount } from '@/lib/stripe/planChecks'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type UpdateListingAttributesState =
   | { success: true; savedAt: string }
@@ -45,7 +46,12 @@ export async function updateListingAttributesAction(
   const sb = supabase as unknown as SupabaseClient
 
   const submittedIds = Array.from(
-    new Set(formData.getAll('attr').map((v) => v.toString().trim()).filter(Boolean))
+    new Set(
+      formData
+        .getAll('attr')
+        .map((v) => v.toString().trim())
+        .filter(Boolean)
+    )
   )
 
   // Keep only ids that are real, active attribute values.
@@ -69,7 +75,10 @@ export async function updateListingAttributesAction(
   if (limitError) return { error: limitError }
 
   // Replace the full set: delete existing, then insert the new selection.
-  const { error: delError } = await sb.from('listing_attributes').delete().eq('listing_id', listingId)
+  const { error: delError } = await sb
+    .from('listing_attributes')
+    .delete()
+    .eq('listing_id', listingId)
   if (delError) return { error: 'Could not update attributes. Please try again.' }
 
   if (validIds.length > 0) {
@@ -82,7 +91,7 @@ export async function updateListingAttributesAction(
   const city = listing.cities as { slug: string } | null
   const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
   if (publicUrl) revalidatePath(publicUrl)
-  revalidatePath(`/dashboard/pages/${listingId}/edit`)
+  revalidateOwnerEditors(listingId)
 
   return { success: true, savedAt: new Date().toISOString() }
 }

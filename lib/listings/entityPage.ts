@@ -27,6 +27,9 @@ type RawRow = {
   slug: string
   name: string
   tagline: string | null
+  meta_title: string | null
+  meta_description: string | null
+  noindex: boolean
   entity_type: string
   location_type: string
   trust_tier: string
@@ -76,7 +79,8 @@ type RawRow = {
 }
 
 const LISTING_SELECT = `
-  id, slug, name, tagline, entity_type, location_type, trust_tier, tier,
+  id, slug, name, tagline, meta_title, meta_description, noindex,
+  entity_type, location_type, trust_tier, tier,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id, city_id,
@@ -670,6 +674,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     slug: raw.slug,
     name: raw.name,
     tagline: raw.tagline ?? '',
+    meta_title: raw.meta_title,
+    meta_description: raw.meta_description,
+    noindex: raw.noindex,
     entity_type: raw.entity_type as EntityPageData['entity_type'],
     location_type: raw.location_type as EntityPageData['location_type'],
     trust_tier: raw.trust_tier as EntityPageData['trust_tier'],

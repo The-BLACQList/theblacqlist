@@ -386,6 +386,73 @@ export type Database = {
           },
         ]
       }
+      category_requests: {
+        Row: {
+          created_at: string
+          created_category_id: string | null
+          id: string
+          listing_id: string
+          owner_words: string
+          parent_category_id: string | null
+          proposed_name: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_category_id?: string | null
+          id?: string
+          listing_id: string
+          owner_words: string
+          parent_category_id?: string | null
+          proposed_name: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_category_id?: string | null
+          id?: string
+          listing_id?: string
+          owner_words?: string
+          parent_category_id?: string | null
+          proposed_name?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_requests_created_category_id_fkey"
+            columns: ["created_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_requests_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           created_at: string

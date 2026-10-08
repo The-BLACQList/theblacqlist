@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 112
+**Total tickets:** 128
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-07-27
+**Last updated:** 2026-10-06
 
 ---
 
@@ -131,3 +131,8 @@
 | [122](122-opening-soon-covers.md) | Opening-soon covers: Marketplace, Jobs, The Collective | V1.5 | P1 | — | Ready | Flags off in prod by default; proxy rewrites to /soon, APIs 403, receipt actions refuse; nav keeps links with a Soon pill |
 | [123](123-earned-weekly-featured.md) | Earned weekly Featured: one winner per listing type | V1.5 | P1 | — | Ready | GATE-DATA migration + flag flip clears 27 seeded flags; contact taps tracked; cron Mon 09:00 UTC |
 | [124](124-featured-badge-and-copy.md) | Featured badge and copy say "earned" | V1.5 | P1 | 123 | Ready | Same PR as 123; hero "Featured this week" + bucket line; Featured removed from plans and sponsor copy |
+| [125](125-category-sorting-guide.md) | "Help me choose" category guide on /add-business | V1.5 | P1 | — | Ready | Two questions or a search suggest type, category and location type; rules in lib/categories/sorting-guide.ts, slugs checked against the seed; multi-category is 5b |
+| [126](126-add-business-rules-first.md) | Add-business redesign, rules-first | V1.5 | P1 | 125 | Ready | Round 2 flow approved 2026-10-05; closes #181; fixes CTA twice, founder story, city_id, reload; GATE-DATA for category_requests + moderation_queue check |
+| [127](127-add-business-site-import.md) | Bring in what you already have (site import) | V1.5 | P1 | 126 | Needs approval | Behind FEATURE_SITE_IMPORT; safe fetcher + reader + photo import; needs HTML parser and sharp-to-dependencies approval |
+| [128](128-add-business-ai-drafts.md) | AI drafts and category help on /add-business | V2 | P2 | 126, 127 | Blocked | Behind FEATURE_AI_ONBOARDING, off by default; GATE-SPEND, safety-plan exception, six AI launch gates |
+| [129](129-edit-page-finish-view.md) | Owners edit their page in the finish view | V1.5 | P1 | 126 | Ready (after 126) | Founder 2026-10-06: every business page edit uses the side-by-side finish view; photos + services fold in; events/jobs unchanged; no migration |

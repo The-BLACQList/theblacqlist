@@ -4,7 +4,9 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const bodySchema = z.object({
   name: z.string().min(2).max(200).trim(),
-  city_id: z.string().uuid(),
+  // Optional since ticket 126: the quick start checks the name before the owner
+  // picks a city, so a match in any city shows up as "is this yours?".
+  city_id: z.string().uuid().optional(),
 })
 
 interface DuplicateResult {
@@ -59,86 +61,50 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ data: { duplicates } })
 }
 
-async function findDuplicates(name: string, cityId: string): Promise<DuplicateResult[]> {
+// Ilike matching only: check_listing_similarity (pg_trgm) never shipped as a
+// migration, so the old RPC branch always threw and fell through to this.
+async function findDuplicates(name: string, cityId: string | undefined): Promise<DuplicateResult[]> {
   const supabase = await createClient()
   const serviceClient = createServiceClient()
 
-  // Validate city_id exists
-  const { data: city } = await supabase
-    .from('cities')
-    .select('id, name, slug')
-    .eq('id', cityId)
-    .eq('is_active', true)
-    .maybeSingle()
-
-  if (!city) return []
-
-  // Try pg_trgm similarity first
-  try {
-    const { data: simRows, error } = await (
-      supabase.rpc as (fn: string, args: Record<string, unknown>) => ReturnType<typeof supabase.rpc>
-    )('check_listing_similarity', {
-      name_query: name,
-      city_id: cityId,
-      threshold: 0.3,
-      max_results: 5,
-    })
-
-    if (error) throw error
-
-    if (simRows && Array.isArray(simRows) && simRows.length > 0) {
-      return (
-        simRows as Array<{
-          id: string
-          name: string
-          slug: string
-          entity_type: string
-          trust_tier: string
-          cover_image_path: string | null
-          similarity_score: number
-        }>
-      ).map((row) => ({
-        id: row.id,
-        name: row.name,
-        slug: row.slug,
-        entity_type: row.entity_type,
-        trust_tier: row.trust_tier,
-        match_score: row.similarity_score,
-        cover_image_url: row.cover_image_path
-          ? serviceClient.storage.from('listing-media').getPublicUrl(row.cover_image_path).data
-              .publicUrl
-          : null,
-        city: { name: city.name, slug: city.slug },
-      }))
-    }
-
-    return []
-  } catch {
-    // pg_trgm not available — fall back to ilike
+  if (cityId) {
+    const { data: city } = await supabase
+      .from('cities')
+      .select('id')
+      .eq('id', cityId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (!city) return []
   }
 
-  const { data: ilikeRows } = await supabase
+  // `%` and `_` in a business name are literal characters, not wildcards.
+  const pattern = `%${name.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
+  let query = supabase
     .from('listings')
-    .select('id, name, slug, entity_type, trust_tier, cover_image_path')
-    .eq('city_id', cityId)
-    .ilike('name', `%${name}%`)
+    .select('id, name, slug, entity_type, trust_tier, cover_image_path, cities!listings_city_id_fkey(name, slug)')
+    .ilike('name', pattern)
     .eq('status', 'published')
     .is('deleted_at', null)
     .limit(5)
+  if (cityId) query = query.eq('city_id', cityId)
 
-  if (!ilikeRows || ilikeRows.length === 0) return []
+  const { data: rows } = await query
+  if (!rows || rows.length === 0) return []
 
-  return ilikeRows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    entity_type: row.entity_type,
-    trust_tier: row.trust_tier,
-    match_score: 0,
-    cover_image_url: row.cover_image_path
-      ? serviceClient.storage.from('listing-media').getPublicUrl(row.cover_image_path).data
-          .publicUrl
-      : null,
-    city: { name: city.name, slug: city.slug },
-  }))
+  return rows.map((row) => {
+    const city = Array.isArray(row.cities) ? row.cities[0] : row.cities
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      entity_type: row.entity_type,
+      trust_tier: row.trust_tier,
+      match_score: 0,
+      cover_image_url: row.cover_image_path
+        ? serviceClient.storage.from('listing-media').getPublicUrl(row.cover_image_path).data
+            .publicUrl
+        : null,
+      city: city ? { name: city.name, slug: city.slug } : null,
+    }
+  })
 }

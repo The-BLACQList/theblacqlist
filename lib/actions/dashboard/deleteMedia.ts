@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type DeleteMediaState = { success: true } | { error: string } | null
 
@@ -60,6 +61,8 @@ export async function deleteMediaAction(
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
     }
   }
+
+  revalidateOwnerEditors(listing.id)
 
   return { success: true }
 }

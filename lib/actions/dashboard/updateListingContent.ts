@@ -6,6 +6,7 @@ import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { geocodeAddress } from '@/lib/listings/geocode'
 import { checkDescription, checkSocialLinks, SOCIAL_FIELDS } from '@/lib/stripe/planChecks'
+import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type UpdateListingContentState =
   | { success: true; savedAt: string }
@@ -201,7 +202,7 @@ export async function updateListingContentAction(
 
   // ── Revalidate the editor route so the just-saved value shows without a hard
   //    reload (the post-action RSC refresh otherwise reads a stale cache). ─────
-  revalidatePath(`/dashboard/pages/${listingId}/edit`)
+  revalidateOwnerEditors(listingId)
 
   // ── Revalidate public page only if listing is published ───────────────────
   if (listing.status === 'published') {
