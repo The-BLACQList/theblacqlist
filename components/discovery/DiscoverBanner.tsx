@@ -41,13 +41,18 @@ const P = '/images/editorial/categories'
 // alone until 2026-09-25, when the founder supplied its frame (a shop owner at
 // the counter); the "street scene" brief was the one that could not be shot
 // without picking a city, so the frame answers it with a shop instead.
+// On 2026-10-07 that frame moved to a citrus grower, because the shop-counter
+// look now belongs to the Brick & Mortar banner and the old frame was an
+// AI-made twin of it. A grower still answers the brief without naming a city.
 const BANNERS: Record<string, BannerContent> = {
   business: {
     title: 'Brick & Mortar',
     line: 'Shops and storefronts keeping the block alive.',
     shot: 'storefront at golden hour, owner in the doorway',
     tone: 'linear-gradient(135deg, #4a3423 0%, #7a5535 48%, #33251a 100%)',
-    photo: `${P}/brick-and-mortar.webp`,
+    // A real counter hand-off, 2400px wide. The old frame was AI-made and
+    // 1600px, which read soft at this 3:1 crop on 2x screens (2026-10-07).
+    photo: '/images/editorial/counter-handoff.webp',
   },
   restaurant: {
     title: 'Restaurants',
@@ -106,7 +111,7 @@ const BANNERS: Record<string, BannerContent> = {
     line: 'Every kind of Black-owned enterprise, one living index.',
     shot: 'street scene: shops, people, motion',
     tone: 'linear-gradient(130deg, #241c12 0%, #4a3a24 55%, #17110a 100%)',
-    photo: '/images/editorial/discover-cover.webp',
+    photo: '/images/editorial/farmer-and-cattle.webp',
     // Founder, 2026-09-25: the whole width of this frame shows, edge to edge.
     fullWidth: true,
   },
@@ -155,18 +160,19 @@ export function DiscoverBanner({ type }: Props) {
   const banner = (type && BANNERS[type]) || BANNERS.default!
 
   return (
-    <div
-      className="relative overflow-hidden"
-      style={{ background: banner.tone }}
-    >
+    <div className="relative overflow-hidden" style={{ background: banner.tone }}>
       {banner.photo !== undefined && (
         <>
           {/* Above the fold on the busiest route in the product, and the LCP
               element on it — so `priority`, and full-width `sizes` because the
               banner is edge-to-edge at every breakpoint. */}
-          {/* The frame is 1920x1280. At 375px a 360px-tall cover fill would
+          {/* The frame is 3:2 (2400x1600). At 375px a 360px-tall cover fill would
               cut about a third off its sides, so a `fullWidth` frame keeps its
-              3:2 box below `md` and fades into the ground under it. */}
+              3:2 box below `md` and fades into the ground under it. From `md`
+              up the photo fills the whole band edge to edge (founder,
+              2026-10-07: all image, no side fade). At 1914px the band is 4:1
+              and shows ~37% of the frame's height, so a default frame has to
+              be one whose subject fits a strip that thin. */}
           <div
             className={cn(
               'absolute',

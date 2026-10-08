@@ -271,6 +271,11 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/peach-and-rye-kitchen.webp': 'object-[50%_40%]',
   // Hard hat at 16%.
   '/images/editorial/ujima-construction.webp': 'object-[50%_40%]',
+  // Category tiles added 2026-10-07. Both put a head near the top edge.
+  // The braider's head runs off the top; the braids and hands sit ~30–65%.
+  '/images/editorial/braiding-chair.webp': 'object-[50%_35%]',
+  // Locs top out at ~2%, face ~10–30%.
+  '/images/editorial/notebook-skyline.webp': 'object-[50%_15%]',
 
   // No people in these two, so the rule is "keep the subject whole" rather than
   // "keep the head". The plate of ribs spans 26–85%, low in the frame, so this
@@ -311,7 +316,9 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // `object-cover` crops *vertically* and hard, and the type sits over the
   // lower two thirds. Each value keeps the subject clear of that type band
   // rather than clear of the top edge.
-  '/images/editorial/categories/brick-and-mortar.webp': 'object-[50%_35%]',
+  // Both heads sit at ~13–35% and the bag hand-off at ~25–60%. 20% puts the
+  // band at ~10–60%, so the faces and the bag both stay in.
+  '/images/editorial/counter-handoff.webp': 'object-[50%_20%]',
   '/images/editorial/categories/restaurants.webp': 'object-[50%_50%]',
   '/images/editorial/categories/products-and-services.webp': 'object-[50%_50%]',
   // Faces highest in the set — heads near the top of the frame, so bias up.
@@ -319,9 +326,12 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   '/images/editorial/categories/creatives.webp': 'object-[50%_40%]',
   '/images/editorial/categories/events.webp': 'object-[50%_45%]',
   '/images/editorial/categories/jobs.webp': 'object-[50%_35%]',
-  // Head and beard span ~25–55% of the source. At the ~42% desktop cut, 35%
-  // puts the band at ~20–62%, so the face stays whole.
-  '/images/editorial/discover-cover.webp': 'object-[50%_35%]',
+  // Hat brim to chin sits ~13–50% of the frame. At 4:1 (1914px wide) the band
+  // shows ~37% of the height, and 34% keeps his whole chin and smile, giving up
+  // the top of the hat (founder, 2026-10-07), with the cows' horns on the left
+  // under the headline. Below `md` it shows the whole 3:2 frame (`fullWidth`),
+  // so the value only matters from `md` up.
+  '/images/editorial/farmer-and-cattle.webp': 'object-[50%_34%]',
 }
 
 /**
@@ -441,7 +451,7 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   'food-dining': '/images/editorial/bbq-plate.webp',
   'fashion-apparel': '/images/editorial/leather-and-denim.webp',
   'arts-culture': '/images/editorial/hands-and-drums.webp',
-  'beauty-grooming': '/images/editorial/crown-and-coil-studio.webp',
+  'beauty-grooming': '/images/editorial/braiding-chair.webp',
   'legal-financial': '/images/editorial/melanin-law-group.webp',
   technology: '/images/editorial/rooted-tech-solutions.webp',
   'home-living': '/images/editorial/zinga-interior-design.webp',
@@ -449,7 +459,7 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   'retail-gifts': '/images/editorial/calabash-candles.webp',
   'childcare-family': '/images/editorial/soleil-kidswear.webp',
   'wellness-health': '/images/editorial/sable-fitness-collective.webp',
-  'books-publishing': '/images/editorial/afrofuturist-bookshop.webp',
+  'books-publishing': '/images/editorial/notebook-skyline.webp',
   healthcare: '/images/editorial/physician-portrait.webp',
   'social-media-marketing': '/images/editorial/agency-desk.webp',
   'professional-services': '/images/editorial/suit-and-ledger.webp',
