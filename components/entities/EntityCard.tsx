@@ -32,6 +32,7 @@ const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
   vendor: 'Vendor',
   event: 'Event',
   job: 'Job',
+  creator: 'Creator',
 }
 
 /**

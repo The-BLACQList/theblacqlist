@@ -7,6 +7,7 @@ import { isFeatureEnabled } from '@/lib/env'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { checkDescription, checkSocialLinks } from '@/lib/stripe/planChecks'
 import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
+import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -99,6 +100,13 @@ export async function createListingAction(
     !isFeatureEnabled('postingSubmissions')
   ) {
     return { error: 'Event and job submissions are not open yet.' }
+  }
+
+  // The creator type exists (ticket 131) before its sign-up path does. Ticket
+  // 132 replaces this with the creator path and its "I'm 18 or older" check;
+  // until then nobody can create a creator page, so none skips that check.
+  if (entityType === 'creator') {
+    return { error: 'Creator pages are not open yet.' }
   }
 
   const isBusinessPath = entityType !== 'event' && entityType !== 'job'
@@ -379,7 +387,7 @@ export async function createListingAction(
 
   const { data: category } = await supabase
     .from('categories')
-    .select('id')
+    .select('id, slug, parent_id, parent:categories!categories_parent_id_fkey(slug)')
     .eq('id', categoryId)
     .eq('is_active', true)
     .maybeSingle()
@@ -388,6 +396,18 @@ export async function createListingAction(
     return {
       error: 'Please fix the errors below.',
       fieldErrors: { category_id: 'Invalid category. Please select again.' },
+    }
+  }
+
+  // Creators & Influencers is the creator path's alone (lib/listings/creatorCategories.ts).
+  const parentSlug = (category.parent as unknown as { slug: string } | null)?.slug
+  if (
+    entityType !== 'creator' &&
+    (category.slug === CREATOR_PARENT_SLUG || parentSlug === CREATOR_PARENT_SLUG)
+  ) {
+    return {
+      error: 'Please fix the errors below.',
+      fieldErrors: { category_id: 'Creator pages have their own sign-up. Please pick another category.' },
     }
   }
 

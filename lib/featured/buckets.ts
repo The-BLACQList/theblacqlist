@@ -8,7 +8,7 @@
  *
  *   1. its own `entity_type`, when that isn't the generic `business`
  *      (a real `restaurant`, `vendor` or `event` row);
- *   2. otherwise Restaurant, Professional or Creative, by category, using the
+ *   2. otherwise Restaurant, Professional, Creative or Creator, by category, using the
  *      same mapping as the discover Type chips (lib/listings/type-shortcuts.ts);
  *   3. otherwise Services, by location type, same source;
  *   4. otherwise Business.
@@ -34,7 +34,7 @@ import type { EntityType } from '@/types'
 export type FeaturedBucket = EntityType
 
 /** Checked in this order after a listing's own entity_type. */
-const MAPPED_ORDER = ['restaurant', 'professional', 'creative', 'service_provider'] as const
+const MAPPED_ORDER = ['restaurant', 'professional', 'creative', 'creator', 'service_provider'] as const
 
 /** What the badge line calls each bucket: "among Restaurants this week". */
 export const BUCKET_LABELS: Record<FeaturedBucket, string> = {
@@ -46,6 +46,7 @@ export const BUCKET_LABELS: Record<FeaturedBucket, string> = {
   creative: 'Creatives',
   event: 'Events',
   job: 'Jobs',
+  creator: 'Creators',
 }
 
 export function bucketLabel(bucket: string): string {

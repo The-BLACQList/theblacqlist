@@ -12,6 +12,8 @@ const h = vi.hoisted(() => ({
     requestError: null as null | { code: string },
     inserts: {} as Record<string, Array<Record<string, unknown>>>,
     cityFilters: [] as Array<[string, unknown[]]>,
+    // Set in beforeEach; vi.hoisted runs before CATEGORY_ID exists.
+    category: null as null | Record<string, unknown>,
   },
 }))
 
@@ -40,9 +42,7 @@ function builder(table: string) {
   }
   chain.delete = self
   chain.maybeSingle = async () =>
-    table === 'categories'
-      ? { data: { id: CATEGORY_ID }, error: null }
-      : { data: null, error: null }
+    table === 'categories' ? { data: h.state.category, error: null } : { data: null, error: null }
   chain.single = async () => ({ data: { id: 'listing-1' }, error: null })
   chain.then = (resolve: (v: unknown) => unknown) => {
     if (table === 'cities') return resolve({ data: h.state.cities, error: null })
@@ -92,6 +92,7 @@ beforeEach(() => {
   h.state.requestError = null
   h.state.inserts = {}
   h.state.cityFilters = []
+  h.state.category = { id: CATEGORY_ID, slug: 'bakeries', parent: { slug: 'food-dining' } }
 })
 
 describe('createListingAction, business path', () => {
@@ -185,5 +186,44 @@ describe('createListingAction, business path', () => {
   it('rejects a one-letter category name', async () => {
     const res = await createListingAction(null, form({ category_request_name: 'x' }))
     expect(res).toMatchObject({ fieldErrors: { category_request_name: expect.any(String) } })
+  })
+})
+
+// Ticket 131: creators add themselves through their own sign-up with an 18+
+// check (ticket 132), so the business path can't make creator pages.
+describe('createListingAction, creator guards', () => {
+  it('refuses the creator type until the creator path ships', async () => {
+    const res = await createListingAction(null, form({ entity_type: 'creator' }))
+    expect(res).toMatchObject({ error: expect.stringContaining('not open yet') })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('refuses a business page in a Creators subcategory', async () => {
+    h.state.category = {
+      id: CATEGORY_ID,
+      slug: 'podcasters',
+      parent: { slug: 'creators-influencers' },
+    }
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({
+      fieldErrors: { category_id: expect.stringContaining('own sign-up') },
+    })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('refuses a business page in the Creators parent', async () => {
+    h.state.category = { id: CATEGORY_ID, slug: 'creators-influencers', parent: null }
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({ fieldErrors: { category_id: expect.any(String) } })
+  })
+
+  it('still allows the agency category Influencer Marketing', async () => {
+    h.state.category = {
+      id: CATEGORY_ID,
+      slug: 'influencer-marketing',
+      parent: { slug: 'social-media-marketing' },
+    }
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({ success: true })
   })
 })

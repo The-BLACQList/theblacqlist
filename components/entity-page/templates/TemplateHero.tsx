@@ -38,6 +38,7 @@ const TYPE_LABELS: Record<string, string> = {
   creative: 'Creative',
   event: 'Event',
   job: 'Job',
+  creator: 'Creator',
 }
 
 // The hero gets shorter as the page below it gets more utilitarian: a portfolio
