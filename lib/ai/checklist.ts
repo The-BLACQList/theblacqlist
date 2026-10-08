@@ -51,6 +51,20 @@ interface DetailsFields {
   cta_type: string | null
 }
 
+/**
+ * What a creator page needs that a business page doesn't (ticket 132). Pass it
+ * only for creator pages: hours and phone/website drop out, and a niche and a
+ * sample post or video come in.
+ */
+export interface CreatorChecklistFacts {
+  /** Niches picked from the creator-niche group. */
+  nicheCount: number
+  /** A page video, or a link to a post, episode or article. */
+  hasSample: boolean
+}
+
+const CREATOR_DROPS = new Set(['contact', 'hours'])
+
 export function computePageChecklist(
   listing: ListingFields,
   details: DetailsFields | null,
@@ -62,7 +76,8 @@ export function computePageChecklist(
    * so a Free page can hit 100%: the gallery needs 3 photos (Free allows 1) and
    * social links need Starter. Omit it to score every item, as before.
    */
-  tier?: string | null
+  tier?: string | null,
+  creator?: CreatorChecklistFacts | null
 ): ChecklistResult {
   const hasSocialLink = !!(
     details?.social_instagram ||
@@ -75,7 +90,7 @@ export function computePageChecklist(
 
   const descriptionLength = details?.description?.trim().length ?? 0
 
-  const items: ChecklistItem[] = [
+  const baseItems: ChecklistItem[] = [
     {
       id: 'tagline',
       label: 'Tagline added',
@@ -174,6 +189,7 @@ export function computePageChecklist(
     },
   ]
 
+  const items = creator ? creatorItems(baseItems, creator) : baseItems
   const reachable = tier === undefined ? items : items.filter((i) => isReachable(i.id, tier))
 
   const maxScore = reachable.reduce((sum, item) => sum + item.weight, 0)
@@ -187,6 +203,56 @@ export function computePageChecklist(
     share >= 0.74 ? 'strong' : share >= 0.46 ? 'good' : 'needs-work'
 
   return { items: reachable, score, maxScore, percent, grade }
+}
+
+function creatorItems(base: ChecklistItem[], facts: CreatorChecklistFacts): ChecklistItem[] {
+  const items = base
+    .filter((i) => !CREATOR_DROPS.has(i.id))
+    .map((i) => {
+      if (i.id === 'description') {
+        return {
+          ...i,
+          label: 'About you (100+ characters)',
+          hint: 'Write a short paragraph about what you make, who it is for, and where people can find it.',
+        }
+      }
+      if (i.id === 'logo') {
+        return {
+          ...i,
+          label: 'Profile photo uploaded',
+          hint: 'Upload a clear photo of you, or the image people know you by.',
+        }
+      }
+      if (i.id === 'social') {
+        return {
+          ...i,
+          category: 'recommended' as const,
+          weight: 10,
+          hint: 'Link the accounts you post on so people can follow you and businesses can see your work.',
+        }
+      }
+      return i
+    })
+
+  items.push(
+    {
+      id: 'niche',
+      label: 'At least one niche picked',
+      hint: 'Pick up to 3 niches so people and businesses can find you by what you make.',
+      category: 'required',
+      weight: 8,
+      passed: facts.nicheCount > 0,
+    },
+    {
+      id: 'sample',
+      label: 'A sample post or video',
+      hint: 'Add a video, or a link to a post, episode or article, so people can see your work.',
+      category: 'recommended',
+      weight: 8,
+      passed: facts.hasSample,
+    }
+  )
+  return items
 }
 
 function isReachable(id: string, tier: string | null): boolean {

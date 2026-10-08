@@ -27,6 +27,7 @@ export default function TermsPage() {
               <li><a href="#the-platform" className="text-amber hover:underline">The Platform</a></li>
               <li><a href="#user-accounts" className="text-amber hover:underline">User Accounts</a></li>
               <li><a href="#business-listings" className="text-amber hover:underline">Business Listings</a></li>
+              <li><a href="#creator-listings" className="text-amber hover:underline">Creator Pages</a></li>
               <li><a href="#community-content" className="text-amber hover:underline">Community Content</a></li>
               <li><a href="#receipt-data" className="text-amber hover:underline">Receipt and Spend Data</a></li>
               <li><a href="#prohibited-uses" className="text-amber hover:underline">Prohibited Uses</a></li>
@@ -146,8 +147,60 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* [Needs professional review] Ticket 132. The Black Creator / Ally Creator
+              definitions, the 18+ warranty and the partnership language below are new.
+              Founder signed off on the copy 2026-10-08; legal review is pending. Do not
+              ship to production until counsel has reviewed this section alongside §4. */}
+          <section id="creator-listings" className="space-y-3">
+            <h2 className="font-headline text-xl text-brand-black">5. Creator Pages</h2>
+            <p>
+              <strong>Who can have a creator page.</strong> A creator page is a page about one
+              person who makes content, such as an influencer, video creator, podcaster, streamer,
+              or writer. Creators add their own pages. We do not create a page about a person
+              without that person&apos;s consent, and you may not create a creator page about
+              someone else. You must be at least 18 years old to have a creator page.
+            </p>
+            <p>
+              <strong>Creator labels.</strong> Every creator page is labeled either &ldquo;Black
+              Creator&rdquo; or &ldquo;Ally Creator.&rdquo; &ldquo;Black Creator&rdquo; means the
+              creator is Black or African American. &ldquo;Ally Creator&rdquo; means a creator who
+              is not Black and who supports Black-owned businesses and creators. As with business
+              listings, how creator pages are presented is an editorial decision, and we may
+              decline, remove, or re-label any creator page without prior notice and without
+              liability.
+            </p>
+            <p>Creators who add a page represent and warrant that:</p>
+            <ul className="list-disc list-inside space-y-1 pl-2">
+              <li>The page is about them, and they are at least 18 years old</li>
+              <li>They run the social accounts and other profiles the page links to</li>
+              <li>The creator label they select is accurate</li>
+              <li>
+                The audience size they choose is their honest estimate. It is shown on the page as
+                self-reported, and we do not check it
+              </li>
+              <li>No one under 18 is presented as the creator</li>
+              <li>Any images, videos, or other content submitted do not violate third-party rights</li>
+            </ul>
+            <p>
+              <strong>Partnerships.</strong> Any page may say it is open to partnerships (&ldquo;Open
+              to brand deals&rdquo; on creator pages, &ldquo;Open to creator partnerships &amp;
+              sponsorships&rdquo; on other pages). This is the page owner&apos;s own statement. The
+              BLACQList does not make introductions, arrange or guarantee deals, or take part in any
+              agreement between creators and businesses, and is not responsible for those
+              agreements. Creators are responsible for disclosing paid partnerships and sponsored
+              content as the law requires, including the U.S. Federal Trade Commission&apos;s
+              Endorsement Guides.
+            </p>
+            <p>
+              Creator page content you make public (your name, description, photos, links, and the
+              details you choose) may be indexed by search engines and distributed by third-party
+              data aggregators. We are not responsible for how third parties use publicly listed
+              information.
+            </p>
+          </section>
+
           <section id="community-content" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">5. Community Content</h2>
+            <h2 className="font-headline text-xl text-brand-black">6. Community Content</h2>
             <p>
               By submitting reviews, receipts, photos, or other content to the Platform
               (&ldquo;User Content&rdquo;), you grant The BLACQList a non-exclusive, worldwide,
@@ -170,7 +223,7 @@ export default function TermsPage() {
           </section>
 
           <section id="receipt-data" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">6. Receipt and Spend Data</h2>
+            <h2 className="font-headline text-xl text-brand-black">7. Receipt and Spend Data</h2>
             <p>When you submit receipts through the community spend feature, you confirm that:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>The receipt represents a genuine transaction you made</li>
@@ -186,7 +239,7 @@ export default function TermsPage() {
           </section>
 
           <section id="prohibited-uses" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">7. Prohibited Uses</h2>
+            <h2 className="font-headline text-xl text-brand-black">8. Prohibited Uses</h2>
             <p>You may not use the Platform to:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Scrape, crawl, or systematically extract data without our prior written permission</li>
@@ -202,7 +255,7 @@ export default function TermsPage() {
           </section>
 
           <section id="intellectual-property" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">8. Intellectual Property</h2>
+            <h2 className="font-headline text-xl text-brand-black">9. Intellectual Property</h2>
             <p>
               The BLACQList name, logo, wordmark, design system, platform software, and all original
               Platform content created by us are owned by The BLACQList and protected by copyright,
@@ -213,7 +266,7 @@ export default function TermsPage() {
             <p>
               Business listing content uploaded by business owners (business name, description,
               photos, logos) remains the property of those business owners, subject to the license
-              granted in Section 5.
+              granted in Section 6.
             </p>
             <h3 className="font-subhead font-semibold text-brand-black mt-4">
               Copyright complaints (DMCA)
@@ -244,7 +297,7 @@ export default function TermsPage() {
           </section>
 
           <section id="disclaimers" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">9. Disclaimers</h2>
+            <h2 className="font-headline text-xl text-brand-black">10. Disclaimers</h2>
             <p>
               The Platform is provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without
               warranties of any kind, either express or implied, including but not limited to implied
@@ -265,7 +318,7 @@ export default function TermsPage() {
           </section>
 
           <section id="limitation-of-liability" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">10. Limitation of Liability</h2>
+            <h2 className="font-headline text-xl text-brand-black">11. Limitation of Liability</h2>
             <p>
               To the fullest extent permitted by applicable law, The BLACQList and its officers,
               directors, employees, and agents shall not be liable for any indirect, incidental,
@@ -290,7 +343,7 @@ export default function TermsPage() {
           </section>
 
           <section id="termination" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">11. Termination</h2>
+            <h2 className="font-headline text-xl text-brand-black">12. Termination</h2>
             <p>
               We may suspend or terminate your account or access to the Platform at any time, with
               or without notice, for violation of these Terms, fraudulent activity, conduct harmful
@@ -308,7 +361,7 @@ export default function TermsPage() {
           </section>
 
           <section id="governing-law" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">12. Governing Law</h2>
+            <h2 className="font-headline text-xl text-brand-black">13. Governing Law</h2>
             <p>
               These Terms are governed by and construed in accordance with the laws of the United
               States and the state of Georgia, without regard to its conflict of law principles.
@@ -322,7 +375,7 @@ export default function TermsPage() {
           </section>
 
           <section id="changes" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">13. Changes to Terms</h2>
+            <h2 className="font-headline text-xl text-brand-black">14. Changes to Terms</h2>
             <p>
               We may update these Terms at any time. We will notify registered users of material
               changes by email at least 14 days before they take effect. The &ldquo;Last updated&rdquo;
@@ -336,7 +389,7 @@ export default function TermsPage() {
           </section>
 
           <section id="contact" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">14. Contact</h2>
+            <h2 className="font-headline text-xl text-brand-black">15. Contact</h2>
             <p>
               Questions about these Terms:{' '}
               <a

@@ -1,12 +1,32 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { withoutCreatorCategories } from '@/lib/listings/creatorCategories'
+import {
+  creatorSubcategories,
+  withoutCreatorCategories,
+} from '@/lib/listings/creatorCategories'
+import { quickStartMode } from '@/lib/listings/quickStart'
 import { QuickStart } from './_components/quick-start/QuickStart'
 
-export const metadata = {
-  title: 'Add Your Business | The BLACQList',
-  description:
-    'List your business on The BLACQList. Black-owned businesses and allies who support them are welcome. Every listing is clearly labeled.',
+interface PageProps {
+  searchParams: Promise<{ as?: string | string[] }>
+}
+
+// `?as=creator` (ticket 132) runs the same quick start worded for a person.
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const { as } = await searchParams
+  if (quickStartMode(as) === 'creator') {
+    return {
+      title: 'Add Your Creator Page | The BLACQList',
+      description:
+        'List yourself as a creator on The BLACQList. Black creators and allies who support them are welcome. Every page is clearly labeled.',
+    }
+  }
+  return {
+    title: 'Add Your Business | The BLACQList',
+    description:
+      'List your business on The BLACQList. Black-owned businesses and allies who support them are welcome. Every listing is clearly labeled.',
+  }
 }
 
 export interface CategoryOption {
@@ -16,13 +36,21 @@ export interface CategoryOption {
   parent_id: string | null
 }
 
-export default async function AddBusinessPage() {
+export default async function AddBusinessPage({ searchParams }: PageProps) {
+  const { as } = await searchParams
+  const mode = quickStartMode(as)
+  const creator = mode === 'creator'
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect('/sign-in?next=/add-business')
+  if (!user)
+    redirect(
+      creator
+        ? `/sign-in?next=${encodeURIComponent('/add-business?as=creator')}`
+        : '/sign-in?next=/add-business'
+    )
 
   const [{ data: categories }, { data: cityRows }] = await Promise.all([
     supabase
@@ -51,18 +79,24 @@ export default async function AddBusinessPage() {
             Get Listed
           </p>
           <h1 className="mb-3 font-headline text-3xl text-brand-black md:text-4xl">
-            Add your business
+            {creator ? 'Add your creator page' : 'Add your business'}
           </h1>
           <p className="font-subhead text-base leading-relaxed text-charcoal">
-            A few quick questions and your page starts taking shape. Then add photos, hours and
-            more, and send it to our team for review.
+            {creator
+              ? 'A few quick questions and your page starts taking shape. Then add your niche, platforms and photos, and send it to our team for review.'
+              : 'A few quick questions and your page starts taking shape. Then add photos, hours and more, and send it to our team for review.'}
           </p>
         </div>
 
         <QuickStart
-          categories={withoutCreatorCategories(categories ?? [])}
+          categories={
+            creator
+              ? creatorSubcategories(categories ?? [])
+              : withoutCreatorCategories(categories ?? [])
+          }
           cities={cities}
           email={user.email ?? ''}
+          mode={mode}
         />
       </div>
     </main>

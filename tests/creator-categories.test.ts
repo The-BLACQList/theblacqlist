@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest'
 
 import {
   CREATOR_PARENT_SLUG,
+  creatorSubcategories,
   isCreatorCategory,
   withoutCreatorCategories,
 } from '@/lib/listings/creatorCategories'
@@ -48,5 +49,15 @@ describe('withoutCreatorCategories', () => {
       'social',
       'agency',
     ])
+  })
+})
+
+describe('creatorSubcategories (ticket 132)', () => {
+  it('is the Creators children only, in order', () => {
+    expect(creatorSubcategories(CATS).map((c) => c.id)).toEqual(['pod', 'inf'])
+  })
+
+  it('is empty when the Creators parent is missing', () => {
+    expect(creatorSubcategories(CATS.filter((c) => c.id !== 'cre'))).toEqual([])
   })
 })

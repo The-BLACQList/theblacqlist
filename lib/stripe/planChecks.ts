@@ -68,7 +68,8 @@ export function checkSocialLinks(
 
 /**
  * Filter details (attributes). Over the limit is allowed only when it is not
- * more than the listing already had.
+ * more than the listing already had. Counts leave out the creator groups,
+ * which don't count toward the limit (see lib/listings/creatorAttributes.ts).
  */
 export function checkAttributeCount(
   tier: string | null,

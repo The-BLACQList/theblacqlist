@@ -18,7 +18,9 @@ import {
   type FitLayer,
   type QuickStartAnswers,
   ctaValueProblem,
+  ctasFor,
   defaultRequestParent,
+  findCta,
   fitCategoryId,
   fitOptions,
   firstFitLayer,
@@ -26,8 +28,10 @@ import {
   locationLabel,
   nextFitLayer,
   pickFor,
+  quickStartMode,
   stepForServerField,
   stepProblem,
+  whereLocationType,
 } from '@/lib/listings/quickStart'
 
 const seed = readFileSync(resolve(process.cwd(), 'supabase/seed.sql'), 'utf8')
@@ -195,5 +199,87 @@ describe('the live page', () => {
   it('a pop-up seller lists as a Vendor', () => {
     const pick = pickFor({ ...COMPLETE, where: 'popups' }, CATS)
     expect(pick?.entityType).toBe('vendor')
+  })
+})
+
+// Ticket 132: creators use the same quick start through /add-business?as=creator.
+describe('creator mode', () => {
+  const done: QuickStartAnswers = {
+    ...EMPTY_ANSWERS,
+    ownership: 'black_owned',
+    name: 'Jane Doe',
+    about: 'I talk about money for first-generation earners.',
+    fit: { kind: 'category', categoryId: 'pod' },
+    ctaType: 'subscribe',
+    ctaUrl: 'https://www.instagram.com/janedoe',
+    attested: true,
+    ageAttested: true,
+  }
+
+  it('turns on only for as=creator', () => {
+    expect(quickStartMode('creator')).toBe('creator')
+    expect(quickStartMode(undefined)).toBe('business')
+    expect(quickStartMode('business')).toBe('business')
+    expect(quickStartMode(['creator'])).toBe('business')
+  })
+
+  it('offers Message, Follow and Work with me', () => {
+    expect(ctasFor('creator').map((c) => c.label)).toEqual(['Message', 'Follow', 'Work with me'])
+    expect(ctasFor('business').map((c) => c.value)).not.toContain('inquire')
+  })
+
+  it('finds creator buttons only in creator mode', () => {
+    expect(findCta('inquire', 'creator')?.labelOverride).toBe('Work with me')
+    expect(findCta('inquire')).toBeUndefined()
+    expect(findCta('call', 'creator')).toBeUndefined()
+  })
+
+  it('a finished creator has nothing missing, with no city', () => {
+    expect(firstMissing(done, 'creator')).toBeNull()
+  })
+
+  it('needs the 18 or older check after "this page is about me"', () => {
+    expect(stepProblem('attest', { ...done, attested: false }, 'creator')?.reason).toBe(
+      'Confirm this page is about you.'
+    )
+    const age = stepProblem('attest', { ...done, ageAttested: false }, 'creator')
+    expect(age?.fieldId).toBe('qs-age')
+    expect(age?.reason).toContain('18')
+  })
+
+  it('a business never needs the age check', () => {
+    expect(stepProblem('attest', { ...done, ageAttested: false })).toBeNull()
+  })
+
+  it('words problems for a person', () => {
+    expect(stepProblem('ownership', { ...done, ownership: '' } as QuickStartAnswers, 'creator')?.reason).toBe(
+      'Pick Black Creator or Ally Creator.'
+    )
+    expect(stepProblem('name', { ...done, name: '' }, 'creator')?.reason).toBe(
+      'Add the name people know you by.'
+    )
+    expect(stepProblem('fit', { ...done, fit: null }, 'creator')?.reason).toBe(
+      'Pick what you make most.'
+    )
+  })
+
+  it('checks the creator button value', () => {
+    expect(ctaValueProblem('message', 'not-an-email', 'creator')).toBe('Enter a valid email address.')
+    expect(ctaValueProblem('message', 'hi@jane.com', 'creator')).toBeNull()
+  })
+
+  it('maps the age error to the last step', () => {
+    expect(stepForServerField('age_attested')).toBe('attest')
+    expect(stepForServerField('ownership_attested')).toBe('attest')
+  })
+
+  it('lists a creator online, with or without a city', () => {
+    expect(whereLocationType('', 'creator')).toBe('virtual')
+    expect(locationLabel({ where: '', cityId: '', cityText: '', stateText: '' }, [], 'creator')).toBe(
+      'Online'
+    )
+    expect(
+      locationLabel({ where: '', cityId: '', cityText: 'Atlanta', stateText: 'GA' }, [], 'creator')
+    ).toBe('Atlanta, GA')
   })
 })

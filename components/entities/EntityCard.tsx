@@ -143,7 +143,11 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
       <div className="flex flex-col flex-1 p-4 gap-2">
         {/* Badge order: ownership label → trust (claimed/unclaimed) → entity type */}
         <div className="flex items-center gap-2 flex-wrap">
-          <OwnershipBadge label={entity.ownership_label} size="small" />
+          <OwnershipBadge
+            label={entity.ownership_label}
+            entityType={entity.entity_type}
+            size="small"
+          />
           <StatusBadge tier={entity.trust_tier} size="small" />
           <Badge
             variant="outline"

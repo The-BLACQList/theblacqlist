@@ -60,7 +60,7 @@ Out:
 | Save the partner switch | `updateListingContent.ts` |
 | Skip creator groups in the Free cap; enforce 3 niches, 1 audience size | `updateListingAttributes.ts`, `checkAttributeCount` in `lib/stripe/planChecks.ts` |
 
-**Moderation.** New creator pages go through the existing `new_submission` queue. Add a creator section to the moderation policy (`.claude/rules/moderation-policy.md`, `moderate-queue` skill): the label matches the person, linked profiles exist and belong to them, the audience range is plausible, the creator is an adult, no minors shown as the creator.
+**Moderation.** New creator pages go through the existing `new_submission` queue. Add a creator section to the admin review guide (`docs/blacqlist/admin/editorial-review-guide.md`; the moderation-policy file and `moderate-queue` skill named in the plan do not exist): the label matches the person, linked profiles exist and belong to them, the audience range is plausible, the creator is an adult, no minors shown as the creator.
 
 ## Acceptance criteria
 

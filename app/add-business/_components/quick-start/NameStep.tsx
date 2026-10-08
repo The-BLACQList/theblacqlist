@@ -54,25 +54,29 @@ function useNameMatches(name: string): Match[] {
   return query.length >= 3 && matches.query === query ? matches.list : []
 }
 
-export function NameStep({ answers, onChange, problem }: StepProps) {
-  const matches = useNameMatches(answers.name)
+export function NameStep({ answers, onChange, problem, mode }: StepProps) {
+  const creator = mode === 'creator'
+  // Creators add themselves only, so there is no existing page to claim.
+  const matches = useNameMatches(creator ? '' : answers.name)
 
   return (
     <>
-      <StepIntro title="What's your business called?" />
+      <StepIntro title={creator ? 'What do people call you?' : "What's your business called?"}>
+        {creator ? 'Your creator name, the one your followers know.' : null}
+      </StepIntro>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.name} className={LABEL_CLASS}>
-          Business name
+          {creator ? 'Creator name' : 'Business name'}
         </label>
         <input
           id={FIELD_IDS.name}
           type="text"
-          autoComplete="organization"
+          autoComplete={creator ? 'nickname' : 'organization'}
           value={answers.name}
           onChange={(e) => onChange({ name: e.target.value })}
           minLength={NAME_MIN}
           maxLength={NAME_MAX}
-          placeholder="Fade Lab Barbershop"
+          placeholder={creator ? 'Chef Kiana Eats' : 'Fade Lab Barbershop'}
           className={inputClass(problem?.fieldId === FIELD_IDS.name)}
           {...fieldA11y(problem, FIELD_IDS.name)}
         />

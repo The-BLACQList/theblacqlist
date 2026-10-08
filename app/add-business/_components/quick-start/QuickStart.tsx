@@ -7,7 +7,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createListingAction } from '@/lib/actions/listings/createListing'
 import type { GuideCategory } from '@/lib/categories/sorting-guide'
-import { OWNERSHIP_LABEL_META } from '@/lib/constants/listing'
+import { ownershipLabelText } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
 import {
   EMPTY_ANSWERS,
@@ -23,9 +23,11 @@ import {
   whereLocationType,
   type Missing,
   type QuickStartAnswers,
+  type QuickStartMode,
   type QuickStep,
 } from '@/lib/listings/quickStart'
 import { LivePagePreview, type PreviewPart } from '@/components/listings/LivePagePreview'
+import { CreatorFitStep } from './CreatorFitStep'
 import { CtaStep } from './CtaStep'
 import { FitStep } from './FitStep'
 import { NameStep } from './NameStep'
@@ -34,8 +36,12 @@ import { WhereStep, type CityOption } from './WhereStep'
 
 // The rules-first quick start (ticket 126): eight short questions beside a live
 // page, then "Save my draft" creates the draft and opens the finish view.
+// Creator mode (ticket 132, `?as=creator`) runs the same steps worded for a
+// person, with its own saved draft so the two never mix.
 
-const DRAFT_KEY = 'draft-add-business-v2'
+function draftKey(mode: QuickStartMode): string {
+  return mode === 'creator' ? 'draft-add-creator-v1' : 'draft-add-business-v2'
+}
 
 const HIGHLIGHT: Record<QuickStep, PreviewPart | null> = {
   ownership: 'owner',
@@ -53,6 +59,8 @@ interface Props {
   cities: readonly CityOption[]
   /** The owner's sign-in email: the page's contact email and the "Send a message" default. */
   email: string
+  /** 'creator' for `/add-business?as=creator`; `categories` is then the Creators subcategories. */
+  mode?: QuickStartMode
 }
 
 interface Draft {
@@ -60,9 +68,9 @@ interface Draft {
   stepIndex: number
 }
 
-function readDraft(): Draft {
+function readDraft(key: string): Draft {
   try {
-    const raw = window.localStorage.getItem(DRAFT_KEY)
+    const raw = window.localStorage.getItem(key)
     if (!raw) return { answers: EMPTY_ANSWERS, stepIndex: 0 }
     const parsed = JSON.parse(raw) as Partial<Draft>
     const stepIndex = Number.isInteger(parsed.stepIndex)
@@ -87,9 +95,11 @@ export function QuickStart(props: Props) {
   return <QuickStartFlow {...props} />
 }
 
-function QuickStartFlow({ categories, cities, email }: Props) {
+function QuickStartFlow({ categories, cities, email, mode = 'business' }: Props) {
   const router = useRouter()
-  const [initial] = useState(readDraft)
+  const creator = mode === 'creator'
+  const DRAFT_KEY = draftKey(mode)
+  const [initial] = useState(() => readDraft(DRAFT_KEY))
   const [answers, setAnswers] = useState<QuickStartAnswers>(initial.answers)
   const [stepIndex, setStepIndex] = useState(initial.stepIndex)
   const [problem, setProblem] = useState<Missing | null>(null)
@@ -110,7 +120,7 @@ function QuickStartFlow({ categories, cities, email }: Props) {
     } catch {
       // Private mode or storage full. The flow still works, it just won't resume.
     }
-  }, [answers, stepIndex])
+  }, [DRAFT_KEY, answers, stepIndex])
 
   useEffect(() => {
     if (navCount === 0) return
@@ -134,7 +144,7 @@ function QuickStartFlow({ categories, cities, email }: Props) {
   }
 
   function next() {
-    const p = stepProblem(step, answers)
+    const p = stepProblem(step, answers, mode)
     if (p) {
       goTo(stepIndex, p)
       return
@@ -148,23 +158,25 @@ function QuickStartFlow({ categories, cities, email }: Props) {
 
   function submit() {
     setFormError(null)
-    const missing = firstMissing(answers)
+    const missing = firstMissing(answers, mode)
     if (missing) {
       goTo(QUICK_STEPS.indexOf(missing.step), missing)
       return
     }
-    const pick = pickFor(answers, categories)
-    const cta = findCta(answers.ctaType)
+    const cta = findCta(answers.ctaType, mode)
     const fd = new FormData()
-    fd.set('entity_type', pick?.entityType ?? 'business')
+    fd.set(
+      'entity_type',
+      creator ? 'creator' : (pickFor(answers, categories)?.entityType ?? 'business')
+    )
     fd.set('name', answers.name.trim())
     fd.set('category_id', fitCategoryId(answers.fit))
     fd.set('description', answers.about.trim())
     fd.set('tagline', answers.tagline.trim())
-    fd.set('location_type', whereLocationType(answers.where))
-    if (answers.where !== 'online') {
+    fd.set('location_type', whereLocationType(answers.where, mode))
+    if (creator || answers.where !== 'online') {
       if (answers.cityId) fd.set('city_id', answers.cityId)
-      else {
+      else if (!creator || answers.cityText.trim()) {
         fd.set('city_text', answers.cityText.trim())
         fd.set('state_text', answers.stateText.trim())
       }
@@ -175,6 +187,8 @@ function QuickStartFlow({ categories, cities, email }: Props) {
     fd.set('email', email)
     fd.set('ownership_label', answers.ownership)
     fd.set('ownership_attested', 'true')
+    if (creator) fd.set('age_attested', answers.ageAttested ? 'true' : 'false')
+    if (cta?.labelOverride) fd.set('cta_label_override', cta.labelOverride)
     if (answers.fit?.kind === 'request') {
       fd.set('category_request_name', answers.fit.proposedName.trim())
       fd.set('category_request_words', answers.fit.words.trim())
@@ -221,14 +235,16 @@ function QuickStartFlow({ categories, cities, email }: Props) {
       tagline: answers.tagline.trim() || firstSentence(answers.about),
       description: answers.about.trim(),
       categoryName,
-      locationLabel: locationLabel(answers, cities),
-      ownershipLabel: answers.ownership ? OWNERSHIP_LABEL_META[answers.ownership].label : null,
-      ctaLabel: findCta(answers.ctaType)?.buttonLabel ?? null,
+      locationLabel: locationLabel(answers, cities, mode),
+      ownershipLabel: answers.ownership
+        ? ownershipLabelText(answers.ownership, creator ? 'creator' : null)
+        : null,
+      ctaLabel: findCta(answers.ctaType, mode)?.buttonLabel ?? null,
       highlight: HIGHLIGHT[step],
     }
-  }, [answers, categories, cities, step])
+  }, [answers, categories, cities, step, mode, creator])
 
-  const stepProps = { answers, onChange: update, problem }
+  const stepProps = { answers, onChange: update, problem, mode }
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10">
@@ -252,9 +268,16 @@ function QuickStartFlow({ categories, cities, email }: Props) {
           {step === 'ownership' && <OwnershipStep {...stepProps} />}
           {step === 'name' && <NameStep {...stepProps} />}
           {step === 'about' && <AboutStep {...stepProps} />}
-          {step === 'fit' && (
-            <FitStep {...stepProps} categories={categories} onPicked={() => goTo(stepIndex + 1)} />
-          )}
+          {step === 'fit' &&
+            (creator ? (
+              <CreatorFitStep
+                {...stepProps}
+                categories={categories}
+                onPicked={() => goTo(stepIndex + 1)}
+              />
+            ) : (
+              <FitStep {...stepProps} categories={categories} onPicked={() => goTo(stepIndex + 1)} />
+            ))}
           {step === 'where' && <WhereStep {...stepProps} cities={cities} />}
           {step === 'cta' && <CtaStep {...stepProps} email={email} />}
           {step === 'tagline' && <TaglineStep {...stepProps} />}
@@ -328,7 +351,7 @@ function serverFieldId(step: QuickStep, field: string): string {
     case 'tagline':
       return FIELD_IDS.tagline
     case 'attest':
-      return FIELD_IDS.attest
+      return field === 'age_attested' ? FIELD_IDS.age : FIELD_IDS.attest
   }
 }
 

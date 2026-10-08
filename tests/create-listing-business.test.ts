@@ -192,12 +192,6 @@ describe('createListingAction, business path', () => {
 // Ticket 131: creators add themselves through their own sign-up with an 18+
 // check (ticket 132), so the business path can't make creator pages.
 describe('createListingAction, creator guards', () => {
-  it('refuses the creator type until the creator path ships', async () => {
-    const res = await createListingAction(null, form({ entity_type: 'creator' }))
-    expect(res).toMatchObject({ error: expect.stringContaining('not open yet') })
-    expect(h.state.inserts.listings).toBeUndefined()
-  })
-
   it('refuses a business page in a Creators subcategory', async () => {
     h.state.category = {
       id: CATEGORY_ID,
@@ -225,5 +219,75 @@ describe('createListingAction, creator guards', () => {
     }
     const res = await createListingAction(null, form())
     expect(res).toMatchObject({ success: true })
+  })
+})
+
+// Ticket 132: the creator path. Same action, an 18+ check, a Creators
+// subcategory, and always listed as online.
+describe('createListingAction, creator path', () => {
+  const PODCASTERS = { id: CATEGORY_ID, slug: 'podcasters', parent: { slug: 'creators-influencers' } }
+
+  function creatorForm(extra: Record<string, string> = {}): FormData {
+    return form({
+      entity_type: 'creator',
+      name: 'Jane Doe',
+      description: 'I talk about money for first-generation earners. New episodes every week.',
+      location_type: '',
+      cta_type: 'subscribe',
+      cta_url: 'https://www.instagram.com/janedoe',
+      cta_label_override: 'Follow me',
+      age_attested: 'true',
+      ...extra,
+    })
+  }
+
+  beforeEach(() => {
+    h.state.category = PODCASTERS
+  })
+
+  it('creates a creator page listed as online with the button label', async () => {
+    const res = await createListingAction(null, creatorForm())
+    expect(res).toMatchObject({ success: true })
+    expect(listingRow()).toMatchObject({ entity_type: 'creator', location_type: 'virtual' })
+    expect(h.state.inserts.listing_details_business?.[0]?.cta_label_override).toBe('Follow me')
+  })
+
+  it('refuses without the 18 or older check', async () => {
+    const fd = creatorForm()
+    fd.delete('age_attested')
+    const res = await createListingAction(null, fd)
+    expect(res).toMatchObject({ fieldErrors: { age_attested: expect.stringContaining('18') } })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('refuses without "this page is about me"', async () => {
+    const res = await createListingAction(null, creatorForm({ ownership_attested: 'false' }))
+    expect(res).toMatchObject({ fieldErrors: { ownership_attested: expect.any(String) } })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('words a bad label for a person', async () => {
+    const res = await createListingAction(null, creatorForm({ ownership_label: 'other' }))
+    expect(res).toMatchObject({
+      fieldErrors: { ownership_label: 'Select Black Creator or Ally Creator.' },
+    })
+  })
+
+  it('refuses a category outside Creators', async () => {
+    h.state.category = { id: CATEGORY_ID, slug: 'bakeries', parent: { slug: 'food-dining' } }
+    const res = await createListingAction(null, creatorForm())
+    expect(res).toMatchObject({ fieldErrors: { category_id: 'Pick what you make most.' } })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('places a creator in a typed city and still lists them online', async () => {
+    h.state.cities = [{ id: CITY_ID, name: 'Atlanta' }]
+    await createListingAction(null, creatorForm({ city_text: 'Atlanta' }))
+    expect(listingRow()).toMatchObject({ city_id: CITY_ID, location_type: 'virtual' })
+  })
+
+  it('refuses button text over 50 characters', async () => {
+    const res = await createListingAction(null, creatorForm({ cta_label_override: 'x'.repeat(51) }))
+    expect(res).toMatchObject({ fieldErrors: { cta_type: expect.stringContaining('50') } })
   })
 })
