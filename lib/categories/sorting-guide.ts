@@ -25,7 +25,7 @@
  */
 
 import type { LocationType } from '@/lib/constants/listing'
-import { TYPE_CATEGORY_SLUGS } from '@/lib/listings/type-shortcuts'
+import { TYPE_CATEGORY_SLUGS, typeExcludedSlugs } from '@/lib/listings/type-shortcuts'
 
 export interface GuideCategory {
   id: string
@@ -113,7 +113,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   {
     id: 'food',
     label: 'Food and drink',
-    hint: 'Restaurants, bakeries, catering, food trucks',
+    hint: 'Restaurants, bakeries, catering, groceries',
     candidates: [
       c('restaurants', 'visit'),
       c('cafes-coffee', 'visit'),
@@ -123,6 +123,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
       c('food-trucks', 'popups'),
       c('meal-prep-delivery', 'online', 'come_to_them'),
       c('juice-bars-smoothies', 'visit', 'popups'),
+      c('grocery-markets', 'visit'),
     ],
   },
   {
@@ -172,6 +173,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
       c('insurance', 'visit'),
       c('real-estate', 'come_to_them'),
       c('mortgage-lending'),
+      c('banks-credit-unions', 'visit', 'online'),
       c('business-consulting', 'online'),
       c('business-formation-incorporation', 'online'),
       c('estate-planning'),
@@ -229,6 +231,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
       c('secondhand-vintage', 'visit', 'popups'),
       c('plant-shops-nurseries', 'visit'),
       c('organic-natural-products', 'online'),
+      c('farms-farm-stands', 'visit', 'popups'),
     ],
   },
   {
@@ -449,7 +452,16 @@ export const GUIDE_SEARCH_WORDS: Readonly<Record<string, readonly string[]>> = {
   groomer: ['pet-grooming'],
   dog: ['dog-walking-pet-sitting', 'pet-grooming', 'pet-training'],
   vet: ['veterinary-care'],
-  farm: ['urban-farming-community-gardens'],
+  farm: ['farms-farm-stands', 'urban-farming-community-gardens'],
+  farmer: ['farms-farm-stands'],
+  produce: ['farms-farm-stands', 'grocery-markets'],
+  ranch: ['farms-farm-stands'],
+  csa: ['farms-farm-stands'],
+  grocery: ['grocery-markets'],
+  grocer: ['grocery-markets'],
+  supermarket: ['grocery-markets'],
+  bank: ['banks-credit-unions'],
+  'credit union': ['banks-credit-unions'],
   garden: ['urban-farming-community-gardens', 'landscaping-outdoor'],
   staffing: ['temp-contract-staffing'],
   recruiter: ['executive-search', 'temp-contract-staffing'],
@@ -601,7 +613,12 @@ export function suggestEntityType(
   if (where === 'popups') return 'vendor'
   const parentSlug = topParent(category, categories).slug
   for (const type of ['restaurant', 'professional', 'creative'] as const) {
-    if (TYPE_CATEGORY_SLUGS[type]?.includes(parentSlug)) return type
+    if (
+      TYPE_CATEGORY_SLUGS[type]?.includes(parentSlug) &&
+      !typeExcludedSlugs(type).includes(category.slug)
+    ) {
+      return type
+    }
   }
   if (answer?.leansVendor) return 'vendor'
   if (where === 'come_to_them') return 'service_provider'

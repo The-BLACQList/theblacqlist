@@ -4,7 +4,7 @@
  * Usage:
  *   SUPABASE_URL=https://xxx.supabase.co \
  *   SUPABASE_SERVICE_ROLE_KEY=... \
- *   npx tsx scripts/seed-launch-listings.ts [--yes]
+ *   npx tsx scripts/seed-launch-listings.ts [--yes] [--only=<city,...>] [--categories=<slug,...>]
  *
  * Idempotent: re-running does not create duplicates (ON CONFLICT DO NOTHING).
  * Logs "Inserted: N, Skipped: N, Errors: N" per city after completion.
@@ -104,6 +104,34 @@ function resolveCitiesToSeed(): typeof SEED_CITIES {
   return scoped
 }
 
+/**
+ * Restrict the run to rows in named categories: `--categories=grocery-markets`.
+ *
+ * --only bounds a run by city, but a city's file also holds rows that may never
+ * have reached the target (LA, DC and New Orleans were seeded to staging long
+ * before production). When a change adds a new category, this bounds the write
+ * to exactly that category's rows, whatever else the target is missing.
+ *
+ * Returns null when the flag is absent. An empty flag is a hard error, for the
+ * same reason as --only.
+ */
+function resolveCategoriesToSeed(): Set<string> | null {
+  const flag = process.argv.find((a) => a.startsWith('--categories='))
+  if (!flag) return null
+
+  const wanted = flag
+    .slice('--categories='.length)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (wanted.length === 0) {
+    console.error('\n--categories did not name a category slug')
+    process.exit(1)
+  }
+  console.log(`Scoped by --categories to: ${wanted.join(', ')}`)
+  return new Set(wanted)
+}
+
 assertTargetConfirmed(SUPABASE_URL)
 
 /**
@@ -111,6 +139,7 @@ assertTargetConfirmed(SUPABASE_URL)
  * after a round trip that makes the error look like a connectivity problem.
  */
 const CITIES_TO_SEED = resolveCitiesToSeed()
+const CATEGORIES_TO_SEED = resolveCategoriesToSeed()
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
@@ -240,6 +269,11 @@ async function seedCity(
     return
   }
 
+  if (CATEGORIES_TO_SEED) {
+    listings = listings.filter((l) => CATEGORIES_TO_SEED.has(l.category_slug))
+    console.log(`[${cityLabel}] ${listings.length} rows in the --categories scope`)
+  }
+
   let inserted = 0
   let skipped = 0
   let errors = 0
@@ -325,14 +359,17 @@ async function seedCity(
     }
 
     // Insert hours if provided
+    // The columns are opens_at / closes_at, both NOT NULL. A closed day carries
+    // 00:00-00:00, which the "open now" filter already reads as closed.
     if (listing.hours && listing.hours.length > 0) {
       const hoursRows = listing.hours.map((h) => ({
         listing_id: listingId,
         day_of_week: h.day,
-        open_time: h.open_time,
-        close_time: h.close_time,
+        opens_at: h.is_closed ? '00:00' : h.open_time,
+        closes_at: h.is_closed ? '00:00' : h.close_time,
         is_closed: h.is_closed,
       }))
+        .filter((h) => h.opens_at && h.closes_at)
       const { error: hoursErr } = await supabase
         .from('listing_hours')
         .upsert(hoursRows, { onConflict: 'listing_id,day_of_week', ignoreDuplicates: true })
@@ -378,6 +415,14 @@ async function main() {
   console.log(
     `Found ${Object.keys(lookups.cities).length} cities, ${Object.keys(lookups.categories).length} categories`
   )
+
+  // A slug the target does not have is a typo, or the category migration has
+  // not run there yet. Either way, stop before the first write.
+  const missing = [...(CATEGORIES_TO_SEED ?? [])].filter((s) => !lookups.categories[s])
+  if (missing.length > 0) {
+    console.error(`\n--categories names slugs the target does not have: ${missing.join(', ')}`)
+    process.exit(1)
+  }
 
   for (const city of CITIES_TO_SEED) {
     await seedCity(city.file, city.label, lookups)

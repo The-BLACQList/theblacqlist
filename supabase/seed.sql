@@ -211,7 +211,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0001-0000-0000-000000000005', 'Catering & Events',        'catering-events-food',       'c0000001-0000-0000-0000-000000000001', 5, true),
   ('c0000002-0001-0000-0000-000000000006', 'Meal Prep & Delivery',     'meal-prep-delivery',         'c0000001-0000-0000-0000-000000000001', 6, true),
   ('c0000002-0001-0000-0000-000000000007', 'Food Trucks',              'food-trucks',                'c0000001-0000-0000-0000-000000000001', 7, true),
-  ('c0000002-0001-0000-0000-000000000008', 'Juice Bars & Smoothies',   'juice-bars-smoothies',       'c0000001-0000-0000-0000-000000000001', 8, true)
+  ('c0000002-0001-0000-0000-000000000008', 'Juice Bars & Smoothies',   'juice-bars-smoothies',       'c0000001-0000-0000-0000-000000000001', 8, true),
+  ('c0000002-0001-0000-0000-000000000009', 'Grocery & Markets',        'grocery-markets',            'c0000001-0000-0000-0000-000000000001', 9, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -424,7 +425,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0016-0000-0000-000000000002', 'Business Formation & Incorporation',  'business-formation-incorporation',    'c0000001-0000-0000-0000-000000000016', 2, true),
   ('c0000002-0016-0000-0000-000000000003', 'Tax Services',                        'tax-services',                       'c0000001-0000-0000-0000-000000000016', 3, true),
   ('c0000002-0016-0000-0000-000000000004', 'Credit Repair & Financial Coaching',  'credit-repair-financial-coaching',    'c0000001-0000-0000-0000-000000000016', 4, true),
-  ('c0000002-0016-0000-0000-000000000005', 'Mortgage & Lending',                  'mortgage-lending',                   'c0000001-0000-0000-0000-000000000016', 5, true)
+  ('c0000002-0016-0000-0000-000000000005', 'Mortgage & Lending',                  'mortgage-lending',                   'c0000001-0000-0000-0000-000000000016', 5, true),
+  ('c0000002-0016-0000-0000-000000000006', 'Banks & Credit Unions',               'banks-credit-unions',                'c0000001-0000-0000-0000-000000000016', 6, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -448,7 +450,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0018-0000-0000-000000000002', 'Organic & Natural Products',        'organic-natural-products',         'c0000001-0000-0000-0000-000000000018', 2, true),
   ('c0000002-0018-0000-0000-000000000003', 'Eco-Friendly Services',             'eco-friendly-services',            'c0000001-0000-0000-0000-000000000018', 3, true),
   ('c0000002-0018-0000-0000-000000000004', 'Composting & Recycling',            'composting-recycling',             'c0000001-0000-0000-0000-000000000018', 4, true),
-  ('c0000002-0018-0000-0000-000000000005', 'Plant Shops & Nurseries',           'plant-shops-nurseries',            'c0000001-0000-0000-0000-000000000018', 5, true)
+  ('c0000002-0018-0000-0000-000000000005', 'Plant Shops & Nurseries',           'plant-shops-nurseries',            'c0000001-0000-0000-0000-000000000018', 5, true),
+  ('c0000002-0018-0000-0000-000000000006', 'Farms & Farm Stands',               'farms-farm-stands',                'c0000001-0000-0000-0000-000000000018', 6, true)
 ON CONFLICT (slug) DO NOTHING;
 
 

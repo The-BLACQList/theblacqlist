@@ -461,7 +461,7 @@
     "description": "A Black-owned grocery market fighting food insecurity on Chicago's West Side by providing fresh produce, healthy staples, and affordable groceries to underserved communities. Forty Acres represents the powerful intersection of entrepreneurship, community investment, and food justice.",
     "listing_type": "business",
     "city_slug": "chicago-il",
-    "category_slug": "food-dining",
+    "category_slug": "grocery-markets",
     "location_type": "physical",
     "status": "published",
     "is_featured": false,
@@ -1358,5 +1358,639 @@
     "founded_year": null,
     "hours": [],
     "links": []
+  },
+  {
+    "name": "Liberty Bank and Trust",
+    "slug": "liberty-bank-and-trust-chicago",
+    "tagline": "Black-owned New Orleans bank with a full-service branch in Forest Park",
+    "description": "Liberty Bank and Trust, a Black-owned bank founded in New Orleans in 1972, runs a full-service branch on Roosevelt Road in Forest Park, just west of Chicago. The branch offers personal and business banking and lending.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "7610 West Roosevelt Road",
+    "city_text": "Forest Park",
+    "state": "IL",
+    "zip": "60130",
+    "phone": "(708) 776-2000",
+    "website_url": "https://www.libertybank.net",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.libertybank.net/locations/il/forest-park/forest-park",
+    "price_range": null,
+    "founded_year": 1972,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "15:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.libertybank.net/locations/il/forest-park/forest-park",
+        "https://api.fdic.gov/banks/locations?filters=CERT:20856"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and its site lists the Forest Park branch in October 2026. Forest Park is a suburb about 10 miles west of the Loop. FDIC lists this as the Roosevelt Road branch, opened 2015. A Chicago loan office at 850 W Jackson Blvd is marked Coming Soon on the bank's site. Weekend hours not published. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "GN Bank",
+    "slug": "gn-bank",
+    "tagline": "Black-owned community bank on King Drive in Bronzeville",
+    "description": "GN Bank is a Black-owned savings bank with one office on South King Drive in Chicago's Bronzeville neighborhood. It traces its history to 1934 and took the GN Bank name in 2018, after operating as Illinois Service Federal. It offers personal deposit accounts and lending.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "4619 S King Drive",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60653",
+    "phone": "(773) 624-2000",
+    "website_url": "https://www.gnbank.net",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.gnbank.net/location",
+    "price_range": null,
+    "founded_year": 1934,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://www.gnbank.net",
+        "https://api.fdic.gov/banks/locations?filters=CERT:29399",
+        "https://www.gnbank.net/location"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and its site posts 2026 holiday notices. Use gnbank.net. The gnbank.com domain is parked and for sale. The Chatham branch is no longer listed and FDIC shows one office. Hours left blank because the site's text is unclear: it reads Monday to Friday 10:00 AM to 3:00 PM, Wednesday 8:30 AM to 12:00 PM, Saturday 8:30 AM to 12:00 PM, Sunday closed. Call to confirm before publishing hours. A CBS Chicago segment headlined complaints against the bank's practices; this pass did not review it, so look before featuring. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "First Independence Bank",
+    "slug": "first-independence-bank",
+    "tagline": "Black-owned Detroit bank with a Chicago branch on East Ontario Street",
+    "description": "First Independence Bank is a Black-owned bank founded in Detroit in 1970, headquartered in Detroit, with a branch in Chicago. It took over the deposits and River North office of Metropolitan Capital Bank and Trust when that bank failed in January 2026. It offers personal and business banking and lending.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "9 East Ontario Street",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60611",
+    "phone": "(312) 640-2300",
+    "website_url": "https://www.firstindependence.com",
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": "https://www.firstindependence.com/about/convenient-locations",
+    "price_range": null,
+    "founded_year": 1970,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.fdic.gov/minority-depository-institutions-program/second-quarter-2026.xlsx",
+        "https://idfpr.illinois.gov/news/2026/state-of-illinois-announces-steps-to-protect-consumers-deposits-state-chartered-bank.html",
+        "https://www.americanbanker.com/news/chicago-bank-becomes-first-failure-of-2026",
+        "https://api.fdic.gov/banks/locations?filters=CERT:20179",
+        "https://www.firstindependence.com/about/convenient-locations"
+      ],
+      "note": "On the FDIC MDI list (Q2 2026) as Black-owned, and it opened its Chicago branch on 2026-01-30 by acquiring Metropolitan Capital Bank and Trust. The Chicago branch is the former Metropolitan Capital Bank and Trust office, acquired 2026-01-30 after that bank failed. Headquarters 7310 Woodward Ave, Detroit. The site blocks simple fetches, so it was read with a browser user agent. FDIC MDI code 1 (Black-owned)."
+    }
+  },
+  {
+    "name": "For Members Only Federal Credit Union",
+    "slug": "for-members-only-fcu",
+    "tagline": "Digital credit union for members of Alpha Kappa Alpha Sorority",
+    "description": "For Members Only Federal Credit Union is a digital credit union sponsored by Alpha Kappa Alpha Sorority, Incorporated and owned by its members. It calls itself the first Black-owned, woman-led, sorority-based digital financial institution in the United States. Banking is done online.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "banks-credit-unions",
+    "location_type": "virtual",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60637",
+    "phone": "(773) 684-1282",
+    "website_url": "https://akafmofcu.org",
+    "social_instagram": null,
+    "cta_type": "contact",
+    "cta_url": "https://akafmofcu.org/contact-us/",
+    "price_range": null,
+    "founded_year": 2023,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 5,
+        "open_time": "09:00",
+        "close_time": "16:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://akafmofcu.org/contact-us/",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/24946",
+        "https://akafmofcu.org"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active per NCUA, and its site is current for 2026. Who can join: members of Alpha Kappa Alpha Sorority (single common bond). It is not open to the general public, so list it only if member-only institutions fit the directory. It is digital-only. The contact address, 5656 S Stony Island Ave, is the sorority's headquarters and not a branch, so the street address is left blank. Hours are Central time contact hours. Phone is from the NCUA record. Founded year is the NCUA charter year."
+    }
+  },
+  {
+    "name": "South Side Community Federal Credit Union",
+    "slug": "south-side-community-fcu",
+    "tagline": "Community development credit union for Chicago's South Side",
+    "description": "South Side Community Federal Credit Union is a low-income designated community development credit union and certified CDFI on South Wentworth Avenue in Chicago. It opened in November 2003 and also runs a HUD-approved housing counseling program. It offers savings, share draft checking, loans and small business accounts.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "banks-credit-unions",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "5401 South Wentworth Avenue, Suite 19E",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60609",
+    "phone": "(773) 548-5500",
+    "website_url": "https://southsidecommunityfcu.org",
+    "social_instagram": "https://instagram.com/southsidecomfcu",
+    "cta_type": "visit",
+    "cta_url": "https://southsidecommunityfcu.org/w/business-hours/",
+    "price_range": null,
+    "founded_year": 2003,
+    "hours": [
+      {
+        "day": 1,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 2,
+        "open_time": "10:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 3,
+        "open_time": "09:00",
+        "close_time": "17:00",
+        "is_closed": false
+      },
+      {
+        "day": 4,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      },
+      {
+        "day": 5,
+        "open_time": "10:00",
+        "close_time": "18:00",
+        "is_closed": false
+      },
+      {
+        "day": 6,
+        "open_time": "10:00",
+        "close_time": "14:00",
+        "is_closed": false
+      },
+      {
+        "day": 0,
+        "open_time": null,
+        "close_time": null,
+        "is_closed": true
+      }
+    ],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_coop",
+      "sources": [
+        "https://ncua.gov/support-services/credit-union-resources-expansion/minority-depository-institutions/list-mdis",
+        "https://mapping.ncua.gov/api/CreditUnionDetails/GetCreditUnionDetails/24704",
+        "https://southsidecommunityfcu.org/w/business-hours/"
+      ],
+      "note": "On the NCUA MDI list (June 30, 2026) under Black Americans and active per NCUA, with published hours and address. Who can join: people and businesses that live, work, worship, attend school or belong to an organization on Chicago's South Side, from 22nd Street south to the city limits and from the lake west to Western Avenue. Tuesday is drive-thru only. The site lists the address as 5401 South Wentworth Avenue #25 Suite 19E. Its footer still says 2023, so activity rests on NCUA reporting as of June 30, 2026."
+    }
+  },
+  {
+    "name": "Urban Growers Collective",
+    "slug": "urban-growers-collective",
+    "tagline": "Black- and women-led nonprofit farm with a CSA and mobile market on the South Side",
+    "description": "Urban Growers Collective runs 8 farms on 11 acres across Chicago and sells produce through a CSA, the Fresh Moves mobile market, farm stands and farmers markets. It was founded in 2017 by Erika Allen and Laurell Sims, and Allen has led it as CEO since 2024.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "hybrid",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "9001 S Mackinaw Ave",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60617",
+    "phone": "(773) 376-8882",
+    "website_url": "https://urbangrowerscollective.org/",
+    "social_instagram": "https://instagram.com/urbangrowerscollective",
+    "cta_type": "subscribe",
+    "cta_url": "https://gofarmhand.com/csa/urban-growers-collective/plans",
+    "price_range": null,
+    "founded_year": 2017,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://www.ugccsa.org/",
+        "https://www.ugccsa.org/",
+        "https://en.wikipedia.org/wiki/Urban_Growers_Collective"
+      ],
+      "note": "Own site calls it a Black- and women-led nonprofit farm, and the 2026 CSA and fall 2026 events are live. Nonprofit. Address is the public South Chicago Farm; the office is at 1200 W 35th St #118, Chicago 60609. Upcoming events on site: Harvest Fest 10/10 and a Winter Grower Workshop 11/7. Stand hours vary by season so hours left empty."
+    }
+  },
+  {
+    "name": "Eden Place Farms",
+    "slug": "eden-place-farms",
+    "tagline": "Fuller Park farm and farm store growing greens, herbs and microgreens",
+    "description": "Eden Place Farms grows greens, herbs, collards and microgreens on about 3 acres in Fuller Park and is part of the IL-EATS food hub. It runs under Fuller Park Community Development, co-founded by Michael and Amelia Howard, with a mission to reconnect the African American community to farming. A farm store opened in June 2025.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "hybrid",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60609",
+    "phone": null,
+    "website_url": "http://www.edenplacefarms.org/",
+    "social_instagram": "https://instagram.com/edenplacefarms",
+    "cta_type": "visit",
+    "cta_url": "http://www.edenplacefarms.org/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://buyfreshbuylocal.org/illinois/blog/2022/04/07/black-owned-eden-place-farms-heavenly-impact-on-a-south-side-chicago-neighborhood/",
+        "https://extension.illinois.edu/blogs/cultivating-connections/2025-09-16-reclaiming-land-story-eden-place-farms",
+        "https://instagram.com/edenplacefarms"
+      ],
+      "note": "Buy Fresh Buy Local profiles it as Black-owned, and Illinois Extension reported its farm store opening in June 2025. Nonprofit. Farm is near W 43rd Pl and S Shields Ave, but no exact street address is published, so address left empty. No phone or store hours found. Instagram has posts from late 2025."
+    }
+  },
+  {
+    "name": "We Sow We Grow",
+    "slug": "we-sow-we-grow",
+    "tagline": "West Pullman community farm teaching neighbors to grow food",
+    "description": "We Sow We Grow is an education nonprofit that grows fruits and vegetables on a West Pullman lot and shares eggs with neighbors. Natasha Nicholes founded it in 2016. It also sells merchandise to support its programs.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "657 W 120th St",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": null,
+    "phone": null,
+    "website_url": "http://www.wesowwegrow.org/",
+    "social_instagram": "https://instagram.com/wesowwegrow",
+    "cta_type": "contact",
+    "cta_url": "http://www.wesowwegrow.org/",
+    "price_range": null,
+    "founded_year": 2016,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://abc7chicago.com/amp/post/chicago-urban-farming-sow-grow-project-taking-back-soil-west-pullman/18585798/",
+        "https://abc7chicago.com/amp/post/chicago-urban-farming-sow-grow-project-taking-back-soil-west-pullman/18585798/"
+      ],
+      "note": "ABC7 Chicago covered Natasha Nicholes and the West Pullman farm in February 2026. Nonprofit, education focus rather than a retail farm. ZIP not published. No phone found."
+    }
+  },
+  {
+    "name": "Sistas In The Village",
+    "slug": "sistas-in-the-village",
+    "tagline": "Black woman-led Englewood farm selling and sharing produce at local markets",
+    "description": "Sistas In The Village grows produce on a lot in Englewood and sells and donates it at markets including the Englewood Village Market. Co-founders Mecca Bey and Nyabweza Itaagi started it in 2020. They also run growing workshops.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "5800 S Ada St",
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": "60636",
+    "phone": "(312) 450-9792",
+    "website_url": "http://www.sistasinthevillage.com/",
+    "social_instagram": "https://instagram.com/sistasinthevillage",
+    "cta_type": "contact",
+    "cta_url": "http://www.sistasinthevillage.com/",
+    "price_range": null,
+    "founded_year": 2020,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://blockclubchicago.org/2022/06/29/black-woman-led-sistas-in-the-village-farm-bringing-fresh-food-to-chicagos-south-side/",
+        "https://driehausfoundation.org/news/2026/reimagining-spaces-for-chicagos-south-side",
+        "https://ragenglewood.org/membership-directory/corporate/3341898"
+      ],
+      "note": "Block Club Chicago describes it as a Black woman-led farm, and the Driehaus Foundation featured it in February 2026. Address is the public farm lot. Phone comes from the RAG Englewood business directory listing. Sells mostly at markets, so no hours."
+    }
+  },
+  {
+    "name": "Sowed Up Farms",
+    "slug": "sowed-up-farms",
+    "tagline": "Black women-owned West Side farm with produce boxes and market stands",
+    "description": "Sowed Up Farms is a family-operated urban farm on Chicago's West Side that sells produce boxes and sells at neighborhood farmers markets. It is led by founder Chamika. October 2026 dates include the Eckhart Park and Austin Town Hall markets.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": null,
+    "phone": "(773) 245-3754",
+    "website_url": "https://www.sowedupfarms.com/",
+    "social_instagram": "https://instagram.com/sowedupfarms",
+    "cta_type": "subscribe",
+    "cta_url": "https://www.sowedupfarms.com/produce-boxes-csa",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.sowedupfarms.com/",
+        "https://www.sowedupfarms.com/"
+      ],
+      "note": "Own site says Black women-owned and family-operated, and it lists October 2026 market dates. Markets only for in-person sales: Eckhart Park Farmers Market Oct 3, 10, 17 at 9am and Austin Town Hall Farmers Market Oct 25 at 1pm. Farm address not published."
+    }
+  },
+  {
+    "name": "Westside Bee Boyz",
+    "slug": "westside-bee-boyz",
+    "tagline": "North Lawndale beekeepers selling honey, honey drinks and body care",
+    "description": "Westside Bee Boyz keeps hives around Chicago, including at O'Hare, and sells honey, honey water, honey soda, soaps and lotions. Thad Smith founded it in 2014 in North Lawndale. It also offers hive services and sells at farm stands that take LINK/EBT.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "service_area",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": null,
+    "city_text": "Chicago",
+    "state": "IL",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": "https://instagram.com/westsidebeeboyz",
+    "cta_type": "contact",
+    "cta_url": "https://linktr.ee/Westsidebeeboyz",
+    "price_range": null,
+    "founded_year": 2014,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.austinweeklynews.com/2024/09/06/african-american-beekeeper-talks-about-the-fascinating-life-of-bees/",
+        "https://instagram.com/westsidebeeboyz",
+        "https://linktr.ee/Westsidebeeboyz",
+        "https://www.dnainfo.com/chicago/20170317/north-lawndale/westside-bee-boyz-beekeeping-group-honey-hives/"
+      ],
+      "note": "Austin Weekly News profiles founder Thad Smith as an African American beekeeper, and Instagram shows posts June to October 2026. Old website westsidebeeboyz.com is now spam, never link it. Website left empty; use the Linktree. Honey business rather than a crop farm."
+    }
+  },
+  {
+    "name": "Black Oaks Center",
+    "slug": "black-oaks-center",
+    "tagline": "Black-led farm and food hub in Pembroke Township selling Black farmers' produce",
+    "description": "Black Oaks Center for Sustainable Renewable Living runs a farm and education center in Pembroke Township, Illinois. Its Healthy Food Hub sells produce from Black farmers. It was founded by Dr. Jifunza Wright-Carter, Fred Carter and Akin Carter and has been active since 2011.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "14485 E 3000 S Rd",
+    "city_text": "Pembroke Township",
+    "state": "IL",
+    "zip": "60958",
+    "phone": "(773) 410-3446",
+    "website_url": "https://www.blackoakscenter.org/",
+    "social_instagram": "https://instagram.com/blackoakscenter",
+    "cta_type": "contact",
+    "cta_url": "https://www.blackoakscenter.org/",
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://internships.ncat.org/?p=176941",
+        "https://internships.ncat.org/?p=176941",
+        "https://southsideweekly.com/?p=11050",
+        "https://www.bezosearthfund.org/grants/developing-health-food-hub-chicago"
+      ],
+      "note": "NCAT's internship listing, updated April 2026, calls it a Black-led nonprofit and shows current programs. Nonprofit. About 65 miles south of Chicago. Active since 2011; exact founding year not confirmed, so left empty. No public hours."
+    }
+  },
+  {
+    "name": "Faith Farms & Orchard",
+    "slug": "faith-farms-and-orchard",
+    "tagline": "Gary urban farm and orchard growing food for wholesale and the local food bank",
+    "description": "Faith Farms & Orchard is run by Families Anchored In Total Harmony CDC, founded in 2013 by Rev. Curtis Whittaker to revive his Gary neighborhood. It grows produce, keeps chickens, goats and bees, and runs the Faith Fresh Frozen program. About 80% of its harvest goes wholesale and about 20% is donated to the Food Bank of Northwest Indiana.",
+    "listing_type": "business",
+    "city_slug": "chicago-il",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "576 Carolina St",
+    "city_text": "Gary",
+    "state": "IN",
+    "zip": null,
+    "phone": null,
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "contact",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": 2013,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-07",
+      "verdict": "confirmed-black_led_nonprofit",
+      "sources": [
+        "https://gary.capitalbnews.org/gary-faith-farm/",
+        "https://gary.capitalbnews.org/gary-faith-farm/",
+        "https://nwitimes.com/news/local/lake/gary/article_793b5500-f228-5086-9b05-1ec688f0fb22.html",
+        "https://nwindianabusiness.com/0buc",
+        "https://today.iu.edu/live/news/1107-alumnus-turns-blight-to-light"
+      ],
+      "note": "Capital B Gary covered the farm in 2024, and it won the 2025 Marbleseed Changemakers award and runs the Faith Fresh Frozen program. In Gary, Indiana, listed under Chicago. Nonprofit. Capital B (a Black news outlet) quotes Whittaker saying everyone on the project was Black and brown; no source states his race in words. 2025 activity is the Marbleseed Changemakers award. Website faithgary.org had an SSL error, so website left empty. Address is the farm site named in coverage; confirm it is open to visitors before listing as a visit location."
+    }
   }
 ]

@@ -125,6 +125,10 @@ describe('searchGuide', () => {
     ['dentist', 'dentists'],
     ['dj', 'djs-live-music'],
     ['mobile mechanic', 'mobile-mechanic'],
+    ['grocery store', 'grocery-markets'],
+    ['credit union', 'banks-credit-unions'],
+    ['bank', 'banks-credit-unions'],
+    ['family farm', 'farms-farm-stands'],
   ])('"%s" finds %s first', (query, slug) => {
     expect(searchGuide(query, CATS)[0]?.slug).toBe(slug)
   })
@@ -164,6 +168,8 @@ describe('suggestEntityType', () => {
     ['a photographer', 'photography', 'creative', 'come_to_them', 'creative'],
     ['a candle maker online', 'candles-home-fragrance', 'make_sell', 'online', 'vendor'],
     ['a plumber', 'plumbing', 'home', 'come_to_them', 'service_provider'],
+    ['a grocery store, not a restaurant', 'grocery-markets', 'food', 'visit', 'business'],
+    ['a bank branch', 'banks-credit-unions', 'money_law', 'visit', 'professional'],
   ] as const)('%s', (_name, slug, answerId, where, type) => {
     expect(suggestEntityType(bySlug(slug), CATS, findAnswer(answerId), where)).toBe(type)
   })

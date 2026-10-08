@@ -152,7 +152,8 @@ const ZIP_PREFIXES: Record<string, string[]> = {
   'atlanta-ga': ['30'],
   'houston-tx': ['77'],
   'chicago-il': ['60'],
-  'los-angeles-ca': ['90', '91'],
+  // 93510 is Acton, LA County's Antelope Valley.
+  'los-angeles-ca': ['90', '91', '93510'],
   'washington-dc': ['20'],
   'new-orleans-la': ['70'],
 }
@@ -193,7 +194,13 @@ function runStaticChecks(city: SeedCity, rows: Row[]): void {
     // Checked against the registry's state, not just "is it two letters" —
     // 'CH' (a truncated "CHICAGO" that leaked out of an address parse) is two
     // letters and passed the old check while being nonsense.
-    if (r.state !== city.state) at('state-mismatch', `${r.state} — expected ${city.state}`)
+    if (r.state !== city.state) {
+      if (city.neighborStates?.includes(r.state)) {
+        at('neighbor-state', `${r.state} — inside the ${city.label} metro`, false)
+      } else {
+        at('state-mismatch', `${r.state} — expected ${city.state}`)
+      }
+    }
     if (r.zip && !/^\d{5}$/.test(r.zip)) at('zip-not-5-digit', r.zip)
 
     if (r.zip) {

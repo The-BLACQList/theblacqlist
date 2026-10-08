@@ -37,6 +37,14 @@ export interface SeedCity {
   cityText: string
   /** Two-letter state code every row in this corpus must carry. */
   state: string
+  /**
+   * States across the line that are still this metro: the farms that sell at
+   * DC markets are in Maryland and Virginia, Gary sits next to Chicago, and
+   * New Orleans co-ops reach into Mississippi. A row from one of these is a
+   * warning (counted, printed) rather than a failure; any other state still
+   * fails, which is what catches a truncated 'CH' from an address parse.
+   */
+  neighborStates?: readonly string[]
   /** Corpus filename inside scripts/data/. */
   file: string
   /** M9 minimum published listings for this city. */
@@ -95,6 +103,7 @@ export const SEED_CITIES: SeedCity[] = [
     label: 'Chicago',
     cityText: 'Chicago',
     state: 'IL',
+    neighborStates: ['IN'],
     file: 'listings-chicago.json',
     minPublished: 50,
     center: [-87.629799, 41.878113],
@@ -117,6 +126,7 @@ export const SEED_CITIES: SeedCity[] = [
     label: 'Washington DC',
     cityText: 'Washington',
     state: 'DC',
+    neighborStates: ['MD', 'VA'],
     file: 'listings-washington-dc.json',
     minPublished: 40,
     center: [-77.036873, 38.907192],
@@ -128,6 +138,7 @@ export const SEED_CITIES: SeedCity[] = [
     label: 'New Orleans',
     cityText: 'New Orleans',
     state: 'LA',
+    neighborStates: ['MS'],
     file: 'listings-new-orleans.json',
     minPublished: 40,
     center: [-90.071533, 29.951065],
