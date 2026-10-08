@@ -1,7 +1,7 @@
 import 'server-only'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { OWNERSHIP_LABEL_META, type OwnershipLabel } from '@/lib/constants/listing'
+import { ownershipLabelText, type OwnershipLabel } from '@/lib/constants/listing'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { loadAttributeGroups, type FacetGroupData } from '@/lib/listings/facets'
 import { levelsForCategory, isBusinessLevel, type BusinessLevel } from '@/lib/listings/levels'
@@ -86,6 +86,8 @@ export interface FinishData {
    * Null when the columns aren't there yet (a database before the migration).
    */
   levels: { primary: BusinessLevel; extras: BusinessLevel[]; allowed: BusinessLevel[] } | null
+  /** The partner switch (ticket 132). False when the column is not there yet. */
+  openToPartnerships: boolean
 }
 
 const DETAIL_COLUMNS = `
@@ -142,6 +144,7 @@ export async function loadFinishData(
     { data: serviceRows },
     { data: groupRows },
     { data: levelRow, error: levelError },
+    { data: partnerRow },
   ] = await Promise.all([
     loadAttributeGroups(supabase, row.entity_type),
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
@@ -181,6 +184,8 @@ export async function loadFinishData(
       )
       .eq('id', row.id)
       .maybeSingle(),
+    // '*' so a database without open_to_partnerships (ticket 131) still loads.
+    supabase.from('listings').select('*').eq('id', row.id).maybeSingle(),
   ])
 
   // One-to-one embeds come back as an object; guard the array shape too.
@@ -241,7 +246,8 @@ export async function loadFinishData(
     metaDescription: row.meta_description ?? null,
     coverImagePath: row.cover_image_path ?? null,
     coverUrl: resolveMediaPath(row.cover_image_path),
-    ownershipLabel: ownership ? (OWNERSHIP_LABEL_META[ownership]?.label ?? null) : null,
+    // Same rule as the public page: only an ally page carries a label.
+    ownershipLabel: ownership === 'ally' ? ownershipLabelText('ally', row.entity_type) : null,
     categoryName: category?.name ?? null,
     locationLabel: typedCity ?? textCity,
     publicUrl: buildEntityUrl(row.entity_type, city?.slug, row.slug),
@@ -258,5 +264,7 @@ export async function loadFinishData(
       [],
     faqs: (faqRows as { id: string; question: string; answer: string }[] | null) ?? [],
     levels,
+    openToPartnerships:
+      (partnerRow as { open_to_partnerships?: boolean } | null)?.open_to_partnerships === true,
   }
 }

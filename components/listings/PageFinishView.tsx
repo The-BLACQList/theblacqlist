@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
+import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import { socialLinksAllowed } from '@/lib/stripe/planChecks'
 import {
   TIER_RANK,
@@ -24,6 +25,7 @@ import { OfferingsList } from '@/components/dashboard/OfferingsList'
 import { AddOfferingForm } from '@/components/dashboard/AddOfferingForm'
 import { AttributesSection } from '@/components/dashboard/AttributesSection'
 import { LevelSection } from '@/components/dashboard/LevelSection'
+import { PartnershipSection } from '@/components/dashboard/PartnershipSection'
 import { SocialSection } from '@/components/dashboard/SocialSection'
 import { VideoSection } from '@/components/dashboard/VideoSection'
 import { LinksSection } from '@/components/dashboard/LinksSection'
@@ -166,7 +168,8 @@ export function PageFinishView({
     data.media.length,
     data.services.length,
     data.hoursCount,
-    tier ?? undefined
+    tier ?? undefined,
+    data.entityType === 'creator' ? creatorChecklistFacts(data) : null
   )
   const missing = checklist.items.filter((i) => !i.passed).map((i) => itemLabel(i.id, i.label))
 
@@ -272,9 +275,11 @@ export function PageFinishView({
               />
             </Anchor>
 
-            <Anchor id="hours">
-              <HoursSection listingId={data.id} hours={d?.hours ?? null} />
-            </Anchor>
+            {data.entityType !== 'creator' && (
+              <Anchor id="hours">
+                <HoursSection listingId={data.id} hours={d?.hours ?? null} />
+              </Anchor>
+            )}
 
             <Anchor id="photos">
               <MediaGrid
@@ -331,6 +336,15 @@ export function PageFinishView({
                 selectedValueIds={data.selectedValueIds}
                 limit={attributeLimit(tier)}
                 showUpgrade={showUpgrade}
+                entityType={data.entityType}
+              />
+            </Anchor>
+
+            <Anchor id="partnerships">
+              <PartnershipSection
+                listingId={data.id}
+                entityType={data.entityType}
+                openToPartnerships={data.openToPartnerships}
               />
             </Anchor>
 

@@ -33,7 +33,7 @@ Today the directory has an "Influencer Marketing" subcategory, "Content Creation
 |---|---|
 | Scope | Directory plus partner switches. Contact goes through each page's existing contact button. No messaging and no introductions; The BLACQList still makes no introductions. |
 | Organization | One Creators group that is easy to find as a group. Niche is a filter inside it. Creators get a spot on the home page so it's clear they are a group on the platform. |
-| Label | "Black Creator" / "Ally Creator". The same two-label system, worded for people. |
+| Label | Only "Ally Creator" is ever shown; there is no Black Creator label (founder, 2026-10-19). The same stored values as businesses. |
 | Sourcing | Creators add themselves only. We never publish a person's page without their consent. |
 | Social links | Free on creator pages. Businesses stay on Starter for socials. |
 | Tag limit | Creator niche, platform and audience tags don't count toward the Free plan's 3-tag limit. |
@@ -95,7 +95,7 @@ Creators use the add-business quick start at `/add-business?as=creator`, worded 
 - "What do people call you?"
 - "Where are you based?" City is optional. Without one, the page is Online.
 - Main button: Message, Follow, or Work with me.
-- Label: **Black Creator** ("I'm a Black creator") or **Ally Creator** ("I'm not Black, and I support Black-owned businesses and creators").
+- Label: none by default (the attest box says "I'm a Black creator"), or **Ally Creator** ("I'm not Black, and I support Black-owned businesses and creators"). Only Ally Creator shows on the page (2026-10-19).
 - "I'm 18 or older." The Terms already say 18+, and sign-up never asked until now.
 
 The finish view adds a Creator details section (niche, platforms, audience size) and the partner switch. Social links are free on creator pages.
@@ -141,7 +141,7 @@ New creator pages go through the normal new-submission review.
 | Too few creators at launch, so the band looks empty | Product | High | Medium | Invitation fallback; no cards until 4 are published |
 | A minor signs up | Data / legal | Medium | High | 18+ attestation, moderation check, Terms section; review before merge |
 | Inflated audience ranges | Product | Medium | Low | "Self-reported" label; moderation plausibility check |
-| Label misuse (Ally creator picks Black Creator) | Legal / trust | Low | High | Same moderation and report path as business labels; founder + legal sign-off on definitions |
+| Label misuse (an ally creator lists without the Ally Creator label) | Legal / trust | Low | High | Same moderation and report path as business labels; founder + legal sign-off on definitions |
 | Free socials for creators reads as unfair to businesses | Business | Low | Low | Creators have no storefront; socials are their whole page. Decision logged. |
 | The Links section already lets Free businesses add socials | Business | Already true | Medium | Ticket 133 closes it |
 

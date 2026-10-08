@@ -111,13 +111,11 @@ export async function createListingAction(
     return { error: 'Event and job submissions are not open yet.' }
   }
 
-  // The creator type exists (ticket 131) before its sign-up path does. Ticket
-  // 132 replaces this with the creator path and its "I'm 18 or older" check;
-  // until then nobody can create a creator page, so none skips that check.
-  if (entityType === 'creator') {
-    return { error: 'Creator pages are not open yet.' }
-  }
-
+  // Creators come through the business path with three differences (ticket
+  // 132): an "I'm 18 or older" attestation is required, the category must be a
+  // Creators subcategory, and the page is always listed as online ('virtual').
+  // A city, when given, only places the page in that city's listings and URL.
+  const isCreator = entityType === 'creator'
   const isBusinessPath = entityType !== 'event' && entityType !== 'job'
 
   const name = formData.get('name')?.toString().trim() ?? ''
@@ -160,6 +158,13 @@ export async function createListingAction(
   const coverImagePath = formData.get('cover_image_path')?.toString().trim() || null
   const tempEntityId = formData.get('temp_entity_id')?.toString().trim() || null
   const ownershipAttested = formData.get('ownership_attested') === 'true'
+  // Creators only. There is no column for it: a creator page cannot be created
+  // without it, so ownership_attested_at on a creator page is also the moment
+  // the person attested they are 18 or older.
+  const ageAttested = formData.get('age_attested') === 'true'
+  // Lets a creator button reuse a CTA type with a person-worded label
+  // ("Follow me" on subscribe). Same limit as the CTA editor (updateCta.ts).
+  const ctaLabelOverride = formData.get('cta_label_override')?.toString().trim() || null
   // Ownership label is authoritative and required. Default to 'black_owned' only
   // if the field is entirely absent (older clients); an explicit invalid value is
   // rejected below.
@@ -196,7 +201,18 @@ export async function createListingAction(
   }
 
   if (!VALID_OWNERSHIP_LABELS.includes(ownershipLabel as (typeof VALID_OWNERSHIP_LABELS)[number])) {
-    fieldErrors.ownership_label = 'Select whether your business is Black-Owned or an Ally.'
+    fieldErrors.ownership_label = isCreator
+      ? 'Confirm how you are listed.'
+      : 'Select whether your business is Black-Owned or an Ally.'
+  }
+
+  if (isCreator) {
+    if (!ownershipAttested) {
+      fieldErrors.ownership_attested = 'Confirm this page is about you.'
+    }
+    if (!ageAttested) {
+      fieldErrors.age_attested = 'You must be 18 or older to add a creator page.'
+    }
   }
 
   if (name.length < 2) {
@@ -239,7 +255,9 @@ export async function createListingAction(
         : workplaceType === 'hybrid'
           ? 'hybrid'
           : 'physical'
-      : locationType
+      : isCreator
+        ? 'virtual'
+        : locationType
   if (
     !VALID_LOCATION_TYPES.includes(effectiveLocationType as (typeof VALID_LOCATION_TYPES)[number])
   ) {
@@ -331,6 +349,9 @@ export async function createListingAction(
   } else {
     if (!VALID_CTA_TYPES.includes(ctaType as (typeof VALID_CTA_TYPES)[number])) {
       fieldErrors.cta_type = 'Select a primary call to action.'
+    }
+    if (ctaLabelOverride && ctaLabelOverride.length > 50) {
+      fieldErrors.cta_type = 'Button text must be 50 characters or fewer.'
     }
     if (websiteUrl && !isValidUrl(websiteUrl)) {
       fieldErrors.website_url = 'Website must start with https://'
@@ -466,7 +487,7 @@ export async function createListingAction(
 
   // Creators & Influencers is the creator path's alone (lib/listings/creatorCategories.ts).
   if (
-    entityType !== 'creator' &&
+    !isCreator &&
     (category.slug === CREATOR_PARENT_SLUG || parentSlug === CREATOR_PARENT_SLUG)
   ) {
     return {
@@ -474,12 +495,18 @@ export async function createListingAction(
       fieldErrors: { category_id: 'Creator pages have their own sign-up. Please pick another category.' },
     }
   }
+  if (isCreator && parentSlug !== CREATOR_PARENT_SLUG) {
+    return {
+      error: 'Please fix the errors below.',
+      fieldErrors: { category_id: 'Pick what you make most.' },
+    }
+  }
 
   // City (ticket 126). Until now no listing got a city_id, so every page URL
   // fell back to /online/. Prefer the picked id; otherwise match the typed city
   // name to an active city. An unknown city stays as text only.
   let cityId: string | null = null
-  if (isBusinessPath && effectiveLocationType !== 'virtual') {
+  if (isBusinessPath && (effectiveLocationType !== 'virtual' || isCreator)) {
     const cityQuery = supabase.from('cities').select('id, name').eq('is_active', true)
     const { data: cities } = cityIdRaw
       ? await cityQuery.eq('id', cityIdRaw).limit(1)
@@ -600,6 +627,7 @@ export async function createListingAction(
           description,
           cta_type: ctaType,
           cta_url: ctaUrl,
+          cta_label_override: ctaLabelOverride,
           email,
           phone,
           website_url: websiteUrl,
@@ -627,7 +655,9 @@ export async function createListingAction(
         ? 'Failed to save your job details. Please try again.'
         : isEvent
           ? 'Failed to save your event details. Please try again.'
-          : 'Failed to save your business details. Please try again.',
+          : isCreator
+            ? 'Failed to save your page details. Please try again.'
+            : 'Failed to save your business details. Please try again.',
     }
   }
 

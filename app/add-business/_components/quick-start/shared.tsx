@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import type { Missing, QuickStartAnswers } from '@/lib/listings/quickStart'
+import type { Missing, QuickStartAnswers, QuickStartMode } from '@/lib/listings/quickStart'
 
 export interface StepProps {
   answers: QuickStartAnswers
   onChange: (patch: Partial<QuickStartAnswers>) => void
   /** This step's problem after "Next" or "Save my draft", else null. */
   problem: Missing | null
+  /** Who the flow is for. Creator mode words every step for a person. */
+  mode?: QuickStartMode
 }
 
 export const ERROR_ID = 'qs-error'

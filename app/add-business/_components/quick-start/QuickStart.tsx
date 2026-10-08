@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { createListingAction } from '@/lib/actions/listings/createListing'
 import { siteFormFields, type SiteDraft } from '@/lib/import/siteDraft'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
-import { OWNERSHIP_LABEL_META } from '@/lib/constants/listing'
+import { ownershipLabelText } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
 import {
   EMPTY_ANSWERS,
@@ -28,9 +28,11 @@ import {
   type Missing,
   type QuickCategory,
   type QuickStartAnswers,
+  type QuickStartMode,
   type QuickStep,
 } from '@/lib/listings/quickStart'
 import { LivePagePreview, type PreviewPart } from '@/components/listings/LivePagePreview'
+import { CreatorFitStep } from './CreatorFitStep'
 import { CtaStep } from './CtaStep'
 import { FitStep } from './FitStep'
 import { NameStep } from './NameStep'
@@ -43,8 +45,12 @@ import { WhereStep, type CityOption } from './WhereStep'
 // page, then "Save my draft" creates the draft and opens the finish view.
 // With FEATURE_SITE_IMPORT on, step 0 offers to bring in the owner's own site
 // first (ticket 127); what they keep rides along in the draft as `site`.
+// Creator mode (ticket 132, `?as=creator`) runs the same steps worded for a
+// person, with its own saved draft so the two never mix.
 
-const DRAFT_KEY = 'draft-add-business-v2'
+function draftKey(mode: QuickStartMode): string {
+  return mode === 'creator' ? 'draft-add-creator-v1' : 'draft-add-business-v2'
+}
 
 const HIGHLIGHT: Record<QuickStep, PreviewPart | null> = {
   ownership: 'owner',
@@ -67,6 +73,8 @@ interface Props {
   siteImport?: boolean
   /** FEATURE_AI_ONBOARDING: the finish view opens with drafts (ticket 128). */
   aiOnboarding?: boolean
+  /** 'creator' for `/add-business?as=creator`; `categories` is then the Creators subcategories. */
+  mode?: QuickStartMode
 }
 
 type Stage = 'site' | 'steps'
@@ -79,9 +87,9 @@ interface Draft {
   site: SiteDraft | null
 }
 
-function readDraft(): Draft {
+function readDraft(key: string): Draft {
   try {
-    const raw = window.localStorage.getItem(DRAFT_KEY)
+    const raw = window.localStorage.getItem(key)
     if (!raw) return { answers: EMPTY_ANSWERS, stepIndex: 0, site: null }
     const parsed = JSON.parse(raw) as Partial<Draft>
     const stepIndex = Number.isInteger(parsed.stepIndex)
@@ -123,9 +131,12 @@ function QuickStartFlow({
   email,
   siteImport = false,
   aiOnboarding = false,
+  mode = 'business',
 }: Props) {
   const router = useRouter()
-  const [initial] = useState(readDraft)
+  const creator = mode === 'creator'
+  const DRAFT_KEY = draftKey(mode)
+  const [initial] = useState(() => readDraft(DRAFT_KEY))
   const [answers, setAnswers] = useState<QuickStartAnswers>(initial.answers)
   const [stepIndex, setStepIndex] = useState(initial.stepIndex)
   const [stage, setStage] = useState<Stage>(siteImport ? (initial.stage ?? 'site') : 'steps')
@@ -150,7 +161,7 @@ function QuickStartFlow({
     } catch {
       // Private mode or storage full. The flow still works, it just won't resume.
     }
-  }, [answers, stepIndex, stage, site])
+  }, [DRAFT_KEY, answers, stepIndex, stage, site])
 
   useEffect(() => {
     if (navCount === 0) return
@@ -161,7 +172,7 @@ function QuickStartFlow({
 
   function update(patch: Partial<QuickStartAnswers>) {
     // Picking "Call" or "Visit our site" starts with what came from their site.
-    const input = patch.ctaType ? findCta(patch.ctaType)?.input : undefined
+    const input = patch.ctaType ? findCta(patch.ctaType, mode)?.input : undefined
     if (input === 'tel' && !patch.ctaUrl && site?.phone) patch = { ...patch, ctaUrl: site.phone }
     if (patch.ctaType === 'visit' && !patch.ctaUrl && site?.website)
       patch = { ...patch, ctaUrl: site.website }
@@ -179,7 +190,7 @@ function QuickStartFlow({
   }
 
   function next() {
-    const p = stepProblem(step, answers)
+    const p = stepProblem(step, answers, mode)
     if (p) {
       goTo(stepIndex, p)
       return
@@ -205,25 +216,27 @@ function QuickStartFlow({
 
   function submit() {
     setFormError(null)
-    const missing = firstMissing(answers)
+    const missing = firstMissing(answers, mode)
     if (missing) {
       goTo(QUICK_STEPS.indexOf(missing.step), missing)
       return
     }
-    const pick = pickFor(answers, categories)
-    const cta = findCta(answers.ctaType)
+    const cta = findCta(answers.ctaType, mode)
     const fd = new FormData()
-    fd.set('entity_type', pick?.entityType ?? 'business')
+    fd.set(
+      'entity_type',
+      creator ? 'creator' : (pickFor(answers, categories)?.entityType ?? 'business')
+    )
     fd.set('name', answers.name.trim())
     fd.set('category_id', fitCategoryId(answers.fit))
     const level = chosenLevel(answers, categories)
     if (level) fd.set('primary_level', level)
     fd.set('description', answers.about.trim())
     fd.set('tagline', answers.tagline.trim())
-    fd.set('location_type', whereLocationType(answers.where))
-    if (answers.where !== 'online') {
+    fd.set('location_type', whereLocationType(answers.where, mode))
+    if (creator || answers.where !== 'online') {
       if (answers.cityId) fd.set('city_id', answers.cityId)
-      else {
+      else if (!creator || answers.cityText.trim()) {
         fd.set('city_text', answers.cityText.trim())
         fd.set('state_text', answers.stateText.trim())
       }
@@ -235,6 +248,8 @@ function QuickStartFlow({
     fd.set('email', site?.email ?? email)
     fd.set('ownership_label', answers.ownership)
     fd.set('ownership_attested', 'true')
+    if (creator) fd.set('age_attested', answers.ageAttested ? 'true' : 'false')
+    if (cta?.labelOverride) fd.set('cta_label_override', cta.labelOverride)
     if (answers.fit?.kind === 'request') {
       fd.set('category_request_name', answers.fit.proposedName.trim())
       fd.set('category_request_words', answers.fit.words.trim())
@@ -289,16 +304,17 @@ function QuickStartFlow({
       tagline: answers.tagline.trim() || firstSentence(answers.about),
       description: answers.about.trim(),
       categoryName,
-      locationLabel: locationLabel(answers, cities),
-      // Matches the live page: only Ally is named (2026-10-16).
-      ownershipLabel: answers.ownership === 'ally' ? OWNERSHIP_LABEL_META.ally.label : null,
-      ctaLabel: findCta(answers.ctaType)?.buttonLabel ?? null,
+      locationLabel: locationLabel(answers, cities, mode),
+      // Matches the live page: only Ally is named (2026-10-16, creators too 2026-10-19).
+      ownershipLabel:
+        answers.ownership === 'ally' ? ownershipLabelText('ally', creator ? 'creator' : null) : null,
+      ctaLabel: findCta(answers.ctaType, mode)?.buttonLabel ?? null,
       coverUrl: resolveMediaPath(site?.coverPath),
       highlight: stage === 'site' ? null : HIGHLIGHT[step],
     }
-  }, [answers, categories, cities, step, stage, site])
+  }, [answers, categories, cities, step, stage, site, mode, creator])
 
-  const stepProps = { answers, onChange: update, problem }
+  const stepProps = { answers, onChange: update, problem, mode }
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10">
@@ -338,15 +354,22 @@ function QuickStartFlow({
             {step === 'ownership' && <OwnershipStep {...stepProps} />}
             {step === 'name' && <NameStep {...stepProps} />}
             {step === 'about' && <AboutStep {...stepProps} />}
-            {step === 'fit' && (
-              <FitStep
-                {...stepProps}
-                categories={categories}
-                // The fit just changed, so read the role question's rule off
-                // the new answer rather than the render's stale one.
-                onPicked={(fit) => goTo(adjacentStepIndex(stepIndex, 1, { fit }, categories))}
-              />
-            )}
+            {step === 'fit' &&
+              (creator ? (
+                <CreatorFitStep
+                  {...stepProps}
+                  categories={categories}
+                  onPicked={(fit) => goTo(adjacentStepIndex(stepIndex, 1, { fit }, categories))}
+                />
+              ) : (
+                <FitStep
+                  {...stepProps}
+                  categories={categories}
+                  // The fit just changed, so read the role question's rule off
+                  // the new answer rather than the render's stale one.
+                  onPicked={(fit) => goTo(adjacentStepIndex(stepIndex, 1, { fit }, categories))}
+                />
+              ))}
             {step === 'role' && <RoleStep {...stepProps} categories={categories} />}
             {step === 'where' && <WhereStep {...stepProps} cities={cities} />}
             {step === 'cta' && <CtaStep {...stepProps} email={site?.email ?? email} />}
@@ -437,7 +460,7 @@ function serverFieldId(step: QuickStep, field: string): string {
     case 'tagline':
       return FIELD_IDS.tagline
     case 'attest':
-      return FIELD_IDS.attest
+      return field === 'age_attested' ? FIELD_IDS.age : FIELD_IDS.attest
   }
 }
 

@@ -1,9 +1,11 @@
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { OWNERSHIP_LABEL_META, type OwnershipLabel } from '@/lib/constants/listing'
+import { ownershipLabelText, type OwnershipLabel } from '@/lib/constants/listing'
 
 interface OwnershipBadgeProps {
   label: OwnershipLabel
+  /** An ally creator page reads "Ally Creator". */
+  entityType?: string | null
   size?: 'small' | 'standard'
   className?: string
 }
@@ -23,7 +25,12 @@ const LABEL_CLASSES: Record<OwnershipLabel, string> = {
   ally: 'bg-pale-lavender text-brand-black',
 }
 
-export function OwnershipBadge({ label, size = 'small', className }: OwnershipBadgeProps) {
+export function OwnershipBadge({
+  label,
+  entityType,
+  size = 'small',
+  className,
+}: OwnershipBadgeProps) {
   if (label !== 'ally') return null
   const sizeClasses = size === 'small' ? 'h-[26px] px-2 text-[12px]' : 'h-[32px] px-3 text-[14px]'
 
@@ -36,7 +43,7 @@ export function OwnershipBadge({ label, size = 'small', className }: OwnershipBa
         className
       )}
     >
-      {OWNERSHIP_LABEL_META[label].label}
+      {ownershipLabelText(label, entityType)}
     </Badge>
   )
 }

@@ -40,6 +40,18 @@ export const OWNERSHIP_LABEL_META: Record<
   ally: { label: 'Ally', shortLabel: 'Ally' },
 }
 
+// [Decision — founder, 2026-10-19] Creator pages store the same two values, so
+// filters and counts treat creators like every other page. Only an ally page is
+// ever labeled ("Ally Creator" for a person); there is no Black Creator label.
+export const ALLY_CREATOR_LABEL = 'Ally Creator'
+
+/** The ownership label as a page of this type shows it. */
+export function ownershipLabelText(label: OwnershipLabel, entityType?: string | null): string {
+  return entityType === 'creator' && label === 'ally'
+    ? ALLY_CREATOR_LABEL
+    : OWNERSHIP_LABEL_META[label].label
+}
+
 // Trust ladder (listings.trust_tier CHECK, set by the initial schema
 // `20260510000000_initial_blacqlist_mvp_schema` and never superseded — verified
 // against every later migration that touches trust_tier). Order is meaningful:

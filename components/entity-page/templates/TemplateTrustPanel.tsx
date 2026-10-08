@@ -23,6 +23,7 @@ interface Props {
  */
 export function TemplateTrustPanel({ entity }: Props) {
   const isUnclaimed = entity.trust_tier === 'unclaimed'
+  const isCreator = entity.entity_type === 'creator'
 
   return (
     <div className="lg:sticky lg:top-32 bg-pale-lavender border-t-[3px] border-gold rounded-b-xl p-5 md:p-6">
@@ -37,10 +38,12 @@ export function TemplateTrustPanel({ entity }: Props) {
       <div className="divide-y divide-charcoal/10 font-body text-[13.5px] text-charcoal">
         <p className="py-2.5">{TIER_DESCRIPTIONS[entity.trust_tier]}</p>
         {/* Black-owned is the default and goes unsaid; only Ally is named
-            (founder decision 2026-10-16). */}
+            (founder decision 2026-10-16, creators too 2026-10-19). */}
         {entity.ownership_label === 'ally' && (
           <p className="py-2.5">
-            Listed as an <strong className="text-brand-black">Ally</strong>. {ALLY_ONE_LINER}
+            Listed as an{' '}
+            <strong className="text-brand-black">{isCreator ? 'Ally Creator' : 'Ally'}</strong>.{' '}
+            {ALLY_ONE_LINER}
           </p>
         )}
         {entity.review_count > 0 && (
@@ -53,7 +56,7 @@ export function TemplateTrustPanel({ entity }: Props) {
         )}
         {isUnclaimed && (
           <p className="py-2.5">
-            Is this your business?{' '}
+            {isCreator ? 'Is this you?' : 'Is this your business?'}{' '}
             <Link
               href={`/claim/${entity.id}`}
               className="font-subhead font-semibold text-amber hover:text-brand-black underline underline-offset-2 transition-colors duration-150"
