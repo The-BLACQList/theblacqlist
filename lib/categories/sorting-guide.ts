@@ -462,6 +462,12 @@ export const GUIDE_SEARCH_WORDS: Readonly<Record<string, readonly string[]>> = {
   supermarket: ['grocery-markets'],
   bank: ['banks-credit-unions'],
   'credit union': ['banks-credit-unions'],
+  // A banker or advisor is a person, so they list as a Professional, not a bank
+  // [Decision - founder, 2026-10-08].
+  banker: ['financial-planning-wealth'],
+  'financial advisor': ['financial-planning-wealth'],
+  'financial planner': ['financial-planning-wealth'],
+  'loan officer': ['mortgage-lending'],
   garden: ['urban-farming-community-gardens', 'landscaping-outdoor'],
   staffing: ['temp-contract-staffing'],
   recruiter: ['executive-search', 'temp-contract-staffing'],
@@ -504,6 +510,11 @@ function normalize(text: string): string[] {
     .filter((t) => t.length > 0 && !STOP_WORDS.has(t))
 }
 
+/** The same word, or its plural. */
+function wordExact(queryWord: string, word: string): boolean {
+  return queryWord === word || queryWord === `${word}s` || queryWord === `${word}es`
+}
+
 /**
  * One query word matches one key or name word: exactly, as a plural
  * ("barbers", "lashes"), as a longer form of a 4+ letter word ("braiding"), or
@@ -511,7 +522,7 @@ function normalize(text: string): string[] {
  * a prefix, so "app" doesn't find "apparel".
  */
 function wordMatches(queryWord: string, word: string): boolean {
-  if (queryWord === word || queryWord === `${word}s` || queryWord === `${word}es`) return true
+  if (wordExact(queryWord, word)) return true
   if (word.length >= 4 && queryWord.startsWith(word)) return true
   return queryWord.length >= 4 && word.startsWith(queryWord)
 }
@@ -534,7 +545,10 @@ export function searchGuide(
   for (const [key, slugs] of Object.entries(GUIDE_SEARCH_WORDS)) {
     const keyWords = key.split(' ')
     const hit = keyWords.every((kw) => words.some((w) => wordMatches(w, kw)))
-    if (hit) for (const slug of slugs) bump(slug, 2 + keyWords.length)
+    // An exact word beats a longer or partial one, so "banker" finds the
+    // banker key ahead of the bank key it also starts with.
+    const exact = keyWords.every((kw) => words.some((w) => wordExact(w, kw)))
+    if (hit) for (const slug of slugs) bump(slug, 2 + keyWords.length + (exact ? 1 : 0))
   }
 
   for (const cat of categories) {
@@ -601,7 +615,9 @@ function topParent(category: GuideCategory, categories: readonly GuideCategory[]
  *      Professional, Photography → Creative), so the guide and the directory
  *      agree on what a listing is
  *   3. "Things I make or sell" → Vendor
- *   4. "I come to them"      → Service Provider
+ *   4. "I come to them", or a bank that is online only → Service Provider
+ *      (a bank with a branch is a Business, not a Professional
+ *      [Decision - founder, 2026-10-08])
  *   5. otherwise Business
  */
 export function suggestEntityType(
@@ -622,6 +638,7 @@ export function suggestEntityType(
   }
   if (answer?.leansVendor) return 'vendor'
   if (where === 'come_to_them') return 'service_provider'
+  if (where === 'online' && category.slug === 'banks-credit-unions') return 'service_provider'
   return 'business'
 }
 

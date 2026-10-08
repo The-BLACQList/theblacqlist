@@ -444,6 +444,15 @@ export const CITY_PHOTOS: Readonly<Record<string, string>> = {
  * Both are named for what they show rather than for a business, like the three
  * frames above them and unlike the older nine.
  *
+ * `agriculture-sustainability` reuses `citrus-harvest`, the /for-business hero
+ * [Decision — founder, 2026-10-08: "it needs a picture. It can use either the
+ * citrus grower or the cattle farmer. This repeat is ok."]. The repeat is across
+ * pages, not inside the homepage scroll, so the triptych rule below still holds.
+ * Citrus over cattle because of the crop: these tiles are taller than 3:2, so
+ * the width comes off, and the citrus grower's face sits near the middle of the
+ * frame while the cattle farmer's sits at ~65% and is the first thing a narrow
+ * tile loses.
+ *
  * The three triptych photographs are intentionally absent — both components
  * render on the homepage inside one scroll, and a repeated frame reads as a bug.
  */
@@ -463,4 +472,5 @@ export const CATEGORY_PHOTOS: Readonly<Record<string, string>> = {
   healthcare: '/images/editorial/physician-portrait.webp',
   'social-media-marketing': '/images/editorial/agency-desk.webp',
   'professional-services': '/images/editorial/suit-and-ledger.webp',
+  'agriculture-sustainability': '/images/editorial/citrus-harvest.webp',
 }
