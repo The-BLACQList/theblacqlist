@@ -1137,6 +1137,7 @@ export type Database = {
           state: string | null
           updated_at: string
           video_embed_url: string | null
+          video_path: string | null
           website_url: string | null
           zip: string | null
         }
@@ -1169,6 +1170,7 @@ export type Database = {
           state?: string | null
           updated_at?: string
           video_embed_url?: string | null
+          video_path?: string | null
           website_url?: string | null
           zip?: string | null
         }
@@ -1201,6 +1203,7 @@ export type Database = {
           state?: string | null
           updated_at?: string
           video_embed_url?: string | null
+          video_path?: string | null
           website_url?: string | null
           zip?: string | null
         }

@@ -62,7 +62,7 @@ export const PLANS: PlanMeta[] = [
     features: [
       'Everything in Free',
       'Up to 10 photos',
-      'A video from YouTube or Vimeo',
+      'A video on your page, your own upload or a link',
       'Your full story, with no length limit',
       'Up to 10 details customers filter by',
       'A common questions section (up to 5)',

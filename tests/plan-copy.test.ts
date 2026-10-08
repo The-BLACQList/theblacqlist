@@ -89,7 +89,7 @@ describe('Starter copy matches the Starter gates and limits', () => {
     expect(photoLimit('starter')).toBe(10)
     expect(starter).toContain('Up to 10 photos')
     expect(videoLimit('starter')).toBe(1)
-    expect(starter).toContain('A video from YouTube or Vimeo')
+    expect(starter).toContain('A video on your page, your own upload or a link')
     expect(descriptionCharLimit('starter')).toBeNull()
     expect(starter).toContain('Your full story, with no length limit')
     expect(attributeLimit('starter')).toBe(10)

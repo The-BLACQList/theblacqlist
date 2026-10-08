@@ -163,6 +163,8 @@ export interface BusinessDetails {
   cta_label_override: string | null
   ships_nationwide: boolean
   video_embed_url: string | null
+  /** Public URL of a video the owner uploaded (ticket 130). Set only when there is no link. */
+  video_file_url: string | null
   services: ServiceItem[]
 }
 

@@ -276,6 +276,8 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
           <VideoSection
             listingId={data.id}
             videoEmbedUrl={data.videoEmbedUrl}
+            videoPath={data.videoPath}
+            storageUrl={storageUrl}
             locked={!canAccess(tier, 'listing_video')}
             showUpgrade={showUpgrade}
           />

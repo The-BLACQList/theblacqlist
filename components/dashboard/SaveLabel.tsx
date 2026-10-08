@@ -16,3 +16,8 @@ export function SaveLabelProvider({ live, children }: { live: boolean; children:
 export function useSaveLabel(base: string = 'Save'): string {
   return useContext(LiveContext) ? 'Save and publish' : base
 }
+
+/** True inside the finish view of a page that is already public. */
+export function useLivePage(): boolean {
+  return useContext(LiveContext)
+}

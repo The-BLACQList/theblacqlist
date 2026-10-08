@@ -32,6 +32,7 @@ export type RateLimitBucket =
   | 'review'
   | 'listing_submit'
   | 'upload'
+  | 'video_upload'
   | 'join'
 
 const DEFAULT_WINDOW_SECONDS = 60

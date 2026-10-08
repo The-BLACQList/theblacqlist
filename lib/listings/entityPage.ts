@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
+import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -20,6 +21,20 @@ import type {
   ReviewCriterionAverage,
 } from '@/types'
 import type { DiscoveryEntity } from '@/types'
+
+/**
+ * The page's one video (ticket 130): an uploaded file wins over a link. The
+ * database allows only one, so the guard only matters for a hand-edited row.
+ */
+function videoFields(row: unknown): { video_embed_url: string | null; video_file_url: string | null } {
+  const v = row as { video_embed_url?: string | null; video_path?: string | null } | null
+  const path = v?.video_path ?? null
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL
+  return {
+    video_embed_url: path ? null : (v?.video_embed_url ?? null),
+    video_file_url: path && base ? listingVideoPublicUrl(base, path) : null,
+  }
+}
 
 // Internal type matching the Supabase nested select result
 type RawRow = {
@@ -211,11 +226,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         )`
       )
       .eq('listing_id', raw.id),
-    // Fail-soft: video_embed_url may not be migrated yet — queried separately so
-    // its absence can't break the page (returns { data: null } on error).
+    // Fail-soft: the video columns (video_embed_url, video_path) may not be
+    // migrated yet. Queried separately with '*' so a missing column can't break
+    // the page (returns { data: null } on error).
     sb
       .from('listing_details_business')
-      .select('video_embed_url')
+      .select('*')
       .eq('listing_id', raw.id)
       .maybeSingle(),
     // Fail-soft: services.group_label may not be migrated yet — queried separately
@@ -427,7 +443,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     cta_url: det?.cta_url ?? null,
     cta_label_override: det?.cta_label_override ?? null,
     ships_nationwide: det?.ships_nationwide ?? raw.ships_nationwide,
-    video_embed_url: (videoData as { video_embed_url: string | null } | null)?.video_embed_url ?? null,
+    ...videoFields(videoData),
     hours: (det?.hours as WeeklyHours | null) ?? null,
     services: (servicesData ?? []).map((s) => ({
       id: s.id,

@@ -16,9 +16,11 @@
 // scanning service, which is a spend decision, not a code change. It is
 // deliberately not attempted here in a way that would look like coverage.
 //
-// Scope: the four types the upload endpoint accepts. Anything else fails
-// closed — an unrecognised declared type has no signature to match, and
-// guessing is how a check like this quietly becomes a no-op.
+// Scope: the four types the upload endpoint accepts, plus the three page-video
+// types (ticket 130), which are checked after a direct-to-storage upload by
+// reading the object's first bytes back. Anything else fails closed — an
+// unrecognised declared type has no signature to match, and guessing is how a
+// check like this quietly becomes a no-op.
 // =============================================================================
 
 /**
@@ -42,6 +44,13 @@ function startsWith(header: Uint8Array, bytes: number[], offset = 0): boolean {
 
 const ASCII_RIFF = [0x52, 0x49, 0x46, 0x46]
 const ASCII_WEBP = [0x57, 0x45, 0x42, 0x50]
+const ASCII_FTYP = [0x66, 0x74, 0x79, 0x70]
+
+// Atom types an older QuickTime file may open with instead of `ftyp`. Phones
+// write `ftyp` first, but a .mov from desktop editing software may not.
+const QUICKTIME_FIRST_ATOMS = ['ftyp', 'moov', 'mdat', 'wide', 'free', 'skip', 'pnot'].map((a) =>
+  Array.from(a, (ch) => ch.charCodeAt(0))
+)
 
 const MATCHERS: Record<string, (header: Uint8Array) => boolean> = {
   // SOI marker, then the first segment marker. Every JFIF/Exif JPEG opens this
@@ -61,6 +70,15 @@ const MATCHERS: Record<string, (header: Uint8Array) => boolean> = {
   // any office suite puts it at byte 0, and accepting a leading-junk PDF means
   // accepting a file that is something else with a PDF stapled inside it.
   'application/pdf': (h) => startsWith(h, [0x25, 0x50, 0x44, 0x46, 0x2d]),
+
+  // ISO base media: a 4-byte box size, then `ftyp`. The size is not checked
+  // for the same reason the RIFF length is not.
+  'video/mp4': (h) => startsWith(h, ASCII_FTYP, 4),
+
+  'video/quicktime': (h) => QUICKTIME_FIRST_ATOMS.some((atom) => startsWith(h, atom, 4)),
+
+  // The EBML magic number every Matroska/WebM file opens with.
+  'video/webm': (h) => startsWith(h, [0x1a, 0x45, 0xdf, 0xa3]),
 }
 
 /**

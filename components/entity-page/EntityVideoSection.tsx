@@ -30,8 +30,11 @@ function toEmbedSrc(url: string | null): string | null {
 }
 
 export function EntityVideoSection({ entity }: { entity: EntityPageData }) {
-  const src = toEmbedSrc(entity.details.video_embed_url)
-  if (!src) return null
+  // An uploaded video (ticket 130) plays in the browser's own player. A link
+  // plays in the YouTube or Vimeo embed. The page has one or the other.
+  const fileSrc = entity.details.video_file_url
+  const src = fileSrc ? null : toEmbedSrc(entity.details.video_embed_url)
+  if (!fileSrc && !src) return null
 
   return (
     <section aria-labelledby="video-heading" className="bg-cream py-12 md:py-16">
@@ -44,14 +47,26 @@ export function EntityVideoSection({ entity }: { entity: EntityPageData }) {
         </h2>
         <div className="md:max-w-3xl">
           <div className="relative w-full aspect-video overflow-hidden rounded-xl bg-deep-bg">
-            <iframe
-              src={src}
-              title={`${entity.name} video`}
-              className="absolute inset-0 size-full"
-              loading="lazy"
-              allow="encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
+            {fileSrc ? (
+              // #t=0.1 makes Safari draw the first frame instead of a black box.
+              <video
+                src={`${fileSrc}#t=0.1`}
+                controls
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 size-full"
+                aria-label={`${entity.name} video`}
+              />
+            ) : (
+              <iframe
+                src={src ?? undefined}
+                title={`${entity.name} video`}
+                className="absolute inset-0 size-full"
+                loading="lazy"
+                allow="encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            )}
           </div>
         </div>
       </div>
