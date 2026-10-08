@@ -140,12 +140,12 @@ export default async function ForBusinessPage() {
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-[3px]">
             <Image
-              src="/images/editorial/cafe-planning.webp"
-              alt="A woman in glasses writes in a notebook beside a tablet and a cup of coffee at an outdoor cafe table."
+              src="/images/editorial/citrus-harvest.webp"
+              alt="A grower in work gloves checks ripe oranges on a tree in his orchard."
               fill
               priority
               sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover object-[50%_20%]"
+              className="object-cover object-[40%_40%]"
             />
           </div>
         </Container>
