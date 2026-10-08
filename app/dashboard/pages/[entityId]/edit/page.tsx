@@ -12,28 +12,13 @@ import {
   JOB_POSTING_PRICE_DISPLAY,
 } from '@/lib/stripe/jobPostings'
 import { buildEntityUrl } from '@/lib/listings/url'
-import { loadAttributeGroups } from '@/lib/listings/facets'
-import {
-  attributeLimit,
-  canAccess,
-  descriptionCharLimit,
-  faqLimit,
-  TIER_RANK,
-} from '@/lib/stripe/features'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
-import { AboutSection } from '@/components/dashboard/AboutSection'
-import { ContactSection } from '@/components/dashboard/ContactSection'
-import { SocialSection } from '@/components/dashboard/SocialSection'
-import { AttributesSection } from '@/components/dashboard/AttributesSection'
-import { VideoSection } from '@/components/dashboard/VideoSection'
-import { LinksSection } from '@/components/dashboard/LinksSection'
-import { FaqSection } from '@/components/dashboard/FaqSection'
 import { EventDetailsSection } from '@/components/dashboard/EventDetailsSection'
 import { JobDetailsSection } from '@/components/dashboard/JobDetailsSection'
-import { CtaSection } from '@/components/dashboard/CtaSection'
 import { SeoSection } from '@/components/dashboard/SeoSection'
-import { HoursSection } from '@/components/dashboard/HoursSection'
 import { PublishSection } from '@/components/dashboard/PublishSection'
+import { loadFinishData } from '@/lib/listings/finishData'
+import { PageFinishView } from '@/components/listings/PageFinishView'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -50,15 +35,7 @@ export default async function EditPage({ params }: Props) {
       `
       id, name, slug, status, trust_tier, entity_type, tier, tagline, meta_title, meta_description,
       created_at,
-      cities(slug, name),
-      listing_details_business(
-        description, phone, email, website_url,
-        address_line_1, address_line_2, state, zip,
-        social_instagram, social_facebook, social_linkedin,
-        social_tiktok, social_youtube, social_twitter,
-        cta_type, cta_url, cta_label_override,
-        hours
-      )
+      cities(slug, name)
     `
     )
     .eq('id', entityId)
@@ -285,80 +262,15 @@ export default async function EditPage({ params }: Props) {
     )
   }
 
-  // Attribute groups for this entity type + the listing's current selections,
-  // plus the (fail-soft) video field — queried separately so a not-yet-migrated
-  // column can't break the editor.
-  const sb = supabase as unknown as SupabaseClient
-  const [
-    attributeGroups,
-    { data: selectedAttrRows },
-    { data: videoRow },
-    { data: linkRows },
-    { data: faqRows },
-  ] = await Promise.all([
-    loadAttributeGroups(supabase, listing.entity_type),
-    sb.from('listing_attributes').select('value_id').eq('listing_id', listing.id),
-    sb
-      .from('listing_details_business')
-      .select('video_embed_url')
-      .eq('listing_id', listing.id)
-      .maybeSingle(),
-    sb
-      .from('listing_links')
-      .select('id, link_type, url, label')
-      .eq('listing_id', listing.id)
-      .order('display_order', { ascending: true }),
-    // Fail-soft: listing_faqs may not be migrated yet.
-    sb
-      .from('listing_faqs')
-      .select('id, question, answer')
-      .eq('listing_id', listing.id)
-      .order('display_order', { ascending: true }),
-  ])
-  const selectedValueIds = ((selectedAttrRows as { value_id: string }[] | null) ?? []).map(
-    (r) => r.value_id
-  )
-  const videoEmbedUrl =
-    (videoRow as { video_embed_url: string | null } | null)?.video_embed_url ?? null
-  const links =
-    (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
-    []
-  const faqs = (faqRows as { id: string; question: string; answer: string }[] | null) ?? []
-
-  const details = listing.listing_details_business as {
-    description: string | null
-    phone: string | null
-    email: string | null
-    website_url: string | null
-    address_line_1: string | null
-    address_line_2: string | null
-    state: string | null
-    zip: string | null
-    social_instagram: string | null
-    social_facebook: string | null
-    social_linkedin: string | null
-    social_tiktok: string | null
-    social_youtube: string | null
-    social_twitter: string | null
-    cta_type: string | null
-    cta_url: string | null
-    cta_label_override: string | null
-    hours: Record<string, { open: string; close: string; closed: boolean }> | null
-  } | null
-
-  // Plan limits (ticket 119). The server actions enforce them; these props let
-  // each section say so up front instead of failing on save.
-  const tier = listing.tier
-  const showUpgrade = (TIER_RANK[tier ?? 'free'] ?? 0) === 0
-
-  const city = listing.cities as { slug: string; name: string } | null
-  const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
-
+  // Every other page (business, creative, service provider, vendor) edits in
+  // the same side-by-side finish view a new owner uses (ticket 129).
+  const data = await loadFinishData(supabase, listing.id, owner.user.id)
+  if (!data) notFound()
+  const cityB = listing.cities as { slug: string; name: string } | null
   return (
-    <div className="max-w-2xl space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <div className="max-w-[1100px] space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
           <h1 className="font-headline text-2xl text-brand-black">{listing.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             <span
@@ -372,99 +284,26 @@ export default async function EditPage({ params }: Props) {
             >
               {listing.status}
             </span>
-            {city && <p className="font-body text-xs text-charcoal-soft">{city.name}</p>}
+            {cityB && <p className="font-body text-xs text-charcoal-soft">{cityB.name}</p>}
           </div>
         </div>
-        {publicUrl && (
+        {data.publicUrl && (
           <Link
-            href={publicUrl}
+            href={data.publicUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-brand-black transition-colors"
           >
-            Preview <ExternalLink className="size-3" aria-hidden="true" />
+            {listing.status === 'published' ? 'View live page' : 'Preview'}{' '}
+            <ExternalLink className="size-3" aria-hidden="true" />
           </Link>
         )}
       </div>
 
-      <PublishSection
-        listingId={listing.id}
-        status={listing.status}
-        trustTier={listing.trust_tier}
-        entityType={listing.entity_type}
-      />
-
-      <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />
-
-      <AboutSection
-        listingId={listing.id}
-        description={details?.description ?? null}
-        charLimit={descriptionCharLimit(tier)}
-        showUpgrade={showUpgrade}
-      />
-
-      <ContactSection
-        listingId={listing.id}
-        phone={details?.phone ?? null}
-        email={details?.email ?? null}
-        websiteUrl={details?.website_url ?? null}
-        addressLine1={details?.address_line_1 ?? null}
-        addressLine2={details?.address_line_2 ?? null}
-        state={details?.state ?? null}
-        zip={details?.zip ?? null}
-      />
-
-      <HoursSection listingId={listing.id} hours={details?.hours ?? null} />
-
-      <SocialSection
-        listingId={listing.id}
-        socialInstagram={details?.social_instagram ?? null}
-        socialFacebook={details?.social_facebook ?? null}
-        socialLinkedin={details?.social_linkedin ?? null}
-        socialTiktok={details?.social_tiktok ?? null}
-        socialYoutube={details?.social_youtube ?? null}
-        socialTwitter={details?.social_twitter ?? null}
-        locked={!canAccess(tier, 'social_links')}
-        showUpgrade={showUpgrade}
-      />
-
-      <AttributesSection
-        listingId={listing.id}
-        groups={attributeGroups}
-        selectedValueIds={selectedValueIds}
-        limit={attributeLimit(tier)}
-        showUpgrade={showUpgrade}
-      />
-
-      <VideoSection
-        listingId={listing.id}
-        videoEmbedUrl={videoEmbedUrl}
-        locked={!canAccess(tier, 'listing_video')}
-        showUpgrade={showUpgrade}
-      />
-
-      <LinksSection listingId={listing.id} links={links} />
-
-      <FaqSection
-        listingId={listing.id}
-        faqs={faqs}
-        limit={faqLimit(tier)}
-        showUpgrade={showUpgrade}
-      />
-
-      <CtaSection
-        listingId={listing.id}
-        ctaType={details?.cta_type ?? null}
-        ctaUrl={details?.cta_url ?? null}
-        ctaLabelOverride={details?.cta_label_override ?? null}
-      />
-
-      <SeoSection
-        listingId={listing.id}
-        metaTitle={listing.meta_title}
-        metaDescription={listing.meta_description}
-        name={listing.name}
-        description={details?.description ?? null}
+      <PageFinishView
+        data={data}
+        mode="edit"
+        storageUrl={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`}
       />
     </div>
   )

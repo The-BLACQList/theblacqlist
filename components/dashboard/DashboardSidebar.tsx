@@ -30,10 +30,12 @@ export function DashboardSidebar({ ownerEmail }: Props) {
     return pathname.startsWith(href)
   }
 
+  // Phones get a full-width bar with rows that scroll sideways, so the page
+  // keeps the whole screen width; md and up keep the side column.
   return (
-    <aside className="w-56 shrink-0 bg-brand-black min-h-screen flex flex-col">
+    <aside className="w-full md:w-56 shrink-0 bg-brand-black md:min-h-screen flex flex-col">
       {/* Logo area */}
-      <div className="px-5 py-5 border-b border-white/10">
+      <div className="px-4 py-3 md:px-5 md:py-5 border-b border-white/10">
         <Link
           href="/dashboard"
           className="font-headline text-base text-gold leading-tight flex items-center gap-3"
@@ -48,66 +50,70 @@ export function DashboardSidebar({ ownerEmail }: Props) {
       </div>
 
       {/* Main nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5" aria-label="Dashboard navigation">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
-          const active = isActive(href, exact)
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
-                active
-                  ? 'bg-amber-gold/15 text-gold'
-                  : 'text-white/70 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              {label}
-            </Link>
-          )
-        })}
+      <nav className="flex-1 px-3 py-2 md:py-4" aria-label="Dashboard navigation">
+        <div className="flex gap-1 overflow-x-auto md:block md:space-y-0.5">
+          {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+            const active = isActive(href, exact)
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
+                  active
+                    ? 'bg-amber-gold/15 text-gold'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
+                {label}
+              </Link>
+            )
+          })}
+        </div>
 
         {/* Page-specific nav when on a page route */}
         {entityId && (
-          <div className="pt-3 mt-1 border-t border-white/10">
+          <div className="pt-2 mt-2 md:pt-3 md:mt-1 border-t border-white/10">
             <p className="px-3 pb-1 font-subhead text-[10px] uppercase tracking-widest text-white/30">
               This page
             </p>
-            {[
-              { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
-              { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
-              { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },
-              { href: `/dashboard/pages/${entityId}/analytics`, label: 'Analytics' },
-              { href: `/dashboard/pages/${entityId}/ai-suggestions`, label: 'AI Suggestions' },
-              { href: `/dashboard/pages/${entityId}/verification`, label: 'Get Verified' },
-            ].map(({ href, label }) => {
-              const active = pathname === href || pathname.startsWith(href + '/')
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
-                    active
-                      ? 'bg-amber-gold/15 text-gold'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <ChevronRight className="size-3 shrink-0 opacity-50" aria-hidden="true" />
-                  {label}
-                </Link>
-              )
-            })}
+            <div className="flex gap-1 overflow-x-auto md:block">
+              {[
+                { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
+                { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
+                { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },
+                { href: `/dashboard/pages/${entityId}/analytics`, label: 'Analytics' },
+                { href: `/dashboard/pages/${entityId}/ai-suggestions`, label: 'AI Suggestions' },
+                { href: `/dashboard/pages/${entityId}/verification`, label: 'Get Verified' },
+              ].map(({ href, label }) => {
+                const active = pathname === href || pathname.startsWith(href + '/')
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-2 rounded-lg font-subhead text-sm transition-colors ${
+                      active
+                        ? 'bg-amber-gold/15 text-gold'
+                        : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <ChevronRight className="size-3 shrink-0 opacity-50" aria-hidden="true" />
+                    {label}
+                  </Link>
+                )
+              })}
+            </div>
           </div>
         )}
       </nav>
 
       {/* Footer */}
       {ownerEmail && (
-        <div className="px-5 py-4 border-t border-white/10">
+        <div className="flex items-baseline justify-between gap-3 px-4 py-2 md:block md:px-5 md:py-4 border-t border-white/10">
           <p className="font-mono text-[10px] text-white/30 truncate">{ownerEmail}</p>
           <Link
             href="/account"
-            className="font-subhead text-xs text-white/50 hover:text-white/80 mt-0.5 block"
+            className="shrink-0 font-subhead text-xs text-white/50 hover:text-white/80 md:mt-0.5 block"
           >
             Account settings →
           </Link>

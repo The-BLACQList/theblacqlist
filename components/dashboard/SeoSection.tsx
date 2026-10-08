@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
 
@@ -14,6 +15,7 @@ interface Props {
 
 export function SeoSection({ listingId, metaTitle, metaDescription, name, description }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
+  const saveLabel = useSaveLabel()
   const [titleChars, setTitleChars] = useState(metaTitle?.length ?? 0)
   const [descChars, setDescChars] = useState(metaDescription?.length ?? 0)
 
@@ -100,7 +102,7 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? 'Saving…' : saveLabel}
           </button>
         </div>
       </form>

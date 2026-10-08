@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateCtaAction } from '@/lib/actions/dashboard/updateCta'
 
@@ -33,6 +34,7 @@ const CTA_OPTIONS: { value: string; label: string; requiresUrl: boolean }[] = [
 
 export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Props) {
   const [state, formAction, isPending] = useActionState(updateCtaAction, null)
+  const saveLabel = useSaveLabel()
   const [selectedType, setSelectedType] = useState(ctaType ?? '')
 
   const selectedOption = CTA_OPTIONS.find((o) => o.value === selectedType)
@@ -142,7 +144,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? 'Saving…' : saveLabel}
           </button>
         </div>
       </form>

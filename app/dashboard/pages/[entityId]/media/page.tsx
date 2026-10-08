@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { MediaGrid } from '@/components/dashboard/MediaGrid'
@@ -14,13 +14,17 @@ export default async function MediaPage({ params }: Props) {
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name, cover_image_path')
+    .select('id, name, entity_type, cover_image_path')
     .eq('id', entityId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .maybeSingle()
 
   if (!listing) notFound()
+  // Business-shaped pages edit everything in one finish view (ticket 129);
+  // old links land on the matching section there.
+  if (listing.entity_type !== 'event' && listing.entity_type !== 'job')
+    redirect(`/dashboard/pages/${listing.id}/edit#photos`)
 
   const { data: media } = await supabase
     .from('media_attachments')

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import type { UpdateListingContentState } from '@/lib/actions/dashboard/updateListingContent'
 import type { UpdateCtaState } from '@/lib/actions/dashboard/updateCta'
@@ -16,6 +17,7 @@ interface Props {
 
 export function EditorSectionShell({ title, children, listingId, action }: Props) {
   const [state, formAction, isPending] = useActionState(action, null)
+  const saveLabel = useSaveLabel()
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -51,7 +53,7 @@ export function EditorSectionShell({ title, children, listingId, action }: Props
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save'}
+            {isPending ? 'Saving…' : saveLabel}
           </button>
         </div>
       </form>
