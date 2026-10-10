@@ -44,7 +44,7 @@ const PANELS: readonly Panel[] = [
   {
     index: '03',
     title: 'Connect',
-    body: 'See how our spending links us in The Collective.',
+    body: 'Track the dollars we keep in community.',
     href: '/flow-map',
     photo: '/images/editorial/diaspora-creative-agency.webp',
     // The Collective is covered until it opens (ticket 122).
