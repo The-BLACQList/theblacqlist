@@ -184,7 +184,7 @@ export function announceTransition(
   if (prev === null) return null
 
   if (prev.completedAt === null && next.completedAt !== null) {
-    return 'Tour complete. You finished all four written steps — your trial is ready to claim.'
+    return 'Tour complete. You finished all four written steps. Your free month is ready.'
   }
 
   const before = new Map(prev.steps.map((s) => [s.key, s.status]))

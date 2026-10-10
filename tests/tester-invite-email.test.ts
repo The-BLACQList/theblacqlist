@@ -95,6 +95,16 @@ describe('the owner variant', () => {
     const html = await renderInvite({ variant: 'owner', previewLink: LINK })
     expect(html).toMatch(/one month of The BLACQList free on any tier/i)
   })
+
+  it('ties the free month to finishing the short steps, and can be held', async () => {
+    // [Decision — founder, 2026-10-10]: only testers who finish the walk get
+    // it, and they can save it for the plan they want.
+    const html = await renderInvite({ variant: 'owner', previewLink: LINK })
+    expect(html).toMatch(/Finish them and you get one month/i)
+    expect(html).toMatch(/save it until the plan you want opens/i)
+    expect(html).not.toMatch(/\btrial\b/i)
+    expect(html).not.toMatch(/\btour\b/i)
+  })
 })
 
 describe('the supporter variant', () => {

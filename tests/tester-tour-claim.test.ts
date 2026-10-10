@@ -25,7 +25,8 @@ const h = vi.hoisted(() => {
         trialGrantedAt: string | null
       }
     } | null,
-    plan: null as Record<string, unknown> | null,
+    // Active plan rows by plan_key, as the plan guard sees them.
+    plans: {} as Record<string, Record<string, unknown> | null>,
     row: {
       id: 'enr-1',
       trial_granted_at: null as string | null,
@@ -40,9 +41,10 @@ const h = vi.hoisted(() => {
     log: [] as string[],
   }
 
-  const resolveTourViewer = vi.fn(async () => state.viewer)
+  const resolveTrialClaimer = vi.fn(async () => state.viewer)
   const createSession = vi.fn()
   const retrieveSession = vi.fn()
+  const expireSession = vi.fn()
 
   function runUpdate(q: { table: string; payload: Record<string, unknown>; filters: Filter[]; wantsRows: boolean }) {
     state.updates.push({ table: q.table, payload: q.payload, filters: q.filters })
@@ -92,7 +94,10 @@ const h = vi.hoisted(() => {
           return q
         },
         async maybeSingle() {
-          if (q.table === 'plans') return { data: state.plan, error: null }
+          if (q.table === 'plans') {
+            const key = q.filters.find((f) => f.col === 'plan_key')?.val as string
+            return { data: state.plans[key] ?? null, error: null }
+          }
           if (q.table === 'tour_enrollments') {
             return {
               data: { stripe_checkout_session_id: state.row.stripe_checkout_session_id },
@@ -120,18 +125,37 @@ const h = vi.hoisted(() => {
     },
   }))
 
-  return { state, resolveTourViewer, createSession, retrieveSession, createServiceClient }
+  return { state, resolveTrialClaimer, createSession, retrieveSession, expireSession, createServiceClient }
 })
 
-vi.mock('@/lib/tour/witness', () => ({ resolveTourViewer: h.resolveTourViewer }))
+// Only the resolver is doubled; LIVE_STATUSES stays the real list. The real
+// resolver never reads FEATURE_TESTER_TOUR, which is what lets the claim
+// outlive the tour (founder answer 3, 2026-10-10).
+vi.mock('@/lib/tour/freeMonth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/tour/freeMonth')>()),
+  resolveTrialClaimer: h.resolveTrialClaimer,
+}))
 vi.mock('@/lib/supabase/server', () => ({ createServiceClient: h.createServiceClient }))
 vi.mock('@/lib/stripe/client', () => ({
   stripe: {
-    checkout: { sessions: { create: h.createSession, retrieve: h.retrieveSession } },
+    checkout: {
+      sessions: { create: h.createSession, retrieve: h.retrieveSession, expire: h.expireSession },
+    },
   },
 }))
 
-import { POST } from '@/app/api/tour/claim/route'
+import { POST as claimRoute } from '@/app/api/tour/claim/route'
+
+/** POST the claim. No argument sends an empty body (the old one-button call). */
+function POST(body?: unknown) {
+  return claimRoute(
+    new Request('http://app.test/api/tour/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body === undefined ? '' : typeof body === 'string' ? body : JSON.stringify(body),
+    })
+  )
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -146,7 +170,12 @@ beforeEach(() => {
       trialGrantedAt: null,
     },
   }
-  h.state.plan = { id: 'plan-starter', stripe_price_id_monthly: 'price_starter_monthly' }
+  // Today only Starter is open; Growth and Premium have no price yet.
+  h.state.plans = {
+    starter: { id: 'plan-starter', stripe_price_id_monthly: 'price_starter_monthly' },
+    growth: { id: 'plan-growth', stripe_price_id_monthly: null },
+    premium: null,
+  }
   h.state.row = { id: 'enr-1', trial_granted_at: null, stripe_checkout_session_id: null }
   h.state.liveSubs = []
   h.state.updates = []
@@ -159,7 +188,7 @@ beforeEach(() => {
 })
 
 describe('POST /api/tour/claim — gates before the claim', () => {
-  it('404 when the viewer does not resolve (flag off / signed out / not enrolled)', async () => {
+  it('404 when the viewer does not resolve (signed out / not enrolled)', async () => {
     h.state.viewer = null
     const res = await POST()
     expect(res.status).toBe(404)
@@ -186,11 +215,11 @@ describe('POST /api/tour/claim — gates before the claim', () => {
     expect(h.createSession).not.toHaveBeenCalled()
   })
 
-  it('422 for a missing Starter price WITHOUT burning the claim (§4.3.2)', async () => {
-    h.state.plan = { id: 'plan-starter', stripe_price_id_monthly: null }
+  it('422 PLAN_NOT_OPEN for a missing Starter price WITHOUT burning the claim (§4.3.2)', async () => {
+    h.state.plans.starter = { id: 'plan-starter', stripe_price_id_monthly: null }
     const res = await POST()
     expect(res.status).toBe(422)
-    expect((await res.json()).code).toBe('UNPROCESSABLE')
+    expect((await res.json()).code).toBe('PLAN_NOT_OPEN')
     // The whole point of guard-before-CAS: no update ever ran, so the one
     // claim is intact and a later request can still succeed.
     expect(h.state.updates).toHaveLength(0)
@@ -362,6 +391,10 @@ describe('POST /api/tour/claim — already granted at entry', () => {
     // No second compare-and-set on the recovery path.
     expect(h.state.log).not.toContain('cas')
     expect(h.state.row.stripe_checkout_session_id).toBe('cs_tour_1')
+    // Keyed on the session it replaces, so Stripe can't hand back the dead one.
+    expect(h.createSession.mock.calls[0]![1]).toEqual({
+      idempotencyKey: 'tour-trial:enr-1:cs_prior',
+    })
   })
 
   it('recovers a claim whose session was never persisted (lost response)', async () => {
@@ -383,5 +416,146 @@ describe('POST /api/tour/claim — already granted at entry', () => {
     expect(res.status).toBe(500)
     expect(h.state.log).not.toContain('release')
     expect(h.state.row.trial_granted_at).toBe('2026-08-31T00:00:00Z')
+  })
+})
+
+describe('POST /api/tour/claim — the request body', () => {
+  it('400 on a body that is not JSON, touching nothing', async () => {
+    const res = await POST('{not json')
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('VALIDATION_ERROR')
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('400 on a tier that is not a paid tier', async () => {
+    const res = await POST({ plan: 'free' })
+    expect(res.status).toBe(400)
+    expect(h.state.updates).toHaveLength(0)
+  })
+
+  it('400 on an unknown key', async () => {
+    const res = await POST({ plan: 'starter', trial_days: 300 })
+    expect(res.status).toBe(400)
+    expect(h.state.updates).toHaveLength(0)
+  })
+
+  it('no plan named lands a fresh claim on Starter', async () => {
+    await POST({})
+    expect(h.createSession.mock.calls[0]![0].metadata.plan_slug).toBe('starter')
+  })
+})
+
+describe('POST /api/tour/claim — any paid tier (founder, 2026-10-10)', () => {
+  it('checks out on the tier the tester picked, with that tier’s price', async () => {
+    h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    const args = h.createSession.mock.calls[0]![0]
+    expect(args.line_items).toEqual([{ price: 'price_growth_monthly', quantity: 1 }])
+    expect(args.metadata.plan_slug).toBe('growth')
+    expect(args.metadata.plan_id).toBe('plan-growth')
+    expect(args.subscription_data.metadata.plan_slug).toBe('growth')
+    // Same safety on every tier: these passed the real assertTrialCancels.
+    expect(args.subscription_data.trial_settings.end_behavior.missing_payment_method).toBe('cancel')
+    // The first-session key carries no tier.
+    expect(h.createSession.mock.calls[0]![1]).toEqual({ idempotencyKey: 'tour-trial:enr-1' })
+  })
+
+  it.each(['growth', 'premium'] as const)(
+    '422 PLAN_NOT_OPEN for %s before it opens, and the month keeps waiting',
+    async (plan) => {
+      const res = await POST({ plan })
+      expect(res.status).toBe(422)
+      const body = await res.json()
+      expect(body.code).toBe('PLAN_NOT_OPEN')
+      expect(body.error).toMatch(/free month will wait/)
+      expect(h.state.updates).toHaveLength(0)
+      expect(h.state.row.trial_granted_at).toBeNull()
+      expect(h.createSession).not.toHaveBeenCalled()
+    }
+  )
+
+  it('a held month can still be used on Starter after a Growth refusal', async () => {
+    expect((await POST({ plan: 'growth' })).status).toBe(422)
+    const res = await POST({ plan: 'starter' })
+    expect(res.status).toBe(200)
+    expect(h.createSession).toHaveBeenCalledTimes(1)
+  })
+
+  it('a tester already paying is refused WITHOUT spending the month (saved for ticket 136)', async () => {
+    h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
+    h.state.liveSubs = [{ id: 'sub-row-1' }]
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.code).toBe('ALREADY_SUBSCRIBED')
+    expect(body.error).toMatch(/saving your free month/)
+    expect(h.state.log).not.toContain('cas')
+    expect(h.state.row.trial_granted_at).toBeNull()
+  })
+})
+
+describe('POST /api/tour/claim — switching tiers on an open checkout', () => {
+  beforeEach(() => {
+    h.state.viewer!.enrollment.trialGrantedAt = '2026-08-31T00:00:00Z'
+    h.state.row.trial_granted_at = '2026-08-31T00:00:00Z'
+    h.state.row.stripe_checkout_session_id = 'cs_prior'
+    h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
+    h.retrieveSession.mockResolvedValue({
+      status: 'open',
+      url: 'https://checkout.stripe.test/resume',
+      metadata: { plan_slug: 'starter' },
+    })
+  })
+
+  it('same tier hands back the open checkout', async () => {
+    const res = await POST({ plan: 'starter' })
+    expect(await res.json()).toEqual({ data: { url: 'https://checkout.stripe.test/resume' } })
+    expect(h.expireSession).not.toHaveBeenCalled()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('a new tier closes the old checkout first, then opens one keyed on it', async () => {
+    h.expireSession.mockImplementation(async () => {
+      h.state.log.push('stripe:expire')
+      return { id: 'cs_prior', status: 'expired' }
+    })
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    expect(h.expireSession).toHaveBeenCalledWith('cs_prior')
+    expect(h.state.log.indexOf('stripe:expire')).toBeLessThan(h.state.log.indexOf('stripe:create'))
+    expect(h.createSession.mock.calls[0]![0].metadata.plan_slug).toBe('growth')
+    expect(h.createSession.mock.calls[0]![1]).toEqual({
+      idempotencyKey: 'tour-trial:enr-1:cs_prior',
+    })
+    expect(h.state.log).not.toContain('cas')
+  })
+
+  it('opens nothing new when the old checkout cannot be closed', async () => {
+    h.expireSession.mockRejectedValue(new Error('already complete'))
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(500)
+    expect(h.createSession).not.toHaveBeenCalled()
+    expect(h.state.row.stripe_checkout_session_id).toBe('cs_prior')
+  })
+
+  it('does not close the old checkout when the new tier is not open', async () => {
+    const res = await POST({ plan: 'premium' })
+    expect(res.status).toBe(422)
+    expect((await res.json()).code).toBe('PLAN_NOT_OPEN')
+    expect(h.expireSession).not.toHaveBeenCalled()
+  })
+
+  it('a resume with no tier named stays on the tier of an expired checkout', async () => {
+    h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
+    h.retrieveSession.mockResolvedValue({
+      status: 'expired',
+      url: null,
+      metadata: { plan_slug: 'growth' },
+    })
+    const res = await POST()
+    expect(res.status).toBe(200)
+    expect(h.createSession.mock.calls[0]![0].metadata.plan_slug).toBe('growth')
   })
 })

@@ -18,6 +18,7 @@
 // and how the reflection saves (TourReflectionForm.tsx).
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
 
@@ -33,7 +34,6 @@ import {
   optionalUnfinishedSteps,
   pendingReflectionCount,
 } from '@/lib/tour/progress'
-import { ClaimTrialButton } from './ClaimTrialButton'
 import { TourStepRow } from './TourStepRow'
 import {
   applySpotlight,
@@ -301,25 +301,25 @@ export function TourRail() {
                   That&apos;s the walk. Thank you.
                 </p>
                 {/* D2: a supporter tester has no listing, so their finish is a
-                    thank-you with no trial and no claim button. */}
+                    thank-you with no free month and no link. */}
                 <p className="mt-1 font-subhead text-sm text-cream/80">
                   {tour.kind === 'supporter'
                     ? 'You finished the walk. Thank you, this shapes what we build next.'
                     : tour.trialGrantedAt === null
-                      ? 'You finished every written step. Your 30-day Starter trial is ready.'
-                      : 'Your trial claim is in — resume checkout if you didn’t finish it.'}
+                      ? 'You finished every written step. Your free month is ready. Use it now or save it for a bigger plan.'
+                      : 'You started your free month. If you didn’t finish checkout, you can pick it back up.'}
                 </p>
 
-                {tour.kind === 'supporter' ? null : tour.canClaim || tour.trialGrantedAt !== null ? (
-                  <ClaimTrialButton claimed={tour.trialGrantedAt !== null} />
-                ) : (
-                  // `canClaim` is the server's word, not ours. It can be false
-                  // on a complete tour (already subscribed, enrollment closed),
-                  // and rendering a claim button the claim route will refuse is
-                  // worse than rendering none.
-                  <p className="mt-3 font-subhead text-sm text-cream/70">
-                    Nothing left to claim on this account.
-                  </p>
+                {/* The free month is chosen on the plan page, not here: the
+                    tester picks the tier, or holds it until the tier they want
+                    opens (founder, 2026-10-10). The rail only points there. */}
+                {tour.kind === 'supporter' ? null : (
+                  <Link
+                    href="/dashboard/upgrade#free-month"
+                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-amber-gold px-5 py-2.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
+                  >
+                    {tour.trialGrantedAt === null ? 'See your free month' : 'Go to your free month'}
+                  </Link>
                 )}
 
                 <OptionalLeftovers tour={tour} />

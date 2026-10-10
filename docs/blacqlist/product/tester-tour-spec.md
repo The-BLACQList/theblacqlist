@@ -2,7 +2,9 @@
 
 **Status:** approved for build · **Owner:** founder · **Written:** 2026-09-01
 
-An invited tester walks the real product behind the coming-soon gate. Finishing unlocks a one-click **30-day Stripe-native Starter trial** on a listing they already own.
+An invited tester walks the real product behind the coming-soon gate. Finishing unlocks **one free month (a 30-day Stripe-native trial) on any paid tier**, on a listing they already own. They can use it right away or hold it as long as they like.
+
+> **Changed 2026-10-10 (founder):** the reward was a Starter-only trial. It is now any tier, and the tester can wait for Growth or Premium to open instead of being pushed onto Starter. See §4.4.
 
 ---
 
@@ -65,7 +67,7 @@ The test suite enforces this with a Supabase double whose `from('analytics_event
 
 ## 4. The reward, and the one thing that must not go wrong
 
-A completed tour unlocks a **30-day Starter trial**, created through Stripe Checkout with no card required.
+A completed tour unlocks **one free month on the paid tier the tester picks** (Starter, Growth or Premium), created through Stripe Checkout as a 30-day trial with no card required. The tester picks the tier on the upgrade page's "Your free month" card (`/dashboard/upgrade#free-month`).
 
 ### 4.1 The trial must actually end
 
@@ -79,18 +81,30 @@ So `missing_payment_method: 'cancel'` is not a preference — it is the only set
 
 ### 4.2 Zero lines change in the webhook handler
 
-Our sessions deliberately carry **no `purpose` key**, so `handleCheckoutSessionCompleted` does not take its early return (that branch belongs to one-off job-posting purchases). The session falls through to the ordinary subscription path, the tier is re-resolved from the live price, the tester lands on `starter`, and the trial-end cancellation arrives as a normal `customer.subscription.deleted`.
+Our sessions deliberately carry **no `purpose` key**, so `handleCheckoutSessionCompleted` does not take its early return (that branch belongs to one-off job-posting purchases). The session falls through to the ordinary subscription path, the tier is re-resolved from the live price, the tester lands on whichever tier they picked, and the trial-end cancellation arrives as a normal `customer.subscription.deleted`.
 
 A test asserts `'purpose' in metadata === false` so this stays true.
 
 ### 4.3 The claim protocol
 
+The request body is `{ plan?: 'starter' | 'growth' | 'premium' }`, validated strictly. With no plan, a fresh claim lands on Starter, and a resume hands back whatever checkout is already open.
+
 1. **Compare-and-set first, before Stripe is called.** `UPDATE tour_enrollments SET trial_granted_at = now() WHERE id = $1 AND trial_granted_at IS NULL RETURNING id`. The `RETURNING` is what makes a zero-row update *observable* — without it, a second claim looks identical to a first. Two concurrent claims produce **one 200 and one 409**, and Stripe is called exactly once.
-2. **The claim block sits *after* the existing 422 guard** on the checkout route, so a null Starter price cannot burn the tester's one and only claim.
-3. **A stable Stripe idempotency key**, `tour-trial:${enrollmentId}`. Without it, a lost response on retry creates a **second subscription** that the release-on-failure guard cannot see.
+2. **Two refusals run before the claim and never spend it.** A tier with no active plan row or no monthly price answers 422 `PLAN_NOT_OPEN` ("Growth isn't open yet. Your free month will wait for it."). A listing that already has a live subscription answers 409 `ALREADY_SUBSCRIBED`, and the month is saved for an upgrade (§4.4).
+3. **Stable Stripe idempotency keys.** The first session is `tour-trial:${enrollmentId}`, with no tier in it. Without a key, a lost response on retry creates a **second subscription** that the release-on-failure guard cannot see; with no tier in it, a retry for a different tier is refused by Stripe (same key, different params) instead of opening a second session nobody can see. A session that replaces an earlier one is keyed on the one it replaces: `tour-trial:${enrollmentId}:${priorSessionId}`.
 4. **Release on failure.** If Stripe throws, `trial_granted_at` is set back to NULL — carrying the same `.is('trial_granted_at', null)`-style guard so the release cannot clobber a concurrent winner.
 
+5. **Already claimed at entry** (a later request after a claim): no session stored → re-create with the first key (recovers a lost response); session open, same tier or none named → hand back its URL; session open, different tier → `checkout.sessions.expire` the old one first, then create the new one (if the expire fails, open nothing and answer 500); session expired → create a fresh one; session complete → 409 `ALREADY_CLAIMED`.
+
 Three partial unique indexes are the database backstop for the same properties: one live enrollment per tester, one trial per tester ever, one trial per listing ever. Two `CHECK` constraints make the bad states unrepresentable: a trial cannot exist without a completed tour, and a checkout session id cannot exist without a claim.
+
+### 4.4 Holding the month (founder, 2026-10-10)
+
+1. **Only testers who finish the walk get it.** `completed_at` set and a listing on the enrollment. The invite email says the month unlocks when they finish the short steps.
+2. **Holding needs no new column.** An unclaimed enrollment (`trial_granted_at` null) never expires. Ending an enrollment (`ended_at`, an admin action) does close it, the same as it closes the tour.
+3. **The month outlives the tour.** `/api/tour/claim` and the card use `resolveTrialClaimer` (`lib/tour/freeMonth.ts`), which does not read `FEATURE_TESTER_TOUR`. Switching the flag off removes the rail, not the month.
+4. **A tester already paying keeps it for an upgrade.** Putting a trial on top of a live subscription would mean two subscriptions writing one `listings.tier`, and the trial's day-30 cancel would downgrade a paid listing. So today the claim refuses without spending the month, and the card says it is saved. Applying it to the existing subscription is **ticket 136**, which must ship before Growth or Premium get price IDs.
+5. **The card** shows one of three states: ready (a button per paid tier above the listing's current tier; tiers not open say "Coming soon. Your free month will wait."), saved (the listing already pays), or used (the checkout went through). A read failure hides the card for that page load.
 
 ---
 
@@ -118,7 +132,8 @@ Both tour tables have **SELECT-only RLS**. A tester who could `UPDATE tour_enrol
 | `lib/tour/verify.ts` | A `TourReadResult<T>` union modelled on the existing `ReadResult`. Distinguishes `read_failed` from `no_evidence`. Owns `TOUR_STEP_COPY`, including each step's `retry` string. |
 | `lib/actions/tour/submitReflection.ts` | A `useActionState` server action following the existing subscribe-action signature. The state API route is **GET-only**. |
 | Claim / checkout route | §4.3 above. |
-| `components/tour/{TourRailMount,TourRail,TourWitness,ClaimTrialButton}.tsx` | §7 below. |
+| `components/tour/{TourRailMount,TourRail,TourWitness,ClaimTrialButton}.tsx` | §7 below. Since 2026-10-10 the rail links to the upgrade page's free-month card instead of claiming directly. |
+| `lib/tour/freeMonth.ts` + `app/dashboard/upgrade/FreeMonthCard.tsx` | §4.4. The flag-free claimer and the tier picker. |
 | `app/admin/testers/` + `lib/actions/admin/manageTesterTour.ts` | Copies the existing admin-role action shape exactly, including the audit-log write. Verifies the tester **already owns** the listing at invitation time — a trial is worth nothing on a listing they cannot edit. |
 | `FEATURE_TESTER_TOUR` | Zero hits repo-wide today. Added to the flag union and env map. Unset defaults to **on in preview, off in production**, which is correct. |
 
@@ -150,7 +165,7 @@ Both `revalidate` values are **already dead**, because the public header reads c
 
 ## 8. Two consequences to plan around, not discover
 
-1. **A trialing tester's listing gets `tier: 'starter'` on the live public site**, and the search tie-break ranks by tier — so it **outranks free listings for 30 days**. Acceptable at tester scale, but **do not read early search placement as a signal** during the soft launch.
+1. **A trialing tester's listing gets the picked tier on the live public site**, and the search tie-break ranks by tier — so it **outranks free listings for 30 days**. Acceptable at tester scale, but **do not read early search placement as a signal** during the soft launch.
 2. **The rail adds a second `auth.getUser()` per request sitewide** while the flag is on — a network round-trip, not a JWT decode. Acceptable at tester scale; it is a reason the flag goes off when the tour ends.
 
 ---
@@ -161,7 +176,8 @@ Beyond the 24 trial tests and 15 migration tests already written:
 
 | File | Proves |
 |---|---|
-| `tester-tour-claim.test.ts` | The claim precedes the Stripe call (ordered call log); two concurrent claims → one 200, one 409, session created **once**; release fires on a Stripe throw and carries its guard; the idempotency key is stable. |
+| `tester-tour-claim.test.ts` | The claim precedes the Stripe call (ordered call log); two concurrent claims → one 200, one 409, session created **once**; release fires on a Stripe throw and carries its guard; the idempotency keys (first and replacement); tier choice; `PLAN_NOT_OPEN` and `ALREADY_SUBSCRIBED` never spend the claim; switching tiers expires the old checkout first; body validation. |
+| `tester-free-month.test.ts` | The card's ready / saved / used states, no card before the walk is finished, the tiers offered, and that the flag is never read. |
 | `tester-tour-evidence.test.ts` | **The anti-forgery centrepiece.** A complete forged `analytics_events` set still yields `no_evidence` on every step; the double's `analytics_events` read throws; `read_failed` never renders the action copy; a review in **any** status counts; the SQL `step_key` CHECK list matches `TOUR_STEPS`. |
 | `tester-tour-render-mode.test.ts` | Source-text assertions: search still declares no `revalidate`; listing and collection no longer declare one they cannot honour. |
 | `tester-tour-rail.test.ts` | Returns null at each of the three gates without doing the more expensive step; **throws nothing when every read fails**; the prefix route-hiding table; `z-40` and nothing ≥ 50. |
@@ -175,4 +191,4 @@ One real tester completes all four gated steps on the real site, claims the tria
 
 ## 11. Retiring it
 
-When the soft-launch cohort is finished: unset `FEATURE_TESTER_TOUR`, which removes the rail and the claim route without deploying different code. The evidence rows stay — they are the research output. Trials already granted are **real subscriptions and are not undone** by switching the flag or dropping the tables; cancel those deliberately in Stripe.
+When the soft-launch cohort is finished: unset `FEATURE_TESTER_TOUR`, which removes the rail without deploying different code. **The free month stays claimable** (§4.4): testers who finished the walk can still use it from the upgrade page. To close an unused month for one tester, end their enrollment. The evidence rows stay — they are the research output. Trials already granted are **real subscriptions and are not undone** by switching the flag or dropping the tables; cancel those deliberately in Stripe.

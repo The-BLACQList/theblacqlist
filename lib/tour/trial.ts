@@ -1,4 +1,7 @@
-// The Tester Tour's reward: a 30-day Stripe-native Starter trial.
+// The Tester Tour's reward: one free month (a 30-day Stripe-native trial) on
+// any paid tier the tester picks, used right away or saved for as long as they
+// like [Decision — founder, 2026-10-10]. The claim and the upgrade-page card
+// live in app/api/tour/claim/route.ts and lib/tour/freeMonth.ts.
 //
 // ══ THE ONE THING THIS FILE EXISTS TO PREVENT ══
 // A trial that never ends.
@@ -7,7 +10,7 @@
 // `create_invoice`. A card-less trial that reaches day 30 under that default
 // does not cancel — it invoices, fails to collect, and parks the subscription in
 // `past_due`. `past_due` is a member of KEEPS_ACCESS in
-// lib/stripe/webhooks/webhookHandlers.ts:46, so that tester keeps Starter
+// lib/services/billing/webhookHandlers.ts, so that tester keeps the tier's
 // entitlements forever, and no `customer.subscription.deleted` event ever
 // arrives to take them away. There is no alarm for this state: it looks exactly
 // like a paying customer whose card bounced.
@@ -23,11 +26,11 @@
 // `cancel`. Never change one without the other.
 //
 // ══ WHY THERE IS NO `purpose` IN THE METADATA ══
-// `handleCheckoutSessionCompleted` early-returns at webhookHandlers.ts:358 for
+// `handleCheckoutSessionCompleted` early-returns in webhookHandlers.ts for
 // sessions carrying a `purpose` (that path belongs to one-off job-posting
 // purchases). Our sessions must NOT carry one, so they fall through to the
 // ordinary subscription path: `handleSubscriptionUpsert` re-resolves the tier
-// from the live price (:107-121) and lands the tester on `starter`, and the
+// from the live price and lands the tester on whichever tier they picked, and the
 // trial-end cancellation arrives as a normal `customer.subscription.deleted`.
 //
 // That is what makes this feature **zero lines of change in webhookHandlers.ts**.
@@ -39,10 +42,21 @@ import type Stripe from 'stripe'
 
 export const TESTER_TRIAL_DAYS = 30
 
-/** The Stripe tier a completed tour grants. Re-resolved from the live price by
- *  the webhook — this constant is for copy and for asserting intent, never for
- *  writing an entitlement directly. */
-export const TESTER_TRIAL_PLAN_SLUG = 'starter' as const
+/** The tiers the free month can go on. The tester picks one; a tier only
+ *  works once its plan row has a monthly Stripe price, so Growth and Premium
+ *  wait until they open. The webhook re-resolves the tier from the live price,
+ *  so this list is for validating the request, never for writing an
+ *  entitlement directly. */
+export const TESTER_TRIAL_TIERS = ['starter', 'growth', 'premium'] as const
+export type TesterTrialTier = (typeof TESTER_TRIAL_TIERS)[number]
+
+/** The tier a claim lands on when the request names none. Kept so a rail or
+ *  tab opened before the tier choice existed still works. */
+export const TESTER_TRIAL_PLAN_SLUG: TesterTrialTier = 'starter'
+
+export function isTesterTrialTier(value: unknown): value is TesterTrialTier {
+  return typeof value === 'string' && (TESTER_TRIAL_TIERS as readonly string[]).includes(value)
+}
 
 type TrialSessionFields = Pick<
   Stripe.Checkout.SessionCreateParams,
@@ -101,7 +115,7 @@ export class TesterTrialUnsafeError extends Error {
  *
  * Called immediately before `stripe.checkout.sessions.create` on the tour path.
  * Every branch here corresponds to a way the feature turns into a permanent free
- * Starter tier, so none of them is defensive padding:
+ * tier, so none of them is defensive padding:
  *
  *   - wrong `mode` — a `payment` session ignores the trial fields entirely and
  *     charges the tester, which is the opposite of the offer;
@@ -140,7 +154,7 @@ export function assertTrialCancels(params: Stripe.Checkout.SessionCreateParams):
     fail(
       `trial_settings.end_behavior.missing_payment_method is "${String(endBehavior)}", expected ` +
         '"cancel" — any other value parks a card-less subscription in past_due, which KEEPS_ACCESS ' +
-        'treats as active, granting a permanent free Starter tier'
+        'treats as active, granting a permanent free tier'
     )
   }
 

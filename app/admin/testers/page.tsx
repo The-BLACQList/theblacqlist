@@ -198,8 +198,9 @@ export default async function AdminTestersPage({
         <h1 className="font-headline text-2xl text-brand-black">Testers</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Tester Tour enrollments and what testers wrote at each step. A
-          listing owner who completes the tour unlocks a one-click 30-day
-          Starter trial on their own listing. A supporter gets a thank-you.
+          listing owner who completes the tour unlocks one free month on any
+          paid tier, used now or saved until the tier they want opens. A
+          supporter gets a thank-you.
         </p>
       </div>
 
