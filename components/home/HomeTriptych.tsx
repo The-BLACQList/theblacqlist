@@ -12,6 +12,9 @@ import { isCovered } from '@/lib/features/covered'
 //   Discover → a maker mid-work in a market interior
 //   Support  → a chef mid-service, the archetypal business you spend money at
 //   Connect  → two people collaborating
+// Support opens the map (shop near you) and Connect opens The Collective
+// [Decision — founder, 2026-10-10]. Connect used to open The BLACQLight,
+// which did not match its words.
 // None of these three appear in CATEGORY_PHOTOS: the bento renders in the same
 // scroll, and a repeated frame reads as a bug.
 interface Panel {
@@ -34,18 +37,18 @@ const PANELS: readonly Panel[] = [
   {
     index: '02',
     title: 'Support',
-    body: 'Track the dollars you keep in community.',
-    href: '/flow-map',
+    body: 'Find the businesses near you and spend there.',
+    href: '/map',
     photo: '/images/editorial/peach-and-rye-kitchen.webp',
-    // Support is The Collective, which is covered until it opens (ticket 122).
-    soon: 'collective',
   },
   {
     index: '03',
     title: 'Connect',
-    body: 'Owners, events, and the people behind them.',
-    href: '/blacqlight',
+    body: 'Track the dollars we keep in community.',
+    href: '/flow-map',
     photo: '/images/editorial/diaspora-creative-agency.webp',
+    // The Collective is covered until it opens (ticket 122).
+    soon: 'collective',
   },
 ]
 
