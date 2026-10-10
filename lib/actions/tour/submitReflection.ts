@@ -14,7 +14,7 @@
 //
 // The write is service-role because both tour tables are SELECT-only under RLS
 // on purpose (20260830000000_tester_tour.sql) — a tester who could write their
-// own completion rows could mint a free Starter trial. What stands in for RLS
+// own completion rows could mint a free month. What stands in for RLS
 // here is the evidence check: no reflection row is written unless
 // lib/tour/verify.ts confirms the underlying thing actually happened, from
 // rows a browser cannot forge.

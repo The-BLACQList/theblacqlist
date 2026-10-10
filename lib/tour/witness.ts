@@ -22,7 +22,7 @@
 //
 // The write is the service role because both tour tables are SELECT-only under
 // RLS on purpose (see 20260830000000_tester_tour.sql): a tester who could
-// write their own rows could mint a free Starter trial.
+// write their own rows could mint a free month.
 
 import { cache } from 'react'
 import { after } from 'next/server'

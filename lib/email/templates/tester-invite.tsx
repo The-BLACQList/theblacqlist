@@ -120,13 +120,16 @@ export function TesterInviteEmail({
                   <strong style={stepNumber}>5.</strong> We review it and email you when it&rsquo;s
                   live.
                 </Text>
-                {/* Owner compensation [Decision — founder, 2026-09-19]: one free
-                    month on any tier, redeemable now or held until the tier they
-                    want is purchasable. The word "trial" is deliberately absent;
-                    the tour trial is a different thing and the test guards it. */}
+                {/* Owner compensation [Decision — founder, 2026-09-19, made
+                    conditional 2026-10-10]: one free month on any tier, used now
+                    or held until the tier they want opens. It unlocks when the
+                    owner finishes the short walk on the site, so the email says
+                    so rather than promising it on sign-up. The words "trial" and
+                    "tour" are deliberately absent; the test guards both. */}
                 <Text style={paragraph}>
-                  As a thank you for testing, you get one month of The BLACQList free on any tier.
-                  Use it as soon as plans open, or hold it until the tier you want is available.
+                  Once your business is live, we&rsquo;ll walk you through a few short steps on the
+                  site. Finish them and you get one month of The BLACQList free on any tier. Use it
+                  right away, or save it until the plan you want opens.
                 </Text>
               </>
             ) : (

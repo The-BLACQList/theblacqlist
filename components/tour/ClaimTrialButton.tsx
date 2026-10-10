@@ -1,17 +1,25 @@
 'use client'
 
-// One click from a completed tour to Stripe Checkout (tester-tour-spec.md
+// One click from the free-month card to Stripe Checkout (tester-tour-spec.md
 // §4.3). All the hard guarantees live server-side in /api/tour/claim — the
-// compare-and-set, the idempotency key, release-on-failure. This button just
-// POSTs and follows the URL; on a resumable claim the route hands back the
-// same open session, so `claimed` only changes the label, never the call.
+// tier guard, the compare-and-set, the idempotency key, release-on-failure.
+// This button just POSTs the tier and follows the URL. On a tier whose
+// checkout is already open the route hands back the same session, so
+// `resume` only changes the label, never the call.
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import type { TesterTrialTier } from '@/lib/tour/trial'
 
-const GENERIC_ERROR = 'Couldn’t start your trial just now. Try again in a moment.'
+const GENERIC_ERROR = 'Couldn’t start your free month just now. Try again in a moment.'
 
-export function ClaimTrialButton({ claimed }: { claimed: boolean }) {
+interface Props {
+  plan: TesterTrialTier
+  /** e.g. "Use it on Starter" or "Resume checkout". */
+  label: string
+}
+
+export function ClaimTrialButton({ plan, label }: Props) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,7 +27,11 @@ export function ClaimTrialButton({ claimed }: { claimed: boolean }) {
     setPending(true)
     setError(null)
     try {
-      const res = await fetch('/api/tour/claim', { method: 'POST' })
+      const res = await fetch('/api/tour/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
       const body = (await res.json().catch(() => null)) as
         | { data?: { url?: string }; error?: string }
         | null
@@ -38,22 +50,18 @@ export function ClaimTrialButton({ claimed }: { claimed: boolean }) {
   }
 
   return (
-    <div className="mt-3">
+    <div>
       <button
         type="button"
         onClick={() => void claim()}
         disabled={pending}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-amber-gold px-5 py-2.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-amber-gold px-5 font-body text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {pending
-          ? 'Opening checkout…'
-          : claimed
-            ? 'Resume checkout'
-            : 'Start 30-day trial'}
+        {pending ? 'Opening checkout…' : label}
       </button>
       {error && (
-        <p role="alert" className="mt-2 font-subhead text-sm text-light-gold">
+        <p role="alert" className="mt-2 font-body text-xs text-red-600">
           {error}
         </p>
       )}

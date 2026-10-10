@@ -1,6 +1,6 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 135
+**Total tickets:** 136
 **Phases:** 0–18, plus V1 / V1.5 monetization work
 **Last updated:** 2026-10-08
 
@@ -143,3 +143,4 @@
 | [133](133-creator-social-links-and-link-paywall-fix.md) | Free social links for creators, and close the Links paywall hole | V1.5 | P1 | 131, 119 | Ready | Socials free on creator pages only; addListingLink gets the social plan check |
 | [134](134-partners-filter-and-badges.md) | "Open to partnerships" filter and badges | V1.5 | P1 | 131, 132 | Ready | partners=1 on Discover; badge text + icon; no messaging or introductions |
 | [135](135-home-creators-band.md) | Creators on the home page | V1.5 | P1 | 131, 132 | Needs approval | Hero chip, Creators band (invitation under 4 creators), Avenues tile; round-1 workshop for tile + photo picks |
+| [136](136-free-month-on-paid-upgrade.md) | Use the free month on an upgrade when the listing already pays | V1.5 | P1 | — | Blocked | Founder 2026-10-10: a paying tester keeps the free month for Growth/Premium; Subscription Schedule (trial phase, then back to the old price); PAYMENTS + GATE-DATA + test-mode run; must ship before Growth or Premium get price IDs |

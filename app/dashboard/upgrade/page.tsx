@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { getPlanAvailability } from '@/lib/stripe/availability'
 import type { PlanSlug } from '@/lib/stripe/plans'
+import { getFreeMonthState } from '@/lib/tour/freeMonth'
+import { FreeMonthCard } from './FreeMonthCard'
 import { UpgradePlans } from './UpgradePlans'
 
 export const metadata: Metadata = { title: 'Upgrade | BLACQList Dashboard' }
@@ -28,7 +30,12 @@ export default async function UpgradePage() {
 
   // Which plans have Stripe price IDs configured, per cycle. Shared with the
   // public /pricing page so the two surfaces cannot disagree about what is for sale.
-  const availability = await getPlanAvailability(supabase)
+  // A tester who finished the walk sees their free month first. Null for
+  // everyone else, and on any read failure (the card hides, plans still show).
+  const [availability, freeMonth] = await Promise.all([
+    getPlanAvailability(supabase),
+    getFreeMonthState(),
+  ])
 
   // Does the primary listing have a manageable subscription (portal target)?
   let canManage = false
@@ -54,6 +61,14 @@ export default async function UpgradePage() {
           annual billing.
         </p>
       </div>
+
+      {freeMonth && (
+        <FreeMonthCard
+          state={freeMonth}
+          availability={availability}
+          primaryListingId={primaryListingId}
+        />
+      )}
 
       <UpgradePlans
         primaryListingId={primaryListingId}
