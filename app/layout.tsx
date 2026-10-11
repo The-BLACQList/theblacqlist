@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { Jost, Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
@@ -11,18 +11,23 @@ import { ReportProblemMount } from '@/components/feedback/ReportProblemMount'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
+// Both faces are self-hosted from app/fonts (latin subset, variable weight,
+// SIL Open Font License, see the OFL files beside them). next/font/google
+// downloads them on every dev server start and build, and one Google Fonts
+// hiccup on 2026-10-08 timed out the CI e2e job.
+
 // Display / wordmark / headlines — geometric, refined, set light–medium with wide tracking.
-const jost = Jost({
-  weight: ['300', '400', '500'],
-  subsets: ['latin'],
+const jost = localFont({
+  src: './fonts/jost-latin-wght.woff2',
+  weight: '300 500',
   variable: '--font-jost',
   display: 'swap',
 })
 
 // UI / body / everything functional.
-const inter = Inter({
-  weight: ['400', '600'],
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/inter-latin-wght.woff2',
+  weight: '400 600',
   variable: '--font-inter',
   display: 'swap',
 })
