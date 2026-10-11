@@ -381,7 +381,7 @@ Anonymous Visitor → Business Owner (sign up to claim a listing)
 1. Should the Supporter role be the default for all new signups, or should there be an explicit "I have a business" branching during onboarding?
 2. Can a Professional and a Business Owner exist on the same account (one user who is both a freelancer and a business owner)?
 3. Should the Editor role be a formal role or just Admin with limited scope?
-4. What is the process for revoking a Business Owner's claim if the business closes or is found to be fraudulent?
+4. ~~What is the process for revoking a Business Owner's claim if the business closes or is found to be fraudulent?~~ **Answered 2026-10-11:** there is no release feature in the app. A release is a one-time guarded script the founder runs (staging first): the listing goes back to `unclaimed` with no owner, the owner role row is removed, the claim is marked withdrawn, any live tester enrollments on the listing are ended, and the subscription is checked first (Stripe is never touched by the script). After a release the person sees the "no listing" dashboard and claim card, and the tester free month refuses a listing they no longer own (`NOT_LISTING_OWNER`).
 
 ---
 

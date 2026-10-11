@@ -47,9 +47,10 @@ As a business owner, I want to see how my listing is performing at a glance and 
 **In scope:**
 
 - `app/dashboard/page.tsx` — Server Component; authenticated Owner-only; fetches data from `GET /api/dashboard`
-- Role-based redirect: if the authenticated user has no owner role for any listing → redirect to `/account` (supporters don't have a `/dashboard` in MVP)
+- Gate: `/dashboard` and `/dashboard/pages` check sign-in only (`getOwnerSession()`), so a signed-in user who owns no listing sees the "No listing" state below instead of a redirect. The per-listing pages (products, services, upgrade, the editor) still use `requireOwner()`, which sends a user with no owned listing to `/account`. Ownership is read from `listings.owner_user_id` (not deleted), never from `user_roles`.
+- Sidebar: when the user owns no listing, it shows only Overview and My Pages. Products, Services and Upgrade are hidden because each one would bounce to `/account`. If the count read fails, every link shows.
 - **Three dashboard states:**
-  1. **No listing:** User has owner role but no listing associated — show "Create your BLACQList Page" empty state with two CTAs: "Search for my business to claim" → `/claim` and "Create a new page" → `/add-business`
+  1. **No listing:** Signed in but owns no listing (reached by typing the dashboard URL, the onboarding owner branch, or after a release). Built 2026-10-11 as `components/dashboard/GetListedEmptyState.tsx` on both `/dashboard` and `/dashboard/pages`: heading "Create your BLACQList page", body "Let's get you found. Find your business to claim it, or make a new page.", primary "Find my business to claim" → `/claim`, secondary "Create a new page" → `/add-business`. The `/account` claim card carries the same two choices: "Claim your business" plus a "Not listed yet? Add your business" link.
   2. **Draft listing:** Has listing but `status = 'draft'` or `'pending'` — show completion checklist prominently, stat cards show `—` with "Stats begin once your page is published"
   3. **Published listing:** Full dashboard — stats + checklist (if incomplete) + quick actions
 - **Claim status banner** (rendered on all states that have a listing): contextual by claim status — Amber Gold banner if `claim.status = 'pending'` or `'under_review'`; no banner if approved or no claim
@@ -235,7 +236,7 @@ interface DashboardOverviewResponse {
 | Code            | HTTP | UI behavior                                         |
 | --------------- | ---- | --------------------------------------------------- |
 | `AUTH_REQUIRED` | 401  | Middleware redirects to `/sign-in?next=/dashboard`  |
-| `FORBIDDEN`     | 403  | Redirect to `/account` (supporter with no listings) |
+| `FORBIDDEN`     | 403  | Per-listing pages only: redirect to `/account` (no owned listing). The dashboard home shows the "No listing" state instead. |
 
 **Analytics event emitted:** `dashboard_viewed` — properties: `{ listing_count: number }` — fire-and-forget from the page component
 
@@ -278,7 +279,7 @@ interface DashboardOverviewResponse {
 ## Acceptance Criteria
 
 - [ ] Given an authenticated owner with a published listing navigates to `/dashboard`, then the page renders: claim status banner (if applicable), page preview card, stat cards with 7-day data, quick actions bar, and completion checklist (if not all complete)
-- [ ] Given an authenticated owner with no listing navigates to `/dashboard`, then the "Create your BLACQList Page" empty state renders with "Search for my business to claim" and "Create a new page" CTAs
+- [ ] Given an authenticated owner with no listing navigates to `/dashboard`, then the "Create your BLACQList page" empty state renders with "Find my business to claim" and "Create a new page" CTAs
 - [ ] Given an authenticated owner with a draft listing, then stat cards show `—` with "Stats begin once your page is published"; the completion checklist is shown prominently
 - [ ] Given an owner's claim is `status = 'pending'` or `'under_review'`, then the Amber Gold claim status banner renders: "Your claim is pending review. We'll email you at [email] within 48 hours."
 - [ ] Given an owner's claim is approved, then no claim status banner is shown

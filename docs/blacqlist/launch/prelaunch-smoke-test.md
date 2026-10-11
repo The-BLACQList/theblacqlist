@@ -240,7 +240,8 @@ Before starting:
 
 - [ ] Dashboard loads without error
 - [ ] Navigation sidebar is visible
-- [ ] Dashboard shows the owner's listing(s) or an empty state if no listings are owned
+- [ ] Dashboard shows the owner's listing(s). With no owned listing it shows "Create your BLACQList page" with both choices (claim, or create a new page), and the sidebar shows only Overview and My Pages
+- [ ] With no owned listing, `/account` shows the claim card with a "Not listed yet? Add your business" link
 - [ ] No console errors
 
 ---

@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ExternalLink, ChevronRight, Clock, Store } from 'lucide-react'
+import { ExternalLink, ChevronRight, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
-import { EmptyState } from '@/components/ui/empty-state'
+import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
 
 export default async function DashboardPagesPage() {
   const owner = await getOwnerSession()
@@ -28,12 +28,7 @@ export default async function DashboardPagesPage() {
       </div>
 
       {!listings || listings.length === 0 ? (
-        <EmptyState
-          heading="No listings yet"
-          body="Create your first business page on The BLACQList to manage it here."
-          action={{ href: '/add-business', label: 'Add your business' }}
-          icon={Store}
-        />
+        <GetListedEmptyState />
       ) : (
         <ul className="space-y-3">
           {listings.map((listing) => {

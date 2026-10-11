@@ -8,18 +8,23 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 
 interface Props {
   ownerEmail?: string
+  /** False when the user owns no listing yet. Products, Services and Upgrade
+   *  each need a listing (requireOwner sends them to /account), so they stay
+   *  hidden until there is one. */
+  hasListings?: boolean
 }
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/pages', label: 'My Pages', icon: FileText, exact: false },
-  { href: '/dashboard/products', label: 'Products', icon: Package, exact: false },
-  { href: '/dashboard/services', label: 'Services', icon: Briefcase, exact: false },
-  { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false },
+  { href: '/dashboard/products', label: 'Products', icon: Package, exact: false, needsListing: true },
+  { href: '/dashboard/services', label: 'Services', icon: Briefcase, exact: false, needsListing: true },
+  { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false, needsListing: true },
 ]
 
-export function DashboardSidebar({ ownerEmail }: Props) {
+export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
   const pathname = usePathname()
+  const navItems = NAV_ITEMS.filter((item) => hasListings || !('needsListing' in item))
 
   // Extract entityId from /dashboard/pages/[entityId]/...
   const entityMatch = pathname.match(/^\/dashboard\/pages\/([^/]+)/)
@@ -52,7 +57,7 @@ export function DashboardSidebar({ ownerEmail }: Props) {
       {/* Main nav */}
       <nav className="flex-1 px-3 py-2 md:py-4" aria-label="Dashboard navigation">
         <div className="flex gap-1 overflow-x-auto md:block md:space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+          {navItems.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact)
             return (
               <Link

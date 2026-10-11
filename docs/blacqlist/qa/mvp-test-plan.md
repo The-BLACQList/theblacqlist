@@ -338,7 +338,7 @@ _Corrected 2026-08-23: the "serves mock data" gap this case was written around i
 
 | #   | Action                                               | Expected                                                                         |
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | Load `/dashboard` as non-owner                       | Redirected to `/account` (no owned listing)                                      |
+| 1   | Load `/dashboard` as a signed-in user with no listing | "Create your BLACQList page" with "Find my business to claim" and "Create a new page"; sidebar has no Products, Services or Upgrade. `/account` claim card also shows "Not listed yet? Add your business" |
 | 2   | Load `/dashboard` as owner                           | Overview page renders with listing name, stats                                   |
 | 3   | Load `/dashboard/pages/[entityId]` for owned listing | Page editor loads                                                                |
 | 4   | Attempt `/dashboard/pages/[fakeId]`                  | 404 returned (not another owner's data)                                          |

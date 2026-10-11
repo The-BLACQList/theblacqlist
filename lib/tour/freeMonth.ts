@@ -68,6 +68,29 @@ export const resolveTrialClaimer = cache(async (): Promise<TourViewer | null> =>
   }
 })
 
+/**
+ * Whether the enrollment's listing is still the tester's own.
+ *
+ * The enrollment remembers the listing it was made for, but ownership can
+ * move after that (a test claim released by hand, 2026-10-11). The free month
+ * must only ever land on a listing the tester owns now. Returns null when the
+ * read fails, so each caller can choose how to fail closed.
+ */
+export async function listingIsOwnedBy(
+  service: SupabaseClient,
+  listingId: string,
+  userId: string
+): Promise<boolean | null> {
+  const { data, error } = await service
+    .from('listings')
+    .select('owner_user_id, deleted_at')
+    .eq('id', listingId)
+    .maybeSingle()
+  if (error) return null
+  const row = data as { owner_user_id: string | null; deleted_at: string | null } | null
+  return row !== null && row.owner_user_id === userId && row.deleted_at === null
+}
+
 export type FreeMonthState =
   | {
       /** Ready to use. `openTier` is set when a checkout from an earlier
@@ -95,8 +118,8 @@ export type FreeMonthState =
 /**
  * What the upgrade page's free-month card shows, or null for no card.
  *
- * Null covers: not a tester, a supporter tester, and a walk not finished. A
- * read failure also returns
+ * Null covers: not a tester, a supporter tester, a walk not finished, and a
+ * listing the tester no longer owns. A read failure also returns
  * null; the card is an offer, and hiding it for one page load is better than
  * showing a button the claim route would refuse.
  */
@@ -108,6 +131,7 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
 
   try {
     const service = createServiceClient() as unknown as SupabaseClient
+    if ((await listingIsOwnedBy(service, listingId, viewer.userId)) !== true) return null
 
     let openTier: TesterTrialTier | null = null
     if (trialGrantedAt !== null) {

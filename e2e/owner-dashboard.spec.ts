@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsOwner } from './helpers/auth'
+import { loginAsAdmin, loginAsOwner } from './helpers/auth'
 import {
   FIXTURE_ABSENT_ID,
   FIXTURE_CLAIMABLE_ID,
@@ -129,4 +129,47 @@ test.describe('owner dashboard', () => {
     await page.waitForURL((url) => url.pathname === '/')
     expect(page.url()).not.toContain('/sign-in')
   })
+})
+
+/**
+ * Ticket 050 "no listing" state. The admin fixture is the one signed-in account
+ * global-setup gives no listing, so it stands in for a business owner who
+ * hasn't claimed or added their page yet. Nothing here uses admin powers.
+ */
+test.describe('signed in with no listing', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page)
+  })
+
+  test('the dashboard offers both ways in: claim or create', async ({ page }) => {
+    for (const path of ['/dashboard', '/dashboard/pages']) {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { name: 'Create your BLACQList page' })).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Find my business to claim' })).toHaveAttribute(
+        'href',
+        '/claim'
+      )
+      await expect(page.getByRole('link', { name: 'Create a new page' })).toHaveAttribute(
+        'href',
+        '/add-business'
+      )
+    }
+  })
+
+  test('the sidebar hides the tools that need a listing', async ({ page }) => {
+    await page.goto('/dashboard')
+    const nav = page.getByRole('navigation', { name: 'Dashboard navigation' })
+    await expect(nav.getByRole('link', { name: 'My Pages' })).toBeVisible()
+    for (const name of ['Products', 'Services', 'Upgrade']) {
+      await expect(nav.getByRole('link', { name })).toHaveCount(0)
+    }
+  })
+})
+
+test('an owner still sees every sidebar tool', async ({ page }) => {
+  await loginAsOwner(page)
+  const nav = page.getByRole('navigation', { name: 'Dashboard navigation' })
+  for (const name of ['My Pages', 'Products', 'Services', 'Upgrade']) {
+    await expect(nav.getByRole('link', { name })).toBeVisible()
+  }
 })
