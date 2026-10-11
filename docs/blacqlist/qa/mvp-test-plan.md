@@ -336,15 +336,15 @@ _Corrected 2026-08-23: the "serves mock data" gap this case was written around i
 
 **Steps:**
 
-| #   | Action                                               | Expected                                                                         |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| #   | Action                                                | Expected                                                                                                                                                                                                  |
+| --- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Load `/dashboard` as a signed-in user with no listing | "Create your BLACQList page" with "Find my business to claim" and "Create a new page"; sidebar has no Products, Services or Upgrade. `/account` claim card also shows "Not listed yet? Add your business" |
-| 2   | Load `/dashboard` as owner                           | Overview page renders with listing name, stats                                   |
-| 3   | Load `/dashboard/pages/[entityId]` for owned listing | Page editor loads                                                                |
-| 4   | Attempt `/dashboard/pages/[fakeId]`                  | 404 returned (not another owner's data)                                          |
-| 5   | Attempt `/dashboard/pages/[otherOwnerId]`            | 404 returned (ownership enforced)                                                |
-| 6   | Edit listing name + save                             | Change persists on reload; DB updated                                            |
-| 7   | Upload gallery image                                 | Upload succeeds via `app/api/upload/route.ts` (magic-byte sniffed, size-capped). |
+| 2   | Load `/dashboard` as owner                            | Overview page renders with listing name, stats                                                                                                                                                            |
+| 3   | Load `/dashboard/pages/[entityId]` for owned listing  | Page editor loads                                                                                                                                                                                         |
+| 4   | Attempt `/dashboard/pages/[fakeId]`                   | 404 returned (not another owner's data)                                                                                                                                                                   |
+| 5   | Attempt `/dashboard/pages/[otherOwnerId]`             | 404 returned (ownership enforced)                                                                                                                                                                         |
+| 6   | Edit listing name + save                              | Change persists on reload; DB updated                                                                                                                                                                     |
+| 7   | Upload gallery image                                  | Upload succeeds via `app/api/upload/route.ts` (magic-byte sniffed, size-capped).                                                                                                                          |
 
 ---
 
@@ -685,6 +685,35 @@ curl -X POST /api/analytics/event -d 'not json'
 | 4   | Roadmap section                     | Foundation → V2 → V3 phases visible             |
 | 5   | Non-admin accesses page             | Redirect to `/`                                 |
 | 6   | Confirm no real AI API call is made | Network tab shows no calls to anthropic.com     |
+
+---
+
+### TA-26 — Tester Link for an Owner With No Page
+
+| Field    | Value                                                                                       |
+| -------- | ------------------------------------------------------------------------------------------- |
+| Severity | P1                                                                                          |
+| Type     | Manual (steps 1-3 also in `e2e/admin-tester-links.spec.ts`, local database only, not in CI) |
+| Role     | Admin, then a business owner with no page                                                   |
+| Status   | Not run on staging (added 2026-10-11)                                                       |
+
+Needs migration `20261012000000_owner_links_without_listing` on the database you test against. Use a
+throwaway email you control. Never paste the link or the email into a ticket or chat.
+
+**Steps:**
+
+| #   | Action                                                                                     | Expected                                                                                            |
+| --- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 1   | On `/admin/testers`, pick "Listing owner", leave the listing blank, add a label, Make link | A link shows once. No "Pick a listing" error                                                        |
+| 2   | Same, but fill both a listing and an owner email                                           | Refused with "Leave the email blank". No link is made                                               |
+| 3   | Open the step 1 link in a private window, type a new email, tap Start                      | Lands on `/dashboard` with "Find my business to claim" and "Create a new page", tour rail alongside |
+| 4   | Open a fresh link with an email that already has an account                                | Asked to sign in first. Not signed in to that account                                               |
+| 5   | Open a fresh link while signed in as an admin                                              | The admin session is ignored; the link asks for an email                                            |
+| 6   | As the step 3 tester, finish the walk with no page yet, open `/dashboard/upgrade`          | Free month card says it is saved, with links to claim or add a page. No checkout button             |
+| 7   | Get one published page owned by that tester, reload `/dashboard/upgrade`                   | Normal free month card for that page                                                                |
+| 8   | With two published pages owned by the tester, reload                                       | The card asks which page first                                                                      |
+| 9   | Pick a page that already used a tester free month                                          | "That page already used a tester free month." Nothing reaches Stripe                                |
+| 10  | Admin `/admin/testers` enrollments table                                                   | The tester shows as "Owner, no page yet" until the month is claimed                                 |
 
 ---
 

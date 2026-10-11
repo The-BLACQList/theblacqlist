@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   redeemTesterLinkAction,
@@ -17,7 +17,7 @@ type Start = 'email' | 'session' | 'ready'
  * leaves the address bar, history and anything that later reads location. It
  * stays only in this component's state until Start posts it.
  *
- * A supporter link made without an email asks for one here. Checking whether
+ * A link made without an email or a listing asks for one here. Checking whether
  * to ask is read only, so loading the page never spends a use.
  */
 export function StartTourButton() {
@@ -26,15 +26,18 @@ export function StartTourButton() {
   const [start, setStart] = useState<Start | null>(null)
   // Controlled, so the email stays in the box when Start comes back with an error.
   const [typed, setTyped] = useState('')
+  // React runs this effect twice in dev. The first run wipes the fragment, so
+  // the second would find no code without this.
+  const tokenRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const fromHash = window.location.hash.replace(/^#/, '')
-    if (fromHash) {
+    const fromHash = window.location.hash.replace(/^#/, '') || tokenRef.current || ''
+    tokenRef.current = fromHash || null
+    if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }
     // Reading location has to wait for the browser, so this is a one-time
     // sync from outside React rather than derived state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToken(fromHash || null)
     if (!fromHash) {
       setStart('ready')

@@ -46,8 +46,13 @@ export interface TourViewer {
   email: string | null
   enrollment: {
     id: string
-    /** Null for a supporter tester (one-tap link, D2): no listing, no trial. */
+    /** Null for a supporter tester (one-tap link, D2): no listing, no trial.
+     *  Also null for an owner with no page yet, until the free month is
+     *  claimed on a page they own. */
     listingId: string | null
+    /** An owner tester, with or without a listing. Only resolveTrialClaimer
+     *  reads it; the tour itself doesn't care. */
+    isOwner?: boolean
     completedAt: string | null
     trialGrantedAt: string | null
   }

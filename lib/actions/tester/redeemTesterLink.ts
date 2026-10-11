@@ -53,7 +53,7 @@ export async function testerLinkStartAction(token: string): Promise<TesterLinkSt
  * link preview or scanner that fetches /t cannot spend a use. The token comes
  * from the hidden input the page filled from the URL fragment.
  *
- * `email` is only sent for a supporter link made without one; redeem uses it to
+ * `email` is only sent for a link made without an email or a listing; redeem uses it to
  * make a new account and never to sign in to an existing one.
  *
  * Do not log `token` or `email`. lib/tester/redeem.ts holds the logic and the rules for
@@ -112,6 +112,7 @@ export async function redeemTesterLinkAction(
     })
   }
 
-  // Outside any try/catch: redirect() works by throwing.
-  redirect('/search')
+  // Outside any try/catch: redirect() works by throwing. An owner with no page
+  // yet lands on the create-your-page choices; everyone else on search.
+  redirect(result.firstStop)
 }

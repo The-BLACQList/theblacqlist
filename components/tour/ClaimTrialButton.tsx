@@ -17,9 +17,12 @@ interface Props {
   plan: TesterTrialTier
   /** e.g. "Use it on Starter" or "Resume checkout". */
   label: string
+  /** The page to put the month on, only for an owner tester whose
+   *  enrollment has no listing yet. The route checks it is theirs. */
+  listingId?: string
 }
 
-export function ClaimTrialButton({ plan, label }: Props) {
+export function ClaimTrialButton({ plan, label, listingId }: Props) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,7 +33,7 @@ export function ClaimTrialButton({ plan, label }: Props) {
       const res = await fetch('/api/tour/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify(listingId ? { plan, listingId } : { plan }),
       })
       const body = (await res.json().catch(() => null)) as
         | { data?: { url?: string }; error?: string }

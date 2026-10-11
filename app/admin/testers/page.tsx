@@ -38,8 +38,10 @@ function formatDateTime(iso: string) {
 interface EnrollmentRow {
   id: string
   tester_user_id: string
-  // NULL is a supporter tester: no listing, a thank-you instead of a trial.
+  // NULL is a supporter tester, or an owner with no page yet (is_owner), whose
+  // free month goes on a page they own later.
   listing_id: string | null
+  is_owner: boolean
   started_at: string
   completed_at: string | null
   trial_granted_at: string | null
@@ -71,6 +73,7 @@ type View = 'enrollments' | 'reflections'
 interface TesterLinkRow {
   id: string
   kind: string
+  listing_id: string | null
   label: string
   use_count: number
   max_uses: number
@@ -120,7 +123,7 @@ export default async function AdminTestersPage({
   const { data: enrollmentData } = await serviceClient
     .from('tour_enrollments')
     .select(
-      'id, tester_user_id, listing_id, started_at, completed_at, trial_granted_at, ended_at, listings(name, slug)'
+      'id, tester_user_id, listing_id, is_owner, started_at, completed_at, trial_granted_at, ended_at, listings(name, slug)'
     )
     .order('started_at', { ascending: false })
 
@@ -128,7 +131,7 @@ export default async function AdminTestersPage({
 
   const { data: linkData } = await serviceClient
     .from('tester_invites')
-    .select('id, kind, label, use_count, max_uses, expires_at, revoked_at, created_at')
+    .select('id, kind, listing_id, label, use_count, max_uses, expires_at, revoked_at, created_at')
     .order('created_at', { ascending: false })
 
   const links = (linkData ?? []) as TesterLinkRow[]
@@ -338,7 +341,9 @@ function EnrollmentRows({
         </td>
         <td className="px-4 py-3">
           {row.listing_id === null ? (
-            <span className="font-body text-xs text-charcoal-soft">Supporter</span>
+            <span className="font-body text-xs text-charcoal-soft">
+              {row.is_owner ? 'Owner, no page yet' : 'Supporter'}
+            </span>
           ) : row.listings ? (
             <Link
               href={`/admin/entities/${row.listing_id}`}
@@ -452,7 +457,11 @@ function LinksTable({ links }: { links: TesterLinkRow[] }) {
                   {link.label}
                 </td>
                 <td className="px-4 py-2 font-body text-xs text-charcoal-soft">
-                  {link.kind === 'owner' ? 'Listing owner' : 'Supporter'}
+                  {link.kind === 'supporter'
+                    ? 'Supporter'
+                    : link.listing_id === null
+                      ? 'Owner, no page yet'
+                      : 'Listing owner'}
                 </td>
                 <td className="px-4 py-2">
                   <span

@@ -79,42 +79,44 @@ export function MintTesterLinkForm() {
           />
         </div>
 
-        {kind === 'supporter' ? (
-          <div>
-            <label htmlFor="link-email" className={LABEL_CLASS}>
-              Supporter email (optional)
-            </label>
-            <p className={HINT_CLASS}>
-              Leave it blank and the tester types their own email when they tap Start. If you
-              fill it in, the link signs in to that account and makes it if it does not exist yet.
-            </p>
-            <input
-              id="link-email"
-              name="email"
-              type="email"
-              autoComplete="off"
-              placeholder="name@example.com"
-              className={INPUT_CLASS}
-            />
-          </div>
-        ) : (
+        {kind === 'owner' && (
           <div>
             <label htmlFor="link-listing" className={LABEL_CLASS}>
-              Listing ID or slug
+              Listing ID or slug (optional)
             </label>
             <p className={HINT_CLASS}>
-              The link signs in as this listing&rsquo;s owner. Their tour ends in a trial on it.
+              Leave blank if they don&rsquo;t have a page yet. With a listing, the link signs in as
+              its owner. Without one, they start on the choices to claim or create their page, and
+              their free month goes on it once it&rsquo;s live.
             </p>
             <input
               id="link-listing"
               name="listing"
               type="text"
-              required
               placeholder="e.g. harlem-coffee-co or a UUID"
               className={INPUT_CLASS}
             />
           </div>
         )}
+
+        <div>
+          <label htmlFor="link-email" className={LABEL_CLASS}>
+            {kind === 'supporter' ? 'Supporter email (optional)' : 'Owner email (optional)'}
+          </label>
+          <p className={HINT_CLASS}>
+            {kind === 'owner' ? 'Only for an owner with no page yet. ' : ''}
+            Leave it blank and the tester types their own email when they tap Start. If you fill it
+            in, the link signs in to that account and makes it if it does not exist yet.
+          </p>
+          <input
+            id="link-email"
+            name="email"
+            type="email"
+            autoComplete="off"
+            placeholder="name@example.com"
+            className={INPUT_CLASS}
+          />
+        </div>
 
         {error && (
           <p role="alert" className="font-body text-sm text-red-600">

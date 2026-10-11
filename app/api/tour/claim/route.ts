@@ -5,7 +5,12 @@ import { getAppUrl } from '@/lib/env'
 import { getPlanMeta } from '@/lib/stripe/plans'
 import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
-import { LIVE_STATUSES, listingIsOwnedBy, resolveTrialClaimer } from '@/lib/tour/freeMonth'
+import {
+  LIVE_STATUSES,
+  listingCanTakeFreeMonth,
+  listingIsOwnedBy,
+  resolveTrialClaimer,
+} from '@/lib/tour/freeMonth'
 import {
   withTesterTrial,
   assertTrialCancels,
@@ -20,9 +25,16 @@ import {
 // tester picks, on their own listing, exactly once. The tester can hold it as
 // long as they like; nothing here expires an unclaimed month.
 //
-// Body: `{ plan?: 'starter' | 'growth' | 'premium' }`. With no plan, a fresh
-// claim lands on Starter (so a tab opened before the tier choice still works)
-// and a resume hands back whatever checkout is already open.
+// Body: `{ plan?: 'starter' | 'growth' | 'premium', listingId?: uuid }`. With no
+// plan, a fresh claim lands on Starter (so a tab opened before the tier choice
+// still works) and a resume hands back whatever checkout is already open.
+//
+// `listingId` is for an owner tester whose link had no page (2026-10-11): their
+// enrollment has is_owner set and no listing. They name a live page they own,
+// and the compare-and-set writes it onto the enrollment together with
+// trial_granted_at, so the page is fixed the moment the month is claimed. The
+// one-tester-trial-per-listing index refuses a page that already had one.
+// Anyone whose enrollment already has a listing may only name that listing.
 //
 // The ordering here is the whole design and none of it is free to move:
 //
@@ -73,7 +85,10 @@ const ALREADY_SUBSCRIBED = {
 } as const
 
 const claimBodySchema = z
-  .object({ plan: z.enum(TESTER_TRIAL_TIERS).optional() })
+  .object({
+    plan: z.enum(TESTER_TRIAL_TIERS).optional(),
+    listingId: z.string().uuid().optional(),
+  })
   .strict()
 
 // The enrollment's listing changed hands after the invite (a released test
@@ -81,6 +96,20 @@ const claimBodySchema = z
 const NOT_LISTING_OWNER = {
   error: 'This listing isn’t yours anymore, so your free month can’t go on it. Ask us for a new invite.',
   code: 'NOT_LISTING_OWNER',
+} as const
+
+// An owner tester with no page on their enrollment named a page that isn't a
+// live page of theirs. Checked before the guard, the claim and Stripe.
+const PAGE_NOT_ELIGIBLE = {
+  error: 'Your free month goes on a live page you own, and this page isn’t one yet.',
+  code: 'NOT_LISTING_OWNER',
+} as const
+
+// The one-tester-trial-per-listing index refused the claim: another tester
+// already used their month on this page.
+const PAGE_ALREADY_USED = {
+  error: 'That page already used a tester free month.',
+  code: 'LISTING_TRIAL_USED',
 } as const
 
 const ALREADY_CLAIMED = {
@@ -118,11 +147,33 @@ export async function POST(request: Request) {
 
   const enrollmentId = viewer.enrollment.id
 
-  // A supporter tester has no listing to put a trial on. Refused before the
-  // plan guard and the compare-and-set, so nothing is read or spent. The DB
-  // CHECK tour_enrollments_trial_requires_listing backs this up.
-  const listingId = viewer.enrollment.listingId
-  if (listingId === null) {
+  // Which page the month goes on. An enrollment with a listing uses only that
+  // one. An owner tester with no listing yet names one (`attach`). A supporter
+  // tester has no listing to put a trial on. All refused before the plan guard
+  // and the compare-and-set, so nothing is read or spent. The DB CHECK
+  // tour_enrollments_trial_requires_listing backs this up.
+  const enrollmentListingId = viewer.enrollment.listingId
+  const named = parsed.data.listingId ?? null
+  let listingId: string
+  let attach = false
+  if (enrollmentListingId !== null) {
+    if (named !== null && named !== enrollmentListingId) {
+      return NextResponse.json(
+        { error: 'Invalid claim request', code: 'VALIDATION_ERROR' },
+        { status: 400 }
+      )
+    }
+    listingId = enrollmentListingId
+  } else if (viewer.enrollment.isOwner === true) {
+    if (named === null) {
+      return NextResponse.json(
+        { error: 'Pick the page your free month goes on.', code: 'LISTING_REQUIRED' },
+        { status: 422 }
+      )
+    }
+    listingId = named
+    attach = true
+  } else {
     return NextResponse.json(
       { error: 'Your free month goes on a business listing, and this account doesn’t have one.', code: 'NO_LISTING_FOR_TRIAL' },
       { status: 422 }
@@ -145,13 +196,16 @@ export async function POST(request: Request) {
     // Ownership is checked now, not trusted from the invite: the listing may
     // have changed hands since. This runs before every branch below, so a
     // fresh claim, a resume and a tier switch are all refused alike, with
-    // nothing spent and Stripe never called.
-    const owned = await listingIsOwnedBy(serviceClient, listingId, viewer.userId)
+    // nothing spent and Stripe never called. A page named by an owner tester
+    // with no listing yet must also be live.
+    const owned = attach
+      ? await listingCanTakeFreeMonth(serviceClient, listingId, viewer.userId)
+      : await listingIsOwnedBy(serviceClient, listingId, viewer.userId)
     if (owned === null) {
       return NextResponse.json(CLAIM_FAILED, { status: 500 })
     }
     if (!owned) {
-      return NextResponse.json(NOT_LISTING_OWNER, { status: 403 })
+      return NextResponse.json(attach ? PAGE_NOT_ELIGIBLE : NOT_LISTING_OWNER, { status: 403 })
     }
 
     // ── Already claimed at entry: consummated, resumable, or recoverable ─────
@@ -235,14 +289,32 @@ export async function POST(request: Request) {
     if (guard instanceof NextResponse) return guard
 
     // ── The compare-and-set (§4.3.1): claim BEFORE Stripe ────────────────────
+    // With `attach`, the page is written in the same update, and only while
+    // the enrollment still has no page. A release later clears only the
+    // claim, so the page stays.
     const grantedAtIso = new Date().toISOString()
-    const { data: claimed, error: claimError } = await serviceClient
+    const claimUpdate = serviceClient
       .from('tour_enrollments')
-      .update({ trial_granted_at: grantedAtIso })
+      .update(
+        attach
+          ? { listing_id: listingId, trial_granted_at: grantedAtIso }
+          : { trial_granted_at: grantedAtIso }
+      )
       .eq('id', enrollmentId)
       .is('trial_granted_at', null)
-      .select('id')
+    const { data: claimed, error: claimError } = await (
+      attach ? claimUpdate.is('listing_id', null) : claimUpdate
+    ).select('id')
     if (claimError) {
+      // 23505 is one of the two one-trial indexes. Nothing reached Stripe.
+      if (claimError.code === '23505') {
+        if (claimError.message.includes('one_trial_per_listing')) {
+          return NextResponse.json(PAGE_ALREADY_USED, { status: 409 })
+        }
+        if (claimError.message.includes('one_trial_per_tester')) {
+          return NextResponse.json(ALREADY_CLAIMED, { status: 409 })
+        }
+      }
       return NextResponse.json(CLAIM_FAILED, { status: 500 })
     }
     if (!claimed || claimed.length === 0) {

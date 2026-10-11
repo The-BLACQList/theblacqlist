@@ -22,6 +22,12 @@ import { hashTesterToken, isWellFormedTesterToken, normalizeTesterEmail } from '
  * is sent to normal sign-in instead, so a forwarded link can't be used to get
  * into someone else's account. All of this is checked before the claim, so
  * asking for an email or turning one down spends no use.
+ *
+ * An owner link may be made without a listing, for an owner who has no page
+ * yet (founder, 2026-10-11). It finds or makes the account exactly like a
+ * supporter link, enrolls the account as an owner with no listing, and sends
+ * the tester to /dashboard to claim or create their page. The free month finds
+ * the page later (lib/tour/freeMonth.ts).
  */
 
 export const REDEEM_MISSING = 'This link is missing its code. Ask for a new one.'
@@ -45,7 +51,15 @@ export interface RedeemDeps {
 }
 
 export type RedeemResult =
-  | { ok: true; inviteId: string; testerUserId: string; createdBy: string | null }
+  | {
+      ok: true
+      inviteId: string
+      testerUserId: string
+      createdBy: string | null
+      /** Where Start lands: the create-your-page choices for an owner with no
+       *  page yet, search for everyone else. */
+      firstStop: '/dashboard' | '/search'
+    }
   | { ok: false; error: string; needEmail?: true }
 
 /**
@@ -84,8 +98,8 @@ export async function redeemTesterInvite(
   const { service } = deps
   const tokenHash = hashTesterToken(token)
 
-  // A live supporter link with no email and no account yet: pick the account
-  // now, so asking for an email or refusing one spends nothing.
+  // A live link with no email, no listing and no account yet: pick the
+  // account now, so asking for an email or refusing one spends nothing.
   let newAccount: NewAccount | null = null
   try {
     const start = await startFor(service, tokenHash, deps)
@@ -118,8 +132,11 @@ export async function redeemTesterInvite(
   if (!invite) return { ok: false, error: REDEEM_EXPIRED }
 
   try {
+    // An owner link with a listing signs in as that listing's owner. Every
+    // other link (a supporter, or an owner with no page yet) lands on its own
+    // account.
     const account =
-      invite.kind === 'owner'
+      invite.kind === 'owner' && invite.listing_id !== null
         ? await resolveOwner(invite, service)
         : await resolveSupporter(invite, service, newAccount)
 
@@ -150,7 +167,13 @@ export async function redeemTesterInvite(
     const { error: signInError } = await deps.signIn(hashedToken)
     if (signInError) throw new Error('verifyOtp failed')
 
-    return { ok: true, inviteId: invite.id, testerUserId: account.userId, createdBy: invite.created_by }
+    return {
+      ok: true,
+      inviteId: invite.id,
+      testerUserId: account.userId,
+      createdBy: invite.created_by,
+      firstStop: invite.kind === 'owner' && invite.listing_id === null ? '/dashboard' : '/search',
+    }
   } catch (err) {
     if (err instanceof EmailTaken) {
       console.error('[redeemTesterInvite] typed email taken', invite.id)
@@ -189,14 +212,14 @@ async function startFor(
 ): Promise<{ kind: 'session'; userId: string } | { kind: 'email' | 'ready' }> {
   const { data: invite, error } = await service
     .from('tester_invites')
-    .select('kind, email, tester_user_id, revoked_at, expires_at, use_count, max_uses')
+    .select('kind, email, listing_id, tester_user_id, revoked_at, expires_at, use_count, max_uses')
     .eq('token_hash', tokenHash)
     .maybeSingle()
   if (error) throw new Error(`peek ${error.code}`)
 
   const needsAccount =
     invite !== null &&
-    invite.kind === 'supporter' &&
+    invite.listing_id === null &&
     invite.email === null &&
     invite.tester_user_id === null &&
     invite.revoked_at === null &&
@@ -221,7 +244,7 @@ async function emailForUser(service: SupabaseClient<Database>, userId: string): 
 }
 
 /**
- * Owner links sign in as whoever owns the listing now, with the checks the
+ * Owner links with a listing sign in as whoever owns the listing now, with the checks the
  * mint ran, run again: a listing can be unpublished or change hands inside
  * fourteen days. Once bound, a link never follows the listing to a new owner.
  */
@@ -248,7 +271,8 @@ async function resolveOwner(
 }
 
 /**
- * Supporter links land on the bound account after the first use. Before that:
+ * Supporter links, and owner links with no listing, land on the bound account
+ * after the first use. Before that:
  * the account with the link's email if there is one, else a new one with the
  * email already confirmed, since holding the link is the proof. A link with no
  * email uses the account picked before the claim (see the header).
@@ -262,7 +286,7 @@ async function resolveSupporter(
     return { userId: invite.tester_user_id, email: await emailForUser(service, invite.tester_user_id) }
   }
   if (!invite.email) {
-    if (!newAccount) throw new RedeemRefused('supporter link without email')
+    if (!newAccount) throw new RedeemRefused('link without email or listing')
     if (newAccount.kind === 'session') {
       return { userId: newAccount.userId, email: await emailForUser(service, newAccount.userId) }
     }
@@ -312,25 +336,40 @@ async function findUserIdByEmail(service: SupabaseClient<Database>, email: strin
 
 /**
  * One live enrollment per tester, which a unique index also enforces. A tester
- * already on the tour keeps the enrollment they have, listing and all.
+ * already on the tour keeps the enrollment they have, listing and all, with one
+ * exception: a supporter who taps an owner link with no listing becomes an
+ * owner, so the free month can find their page. Their walk keeps its progress.
  */
 async function ensureEnrollment(
   service: SupabaseClient<Database>,
   userId: string,
   invite: ClaimedInvite
 ): Promise<void> {
+  const isOwner = invite.kind === 'owner'
+
   const { data: live, error: liveError } = await service
     .from('tour_enrollments')
-    .select('id')
+    .select('id, listing_id, is_owner')
     .eq('tester_user_id', userId)
     .is('ended_at', null)
     .maybeSingle()
   if (liveError) throw new Error(`enrollment lookup ${liveError.code}`)
-  if (live) return
+  if (live) {
+    if (isOwner && !live.is_owner && live.listing_id === null) {
+      const { error: upgradeError } = await service
+        .from('tour_enrollments')
+        .update({ is_owner: true })
+        .eq('id', live.id)
+        .is('ended_at', null)
+      if (upgradeError) throw new Error(`enrollment owner ${upgradeError.code}`)
+    }
+    return
+  }
 
   const { error: insertError } = await service.from('tour_enrollments').insert({
     tester_user_id: userId,
-    listing_id: invite.kind === 'owner' ? invite.listing_id : null,
+    listing_id: isOwner ? invite.listing_id : null,
+    is_owner: isOwner,
     invited_by: invite.created_by,
   })
   if (insertError && insertError.code !== '23505') {
