@@ -6,13 +6,19 @@
 // today. Three answers shape this file:
 //
 //   1. Only owner testers who finish the walk get it (completed_at is set and
-//      the enrollment has a listing).
+//      the enrollment has a listing, or is_owner is set).
 //   2. A tester already paying for Starter keeps the free month for a bigger
 //      plan later. Putting it on an existing subscription is ticket 136; until
 //      then the claim route refuses without spending the claim, and the card
 //      says it is saved.
 //   3. The free month outlives the tour. Switching FEATURE_TESTER_TOUR off
 //      removes the rail, not the claim, so nothing here reads the flag.
+//
+// An owner can get a link before they have a page (founder, 2026-10-11). Their
+// enrollment has is_owner set and no listing. The card waits until they own a
+// published page, then offers it on that page, or asks which page when they
+// own more than one. The claim route writes the page onto the enrollment in
+// the same compare-and-set as the claim.
 //
 // "Held" needs no new column: an unclaimed enrollment (trial_granted_at null)
 // never expires. Ending an enrollment (ended_at) is an admin decision and does
@@ -47,7 +53,7 @@ export const resolveTrialClaimer = cache(async (): Promise<TourViewer | null> =>
 
     const { data: enrollment, error } = await supabase
       .from('tour_enrollments')
-      .select('id, listing_id, completed_at, trial_granted_at')
+      .select('id, listing_id, is_owner, completed_at, trial_granted_at')
       .eq('tester_user_id', user.id)
       .is('ended_at', null)
       .maybeSingle()
@@ -59,6 +65,7 @@ export const resolveTrialClaimer = cache(async (): Promise<TourViewer | null> =>
       enrollment: {
         id: enrollment.id,
         listingId: enrollment.listing_id,
+        isOwner: enrollment.is_owner,
         completedAt: enrollment.completed_at,
         trialGrantedAt: enrollment.trial_granted_at,
       },
@@ -91,15 +98,60 @@ export async function listingIsOwnedBy(
   return row !== null && row.owner_user_id === userId && row.deleted_at === null
 }
 
+/**
+ * Whether a page can take the free month for an owner with no listing on their
+ * enrollment: theirs, published and not deleted. Same null-on-read-failure
+ * contract as listingIsOwnedBy.
+ */
+export async function listingCanTakeFreeMonth(
+  service: SupabaseClient,
+  listingId: string,
+  userId: string
+): Promise<boolean | null> {
+  const { data, error } = await service
+    .from('listings')
+    .select('owner_user_id, deleted_at, status')
+    .eq('id', listingId)
+    .maybeSingle()
+  if (error) return null
+  const row = data as { owner_user_id: string | null; deleted_at: string | null; status: string } | null
+  return (
+    row !== null && row.owner_user_id === userId && row.deleted_at === null && row.status === 'published'
+  )
+}
+
+/** A page an owner with no listing on their enrollment could use the month on. */
+export interface FreeMonthPage {
+  listingId: string
+  listingName: string | null
+  currentTier: PlanSlug
+  /** Already on a live plan, so the month waits for an upgrade (ticket 136). */
+  paid: boolean
+}
+
 export type FreeMonthState =
   | {
       /** Ready to use. `openTier` is set when a checkout from an earlier
-       *  click is still open, so that tier's button can say "Resume". */
+       *  click is still open, so that tier's button can say "Resume".
+       *  `attach` is set when the enrollment has no listing yet, so the
+       *  claim must name this page. */
       status: 'ready'
       listingId: string
       listingName: string | null
       currentTier: PlanSlug
       openTier: TesterTrialTier | null
+      attach: boolean
+    }
+  | {
+      /** An owner with no published page yet. The month waits for one.
+       *  `hasPage` is set when they own a page that isn't live yet. */
+      status: 'waiting'
+      hasPage: boolean
+    }
+  | {
+      /** An owner with more than one published page: they pick which. */
+      status: 'pick'
+      pages: FreeMonthPage[]
     }
   | {
       /** The checkout went through; the month is in use or done. */
@@ -127,7 +179,10 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
   const viewer = await resolveTrialClaimer()
   if (!viewer) return null
   const { listingId, completedAt, trialGrantedAt } = viewer.enrollment
-  if (listingId === null || completedAt === null) return null
+  if (completedAt === null) return null
+  if (listingId === null) {
+    return viewer.enrollment.isOwner === true ? findOwnerPages(viewer.userId) : null
+  }
 
   try {
     const service = createServiceClient() as unknown as SupabaseClient
@@ -170,7 +225,75 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
     if ((subs?.length ?? 0) > 0) {
       return { status: 'saved', listingId, listingName, currentTier }
     }
-    return { status: 'ready', listingId, listingName, currentTier, openTier }
+    return { status: 'ready', listingId, listingName, currentTier, openTier, attach: false }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The card for an owner whose enrollment has no listing yet: waiting with no
+ * published page, that page when there is one, a choice when there are more.
+ * A claim can't have happened yet (the DB CHECK ties a claim to a listing), so
+ * there is never an open checkout to resume here.
+ */
+async function findOwnerPages(userId: string): Promise<FreeMonthState | null> {
+  try {
+    const service = createServiceClient() as unknown as SupabaseClient
+    const { data: listings, error } = await service
+      .from('listings')
+      .select('id, name, tier, status')
+      .eq('owner_user_id', userId)
+      .is('deleted_at', null)
+      .order('created_at')
+    if (error) return null
+
+    const owned = (listings ?? []) as {
+      id: string
+      name: string | null
+      tier: string | null
+      status: string
+    }[]
+    const rows = owned.filter((r) => r.status === 'published')
+    if (rows.length === 0) return { status: 'waiting', hasPage: owned.length > 0 }
+
+    const { data: subs, error: subsError } = await service
+      .from('subscriptions')
+      .select('listing_id')
+      .in(
+        'listing_id',
+        rows.map((r) => r.id)
+      )
+      .in('status', LIVE_STATUSES)
+    if (subsError) return null
+    const paidIds = new Set(((subs ?? []) as { listing_id: string }[]).map((s) => s.listing_id))
+
+    const pages: FreeMonthPage[] = rows.map((r) => ({
+      listingId: r.id,
+      listingName: r.name,
+      currentTier: (r.tier ?? 'free') as PlanSlug,
+      paid: paidIds.has(r.id),
+    }))
+
+    if (pages.length > 1) return { status: 'pick', pages }
+    const page = pages[0]
+    if (!page) return { status: 'waiting', hasPage: true }
+    if (page.paid) {
+      return {
+        status: 'saved',
+        listingId: page.listingId,
+        listingName: page.listingName,
+        currentTier: page.currentTier,
+      }
+    }
+    return {
+      status: 'ready',
+      listingId: page.listingId,
+      listingName: page.listingName,
+      currentTier: page.currentTier,
+      openTier: null,
+      attach: true,
+    }
   } catch {
     return null
   }

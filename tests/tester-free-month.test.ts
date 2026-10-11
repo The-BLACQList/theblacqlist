@@ -13,7 +13,10 @@ const h = vi.hoisted(() => {
       string,
       unknown
     > | null,
-    liveSubs: [] as { id: string }[],
+    liveSubs: [] as { id?: string; listing_id?: string }[],
+    // An owner with no listing on the enrollment: the pages they own.
+    ownedListings: [] as { id: string; name: string | null; tier: string | null; status: string }[],
+    ownedError: null as { message: string } | null,
     subsError: null as { message: string } | null,
     flagReads: 0,
   }
@@ -25,6 +28,7 @@ const h = vi.hoisted(() => {
       is: () => q,
       in: () => q,
       limit: () => q,
+      order: () => q,
       async maybeSingle() {
         if (table === 'tour_enrollments') {
           // The user's own read returns the enrollment; the service read
@@ -35,7 +39,11 @@ const h = vi.hoisted(() => {
         return { data: null, error: null }
       },
       then(onFulfilled?: (v: unknown) => unknown, onRejected?: (e: unknown) => unknown) {
-        return Promise.resolve({ data: state.liveSubs, error: state.subsError }).then(
+        const result =
+          table === 'listings'
+            ? { data: state.ownedListings, error: state.ownedError }
+            : { data: state.liveSubs, error: state.subsError }
+        return Promise.resolve(result).then(
           onFulfilled,
           onRejected
         )
@@ -98,6 +106,8 @@ beforeEach(() => {
   h.state.listing = { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u1', deleted_at: null }
   h.state.liveSubs = []
   h.state.subsError = null
+  h.state.ownedListings = []
+  h.state.ownedError = null
   h.state.flagReads = 0
 })
 
@@ -120,6 +130,7 @@ describe('getFreeMonthState', () => {
       listingName: 'Hampton Greens',
       currentTier: 'free',
       openTier: null,
+      attach: false,
     })
     expect(h.state.flagReads).toBe(0)
   })
@@ -193,6 +204,88 @@ describe('getFreeMonthState', () => {
     h.state.enrollment!.trial_granted_at = '2026-09-02T00:00:00Z'
     h.state.sessionId = 'cs_1'
     h.retrieveSession.mockRejectedValue(new Error('stripe down'))
+    expect(await getFreeMonthState()).toBeNull()
+  })
+})
+
+describe('getFreeMonthState: owner link with no page yet', () => {
+  beforeEach(() => {
+    h.state.enrollment = {
+      id: 'enr-1',
+      listing_id: null,
+      is_owner: true,
+      completed_at: '2026-09-01T00:00:00Z',
+      trial_granted_at: null,
+    }
+  })
+
+  it('waiting, with no page at all', async () => {
+    expect(await getFreeMonthState()).toEqual({ status: 'waiting', hasPage: false })
+  })
+
+  it('waiting, with a page that is not live yet', async () => {
+    h.state.ownedListings = [{ id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'pending' }]
+    expect(await getFreeMonthState()).toEqual({ status: 'waiting', hasPage: true })
+  })
+
+  it('no card before the walk is finished', async () => {
+    h.state.enrollment!.completed_at = null
+    expect(await getFreeMonthState()).toBeNull()
+  })
+
+  it('ready on the one live page, and the claim names it', async () => {
+    h.state.ownedListings = [
+      { id: 'l0', name: 'Draft', tier: 'free', status: 'pending' },
+      { id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' },
+    ]
+    expect(await getFreeMonthState()).toEqual({
+      status: 'ready',
+      listingId: 'l1',
+      listingName: 'Hampton Greens',
+      currentTier: 'free',
+      openTier: null,
+      attach: true,
+    })
+  })
+
+  it('saved when the one live page already pays', async () => {
+    h.state.ownedListings = [{ id: 'l1', name: 'Hampton Greens', tier: 'starter', status: 'published' }]
+    h.state.liveSubs = [{ listing_id: 'l1' }]
+    expect(await getFreeMonthState()).toEqual({
+      status: 'saved',
+      listingId: 'l1',
+      listingName: 'Hampton Greens',
+      currentTier: 'starter',
+    })
+  })
+
+  it('asks which page when there is more than one, and marks the paid ones', async () => {
+    h.state.ownedListings = [
+      { id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' },
+      { id: 'l2', name: 'Hampton Farms', tier: 'starter', status: 'published' },
+    ]
+    h.state.liveSubs = [{ listing_id: 'l2' }]
+    expect(await getFreeMonthState()).toEqual({
+      status: 'pick',
+      pages: [
+        { listingId: 'l1', listingName: 'Hampton Greens', currentTier: 'free', paid: false },
+        { listingId: 'l2', listingName: 'Hampton Farms', currentTier: 'starter', paid: true },
+      ],
+    })
+  })
+
+  it('no card for a supporter with no listing', async () => {
+    h.state.enrollment!.is_owner = false
+    h.state.ownedListings = [{ id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' }]
+    expect(await getFreeMonthState()).toBeNull()
+  })
+
+  it('no card when a read fails', async () => {
+    h.state.ownedError = { message: 'boom' }
+    expect(await getFreeMonthState()).toBeNull()
+    h.state.ownedError = null
+    h.state.ownedListings = [{ id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' }]
+    h.state.subsError = { message: 'boom' }
     expect(await getFreeMonthState()).toBeNull()
   })
 })

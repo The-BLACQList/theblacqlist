@@ -99,7 +99,8 @@ describe('mintTesterLinkAction', () => {
     [{ kind: 'nope', label: 'T-07' }, /supporter or owner/],
     [{ kind: 'supporter', label: '  ' }, /label/],
     [{ kind: 'supporter', label: 'T-07', email: 'not-an-email' }, /doesn’t look right/],
-    [{ kind: 'owner', label: 'T-07', listing: '' }, /listing ID or slug/],
+    [{ kind: 'owner', label: 'T-07', listing: 'some-slug', email: 'a@b.co' }, /Leave the email blank/],
+    [{ kind: 'owner', label: 'T-07', email: 'not-an-email' }, /doesn’t look right/],
   ])('refuses bad input %j', async (fields, message) => {
     const result = await mintTesterLinkAction(null, form(fields))
     expect(result && 'error' in result ? result.error : '').toMatch(message)
@@ -168,6 +169,36 @@ describe('mintTesterLinkAction', () => {
 
     await mintTesterLinkAction(null, form({ kind: 'owner', label: 'T-08', listing: 'some-slug' }))
     expect(h.state.listingFilter).toEqual(['slug', 'some-slug'])
+  })
+
+  it('mints an owner link with no page, so the tester types their own email on /t', async () => {
+    // Set, to prove neither the listing nor the account lookup runs.
+    h.state.existingUserId = 'u-existing'
+    h.service.rpc.mockClear()
+    for (const listing of [undefined, '', '   ']) {
+      h.state.inserted = null
+      h.state.listingFilter = null
+      const fields: Record<string, string> = { kind: 'owner', label: 'T-09' }
+      if (listing !== undefined) fields.listing = listing
+      const result = await mintTesterLinkAction(null, form(fields))
+      expect(result).toMatchObject({ success: true, label: 'T-09', existingAccount: false })
+      expect(h.state.inserted).toMatchObject({ kind: 'owner', email: null, listing_id: null })
+      expect(h.state.listingFilter).toBeNull()
+    }
+    expect(h.service.rpc).not.toHaveBeenCalled()
+  })
+
+  it('mints an owner link with no page and an email, with the same account checks', async () => {
+    const ok = await mintTesterLinkAction(null, form({ kind: 'owner', label: 'T-09', email: ' Owner@Example.com ' }))
+    expect(ok).toMatchObject({ success: true, existingAccount: false })
+    expect(h.state.inserted).toMatchObject({ kind: 'owner', email: 'owner@example.com', listing_id: null })
+
+    h.state.inserted = null
+    h.state.existingUserId = 'u-existing'
+    h.state.adminRoles.add('u-existing')
+    const refused = await mintTesterLinkAction(null, form({ kind: 'owner', label: 'T-09', email: 'owner@example.com' }))
+    expect(refused).toEqual({ error: expect.stringMatching(/admins can never get one/) })
+    expect(h.state.inserted).toBeNull()
   })
 
   it.each([

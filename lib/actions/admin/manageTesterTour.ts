@@ -64,6 +64,7 @@ export async function inviteTesterAction(
     .insert({
       tester_user_id: listing.owner_user_id,
       listing_id: listing.id,
+      is_owner: true,
       invited_by: admin.user.id,
     })
     .select('id')

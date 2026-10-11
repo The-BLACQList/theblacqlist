@@ -36,8 +36,11 @@ const ADMIN_ACCOUNT_REFUSAL =
  * `link` here: a link is a login.
  *
  * A supporter link can name an email, or leave it blank so the tester types
- * their own when they tap Start (founder, 2026-10-11). Owner links name a
- * listing and use whoever owns it, with the same checks inviteTesterAction runs.
+ * their own when they tap Start (founder, 2026-10-11). An owner link can name a
+ * listing and use whoever owns it, with the same checks inviteTesterAction
+ * runs. An owner who has no page yet gets a link with no listing; it makes the
+ * account the way a supporter link does, and the free month finds their page
+ * later (founder, 2026-10-11).
  */
 export async function mintTesterLinkAction(
   _prev: MintTesterLinkState,
@@ -58,29 +61,13 @@ export async function mintTesterLinkAction(
   let listingId: string | null = null
   let existingAccount = false
 
-  if (kind === 'supporter') {
-    // Blank is fine: the tester types their own email on /t.
-    const typedEmail = formData.get('email')?.toString().trim() ?? ''
-    if (typedEmail) {
-      email = normalizeTesterEmail(typedEmail)
-      if (!email) return { error: 'That email doesn’t look right. Fix it or leave it blank.' }
+  const listingRef = kind === 'owner' ? (formData.get('listing')?.toString().trim() ?? '') : ''
+  const typedEmail = formData.get('email')?.toString().trim() ?? ''
 
-      const { data: existingId, error: lookupError } = await serviceClient.rpc(
-        'find_auth_user_id_by_email',
-        { p_email: email }
-      )
-      if (lookupError) {
-        console.error('[mintTesterLinkAction] account lookup', lookupError.code)
-        return { error: 'Failed to check that email. Please try again.' }
-      }
-      if (existingId) {
-        if (await getAdminRole(existingId)) return { error: ADMIN_ACCOUNT_REFUSAL }
-        existingAccount = true
-      }
+  if (listingRef) {
+    if (typedEmail) {
+      return { error: 'A link for a page signs in as the page’s owner. Leave the email blank.' }
     }
-  } else {
-    const listingRef = formData.get('listing')?.toString().trim() ?? ''
-    if (!listingRef) return { error: 'Enter a listing ID or slug.' }
 
     const listingQuery = serviceClient
       .from('listings')
@@ -105,6 +92,24 @@ export async function mintTesterLinkAction(
     }
     if (await getAdminRole(listing.owner_user_id)) return { error: ADMIN_ACCOUNT_REFUSAL }
     listingId = listing.id
+  } else if (typedEmail) {
+    // A supporter link, or an owner with no page yet. Blank is fine: the
+    // tester types their own email on /t.
+    email = normalizeTesterEmail(typedEmail)
+    if (!email) return { error: 'That email doesn’t look right. Fix it or leave it blank.' }
+
+    const { data: existingId, error: lookupError } = await serviceClient.rpc(
+      'find_auth_user_id_by_email',
+      { p_email: email }
+    )
+    if (lookupError) {
+      console.error('[mintTesterLinkAction] account lookup', lookupError.code)
+      return { error: 'Failed to check that email. Please try again.' }
+    }
+    if (existingId) {
+      if (await getAdminRole(existingId)) return { error: ADMIN_ACCOUNT_REFUSAL }
+      existingAccount = true
+    }
   }
 
   const origin = originFromHeaders(await headers())

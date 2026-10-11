@@ -21,6 +21,7 @@ const h = vi.hoisted(() => {
       enrollment: {
         id: string
         listingId: string | null
+        isOwner?: boolean
         completedAt: string | null
         trialGrantedAt: string | null
       }
@@ -29,15 +30,19 @@ const h = vi.hoisted(() => {
     plans: {} as Record<string, Record<string, unknown> | null>,
     row: {
       id: 'enr-1',
+      listing_id: 'l1' as string | null,
       trial_granted_at: null as string | null,
       stripe_checkout_session_id: null as string | null,
     },
+    // What the claim compare-and-set returns instead, e.g. a unique-index hit.
+    casError: null as { code: string; message: string } | null,
     // subscriptions rows the live-plan guard sees for the listing.
     liveSubs: [] as { id: string }[],
     // The listing row the ownership recheck reads, and whether that read fails.
-    listing: { owner_user_id: 'u1', deleted_at: null } as {
+    listing: { owner_user_id: 'u1', deleted_at: null, status: 'published' } as {
       owner_user_id: string | null
       deleted_at: string | null
+      status?: string
     } | null,
     listingError: null as { message: string } | null,
     updates: [] as UpdateRecord[],
@@ -56,6 +61,9 @@ const h = vi.hoisted(() => {
     state.updates.push({ table: q.table, payload: q.payload, filters: q.filters })
     if ('trial_granted_at' in q.payload) {
       state.log.push(q.payload.trial_granted_at === null ? 'release' : 'cas')
+      if (q.payload.trial_granted_at !== null && state.casError) {
+        return { data: null, error: state.casError }
+      }
     } else if ('stripe_checkout_session_id' in q.payload) {
       state.log.push('persist')
     }
@@ -65,7 +73,10 @@ const h = vi.hoisted(() => {
       f.kind === 'is' ? row[f.col] === f.val : row[f.col] === f.val
     )
     if (matches) Object.assign(row, q.payload)
-    return { data: q.wantsRows ? (matches ? [{ id: state.row.id }] : []) : null, error: null }
+    return {
+      data: q.wantsRows ? (matches ? [{ id: state.row.id }] : []) : null,
+      error: null as { code: string; message: string } | null,
+    }
   }
 
   const createServiceClient = vi.fn(() => ({
@@ -121,7 +132,7 @@ const h = vi.hoisted(() => {
         // one microtask — which is exactly the atomicity a single UPDATE
         // statement has, making the concurrency test honest.
         then(
-          onFulfilled?: (v: { data: unknown; error: null }) => unknown,
+          onFulfilled?: (v: { data: unknown; error: unknown }) => unknown,
           onRejected?: (e: unknown) => unknown
         ) {
           if (q.op === 'select' && q.table === 'subscriptions') {
@@ -186,9 +197,10 @@ beforeEach(() => {
     growth: { id: 'plan-growth', stripe_price_id_monthly: null },
     premium: null,
   }
-  h.state.row = { id: 'enr-1', trial_granted_at: null, stripe_checkout_session_id: null }
+  h.state.row = { id: 'enr-1', listing_id: 'l1', trial_granted_at: null, stripe_checkout_session_id: null }
+  h.state.casError = null
   h.state.liveSubs = []
-  h.state.listing = { owner_user_id: 'u1', deleted_at: null }
+  h.state.listing = { owner_user_id: 'u1', deleted_at: null, status: 'published' }
   h.state.listingError = null
   h.state.updates = []
   h.state.log = []
@@ -291,6 +303,138 @@ describe('POST /api/tour/claim — the listing must still be the tester\'s', () 
     expect(res.status).toBe(200)
     expect(h.state.log.indexOf('owner-check')).toBeLessThan(h.state.log.indexOf('live-check'))
     expect(h.state.log.indexOf('owner-check')).toBeLessThan(h.state.log.indexOf('cas'))
+  })
+})
+
+describe('POST /api/tour/claim — an owner link with no page picks one', () => {
+  const PAGE = '22222222-3333-4444-8555-666666666666'
+
+  beforeEach(() => {
+    h.state.viewer!.enrollment.listingId = null
+    h.state.viewer!.enrollment.isOwner = true
+    h.state.row.listing_id = null
+  })
+
+  it('writes the page and the claim in one compare-and-set, then opens the checkout on that page', async () => {
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(200)
+    const cas = h.state.updates.find((u) => 'trial_granted_at' in u.payload && u.payload.trial_granted_at !== null)!
+    expect(cas.payload).toEqual({ listing_id: PAGE, trial_granted_at: expect.any(String) })
+    expect(cas.filters).toEqual([
+      { kind: 'eq', col: 'id', val: 'enr-1' },
+      { kind: 'is', col: 'trial_granted_at', val: null },
+      { kind: 'is', col: 'listing_id', val: null },
+    ])
+    expect(h.state.row.listing_id).toBe(PAGE)
+    expect(h.state.log).toEqual(['owner-check', 'live-check', 'cas', 'stripe:create', 'persist'])
+    const params = h.createSession.mock.calls[0]![0] as { metadata: Record<string, string> }
+    expect(params.metadata.listing_id).toBe(PAGE)
+  })
+
+  it('422 LISTING_REQUIRED without a page, touching nothing', async () => {
+    const res = await POST({ plan: 'starter' })
+    expect(res.status).toBe(422)
+    expect((await res.json()).code).toBe('LISTING_REQUIRED')
+    expect(h.state.log).toEqual([])
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('400 for a page id that is not a uuid', async () => {
+    const res = await POST({ plan: 'starter', listingId: 'not-a-uuid' })
+    expect(res.status).toBe(400)
+    expect(h.state.log).toEqual([])
+  })
+
+  it.each([
+    ['someone else\'s page', { owner_user_id: 'someone-else', deleted_at: null, status: 'published' }],
+    ['a page that is not live yet', { owner_user_id: 'u1', deleted_at: null, status: 'pending' }],
+    ['a deleted page', { owner_user_id: 'u1', deleted_at: '2026-10-01T00:00:00Z', status: 'published' }],
+    ['a missing page', null],
+  ])('403 for %s, spending nothing', async (_name, listing) => {
+    h.state.listing = listing
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(403)
+    const body = await res.json()
+    expect(body.code).toBe('NOT_LISTING_OWNER')
+    expect(body.error).toMatch(/live page you own/)
+    expect(h.state.log).toEqual(['owner-check'])
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.state.row.listing_id).toBeNull()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('409 LISTING_TRIAL_USED when the page already had a tester month, and Stripe is never called', async () => {
+    h.state.casError = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "tour_enrollments_one_trial_per_listing_idx"',
+    }
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('LISTING_TRIAL_USED')
+    expect(h.state.row.listing_id).toBeNull()
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('409 ALREADY_CLAIMED when the per-tester index fires', async () => {
+    h.state.casError = {
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "tour_enrollments_one_trial_per_tester_idx"',
+    }
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('ALREADY_CLAIMED')
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('500 for any other compare-and-set error', async () => {
+    h.state.casError = { code: '40001', message: 'could not serialize access' }
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(500)
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('409 when another request attached a page first', async () => {
+    h.state.row.listing_id = 'l-other'
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('ALREADY_CLAIMED')
+    expect(h.state.row.listing_id).toBe('l-other')
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('keeps the page when Stripe fails and only the claim is released', async () => {
+    h.createSession.mockRejectedValueOnce(new Error('stripe down'))
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(500)
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.state.row.listing_id).toBe(PAGE)
+  })
+
+  it('a supporter tester still gets NO_LISTING_FOR_TRIAL even when naming a page', async () => {
+    h.state.viewer!.enrollment.isOwner = false
+    const res = await POST({ plan: 'starter', listingId: PAGE })
+    expect(res.status).toBe(422)
+    expect((await res.json()).code).toBe('NO_LISTING_FOR_TRIAL')
+    expect(h.state.log).toEqual([])
+  })
+})
+
+describe('POST /api/tour/claim — an enrollment with a listing', () => {
+  it('accepts its own listing named in the body', async () => {
+    const res = await POST({ plan: 'starter', listingId: '33333333-4444-4555-8666-777777777777' })
+    expect(res.status).toBe(400)
+    h.state.viewer!.enrollment.listingId = '33333333-4444-4555-8666-777777777777'
+    h.state.row.listing_id = '33333333-4444-4555-8666-777777777777'
+    const ok = await POST({ plan: 'starter', listingId: '33333333-4444-4555-8666-777777777777' })
+    expect(ok.status).toBe(200)
+  })
+
+  it('never rewrites the listing in the compare-and-set', async () => {
+    await POST({ plan: 'starter' })
+    const cas = h.state.updates.find((u) => 'trial_granted_at' in u.payload)!
+    expect(cas.payload).toEqual({ trial_granted_at: expect.any(String) })
+    expect(cas.filters.some((f) => f.col === 'listing_id')).toBe(false)
   })
 })
 

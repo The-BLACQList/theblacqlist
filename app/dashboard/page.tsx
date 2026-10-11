@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
+import { FreeMonthNotice } from './FreeMonthNotice'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -50,6 +51,8 @@ export default async function DashboardPage() {
           Manage your BLACQList business pages.
         </p>
       </div>
+
+      <FreeMonthNotice />
 
       {!listings || listings.length === 0 ? (
         <GetListedEmptyState />

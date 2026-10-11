@@ -2,10 +2,16 @@ import { ClaimTrialButton } from '@/components/tour/ClaimTrialButton'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { getPlanMeta } from '@/lib/stripe/plans'
 import { freeMonthTiers, type FreeMonthState } from '@/lib/tour/freeMonth'
+import type { TesterTrialTier } from '@/lib/tour/trial'
+import { FreeMonthPagePicker, type PickablePage } from './FreeMonthPagePicker'
 
 // The tester's free month (founder, 2026-10-10): one month free on any paid
 // tier, used now or held until the tier they want opens. Nothing pushes the
 // tester onto Starter; a tier that isn't open yet says so and waits.
+//
+// An owner who got their link before they had a page (2026-10-11) sees it
+// wait until a page of theirs is live, then picks the page if they own more
+// than one.
 
 interface Props {
   state: FreeMonthState
@@ -41,6 +47,32 @@ function Body({ state, availability, primaryListingId }: Props) {
     )
   }
 
+  if (state.status === 'waiting') {
+    return (
+      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
+        {waitingCopy(state.hasPage)}
+      </p>
+    )
+  }
+
+  if (state.status === 'pick') {
+    const pages: PickablePage[] = state.pages.map((page) => ({
+      listingId: page.listingId,
+      listingName: page.listingName ?? 'Your page',
+      paid: page.paid,
+      tiers: tierOptions(page.currentTier, availability),
+    }))
+    return (
+      <>
+        <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
+          Thanks for testing. You get one month free on any plan, on one of your pages. Pick the
+          page first. It doesn’t expire, and you don’t need a card to start.
+        </p>
+        <FreeMonthPagePicker pages={pages} />
+      </>
+    )
+  }
+
   const forListing =
     state.listingName && state.listingId !== primaryListingId ? ` for ${state.listingName}` : ''
 
@@ -53,6 +85,8 @@ function Body({ state, availability, primaryListingId }: Props) {
   }
 
   const tiers = freeMonthTiers(state.currentTier)
+  // Only set for an owner whose enrollment has no page yet: the claim names it.
+  const attachTo = state.attach ? state.listingId : undefined
 
   return (
     <>
@@ -64,12 +98,16 @@ function Body({ state, availability, primaryListingId }: Props) {
           const name = getPlanMeta(tier).name
           const open = isPlanPurchasable(availability, tier, 'monthly')
           return (
-            <li key={tier} className="flex flex-col rounded-lg border border-charcoal/10 bg-white p-4">
+            <li
+              key={tier}
+              className="flex flex-col rounded-lg border border-charcoal/10 bg-white p-4"
+            >
               <p className="mb-3 font-subhead text-sm font-bold text-brand-black">{name}</p>
               {open ? (
                 <ClaimTrialButton
                   plan={tier}
                   label={state.openTier === tier ? 'Resume checkout' : `Use it on ${name}`}
+                  listingId={attachTo}
                 />
               ) : (
                 <p className="font-body text-xs text-charcoal-faint">
@@ -82,4 +120,22 @@ function Body({ state, availability, primaryListingId }: Props) {
       </ul>
     </>
   )
+}
+
+/** The waiting line, shared with the dashboard home notice. */
+export function waitingCopy(hasPage: boolean): string {
+  return hasPage
+    ? 'Your free month is saved. It will be ready here once your page is live.'
+    : 'Your free month is saved. Add or claim your page, and it will be ready here once your page is live.'
+}
+
+function tierOptions(
+  currentTier: Parameters<typeof freeMonthTiers>[0],
+  availability: PlanAvailability
+): { tier: TesterTrialTier; name: string; open: boolean }[] {
+  return freeMonthTiers(currentTier).map((tier) => ({
+    tier,
+    name: getPlanMeta(tier).name,
+    open: isPlanPurchasable(availability, tier, 'monthly'),
+  }))
 }
