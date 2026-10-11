@@ -82,16 +82,16 @@ export function MintTesterLinkForm() {
         {kind === 'supporter' ? (
           <div>
             <label htmlFor="link-email" className={LABEL_CLASS}>
-              Supporter email
+              Supporter email (optional)
             </label>
             <p className={HINT_CLASS}>
-              The link signs in to this account and makes it if it does not exist yet.
+              Leave it blank and the tester types their own email when they tap Start. If you
+              fill it in, the link signs in to that account and makes it if it does not exist yet.
             </p>
             <input
               id="link-email"
               name="email"
               type="email"
-              required
               autoComplete="off"
               placeholder="name@example.com"
               className={INPUT_CLASS}

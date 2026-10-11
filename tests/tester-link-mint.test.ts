@@ -98,7 +98,7 @@ describe('mintTesterLinkAction', () => {
   it.each([
     [{ kind: 'nope', label: 'T-07' }, /supporter or owner/],
     [{ kind: 'supporter', label: '  ' }, /label/],
-    [{ kind: 'supporter', label: 'T-07', email: 'not-an-email' }, /valid email/],
+    [{ kind: 'supporter', label: 'T-07', email: 'not-an-email' }, /doesn’t look right/],
     [{ kind: 'owner', label: 'T-07', listing: '' }, /listing ID or slug/],
   ])('refuses bad input %j', async (fields, message) => {
     const result = await mintTesterLinkAction(null, form(fields))
@@ -134,6 +134,19 @@ describe('mintTesterLinkAction', () => {
     expect(h.state.audits).toEqual([
       expect.objectContaining({ action: 'mint_tester_link', targetId: 'inv-new' }),
     ])
+  })
+
+  it('mints a supporter link with no email, so the tester types their own on /t', async () => {
+    // Set, to prove the account lookup is skipped rather than coming back empty.
+    h.state.existingUserId = 'u-existing'
+    for (const email of [undefined, '', '   ']) {
+      h.state.inserted = null
+      const fields: Record<string, string> = { kind: 'supporter', label: 'T-08' }
+      if (email !== undefined) fields.email = email
+      const result = await mintTesterLinkAction(null, form(fields))
+      expect(result).toMatchObject({ success: true, label: 'T-08', existingAccount: false })
+      expect(h.state.inserted).toMatchObject({ kind: 'supporter', email: null, listing_id: null })
+    }
   })
 
   it('flags an existing account and refuses an admin one', async () => {

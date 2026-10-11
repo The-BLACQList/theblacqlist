@@ -4,11 +4,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 import { generateTesterToken, hashTesterToken } from '@/lib/tester/links'
 import {
+  REDEEM_BAD_EMAIL,
+  REDEEM_EMAIL_TAKEN,
   REDEEM_EXPIRED,
   REDEEM_FAILED,
   REDEEM_MISSING,
+  REDEEM_NEED_EMAIL,
   REDEEM_RATE_LIMITED,
   redeemTesterInvite,
+  testerLinkStart,
   type RedeemDeps,
 } from '@/lib/tester/redeem'
 
@@ -27,8 +31,21 @@ type Invite = {
 
 type Err = { code: string } | null
 
+/** What the read-only peek sees before the claim. */
+type PeekRow = {
+  kind: 'owner' | 'supporter'
+  email: string | null
+  tester_user_id: string | null
+  revoked_at: string | null
+  expires_at: string
+  use_count: number
+  max_uses: number
+}
+
 function makeWorld() {
   const w = {
+    peek: null as PeekRow | null,
+    peekError: null as Err,
     claim: null as Invite | null,
     claimError: null as Err,
     claimedHash: null as string | null,
@@ -80,6 +97,10 @@ function makeWorld() {
       },
       maybeSingle: async () => {
         if (table === 'listings') return { data: w.listing, error: null }
+        if (table === 'tester_invites') {
+          w.log.push('peek')
+          return { data: w.peekError ? null : w.peek, error: w.peekError }
+        }
         if (table === 'tour_enrollments') {
           w.log.push('enroll:lookup')
           return { data: w.liveEnrollment, error: null }
@@ -148,11 +169,26 @@ let deps: RedeemDeps & {
   allowAttempt: ReturnType<typeof vi.fn>
   isAdmin: ReturnType<typeof vi.fn>
   signIn: ReturnType<typeof vi.fn>
+  sessionUserId: ReturnType<typeof vi.fn>
 }
 const token = generateTesterToken()
 
 function supporterInvite(over: Partial<Invite> = {}): Invite {
   return { id: 'inv-1', kind: 'supporter', email: 'tester@example.com', listing_id: null, tester_user_id: null, created_by: 'admin-1', ...over }
+}
+
+/** A live supporter link made without an email, not used yet. */
+function emailLessPeek(over: Partial<PeekRow> = {}): PeekRow {
+  return {
+    kind: 'supporter',
+    email: null,
+    tester_user_id: null,
+    revoked_at: null,
+    expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+    use_count: 0,
+    max_uses: 5,
+    ...over,
+  }
 }
 
 function ownerInvite(over: Partial<Invite> = {}): Invite {
@@ -170,6 +206,7 @@ beforeEach(() => {
       world.w.log.push('signIn')
       return { error: null }
     }),
+    sessionUserId: vi.fn(async () => null),
   }
 })
 
@@ -224,6 +261,7 @@ describe('redeemTesterInvite: supporter links', () => {
     expect(world.w.inserted).toEqual([{ tester_user_id: 'new-1', listing_id: null, invited_by: 'admin-1' }])
     expect(deps.signIn).toHaveBeenCalledWith('otp-hash')
     expect(world.w.log).toEqual([
+      'peek',
       'claim',
       'createUser',
       'bind',
@@ -266,9 +304,156 @@ describe('redeemTesterInvite: supporter links', () => {
     expect(deps.signIn).not.toHaveBeenCalled()
   })
 
-  it('refuses a supporter link with no email as expired', async () => {
+  it('refuses an unbound supporter link with no email when the peek did not pick an account', async () => {
+    // The peek saw a dead link, then the claim still returned a row: no account
+    // was chosen, so nothing is created.
     world.w.claim = supporterInvite({ email: null })
     expect(await redeemTesterInvite(token, deps)).toEqual({ ok: false, error: REDEEM_EXPIRED })
+    expect(world.w.created).toEqual([])
+  })
+})
+
+describe('redeemTesterInvite: supporter links without an email', () => {
+  beforeEach(() => {
+    world.w.peek = emailLessPeek()
+    world.w.claim = supporterInvite({ email: null })
+  })
+
+  it('asks for an email and spends no use', async () => {
+    expect(await redeemTesterInvite(token, deps)).toEqual({ ok: false, error: REDEEM_NEED_EMAIL, needEmail: true })
+    expect(await redeemTesterInvite(token, deps, '   ')).toMatchObject({ error: REDEEM_NEED_EMAIL })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('refuses a bad email and spends no use', async () => {
+    expect(await redeemTesterInvite(token, deps, 'not an email')).toEqual({
+      ok: false,
+      error: REDEEM_BAD_EMAIL,
+      needEmail: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('never signs in to an email that already has an account, and spends no use', async () => {
+    world.w.users.set('u-someone', 'someone@example.com')
+    expect(await redeemTesterInvite(token, deps, ' Someone@Example.com ')).toEqual({
+      ok: false,
+      error: REDEEM_EMAIL_TAKEN,
+      needEmail: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+    expect(world.w.log.some((l) => l.startsWith('generateLink'))).toBe(false)
+    expect(deps.signIn).not.toHaveBeenCalled()
+  })
+
+  it('makes a new confirmed account for a new email, binds it and signs in', async () => {
+    const result = await redeemTesterInvite(token, deps, 'New.Tester@Example.com')
+    expect(result).toEqual({ ok: true, inviteId: 'inv-1', testerUserId: 'new-1', createdBy: 'admin-1' })
+    expect(world.w.created).toEqual([
+      { email: 'new.tester@example.com', email_confirm: true, user_metadata: { signup_source: 'tester_link' } },
+    ])
+    expect(world.w.bound?.payload).toEqual({ tester_user_id: 'new-1' })
+    expect(world.w.log).toEqual([
+      'peek',
+      'claim',
+      'createUser',
+      'bind',
+      'enroll:lookup',
+      'enroll:insert',
+      'generateLink:new.tester@example.com',
+      'signIn',
+    ])
+  })
+
+  it('refuses when another request makes the account first, and never falls back to it', async () => {
+    world.w.users.set('u-racer', 'new.tester@example.com')
+    world.w.hiddenUntilRace.add('new.tester@example.com')
+    world.w.createError = { code: 'email_exists' }
+    expect(await redeemTesterInvite(token, deps, 'new.tester@example.com')).toEqual({
+      ok: false,
+      error: REDEEM_EMAIL_TAKEN,
+      needEmail: true,
+    })
+    expect(world.w.bound).toBeNull()
+    expect(deps.signIn).not.toHaveBeenCalled()
+  })
+
+  it('fails when createUser fails for another reason', async () => {
+    world.w.createError = { code: 'unexpected_failure' }
+    expect(await redeemTesterInvite(token, deps, 'new.tester@example.com')).toEqual({ ok: false, error: REDEEM_FAILED })
+    expect(deps.signIn).not.toHaveBeenCalled()
+  })
+
+  it('puts the tour on a signed-in tester without asking for an email', async () => {
+    world.w.users.set('u-session', 'me@example.com')
+    deps.sessionUserId.mockResolvedValue('u-session')
+    const result = await redeemTesterInvite(token, deps)
+    expect(result).toMatchObject({ ok: true, testerUserId: 'u-session' })
+    expect(world.w.created).toEqual([])
+    expect(world.w.bound?.payload).toEqual({ tester_user_id: 'u-session' })
+    expect(world.w.log).toContain('generateLink:me@example.com')
+  })
+
+  it('ignores an admin session and asks for an email instead', async () => {
+    deps.sessionUserId.mockResolvedValue('u-admin')
+    deps.isAdmin.mockImplementation(async (id: string) => id === 'u-admin')
+    expect(await redeemTesterInvite(token, deps)).toMatchObject({ error: REDEEM_NEED_EMAIL, needEmail: true })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('fails when the peek errors, and spends no use', async () => {
+    world.w.peekError = { code: '57014' }
+    expect(await redeemTesterInvite(token, deps, 'new.tester@example.com')).toEqual({ ok: false, error: REDEEM_FAILED })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('goes straight to the bound account once the first use made one', async () => {
+    world.w.users.set('u-bound', 'bound@example.com')
+    world.w.peek = emailLessPeek({ tester_user_id: 'u-bound', use_count: 1 })
+    world.w.claim = supporterInvite({ email: null, tester_user_id: 'u-bound' })
+    expect(await redeemTesterInvite(token, deps)).toMatchObject({ ok: true, testerUserId: 'u-bound' })
+    expect(world.w.created).toEqual([])
+  })
+})
+
+describe('testerLinkStart', () => {
+  it('asks for an email on a live, unbound supporter link with no email', async () => {
+    world.w.peek = emailLessPeek()
+    expect(await testerLinkStart(token, deps)).toBe('email')
+  })
+
+  it('reads session when a non-admin is signed in, email when an admin is', async () => {
+    world.w.peek = emailLessPeek()
+    deps.sessionUserId.mockResolvedValue('u-session')
+    expect(await testerLinkStart(token, deps)).toBe('session')
+    deps.isAdmin.mockResolvedValue(true)
+    expect(await testerLinkStart(token, deps)).toBe('email')
+  })
+
+  it.each([
+    ['a link with an email', { email: 'tester@example.com' }],
+    ['a bound link', { tester_user_id: 'u-bound' }],
+    ['a revoked link', { revoked_at: '2026-10-10T00:00:00Z' }],
+    ['an expired link', { expires_at: '2026-01-01T00:00:00Z' }],
+    ['a used-up link', { use_count: 5 }],
+    ['an owner link', { kind: 'owner' as const }],
+  ])('reads %s as ready, so the page never hints why a link is dead', async (_name, change) => {
+    world.w.peek = emailLessPeek(change)
+    expect(await testerLinkStart(token, deps)).toBe('ready')
+  })
+
+  it('reads an unknown link, a malformed token or an error as ready', async () => {
+    expect(await testerLinkStart(token, deps)).toBe('ready')
+    expect(await testerLinkStart('not-a-token', deps)).toBe('ready')
+    world.w.peek = emailLessPeek()
+    world.w.peekError = { code: '57014' }
+    expect(await testerLinkStart(token, deps)).toBe('ready')
+  })
+
+  it('never writes anything', async () => {
+    world.w.peek = emailLessPeek()
+    await testerLinkStart(token, deps)
+    expect(world.w.log).toEqual(['peek'])
   })
 })
 
@@ -367,6 +552,14 @@ describe('redeemTesterInvite: guards and enrollment', () => {
     await redeemTesterInvite(token, deps)
     deps.isAdmin.mockResolvedValueOnce(true)
     await redeemTesterInvite(token, deps)
+    world.w.peek = emailLessPeek()
+    world.w.peekError = { code: '57014' }
+    await redeemTesterInvite(token, deps, 'typed@example.com')
+    world.w.peekError = null
+    world.w.claim = supporterInvite({ email: null })
+    world.w.insertError = null
+    world.w.createError = { code: 'unexpected_failure' }
+    await redeemTesterInvite(token, deps, 'typed@example.com')
     const logged = JSON.stringify(spy.mock.calls)
     expect(spy).toHaveBeenCalled()
     expect(logged).not.toContain(token)
