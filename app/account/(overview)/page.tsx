@@ -561,12 +561,22 @@ export default async function AccountOverviewPage() {
               Keep your hours and story right, answer reviews, and see who finds you.
             </p>
           </div>
-          <Link
-            href="/claim"
-            className="inline-flex w-full sm:w-auto min-h-[46px] items-center justify-center px-[22px] rounded-[3px] bg-gold hover:bg-light-gold text-brand-black font-subhead text-[15px] font-semibold transition-colors duration-150"
-          >
-            Claim your business
-          </Link>
+          <div className="flex w-full sm:w-auto flex-col items-center gap-1">
+            <Link
+              href="/claim"
+              className="inline-flex w-full sm:w-auto min-h-[46px] items-center justify-center px-[22px] rounded-[3px] bg-gold hover:bg-light-gold text-brand-black font-subhead text-[15px] font-semibold transition-colors duration-150"
+            >
+              Claim your business
+            </Link>
+            {/* Claiming only works for a business already on the site, so the
+                other way in sits right under it (ticket 050). */}
+            <Link
+              href="/add-business"
+              className="inline-flex min-h-[44px] items-center font-subhead text-sm text-ink-soft hover:text-off-white underline underline-offset-2"
+            >
+              Not listed yet? Add your business
+            </Link>
+          </div>
         </section>
       )}
 

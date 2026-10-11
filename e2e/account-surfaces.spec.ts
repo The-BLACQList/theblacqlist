@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsOwner } from './helpers/auth'
+import { loginAsAdmin, loginAsOwner } from './helpers/auth'
 import {
   FIXTURE_ABSENT_ID,
   FIXTURE_OWNED_NAME,
@@ -66,4 +66,20 @@ test.describe('account surfaces', () => {
     await savedList.getByRole('button', { name: 'Remove from saved businesses' }).first().click()
     await expect(savedList.getByText(FIXTURE_OWNED_NAME)).toHaveCount(0)
   })
+})
+
+// The admin fixture owns no listing (see owner-dashboard.spec.ts), so /account
+// shows it the claim card. Claiming only works for a business already on the
+// site, so the card also has to offer adding one (ticket 050).
+test('the claim card also offers adding a business that is not listed yet', async ({ page }) => {
+  await loginAsAdmin(page)
+  await page.goto('/account')
+  const card = page.locator('section[aria-labelledby="claim-heading"]')
+  await expect(card.getByRole('link', { name: 'Claim your business' })).toHaveAttribute(
+    'href',
+    '/claim'
+  )
+  await expect(
+    card.getByRole('link', { name: 'Not listed yet? Add your business' })
+  ).toHaveAttribute('href', '/add-business')
 })

@@ -34,6 +34,12 @@ const h = vi.hoisted(() => {
     },
     // subscriptions rows the live-plan guard sees for the listing.
     liveSubs: [] as { id: string }[],
+    // The listing row the ownership recheck reads, and whether that read fails.
+    listing: { owner_user_id: 'u1', deleted_at: null } as {
+      owner_user_id: string | null
+      deleted_at: string | null
+    } | null,
+    listingError: null as { message: string } | null,
     updates: [] as UpdateRecord[],
     // Ordered log of the operations that matter: 'cas', 'stripe:create',
     // 'persist', 'release'. Pushed at execution time, so ordering assertions
@@ -97,6 +103,10 @@ const h = vi.hoisted(() => {
           if (q.table === 'plans') {
             const key = q.filters.find((f) => f.col === 'plan_key')?.val as string
             return { data: state.plans[key] ?? null, error: null }
+          }
+          if (q.table === 'listings') {
+            state.log.push('owner-check')
+            return { data: state.listingError ? null : state.listing, error: state.listingError }
           }
           if (q.table === 'tour_enrollments') {
             return {
@@ -178,6 +188,8 @@ beforeEach(() => {
   }
   h.state.row = { id: 'enr-1', trial_granted_at: null, stripe_checkout_session_id: null }
   h.state.liveSubs = []
+  h.state.listing = { owner_user_id: 'u1', deleted_at: null }
+  h.state.listingError = null
   h.state.updates = []
   h.state.log = []
   h.createSession.mockImplementation(async () => {
@@ -224,6 +236,61 @@ describe('POST /api/tour/claim — gates before the claim', () => {
     // claim is intact and a later request can still succeed.
     expect(h.state.updates).toHaveLength(0)
     expect(h.state.row.trial_granted_at).toBeNull()
+  })
+})
+
+describe('POST /api/tour/claim — the listing must still be the tester\'s', () => {
+  it('403 NOT_LISTING_OWNER when someone else owns the listing now, spending nothing', async () => {
+    h.state.listing = { owner_user_id: 'someone-else', deleted_at: null }
+    const res = await POST()
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('NOT_LISTING_OWNER')
+    expect(h.state.log).toEqual(['owner-check'])
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('403 when the listing was released and has no owner', async () => {
+    h.state.listing = { owner_user_id: null, deleted_at: null }
+    const res = await POST()
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('NOT_LISTING_OWNER')
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('403 when the listing was deleted', async () => {
+    h.state.listing = { owner_user_id: 'u1', deleted_at: '2026-10-01T00:00:00Z' }
+    const res = await POST()
+    expect(res.status).toBe(403)
+    expect(h.state.updates).toHaveLength(0)
+  })
+
+  it('refuses a resume of an open checkout too, without reading Stripe', async () => {
+    h.state.viewer!.enrollment.trialGrantedAt = '2026-08-31T00:00:00Z'
+    h.state.row.trial_granted_at = '2026-08-31T00:00:00Z'
+    h.state.row.stripe_checkout_session_id = 'cs_open'
+    h.state.listing = { owner_user_id: 'someone-else', deleted_at: null }
+    const res = await POST()
+    expect(res.status).toBe(403)
+    expect(h.retrieveSession).not.toHaveBeenCalled()
+    expect(h.expireSession).not.toHaveBeenCalled()
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('500 and nothing spent when the ownership read fails', async () => {
+    h.state.listingError = { message: 'boom' }
+    const res = await POST()
+    expect(res.status).toBe(500)
+    expect(h.state.updates).toHaveLength(0)
+    expect(h.createSession).not.toHaveBeenCalled()
+  })
+
+  it('checks ownership before the live-plan check and the compare-and-set', async () => {
+    const res = await POST()
+    expect(res.status).toBe(200)
+    expect(h.state.log.indexOf('owner-check')).toBeLessThan(h.state.log.indexOf('live-check'))
+    expect(h.state.log.indexOf('owner-check')).toBeLessThan(h.state.log.indexOf('cas'))
   })
 })
 
@@ -315,7 +382,7 @@ describe('POST /api/tour/claim — release on failure', () => {
     expect(res.status).toBe(500)
 
     // The release ran, after the failed create…
-    expect(h.state.log).toEqual(['live-check', 'cas', 'stripe:create', 'release'])
+    expect(h.state.log).toEqual(['owner-check', 'live-check', 'cas', 'stripe:create', 'release'])
     // …and actually returned the row to claimable.
     expect(h.state.row.trial_granted_at).toBeNull()
 

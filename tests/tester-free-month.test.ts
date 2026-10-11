@@ -9,7 +9,10 @@ const h = vi.hoisted(() => {
     user: { id: 'u1', email: 'tester@example.com' } as { id: string; email: string } | null,
     enrollment: null as Record<string, unknown> | null,
     sessionId: null as string | null,
-    listing: { name: 'Hampton Greens', tier: 'free' } as Record<string, unknown> | null,
+    listing: { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u1', deleted_at: null } as Record<
+      string,
+      unknown
+    > | null,
     liveSubs: [] as { id: string }[],
     subsError: null as { message: string } | null,
     flagReads: 0,
@@ -92,7 +95,7 @@ beforeEach(() => {
     trial_granted_at: null,
   }
   h.state.sessionId = null
-  h.state.listing = { name: 'Hampton Greens', tier: 'free' }
+  h.state.listing = { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u1', deleted_at: null }
   h.state.liveSubs = []
   h.state.subsError = null
   h.state.flagReads = 0
@@ -133,8 +136,31 @@ describe('getFreeMonthState', () => {
     expect(await getFreeMonthState()).toBeNull()
   })
 
+  it('no card when the listing is no longer the tester\'s', async () => {
+    h.state.listing = { name: 'Hampton Greens', tier: 'free', owner_user_id: null, deleted_at: null }
+    expect(await getFreeMonthState()).toBeNull()
+    h.state.listing = { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u2', deleted_at: null }
+    expect(await getFreeMonthState()).toBeNull()
+    h.state.listing = {
+      name: 'Hampton Greens',
+      tier: 'free',
+      owner_user_id: 'u1',
+      deleted_at: '2026-10-01T00:00:00Z',
+    }
+    expect(await getFreeMonthState()).toBeNull()
+  })
+
+  it('no "used" card either once the listing changed hands', async () => {
+    h.state.enrollment!.trial_granted_at = '2026-09-02T00:00:00Z'
+    h.state.sessionId = 'cs_1'
+    h.retrieveSession.mockResolvedValue({ status: 'complete', metadata: { plan_slug: 'starter' } })
+    h.state.listing = { name: 'Hampton Greens', tier: 'starter', owner_user_id: null, deleted_at: null }
+    expect(await getFreeMonthState()).toBeNull()
+    expect(h.retrieveSession).not.toHaveBeenCalled()
+  })
+
   it('saved when the listing already pays', async () => {
-    h.state.listing = { name: 'Hampton Greens', tier: 'starter' }
+    h.state.listing = { name: 'Hampton Greens', tier: 'starter', owner_user_id: 'u1', deleted_at: null }
     h.state.liveSubs = [{ id: 'sub-1' }]
     expect(await getFreeMonthState()).toMatchObject({ status: 'saved', currentTier: 'starter' })
   })

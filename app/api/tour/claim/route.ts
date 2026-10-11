@@ -5,7 +5,7 @@ import { getAppUrl } from '@/lib/env'
 import { getPlanMeta } from '@/lib/stripe/plans'
 import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
-import { LIVE_STATUSES, resolveTrialClaimer } from '@/lib/tour/freeMonth'
+import { LIVE_STATUSES, listingIsOwnedBy, resolveTrialClaimer } from '@/lib/tour/freeMonth'
 import {
   withTesterTrial,
   assertTrialCancels,
@@ -76,6 +76,13 @@ const claimBodySchema = z
   .object({ plan: z.enum(TESTER_TRIAL_TIERS).optional() })
   .strict()
 
+// The enrollment's listing changed hands after the invite (a released test
+// claim, 2026-10-11). Refused before anything is spent or sent to Stripe.
+const NOT_LISTING_OWNER = {
+  error: 'This listing isn’t yours anymore, so your free month can’t go on it. Ask us for a new invite.',
+  code: 'NOT_LISTING_OWNER',
+} as const
+
 const ALREADY_CLAIMED = {
   error: 'You already used your free month.',
   code: 'ALREADY_CLAIMED',
@@ -134,6 +141,18 @@ export async function POST(request: Request) {
   try {
     const serviceClient = createServiceClient()
     const base = { enrollmentId, listingId, userId: viewer.userId, email: viewer.email, serviceClient }
+
+    // Ownership is checked now, not trusted from the invite: the listing may
+    // have changed hands since. This runs before every branch below, so a
+    // fresh claim, a resume and a tier switch are all refused alike, with
+    // nothing spent and Stripe never called.
+    const owned = await listingIsOwnedBy(serviceClient, listingId, viewer.userId)
+    if (owned === null) {
+      return NextResponse.json(CLAIM_FAILED, { status: 500 })
+    }
+    if (!owned) {
+      return NextResponse.json(NOT_LISTING_OWNER, { status: 403 })
+    }
 
     // ── Already claimed at entry: consummated, resumable, or recoverable ─────
     //
