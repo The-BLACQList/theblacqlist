@@ -35,8 +35,9 @@ const ADMIN_ACCOUNT_REFUSAL =
  * SHA-256; the audit log gets the invite id and label. Never log `token` or
  * `link` here: a link is a login.
  *
- * Supporter links name an email (D4). Owner links name a listing and use
- * whoever owns it, with the same checks inviteTesterAction runs.
+ * A supporter link can name an email, or leave it blank so the tester types
+ * their own when they tap Start (founder, 2026-10-11). Owner links name a
+ * listing and use whoever owns it, with the same checks inviteTesterAction runs.
  */
 export async function mintTesterLinkAction(
   _prev: MintTesterLinkState,
@@ -58,20 +59,24 @@ export async function mintTesterLinkAction(
   let existingAccount = false
 
   if (kind === 'supporter') {
-    email = normalizeTesterEmail(formData.get('email')?.toString() ?? '')
-    if (!email) return { error: 'Enter a valid email for the supporter.' }
+    // Blank is fine: the tester types their own email on /t.
+    const typedEmail = formData.get('email')?.toString().trim() ?? ''
+    if (typedEmail) {
+      email = normalizeTesterEmail(typedEmail)
+      if (!email) return { error: 'That email doesn’t look right. Fix it or leave it blank.' }
 
-    const { data: existingId, error: lookupError } = await serviceClient.rpc(
-      'find_auth_user_id_by_email',
-      { p_email: email }
-    )
-    if (lookupError) {
-      console.error('[mintTesterLinkAction] account lookup', lookupError.code)
-      return { error: 'Failed to check that email. Please try again.' }
-    }
-    if (existingId) {
-      if (await getAdminRole(existingId)) return { error: ADMIN_ACCOUNT_REFUSAL }
-      existingAccount = true
+      const { data: existingId, error: lookupError } = await serviceClient.rpc(
+        'find_auth_user_id_by_email',
+        { p_email: email }
+      )
+      if (lookupError) {
+        console.error('[mintTesterLinkAction] account lookup', lookupError.code)
+        return { error: 'Failed to check that email. Please try again.' }
+      }
+      if (existingId) {
+        if (await getAdminRole(existingId)) return { error: ADMIN_ACCOUNT_REFUSAL }
+        existingAccount = true
+      }
     }
   } else {
     const listingRef = formData.get('listing')?.toString().trim() ?? ''

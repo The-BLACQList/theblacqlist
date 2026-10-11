@@ -28,6 +28,7 @@ export type RateLimitBucket =
   | 'checkout'
   | 'billing_portal'
   | 'tester_link'
+  | 'tester_link_peek'
   | 'correction'
   | 'review'
   | 'listing_submit'

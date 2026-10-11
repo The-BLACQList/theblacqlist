@@ -1,5 +1,6 @@
 // =============================================================================
 // Migration test: 20261001000000_tester_one_tap_links.sql
+// plus its follow-up 20261011000000_supporter_links_without_email.sql
 // =============================================================================
 // A one-tap link is a login, so the security property under test is again an
 // ABSENCE: no write policy on tester_invites, and no EXECUTE on the two
@@ -21,6 +22,7 @@ import { DB_REACHABLE, MIGRATIONS_DIR, applyFile, exec, query, raises, withScrat
 
 const TOUR_MIGRATION = path.join(MIGRATIONS_DIR, '20260830000000_tester_tour.sql')
 const MIGRATION = path.join(MIGRATIONS_DIR, '20261001000000_tester_one_tap_links.sql')
+const NO_EMAIL_MIGRATION = path.join(MIGRATIONS_DIR, '20261011000000_supporter_links_without_email.sql')
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111'
 const TESTER_ID = '22222222-2222-2222-2222-222222222222'
@@ -119,6 +121,7 @@ async function withMigrated(name: string, fn: (url: string) => void | Promise<vo
     exec(url, FIXTURE)
     applyFile(url, TOUR_MIGRATION)
     applyFile(url, MIGRATION)
+    applyFile(url, NO_EMAIL_MIGRATION)
     exec(url, GRANTS)
     await fn(url)
   })
@@ -219,8 +222,8 @@ describe.skipIf(!DB_REACHABLE)('migration: tester one-tap links', () => {
   it('enforces the kind and target CHECK and the use_count range', async () => {
     await withMigrated('otl_checks', (url) => {
       const bad = [
-        `('h1', 'supporter', NULL, NULL)`,
         `('h2', 'supporter', 'a@example.com', '${LISTING_ID}')`,
+        `('h2b', 'supporter', NULL, '${LISTING_ID}')`,
         `('h3', 'owner', NULL, NULL)`,
         `('h4', 'owner', 'a@example.com', '${LISTING_ID}')`,
       ]
@@ -228,6 +231,8 @@ describe.skipIf(!DB_REACHABLE)('migration: tester one-tap links', () => {
         expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, email, listing_id, label) VALUES ${values.replace(/\)$/, ", 'T-01')")};`)).toBe(true)
       }
       expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, listing_id, label) VALUES ('h5', 'owner', '${LISTING_ID}', 'T-01');`)).toBe(false)
+      // A supporter link may leave the email for the tester to type on /t.
+      expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, label) VALUES ('h1', 'supporter', 'T-03');`)).toBe(false)
       expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, email, label, use_count, max_uses) VALUES ('h6', 'supporter', 'a@example.com', 'T-01', 3, 2);`)).toBe(true)
       expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, email, label) VALUES ('h7', 'supporter', 'a@example.com', '');`)).toBe(true)
       expect(raises(url, `INSERT INTO tester_invites (token_hash, kind, email, label) VALUES ('h5', 'supporter', 'a@example.com', 'T-02');`)).toBe(true)
