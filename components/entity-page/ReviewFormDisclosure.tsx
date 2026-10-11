@@ -69,9 +69,10 @@ export function ReviewFormDisclosure({ listingId, listingName, criteria, hasRevi
   // had focus is gone the moment it opens — without moving focus a keyboard user
   // is dumped back at the top of the document.
   //
-  // Focus lands on the panel, not on the first field: the first field is the
-  // star rating, whose radios are `sr-only` (ReviewForm.tsx:80-87), so focusing
-  // one would put a keyboard user's focus somewhere with no visible ring at all.
+  // Focus lands on the panel, not on the first field: the first field is a
+  // rating control (category star buttons, or `sr-only` star radios when there
+  // are no categories), and focusing straight into it skips the heading and
+  // the line that explains how the overall is worked out.
   //
   // Only on a click. A hash arrival scrolls instead — the same reasoning as
   // ReportCorrectionForm's "auto-opening would steal focus on mount from anyone

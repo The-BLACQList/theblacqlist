@@ -5,6 +5,7 @@ import { Loader2, Star, ImagePlus, X } from 'lucide-react'
 import { createReviewAction } from '@/lib/actions/reviews/createReview'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import type { ReviewCriterion } from '@/types'
+import { overallFromCriteria, type OverallRating } from '@/lib/reviews/overall'
 import { cn } from '@/lib/utils'
 
 // No `listingName` prop on purpose. The success message used to print it. When
@@ -61,6 +62,38 @@ function CriterionStarRow({
   )
 }
 
+// Read-only. With categories, the overall stars are their average
+// (lib/reviews/overall.ts), and createReview.ts saves the same number.
+function OverallStars({ overall }: { overall: OverallRating | null }) {
+  const stars = overall?.stars ?? 0
+  const average = overall ? overall.average.toFixed(1).replace(/\.0$/, '') : ''
+  return (
+    <div className="mt-3 border-t border-charcoal/12 pt-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-subhead text-sm font-semibold text-brand-black">Overall</span>
+        <div className="flex items-center gap-0.5 p-0.5" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              className={cn(
+                'size-5',
+                star <= stars ? 'fill-amber-gold text-amber' : 'fill-none text-charcoal/25'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+      <output aria-live="polite" className="block mt-1 font-body text-xs text-charcoal-soft text-right">
+        {!overall
+          ? 'Not rated yet'
+          : overall.count === 1
+            ? `Overall ${stars} star${stars > 1 ? 's' : ''}`
+            : `Overall ${stars} star${stars > 1 ? 's' : ''}, the average of your ${overall.count} ratings (${average})`}
+      </output>
+    </div>
+  )
+}
+
 function StarSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hover, setHover] = useState(0)
   const labels = [
@@ -106,9 +139,15 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
   )
 }
 
+const HINT_ID = 'review-rating-hint'
+
 export function ReviewForm({ listingId, criteria = [] }: Props) {
   const [state, formAction, isPending] = useActionState(createReviewAction, null)
-  const [rating, setRating] = useState(0)
+  // Only used when there are no categories. With categories the overall is
+  // their average [Decision — founder, 2026-10-10]: reviewers rated the
+  // categories, skipped the separate overall stars, and met a greyed-out
+  // submit button with no reason given.
+  const [manualRating, setManualRating] = useState(0)
   // CONTROLLED on purpose (debt ⑰). React 19 resets an uncontrolled
   // <form action={…}> once the action resolves, so a server-side rejection —
   // Turnstile, a duplicate review, a body that failed a rule — used to wipe up
@@ -120,6 +159,12 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
   const [body, setBody] = useState('')
   const [criteriaRatings, setCriteriaRatings] = useState<Record<string, number>>({})
   const [photoNames, setPhotoNames] = useState<string[]>([])
+
+  const hasCriteria = criteria.length > 0
+  const overall = hasCriteria
+    ? overallFromCriteria(criteria.map((c) => criteriaRatings[c.id] ?? 0))
+    : null
+  const rating = hasCriteria ? (overall?.stars ?? 0) : manualRating
 
   if (state && 'success' in state) {
     return (
@@ -143,19 +188,15 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
       <input type="hidden" name="listing_id" value={listingId} />
       <input type="hidden" name="rating" value={rating} />
 
-      <StarSelector value={rating} onChange={setRating} />
-      {state && 'field' in state && state.field === 'rating' && (
-        <p role="alert" className="font-body text-xs text-red-600">
-          {state.error}
-        </p>
-      )}
-
-      {criteria.length > 0 && (
+      {hasCriteria ? (
         <fieldset className="rounded-lg border border-charcoal/12 bg-cream/40 px-4 py-3">
           <legend className="px-1 font-subhead text-xs font-semibold text-charcoal-soft">
-            Rate by category <span className="font-normal text-charcoal-faint">(optional)</span>
+            Your rating <span aria-hidden="true">*</span>
           </legend>
-          <div className="space-y-2 mt-1">
+          <p className="font-body text-xs text-charcoal-faint">
+            Rate as many as you like. Your overall stars are their average.
+          </p>
+          <div className="space-y-2 mt-2">
             {criteria.map((c) => (
               <CriterionStarRow
                 key={c.id}
@@ -166,7 +207,15 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
               />
             ))}
           </div>
+          <OverallStars overall={overall} />
         </fieldset>
+      ) : (
+        <StarSelector value={manualRating} onChange={setManualRating} />
+      )}
+      {state && 'field' in state && state.field === 'rating' && (
+        <p role="alert" className="font-body text-xs text-red-600">
+          {state.error}
+        </p>
       )}
 
       <div>
@@ -270,10 +319,16 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
 
       <TurnstileWidget resetKey={state} />
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+        {rating === 0 && (
+          <p id={HINT_ID} className="font-body text-xs text-charcoal-soft">
+            {hasCriteria ? 'Rate at least one category to submit.' : 'Pick a star rating to submit.'}
+          </p>
+        )}
         <button
           type="submit"
           disabled={isPending || rating === 0}
+          aria-describedby={rating === 0 ? HINT_ID : undefined}
           className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}

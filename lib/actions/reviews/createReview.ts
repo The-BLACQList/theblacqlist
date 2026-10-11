@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
 import { checkRateLimit } from '@/lib/security/rate-limit'
+import { overallFromCriteria } from '@/lib/reviews/overall'
 
 const REVIEW_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const REVIEW_PHOTO_MAX_BYTES = 5 * 1024 * 1024
@@ -65,9 +66,40 @@ export async function createReviewAction(
 
   if (!listingId) return { error: 'Missing listing ID.' }
 
-  const rating = parseInt(ratingRaw, 10)
-  if (!ratingRaw || isNaN(rating) || rating < 1 || rating > 5) {
-    return { error: 'Please select a star rating.', field: 'rating' }
+  // Category ratings arrive as `criterion:<uuid>` form fields. Only ids that
+  // are active criteria count, so a made-up id cannot move the overall.
+  // Fail-soft: if this read fails the set is empty and the posted rating is
+  // used, the same as a site with no categories.
+  const { data: activeCriteria } = await (supabase as unknown as SupabaseClient)
+    .from('review_criteria')
+    .select('id')
+    .eq('is_active', true)
+  const activeCriterionIds = new Set(
+    ((activeCriteria ?? []) as { id: string }[]).map((c) => c.id)
+  )
+  const criterionScores: { criterionId: string; rating: number }[] = []
+  for (const [key, raw] of formData.entries()) {
+    if (!key.startsWith('criterion:')) continue
+    const criterionId = key.slice('criterion:'.length).trim()
+    const value = parseInt(raw.toString().trim(), 10)
+    if (!activeCriterionIds.has(criterionId) || isNaN(value) || value < 1 || value > 5) continue
+    criterionScores.push({ criterionId, rating: value })
+  }
+
+  // With categories, the overall is their average and the posted `rating` is
+  // ignored, so it always matches the category stars (lib/reviews/overall.ts).
+  // Without categories, the reviewer picks the overall stars by hand.
+  const fromCriteria = overallFromCriteria(criterionScores.map((c) => c.rating))
+  let rating: number
+  if (fromCriteria) {
+    rating = fromCriteria.stars
+  } else if (activeCriterionIds.size > 0) {
+    return { error: 'Please rate at least one category.', field: 'rating' }
+  } else {
+    rating = parseInt(ratingRaw, 10)
+    if (!ratingRaw || isNaN(rating) || rating < 1 || rating > 5) {
+      return { error: 'Please select a star rating.', field: 'rating' }
+    }
   }
   if (title && title.length > 150) {
     return { error: 'Title must be 150 characters or fewer.', field: 'title' }
@@ -150,17 +182,14 @@ export async function createReviewAction(
 
   if (error || !review) return { error: 'Failed to submit your review. Please try again.' }
 
-  // Optional per-criterion scores arrive as `criterion:<uuid>` form fields.
-  // These ride the review's moderation gate and are best-effort: a failure here
-  // (e.g. review_ratings not migrated yet) must not fail the saved review.
-  const criterionRows: { review_id: string; criterion_id: string; rating: number }[] = []
-  for (const [key, raw] of formData.entries()) {
-    if (!key.startsWith('criterion:')) continue
-    const criterionId = key.slice('criterion:'.length).trim()
-    const value = parseInt(raw.toString().trim(), 10)
-    if (!criterionId || isNaN(value) || value < 1 || value > 5) continue
-    criterionRows.push({ review_id: review.id, criterion_id: criterionId, rating: value })
-  }
+  // The category scores ride the review's moderation gate and are best-effort:
+  // a failure here must not fail the saved review, whose overall already
+  // reflects them.
+  const criterionRows = criterionScores.map((c) => ({
+    review_id: review.id,
+    criterion_id: c.criterionId,
+    rating: c.rating,
+  }))
   if (criterionRows.length > 0) {
     try {
       await (supabase as unknown as SupabaseClient).from('review_ratings').insert(criterionRows)
