@@ -4,6 +4,7 @@ import { requireOwner } from '@/lib/dashboard/guard'
 import { getPlanAvailability } from '@/lib/stripe/availability'
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { getFreeMonthState } from '@/lib/tour/freeMonth'
+import { freeMonthHold } from '@/lib/tour/freeMonthHold'
 import { FreeMonthCard } from './FreeMonthCard'
 import { UpgradePlans } from './UpgradePlans'
 
@@ -75,6 +76,7 @@ export default async function UpgradePage() {
         currentTier={currentTier}
         canManage={canManage}
         availability={availability}
+        freeMonthHold={freeMonthHold(freeMonth, primaryListingId)}
       />
     </div>
   )

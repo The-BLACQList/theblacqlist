@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { PLANS, annualSavingsPct, type BillingCycle, type PlanSlug } from '@/lib/stripe/plans'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
+import type { FreeMonthHold } from '@/lib/tour/freeMonthHold'
 import { CheckoutButton } from './CheckoutButton'
 import { ManageSubscriptionButton } from './ManageSubscriptionButton'
 
@@ -15,11 +16,20 @@ interface Props {
   canManage: boolean
   // Per paid plan, whether a Stripe price ID exists for each cycle.
   availability: PlanAvailability
+  /** Set while a tester's free month is unclaimed for this listing. The paid
+   *  checkout charges today, so the cards point at the free month instead. */
+  freeMonthHold?: FreeMonthHold
 }
 
 const TIER_ORDER: PlanSlug[] = ['free', 'starter', 'growth', 'premium']
 
-export function UpgradePlans({ primaryListingId, currentTier, canManage, availability }: Props) {
+export function UpgradePlans({
+  primaryListingId,
+  currentTier,
+  canManage,
+  availability,
+  freeMonthHold = null,
+}: Props) {
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
   const starter = PLANS.find((p) => p.slug === 'starter')!
   const savingsPct = annualSavingsPct(starter)
@@ -121,6 +131,17 @@ export function UpgradePlans({ primaryListingId, currentTier, canManage, availab
                     <ManageSubscriptionButton listingId={primaryListingId} />
                   )}
                 </div>
+              ) : isPurchasable && freeMonthHold === 'ready' ? (
+                <a
+                  href="#free-month"
+                  className="flex w-full h-10 items-center justify-center rounded-full bg-amber-gold font-body font-bold text-sm text-brand-black transition-colors hover:bg-light-gold"
+                >
+                  Use your free month
+                </a>
+              ) : isPurchasable && freeMonthHold === 'waiting' ? (
+                <p className="font-subhead text-xs text-charcoal-soft">
+                  Your first month is free. It will be ready once your page is live.
+                </p>
               ) : isPurchasable ? (
                 <CheckoutButton
                   planSlug={plan.slug}
