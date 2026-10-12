@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const CATEGORY_ID = '11111111-1111-4111-8111-111111111111'
 const CITY_ID = '22222222-2222-4222-8222-222222222222'
+const PARENT_ID = '44444444-4444-4444-8444-444444444444'
 
 const h = vi.hoisted(() => ({
   state: {
@@ -12,16 +13,22 @@ const h = vi.hoisted(() => ({
     requestError: null as null | { code: string },
     inserts: {} as Record<string, Array<Record<string, unknown>>>,
     cityFilters: [] as Array<[string, unknown[]]>,
-    // Set in beforeEach; vi.hoisted runs before CATEGORY_ID exists.
-    category: null as null | Record<string, unknown>,
+    // Rows by id, set in beforeEach; vi.hoisted runs before CATEGORY_ID exists.
+    categories: {} as Record<string, Record<string, unknown>>,
+    categorySelects: [] as string[],
+    categoryError: null as null | { code: string; message: string },
   },
 }))
 
 function builder(table: string) {
   let op: 'select' | 'insert' = 'select'
+  let idFilter: unknown = null
   const chain: Record<string, unknown> = {}
   const self = () => chain
-  chain.select = self
+  chain.select = (cols?: string) => {
+    if (table === 'categories' && typeof cols === 'string') h.state.categorySelects.push(cols)
+    return chain
+  }
   chain.is = self
   chain.limit = (...args: unknown[]) => {
     if (table === 'cities') h.state.cityFilters.push(['limit', args])
@@ -29,6 +36,7 @@ function builder(table: string) {
   }
   chain.eq = (...args: unknown[]) => {
     if (table === 'cities') h.state.cityFilters.push(['eq', args])
+    if (args[0] === 'id') idFilter = args[1]
     return chain
   }
   chain.ilike = (...args: unknown[]) => {
@@ -41,8 +49,11 @@ function builder(table: string) {
     return chain
   }
   chain.delete = self
-  chain.maybeSingle = async () =>
-    table === 'categories' ? { data: h.state.category, error: null } : { data: null, error: null }
+  chain.maybeSingle = async () => {
+    if (table !== 'categories') return { data: null, error: null }
+    if (h.state.categoryError) return { data: null, error: h.state.categoryError }
+    return { data: h.state.categories[String(idFilter)] ?? null, error: null }
+  }
   chain.single = async () => ({ data: { id: 'listing-1' }, error: null })
   chain.then = (resolve: (v: unknown) => unknown) => {
     if (table === 'cities') return resolve({ data: h.state.cities, error: null })
@@ -87,12 +98,22 @@ function listingRow() {
   return row
 }
 
+// The picked category, and its parent when parentSlug is given.
+function setCategory(slug: string, parentSlug: string | null) {
+  h.state.categories = {
+    [CATEGORY_ID]: { id: CATEGORY_ID, slug, parent_id: parentSlug ? PARENT_ID : null },
+  }
+  if (parentSlug) h.state.categories[PARENT_ID] = { slug: parentSlug }
+}
+
 beforeEach(() => {
   h.state.cities = []
   h.state.requestError = null
   h.state.inserts = {}
   h.state.cityFilters = []
-  h.state.category = { id: CATEGORY_ID, slug: 'bakeries', parent: { slug: 'food-dining' } }
+  h.state.categorySelects = []
+  h.state.categoryError = null
+  setCategory('bakeries', 'food-dining')
 })
 
 describe('createListingAction, business path', () => {
@@ -199,11 +220,7 @@ describe('createListingAction, creator guards', () => {
   })
 
   it('refuses a business page in a Creators subcategory', async () => {
-    h.state.category = {
-      id: CATEGORY_ID,
-      slug: 'podcasters',
-      parent: { slug: 'creators-influencers' },
-    }
+    setCategory('podcasters', 'creators-influencers')
     const res = await createListingAction(null, form())
     expect(res).toMatchObject({
       fieldErrors: { category_id: expect.stringContaining('own sign-up') },
@@ -212,18 +229,39 @@ describe('createListingAction, creator guards', () => {
   })
 
   it('refuses a business page in the Creators parent', async () => {
-    h.state.category = { id: CATEGORY_ID, slug: 'creators-influencers', parent: null }
+    setCategory('creators-influencers', null)
     const res = await createListingAction(null, form())
     expect(res).toMatchObject({ fieldErrors: { category_id: expect.any(String) } })
   })
 
   it('still allows the agency category Influencer Marketing', async () => {
-    h.state.category = {
-      id: CATEGORY_ID,
-      slug: 'influencer-marketing',
-      parent: { slug: 'social-media-marketing' },
-    }
+    setCategory('influencer-marketing', 'social-media-marketing')
     const res = await createListingAction(null, form())
     expect(res).toMatchObject({ success: true })
+  })
+
+  // 2026-10-11: a hinted embed from categories to itself fails in PostgREST
+  // (PGRST200), and every page in a subcategory was refused as "Invalid
+  // category". The lookups must stay plain selects with no embed.
+  it('looks up the category and its parent with plain selects', async () => {
+    setCategory('authors-writers', 'books-publishing')
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({ success: true })
+    expect(h.state.categorySelects.length).toBeGreaterThan(0)
+    for (const cols of h.state.categorySelects) expect(cols).not.toMatch(/[!(]/)
+  })
+
+  it('does not call a failed lookup an invalid category', async () => {
+    h.state.categoryError = { code: 'PGRST200', message: 'Could not find a relationship' }
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({ error: expect.stringContaining('Something went wrong') })
+    expect(res && 'fieldErrors' in res ? res.fieldErrors : undefined).toBeUndefined()
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('still calls a missing category invalid', async () => {
+    h.state.categories = {}
+    const res = await createListingAction(null, form())
+    expect(res).toMatchObject({ fieldErrors: { category_id: expect.stringContaining('Invalid') } })
   })
 })
