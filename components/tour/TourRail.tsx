@@ -34,6 +34,7 @@ import {
   optionalUnfinishedSteps,
   pendingReflectionCount,
 } from '@/lib/tour/progress'
+import { TourCloseForGood } from './TourCloseForGood'
 import { TourStepRow } from './TourStepRow'
 import {
   applySpotlight,
@@ -118,6 +119,9 @@ export function TourRail() {
   // pins the tester's own choice; '' means they closed everything.
   const [openStep, setOpenStep] = useState<string | null>(null)
   const [reviewing, setReviewing] = useState(false)
+  // Set once closeTourRailAction saved the choice. The server mount stops
+  // rendering the rail on the next request; this hides it right now.
+  const [closedForGood, setClosedForGood] = useState(false)
 
   const steps = tour?.steps ?? NO_STEPS
 
@@ -128,6 +132,11 @@ export function TourRail() {
     refresh()
     router.refresh()
   }, [refresh, router])
+
+  const handleClosedForGood = useCallback(() => {
+    setClosedForGood(true)
+    router.refresh()
+  }, [router])
 
   const handleToggle = useCallback(
     (key: string) =>
@@ -185,7 +194,14 @@ export function TourRail() {
     return () => clearTimeout(timer)
   }, [attentionKey, attentionSeq])
 
-  if (isHiddenPath(pathname) || isRailHiddenPath(pathname) || phase === 'gone') return null
+  if (
+    closedForGood ||
+    isHiddenPath(pathname) ||
+    isRailHiddenPath(pathname) ||
+    phase === 'gone'
+  ) {
+    return null
+  }
 
   const done = doneCount(steps)
   const total = steps.length || 6
@@ -336,6 +352,8 @@ export function TourRail() {
                     className={`size-4 transition-transform ${reviewing ? 'rotate-180' : ''}`}
                   />
                 </button>
+
+                <TourCloseForGood kind={tour.kind} onClosed={handleClosedForGood} />
               </div>
             )}
 

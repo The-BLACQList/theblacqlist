@@ -94,7 +94,9 @@ export async function GET() {
   // existence is itself gated, and none of the three callers is owed a
   // distinction (resolveTourViewer collapses them on purpose).
   const viewer = await resolveTourViewer()
-  if (!viewer) {
+  // A closed panel answers like no enrollment, so a rail still open in another
+  // tab vanishes on its next fetch instead of coming back.
+  if (!viewer || viewer.enrollment.railClosedAt) {
     return NextResponse.json({ error: 'Not found.', code: 'NOT_FOUND' }, { status: 404 })
   }
 

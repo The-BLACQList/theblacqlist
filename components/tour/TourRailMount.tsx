@@ -24,5 +24,7 @@ import { TourRail } from './TourRail'
 export async function TourRailMount() {
   const viewer = await resolveTourViewer()
   if (!viewer) return null
+  // A finished tester closed the panel for good (founder, 2026-10-12).
+  if (viewer.enrollment.railClosedAt) return null
   return <TourRail />
 }

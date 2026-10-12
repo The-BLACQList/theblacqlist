@@ -37,6 +37,7 @@ const h = vi.hoisted(() => {
         listingId: string
         completedAt: string | null
         trialGrantedAt: string | null
+        railClosedAt?: string | null
       }
     } | null,
     rows: [] as { step_key: string; reflection: string | null }[],
@@ -168,6 +169,15 @@ describe('GET /api/tour/state — the door', () => {
     expect(h.createServiceClient).not.toHaveBeenCalled()
     expect(h.verifyListingSaved).not.toHaveBeenCalled()
     expect(h.verifyReviewOrCorrection).not.toHaveBeenCalled()
+  })
+
+  it('404s once the tester closed the tour for good, so an open tab drops it too', async () => {
+    h.state.viewer!.enrollment.completedAt = '2026-10-10T00:00:00Z'
+    h.state.viewer!.enrollment.railClosedAt = '2026-10-12T00:00:00Z'
+    const { status, body } = await load()
+    expect(status).toBe(404)
+    expect(body.code).toBe('NOT_FOUND')
+    expect(h.createServiceClient).not.toHaveBeenCalled()
   })
 
   it('reads only this enrollment’s completion rows', async () => {
