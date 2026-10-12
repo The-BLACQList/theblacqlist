@@ -55,6 +55,10 @@ export interface TourViewer {
     isOwner?: boolean
     completedAt: string | null
     trialGrantedAt: string | null
+    /** When the tester closed the finished tour panel for good. The rail
+     *  mount and the state route both hide on it. Optional because only
+     *  resolveTourViewer reads it; the free month resolver doesn't care. */
+    railClosedAt?: string | null
   }
 }
 
@@ -89,7 +93,7 @@ export const resolveTourViewer = cache(async (): Promise<TourViewer | null> => {
 
     const { data: enrollment, error } = await supabase
       .from('tour_enrollments')
-      .select('id, listing_id, completed_at, trial_granted_at')
+      .select('id, listing_id, completed_at, trial_granted_at, rail_closed_at')
       .eq('tester_user_id', user.id)
       .is('ended_at', null)
       .maybeSingle()
@@ -103,6 +107,7 @@ export const resolveTourViewer = cache(async (): Promise<TourViewer | null> => {
         listingId: enrollment.listing_id,
         completedAt: enrollment.completed_at,
         trialGrantedAt: enrollment.trial_granted_at,
+        railClosedAt: enrollment.rail_closed_at,
       },
     }
   } catch {

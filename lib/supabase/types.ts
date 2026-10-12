@@ -2910,6 +2910,7 @@ export type Database = {
           invited_by: string | null
           is_owner: boolean
           listing_id: string | null
+          rail_closed_at: string | null
           started_at: string
           stripe_checkout_session_id: string | null
           tester_user_id: string
@@ -2924,6 +2925,7 @@ export type Database = {
           invited_by?: string | null
           is_owner?: boolean
           listing_id?: string | null
+          rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
           tester_user_id: string
@@ -2938,6 +2940,7 @@ export type Database = {
           invited_by?: string | null
           is_owner?: boolean
           listing_id?: string | null
+          rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
           tester_user_id?: string

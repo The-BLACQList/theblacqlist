@@ -116,6 +116,7 @@ const ENROLLED = {
   listing_id: 'listing-id',
   completed_at: null,
   trial_granted_at: null,
+  rail_closed_at: null,
 }
 
 function reset() {
@@ -175,6 +176,7 @@ describe('gate order — each gate refuses before paying for the next', () => {
         listingId: 'listing-id',
         completedAt: null,
         trialGrantedAt: null,
+        railClosedAt: null,
       },
     })
   })
@@ -224,6 +226,27 @@ describe('TourRailMount — null at every gate, and no rail element', () => {
       expect(h.TourRail).not.toHaveBeenCalled()
     })
   }
+
+  it('returns null once a finished tester closed the tour for good', async () => {
+    // Founder, 2026-10-12: a finished tester can close the panel and just enjoy
+    // the site. The enrollment stays live (the free month still reads it), so
+    // the mount has to check the closed mark itself.
+    h.state.enrollment = {
+      ...ENROLLED,
+      completed_at: '2026-10-10T00:00:00Z',
+      rail_closed_at: '2026-10-12T00:00:00Z',
+    }
+
+    expect(await TourRailMount()).toBeNull()
+    expect(h.TourRail).not.toHaveBeenCalled()
+  })
+
+  it('still renders for a finished tester who has not closed it', async () => {
+    h.state.enrollment = { ...ENROLLED, completed_at: '2026-10-10T00:00:00Z' }
+
+    const rendered = await TourRailMount()
+    expect((rendered as { type: unknown }).type).toBe(h.TourRail)
+  })
 
   it('renders the rail for an enrolled tester', async () => {
     const rendered = await TourRailMount()
