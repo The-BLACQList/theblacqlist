@@ -385,12 +385,21 @@ export async function createListingAction(
     return { error: 'Please fix the errors below.', fieldErrors }
   }
 
-  const { data: category } = await supabase
+  // No embedded parent here. A hinted embed from categories to itself
+  // (categories!categories_parent_id_fkey) fails in PostgREST with PGRST200,
+  // and reading that error as "not found" refused every new page from
+  // 2026-10-08 to 2026-10-11. Two plain lookups can't break that way.
+  const { data: category, error: categoryError } = await supabase
     .from('categories')
-    .select('id, slug, parent_id, parent:categories!categories_parent_id_fkey(slug)')
+    .select('id, slug, parent_id')
     .eq('id', categoryId)
     .eq('is_active', true)
     .maybeSingle()
+
+  if (categoryError) {
+    console.error('[createListing] category lookup error:', categoryError)
+    return { error: 'Something went wrong creating your listing. Please try again.' }
+  }
 
   if (!category) {
     return {
@@ -399,8 +408,21 @@ export async function createListingAction(
     }
   }
 
+  let parentSlug: string | null = null
+  if (category.parent_id) {
+    const { data: parent, error: parentError } = await supabase
+      .from('categories')
+      .select('slug')
+      .eq('id', category.parent_id)
+      .maybeSingle()
+    if (parentError) {
+      console.error('[createListing] parent category lookup error:', parentError)
+      return { error: 'Something went wrong creating your listing. Please try again.' }
+    }
+    parentSlug = parent?.slug ?? null
+  }
+
   // Creators & Influencers is the creator path's alone (lib/listings/creatorCategories.ts).
-  const parentSlug = (category.parent as unknown as { slug: string } | null)?.slug
   if (
     entityType !== 'creator' &&
     (category.slug === CREATOR_PARENT_SLUG || parentSlug === CREATOR_PARENT_SLUG)
