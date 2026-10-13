@@ -1,10 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
-import {
-  inviteTesterAction,
-  endTesterEnrollmentAction,
-} from '@/lib/actions/admin/manageTesterTour'
+import { useActionState, useState } from 'react'
+import { inviteTesterAction, endTesterEnrollmentAction } from '@/lib/actions/admin/manageTesterTour'
 
 export function InviteTesterForm() {
   const [state, dispatch, pending] = useActionState(inviteTesterAction, null)
@@ -22,8 +19,8 @@ export function InviteTesterForm() {
           Listing ID or slug
         </label>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
-          The listing&rsquo;s owner becomes the tester — the tour&rsquo;s trial
-          lands on their own listing.
+          The listing&rsquo;s owner becomes the tester, and their free month lands on their own
+          listing.
         </p>
         <input
           id="invite-listing"
@@ -41,8 +38,8 @@ export function InviteTesterForm() {
       )}
       {succeeded && (
         <p role="status" className="font-body text-sm text-green-700">
-          Enrolled. The tester sees the tour rail on their next signed-in page
-          view (while the tour flag is on).
+          Enrolled. The tester sees the tour rail on their next signed-in page view (while the tour
+          flag is on).
         </p>
       )}
       <button
@@ -56,29 +53,75 @@ export function InviteTesterForm() {
   )
 }
 
-export function EndEnrollmentButton({ enrollmentId }: { enrollmentId: string }) {
-  const [state, dispatch, pending] = useActionState(
-    endTesterEnrollmentAction,
-    null
-  )
+/**
+ * End a tester. Ending frees their spot under the cap and keeps their answers,
+ * but an owner's unclaimed free month closes for good, so it always asks first
+ * and says so when it applies (ticket 137).
+ */
+export function EndEnrollmentButton({
+  enrollmentId,
+  testerLabel,
+  warning,
+}: {
+  enrollmentId: string
+  testerLabel: string
+  warning: string | null
+}) {
+  const [state, dispatch, pending] = useActionState(endTesterEnrollmentAction, null)
+  const [confirming, setConfirming] = useState(false)
 
   const error = state !== null && 'error' in state ? state.error : null
 
+  if (!confirming) {
+    return (
+      <div className="w-full space-y-3">
+        {warning && (
+          <p className="rounded-lg border border-[#ecd9ad] bg-[#fbf3e2] px-3 py-2 font-body text-sm text-[#7a5600]">
+            {warning}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="min-h-11 rounded-lg border border-[#e8c7c4] bg-white px-4 font-subhead text-sm font-semibold text-[#a02a1f] hover:bg-[#fdf1ef]"
+        >
+          End and free this spot
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div
+      role="group"
+      aria-label={`End ${testerLabel}`}
+      className="w-full rounded-lg border border-[#e8c7c4] bg-[#fdf1ef] p-3 space-y-2"
+    >
+      <p className="font-subhead text-sm font-semibold text-[#7d2118]">
+        End {testerLabel}? Their spot opens up and their answers stay.
+      </p>
+      {warning && <p className="font-body text-sm text-[#7d2118]">{warning}</p>}
       {error && (
-        <p className="font-body text-xs text-red-600 max-w-[160px] text-right">
+        <p role="alert" className="font-body text-sm text-[#7d2118]">
           {error}
         </p>
       )}
-      <form action={dispatch}>
+      <form action={dispatch} className="flex flex-wrap gap-2">
         <input type="hidden" name="enrollment_id" value={enrollmentId} />
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          disabled={pending}
+          className="min-h-11 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black hover:border-charcoal/40 disabled:opacity-50"
+        >
+          Keep them
+        </button>
         <button
           type="submit"
           disabled={pending}
-          className="font-subhead text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
+          className="min-h-11 rounded-lg bg-[#a02a1f] px-4 font-subhead text-sm font-semibold text-white hover:bg-[#7d2118] disabled:opacity-50"
         >
-          {pending ? 'Ending…' : 'End enrollment'}
+          {pending ? 'Ending…' : `Yes, end ${testerLabel}`}
         </button>
       </form>
     </div>
