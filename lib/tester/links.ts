@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
+import { TESTER_CAP } from '@/lib/tester/cap'
 
 /**
  * One-tap tester links: the pure parts, kept out of the 'use server' files so
@@ -12,11 +13,28 @@ import { createHash, randomBytes } from 'node:crypto'
  * Plan: docs/blacqlist/ops/tester-week/one-tap-link-plan-2026-10-01.md.
  */
 
-export type TesterLinkKind = 'supporter' | 'owner'
+/**
+ * 'shared' is one link the founder can post or forward (founder, 2026-10-13).
+ * It names no one and is never bound: each person who taps it says whether
+ * they own a business and gets their own account and tour.
+ */
+export type TesterLinkKind = 'supporter' | 'owner' | 'shared'
 
 /** D1, approved 2026-10-01: reusable, five uses, fourteen days. */
 export const TESTER_LINK_MAX_USES = 5
 export const TESTER_LINK_TTL_DAYS = 14
+
+export { TESTER_CAP, formatTesterNumber } from '@/lib/tester/cap'
+
+/** A shared link lets in at most as many new people as the whole test holds. */
+export const SHARED_LINK_MAX_USES = TESTER_CAP
+
+/** What a new tester on a shared link says they are. */
+export type TesterRole = 'owner' | 'supporter'
+
+export function parseTesterRole(raw: string): TesterRole | null {
+  return raw === 'owner' || raw === 'supporter' ? raw : null
+}
 
 export const TESTER_LINK_LABEL_MAX = 40
 

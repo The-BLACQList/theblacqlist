@@ -5,6 +5,7 @@ import {
   mintTesterLinkAction,
   revokeTesterLinkAction,
 } from '@/lib/actions/admin/testerLinks'
+import { TESTER_CAP } from '@/lib/tester/cap'
 
 const LABEL_CLASS = 'block font-subhead text-sm font-semibold text-brand-black'
 const HINT_CLASS = 'font-body text-xs text-charcoal-soft mt-0.5'
@@ -20,7 +21,7 @@ const BUTTON_CLASS =
  */
 export function MintTesterLinkForm() {
   const [state, dispatch, pending] = useActionState(mintTesterLinkAction, null)
-  const [kind, setKind] = useState<'supporter' | 'owner'>('supporter')
+  const [kind, setKind] = useState<'supporter' | 'owner' | 'shared'>('supporter')
   const [copied, setCopied] = useState(false)
 
   const error = state !== null && 'error' in state ? state.error : null
@@ -47,8 +48,11 @@ export function MintTesterLinkForm() {
         <fieldset>
           <legend className={LABEL_CLASS}>Who is it for</legend>
           <div className="mt-1.5 flex flex-wrap gap-4">
-            {(['supporter', 'owner'] as const).map((value) => (
-              <label key={value} className="inline-flex items-center gap-2 font-body text-sm text-brand-black">
+            {(['supporter', 'owner', 'shared'] as const).map((value) => (
+              <label
+                key={value}
+                className="inline-flex items-center gap-2 font-body text-sm text-brand-black"
+              >
                 <input
                   type="radio"
                   name="kind"
@@ -57,10 +61,21 @@ export function MintTesterLinkForm() {
                   onChange={() => setKind(value)}
                   className="h-4 w-4 accent-amber-gold"
                 />
-                {value === 'supporter' ? 'Supporter' : 'Listing owner'}
+                {value === 'supporter'
+                  ? 'Supporter'
+                  : value === 'owner'
+                    ? 'Listing owner'
+                    : `Shared (up to ${TESTER_CAP} people)`}
               </label>
             ))}
           </div>
+          {kind === 'shared' && (
+            <p className={HINT_CLASS}>
+              One link you can post or forward. Each person picks business owner or supporter and
+              gets their own account. It stops letting people in once {TESTER_CAP} testers are on
+              the tour, counting everyone from every link.
+            </p>
+          )}
         </fieldset>
 
         <div>
@@ -99,24 +114,26 @@ export function MintTesterLinkForm() {
           </div>
         )}
 
-        <div>
-          <label htmlFor="link-email" className={LABEL_CLASS}>
-            {kind === 'supporter' ? 'Supporter email (optional)' : 'Owner email (optional)'}
-          </label>
-          <p className={HINT_CLASS}>
-            {kind === 'owner' ? 'Only for an owner with no page yet. ' : ''}
-            Leave it blank and the tester types their own email when they tap Start. If you fill it
-            in, the link signs in to that account and makes it if it does not exist yet.
-          </p>
-          <input
-            id="link-email"
-            name="email"
-            type="email"
-            autoComplete="off"
-            placeholder="name@example.com"
-            className={INPUT_CLASS}
-          />
-        </div>
+        {kind !== 'shared' && (
+          <div>
+            <label htmlFor="link-email" className={LABEL_CLASS}>
+              {kind === 'supporter' ? 'Supporter email (optional)' : 'Owner email (optional)'}
+            </label>
+            <p className={HINT_CLASS}>
+              {kind === 'owner' ? 'Only for an owner with no page yet. ' : ''}
+              Leave it blank and the tester types their own email when they tap Start. If you fill
+              it in, the link signs in to that account and makes it if it does not exist yet.
+            </p>
+            <input
+              id="link-email"
+              name="email"
+              type="email"
+              autoComplete="off"
+              placeholder="name@example.com"
+              className={INPUT_CLASS}
+            />
+          </div>
+        )}
 
         {error && (
           <p role="alert" className="font-body text-sm text-red-600">
@@ -156,8 +173,9 @@ export function MintTesterLinkForm() {
             </button>
           </div>
           <p className="font-body text-xs text-charcoal-soft">
-            Works five times for fourteen days. Anyone holding it signs in as this tester, so send
-            it only to them.
+            {minted.shared
+              ? `Works for fourteen days, for up to ${TESTER_CAP} new people, and stops when the test is full. Each person gets their own account, so it is safe to share.`
+              : 'Works five times for fourteen days. Anyone holding it signs in as this tester, so send it only to them.'}
           </p>
         </div>
       )}

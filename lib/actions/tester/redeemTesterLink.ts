@@ -13,7 +13,12 @@ import {
   type TesterLinkStart,
 } from '@/lib/tester/redeem'
 
-export type RedeemTesterLinkState = { error: string; needEmail?: boolean } | null
+export type RedeemTesterLinkState = {
+  error: string
+  needEmail?: boolean
+  needRole?: boolean
+  full?: boolean
+} | null
 
 const PREVIEW_COOKIE = 'bl_preview'
 const SOURCE_COOKIE = 'bl_src'
@@ -40,7 +45,7 @@ export async function testerLinkStartAction(token: string): Promise<TesterLinkSt
     limit: 30,
     windowSeconds: 600,
   })
-  if (!allowed) return 'ready'
+  if (!allowed) return { mode: 'ready', askRole: false }
   return testerLinkStart(String(token ?? '').trim(), {
     service: createServiceClient(),
     isAdmin,
@@ -54,7 +59,8 @@ export async function testerLinkStartAction(token: string): Promise<TesterLinkSt
  * from the hidden input the page filled from the URL fragment.
  *
  * `email` is only sent for a link made without an email or a listing; redeem uses it to
- * make a new account and never to sign in to an existing one.
+ * make a new account and never to sign in to an existing one. `role` is only
+ * sent for a shared link: 'owner' or 'supporter', picked on /t.
  *
  * Do not log `token` or `email`. lib/tester/redeem.ts holds the logic and the rules for
  * what may be logged.
@@ -65,6 +71,7 @@ export async function redeemTesterLinkAction(
 ): Promise<RedeemTesterLinkState> {
   const token = formData.get('token')?.toString().trim() ?? ''
   const typedEmail = formData.get('email')?.toString() ?? ''
+  const typedRole = formData.get('role')?.toString() ?? ''
   const requestHeaders = await headers()
   const sessionClient = await createClient()
 
@@ -89,10 +96,18 @@ export async function redeemTesterLinkAction(
       },
       sessionUserId,
     },
-    typedEmail
+    typedEmail,
+    typedRole
   )
 
-  if (!result.ok) return { error: result.error, needEmail: result.needEmail }
+  if (!result.ok) {
+    return {
+      error: result.error,
+      needEmail: result.needEmail,
+      needRole: result.needRole,
+      full: result.full,
+    }
+  }
 
   const cookieStore = await cookies()
   const cookieOptions = { httpOnly: true, sameSite: 'lax' as const, path: '/', maxAge: THIRTY_DAYS }
@@ -102,7 +117,8 @@ export async function redeemTesterLinkAction(
   if (bypassToken) cookieStore.set(PREVIEW_COOKIE, bypassToken, cookieOptions)
   cookieStore.set(SOURCE_COOKIE, 'tester_link', cookieOptions)
 
-  if (result.createdBy) {
+  // A returning tester spent nothing, so there is nothing new to record.
+  if (result.createdBy && !result.returning) {
     void writeAuditLog({
       adminUserId: result.createdBy,
       action: 'redeem_tester_link',

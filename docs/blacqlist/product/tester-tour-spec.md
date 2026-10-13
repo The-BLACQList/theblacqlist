@@ -21,7 +21,34 @@ It replaces the two things a soft launch normally does badly:
 
 The tour **ships before the public flip** and is therefore the instrument of the soft-launch period, not a post-launch growth feature. That was decided deliberately, and the cost — roughly a week, with the flip waiting on it — was accepted.
 
-**What it is not.** It is not onboarding, not a product tour overlay, and not a growth loop. It is a research instrument with a paid-tier reward, scoped to 5–10 invited people and then switched off.
+**What it is not.** It is not onboarding, not a product tour overlay, and not a growth loop. It is a research instrument with a paid-tier reward, capped at 15 testers (§1.1) and then switched off.
+
+### 1.1 Getting in: the shared link, the cap and tester numbers (founder, 2026-10-13)
+
+There are three ways in, all made on `/admin/testers`:
+
+| Link | Who it's for | What happens on tap |
+|---|---|---|
+| Supporter | One named person | Supporter tour. Bound to the first account that uses it. |
+| Listing owner | One named owner, with or without a page | Owner tour. Bound to the first account that uses it. |
+| **Shared** | Anyone the founder sends it to | The person picks **"I own a business"** or **"I support Black-owned businesses"**, then gets that tour. |
+
+**The shared link.**
+- It names no email and no listing, and it is never bound to an account. Each new person makes or uses their own account. The database refuses a shared row that names an email, a listing or an account.
+- An owner who picks "I own a business" lands on `/dashboard` with the claim-or-create choices. A supporter lands on `/search`.
+- A tester who is already on the tour and taps it again is just signed back in. That spends nothing.
+- It allows up to 15 uses. Like every link it shows once, can be revoked, and expires.
+- An admin account never joins the tour. An admin who is signed in when they tap the link is asked for an email, like anyone who is signed out.
+
+**The cap: 15 testers in total.** This counts every kind of link plus the admin invite, and only live enrollments (`ended_at` null) count. Ending an enrollment frees its spot.
+- The one place the cap lives is the `tour_enrollments_cap_and_number` trigger (`20261014000000_shared_tester_link.sql`). It runs under an advisory lock, so two taps at the same moment can't both take the last spot. It raises `tester_cap_full`.
+- The shared link also checks the count *before* it spends a use, so a person who arrives when the test is full sees **"This test is full. Thanks for wanting to help!"** with a link to the waitlist, and no account is made.
+- If the trigger still refuses after the claim (a race), the use is spent and the new account stays a plain account with no tour. That is accepted.
+- The 15 is mirrored in `lib/tester/cap.ts` (`TESTER_CAP`). Changing it means a new migration and that constant together.
+
+**Tester numbers.** Every enrollment gets a `tester_number`, shown as **"Tester 07"** in the Tour panel and on `/admin/testers`, so a note or a problem report can be matched to a person without a name. Existing rows were numbered oldest first. Numbers are never reused, even after an enrollment ends.
+
+**The free month is unchanged.** An owner who joined through the shared link with no page yet finishes the walk as an owner. The panel tells them the month is saved and points them to `/dashboard` to claim or create their page. The month still needs a published page they own (§4.4).
 
 ---
 
@@ -181,6 +208,9 @@ Beyond the 24 trial tests and 15 migration tests already written:
 | `tester-tour-evidence.test.ts` | **The anti-forgery centrepiece.** A complete forged `analytics_events` set still yields `no_evidence` on every step; the double's `analytics_events` read throws; `read_failed` never renders the action copy; a review in **any** status counts; the SQL `step_key` CHECK list matches `TOUR_STEPS`. |
 | `tester-tour-render-mode.test.ts` | Source-text assertions: search still declares no `revalidate`; listing and collection no longer declare one they cannot honour. |
 | `tester-tour-rail.test.ts` | Returns null at each of the three gates without doing the more expensive step; **throws nothing when every read fails**; the prefix route-hiding table; `z-40` and nothing ≥ 50. |
+| `tester-link-redeem.test.ts` | Shared links: the role choice, never bound, owner → `/dashboard` and supporter → `/search`, a returning tester spends nothing, "full" before any claim at 15 live testers or 15 uses, the trigger's `tester_cap_full` after a claim reads as full with no sign-in. |
+| `tester-cap.test.ts` | `TESTER_CAP`, the "Tester 07" format, the exact role match, and reading `tester_cap_full`. |
+| `migrations/shared-tester-link.test.ts` | The shared kind's CHECKs, numbering oldest first, the 16th live tester refused, ending frees a spot without reusing its number, a live tester gets the duplicate error not "full", safe to apply twice. |
 | `feature-flags.test.ts` (amend) | `FEATURE_TESTER_TOUR` deleted in `beforeEach`; `'testerTour'` added to the full-list assertion. |
 
 ---

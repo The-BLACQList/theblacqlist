@@ -83,4 +83,40 @@ test.describe('admin tester links', () => {
     await expect(page.getByText(/Leave the email blank/)).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'One-tap link' })).toHaveCount(0)
   })
+
+  // Shared link (founder, 2026-10-13): one link, up to 15 testers, and each
+  // person picks owner or supporter.
+  test('a shared link asks no email, and each person picks their tour', async ({
+    page,
+    browser,
+  }) => {
+    await page.goto('/admin/testers')
+    await page.getByRole('radio', { name: 'Shared (up to 15 people)' }).check()
+    await expect(page.getByLabel(/email \(optional\)/)).toHaveCount(0)
+    await page.getByLabel('Label', { exact: true }).fill(`E2E-${Date.now().toString(36).slice(-6)}`)
+    await page.getByRole('button', { name: 'Make link' }).click()
+    await expect(page.getByText(/safe to share/)).toBeVisible()
+    const link = await page.getByRole('textbox', { name: 'One-tap link' }).inputValue()
+    expect(link).toMatch(/\/t#/)
+
+    const people = [
+      { role: /I own a business/, lands: /\/dashboard(\?|$)/ },
+      { role: /I support Black-owned businesses/, lands: /\/search(\?|$)/ },
+    ]
+    for (const person of people) {
+      const context = await browser.newContext()
+      const tester = await context.newPage()
+      try {
+        await tester.goto(link)
+        await tester.getByRole('radio', { name: person.role }).check()
+        await tester
+          .getByLabel('Your email')
+          .fill(`shared-e2e-${Date.now().toString(36)}@example.com`)
+        await tester.getByRole('button', { name: 'Start' }).click()
+        await tester.waitForURL(person.lands)
+      } finally {
+        await context.close()
+      }
+    }
+  })
 })

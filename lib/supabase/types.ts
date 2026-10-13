@@ -2913,6 +2913,7 @@ export type Database = {
           rail_closed_at: string | null
           started_at: string
           stripe_checkout_session_id: string | null
+          tester_number: number
           tester_user_id: string
           trial_granted_at: string | null
           updated_at: string
@@ -2928,6 +2929,7 @@ export type Database = {
           rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
+          tester_number?: number
           tester_user_id: string
           trial_granted_at?: string | null
           updated_at?: string
@@ -2943,6 +2945,7 @@ export type Database = {
           rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
+          tester_number?: number
           tester_user_id?: string
           trial_granted_at?: string | null
           updated_at?: string

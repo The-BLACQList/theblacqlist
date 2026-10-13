@@ -8,8 +8,10 @@ import {
   REDEEM_EMAIL_TAKEN,
   REDEEM_EXPIRED,
   REDEEM_FAILED,
+  REDEEM_FULL,
   REDEEM_MISSING,
   REDEEM_NEED_EMAIL,
+  REDEEM_NEED_ROLE,
   REDEEM_RATE_LIMITED,
   redeemTesterInvite,
   testerLinkStart,
@@ -22,18 +24,20 @@ import {
 
 type Invite = {
   id: string
-  kind: 'owner' | 'supporter'
+  kind: 'owner' | 'supporter' | 'shared'
   email: string | null
   listing_id: string | null
   tester_user_id: string | null
   created_by: string | null
 }
 
-type Err = { code: string } | null
+type Err = { code: string; message?: string } | null
 
 /** What the read-only peek sees before the claim. */
 type PeekRow = {
-  kind: 'owner' | 'supporter'
+  id?: string
+  created_by?: string | null
+  kind: 'owner' | 'supporter' | 'shared'
   email: string | null
   listing_id: string | null
   tester_user_id: string | null
@@ -56,6 +60,9 @@ function makeWorld() {
     createError: null as Err,
     listing: null as null | { id: string; status: string; owner_user_id: string | null; deleted_at: string | null },
     liveEnrollment: null as null | { id: string; listing_id: string | null; is_owner: boolean },
+    /** Live enrollments across every tester, for the shared link's full check. */
+    liveCount: 0,
+    countError: null as Err,
     upgraded: null as null | { payload: Record<string, unknown>; filters: string[] },
     upgradeError: null as Err,
     insertError: null as Err,
@@ -74,8 +81,17 @@ function makeWorld() {
   }
 
   function from(table: string) {
-    const q = { op: 'select' as 'select' | 'update', payload: null as Record<string, unknown> | null, filters: [] as string[] }
+    const q = {
+      op: 'select' as 'select' | 'update',
+      head: false,
+      payload: null as Record<string, unknown> | null,
+      filters: [] as string[],
+    }
     const run = () => {
+      if (table === 'tour_enrollments' && q.op === 'select' && q.head) {
+        w.log.push('count')
+        return { count: w.countError ? null : w.liveCount, error: w.countError }
+      }
       if (table === 'tester_invites' && q.op === 'update') {
         w.log.push('bind')
         w.bound = { payload: q.payload!, filters: q.filters }
@@ -89,7 +105,10 @@ function makeWorld() {
       throw new Error(`unexpected ${q.op} on ${table}`)
     }
     const b = {
-      select: () => b,
+      select: (_cols?: string, opts?: { head?: boolean }) => {
+        q.head = opts?.head === true
+        return b
+      },
       update: (payload: Record<string, unknown>) => {
         q.op = 'update'
         q.payload = payload
@@ -442,15 +461,15 @@ describe('redeemTesterInvite: supporter links without an email', () => {
 describe('testerLinkStart', () => {
   it('asks for an email on a live, unbound supporter link with no email', async () => {
     world.w.peek = emailLessPeek()
-    expect(await testerLinkStart(token, deps)).toBe('email')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'email', askRole: false })
   })
 
   it('reads session when a non-admin is signed in, email when an admin is', async () => {
     world.w.peek = emailLessPeek()
     deps.sessionUserId.mockResolvedValue('u-session')
-    expect(await testerLinkStart(token, deps)).toBe('session')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'session', askRole: false })
     deps.isAdmin.mockResolvedValue(true)
-    expect(await testerLinkStart(token, deps)).toBe('email')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'email', askRole: false })
   })
 
   it.each([
@@ -462,15 +481,15 @@ describe('testerLinkStart', () => {
     ['an owner link with a page', { kind: 'owner' as const, listing_id: 'lst-1' }],
   ])('reads %s as ready, so the page never hints why a link is dead', async (_name, change) => {
     world.w.peek = emailLessPeek(change)
-    expect(await testerLinkStart(token, deps)).toBe('ready')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
   })
 
   it('reads an unknown link, a malformed token or an error as ready', async () => {
-    expect(await testerLinkStart(token, deps)).toBe('ready')
-    expect(await testerLinkStart('not-a-token', deps)).toBe('ready')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
+    expect(await testerLinkStart('not-a-token', deps)).toEqual({ mode: 'ready', askRole: false })
     world.w.peek = emailLessPeek()
     world.w.peekError = { code: '57014' }
-    expect(await testerLinkStart(token, deps)).toBe('ready')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
   })
 
   it('never writes anything', async () => {
@@ -532,7 +551,7 @@ describe('redeemTesterInvite: owner links without a page', () => {
 
   it('asks for an email and spends no use', async () => {
     expect(await redeemTesterInvite(token, deps)).toEqual({ ok: false, error: REDEEM_NEED_EMAIL, needEmail: true })
-    expect(await testerLinkStart(token, deps)).toBe('email')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'email', askRole: false })
     expect(world.w.log).not.toContain('claim')
   })
 
@@ -578,7 +597,7 @@ describe('redeemTesterInvite: owner links without a page', () => {
   it('puts the tour on a signed-in non-admin without asking for an email', async () => {
     world.w.users.set('u-session', 'me@example.com')
     deps.sessionUserId.mockResolvedValue('u-session')
-    expect(await testerLinkStart(token, deps)).toBe('session')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'session', askRole: false })
     const result = await redeemTesterInvite(token, deps)
     expect(result).toMatchObject({ ok: true, testerUserId: 'u-session', firstStop: '/dashboard' })
     expect(world.w.created).toEqual([])
@@ -597,7 +616,7 @@ describe('redeemTesterInvite: owner links without a page', () => {
   it('uses the email the admin typed without asking', async () => {
     world.w.peek = emailLessPeek({ kind: 'owner', email: 'owner@example.com' })
     world.w.claim = ownerInvite({ listing_id: null, email: 'owner@example.com' })
-    expect(await testerLinkStart(token, deps)).toBe('ready')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
     expect(await redeemTesterInvite(token, deps)).toMatchObject({ ok: true, firstStop: '/dashboard' })
     expect(world.w.inserted).toEqual([
       { tester_user_id: 'new-1', listing_id: null, is_owner: true, invited_by: 'admin-1' },
@@ -632,6 +651,196 @@ describe('redeemTesterInvite: owner links without a page', () => {
     world.w.upgradeError = { code: '40001' }
     expect(await redeemTesterInvite(token, deps)).toEqual({ ok: false, error: REDEEM_FAILED })
     expect(deps.signIn).not.toHaveBeenCalled()
+  })
+})
+
+describe('redeemTesterInvite: shared links', () => {
+  // One link that can be posted anywhere (founder, 2026-10-13): never bound,
+  // each person picks owner or supporter, and the test holds 15 live testers.
+  beforeEach(() => {
+    world.w.peek = emailLessPeek({ kind: 'shared', id: 'inv-3', created_by: 'admin-1', max_uses: 15 })
+    world.w.claim = { id: 'inv-3', kind: 'shared', email: null, listing_id: null, tester_user_id: null, created_by: 'admin-1' }
+    world.w.liveCount = 3
+  })
+
+  it('asks a new person for their role and email on /t', async () => {
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'email', askRole: true })
+    world.w.users.set('u-session', 'me@example.com')
+    deps.sessionUserId.mockResolvedValue('u-session')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'session', askRole: true })
+  })
+
+  it('ignores an admin session and asks for an email instead', async () => {
+    deps.sessionUserId.mockResolvedValue('u-admin')
+    deps.isAdmin.mockImplementation(async (id: string) => id === 'u-admin')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'email', askRole: true })
+  })
+
+  it.each([[''], ['admin'], ['Owner ']])('asks for a role (%j) before anything else, spending no use', async (role) => {
+    expect(await redeemTesterInvite(token, deps, 'new@example.com', role)).toEqual({
+      ok: false,
+      error: REDEEM_NEED_ROLE,
+      needRole: true,
+      needEmail: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+    expect(world.w.created).toEqual([])
+  })
+
+  it('makes an owner: new account, enrolled as an owner with no page, first stop /dashboard, never bound', async () => {
+    const result = await redeemTesterInvite(token, deps, 'New.Owner@Example.com', 'owner')
+    expect(result).toEqual({
+      ok: true,
+      inviteId: 'inv-3',
+      testerUserId: 'new-1',
+      createdBy: 'admin-1',
+      firstStop: '/dashboard',
+    })
+    expect(world.w.bound).toBeNull()
+    expect(world.w.inserted).toEqual([
+      { tester_user_id: 'new-1', listing_id: null, is_owner: true, invited_by: 'admin-1' },
+    ])
+    expect(world.w.log).toEqual([
+      'peek',
+      'count',
+      'claim',
+      'createUser',
+      'enroll:lookup',
+      'enroll:insert',
+      'generateLink:new.owner@example.com',
+      'signIn',
+    ])
+  })
+
+  it('makes a supporter: enrolled without a listing, first stop /search', async () => {
+    const result = await redeemTesterInvite(token, deps, 'fan@example.com', 'supporter')
+    expect(result).toMatchObject({ ok: true, testerUserId: 'new-1', firstStop: '/search' })
+    expect(world.w.bound).toBeNull()
+    expect(world.w.inserted).toEqual([
+      { tester_user_id: 'new-1', listing_id: null, is_owner: false, invited_by: 'admin-1' },
+    ])
+  })
+
+  it('lets the next person in through the same link with their own account', async () => {
+    await redeemTesterInvite(token, deps, 'first@example.com', 'supporter')
+    await redeemTesterInvite(token, deps, 'second@example.com', 'owner')
+    expect(world.w.inserted.map((r) => r.tester_user_id)).toEqual(['new-1', 'new-2'])
+    expect(world.w.bound).toBeNull()
+  })
+
+  it('puts the tour on a signed-in person who is not on it yet', async () => {
+    world.w.users.set('u-session', 'me@example.com')
+    deps.sessionUserId.mockResolvedValue('u-session')
+    expect(await redeemTesterInvite(token, deps, '', 'supporter')).toMatchObject({
+      ok: true,
+      testerUserId: 'u-session',
+    })
+    expect(world.w.created).toEqual([])
+    expect(world.w.bound).toBeNull()
+  })
+
+  it('never signs in to an email that already has an account', async () => {
+    world.w.users.set('u-someone', 'someone@example.com')
+    expect(await redeemTesterInvite(token, deps, 'someone@example.com', 'owner')).toEqual({
+      ok: false,
+      error: REDEEM_EMAIL_TAKEN,
+      needEmail: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('sends a tester already on the tour straight back in, spending nothing', async () => {
+    world.w.users.set('u-session', 'me@example.com')
+    deps.sessionUserId.mockResolvedValue('u-session')
+    world.w.liveEnrollment = { id: 'enr-live', listing_id: null, is_owner: true }
+    world.w.liveCount = 15
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'returning', askRole: false })
+    expect(await redeemTesterInvite(token, deps)).toEqual({
+      ok: true,
+      inviteId: 'inv-3',
+      testerUserId: 'u-session',
+      createdBy: 'admin-1',
+      firstStop: '/dashboard',
+      returning: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+    expect(world.w.inserted).toEqual([])
+    expect(deps.signIn).not.toHaveBeenCalled()
+  })
+
+  it('sends a returning supporter, or an owner with a page, to /search', async () => {
+    world.w.users.set('u-session', 'me@example.com')
+    deps.sessionUserId.mockResolvedValue('u-session')
+    world.w.liveEnrollment = { id: 'enr-live', listing_id: 'lst-1', is_owner: true }
+    expect(await redeemTesterInvite(token, deps)).toMatchObject({ firstStop: '/search', returning: true })
+    world.w.liveEnrollment = { id: 'enr-live', listing_id: null, is_owner: false }
+    expect(await redeemTesterInvite(token, deps)).toMatchObject({ firstStop: '/search', returning: true })
+  })
+
+  it('reads full at 15 live testers, before the role, and spends nothing', async () => {
+    world.w.liveCount = 15
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'full', askRole: false })
+    expect(await redeemTesterInvite(token, deps, 'late@example.com', 'owner')).toEqual({
+      ok: false,
+      error: REDEEM_FULL,
+      full: true,
+    })
+    expect(world.w.log).not.toContain('claim')
+    expect(world.w.created).toEqual([])
+  })
+
+  it('reads full once the link has let in as many people as the test holds', async () => {
+    world.w.peek = emailLessPeek({ kind: 'shared', id: 'inv-3', created_by: 'admin-1', use_count: 15, max_uses: 15 })
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'full', askRole: false })
+    expect(await redeemTesterInvite(token, deps, 'late@example.com', 'owner')).toMatchObject({ full: true })
+    expect(world.w.log).not.toContain('claim')
+  })
+
+  it('reads a revoked or expired shared link as ready, never as full', async () => {
+    world.w.liveCount = 15
+    world.w.peek = emailLessPeek({ kind: 'shared', revoked_at: '2026-10-10T00:00:00Z' })
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
+    world.w.peek = emailLessPeek({ kind: 'shared', expires_at: '2026-01-01T00:00:00Z' })
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
+  })
+
+  it('shows full when the cap refuses the enrollment after the claim, without signing in', async () => {
+    world.w.insertError = { code: 'P0001', message: 'tester_cap_full' }
+    expect(await redeemTesterInvite(token, deps, 'racer@example.com', 'supporter')).toEqual({
+      ok: false,
+      error: REDEEM_FULL,
+      full: true,
+    })
+    expect(deps.signIn).not.toHaveBeenCalled()
+  })
+
+  it('fails on another P0001 error rather than calling it full', async () => {
+    world.w.insertError = { code: 'P0001', message: 'something else' }
+    expect(await redeemTesterInvite(token, deps, 'racer@example.com', 'supporter')).toEqual({
+      ok: false,
+      error: REDEEM_FAILED,
+    })
+  })
+
+  it('fails when the count errors, and spends no use', async () => {
+    world.w.countError = { code: '57014' }
+    expect(await redeemTesterInvite(token, deps, 'new@example.com', 'owner')).toEqual({
+      ok: false,
+      error: REDEEM_FAILED,
+    })
+    expect(world.w.log).not.toContain('claim')
+    expect(await testerLinkStart(token, deps)).toEqual({ mode: 'ready', askRole: false })
+  })
+
+  it('refuses a claimed shared row that never went through the role check', async () => {
+    // The peek saw nothing, then the claim still returned a shared row.
+    world.w.peek = null
+    expect(await redeemTesterInvite(token, deps, 'new@example.com', 'owner')).toEqual({
+      ok: false,
+      error: REDEEM_FAILED,
+    })
+    expect(world.w.created).toEqual([])
+    expect(world.w.inserted).toEqual([])
   })
 })
 

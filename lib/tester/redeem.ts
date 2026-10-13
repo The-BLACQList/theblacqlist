@@ -1,7 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { Database } from '@/lib/supabase/types'
-import { hashTesterToken, isWellFormedTesterToken, normalizeTesterEmail } from '@/lib/tester/links'
+import {
+  TESTER_CAP,
+  hashTesterToken,
+  isWellFormedTesterToken,
+  normalizeTesterEmail,
+  parseTesterRole,
+  type TesterRole,
+} from '@/lib/tester/links'
+import { isTesterCapFull } from '@/lib/tester/cap'
 
 /**
  * Redeem a one-tap tester link: claim a use, find or make the account, enroll
@@ -28,6 +36,20 @@ import { hashTesterToken, isWellFormedTesterToken, normalizeTesterEmail } from '
  * supporter link, enrolls the account as an owner with no listing, and sends
  * the tester to /dashboard to claim or create their page. The free month finds
  * the page later (lib/tour/freeMonth.ts).
+ *
+ * A shared link (founder, 2026-10-13) is one link that can be posted or
+ * forwarded. It names no one and is never bound. Each new person picks "I own
+ * a business" or "I support Black-owned businesses" on /t, gets their own
+ * account the same way an email-less link makes one, and is enrolled as an
+ * owner (first stop /dashboard) or a supporter (first stop /search). A tester
+ * already on the tour who opens it while signed in spends nothing and goes
+ * straight back in.
+ *
+ * The test holds TESTER_CAP live testers in total. The database trigger is the
+ * real limit and covers every kind of link; a shared link also checks before
+ * the claim, so a full test spends nothing and shows REDEEM_FULL. If the
+ * trigger refuses an enrollment after the claim, the use is spent and any
+ * account just made stays as a plain supporter account with no tour.
  */
 
 export const REDEEM_MISSING = 'This link is missing its code. Ask for a new one.'
@@ -38,6 +60,8 @@ export const REDEEM_NEED_EMAIL = 'Type your email to start.'
 export const REDEEM_BAD_EMAIL = 'That email doesn’t look right. Check it and tap Start again.'
 export const REDEEM_EMAIL_TAKEN =
   'That email already has an account. Sign in first, then open this link again.'
+export const REDEEM_NEED_ROLE = 'Pick the one that fits you best, then tap Start.'
+export const REDEEM_FULL = 'This test is full. Thanks for wanting to help!'
 
 export interface RedeemDeps {
   service: SupabaseClient<Database>
@@ -59,15 +83,39 @@ export type RedeemResult =
       /** Where Start lands: the create-your-page choices for an owner with no
        *  page yet, search for everyone else. */
       firstStop: '/dashboard' | '/search'
+      /** A tester already on the tour came back through a shared link. No use
+       *  was spent and nothing was written. */
+      returning?: true
     }
-  | { ok: false; error: string; needEmail?: true }
+  | { ok: false; error: string; needEmail?: true; needRole?: true; full?: true }
 
 /**
- * What /t should show before Start: an email box, a note that the tour goes on
- * the signed-in account, or just the button. A dead link reads as 'ready' so
- * the page gives nothing away; Start then shows the expired message.
+ * What /t should show before Start.
+ *   mode 'email':     the email box.
+ *   mode 'session':   a note that the tour goes on the signed-in account.
+ *   mode 'returning': a tester already on the tour, back through a shared link.
+ *   mode 'full':      the test is full (shared links only).
+ *   mode 'ready':     just the button.
+ * askRole: a shared link asks a new tester whether they own a business.
+ * A dead link reads as 'ready' so the page gives nothing away; Start then
+ * shows the expired message.
  */
-export type TesterLinkStart = 'email' | 'session' | 'ready'
+export type TesterLinkStart = {
+  mode: 'email' | 'session' | 'returning' | 'full' | 'ready'
+  askRole: boolean
+}
+
+type StartPick =
+  | { kind: 'session'; userId: string; askRole: boolean }
+  | {
+      kind: 'returning'
+      userId: string
+      inviteId: string
+      createdBy: string | null
+      firstStop: '/dashboard' | '/search'
+    }
+  | { kind: 'email'; askRole: boolean }
+  | { kind: 'full' | 'ready' }
 
 interface ClaimedInvite {
   id: string
@@ -83,11 +131,13 @@ type NewAccount = { kind: 'session'; userId: string } | { kind: 'typed'; email: 
 
 class RedeemRefused extends Error {}
 class EmailTaken extends Error {}
+class CapFull extends Error {}
 
 export async function redeemTesterInvite(
   token: string,
   deps: RedeemDeps,
-  typedEmail = ''
+  typedEmail = '',
+  typedRole = ''
 ): Promise<RedeemResult> {
   if (!isWellFormedTesterToken(token)) {
     return { ok: false, error: token ? REDEEM_EXPIRED : REDEEM_MISSING }
@@ -101,8 +151,31 @@ export async function redeemTesterInvite(
   // A live link with no email, no listing and no account yet: pick the
   // account now, so asking for an email or refusing one spends nothing.
   let newAccount: NewAccount | null = null
+  let role: TesterRole | null = null
   try {
     const start = await startFor(service, tokenHash, deps)
+    if (start.kind === 'full') return { ok: false, error: REDEEM_FULL, full: true }
+    if (start.kind === 'returning') {
+      return {
+        ok: true,
+        inviteId: start.inviteId,
+        testerUserId: start.userId,
+        createdBy: start.createdBy,
+        firstStop: start.firstStop,
+        returning: true,
+      }
+    }
+    if ((start.kind === 'session' || start.kind === 'email') && start.askRole) {
+      role = parseTesterRole(typedRole)
+      if (!role) {
+        return {
+          ok: false,
+          error: REDEEM_NEED_ROLE,
+          needRole: true,
+          needEmail: start.kind === 'email' || undefined,
+        }
+      }
+    }
     if (start.kind === 'session') {
       newAccount = { kind: 'session', userId: start.userId }
     } else if (start.kind === 'email') {
@@ -130,6 +203,10 @@ export async function redeemTesterInvite(
   }
   const invite = (claimed as ClaimedInvite[] | null)?.[0]
   if (!invite) return { ok: false, error: REDEEM_EXPIRED }
+  // The peek and the claim read the same row, so a shared link always came
+  // through the role check above. Refuse rather than guess if it somehow didn't.
+  if (invite.kind === 'shared' && !role) return { ok: false, error: REDEEM_FAILED }
+  const isOwner = invite.kind === 'owner' || role === 'owner'
 
   try {
     // An owner link with a listing signs in as that listing's owner. Every
@@ -144,7 +221,8 @@ export async function redeemTesterInvite(
     // must never become a way into an admin session.
     if (await deps.isAdmin(account.userId)) throw new RedeemRefused('admin account')
 
-    if (invite.tester_user_id === null) {
+    // A shared link is never bound: each person who taps it is someone new.
+    if (invite.tester_user_id === null && invite.kind !== 'shared') {
       const { error: bindError } = await service
         .from('tester_invites')
         .update({ tester_user_id: account.userId })
@@ -155,7 +233,7 @@ export async function redeemTesterInvite(
 
     // Enroll before signing in, so a retry after a failed sign-in finds the
     // enrollment rather than making a second one.
-    await ensureEnrollment(service, account.userId, invite)
+    await ensureEnrollment(service, account.userId, invite, isOwner)
 
     const { data: link, error: linkError } = await service.auth.admin.generateLink({
       type: 'magiclink',
@@ -172,9 +250,13 @@ export async function redeemTesterInvite(
       inviteId: invite.id,
       testerUserId: account.userId,
       createdBy: invite.created_by,
-      firstStop: invite.kind === 'owner' && invite.listing_id === null ? '/dashboard' : '/search',
+      firstStop: isOwner && invite.listing_id === null ? '/dashboard' : '/search',
     }
   } catch (err) {
+    if (err instanceof CapFull) {
+      console.error('[redeemTesterInvite] test full', invite.id)
+      return { ok: false, error: REDEEM_FULL, full: true }
+    }
     if (err instanceof EmailTaken) {
       console.error('[redeemTesterInvite] typed email taken', invite.id)
       return { ok: false, error: REDEEM_EMAIL_TAKEN, needEmail: true }
@@ -196,12 +278,17 @@ export async function testerLinkStart(
   token: string,
   deps: Pick<RedeemDeps, 'service' | 'isAdmin' | 'sessionUserId'>
 ): Promise<TesterLinkStart> {
-  if (!isWellFormedTesterToken(token)) return 'ready'
+  const ready: TesterLinkStart = { mode: 'ready', askRole: false }
+  if (!isWellFormedTesterToken(token)) return ready
   try {
-    return (await startFor(deps.service, hashTesterToken(token), deps)).kind
+    const start = await startFor(deps.service, hashTesterToken(token), deps)
+    return {
+      mode: start.kind,
+      askRole: (start.kind === 'session' || start.kind === 'email') && start.askRole,
+    }
   } catch (err) {
     console.error('[testerLinkStart]', err instanceof Error ? err.message : 'unknown')
-    return 'ready'
+    return ready
   }
 }
 
@@ -209,31 +296,81 @@ async function startFor(
   service: SupabaseClient<Database>,
   tokenHash: string,
   deps: Pick<RedeemDeps, 'isAdmin' | 'sessionUserId'>
-): Promise<{ kind: 'session'; userId: string } | { kind: 'email' | 'ready' }> {
+): Promise<StartPick> {
   const { data: invite, error } = await service
     .from('tester_invites')
-    .select('kind, email, listing_id, tester_user_id, revoked_at, expires_at, use_count, max_uses')
+    .select(
+      'id, kind, email, listing_id, tester_user_id, revoked_at, expires_at, use_count, max_uses, created_by'
+    )
     .eq('token_hash', tokenHash)
     .maybeSingle()
   if (error) throw new Error(`peek ${error.code}`)
-
-  const needsAccount =
-    invite !== null &&
-    invite.listing_id === null &&
-    invite.email === null &&
-    invite.tester_user_id === null &&
-    invite.revoked_at === null &&
-    new Date(invite.expires_at).getTime() > Date.now() &&
-    invite.use_count < invite.max_uses
-  if (!needsAccount) return { kind: 'ready' }
+  if (
+    !invite ||
+    invite.revoked_at !== null ||
+    new Date(invite.expires_at).getTime() <= Date.now()
+  ) {
+    return { kind: 'ready' }
+  }
 
   // An admin's own session never takes a link. The founder opening a link to
   // check it gets the email box like anyone else, not a refusal.
-  const sessionUserId = (await deps.sessionUserId?.()) ?? null
-  if (sessionUserId && !(await deps.isAdmin(sessionUserId))) {
-    return { kind: 'session', userId: sessionUserId }
+  const sessionUserId = async (): Promise<string | null> => {
+    const id = (await deps.sessionUserId?.()) ?? null
+    return id && !(await deps.isAdmin(id)) ? id : null
   }
-  return { kind: 'email' }
+
+  if (invite.kind === 'shared') {
+    const userId = await sessionUserId()
+    const live = userId ? await liveEnrollment(service, userId) : null
+    if (userId && live) {
+      return {
+        kind: 'returning',
+        userId,
+        inviteId: invite.id,
+        createdBy: invite.created_by,
+        firstStop: live.is_owner && live.listing_id === null ? '/dashboard' : '/search',
+      }
+    }
+    // A used-up shared link has let in as many people as the test holds.
+    if (invite.use_count >= invite.max_uses || (await liveTesterCount(service)) >= TESTER_CAP) {
+      return { kind: 'full' }
+    }
+    return userId ? { kind: 'session', userId, askRole: true } : { kind: 'email', askRole: true }
+  }
+
+  const needsAccount =
+    invite.listing_id === null &&
+    invite.email === null &&
+    invite.tester_user_id === null &&
+    invite.use_count < invite.max_uses
+  if (!needsAccount) return { kind: 'ready' }
+
+  const userId = await sessionUserId()
+  return userId ? { kind: 'session', userId, askRole: false } : { kind: 'email', askRole: false }
+}
+
+async function liveEnrollment(
+  service: SupabaseClient<Database>,
+  userId: string
+): Promise<{ id: string; listing_id: string | null; is_owner: boolean } | null> {
+  const { data, error } = await service
+    .from('tour_enrollments')
+    .select('id, listing_id, is_owner')
+    .eq('tester_user_id', userId)
+    .is('ended_at', null)
+    .maybeSingle()
+  if (error) throw new Error(`enrollment lookup ${error.code}`)
+  return data
+}
+
+async function liveTesterCount(service: SupabaseClient<Database>): Promise<number> {
+  const { count, error } = await service
+    .from('tour_enrollments')
+    .select('id', { count: 'exact', head: true })
+    .is('ended_at', null)
+  if (error || count === null) throw new Error(`tester count ${error?.code ?? 'empty'}`)
+  return count
 }
 
 async function emailForUser(service: SupabaseClient<Database>, userId: string): Promise<string> {
@@ -339,21 +476,15 @@ async function findUserIdByEmail(service: SupabaseClient<Database>, email: strin
  * already on the tour keeps the enrollment they have, listing and all, with one
  * exception: a supporter who taps an owner link with no listing becomes an
  * owner, so the free month can find their page. Their walk keeps its progress.
+ * A new enrollment can be refused by the cap trigger (tester_cap_full).
  */
 async function ensureEnrollment(
   service: SupabaseClient<Database>,
   userId: string,
-  invite: ClaimedInvite
+  invite: ClaimedInvite,
+  isOwner: boolean
 ): Promise<void> {
-  const isOwner = invite.kind === 'owner'
-
-  const { data: live, error: liveError } = await service
-    .from('tour_enrollments')
-    .select('id, listing_id, is_owner')
-    .eq('tester_user_id', userId)
-    .is('ended_at', null)
-    .maybeSingle()
-  if (liveError) throw new Error(`enrollment lookup ${liveError.code}`)
+  const live = await liveEnrollment(service, userId)
   if (live) {
     if (isOwner && !live.is_owner && live.listing_id === null) {
       const { error: upgradeError } = await service
@@ -372,6 +503,7 @@ async function ensureEnrollment(
     is_owner: isOwner,
     invited_by: invite.created_by,
   })
+  if (insertError && isTesterCapFull(insertError)) throw new CapFull()
   if (insertError && insertError.code !== '23505') {
     throw new Error(`enrollment insert ${insertError.code}`)
   }

@@ -12,6 +12,7 @@ import {
 } from '@/components/admin/TesterTourActions'
 import { MintTesterLinkForm, RevokeLinkButton } from '@/components/admin/TesterLinkCard'
 import { testerLinkStatus, type TesterLinkStatus } from '@/lib/tester/links'
+import { TESTER_CAP, formatTesterNumber } from '@/lib/tester/cap'
 
 export const metadata: Metadata = { title: 'Testers' }
 
@@ -38,6 +39,8 @@ function formatDateTime(iso: string) {
 interface EnrollmentRow {
   id: string
   tester_user_id: string
+  // "Tester 07": the ID testers see in their Tour panel and quote in feedback.
+  tester_number: number
   // NULL is a supporter tester, or an owner with no page yet (is_owner), whose
   // free month goes on a page they own later.
   listing_id: string | null
@@ -123,11 +126,13 @@ export default async function AdminTestersPage({
   const { data: enrollmentData } = await serviceClient
     .from('tour_enrollments')
     .select(
-      'id, tester_user_id, listing_id, is_owner, started_at, completed_at, trial_granted_at, ended_at, listings(name, slug)'
+      'id, tester_user_id, tester_number, listing_id, is_owner, started_at, completed_at, trial_granted_at, ended_at, listings(name, slug)'
     )
     .order('started_at', { ascending: false })
 
   const enrollments = (enrollmentData ?? []) as EnrollmentRow[]
+  // The cap counts live enrollments only: ending one frees its spot.
+  const spotsTaken = enrollments.filter((e) => e.ended_at === null).length
 
   const { data: linkData } = await serviceClient
     .from('tester_invites')
@@ -189,7 +194,8 @@ export default async function AdminTestersPage({
   const testerLabel = (enrollmentId: string) => {
     const e = enrollmentById[enrollmentId]
     if (!e) return enrollmentId.slice(0, 8)
-    return emailMap[e.tester_user_id] ?? `${e.tester_user_id.slice(0, 8)}…`
+    const who = emailMap[e.tester_user_id] ?? `${e.tester_user_id.slice(0, 8)}…`
+    return `${formatTesterNumber(e.tester_number)} · ${who}`
   }
 
   const tourFlagOn = isFeatureEnabled('testerTour')
@@ -206,6 +212,22 @@ export default async function AdminTestersPage({
           supporter gets a thank-you.
         </p>
       </div>
+
+      <p
+        className={`rounded-xl border px-4 py-3 font-subhead text-sm ${
+          spotsTaken >= TESTER_CAP
+            ? 'border-amber-200 bg-amber-gold/10 text-amber-800'
+            : 'border-charcoal/10 bg-white text-brand-black'
+        }`}
+      >
+        <strong>
+          {spotsTaken} of {TESTER_CAP}
+        </strong>{' '}
+        tester spots taken.{' '}
+        {spotsTaken >= TESTER_CAP
+          ? 'The test is full. New people see a waitlist message. End an enrollment to free a spot.'
+          : 'Ending an enrollment frees its spot.'}
+      </p>
 
       {!tourFlagOn && (
         <div className="rounded-xl border border-amber-200 bg-amber-gold/10 px-4 py-3">
@@ -337,7 +359,10 @@ function EnrollmentRows({
     <>
       <tr className="hover:bg-[#f9f9fb] transition-colors">
         <td className="px-4 py-3">
-          <p className="font-subhead text-sm font-semibold text-brand-black">{tester}</p>
+          <p className="font-subhead text-sm font-semibold text-brand-black">
+            {formatTesterNumber(row.tester_number)}
+          </p>
+          <p className="font-body text-xs text-charcoal-soft">{tester}</p>
         </td>
         <td className="px-4 py-3">
           {row.listing_id === null ? (
@@ -457,11 +482,13 @@ function LinksTable({ links }: { links: TesterLinkRow[] }) {
                   {link.label}
                 </td>
                 <td className="px-4 py-2 font-body text-xs text-charcoal-soft">
-                  {link.kind === 'supporter'
-                    ? 'Supporter'
-                    : link.listing_id === null
-                      ? 'Owner, no page yet'
-                      : 'Listing owner'}
+                  {link.kind === 'shared'
+                    ? 'Shared, anyone'
+                    : link.kind === 'supporter'
+                      ? 'Supporter'
+                      : link.listing_id === null
+                        ? 'Owner, no page yet'
+                        : 'Listing owner'}
                 </td>
                 <td className="px-4 py-2">
                   <span
