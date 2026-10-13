@@ -96,7 +96,7 @@ describe('mintTesterLinkAction', () => {
   })
 
   it.each([
-    [{ kind: 'nope', label: 'T-07' }, /supporter or owner/],
+    [{ kind: 'nope', label: 'T-07' }, /supporter, owner or shared/],
     [{ kind: 'supporter', label: '  ' }, /label/],
     [{ kind: 'supporter', label: 'T-07', email: 'not-an-email' }, /doesn’t look right/],
     [{ kind: 'owner', label: 'T-07', listing: 'some-slug', email: 'a@b.co' }, /Leave the email blank/],
@@ -135,6 +135,28 @@ describe('mintTesterLinkAction', () => {
     expect(h.state.audits).toEqual([
       expect.objectContaining({ action: 'mint_tester_link', targetId: 'inv-new' }),
     ])
+  })
+
+  it('mints a shared link that names no one, for up to 15 people, ignoring any email or listing', async () => {
+    h.service.rpc.mockClear()
+    const result = await mintTesterLinkAction(
+      null,
+      form({ kind: 'shared', label: 'Wave 2', email: 'stray@example.com', listing: 'some-slug' })
+    )
+    if (!result || !('success' in result)) throw new Error(`expected success, got ${JSON.stringify(result)}`)
+    expect(result.shared).toBe(true)
+    expect(result.existingAccount).toBe(false)
+    expect(h.state.inserted).toMatchObject({
+      kind: 'shared',
+      email: null,
+      listing_id: null,
+      label: 'Wave 2',
+      max_uses: 15,
+      created_by: 'admin-1',
+    })
+    // Nothing typed was looked up.
+    expect(h.service.rpc).not.toHaveBeenCalled()
+    expect(h.state.listingFilter).toBeNull()
   })
 
   it('mints a supporter link with no email, so the tester types their own on /t', async () => {

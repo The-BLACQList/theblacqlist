@@ -59,6 +59,9 @@ export interface TourViewer {
      *  mount and the state route both hide on it. Optional because only
      *  resolveTourViewer reads it; the free month resolver doesn't care. */
     railClosedAt?: string | null
+    /** "Tester 07" in the rail, so feedback can be matched to a person.
+     *  Optional for the same reason as railClosedAt. */
+    testerNumber?: number
   }
 }
 
@@ -93,7 +96,9 @@ export const resolveTourViewer = cache(async (): Promise<TourViewer | null> => {
 
     const { data: enrollment, error } = await supabase
       .from('tour_enrollments')
-      .select('id, listing_id, completed_at, trial_granted_at, rail_closed_at')
+      .select(
+        'id, listing_id, is_owner, completed_at, trial_granted_at, rail_closed_at, tester_number'
+      )
       .eq('tester_user_id', user.id)
       .is('ended_at', null)
       .maybeSingle()
@@ -105,9 +110,11 @@ export const resolveTourViewer = cache(async (): Promise<TourViewer | null> => {
       enrollment: {
         id: enrollment.id,
         listingId: enrollment.listing_id,
+        isOwner: enrollment.is_owner,
         completedAt: enrollment.completed_at,
         trialGrantedAt: enrollment.trial_granted_at,
         railClosedAt: enrollment.rail_closed_at,
+        testerNumber: enrollment.tester_number,
       },
     }
   } catch {

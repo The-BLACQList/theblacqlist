@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
+import { TESTER_CAP, isTesterCapFull } from '@/lib/tester/cap'
 
 export type ManageTesterTourState = { success: true } | { error: string } | null
 
@@ -71,6 +72,13 @@ export async function inviteTesterAction(
     .single()
 
   if (insertError) {
+    // The cap trigger (20261014000000_shared_tester_link.sql) refuses a new
+    // live enrollment once the test holds TESTER_CAP.
+    if (isTesterCapFull(insertError)) {
+      return {
+        error: `All ${TESTER_CAP} tester spots are taken. End an enrollment below to free one.`,
+      }
+    }
     // The only unique index an insert can trip is one-live-enrollment-per-
     // tester (the trial-per-tester/-listing indexes are partial on
     // trial_granted_at, which is NULL here).

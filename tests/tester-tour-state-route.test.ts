@@ -34,10 +34,12 @@ const h = vi.hoisted(() => {
       email: string | null
       enrollment: {
         id: string
-        listingId: string
+        listingId: string | null
+        isOwner?: boolean
         completedAt: string | null
         trialGrantedAt: string | null
         railClosedAt?: string | null
+        testerNumber?: number
       }
     } | null,
     rows: [] as { step_key: string; reflection: string | null }[],
@@ -118,7 +120,9 @@ interface StepPayload {
 }
 
 interface TourPayload {
-  listingId: string
+  listingId: string | null
+  kind: 'owner' | 'supporter'
+  testerNumber: number | null
   completedAt: string | null
   trialGrantedAt: string | null
   canClaim: boolean
@@ -214,6 +218,25 @@ describe('GET /api/tour/state — the envelope', () => {
     expect(status).toBe(200)
     expect(body.data?.listingId).toBe('l1')
     expect(body.data?.steps.map((s) => s.key)).toEqual([...TOUR_STEPS])
+  })
+
+  it('sends the tester number, or null when the viewer has none', async () => {
+    h.state.viewer!.enrollment.testerNumber = 7
+    expect((await load()).body.data?.testerNumber).toBe(7)
+    delete h.state.viewer!.enrollment.testerNumber
+    expect((await load()).body.data?.testerNumber).toBeNull()
+  })
+
+  // Shared link, 2026-10-13: an owner who joined with no page yet still
+  // finishes as an owner, so the rail keeps their free month in view.
+  it.each([
+    ['an owner with a page', { listingId: 'l1', isOwner: true }, 'owner'],
+    ['an owner with no page yet', { listingId: null, isOwner: true }, 'owner'],
+    ['a supporter', { listingId: null, isOwner: false }, 'supporter'],
+    ['an older supporter row with no is_owner read', { listingId: null }, 'supporter'],
+  ] as const)('reads %s as kind %s', async (_name, change, kind) => {
+    Object.assign(h.state.viewer!.enrollment, change)
+    expect((await load()).body.data?.kind).toBe(kind)
   })
 
   it('marks exactly the four reflection-gated steps as gated, each with a prompt', async () => {

@@ -154,9 +154,14 @@ export async function GET() {
     return NextResponse.json({
       data: {
         listingId: viewer.enrollment.listingId,
-        // A supporter tester came in by one-tap link with no listing. Their
-        // finish is a thank-you, so the rail never shows them a claim button.
-        kind: viewer.enrollment.listingId === null ? 'supporter' : 'owner',
+        // A supporter tester has no listing and finishes with a thank-you. An
+        // owner may have no page yet either (is_owner, e.g. the shared link):
+        // they still finish as an owner, with the free month waiting for it.
+        kind:
+          viewer.enrollment.listingId !== null || viewer.enrollment.isOwner === true
+            ? 'owner'
+            : 'supporter',
+        testerNumber: viewer.enrollment.testerNumber ?? null,
         completedAt: viewer.enrollment.completedAt,
         trialGrantedAt: viewer.enrollment.trialGrantedAt,
         canClaim:

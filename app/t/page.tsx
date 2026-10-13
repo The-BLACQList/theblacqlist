@@ -33,11 +33,7 @@ export default function TesterLinkPage() {
         </div>
 
         <main className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="font-headline text-[26px] text-brand-black mb-1">You&rsquo;re in</h1>
-          <p className="font-subhead text-sm text-charcoal mb-6">
-            Thanks for testing The BLACQList. Tap Start and we&rsquo;ll sign you in and open a
-            short tour. No password needed.
-          </p>
+          {/* The heading lives in StartTourButton: a full test says so instead. */}
           <StartTourButton />
         </main>
 

@@ -34,6 +34,7 @@ import {
   optionalUnfinishedSteps,
   pendingReflectionCount,
 } from '@/lib/tour/progress'
+import { formatTesterNumber } from '@/lib/tester/cap'
 import { TourCloseForGood } from './TourCloseForGood'
 import { TourStepRow } from './TourStepRow'
 import {
@@ -306,6 +307,17 @@ export function TourRail() {
 
         {phase === 'ready' && tour && (
           <>
+            {/* The visible tester ID (founder, 2026-10-13), so a note or a
+                problem report can be matched to this tester without a name. */}
+            {tour.testerNumber !== null && (
+              <p className="pb-2 font-subhead text-xs text-cream/70">
+                You&apos;re{' '}
+                <span className="font-bold text-cream">
+                  {formatTesterNumber(tour.testerNumber)}
+                </span>
+                . Mention it when you send us feedback.
+              </p>
+            )}
             {/* D-T2: at the end the rail becomes the reward, not a checklist
                 with a button under it. The six rows fold away behind "Review
                 your walk" and the claim takes their place — but the tester
@@ -321,9 +333,11 @@ export function TourRail() {
                 <p className="mt-1 font-subhead text-sm text-cream/80">
                   {tour.kind === 'supporter'
                     ? 'You finished the walk. Thank you, this shapes what we build next.'
-                    : tour.trialGrantedAt === null
-                      ? 'You finished every written step. Your free month is ready. Use it now or save it for a bigger plan.'
-                      : 'You started your free month. If you didn’t finish checkout, you can pick it back up.'}
+                    : tour.listingId === null && tour.trialGrantedAt === null
+                      ? 'You finished every written step. Your free month is saved, and it’s yours to use once your page is live.'
+                      : tour.trialGrantedAt === null
+                        ? 'You finished every written step. Your free month is ready. Use it now or save it for a bigger plan.'
+                        : 'You started your free month. If you didn’t finish checkout, you can pick it back up.'}
                 </p>
 
                 {/* The free month is chosen on the plan page, not here: the
@@ -331,7 +345,11 @@ export function TourRail() {
                     opens (founder, 2026-10-10). The rail only points there. */}
                 {tour.kind === 'supporter' ? null : (
                   <Link
-                    href="/dashboard/upgrade#free-month"
+                    href={
+                      tour.listingId === null && tour.trialGrantedAt === null
+                        ? '/dashboard'
+                        : '/dashboard/upgrade#free-month'
+                    }
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-amber-gold px-5 py-2.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
                   >
                     {tour.trialGrantedAt === null ? 'See your free month' : 'Go to your free month'}

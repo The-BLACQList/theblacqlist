@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { getAdminRole, getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
 import {
+  SHARED_LINK_MAX_USES,
   TESTER_LINK_MAX_USES,
   TESTER_LINK_TTL_DAYS,
   buildTesterLink,
@@ -17,7 +18,7 @@ import {
 } from '@/lib/tester/links'
 
 export type MintTesterLinkState =
-  | { success: true; link: string; label: string; existingAccount: boolean }
+  | { success: true; link: string; label: string; existingAccount: boolean; shared: boolean }
   | { error: string }
   | null
 
@@ -41,6 +42,10 @@ const ADMIN_ACCOUNT_REFUSAL =
  * runs. An owner who has no page yet gets a link with no listing; it makes the
  * account the way a supporter link does, and the free month finds their page
  * later (founder, 2026-10-11).
+ *
+ * A shared link names no one (founder, 2026-10-13). Anyone who has it can join
+ * until the test holds TESTER_CAP live testers, picking owner or supporter on
+ * /t. It takes no email or listing; anything typed in those boxes is ignored.
  */
 export async function mintTesterLinkAction(
   _prev: MintTesterLinkState,
@@ -50,7 +55,10 @@ export async function mintTesterLinkAction(
   if (!admin) return { error: 'You must be signed in as an admin.' }
 
   const kind = formData.get('kind')?.toString()
-  if (kind !== 'supporter' && kind !== 'owner') return { error: 'Pick supporter or owner.' }
+  if (kind !== 'supporter' && kind !== 'owner' && kind !== 'shared') {
+    return { error: 'Pick supporter, owner or shared.' }
+  }
+  const shared = kind === 'shared'
 
   const label = normalizeTesterLabel(formData.get('label')?.toString() ?? '')
   if (!label) return { error: 'Add a short label such as T-07, up to 40 characters.' }
@@ -62,7 +70,7 @@ export async function mintTesterLinkAction(
   let existingAccount = false
 
   const listingRef = kind === 'owner' ? (formData.get('listing')?.toString().trim() ?? '') : ''
-  const typedEmail = formData.get('email')?.toString().trim() ?? ''
+  const typedEmail = shared ? '' : (formData.get('email')?.toString().trim() ?? '')
 
   if (listingRef) {
     if (typedEmail) {
@@ -126,7 +134,7 @@ export async function mintTesterLinkAction(
       email,
       listing_id: listingId,
       label,
-      max_uses: TESTER_LINK_MAX_USES,
+      max_uses: shared ? SHARED_LINK_MAX_USES : TESTER_LINK_MAX_USES,
       expires_at: expiresAt.toISOString(),
       created_by: admin.user.id,
     })
@@ -147,7 +155,7 @@ export async function mintTesterLinkAction(
   })
 
   revalidatePath('/admin/testers')
-  return { success: true, link: buildTesterLink(origin, token), label, existingAccount }
+  return { success: true, link: buildTesterLink(origin, token), label, existingAccount, shared }
 }
 
 /**

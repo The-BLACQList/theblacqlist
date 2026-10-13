@@ -114,9 +114,11 @@ const { resolveTourViewer } = await import('@/lib/tour/witness')
 const ENROLLED = {
   id: 'enrollment-id',
   listing_id: 'listing-id',
+  is_owner: true,
   completed_at: null,
   trial_granted_at: null,
   rail_closed_at: null,
+  tester_number: 7,
 }
 
 function reset() {
@@ -174,9 +176,11 @@ describe('gate order — each gate refuses before paying for the next', () => {
       enrollment: {
         id: 'enrollment-id',
         listingId: 'listing-id',
+        isOwner: true,
         completedAt: null,
         trialGrantedAt: null,
         railClosedAt: null,
+        testerNumber: 7,
       },
     })
   })
@@ -517,5 +521,22 @@ describe('reflect state — the middle status is visible on a collapsed row', ()
     const src = rail()
     expect(src).toMatch(/setOpenStep\(attentionKey\)/)
     expect(src).toMatch(/\[attentionKey,\s*attentionSeq\]/)
+  })
+})
+
+// Shared link, 2026-10-13: the visible tester ID, and an owner who joined with
+// no page yet is pointed at their dashboard rather than the plan page.
+describe('TourRail tester number and the owner without a page', () => {
+  const src = readFileSync(path.join(process.cwd(), 'components/tour/TourRail.tsx'), 'utf8')
+
+  it('shows the tester number through formatTesterNumber, only when there is one', () => {
+    expect(src).toContain('tour.testerNumber !== null &&')
+    expect(src).toContain('formatTesterNumber(tour.testerNumber)')
+  })
+
+  it('sends an owner with no page to /dashboard, and keeps the plan page for the rest', () => {
+    expect(src).toMatch(/tour\.listingId === null && tour\.trialGrantedAt === null\s*\?\s*'\/dashboard'/)
+    expect(src).toContain("'/dashboard/upgrade#free-month'")
+    expect(src).toContain('once your page is live')
   })
 })

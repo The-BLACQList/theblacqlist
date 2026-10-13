@@ -56,7 +56,7 @@ export function TourCloseForGood({
       </button>
       <p className="mt-2 font-subhead text-xs text-cream/60">
         {kind === 'owner'
-          ? 'It stays closed on every device. Your free month stays on your Upgrade page.'
+          ? 'It stays closed on every device. Your free month stays in your dashboard.'
           : 'It stays closed on every device.'}
       </p>
       {error !== null && (
