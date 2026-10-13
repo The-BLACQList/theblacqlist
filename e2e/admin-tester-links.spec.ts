@@ -26,6 +26,8 @@ test.describe('admin tester links', () => {
 
   test('an owner link with no page makes a link', async ({ page }) => {
     await page.goto('/admin/testers')
+    // The form sits behind the header button since ticket 137.
+    await page.getByRole('button', { name: 'Make a link' }).click()
 
     await page.getByRole('radio', { name: 'Listing owner' }).check()
     const listing = page.getByLabel('Listing ID or slug (optional)')
@@ -47,6 +49,8 @@ test.describe('admin tester links', () => {
     browser,
   }) => {
     await page.goto('/admin/testers')
+    // The form sits behind the header button since ticket 137.
+    await page.getByRole('button', { name: 'Make a link' }).click()
     await page.getByRole('radio', { name: 'Listing owner' }).check()
     await page.getByLabel('Label', { exact: true }).fill(`E2E-${Date.now().toString(36).slice(-6)}`)
     await page.getByRole('button', { name: 'Make link' }).click()
@@ -73,6 +77,8 @@ test.describe('admin tester links', () => {
 
   test('an owner link with a page and an email is refused', async ({ page }) => {
     await page.goto('/admin/testers')
+    // The form sits behind the header button since ticket 137.
+    await page.getByRole('button', { name: 'Make a link' }).click()
 
     await page.getByRole('radio', { name: 'Listing owner' }).check()
     await page.getByLabel('Label', { exact: true }).fill('E2E-both')
@@ -91,6 +97,8 @@ test.describe('admin tester links', () => {
     browser,
   }) => {
     await page.goto('/admin/testers')
+    // The form sits behind the header button since ticket 137.
+    await page.getByRole('button', { name: 'Make a link' }).click()
     await page.getByRole('radio', { name: 'Shared (up to 15 people)' }).check()
     await expect(page.getByLabel(/email \(optional\)/)).toHaveCount(0)
     await page.getByLabel('Label', { exact: true }).fill(`E2E-${Date.now().toString(36).slice(-6)}`)

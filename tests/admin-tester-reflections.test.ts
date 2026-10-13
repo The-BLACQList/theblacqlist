@@ -1,4 +1,5 @@
-// Tester reflections surfaced in admin: source contracts (2026-09-21).
+// Tester reflections surfaced in admin: source contracts (2026-09-21, reshaped
+// for the spots board in ticket 137 on 2026-10-13).
 //
 // The tour already collected reflections (tour_step_completions.reflection,
 // twenty-character floor, four gated steps) but /admin/testers never selected
@@ -25,10 +26,10 @@ const SIDEBAR = 'components/admin/AdminSidebar.tsx'
 describe('app/admin/testers/page.tsx', () => {
   const src = read(PAGE)
 
-  it('selects the reflection text and timestamp from tour_step_completions', () => {
+  it('selects the answer text, its timestamp and step times from tour_step_completions', () => {
     const completions = src.slice(src.indexOf(".from('tour_step_completions')"))
     expect(completions).toMatch(
-      /\.select\('enrollment_id, step_key, reflection, reflected_at'\)/
+      /\.select\('enrollment_id, step_key, completed_at, reflection, reflected_at'\)/
     )
   })
 
@@ -36,26 +37,36 @@ describe('app/admin/testers/page.tsx', () => {
     expect(src).toContain('if (s.reflection && s.reflected_at)')
   })
 
-  it('orders reflections newest first everywhere they appear', () => {
+  it('orders answers newest first', () => {
     expect(src).toContain('b.reflectedAt.localeCompare(a.reflectedAt)')
   })
 
-  it('labels each reflection with the step title and prompt from the tour copy', () => {
+  it('labels answers with the step title and prompt from the tour copy, on the server', () => {
     expect(src).toContain("import { TOUR_STEP_COPY } from '@/lib/tour/verify'")
-    expect(src).toContain('TOUR_STEP_COPY[entry.step]')
+    expect(src).toContain('TOUR_STEP_COPY[step]')
     expect(src).toContain('{copy.title}')
     expect(src).toContain('{copy.prompt}')
+    // lib/tour/verify has server imports; the board's client pieces must not pull it in.
+    for (const client of [
+      'components/admin/TesterBoard.tsx',
+      'components/admin/TesterDetailPanel.tsx',
+      'components/admin/TesterBoardHeader.tsx',
+    ]) {
+      expect(read(client)).not.toContain('@/lib/tour/verify')
+    }
   })
 
-  it('offers the flat triage view at ?view=reflections', () => {
-    expect(src).toContain('href="/admin/testers?view=reflections"')
-    expect(src).toMatch(/params\.view === 'reflections'/)
-    expect(src).toContain('function ReflectionsList')
+  it('groups answers by question at ?view=answers, and the old ?view=reflections still lands there', () => {
+    expect(src).toContain('href="/admin/testers?view=answers"')
+    expect(src).toMatch(/params\.view === 'answers' \|\| params\.view === 'reflections'/)
+    expect(src).toContain('function AnswersByQuestion')
+    expect(src).toContain('REFLECTION_GATED_STEPS.map')
   })
 
-  it('shows the reflection count on every enrollment row', () => {
-    expect(src).toContain("'No reflections yet'")
-    expect(src).toMatch(/\$\{reflections\.length\} reflection/)
+  it('renders the spots board and remembers the selected tester in the URL', () => {
+    expect(src).toContain('<TesterBoard')
+    expect(src).toContain('params.tester')
+    expect(read('components/admin/TesterBoard.tsx')).toContain("searchParams.set('tester'")
   })
 
   it('never reads analytics_events for evidence', () => {
@@ -63,8 +74,18 @@ describe('app/admin/testers/page.tsx', () => {
   })
 
   it('carries no em dash in its rendered copy', () => {
-    const withoutComments = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
-    expect(withoutComments).not.toContain('—')
+    for (const file of [
+      PAGE,
+      'components/admin/TesterBoard.tsx',
+      'components/admin/TesterDetailPanel.tsx',
+      'components/admin/TesterBoardHeader.tsx',
+      'lib/tester/board.ts',
+    ]) {
+      const withoutComments = read(file)
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+      expect(withoutComments, file).not.toContain('\u2014')
+    }
   })
 })
 

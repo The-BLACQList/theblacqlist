@@ -4,19 +4,27 @@ import type { Metadata } from 'next'
 import { requireAdmin } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
-import { TOUR_STEPS, type TourStepKey } from '@/lib/tour/steps'
+import { REFLECTION_GATED_STEPS, TOUR_STEPS, type TourStepKey } from '@/lib/tour/steps'
 import { TOUR_STEP_COPY } from '@/lib/tour/verify'
-import {
-  InviteTesterForm,
-  EndEnrollmentButton,
-} from '@/components/admin/TesterTourActions'
-import { MintTesterLinkForm, RevokeLinkButton } from '@/components/admin/TesterLinkCard'
+import { RevokeLinkButton } from '@/components/admin/TesterLinkCard'
+import { TesterBoard } from '@/components/admin/TesterBoard'
+import { TesterBoardHeader } from '@/components/admin/TesterBoardHeader'
 import { testerLinkStatus, type TesterLinkStatus } from '@/lib/tester/links'
 import { TESTER_CAP, formatTesterNumber } from '@/lib/tester/cap'
+import {
+  daysSince,
+  endWarning,
+  freeMonthText,
+  isOwnerTester,
+  lastActiveAt,
+  spotStatus,
+  walkStates,
+  type BoardTester,
+} from '@/lib/tester/board'
 
 export const metadata: Metadata = { title: 'Testers' }
 
-// The enrollment list must reflect an invite or an end immediately.
+// The board must reflect an invite or an end immediately.
 export const dynamic = 'force-dynamic'
 
 function formatDate(iso: string) {
@@ -34,6 +42,13 @@ function formatDateTime(iso: string) {
     hour: 'numeric',
     minute: '2-digit',
   })
+}
+
+/** "Today", "Yesterday" or "5 days ago", then the date. */
+function activeText(iso: string, now: Date) {
+  const days = daysSince(iso, now)
+  const ago = days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days} days ago`
+  return `${ago}, ${formatDate(iso)}`
 }
 
 interface EnrollmentRow {
@@ -57,11 +72,12 @@ interface EnrollmentRow {
 interface CompletionRow {
   enrollment_id: string
   step_key: TourStepKey
+  completed_at: string
   reflection: string | null
   reflected_at: string | null
 }
 
-// A reflection the founder can act on: text plus who and which step.
+// An answer the founder can act on: text plus who and which step.
 interface ReflectionEntry {
   enrollmentId: string
   step: TourStepKey
@@ -69,7 +85,7 @@ interface ReflectionEntry {
   reflectedAt: string
 }
 
-type View = 'enrollments' | 'reflections'
+type View = 'spots' | 'answers'
 
 // One-tap links, without the email: the table only needs the label to tell
 // links apart, and leaving PII out of the page keeps it out of screenshots.
@@ -93,33 +109,24 @@ const LINK_STATUS_CLASS: Record<TesterLinkStatus['state'], string> = {
   revoked: 'bg-red-50 text-red-700 border-red-200',
 }
 
-function enrollmentStatus(row: EnrollmentRow): { label: string; className: string } {
-  if (row.ended_at) {
-    return { label: 'Ended', className: 'bg-charcoal/10 text-charcoal-soft border-charcoal/15' }
-  }
-  if (row.trial_granted_at) {
-    return { label: 'Trial claimed', className: 'bg-green-50 text-green-800 border-green-200' }
-  }
-  if (row.completed_at) {
-    return { label: 'Completed', className: 'bg-amber-gold/10 text-amber-800 border-amber-200' }
-  }
-  return { label: 'In progress', className: 'bg-blue-50 text-blue-800 border-blue-200' }
-}
-
 const TAB_BASE =
-  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold font-subhead transition-colors'
+  'inline-flex min-h-11 items-center gap-1.5 px-4 rounded-full border text-sm font-semibold font-subhead transition-colors'
 const TAB_ON = 'bg-brand-black text-white border-brand-black'
-const TAB_OFF = 'bg-white text-charcoal-soft border-charcoal/15 hover:border-charcoal/40'
+const TAB_OFF = 'bg-white text-ink border-charcoal/15 hover:border-charcoal/40'
+const MUTED = 'text-[#55545a]'
 
 export default async function AdminTestersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>
+  searchParams: Promise<{ view?: string; tester?: string }>
 }) {
   await requireAdmin()
 
   const params = await searchParams
-  const view: View = params.view === 'reflections' ? 'reflections' : 'enrollments'
+  // ?view=reflections was the old name for the answers view; old bookmarks still land there.
+  const view: View =
+    params.view === 'answers' || params.view === 'reflections' ? 'answers' : 'spots'
+  const initialNumber = /^\d{1,3}$/.test(params.tester ?? '') ? Number(params.tester) : null
 
   const serviceClient = createServiceClient()
 
@@ -141,42 +148,34 @@ export default async function AdminTestersPage({
 
   const links = (linkData ?? []) as TesterLinkRow[]
 
-  // Progress and reflections come from the same rows. Tester scale, so one
-  // query and no pagination. Reflections are what the founder actually reads:
-  // the tour asks for twenty considered characters on four of the six steps,
-  // and until this page showed them they only existed in the table.
-  const stepCountMap: Record<string, number> = {}
-  const reflectionsByEnrollment: Record<string, ReflectionEntry[]> = {}
+  // Progress, last activity and answers all come from the same rows. Tester
+  // scale, so one query and no pagination.
+  const stepsByEnrollment: Record<string, CompletionRow[]> = {}
   const allReflections: ReflectionEntry[] = []
   if (enrollments.length > 0) {
     const { data: steps } = await serviceClient
       .from('tour_step_completions')
-      .select('enrollment_id, step_key, reflection, reflected_at')
+      .select('enrollment_id, step_key, completed_at, reflection, reflected_at')
       .in(
         'enrollment_id',
         enrollments.map((e) => e.id)
       )
     for (const s of (steps ?? []) as CompletionRow[]) {
-      stepCountMap[s.enrollment_id] = (stepCountMap[s.enrollment_id] ?? 0) + 1
+      ;(stepsByEnrollment[s.enrollment_id] ??= []).push(s)
       if (s.reflection && s.reflected_at) {
-        const entry: ReflectionEntry = {
+        allReflections.push({
           enrollmentId: s.enrollment_id,
           step: s.step_key,
           text: s.reflection,
           reflectedAt: s.reflected_at,
-        }
-        ;(reflectionsByEnrollment[s.enrollment_id] ??= []).push(entry)
-        allReflections.push(entry)
+        })
       }
     }
-    const newestFirst = (a: ReflectionEntry, b: ReflectionEntry) =>
-      b.reflectedAt.localeCompare(a.reflectedAt)
-    allReflections.sort(newestFirst)
-    for (const list of Object.values(reflectionsByEnrollment)) list.sort(newestFirst)
+    allReflections.sort((a, b) => b.reflectedAt.localeCompare(a.reflectedAt))
   }
 
-  // Tester identity for the founder's eyes: email from auth. Failures degrade
-  // to the id prefix rather than breaking the page.
+  // Tester identity for the founder's eyes: email from auth. A failed lookup
+  // shows "Email not available" rather than breaking the page.
   const emailMap: Record<string, string> = {}
   const testerIds = [...new Set(enrollments.map((e) => e.tester_user_id))]
   await Promise.all(
@@ -190,260 +189,152 @@ export default async function AdminTestersPage({
     })
   )
 
-  const enrollmentById = Object.fromEntries(enrollments.map((e) => [e.id, e]))
-  const testerLabel = (enrollmentId: string) => {
-    const e = enrollmentById[enrollmentId]
-    if (!e) return enrollmentId.slice(0, 8)
-    const who = emailMap[e.tester_user_id] ?? `${e.tester_user_id.slice(0, 8)}…`
-    return `${formatTesterNumber(e.tester_number)} · ${who}`
-  }
+  const now = new Date()
+  const testers: BoardTester[] = enrollments.map((e) =>
+    buildTester(e, stepsByEnrollment[e.id] ?? [], emailMap, now)
+  )
+  const numberById = Object.fromEntries(enrollments.map((e) => [e.id, e.tester_number]))
 
   const tourFlagOn = isFeatureEnabled('testerTour')
-  const totalSteps = TOUR_STEPS.length
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl text-brand-black">Testers</h1>
-        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Tester Tour enrollments and what testers wrote at each step. A
-          listing owner who completes the tour unlocks one free month on any
-          paid tier, used now or saved until the tier they want opens. A
-          supporter gets a thank-you.
-        </p>
-      </div>
-
-      <p
-        className={`rounded-xl border px-4 py-3 font-subhead text-sm ${
-          spotsTaken >= TESTER_CAP
-            ? 'border-amber-200 bg-amber-gold/10 text-amber-800'
-            : 'border-charcoal/10 bg-white text-brand-black'
-        }`}
-      >
-        <strong>
-          {spotsTaken} of {TESTER_CAP}
-        </strong>{' '}
-        tester spots taken.{' '}
-        {spotsTaken >= TESTER_CAP
-          ? 'The test is full. New people see a waitlist message. End an enrollment to free a spot.'
-          : 'Ending an enrollment frees its spot.'}
-      </p>
+      <TesterBoardHeader taken={spotsTaken} cap={TESTER_CAP} />
 
       {!tourFlagOn && (
         <div className="rounded-xl border border-amber-200 bg-amber-gold/10 px-4 py-3">
           <p className="font-subhead text-sm text-amber-800">
-            The tester tour flag is <strong>off</strong> in this environment
-            (FEATURE_TESTER_TOUR). Enrollments can be managed here, but testers
-            will not see the tour rail until the flag is on.
+            The tester tour flag is <strong>off</strong> in this environment (FEATURE_TESTER_TOUR).
+            Testers can be managed here, but they will not see the tour rail until the flag is on.
           </p>
         </div>
       )}
 
-      <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-        <h2 className="font-subhead text-sm font-bold text-brand-black uppercase tracking-wide">
-          Invite a tester
-        </h2>
-        <div className="mt-3">
-          <InviteTesterForm />
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-        <h2 className="font-subhead text-sm font-bold text-brand-black uppercase tracking-wide">
-          Make a one-tap link
-        </h2>
-        <p className="font-body text-xs text-charcoal-soft mt-1">
-          One tap signs the tester in, enrolls them and opens the tour. No sign-up form.
-        </p>
-        <div className="mt-3">
-          <MintTesterLinkForm />
-        </div>
-        {links.length > 0 && <LinksTable links={links} />}
-      </div>
-
       <nav aria-label="Tester views" className="flex flex-wrap gap-2">
         <Link
           href="/admin/testers"
-          aria-current={view === 'enrollments' ? 'page' : undefined}
-          className={`${TAB_BASE} ${view === 'enrollments' ? TAB_ON : TAB_OFF}`}
+          aria-current={view === 'spots' ? 'page' : undefined}
+          className={`${TAB_BASE} ${view === 'spots' ? TAB_ON : TAB_OFF}`}
         >
-          Enrollments
-          <span className="opacity-70">{enrollments.length}</span>
+          Spots
         </Link>
         <Link
-          href="/admin/testers?view=reflections"
-          aria-current={view === 'reflections' ? 'page' : undefined}
-          className={`${TAB_BASE} ${view === 'reflections' ? TAB_ON : TAB_OFF}`}
+          href="/admin/testers?view=answers"
+          aria-current={view === 'answers' ? 'page' : undefined}
+          className={`${TAB_BASE} ${view === 'answers' ? TAB_ON : TAB_OFF}`}
         >
-          Reflections
+          All answers
           <span className="opacity-70">{allReflections.length}</span>
         </Link>
       </nav>
 
-      {view === 'reflections' ? (
-        <ReflectionsList reflections={allReflections} testerLabel={testerLabel} />
-      ) : enrollments.length === 0 ? (
-        <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-          <p className="font-subhead text-sm text-charcoal-soft">
-            No enrollments yet. Invite a listing owner or send a one-tap link
-            above to start a tour.
-          </p>
-        </div>
+      {view === 'answers' ? (
+        <AnswersByQuestion reflections={allReflections} numberById={numberById} />
       ) : (
-        <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                  Tester
-                </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                  Listing
-                </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                  Progress
-                </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                  Status
-                </th>
-                <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
-                  Started
-                </th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-charcoal/5">
-              {enrollments.map((row) => {
-                const status = enrollmentStatus(row)
-                const done = stepCountMap[row.id] ?? 0
-                const reflections = reflectionsByEnrollment[row.id] ?? []
-                return (
-                  <EnrollmentRows
-                    key={row.id}
-                    row={row}
-                    status={status}
-                    done={done}
-                    totalSteps={totalSteps}
-                    tester={emailMap[row.tester_user_id] ?? `${row.tester_user_id.slice(0, 8)}…`}
-                    reflections={reflections}
-                  />
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <TesterBoard
+          testers={testers}
+          cap={TESTER_CAP}
+          initialNumber={initialNumber}
+          links={<LinksStrip links={links} />}
+        />
       )}
     </div>
   )
 }
 
-// One enrollment: the summary row, then a second row holding every reflection
-// the tester has written, newest first. Rendered inside the same <tbody> so
-// the reflection sits directly under the person who wrote it.
-function EnrollmentRows({
-  row,
-  status,
-  done,
-  totalSteps,
-  tester,
-  reflections,
-}: {
-  row: EnrollmentRow
-  status: { label: string; className: string }
-  done: number
-  totalSteps: number
-  tester: string
-  reflections: ReflectionEntry[]
-}) {
-  return (
-    <>
-      <tr className="hover:bg-[#f9f9fb] transition-colors">
-        <td className="px-4 py-3">
-          <p className="font-subhead text-sm font-semibold text-brand-black">
-            {formatTesterNumber(row.tester_number)}
-          </p>
-          <p className="font-body text-xs text-charcoal-soft">{tester}</p>
-        </td>
-        <td className="px-4 py-3">
-          {row.listing_id === null ? (
-            <span className="font-body text-xs text-charcoal-soft">
-              {row.is_owner ? 'Owner, no page yet' : 'Supporter'}
-            </span>
-          ) : row.listings ? (
-            <Link
-              href={`/admin/entities/${row.listing_id}`}
-              className="font-subhead text-sm text-brand-black underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold"
-            >
-              {row.listings.name}
-            </Link>
-          ) : (
-            <span className="font-body text-xs text-charcoal-faint">
-              {row.listing_id.slice(0, 8)}…
-            </span>
-          )}
-        </td>
-        <td className="px-4 py-3">
-          <span className="font-subhead text-sm text-brand-black">
-            {done}/{totalSteps}
-          </span>
-          <span className="block font-body text-xs text-charcoal-soft">
-            {reflections.length === 0
-              ? 'No reflections yet'
-              : `${reflections.length} reflection${reflections.length === 1 ? '' : 's'}`}
-          </span>
-        </td>
-        <td className="px-4 py-3">
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-semibold font-subhead ${status.className}`}
-          >
-            {status.label}
-          </span>
-        </td>
-        <td className="px-4 py-3 hidden lg:table-cell">
-          <span className="font-body text-xs text-charcoal-soft">
-            {formatDate(row.started_at)}
-          </span>
-        </td>
-        <td className="px-4 py-3 text-right">
-          {row.ended_at === null && <EndEnrollmentButton enrollmentId={row.id} />}
-        </td>
-      </tr>
-      {reflections.length > 0 && (
-        <tr className="bg-[#fcfcfd]">
-          <td colSpan={6} className="px-4 pb-4 pt-1">
-            <ul className="space-y-3">
-              {reflections.map((r) => (
-                <ReflectionItem key={`${r.enrollmentId}-${r.step}`} entry={r} />
-              ))}
-            </ul>
-          </td>
-        </tr>
-      )}
-    </>
-  )
+// Everything the board shows about one tester, worked out here so the client
+// gets plain data: the tour copy stays on the server, and dates are formatted
+// once so the browser's time zone can't disagree with the first render.
+function buildTester(
+  e: EnrollmentRow,
+  steps: CompletionRow[],
+  emailMap: Record<string, string>,
+  now: Date
+): BoardTester {
+  const status = spotStatus(e, steps, now)
+  const states = walkStates(steps, status)
+  const byKey = new Map(steps.map((s) => [s.step_key, s]))
+  return {
+    id: e.id,
+    number: e.tester_number,
+    label: formatTesterNumber(e.tester_number),
+    email: emailMap[e.tester_user_id] ?? null,
+    owner: isOwnerTester(e),
+    pageName: e.listing_id === null ? null : (e.listings?.name ?? 'Page not found'),
+    pageHref: e.listing_id === null ? null : `/admin/entities/${e.listing_id}`,
+    joinedText: formatDate(e.started_at),
+    lastActiveText: activeText(lastActiveAt(e, steps), now),
+    status,
+    freeMonth: freeMonthText(e),
+    endWarning: endWarning(e),
+    endedText: e.ended_at ? formatDate(e.ended_at) : null,
+    walk: TOUR_STEPS.map((key) => {
+      const s = byKey.get(key)
+      const copy = TOUR_STEP_COPY[key]
+      const answered = s?.reflection && s.reflected_at ? s : null
+      return {
+        key,
+        title: copy.title,
+        state: states[key],
+        prompt: answered ? copy.prompt : null,
+        answer: answered?.reflection ?? null,
+        answeredText: answered?.reflected_at ? formatDateTime(answered.reflected_at) : null,
+      }
+    }),
+  }
 }
 
-function ReflectionItem({ entry, tester }: { entry: ReflectionEntry; tester?: string }) {
-  const copy = TOUR_STEP_COPY[entry.step]
+// Links someone can still use, at a glance. The full history, with Revoke,
+// sits behind "See all links".
+const LINKS_SHOWN = 3
+
+function LinksStrip({ links }: { links: TesterLinkRow[] }) {
+  if (links.length === 0) return null
+  const now = new Date()
+  const live = links.filter((l) => {
+    const state = testerLinkStatus(l, now).state
+    return state === 'unused' || state === 'in_use'
+  })
   return (
-    <li className="rounded-lg border border-charcoal/10 bg-white px-4 py-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <p className="font-subhead text-xs font-semibold text-brand-black">
-          {tester && <span className="mr-2">{tester}</span>}
-          <span className="text-charcoal-soft font-normal">{copy.title}</span>
+    <section aria-labelledby="links-heading" className="space-y-3">
+      <h2
+        id="links-heading"
+        className="font-subhead text-xs font-bold uppercase tracking-wide text-ink"
+      >
+        Links that still work
+      </h2>
+      {live.length === 0 ? (
+        <p className={`font-body text-sm ${MUTED}`}>
+          None right now. Make a link to invite someone new.
         </p>
-        <time
-          dateTime={entry.reflectedAt}
-          className="font-body text-xs text-charcoal-faint"
-        >
-          {formatDateTime(entry.reflectedAt)}
-        </time>
-      </div>
-      {copy.prompt && (
-        <p className="mt-1 font-body text-xs italic text-charcoal-soft">{copy.prompt}</p>
+      ) : (
+        <ul className="flex flex-wrap gap-2">
+          {live.slice(0, LINKS_SHOWN).map((l) => (
+            <li
+              key={l.id}
+              className="rounded-lg border border-charcoal/15 bg-white px-3 py-2 font-body text-sm text-ink"
+            >
+              <span className="font-subhead font-semibold">{l.label}</span>
+              <span className={MUTED}>
+                {' '}
+                · {l.use_count} of {l.max_uses} used · until {formatDate(l.expires_at)}
+              </span>
+            </li>
+          ))}
+          {live.length > LINKS_SHOWN && (
+            <li className={`self-center font-body text-sm ${MUTED}`}>
+              and {live.length - LINKS_SHOWN} more in the full list
+            </li>
+          )}
+        </ul>
       )}
-      <p className="mt-2 font-body text-sm text-brand-black whitespace-pre-wrap">{entry.text}</p>
-    </li>
+      <details className="group">
+        <summary className="inline-flex min-h-11 cursor-pointer items-center font-subhead text-sm font-semibold text-ink underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold">
+          See all links ({links.length})
+        </summary>
+        <LinksTable links={links} />
+      </details>
+    </section>
   )
 }
 
@@ -452,7 +343,7 @@ function ReflectionItem({ entry, tester }: { entry: ReflectionEntry; tester?: st
 function LinksTable({ links }: { links: TesterLinkRow[] }) {
   const now = new Date()
   return (
-    <div className="mt-5 overflow-x-auto rounded-lg border border-charcoal/10">
+    <div className="mt-3 overflow-x-auto rounded-lg border border-charcoal/10">
       <table className="w-full text-sm">
         <caption className="sr-only">One-tap links</caption>
         <thead>
@@ -512,34 +403,82 @@ function LinksTable({ links }: { links: TesterLinkRow[] }) {
   )
 }
 
-// Every reflection from every tester, newest first. The triage view: read top
-// to bottom once a day during the tester window.
-function ReflectionsList({
+// Every answer, grouped by the question it answers, newest first within each.
+// Reading one question across all testers is how patterns show up.
+function AnswersByQuestion({
   reflections,
-  testerLabel,
+  numberById,
 }: {
   reflections: ReflectionEntry[]
-  testerLabel: (enrollmentId: string) => string
+  numberById: Record<string, number>
 }) {
   if (reflections.length === 0) {
     return (
       <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
-        <p className="font-subhead text-sm text-charcoal-soft">
-          No reflections yet. They appear here the moment a tester submits one
-          on a reflection step of the tour.
+        <p className={`font-subhead text-sm ${MUTED}`}>
+          No answers yet. They appear here the moment a tester writes one on a step of the tour.
         </p>
       </div>
     )
   }
   return (
-    <ul className="space-y-3">
-      {reflections.map((r) => (
-        <ReflectionItem
-          key={`${r.enrollmentId}-${r.step}`}
-          entry={r}
-          tester={testerLabel(r.enrollmentId)}
-        />
-      ))}
-    </ul>
+    <div className="space-y-6">
+      {REFLECTION_GATED_STEPS.map((step) => {
+        const entries = reflections.filter((r) => r.step === step)
+        const copy = TOUR_STEP_COPY[step]
+        return (
+          <section
+            key={step}
+            aria-labelledby={`q-${step}`}
+            className="rounded-xl border border-charcoal/10 bg-white p-5"
+          >
+            <h2 id={`q-${step}`} className="font-subhead text-sm font-bold text-ink">
+              {copy.title}
+              <span className={`ml-2 font-normal ${MUTED}`}>
+                {entries.length} {entries.length === 1 ? 'answer' : 'answers'}
+              </span>
+            </h2>
+            {copy.prompt && (
+              <p className={`mt-1 font-body text-sm italic ${MUTED}`}>{copy.prompt}</p>
+            )}
+            {entries.length === 0 ? (
+              <p className={`mt-3 font-body text-sm ${MUTED}`}>No one has answered this yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {entries.map((entry) => (
+                  <AnswerItem
+                    key={`${entry.enrollmentId}-${entry.step}`}
+                    entry={entry}
+                    number={numberById[entry.enrollmentId] ?? null}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
+function AnswerItem({ entry, number }: { entry: ReflectionEntry; number: number | null }) {
+  return (
+    <li className="border-l-2 border-gold pl-3">
+      <p className="font-body text-sm text-ink whitespace-pre-wrap">{entry.text}</p>
+      <p className={`mt-1 font-body text-xs ${MUTED}`}>
+        {number !== null ? (
+          <Link
+            href={`/admin/testers?tester=${String(number).padStart(2, '0')}`}
+            className="font-semibold text-amber underline underline-offset-2 hover:text-ink"
+          >
+            {formatTesterNumber(number)}
+          </Link>
+        ) : (
+          'Unknown tester'
+        )}
+        {' · '}
+        <time dateTime={entry.reflectedAt}>{formatDateTime(entry.reflectedAt)}</time>
+      </p>
+    </li>
   )
 }
