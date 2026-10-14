@@ -10,18 +10,17 @@ export const metadata: Metadata = {
 
 /**
  * The map explore page (MP-A "Full-Bleed Explorer" — Living Commerce Index).
- * Tile URL is env-driven: self-hosted PMTiles in our own storage bucket.
- * Without a configured tile URL the page still works — the drawer's list
- * degrades to the primary surface (map canvas shows the plain ground).
+ * Basemap tiles come from our own /api/map/tiles route (lib/map/tileUrls.ts).
+ * If they fail the page still works: the drawer's list is the primary
+ * surface and the canvas shows the plain ground.
  */
 export default function MapPage() {
-  const tilesUrl = process.env.NEXT_PUBLIC_MAP_TILES_URL ?? ''
   return (
     <>
       {/* Tester Tour: opening the map is the whole step. Renders nothing and
           never throws (components/tour/TourWitness.tsx). */}
       <TourWitness step="map_opened" />
-      <MapPageClient tilesUrl={tilesUrl} />
+      <MapPageClient />
     </>
   )
 }

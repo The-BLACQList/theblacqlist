@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 
-// MapLibre + PMTiles stay out of the initial bundle (LCI perf guardrails);
+// MapLibre stays out of the initial bundle (LCI perf guardrails);
 // the loading state holds the layout while the map chunk streams in.
 const MapExplore = dynamic(
   () => import('@/components/map/MapExplore').then((m) => m.MapExplore),
@@ -20,6 +20,6 @@ const MapExplore = dynamic(
   }
 )
 
-export function MapPageClient({ tilesUrl }: { tilesUrl: string }) {
-  return <MapExplore tilesUrl={tilesUrl} />
+export function MapPageClient() {
+  return <MapExplore />
 }

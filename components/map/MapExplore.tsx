@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import type { Map as MlMap, MapLayerMouseEvent } from 'maplibre-gl'
-import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { buildMapStyle, CITY_VIEWS } from '@/components/map/mapStyle'
+import { tileTemplate } from '@/lib/map/tileUrls'
 import { addLandmarkLayers, addListingLayers, DOT_LAYERS } from '@/components/map/mapLayers'
 import { toLandmarkGeoJSON } from '@/lib/map/landmarks'
 import { MapDrawer } from '@/components/map/MapDrawer'
@@ -45,7 +45,7 @@ const TYPE_LABELS: Record<string, string> = {
  * numbered photo pins; every other listing is a small dot or part of a cluster.
  * The panel and sheet lists are the parallel accessible path to every business.
  */
-export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
+export function MapExplore() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const [map, setMap] = useState<MlMap | null>(null)
@@ -145,12 +145,11 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   // Map init
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    maplibregl.addProtocol('pmtiles', new Protocol().tile)
-    // Same-origin tiles proxy by default (CORS-free); env URL is an override.
-    const resolvedTiles = tilesUrl || `${window.location.origin}/api/map/tiles`
+    // Plain z/x/y tiles from our own origin, cached by the CDN
+    // (lib/map/tileUrls.ts).
     const m = new maplibregl.Map({
       container: containerRef.current,
-      style: buildMapStyle(resolvedTiles),
+      style: buildMapStyle(tileTemplate(window.location.origin, 'metros')),
       center: CITY_VIEWS['atlanta-ga']!.center,
       zoom: CITY_VIEWS['atlanta-ga']!.zoom,
       attributionControl: { compact: true },
@@ -205,10 +204,9 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
       mapRef.current = null
       setMap(null)
       setMapReady(false)
-      maplibregl.removeProtocol('pmtiles')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tilesUrl])
+  }, [])
 
   useEffect(() => {
     if (!map || !mapReady) return

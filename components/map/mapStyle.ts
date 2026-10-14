@@ -83,7 +83,8 @@ function landmarkPois(layer: SymbolLayerSpecification): SymbolLayerSpecification
   }
 }
 
-export function buildMapStyle(tilesUrl: string): StyleSpecification {
+/** `tiles` is a z/x/y template, from tileTemplate() in lib/map/tileUrls.ts. */
+export function buildMapStyle(tiles: string): StyleSpecification {
   const base = namedFlavor('light')
   const flavor = {
     ...base,
@@ -134,9 +135,7 @@ export function buildMapStyle(tilesUrl: string): StyleSpecification {
     sources: {
       protomaps: {
         type: 'vector',
-        // Explicit tile template (not the TileJSON `url:` form): sidesteps a
-        // pmtiles/maplibre metadata handshake stall observed in the wild.
-        tiles: [`pmtiles://${tilesUrl}/{z}/{x}/{y}`],
+        tiles: [tiles],
         minzoom: 0,
         maxzoom: 14,
         attribution:
