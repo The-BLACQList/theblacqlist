@@ -19,7 +19,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, Check, ChevronDown, Crosshair, Pencil } from 'lucide-react'
 
-import { TOUR_STEP_TARGETS, planSpotlight, travelHref, type TourTarget } from '@/lib/tour/targets'
+import {
+  TOUR_STEP_TARGETS,
+  planSpotlight,
+  travelButton,
+  travelHref,
+  type LastListing,
+  type TourTarget,
+} from '@/lib/tour/targets'
 import { rowMarker } from '@/lib/tour/progress'
 import {
   applySpotlight,
@@ -27,6 +34,7 @@ import {
   resolveVisibleTarget,
   setPendingSpotlight,
 } from './spotlight'
+import { readLastListing } from './lastListing'
 import { TourReflectionForm } from './TourReflectionForm'
 import type { TourStepState } from './useTourState'
 
@@ -48,16 +56,20 @@ export function TourStepRow({
   expanded,
   onToggle,
   onReflectionSaved,
+  ownListingId,
 }: {
   step: TourStepState
   index: number
   expanded: boolean
   onToggle: (key: string) => void
   onReflectionSaved: () => void
+  /** The tester's own listing, which a "Back to" trip must never offer. */
+  ownListingId: string | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const [awayFrom, setAwayFrom] = useState<string | null>(null)
+  const [lastListing, setLastListing] = useState<LastListing | null>(null)
   const rowRef = useRef<HTMLLIElement | null>(null)
   const wasExpanded = useRef(expanded)
   const panelId = `tour-step-panel-${step.key}`
@@ -111,6 +123,7 @@ export function TourStepRow({
     // has no page target, and expanding the row already put the textarea on
     // screen.
     setAwayFrom(travelHref(plan))
+    setLastListing(readLastListing())
   }, [step.key])
 
   // Re-ask "is the target on THIS page?" whenever the page changes under an
@@ -130,6 +143,7 @@ export function TourStepRow({
       setTimeout(() => {
         const found = resolveVisibleTarget(target.selectors) !== null
         setAwayFrom(travelHref(planSpotlight(target, found)))
+        setLastListing(readLastListing())
       }, delay)
     )
     return () => timers.forEach(clearTimeout)
@@ -141,16 +155,33 @@ export function TourStepRow({
     if (opening) locate()
   }, [expanded, onToggle, step.key, locate])
 
-  const travel = useCallback(() => {
-    if (awayFrom === null) return
+  const target = targetFor(step.key)
+  // Where the travel button goes and what it says: the listing the tester was
+  // just on when there is one that can count, otherwise the target's own trip.
+  const trip =
+    target === undefined
+      ? null
+      : travelButton(target, awayFrom, { last: lastListing, ownListingId, pathname })
+  const tripHref = trip?.href ?? null
+
+  // A plain function, not useCallback: the React Compiler memoizes it, and a
+  // manual memo over a value computed during render is one it refuses.
+  function travel(): void {
+    if (tripHref === null) return
     // Park the intent so the ring fires after the new page paints. The rail
     // survives the navigation (it is in the root layout) but the target's page
     // does not exist yet at this moment.
     setPendingSpotlight(step.key)
-    router.push(awayFrom)
-  }, [awayFrom, step.key, router])
+    router.push(tripHref)
+  }
 
-  const target = targetFor(step.key)
+  // Steps 3 and 5 carry numbered steps instead of one helper sentence. Shown
+  // whenever there is still something to do, on any page, because the third
+  // move ("come back and write") is the one testers missed.
+  const guide =
+    target?.guide !== undefined && (step.status === 'act' || step.status === 'retry')
+      ? target.guide
+      : null
 
   return (
     <li ref={rowRef}>
@@ -218,18 +249,29 @@ export function TourStepRow({
             <p className="font-subhead text-sm text-cream/70">{step.message}</p>
           )}
 
-          {!done && awayFrom !== null && target?.go !== undefined && (
+          {!done && guide !== null && (
+            <ol className="mt-2 list-decimal space-y-1 pl-4 font-subhead text-xs text-cream/75 marker:font-bold marker:text-amber-gold">
+              {guide.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ol>
+          )}
+
+          {!done && awayFrom !== null && trip !== null && target?.go !== undefined && (
             <>
               {/* The button is the short action; the sentence of context
-                  stays visible beside it as helper text. */}
-              <p className="mt-1 font-subhead text-xs text-cream/60">{target.hint}</p>
+                  stays visible beside it as helper text, unless the numbered
+                  guide above already says where things are. */}
+              {guide === null && (
+                <p className="mt-1 font-subhead text-xs text-cream/60">{target.hint}</p>
+              )}
               <button
                 type="button"
                 onClick={travel}
-                className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+                className="mt-2 inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 text-left font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
               >
-                {target.go}
-                <ArrowRight className="size-4" aria-hidden="true" />
+                {trip.label}
+                <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
               </button>
             </>
           )}

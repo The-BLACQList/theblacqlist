@@ -73,8 +73,8 @@ export const TOUR_STEP_COPY: Record<TourStepKey, TourStepCopy> = {
     prompt: null,
   },
   listing_saved: {
-    title: 'Save a listing that isn’t yours',
-    action: 'Tap Save on a listing that isn’t your own.',
+    title: 'Save a place you’d actually go',
+    action: 'Save a business you’d really visit, not your own. The note after is the part we read.',
     retry:
       'We couldn’t check your saves just now. Reload in a moment — a save you already made still counts.',
     prompt: 'What made you save that one?',
