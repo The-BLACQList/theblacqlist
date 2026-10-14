@@ -119,7 +119,11 @@ function stackedLayers(flavor: Parameters<typeof layers>[1]): LayerSpecification
   return [...country, ...metro]
 }
 
-export function buildMapStyle(tilesUrl: string, usTilesUrl: string): StyleSpecification {
+/**
+ * `metroTiles` and `usTiles` are z/x/y templates, from tileTemplate() in
+ * lib/map/tileUrls.ts.
+ */
+export function buildMapStyle(metroTiles: string, usTiles: string): StyleSpecification {
   const base = namedFlavor('light')
   const flavor = {
     ...base,
@@ -171,7 +175,7 @@ export function buildMapStyle(tilesUrl: string, usTilesUrl: string): StyleSpecif
       // The whole lower 48 at zooms 0 to 6 (blacqlist-us-lowzoom.pmtiles).
       'protomaps-us': {
         type: 'vector',
-        tiles: [`pmtiles://${usTilesUrl}/{z}/{x}/{y}`],
+        tiles: [usTiles],
         minzoom: 0,
         maxzoom: 6,
         attribution:
@@ -179,10 +183,9 @@ export function buildMapStyle(tilesUrl: string, usTilesUrl: string): StyleSpecif
       },
       protomaps: {
         type: 'vector',
-        // Explicit tile template (not the TileJSON `url:` form): sidesteps a
-        // pmtiles/maplibre metadata handshake stall observed in the wild.
-        tiles: [`pmtiles://${tilesUrl}/{z}/{x}/{y}`],
-        minzoom: 0,
+        tiles: [metroTiles],
+        // Its layers start at DETAIL_ZOOM, so no tile below it is ever asked for.
+        minzoom: DETAIL_ZOOM,
         maxzoom: 14,
         attribution:
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',

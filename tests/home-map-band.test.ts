@@ -24,15 +24,21 @@ import {
   initialCity,
 } from '@/components/map/mapStyle'
 import { projectUS } from '@/lib/map/albers'
+import { tileTemplate } from '@/lib/map/tileUrls'
 import { US_VIEWBOX } from '@/components/home/usOutline'
 import { BAND_DOTS } from '@/components/home/HomeMapBand'
 
 describe('stacked basemap', () => {
-  const style = buildMapStyle('https://example.test/metros.pmtiles', 'https://example.test/us.pmtiles')
+  const style = buildMapStyle(tileTemplate('https://example.test', 'metros'), tileTemplate('https://example.test', 'us'))
 
-  it('reads the country file through its own source', () => {
+  it('reads the country file through its own source, as plain cacheable tiles', () => {
     const us = style.sources['protomaps-us']
-    expect(us && 'tiles' in us ? us.tiles : null).toEqual(['pmtiles://https://example.test/us.pmtiles/{z}/{x}/{y}'])
+    expect(us && 'tiles' in us ? us.tiles : null).toEqual([tileTemplate('https://example.test', 'us')])
+  })
+
+  it('never asks for metro tiles at country zoom', () => {
+    const metro = style.sources['protomaps']
+    expect(metro && 'minzoom' in metro ? metro.minzoom : null).toBe(DETAIL_ZOOM)
   })
 
   it('has exactly one background', () => {

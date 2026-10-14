@@ -4,13 +4,21 @@ import { parseTileRequest, type TileArchive } from '@/lib/map/tileUrls'
 
 export const dynamic = 'force-dynamic'
 
-/** Where each archive lives. MAP_TILES_UPSTREAM_URL overrides the metro file. */
+/**
+ * Where each archive lives. MAP_TILES_UPSTREAM_URL overrides the metro file,
+ * MAP_TILES_US_UPSTREAM_URL the country file (docs/blacqlist/map-tiles.md).
+ */
 function upstreamUrl(archive: TileArchive): string {
   switch (archive) {
     case 'metros':
       return (
         process.env.MAP_TILES_UPSTREAM_URL ??
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/map-tiles/blacqlist-metros.pmtiles`
+      )
+    case 'us':
+      return (
+        process.env.MAP_TILES_US_UPSTREAM_URL ??
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/map-tiles/blacqlist-us-lowzoom.pmtiles`
       )
   }
 }

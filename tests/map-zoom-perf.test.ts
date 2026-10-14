@@ -48,22 +48,14 @@ describe('proxy matcher', () => {
 })
 
 describe('tiles route cache header', () => {
-  // Both tile routes (metros and the country file) answer through proxyTiles,
-  // so the header lives in one place.
-  const src = read('lib/map/tileProxy.ts')
-
-  it('both tile routes use the shared proxy', () => {
-    for (const route of ['app/api/map/tiles/route.ts', 'app/api/map/tiles/us/route.ts']) {
-      expect(read(route)).toContain('proxyTiles(')
-    }
-  })
+  const src = read('app/api/map/tiles/route.ts')
 
   it('sets a browser cache only', () => {
     expect(src).toContain("headers.set('Cache-Control', 'public, max-age=86400')")
   })
 
   it('does not ask the CDN to cache a Range response', () => {
-    // The proxy's own comment names s-maxage to explain why it is absent, so
+    // The route's own comment names s-maxage to explain why it is absent, so
     // inspect the header values that are actually set, not the whole file.
     const values = [...src.matchAll(/headers\.set\(\s*'Cache-Control'\s*,\s*'([^']*)'/g)].map(
       (m) => m[1]
@@ -88,6 +80,10 @@ describe('plain tile URLs', () => {
   it('reads a real tile address', () => {
     expect(parseTileRequest(ok)).toEqual({ archive: 'metros', z: 11, x: 536, y: 820 })
     expect(parseTileRequest({ ...ok, z: '0', x: '0', y: '0' })).toEqual({ archive: 'metros', z: 0, x: 0, y: 0 })
+  })
+
+  it('reads the country file too', () => {
+    expect(parseTileRequest({ ...ok, archive: 'us', z: '4', x: '3', y: '6' })).toEqual({ archive: 'us', z: 4, x: 3, y: 6 })
   })
 
   it('keeps an older version working, so open tabs survive a bump', () => {
@@ -127,6 +123,7 @@ describe('plain tiles route', () => {
   it('is used by the map, not the Range route', () => {
     const explore = read('components/map/MapExplore.tsx')
     expect(explore).toContain("tileTemplate(window.location.origin, 'metros')")
+    expect(explore).toContain("tileTemplate(window.location.origin, 'us')")
     expect(explore).not.toContain('pmtiles://')
     expect(read('components/map/mapStyle.ts')).not.toContain('pmtiles://')
   })
