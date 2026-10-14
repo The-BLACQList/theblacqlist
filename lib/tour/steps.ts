@@ -1,8 +1,9 @@
-// The Tester Tour's six steps, in the order the rail shows them.
+// The Tester Tour's seven steps, in the order the rail shows them.
 //
 // This list is the TypeScript half of a pair. The other half is the `step_key`
 // CHECK constraint in supabase/migrations/20260830000000_tester_tour.sql, and
-// the two must stay identical: a step added here only would be silently
+// the two must stay identical (the CHECK was last redefined in
+// 20261015000000_tour_map_step.sql): a step added here only would be silently
 // unrecordable (the INSERT fails the CHECK), and a step added to the SQL only
 // would be permanently unreachable. Both fail quietly rather than loudly, which
 // is why tests/tester-tour-trial.test.ts reads the migration's source text and
@@ -12,6 +13,9 @@ export const TOUR_STEPS = [
   'search_ran',
   'listing_opened',
   'listing_saved',
+  // Added 2026-10-15: testers kept saying they found the map late. Un-gated,
+  // so it is a progress tick with no note and does not change who finishes.
+  'map_opened',
   'collection_browsed',
   'review_or_correction',
   'final_reflection',
@@ -19,7 +23,7 @@ export const TOUR_STEPS = [
 
 export type TourStepKey = (typeof TOUR_STEPS)[number]
 
-// Only four of the six ask the tester to write anything.
+// Only four of the seven ask the tester to write anything.
 //
 // The original design gated all six. Asking for twenty considered characters
 // about "you loaded a collection page" is high tax and low signal — it is the

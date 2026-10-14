@@ -74,6 +74,14 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     go: 'Find a listing',
     hint: 'The Save control sits beside the name at the top of any listing page, and on every result card.',
   },
+  map_opened: {
+    kind: 'page',
+    selectors: ['[data-tour="map"]'],
+    href: '/map',
+    fallbackHref: '/map',
+    go: 'Open the map',
+    hint: 'Map sits in the main menu at the top of every page.',
+  },
   collection_browsed: {
     kind: 'page',
     // Prefix match, not exact: the footer's own link is `/collections` with no

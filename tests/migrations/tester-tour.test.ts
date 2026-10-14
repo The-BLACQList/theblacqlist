@@ -37,6 +37,8 @@ import {
 } from './helpers'
 
 const MIGRATION = path.join(MIGRATIONS_DIR, '20260830000000_tester_tour.sql')
+// Adds 'map_opened' to the step_key CHECK. Applied on top in its own test below.
+const MAP_STEP_MIGRATION = path.join(MIGRATIONS_DIR, '20261015000000_tour_map_step.sql')
 
 const ADMIN_ID = '11111111-1111-1111-1111-111111111111'
 const TESTER_ID = '22222222-2222-2222-2222-222222222222'
@@ -418,6 +420,53 @@ describe.skipIf(!DB_REACHABLE)('migration: tester tour', () => {
              VALUES ('${ENROLLMENT_ID}', 'invented_step');`
         )
       ).toBe(true)
+    })
+  })
+
+  it('accepts map_opened once the map step migration runs, and keeps the other checks', async () => {
+    await withMigrated('tour_map_step', (url) => {
+      exec(url, SEED_ENROLLMENT)
+      const insertMap = `INSERT INTO tour_step_completions (enrollment_id, step_key)
+                           VALUES ('${ENROLLMENT_ID}', 'map_opened');`
+
+      // Before: the original CHECK refuses the new key.
+      expect(raises(url, insertMap)).toBe(true)
+
+      // Applied twice on purpose: the DO block must be safe to re-run.
+      applyFile(url, MAP_STEP_MIGRATION)
+      applyFile(url, MAP_STEP_MIGRATION)
+
+      exec(url, insertMap)
+      for (const key of TOUR_STEP_KEYS) {
+        exec(
+          url,
+          `INSERT INTO tour_step_completions (enrollment_id, step_key)
+             VALUES ('${ENROLLMENT_ID}', '${key}');`
+        )
+      }
+      expect(query(url, 'SELECT id FROM tour_step_completions')).toHaveLength(
+        TOUR_STEP_KEYS.length + 1
+      )
+      expect(
+        raises(
+          url,
+          `INSERT INTO tour_step_completions (enrollment_id, step_key)
+             VALUES ('${ENROLLMENT_ID}', 'invented_step');`
+        )
+      ).toBe(true)
+
+      // Exactly one step_key CHECK, and the reflection checks were not touched.
+      const checks = query<{ conname: string }>(
+        url,
+        `SELECT conname FROM pg_constraint
+          WHERE conrelid = 'tour_step_completions'::regclass AND contype = 'c'
+          ORDER BY conname`
+      ).map((c) => c.conname)
+      expect(checks).toEqual([
+        'tour_step_completions_reflected_at_pairs',
+        'tour_step_completions_reflection_substantive',
+        'tour_step_completions_step_key_check',
+      ])
     })
   })
 

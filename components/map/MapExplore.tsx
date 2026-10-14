@@ -302,7 +302,8 @@ export function MapExplore({ tilesUrl }: { tilesUrl: string }) {
   return (
     <div className="relative flex h-[calc(100dvh_-_3.5rem)] overflow-hidden md:h-[calc(100dvh_-_4rem)]">
       <MapDrawer {...drawerProps} slot="side" />
-      <div className="relative min-w-0 flex-1">
+      {/* The Tester Tour's map step rings this (lib/tour/targets.ts). */}
+      <div data-tour="map" className="relative min-w-0 flex-1">
         <div ref={containerRef} className="h-full w-full" />
         {isDesktop ? (
           <>

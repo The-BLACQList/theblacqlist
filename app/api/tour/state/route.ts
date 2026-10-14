@@ -131,6 +131,7 @@ export async function GET() {
         }
         // Un-gated progress ticks: the witness row is the whole step.
         case 'listing_opened':
+        case 'map_opened':
         case 'collection_browsed':
           return stepState(key, rows.has(key) ? 'done' : 'act')
         case 'listing_saved':

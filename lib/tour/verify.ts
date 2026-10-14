@@ -79,6 +79,13 @@ export const TOUR_STEP_COPY: Record<TourStepKey, TourStepCopy> = {
       'We couldn’t check your saves just now. Reload in a moment — a save you already made still counts.',
     prompt: 'What made you save that one?',
   },
+  map_opened: {
+    title: 'Find businesses on the map',
+    action: 'Open the map and look around your area, or any city we cover.',
+    retry:
+      'We couldn’t confirm the map step just now. Reload in a moment. If you already opened the map, that still counts.',
+    prompt: null,
+  },
   collection_browsed: {
     title: 'Browse a collection',
     action: 'Open any collection page and look around.',
