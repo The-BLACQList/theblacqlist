@@ -5,7 +5,7 @@ import { LocateFixed } from 'lucide-react'
 import { FilterChips, FilterExtras } from '@/components/map/MapFilterControls'
 import { MapFiltersButton } from '@/components/map/MapFiltersButton'
 import { MapSearchInput } from '@/components/map/MapSearchInput'
-import { CITY_VIEWS } from '@/components/map/mapStyle'
+import { CITY_CHOICES } from '@/components/map/mapStyle'
 import { activeFilterCount } from '@/lib/map/filterListings'
 import type { MapFilterProps } from '@/lib/map/types'
 
@@ -30,9 +30,9 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
           onChange={(e) => onCity(e.target.value)}
           className="min-h-11 max-w-[104px] shrink-0 rounded-xl bg-off-white px-2 text-[14px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
         >
-          {Object.entries(CITY_VIEWS).map(([slug, view]) => (
+          {CITY_CHOICES.map(({ slug, label }) => (
             <option key={slug} value={slug}>
-              {view.label}
+              {label}
             </option>
           ))}
         </select>

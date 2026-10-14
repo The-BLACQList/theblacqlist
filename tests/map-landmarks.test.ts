@@ -61,7 +61,7 @@ describe('our landmark list', () => {
 })
 
 describe('basemap landmarks', () => {
-  const style = buildMapStyle('https://example.test/tiles.pmtiles')
+  const style = buildMapStyle('https://example.test/tiles.pmtiles', 'https://example.test/us.pmtiles')
   const pois = style.layers.find((l) => l.id === 'pois')
 
   it('keeps the pois layer', () => {

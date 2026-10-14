@@ -9,6 +9,7 @@ import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 import { expandTypeCategoryIds, listingMatchesType } from '@/lib/listings/type-shortcuts'
 import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
+import { HomeMapBand, type MapBandCity } from '@/components/home/HomeMapBand'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
 import { HomeCategories, type CategoryTile } from '@/components/home/HomeCategories'
 import { FreshFinds } from '@/components/home/FreshFinds'
@@ -70,7 +71,7 @@ export default async function HomePage() {
       .is('deleted_at', null),
     supabase
       .from('cities')
-      .select('id, name, slug, is_active, states!cities_state_id_fkey(code)')
+      .select('id, name, slug, is_active, latitude, longitude, states!cities_state_id_fkey(code)')
       .order('name'),
     // Fresh Finds: newest first, no tier or is_featured gating. `published_at`
     // is nullable, so `created_at` (NOT NULL DEFAULT now()) is the tiebreak
@@ -180,6 +181,16 @@ export default async function HomePage() {
     isActive: c.is_active,
   }))
 
+  // latitude and longitude are numeric(10,6), which can arrive as strings.
+  const mapCities: MapBandCity[] = (citiesRes.data ?? []).map((c) => ({
+    name: c.name,
+    slug: c.slug,
+    count: cityCounts.get(c.id) ?? 0,
+    isActive: c.is_active,
+    lat: c.latitude == null ? null : Number(c.latitude),
+    lng: c.longitude == null ? null : Number(c.longitude),
+  }))
+
   const freshFinds = ((freshRes.data ?? []) as unknown as RawRow[]).map(mapRow)
 
   // Showcase carousel: real pages, preferring distinct entity types with covers
@@ -264,6 +275,9 @@ export default async function HomePage() {
       </Reveal>
       <Reveal>
         <HomeTriptych />
+      </Reveal>
+      <Reveal>
+        <HomeMapBand cities={mapCities} />
       </Reveal>
       <Reveal>
         <HomeCategories categories={categories} />

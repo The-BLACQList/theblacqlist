@@ -48,14 +48,22 @@ describe('proxy matcher', () => {
 })
 
 describe('tiles route cache header', () => {
-  const src = read('app/api/map/tiles/route.ts')
+  // Both tile routes (metros and the country file) answer through proxyTiles,
+  // so the header lives in one place.
+  const src = read('lib/map/tileProxy.ts')
+
+  it('both tile routes use the shared proxy', () => {
+    for (const route of ['app/api/map/tiles/route.ts', 'app/api/map/tiles/us/route.ts']) {
+      expect(read(route)).toContain('proxyTiles(')
+    }
+  })
 
   it('sets a browser cache only', () => {
     expect(src).toContain("headers.set('Cache-Control', 'public, max-age=86400')")
   })
 
   it('does not ask the CDN to cache a Range response', () => {
-    // The route's own comment names s-maxage to explain why it is absent, so
+    // The proxy's own comment names s-maxage to explain why it is absent, so
     // inspect the header values that are actually set, not the whole file.
     const values = [...src.matchAll(/headers\.set\(\s*'Cache-Control'\s*,\s*'([^']*)'/g)].map(
       (m) => m[1]
