@@ -19,6 +19,11 @@ const chipClass =
 
 const subheadClass = 'font-headline text-lg text-brand-black mb-3'
 
+/** A search repeated in the copy. Long ones are cut so the heading stays readable. */
+function quoted(query: string): string {
+  return query.length > 60 ? `${query.slice(0, 60).trimEnd()}…` : query
+}
+
 function plural(n: number, one: string, many: string): string {
   return `${n.toLocaleString()} ${n === 1 ? one : many}`
 }
@@ -61,8 +66,8 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
   return (
     <section aria-labelledby="search-assist-heading" className="flex flex-col gap-10 py-6">
       <header className="flex flex-col gap-1">
-        <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black">
-          {exactTotal === 0 ? `No exact match for "${query}"` : 'More to explore'}
+        <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
+          {exactTotal === 0 ? `No exact match for "${quoted(query)}"` : 'More to explore'}
         </h2>
         <p className="font-subhead text-sm text-charcoal max-w-prose">
           {exactTotal === 0
@@ -88,7 +93,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
 
       {close && (
         <div>
-          <h3 className={subheadClass}>
+          <h3 className={`${subheadClass} [overflow-wrap:anywhere]`}>
             Close matches for <WordList words={close.words} />
             {scopeLabel ? ` ${scopeLabel}` : ''}
           </h3>
@@ -136,7 +141,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
         <ul className="flex flex-col gap-2">
           {elsewhere && (
             <li className="font-subhead text-sm text-charcoal">
-              {plural(elsewhere.count, 'business matches', 'businesses match')} &quot;{query}&quot; in
+              {plural(elsewhere.count, 'business matches', 'businesses match')} &quot;{quoted(query)}&quot; in
               other places.{' '}
               <Link href={elsewhere.href} className={linkClass}>
                 Search everywhere
@@ -212,8 +217,8 @@ export async function SearchAssist(props: {
     // leave the two ways out that need no database.
     return (
       <section aria-labelledby="search-assist-heading" className="py-6 flex flex-col gap-2">
-        <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black">
-          {props.exactTotal === 0 ? `No exact match for "${props.params.q ?? ''}"` : 'More to explore'}
+        <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
+          {props.exactTotal === 0 ? `No exact match for "${quoted(props.params.q ?? '')}"` : 'More to explore'}
         </h2>
         <p className="font-subhead text-sm text-charcoal">
           We couldn&apos;t load suggestions just now.{' '}
