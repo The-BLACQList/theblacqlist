@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { MapPageClient } from '@/app/(public)/map/MapPageClient'
+import { TourWitness } from '@/components/tour/TourWitness'
 
 export const metadata: Metadata = {
   title: 'Explore the Map | The BLACQList',
@@ -15,5 +16,12 @@ export const metadata: Metadata = {
  */
 export default function MapPage() {
   const tilesUrl = process.env.NEXT_PUBLIC_MAP_TILES_URL ?? ''
-  return <MapPageClient tilesUrl={tilesUrl} />
+  return (
+    <>
+      {/* Tester Tour: opening the map is the whole step. Renders nothing and
+          never throws (components/tour/TourWitness.tsx). */}
+      <TourWitness step="map_opened" />
+      <MapPageClient tilesUrl={tilesUrl} />
+    </>
+  )
 }

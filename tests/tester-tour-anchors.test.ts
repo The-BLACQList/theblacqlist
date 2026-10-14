@@ -50,6 +50,10 @@ const ANCHORS: Record<string, { file: string; literals: readonly string[]; minCo
     // one of them is the bug where the tour spotlights an invisible control.
     minCount: 2,
   },
+  '[data-tour="map"]': {
+    file: 'components/map/MapExplore.tsx',
+    literals: ['data-tour="map"'],
+  },
   'a[href^="/collections/"]': {
     file: 'components/editorial/CollectionCard.tsx',
     literals: ['href={`/collections/${slug}`}'],
