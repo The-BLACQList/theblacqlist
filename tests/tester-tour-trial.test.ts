@@ -257,20 +257,35 @@ describe('TOUR_STEPS and the migration stay in lockstep', () => {
     path.resolve(process.cwd(), 'supabase/migrations/20260830000000_tester_tour.sql'),
     'utf8'
   )
+  // The CHECK was redefined when the map step was added. The NEWEST definition
+  // is the one the database enforces, so that is the one compared here.
+  const mapStepMigration = readFileSync(
+    path.resolve(process.cwd(), 'supabase/migrations/20261015000000_tour_map_step.sql'),
+    'utf8'
+  )
 
-  it('the step_key CHECK lists exactly the steps TypeScript knows about', () => {
+  function sqlStepList(sql: string): string[] {
+    const check = /CHECK\s*\(\s*step_key IN \(([\s\S]*?)\)\s*\)/.exec(
+      // Comments carry the down plan's old list; only live SQL counts.
+      sql.replace(/^\s*--.*$/gm, '')
+    )
+    expect(check).not.toBeNull()
+    return Array.from(check?.[1]?.matchAll(/'([a-z_]+)'/g) ?? [], (m) => m[1] as string)
+  }
+
+  it('the newest step_key CHECK lists exactly the steps TypeScript knows about', () => {
     // A step added to TS only is silently unrecordable (the INSERT fails the
     // CHECK); a step added to SQL only is permanently unreachable. Both are
     // quiet failures, which is why they are compared here rather than left to
     // be noticed in production.
-    const check = /step_key\s+text\s+NOT NULL\s+CHECK\s*\(\s*step_key IN \(([\s\S]*?)\)\s*\)/.exec(
-      migration
-    )
-    expect(check).not.toBeNull()
+    expect(sqlStepList(mapStepMigration)).toEqual([...TOUR_STEPS])
+  })
 
-    const sqlSteps = Array.from(check?.[1]?.matchAll(/'([a-z_]+)'/g) ?? [], (m) => m[1])
-
-    expect(sqlSteps).toEqual([...TOUR_STEPS])
+  it('the map step only ADDS a key, so no existing row can fail the new CHECK', () => {
+    const before = sqlStepList(migration)
+    const after = sqlStepList(mapStepMigration)
+    expect(before.every((step) => after.includes(step))).toBe(true)
+    expect(after.filter((step) => !before.includes(step))).toEqual(['map_opened'])
   })
 
   it('the database enforces the same reflection floor the rail advertises', () => {

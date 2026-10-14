@@ -90,7 +90,7 @@ export function needsYouReason(status: SpotStatus): string {
 }
 
 /**
- * Each of the six steps in order. The first step not done is where a quiet
+ * Each tour step in order. The first step not done is where a quiet
  * tester is stuck, or simply next for everyone else.
  */
 export function walkStates(steps: BoardStep[], status: SpotStatus): Record<TourStepKey, WalkState> {

@@ -1,7 +1,7 @@
 // Tester Tour witnesses: server-side evidence written inside real page renders.
 //
-// Three of the six steps are proven by the tester simply reaching a page —
-// `search_ran`, `listing_opened`, `collection_browsed`. This module records
+// Four of the seven steps are proven by the tester simply reaching a page —
+// `search_ran`, `listing_opened`, `map_opened`, `collection_browsed`. This module records
 // those, and ONLY those; the other three steps' rows are created by the
 // reflection action after it verifies first-party evidence (saves, reviews,
 // moderation_queue). Nothing here or anywhere in the tour reads
@@ -34,7 +34,12 @@ import type { TourStepKey } from '@/lib/tour/steps'
 // only be completed through the reflection action's evidence checks, and the
 // narrower type makes calling `recordTourWitness('listing_saved', …)` a type
 // error rather than a quiet forgery vector.
-export const WITNESS_STEPS = ['search_ran', 'listing_opened', 'collection_browsed'] as const
+export const WITNESS_STEPS = [
+  'search_ran',
+  'listing_opened',
+  'map_opened',
+  'collection_browsed',
+] as const
 
 export type WitnessStepKey = (typeof WITNESS_STEPS)[number]
 
@@ -59,7 +64,7 @@ export interface TourViewer {
      *  mount and the state route both hide on it. Optional because only
      *  resolveTourViewer reads it; the free month resolver doesn't care. */
     railClosedAt?: string | null
-    /** "Tester 07" in the rail, so feedback can be matched to a person.
+    /** The tester number. The rail no longer shows it (founder, 2026-10-14).
      *  Optional for the same reason as railClosedAt. */
     testerNumber?: number
   }

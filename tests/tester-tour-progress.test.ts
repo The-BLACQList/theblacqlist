@@ -175,7 +175,12 @@ describe('optionalUnfinishedSteps', () => {
       },
       '2026-09-02T12:00:00Z'
     )
-    expect(optionalUnfinishedSteps(snap).map((s) => s.key)).toEqual(['collection_browsed'])
+    // This is also every tester who finished before the map step existed
+    // (2026-10-15): their finish stands, and the map shows up as optional.
+    expect(optionalUnfinishedSteps(snap).map((s) => s.key)).toEqual([
+      'map_opened',
+      'collection_browsed',
+    ])
   })
 
   it('never names a reflection-gated step', () => {
@@ -372,6 +377,7 @@ describe('announceTransition', () => {
       search_ran: 'done',
       listing_opened: 'done',
       listing_saved: 'done',
+      map_opened: 'done',
       collection_browsed: 'done',
       review_or_correction: 'done',
     })
@@ -379,6 +385,7 @@ describe('announceTransition', () => {
       search_ran: 'done',
       listing_opened: 'done',
       listing_saved: 'done',
+      map_opened: 'done',
       collection_browsed: 'done',
       review_or_correction: 'done',
       final_reflection: 'done',

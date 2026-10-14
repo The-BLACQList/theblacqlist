@@ -89,6 +89,14 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
       'Come back to this panel and write one line about why.',
     ],
   },
+  map_opened: {
+    kind: 'page',
+    selectors: ['[data-tour="map"]'],
+    href: '/map',
+    fallbackHref: '/map',
+    go: 'Open the map',
+    hint: 'Map sits in the main menu at the top of every page.',
+  },
   collection_browsed: {
     kind: 'page',
     // Prefix match, not exact: the footer's own link is `/collections` with no

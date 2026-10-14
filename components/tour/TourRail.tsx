@@ -35,7 +35,6 @@ import {
   pendingReflectionCount,
   reflectNudge,
 } from '@/lib/tour/progress'
-import { formatTesterNumber } from '@/lib/tester/cap'
 import { rememberListingOnPage } from './lastListing'
 import { TourCloseForGood } from './TourCloseForGood'
 import { TourStepRow } from './TourStepRow'
@@ -348,17 +347,9 @@ export function TourRail() {
 
         {phase === 'ready' && tour && (
           <>
-            {/* The visible tester ID (founder, 2026-10-13), so a note or a
-                problem report can be matched to this tester without a name. */}
-            {tour.testerNumber !== null && (
-              <p className="pb-2 font-subhead text-xs text-cream/70">
-                You&apos;re{' '}
-                <span className="font-bold text-cream">
-                  {formatTesterNumber(tour.testerNumber)}
-                </span>
-                . Mention it when you send us feedback.
-              </p>
-            )}
+            {/* No "You're Tester 07" line here: the founder took it off the
+                tester's view (2026-10-14). The number still shows on the
+                admin testers board. */}
             {/* D-T2: at the end the rail becomes the reward, not a checklist
                 with a button under it. The six rows fold away behind "Review
                 your walk" and the claim takes their place — but the tester
