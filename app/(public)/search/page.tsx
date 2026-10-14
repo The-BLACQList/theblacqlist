@@ -15,6 +15,8 @@ import {
   type DiscoverSearchParams,
 } from '@/lib/listings/discover-params'
 import { TourWitness } from '@/components/tour/TourWitness'
+import { SearchAssist } from '@/components/discovery/SearchAssist'
+import { shouldAssist } from '@/lib/search/assist'
 
 export const metadata: Metadata = {
   title: 'Search | The BLACQList',
@@ -54,11 +56,12 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
 
   const page = parsePage(params.page)
 
-  const result = await queryListings({
+  const listingParams = {
     ...parseDiscoverParams(params),
     // `query` is the trimmed form the empty-state check above already ran on.
     q: query,
-  })
+  }
+  const result = await queryListings(listingParams)
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
@@ -68,6 +71,22 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
   // not the same as abandoning the search.
   const location = parseLocationParams(params)
   const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, '/search')
+
+  // Fewer than three exact matches: ask the follow-up questions too
+  // (lib/services/searchAssist.ts), so a search never ends in a blank.
+  const assist = shouldAssist({
+    q: query,
+    total: result.total,
+    page,
+    radiusUnavailable: result.radiusUnavailable,
+    filtersUnavailable: result.filtersUnavailable,
+  }) ? (
+    <SearchAssist
+      params={listingParams}
+      exactIds={result.entities.map((e) => e.id)}
+      exactTotal={result.total}
+    />
+  ) : undefined
 
   return (
     <>
@@ -86,6 +105,7 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
         widerRadiusUrl={widerRadiusUrl}
         clearLocationUrl={clearLocationUrl}
         clearFiltersUrl={`/search?q=${encodeURIComponent(query)}`}
+        assist={assist}
       />
     </>
   )

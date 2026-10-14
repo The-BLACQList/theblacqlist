@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import { CardGrid } from '@/components/ui/card-grid'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityCard } from '@/components/entities/EntityCard'
@@ -24,6 +25,12 @@ interface DiscoveryGridProps {
   clearLocationUrl?: string
   /** The page with every filter dropped. The way out of filtersUnavailable. */
   clearFiltersUrl?: string
+  /**
+   * Follow-up help for a thin search (components/discovery/SearchAssist.tsx).
+   * With no results it takes the place of the plain empty state; with one or
+   * two it sits under the grid.
+   */
+  assist?: ReactNode
 }
 
 const linkClass =
@@ -186,6 +193,7 @@ export function DiscoveryGrid({
   widerRadiusUrl,
   clearLocationUrl,
   clearFiltersUrl,
+  assist,
 }: DiscoveryGridProps) {
   if (isLoading) return <LoadingGrid />
   if (error) return <ErrorState message={error} />
@@ -193,16 +201,20 @@ export function DiscoveryGrid({
   // arrive with zero entities, and the empty state would read as an answer.
   if (radiusUnavailable) return <RadiusUnavailableState clearLocationUrl={clearLocationUrl} />
   if (filtersUnavailable) return <FiltersUnavailableState clearFiltersUrl={clearFiltersUrl} />
-  if (entities.length === 0)
-    return radiusMiles ? (
-      <RadiusEmptyState
-        radiusMiles={radiusMiles}
-        widerRadiusUrl={widerRadiusUrl}
-        clearLocationUrl={clearLocationUrl}
-      />
-    ) : (
-      <EmptyState query={query} />
-    )
+  if (entities.length === 0) {
+    if (radiusMiles)
+      return (
+        <>
+          <RadiusEmptyState
+            radiusMiles={radiusMiles}
+            widerRadiusUrl={widerRadiusUrl}
+            clearLocationUrl={clearLocationUrl}
+          />
+          {assist}
+        </>
+      )
+    return assist ?? <EmptyState query={query} />
+  }
 
   const showing = Math.min(currentPage * entities.length, total)
 
@@ -242,6 +254,8 @@ export function DiscoveryGrid({
           </Link>
         </div>
       )}
+
+      {assist && <div className="mt-12">{assist}</div>}
     </section>
   )
 }

@@ -21,6 +21,8 @@ import { MobileFilterSheet } from '@/components/discovery/MobileFilterSheet'
 import { SortDropdown } from '@/components/discovery/SortDropdown'
 import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { SearchAssist } from '@/components/discovery/SearchAssist'
+import { shouldAssist } from '@/lib/search/assist'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,6 +129,22 @@ async function CityContent({
   const location = parseLocationParams(params)
   const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, basePath)
 
+  // Fewer than three exact matches: ask the follow-up questions too
+  // (lib/services/searchAssist.ts), so a search never ends in a blank.
+  const assist = shouldAssist({
+    q: params.q,
+    total: result.total,
+    page,
+    radiusUnavailable: result.radiusUnavailable,
+    filtersUnavailable: result.filtersUnavailable,
+  }) ? (
+    <SearchAssist
+      params={{ ...parseDiscoverParams(params), city: city.slug }}
+      exactIds={result.entities.map((e) => e.id)}
+      exactTotal={result.total}
+    />
+  ) : undefined
+
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
       {/* The same sidebar as /discover, minus the city picker: the route is the city. */}
@@ -164,6 +182,7 @@ async function CityContent({
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
           clearFiltersUrl={basePath}
+          assist={assist}
         />
       </div>
     </div>

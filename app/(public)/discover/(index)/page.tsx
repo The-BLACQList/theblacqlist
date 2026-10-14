@@ -10,6 +10,8 @@ import { MobileFilterSheet } from '@/components/discovery/MobileFilterSheet'
 import { SortDropdown } from '@/components/discovery/SortDropdown'
 import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { SearchAssist } from '@/components/discovery/SearchAssist'
+import { shouldAssist } from '@/lib/search/assist'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
 import { parseLocationParams } from '@/lib/listings/location-params'
@@ -69,6 +71,22 @@ async function DiscoverContent({
   // page and /search, which now receive the radius keys too.
   const { widerRadiusUrl, clearLocationUrl } = buildLocationEscapeUrls(params, '/discover')
 
+  // Fewer than three exact matches: ask the follow-up questions too
+  // (lib/services/searchAssist.ts), so a search never ends in a blank.
+  const assist = shouldAssist({
+    q: params.q,
+    total: result.total,
+    page,
+    radiusUnavailable: result.radiusUnavailable,
+    filtersUnavailable: result.filtersUnavailable,
+  }) ? (
+    <SearchAssist
+      params={parseDiscoverParams(params)}
+      exactIds={result.entities.map((e) => e.id)}
+      exactTotal={result.total}
+    />
+  ) : undefined
+
   return (
     <div className="flex gap-6 lg:gap-8 items-start">
       {/* Sidebar filters — hidden on mobile, shown on md+ */}
@@ -114,6 +132,7 @@ async function DiscoverContent({
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
           clearFiltersUrl="/discover"
+          assist={assist}
         />
       </div>
     </div>
