@@ -8,8 +8,9 @@
 //     the metro file from DETAIL_ZOOM up. These tests keep the two from drawing
 //     the same thing twice.
 //   • /map opens on All cities unless ?city= names a city it knows.
-//   • The homepage picture projects cities with the same math that drew the
-//     outline, so a dot lands on its city.
+//   • The homepage picture projects its dots with the same math that drew the
+//     outline. The dots are illustration only (founder, 2026-10-14): no counts,
+//     no names, spread coast to coast.
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
@@ -24,7 +25,7 @@ import {
 } from '@/components/map/mapStyle'
 import { projectUS } from '@/lib/map/albers'
 import { US_VIEWBOX } from '@/components/home/usOutline'
-import { dotRadius, placeLabels, type Box, type Circle } from '@/components/home/HomeMapBand'
+import { BAND_DOTS } from '@/components/home/HomeMapBand'
 
 describe('stacked basemap', () => {
   const style = buildMapStyle('https://example.test/metros.pmtiles', 'https://example.test/us.pmtiles')
@@ -123,70 +124,27 @@ describe('homepage projection', () => {
     }
   })
 
-  it('sizes dots so a bigger city is never drawn smaller', () => {
-    expect(dotRadius(160)).toBeGreaterThan(dotRadius(44))
-    expect(dotRadius(1)).toBeGreaterThan(18)
-  })
 })
 
-describe('homepage city names', () => {
-  // Prod on 2026-10-14: six live cities and seven coming soon, at their
-  // seeded coordinates.
-  const live: Array<[string, number, number, number]> = [
-    ['Atlanta', -84.388, 33.749, 160],
-    ['Houston', -95.3698, 29.7604, 61],
-    ['Chicago', -87.6298, 41.8781, 56],
-    ['Washington DC', -77.036873, 38.907192, 51],
-    ['New Orleans', -90.071533, 29.951065, 49],
-    ['Los Angeles', -118.243683, 34.052235, 44],
-  ]
-  const soon: Array<[number, number]> = [
-    [-74.005974, 40.712776],
-    [-75.165222, 39.952583],
-    [-96.796988, 32.776664],
-    [-83.045754, 42.331427],
-    [-76.612189, 39.290385],
-    [-90.048981, 35.149532],
-    [-80.843124, 35.227085],
-  ]
-  const liveCircles = live.map(([name, lng, lat, count]) => {
-    const [x, y] = projectUS(lng, lat)
-    return { name, x, y, r: dotRadius(count) }
-  })
-  const soonCircles: Circle[] = soon.map(([lng, lat]) => {
-    const [x, y] = projectUS(lng, lat)
-    return { x, y, r: 12 }
-  })
-  const spots = placeLabels(liveCircles, soonCircles)
+describe('homepage picture', () => {
+  const points = BAND_DOTS.map((d) => projectUS(d.lng, d.lat))
 
-  const hits = (b: Box, c: Circle) => {
-    const dx = c.x - Math.max(b.x0, Math.min(c.x, b.x1))
-    const dy = c.y - Math.max(b.y0, Math.min(c.y, b.y1))
-    return dx * dx + dy * dy < c.r * c.r
-  }
-
-  it('keeps every name clear of every other dot', () => {
-    for (const s of spots) {
-      for (const [j, c] of [...liveCircles, ...soonCircles].entries()) {
-        if (c !== liveCircles.find((l) => l.name === s.name)) {
-          expect(hits(s.label.box, c), `${s.name} over dot ${j}`).toBe(false)
-        }
-      }
+  it('keeps every dot inside the outline', () => {
+    for (const [x, y] of points) {
+      expect(x).toBeGreaterThan(20)
+      expect(x).toBeLessThan(US_VIEWBOX.width - 20)
+      expect(y).toBeGreaterThan(20)
+      expect(y).toBeLessThan(US_VIEWBOX.height - 20)
     }
   })
 
-  it('keeps names apart and on the picture', () => {
-    spots.forEach(({ label: a }, i) => {
-      expect(a.box.x0).toBeGreaterThanOrEqual(0)
-      expect(a.box.x1).toBeLessThanOrEqual(US_VIEWBOX.width)
-      spots.slice(i + 1).forEach(({ label: b }) => {
-        const apart = a.box.x1 <= b.box.x0 || b.box.x1 <= a.box.x0 || a.box.y1 <= b.box.y0 || b.box.y1 <= a.box.y0
-        expect(apart).toBe(true)
-      })
-    })
-  })
-
-  it('moves Houston off New Orleans', () => {
-    expect(spots.find((s) => s.name === 'Houston')?.label.anchor).not.toBe('start')
+  it('reaches every part of the country, not just a few cities', () => {
+    const third = US_VIEWBOX.width / 3
+    const west = points.filter(([x]) => x < third).length
+    const middle = points.filter(([x]) => x >= third && x < 2 * third).length
+    const east = points.filter(([x]) => x >= 2 * third).length
+    expect(west).toBeGreaterThanOrEqual(6)
+    expect(middle).toBeGreaterThanOrEqual(6)
+    expect(east).toBeGreaterThanOrEqual(6)
   })
 })
