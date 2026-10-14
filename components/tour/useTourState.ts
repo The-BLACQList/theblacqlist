@@ -55,7 +55,8 @@ export interface TourState {
   /** Null for a supporter tester, who finishes with a thank-you, not a trial. */
   listingId: string | null
   kind: 'supporter' | 'owner'
-  /** Shown as "Tester 07". Null only if the read came back without it. */
+  /** "Tester 07". Not shown to the tester (founder, 2026-10-14). Null only if
+   *  the read came back without it. */
   testerNumber: number | null
   completedAt: string | null
   trialGrantedAt: string | null

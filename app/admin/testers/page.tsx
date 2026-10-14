@@ -54,7 +54,8 @@ function activeText(iso: string, now: Date) {
 interface EnrollmentRow {
   id: string
   tester_user_id: string
-  // "Tester 07": the ID testers see in their Tour panel and quote in feedback.
+  // "Tester 07": the admin-only ID for this tester. Testers no longer see it
+  // (founder, 2026-10-14).
   tester_number: number
   // NULL is a supporter tester, or an owner with no page yet (is_owner), whose
   // free month goes on a page they own later.

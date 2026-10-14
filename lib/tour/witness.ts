@@ -59,7 +59,7 @@ export interface TourViewer {
      *  mount and the state route both hide on it. Optional because only
      *  resolveTourViewer reads it; the free month resolver doesn't care. */
     railClosedAt?: string | null
-    /** "Tester 07" in the rail, so feedback can be matched to a person.
+    /** The tester number. The rail no longer shows it (founder, 2026-10-14).
      *  Optional for the same reason as railClosedAt. */
     testerNumber?: number
   }

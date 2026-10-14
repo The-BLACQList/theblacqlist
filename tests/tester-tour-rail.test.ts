@@ -524,14 +524,15 @@ describe('reflect state — the middle status is visible on a collapsed row', ()
   })
 })
 
-// Shared link, 2026-10-13: the visible tester ID, and an owner who joined with
-// no page yet is pointed at their dashboard rather than the plan page.
+// Shared link, 2026-10-13: an owner who joined with no page yet is pointed at
+// their dashboard rather than the plan page. The tester number line was taken
+// off the tester's view on 2026-10-14 (founder); it stays on the admin board.
 describe('TourRail tester number and the owner without a page', () => {
   const src = readFileSync(path.join(process.cwd(), 'components/tour/TourRail.tsx'), 'utf8')
 
-  it('shows the tester number through formatTesterNumber, only when there is one', () => {
-    expect(src).toContain('tour.testerNumber !== null &&')
-    expect(src).toContain('formatTesterNumber(tour.testerNumber)')
+  it('does not show testers their tester number', () => {
+    expect(src).not.toContain('formatTesterNumber')
+    expect(src).not.toContain('Mention it when you send us feedback')
   })
 
   it('sends an owner with no page to /dashboard, and keeps the plan page for the rest', () => {
