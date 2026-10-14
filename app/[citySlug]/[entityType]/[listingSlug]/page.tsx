@@ -208,7 +208,14 @@ export default async function EntityPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen">
+    // `data-tour-listing` lets the Tester Tour remember this page so a step row
+    // can offer "Back to {name}" instead of Discover (lib/tour/targets.ts).
+    // Public facts only: the id and the name are already in the page.
+    <div
+      className="min-h-screen"
+      data-tour-listing={entity.id}
+      data-tour-listing-name={entity.name}
+    >
       {jsonLd && (
         <script
           type="application/ld+json"

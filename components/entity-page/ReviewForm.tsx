@@ -107,7 +107,10 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
   const display = hover || value
 
   return (
-    <fieldset>
+    // Product anchor for the Tester Tour's step 5, on BOTH rating variants:
+    // the stars come before the review box, so the tour rings them first.
+    // See lib/tour/targets.ts.
+    <fieldset data-tour="review-rating">
       <legend className="block font-subhead text-xs font-semibold text-charcoal-soft mb-2">
         Star rating <span aria-hidden="true">*</span>
       </legend>
@@ -189,7 +192,10 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
       <input type="hidden" name="rating" value={rating} />
 
       {hasCriteria ? (
-        <fieldset className="rounded-lg border border-charcoal/12 bg-cream/40 px-4 py-3">
+        <fieldset
+          data-tour="review-rating"
+          className="rounded-lg border border-charcoal/12 bg-cream/40 px-4 py-3"
+        >
           <legend className="px-1 font-subhead text-xs font-semibold text-charcoal-soft">
             Your rating <span aria-hidden="true">*</span>
           </legend>

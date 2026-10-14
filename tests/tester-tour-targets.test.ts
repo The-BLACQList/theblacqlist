@@ -12,8 +12,11 @@ import {
   TOUR_STEP_TARGETS,
   evidenceStepKeys,
   planSpotlight,
+  parseLastListing,
   targetHrefs,
+  travelButton,
   travelHref,
+  type LastListing,
   type TourTarget,
 } from '@/lib/tour/targets'
 import { TOUR_STEPS, type TourStepKey } from '@/lib/tour/steps'
@@ -112,26 +115,48 @@ describe('TOUR_STEP_TARGETS — the copy boundary', () => {
   it('gives every step a distinct hint', () => {
     expect(new Set(hints).size).toBe(hints.length)
   })
+
+  it('keeps the numbered guides off the server copy too', () => {
+    // The guide is the "where" side of the split, same as the hint.
+    const guides = TOUR_STEPS.flatMap((k) => [...(TOUR_STEP_TARGETS[k].guide ?? [])])
+    expect(guides.length).toBeGreaterThan(0)
+    expect(guides.filter((g) => serverCopy.includes(g))).toEqual([])
+  })
+
+  it('guides the two steps testers stalled on, in short lines', () => {
+    for (const key of ['listing_saved', 'review_or_correction'] as const) {
+      const guide = TOUR_STEP_TARGETS[key].guide ?? []
+      expect(guide.length, key).toBeGreaterThanOrEqual(3)
+      for (const line of guide) {
+        expect(line.trim().length, line).toBeGreaterThan(0)
+        expect(line.length, line).toBeLessThanOrEqual(80)
+        // Site copy voice: no em dashes.
+        expect(line, line).not.toContain('\u2014')
+      }
+    }
+  })
 })
 
 describe('TOUR_STEP_TARGETS — selector order', () => {
-  it('tries #review-body before the correction trigger', () => {
-    // Both live on a listing page, and the correction trigger renders ABOVE
-    // the reviews section. A comma-joined selector resolves in DOCUMENT order,
-    // not list order, so it would always land on the wrong one — the ordered
-    // list is the fix, and this asserts the order that makes it work.
+  it('tries the star rating first and the correction trigger last', () => {
+    // Testers said they "didn't notice the rating scale until after I wrote
+    // my review": the spotlight landed on #review-body, which sits BELOW the
+    // stars, and scrolled them past the rating. The rating fieldset now leads.
     //
-    // Asserted by RELATIVE position, not by index: M4.14 added
-    // `[data-tour="write-review"]` between the two because the review form now
-    // mounts on intent, and a rung added in the middle must not fail a test
-    // whose real subject is "the review path outranks the correction link".
+    // The correction trigger renders ABOVE the reviews section. A comma-joined
+    // selector resolves in DOCUMENT order, not list order, so it would always
+    // land on the wrong one. The ordered list is the fix.
+    //
+    // #review-body must stay in the list: evidence detection reads a submitted
+    // form with `form.querySelector(selector)`, and the review form is found
+    // by its text box.
     const { selectors } = TOUR_STEP_TARGETS.review_or_correction
-    expect(selectors[0]).toBe('#review-body')
-    expect(selectors.indexOf('[data-tour="write-review"]')).toBeGreaterThan(0)
-    expect(selectors.indexOf('[data-tour="report-correction"]')).toBe(selectors.length - 1)
-    expect(selectors.indexOf('[data-tour="write-review"]')).toBeLessThan(
-      selectors.indexOf('[data-tour="report-correction"]')
+    expect(selectors[0]).toBe('[data-tour="review-rating"]')
+    expect(selectors.indexOf('#review-body')).toBeGreaterThan(0)
+    expect(selectors.indexOf('#review-body')).toBeLessThan(
+      selectors.indexOf('[data-tour="write-review"]')
     )
+    expect(selectors.indexOf('[data-tour="report-correction"]')).toBe(selectors.length - 1)
   })
 
   it('matches collection cards by prefix, so the footer index link does not match', () => {
@@ -255,5 +280,80 @@ describe('travelHref', () => {
 
   it('offers the page route for a page-kind step that is elsewhere', () => {
     expect(travelHref(planSpotlight(TOUR_STEP_TARGETS.search_ran, false))).toBe('/search')
+  })
+})
+
+describe('parseLastListing', () => {
+  const ok = { id: 'abc', name: 'Sweet Auburn Bread', href: '/atlanta-ga/business/sweet-auburn' }
+
+  it('reads a well-formed record', () => {
+    expect(parseLastListing(JSON.stringify(ok))).toEqual(ok)
+  })
+
+  it.each([
+    ['null', null],
+    ['empty', ''],
+    ['not JSON', '{nope'],
+    ['an array', '[]'],
+    ['no id', JSON.stringify({ ...ok, id: '' })],
+    ['no name', JSON.stringify({ ...ok, name: '' })],
+    ['a number for a name', JSON.stringify({ ...ok, name: 4 })],
+    ['an external href', JSON.stringify({ ...ok, href: 'https://evil.example' })],
+    ['a protocol-relative href', JSON.stringify({ ...ok, href: '//evil.example/x' })],
+    ['a backslash href', JSON.stringify({ ...ok, href: '/\\evil.example' })],
+  ])('rejects %s', (_label, raw) => {
+    expect(parseLastListing(raw as string | null)).toBeNull()
+  })
+})
+
+describe('travelButton', () => {
+  const step3 = TOUR_STEP_TARGETS.listing_saved
+  const last: LastListing = {
+    id: 'other',
+    name: 'Sweet Auburn Bread',
+    href: '/atlanta-ga/business/sweet-auburn',
+  }
+
+  it('offers nothing when there is nowhere to go', () => {
+    expect(travelButton(step3, null, { last, ownListingId: null, pathname: '/search' })).toBeNull()
+  })
+
+  it('offers the last listing back by name', () => {
+    expect(
+      travelButton(step3, '/discover', { last, ownListingId: 'mine', pathname: '/search' })
+    ).toEqual({ href: last.href, label: 'Back to Sweet Auburn Bread' })
+  })
+
+  it('keeps Discover when nothing is remembered', () => {
+    expect(
+      travelButton(step3, '/discover', { last: null, ownListingId: null, pathname: '/search' })
+    ).toEqual({ href: '/discover', label: step3.go })
+  })
+
+  it('never sends a tester back to their own listing', () => {
+    expect(
+      travelButton(step3, '/discover', { last, ownListingId: 'other', pathname: '/search' })
+    ).toEqual({ href: '/discover', label: step3.go })
+  })
+
+  it('does not offer the page the tester is already on', () => {
+    expect(
+      travelButton(step3, '/discover', { last, ownListingId: null, pathname: last.href })
+    ).toEqual({ href: '/discover', label: step3.go })
+  })
+
+  it('trims a long name so the button stays one line', () => {
+    const long = { ...last, name: 'The Very Long Name Of A Family Restaurant' }
+    const trip = travelButton(step3, '/discover', { last: long, ownListingId: null, pathname: '/' })
+    expect(trip?.label.endsWith('\u2026')).toBe(true)
+    expect(trip?.label.length).toBeLessThanOrEqual('Back to '.length + 25)
+  })
+
+  it('ignores the remembered listing for a page-kind step', () => {
+    const search = TOUR_STEP_TARGETS.search_ran
+    expect(travelButton(search, '/search', { last, ownListingId: null, pathname: '/' })).toEqual({
+      href: '/search',
+      label: search.go,
+    })
   })
 })

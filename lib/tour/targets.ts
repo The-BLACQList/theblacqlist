@@ -45,6 +45,16 @@ export interface TourTarget {
   hint: string
   /** Short button text for the trip to `href`/`fallbackHref`. The hint is the helper text beside it. */
   go?: string
+  /**
+   * Numbered, find-it-on-the-page steps that replace `hint` in the open row.
+   *
+   * Only steps 3 and 5 have one. Testers stalled on exactly those two
+   * (2026-10-14 notes): both need a listing the tester picks, an action on
+   * that page, and then a trip BACK to the rail to write the note, and a
+   * single helper sentence could not carry three moves. Still WHERE, not WHY:
+   * the copy-boundary test covers these strings too.
+   */
+  guide?: readonly string[]
 }
 
 export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
@@ -73,6 +83,11 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     fallbackHref: '/discover',
     go: 'Find a listing',
     hint: 'The Save control sits beside the name at the top of any listing page, and on every result card.',
+    guide: [
+      'Open a listing you’d actually visit.',
+      'Tap Save, beside the business name.',
+      'Come back to this panel and write one line about why.',
+    ],
   },
   collection_browsed: {
     kind: 'page',
@@ -90,16 +105,33 @@ export const TOUR_STEP_TARGETS: Record<TourStepKey, TourTarget> = {
     // section on a listing page, so a comma-joined selector — which resolves
     // in document order, not list order — would always land on the wrong one.
     //
-    // `[data-tour="write-review"]` is the middle rung because the review form
-    // now mounts on intent: `#review-body` only exists once the form is open,
-    // so with it closed the trigger is what the tour must ring. Dropping this
-    // entry would leave step 5 spotlighting the correction link on every
+    // The rating comes FIRST. It sits above the review box, and testers
+    // reported finding the stars only after they had written the review
+    // (2026-10-14): ringing `#review-body` scrolled them straight past the
+    // required field. `#review-body` stays in the list because the submit
+    // listener (useTourState) finds the review form by it.
+    //
+    // `[data-tour="write-review"]` is the trigger rung because the review form
+    // mounts on intent: neither the rating nor `#review-body` exists until the
+    // form is open, so with it closed the trigger is what the tour must ring.
+    // Dropping it would leave step 5 spotlighting the correction link on every
     // listing page a tester had not already opened the form on.
-    selectors: ['#review-body', '[data-tour="write-review"]', '[data-tour="report-correction"]'],
+    selectors: [
+      '[data-tour="review-rating"]',
+      '#review-body',
+      '[data-tour="write-review"]',
+      '[data-tour="report-correction"]',
+    ],
     href: null,
     fallbackHref: '/discover',
     go: 'Find a listing',
     hint: 'The review box is near the bottom of a listing page; the correction link sits above it.',
+    guide: [
+      'Open a listing you know.',
+      'Scroll to Reviews. Pick your stars first, then add a few words.',
+      'Or tap Report a correction if something looks out of date.',
+      'Come back to this panel and write one line about it.',
+    ],
   },
   final_reflection: {
     kind: 'in-rail',
@@ -173,6 +205,77 @@ export function evidenceStepKeys(touches: (selector: string) => boolean): TourSt
       }
     })
   )
+}
+
+/** sessionStorage key for the last listing page this tab visited. */
+export const LAST_LISTING_KEY = 'blacq-tour-last-listing'
+
+/** The last listing page the tester was on, so a row can offer the trip back. */
+export interface LastListing {
+  id: string
+  name: string
+  href: string
+}
+
+/** Longest listing name the travel button prints before it trims. */
+const MAX_BUTTON_NAME = 24
+
+/**
+ * Read a stored last-listing value, or null for anything malformed.
+ *
+ * sessionStorage is writable by any script on the origin, so the href is held
+ * to the same rule the route-safety test holds every target to: an in-app
+ * absolute path, never `//host` or an external URL.
+ */
+export function parseLastListing(raw: string | null): LastListing | null {
+  if (raw === null) return null
+  try {
+    const value: unknown = JSON.parse(raw)
+    if (typeof value !== 'object' || value === null) return null
+    const { id, name, href } = value as Record<string, unknown>
+    if (typeof id !== 'string' || typeof name !== 'string' || typeof href !== 'string') {
+      return null
+    }
+    if (id.length === 0 || name.trim().length === 0) return null
+    if (!href.startsWith('/') || href.startsWith('//') || href.includes('\\')) return null
+    return { id, name: name.trim(), href }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The travel button a row offers: where it goes and what it says.
+ *
+ * For a listing-scoped step the best destination is the listing the tester was
+ * just on, not Discover. "Find a listing" sent a tester who had a page in mind
+ * back to a grid of 400 to pick a different one, and one stalled there for
+ * good. The trip back is offered only when it can count: never to the
+ * tester's own listing (steps 3 and 5 need one that is not theirs) and never
+ * to the page they are already on.
+ *
+ * Still a button the tester taps. D-T3 holds: nothing here navigates.
+ */
+export function travelButton(
+  target: TourTarget,
+  href: string | null,
+  ctx: { last: LastListing | null; ownListingId: string | null; pathname: string }
+): { href: string; label: string } | null {
+  if (href === null) return null
+  const { last, ownListingId, pathname } = ctx
+  if (
+    target.kind === 'listing-scoped' &&
+    last !== null &&
+    last.id !== ownListingId &&
+    last.href !== pathname
+  ) {
+    const name =
+      last.name.length > MAX_BUTTON_NAME
+        ? `${last.name.slice(0, MAX_BUTTON_NAME - 1).trimEnd()}…`
+        : last.name
+    return { href: last.href, label: `Back to ${name}` }
+  }
+  return { href, label: target.go ?? 'Go' }
 }
 
 /** Every href this module can ever send a tester to. The route-safety test walks it. */

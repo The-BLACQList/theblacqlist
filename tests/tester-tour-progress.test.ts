@@ -15,6 +15,7 @@ import {
   doneCount,
   optionalUnfinishedSteps,
   pendingReflectionCount,
+  reflectNudge,
   rowMarker,
   statusFingerprint,
   watchedStepMoved,
@@ -457,5 +458,35 @@ describe('watchedStepMoved', () => {
 
   it('is false for an empty watch list', () => {
     expect(watchedStepMoved(new Map(), snapshot({ listing_saved: 'done' }))).toBe(false)
+  })
+})
+
+describe('reflectNudge', () => {
+  it('asks for the note while the saved step waits on it', () => {
+    const steps = snapshot({ listing_saved: 'reflect' }).steps
+    expect(reflectNudge(steps, 'listing_saved')).toBe('Saved. Now write one line about why')
+  })
+
+  it('says nothing once the note is written', () => {
+    const steps = snapshot({ listing_saved: 'done' }).steps
+    expect(reflectNudge(steps, 'listing_saved')).toBeNull()
+  })
+
+  it('says nothing with no attention step', () => {
+    expect(reflectNudge(snapshot({ listing_saved: 'reflect' }).steps, null)).toBeNull()
+  })
+
+  it('says nothing for an unknown step key', () => {
+    expect(reflectNudge(ALL_ACT.steps, 'not_a_step')).toBeNull()
+  })
+
+  it('has a line for every reflection-gated step', () => {
+    for (const key of TOUR_STEPS.filter(isReflectionGated)) {
+      const steps = snapshot({ [key]: 'reflect' }).steps
+      const line = reflectNudge(steps, key)
+      expect(line, key).not.toBeNull()
+      // Site copy voice: no em dashes.
+      expect(line, key).not.toContain('\u2014')
+    }
   })
 })

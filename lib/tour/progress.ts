@@ -208,3 +208,31 @@ export function announceTransition(
 
   return null
 }
+
+/** The pill's nudge per step, short enough for a phone. */
+const REFLECT_NUDGES: Record<string, string> = {
+  search_ran: 'Search counted. Now write one line about it',
+  listing_saved: 'Saved. Now write one line about why',
+  review_or_correction: 'Sent. Now write one line about how it went',
+}
+
+/**
+ * The line the collapsed rail shows when a step just became writable, or null.
+ *
+ * On a phone the rail starts as a pill, so the row that `attentionStep` opens
+ * is inside a panel nobody can see. A tester saved a listing, saw nothing
+ * change, and never came back to write the note (2026-10-14). This is the
+ * pill's half of the same signal.
+ *
+ * Null unless the step is STILL waiting on its note: once it is written, or
+ * the next poll moves it on, the nudge goes away by itself.
+ */
+export function reflectNudge(
+  steps: readonly ProgressStep[],
+  attentionKey: string | null
+): string | null {
+  if (attentionKey === null) return null
+  const step = steps.find((s) => s.key === attentionKey)
+  if (step === undefined || step.status !== 'reflect') return null
+  return REFLECT_NUDGES[attentionKey] ?? 'Now write one line about it'
+}

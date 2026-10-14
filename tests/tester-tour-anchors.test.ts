@@ -54,6 +54,13 @@ const ANCHORS: Record<string, { file: string; literals: readonly string[]; minCo
     file: 'components/editorial/CollectionCard.tsx',
     literals: ['href={`/collections/${slug}`}'],
   },
+  '[data-tour="review-rating"]': {
+    // Both rating fieldsets (the overall stars and the per-category criteria)
+    // carry it, so step 5 spotlights the rating whichever form the listing uses.
+    file: 'components/entity-page/ReviewForm.tsx',
+    literals: ['data-tour="review-rating"'],
+    minCount: 2,
+  },
   '#review-body': {
     file: 'components/entity-page/ReviewForm.tsx',
     literals: ['id="review-body"'],

@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
 
 // Prefix-hidden routes. The rail belongs on the public marketplace surfaces
 // the tour walks (search, listings, collections, reviews) — not over the
@@ -33,8 +33,10 @@ import {
   doneCount,
   optionalUnfinishedSteps,
   pendingReflectionCount,
+  reflectNudge,
 } from '@/lib/tour/progress'
 import { formatTesterNumber } from '@/lib/tester/cap'
+import { rememberListingOnPage } from './lastListing'
 import { TourCloseForGood } from './TourCloseForGood'
 import { TourStepRow } from './TourStepRow'
 import {
@@ -46,6 +48,8 @@ import {
 import { useTourState, type TourState, type TourStepState } from './useTourState'
 
 const COLLAPSE_KEY = 'blacq-tour-collapsed'
+/** When to look for a listing mark after a navigation: after paint, then after streaming. */
+const LISTING_MARK_DELAYS = [0, 700] as const
 /** Two shots at the parked spotlight: after paint, then after data lands. */
 const PENDING_RETRIES = [260, 900] as const
 /** Module-level so the empty case is referentially stable across renders. */
@@ -123,6 +127,8 @@ export function TourRail() {
   // Set once closeTourRailAction saved the choice. The server mount stops
   // rendering the rail on the next request; this hides it right now.
   const [closedForGood, setClosedForGood] = useState(false)
+  // The attention `seq` whose nudge the tester already acted on.
+  const [nudgeSeenSeq, setNudgeSeenSeq] = useState(0)
 
   const steps = tour?.steps ?? NO_STEPS
 
@@ -169,6 +175,14 @@ export function TourRail() {
         }, delay)
       ),
     ]
+    return () => timers.forEach(clearTimeout)
+  }, [pathname])
+
+  // Remember the listing this page shows, so a row can offer the trip back.
+  useEffect(() => {
+    const timers = LISTING_MARK_DELAYS.map((delay) =>
+      setTimeout(() => rememberListingOnPage(pathname), delay)
+    )
     return () => timers.forEach(clearTimeout)
   }, [pathname])
 
@@ -220,6 +234,17 @@ export function TourRail() {
   const pendingPart = pending > 0 ? ` · ${pending} to write` : ''
   const countLine = `${count}${pendingPart}`
 
+  // A step that just became writable, said on the pill, where a phone tester
+  // can actually see it. Gone once tapped or once the note is written.
+  const nudge =
+    attention !== null && attention.seq !== nudgeSeenSeq
+      ? reflectNudge(steps, attention.key)
+      : null
+  const openFromNudge = () => {
+    if (attention !== null) setNudgeSeenSeq(attention.seq)
+    writeCollapse(false)
+  }
+
   // 'default' (no stored choice) renders both and lets the viewport decide.
   const showPill = collapse !== 'open'
   const showPanel = collapse !== 'closed'
@@ -227,8 +252,24 @@ export function TourRail() {
 
   const pill = (
     <div
-      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40${undecided ? ' md:hidden' : ''}`}
+      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2${undecided ? ' md:hidden' : ''}`}
     >
+      {/* Always mounted, for the same reason as the panel's live region: a
+          region that appears with its text is not announced. The panel's own
+          region is display:none while the pill shows, so the pill needs one. */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {nudge ?? ''}
+      </p>
+      {nudge !== null && (
+        <button
+          type="button"
+          onClick={openFromNudge}
+          className="inline-flex min-h-11 max-w-[16rem] items-center gap-2 rounded-2xl bg-amber-gold px-4 py-2 text-left font-subhead text-sm font-bold text-brand-black shadow-lg transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
+        >
+          {nudge}
+          <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+        </button>
+      )}
       <button
         type="button"
         onClick={() => writeCollapse(false)}
@@ -389,6 +430,7 @@ export function TourRail() {
                     expanded={effectiveOpen === step.key}
                     onToggle={handleToggle}
                     onReflectionSaved={handleReflectionSaved}
+                    ownListingId={tour.listingId}
                   />
                 ))}
               </ol>
