@@ -600,6 +600,43 @@
     }
   },
   {
+    "name": "DUPP and SWAT",
+    "slug": "dupp-and-swat",
+    "tagline": "Creative studio, shop and event space at Camp North End.",
+    "description": "DUPP and SWAT is a creative studio, retail shop and event space at Camp North End. Siblings Dion and Davita Galloway run it as a home for art, design and community events.",
+    "listing_type": "business",
+    "city_slug": "charlotte-nc",
+    "category_slug": "arts-culture",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1824 Statesville Ave, Ste 105",
+    "city_text": "Charlotte",
+    "state": "NC",
+    "zip": "28206",
+    "phone": "(980) 224-2128",
+    "website_url": "https://www.duppandswat.com",
+    "social_instagram": "https://www.instagram.com/duppandswat",
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-15",
+      "verdict": "open",
+      "sources": [
+        "https://www.qcitymetro.com/black-biz/the-black-businesses-of-camp-north-end-2319c312",
+        "https://www.qcitymetro.com/business/dupptswatt-cell-therapy-camp-north-end-257666",
+        "https://www.duppandswat.com",
+        "https://www.duppandswat.com/locations"
+      ],
+      "note": "Black-owned per QCity Camp North End coverage. Top-up 2026-10-15: studio address and phone from own locations page."
+    }
+  },
+  {
     "name": "ASÉ Wrestling",
     "slug": "ase-wrestling",
     "tagline": "Independent pro wrestling shows built around Black talent.",
@@ -987,6 +1024,42 @@
         "https://www.noteandaccord.com"
       ],
       "note": "Black-owned per QCity. Two locations, so slug carries -charlotte."
+    }
+  },
+  {
+    "name": "Cell Therapy",
+    "slug": "cell-therapy-charlotte",
+    "tagline": "Salon and barbershop inside Kinship at Camp North End.",
+    "description": "Cell Therapy is a salon and barbershop inside the Kinship space at Camp North End. It comes from the Galloway siblings behind DUPP and SWAT.",
+    "listing_type": "business",
+    "city_slug": "charlotte-nc",
+    "category_slug": "beauty-grooming",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "115 Razades Way, Unit W-118",
+    "city_text": "Charlotte",
+    "state": "NC",
+    "zip": "28206",
+    "phone": "(980) 224-2128",
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "book",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-15",
+      "verdict": "open",
+      "sources": [
+        "https://www.qcitymetro.com/business/dupptswatt-cell-therapy-camp-north-end-257666",
+        "https://www.qcitymetro.com/black-biz/the-black-businesses-of-camp-north-end-2319c312",
+        "https://www.duppandswat.com/locations"
+      ],
+      "note": "Black-owned per QCity. No dedicated website confirmed. Top-up 2026-10-15: address and phone from the Dupp & Swat locations page."
     }
   },
   {

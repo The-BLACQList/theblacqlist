@@ -585,6 +585,42 @@
     }
   },
   {
+    "name": "Last Slyce",
+    "slug": "last-slyce",
+    "tagline": "Pizza and snowballs at Broadway Market in Fells Point.",
+    "description": "Last Slyce sells pizza and snowballs from Broadway Market in Fells Point. It takes online orders.",
+    "listing_type": "business",
+    "city_slug": "baltimore-md",
+    "category_slug": "food-dining",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1640 Aliceanna St",
+    "city_text": "Baltimore",
+    "state": "MD",
+    "zip": "21231",
+    "phone": null,
+    "website_url": "https://www.lastslyce.com",
+    "social_instagram": "https://www.instagram.com/lastslyce",
+    "cta_type": "order",
+    "cta_url": "https://lastslyce.com/online-ordering/",
+    "price_range": "$",
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-15",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.lastslyce.com",
+        "https://www.waterfrontpartnership.org/blog/black-owned-businesses-on-baltimores-waterfront",
+        "https://www.lastslyce.com/contact"
+      ],
+      "note": "Black-owned per the Waterfront Partnership's Black-owned list only (directory-style proof); the business site does not name owners. Active per live site with a 2026 footer and online ordering. Street address and phone not listed on the site, left null. Top-up 2026-10-15: Broadway Market address from own contact page."
+    }
+  },
+  {
     "name": "Aunt Kelly's Cookies",
     "slug": "aunt-kellys-cookies",
     "tagline": "Cookies from a Baltimore baker who started baking in 1999.",
@@ -866,6 +902,43 @@
         "https://blackfarmersindex.com/reg-3-maryland"
       ],
       "note": "Black-owned per the Black Farmers Index (vineyard in Hydes). Active per events listed on its site (Oct 16 to Nov 13, 2026). Founded 2023 per the site (started April 2023). Tasting room in Savage, Howard County. Top-up 2026-10-15: dropped the building name 'New Weave Building' so the address geocodes."
+    }
+  },
+  {
+    "name": "Strength to Love II Farm",
+    "slug": "strength-to-love-ii-farm",
+    "tagline": "Urban farm on 1.5 acres in Sandtown-Winchester.",
+    "description": "Strength to Love II Farm grows produce on about 1.5 acres in Sandtown-Winchester. It is a program of the community group Intersection of Change.",
+    "listing_type": "business",
+    "city_slug": "baltimore-md",
+    "category_slug": "farms-farm-stands",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "1855 Kavanaugh St",
+    "city_text": "Baltimore",
+    "state": "MD",
+    "zip": "21217",
+    "phone": null,
+    "website_url": "https://s2l2.intersectionofchange.org",
+    "social_instagram": "https://www.instagram.com/strengthtolovefarm",
+    "cta_type": "learn-more",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-15",
+      "verdict": "confirmed",
+      "sources": [
+        "https://s2l2.intersectionofchange.org",
+        "https://blackfarmersindex.com/reg-3-maryland",
+        "https://www.baltimoremagazine.com/section/fooddrink/black-owned-food-businesses-to-support-in-baltimore",
+        "https://s2l2.intersectionofchange.org/contact"
+      ],
+      "note": "Black-owned per the Black Farmers Index and Baltimore Magazine. Draft because the site shows no dated 2024 to 2026 activity. Street address not confirmed, left null. Top-up 2026-10-15: address from the farm's contact page."
     }
   },
   {
