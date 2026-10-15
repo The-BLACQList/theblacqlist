@@ -7,7 +7,6 @@
 //
 //   * meaningfulWords   drops the filler ("how do I ... near me") from a search
 //   * findPlaces        spots a city or state in it ("plumber ohio")
-//   * looseQuery        rebuilds the words as an any-of search for the RPC
 //   * matchCategories   matches the words to categories, typos and plurals too
 //   * nearestCity       the closest city we cover, for "nothing near you"
 //
@@ -93,16 +92,6 @@ export function meaningfulWords(text: string): string[] {
     if (out.length >= MAX_WORDS) break
   }
   return out
-}
-
-/**
- * The words as an any-of search: "travel OR solo OR japan". The RPC's
- * websearch_to_tsquery reads OR as "either", and the RPC's prefix matcher
- * steps aside for it, so this widens the match without changing the ranking.
- * Null when there is nothing left to search for.
- */
-export function looseQuery(words: readonly string[]): string | null {
-  return words.length > 0 ? words.join(' OR ') : null
 }
 
 /** True when the exact search found too little to stand on its own. */

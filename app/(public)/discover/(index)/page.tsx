@@ -82,7 +82,6 @@ async function DiscoverContent({
   }) ? (
     <SearchAssist
       params={parseDiscoverParams(params)}
-      exactIds={result.entities.map((e) => e.id)}
       exactTotal={result.total}
     />
   ) : undefined

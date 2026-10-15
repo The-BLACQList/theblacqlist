@@ -140,7 +140,6 @@ async function CityContent({
   }) ? (
     <SearchAssist
       params={{ ...parseDiscoverParams(params), city: city.slug }}
-      exactIds={result.entities.map((e) => e.id)}
       exactTotal={result.total}
     />
   ) : undefined

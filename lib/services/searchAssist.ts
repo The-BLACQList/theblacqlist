@@ -1,20 +1,23 @@
 // The follow-up questions a thin search asks the database (PR 5).
 //
 // When a search finds fewer than three listings, the page asks, in order:
-//   1. Looser: the meaningful words as an any-of search ("travel OR solo").
-//   2. Categories: which categories the words mean, with real counts here and
+//   1. Categories: which categories the words mean, with real counts here and
 //      nationwide, and which of those we have nothing in yet.
-//   3. Somewhere else: a place we do not cover, the nearest city we do, the
+//   2. Somewhere else: a place we do not cover, the nearest city we do, the
 //      same search nationwide, and businesses that work online.
-//   4. Keep exploring: popular categories and live cities, when 1 to 3 found
+//   3. Keep exploring: popular categories and live cities, when 1 and 2 found
 //      nothing at all.
 //
-// Every count and card comes from published listings through the same RPCs
-// the grid uses. Nothing here writes, logs or stores the search.
+// It never shows listings that match only some of the words. A search with no
+// match says so, then points somewhere useful.
+// [Decision — founder, 2026-10-14: the any-of "close matches" made search feel
+// loose. An honest empty result with help beats a page that is never empty.]
+//
+// Every count comes from published listings through the same RPCs the grid
+// uses. Nothing here writes, logs or stores the search.
 
 import { createClient } from '@/lib/supabase/server'
-import type { DiscoveryEntity } from '@/types'
-import { queryListings, type ListingsParams } from '@/lib/listings/query'
+import type { ListingsParams } from '@/lib/listings/query'
 import {
   getFacetCounts,
   resolveFacetParams,
@@ -23,16 +26,12 @@ import {
 } from '@/lib/listings/facets'
 import {
   findPlaces,
-  looseQuery,
   matchCategories,
   meaningfulWords,
   nearestCity,
-  normalizeQuery,
   type AssistCity,
 } from '@/lib/search/assist'
 
-/** Close matches shown under the grid. Two rows on a wide screen. */
-const MAX_CLOSE = 8
 const MAX_EXPLORE_CATEGORIES = 6
 
 export interface AssistChip {
@@ -56,7 +55,6 @@ export interface SearchAssistData {
   exactTotal: number
   /** "in Atlanta" or "within 25 miles", for the copy. Null when nationwide. */
   scopeLabel: string | null
-  close: { entities: DiscoveryEntity[]; words: string[] } | null
   chips: AssistChip[]
   /** Categories the search means that have no listings anywhere yet. */
   gaps: string[]
@@ -66,8 +64,8 @@ export interface SearchAssistData {
   nearestToYou: NearbyCity | null
   /** The same search with the place taken off. */
   elsewhere: { count: number; href: string } | null
-  /** Businesses that work online, matching any of the words. */
-  online: { count: number; href: string } | null
+  /** Businesses that work online, matching every word once the place is off. */
+  online: { count: number; words: string; href: string } | null
   explore: {
     categories: Array<{ name: string; slug: string; count: number | null }>
     cities: Array<{ name: string; slug: string }>
@@ -121,10 +119,9 @@ function qs(entries: Record<string, string | number | undefined>): string {
 export async function getSearchAssist(args: {
   /** The parsed params of the search the grid just ran, `q` included. */
   params: ListingsParams
-  exactIds: readonly string[]
   exactTotal: number
 }): Promise<SearchAssistData> {
-  const { params, exactIds, exactTotal } = args
+  const { params, exactTotal } = args
   const query = params.q?.trim() ?? ''
   const supabase = await createClient()
 
@@ -176,13 +173,9 @@ export async function getSearchAssist(args: {
       : null
   const scoped = !!(scopeCity || radius)
 
-  const words = meaningfulWords(rest)
-  const loose = looseQuery(words)
-  // The any-of search differs from the exact one whenever there are two or
-  // more words, or when filler or a place came off. One bare word would just
-  // repeat the exact search.
-  const runLoose =
-    !!loose && (words.length > 1 || normalizeQuery(query) !== words.join(' ') || !!typedCity)
+  // The search with filler and any place taken off. Every word still has to
+  // match, so the online line never widens the search.
+  const onlineWords = meaningfulWords(rest).join(' ')
 
   const localResolved = scoped
     ? (
@@ -197,25 +190,17 @@ export async function getSearchAssist(args: {
 
   const matches = matchCategories(rest, categories)
 
-  const [closeResult, local, elsewhereCount, onlineCount] = await Promise.all([
-    runLoose
-      ? queryListings({ ...params, q: loose!, city: scopeCity?.slug, page: 1, sort: undefined, withFacets: false })
-      : Promise.resolve(null),
+  const [local, elsewhereCount, onlineCount] = await Promise.all([
     localResolved && matches.length > 0 ? getFacetCounts(supabase, localResolved) : Promise.resolve(null),
     (filterCity || radius) && query
       ? searchFacetedIds(supabase, { ...NO_FILTERS, p_q: query }, 'relevance', 1, 0)
       : Promise.resolve(null),
-    (scoped || places.length > 0) && loose
-      ? searchFacetedIds(supabase, { ...NO_FILTERS, p_q: loose, p_location_types: ['virtual'] }, 'relevance', 1, 0)
+    (scoped || places.length > 0) && onlineWords
+      ? searchFacetedIds(supabase, { ...NO_FILTERS, p_q: onlineWords, p_location_types: ['virtual'] }, 'relevance', 1, 0)
       : Promise.resolve(null),
   ])
 
-  // ── 1. Looser ────────────────────────────────────────────────────────────
-  const shown = new Set(exactIds)
-  const closeEntities = (closeResult?.entities ?? []).filter((e) => !shown.has(e.id)).slice(0, MAX_CLOSE)
-  const close = closeEntities.length > 0 ? { entities: closeEntities, words } : null
-
-  // ── 2. Categories ────────────────────────────────────────────────────────
+  // ── 1. Categories ────────────────────────────────────────────────────────
   const localCounts = local && !local.countsUnavailable ? (local.category ?? null) : null
   const chips: AssistChip[] = []
   const gaps: string[] = []
@@ -241,7 +226,7 @@ export async function getSearchAssist(args: {
     })
   }
 
-  // ── 3. Somewhere else ────────────────────────────────────────────────────
+  // ── 2. Somewhere else ────────────────────────────────────────────────────
   const near = (from: { lat: number; lng: number }): NearbyCity | null => {
     const n = nearestCity(from, cities)
     return n ? { name: n.city.name, miles: n.miles, href: `/discover/${n.city.slug}` } : null
@@ -262,13 +247,17 @@ export async function getSearchAssist(args: {
       : null
   const online =
     onlineCount && !onlineCount.error && onlineCount.total > 0
-      ? { count: onlineCount.total, href: `/search${qs({ q: loose!, location_type: 'virtual' })}` }
+      ? {
+          count: onlineCount.total,
+          words: onlineWords,
+          href: `/search${qs({ q: onlineWords, location_type: 'virtual' })}`,
+        }
       : null
 
-  // ── 4. Keep exploring ────────────────────────────────────────────────────
+  // ── 3. Keep exploring ────────────────────────────────────────────────────
   const anyChipHasListings = chips.some((c) => (c.nationalCount ?? 1) > 0)
   const explore =
-    !close && !anyChipHasListings && !elsewhere && !online
+    !anyChipHasListings && !elsewhere && !online
       ? {
           categories: categories
             .filter((c) => !c.parentId && (nationalOf(c.slug) ?? 1) > 0)
@@ -286,7 +275,6 @@ export async function getSearchAssist(args: {
     query,
     exactTotal,
     scopeLabel,
-    close,
     chips,
     gaps,
     uncovered,
