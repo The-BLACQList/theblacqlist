@@ -7,7 +7,7 @@
  *   SUPABASE_URL=https://xxx.supabase.co \
  *   SUPABASE_SERVICE_ROLE_KEY=... \
  *   npx tsx scripts/seed-collections.ts
- *   npx tsx scripts/seed-collections.ts --only=black-farms-near-you,black-art-museums-and-stages
+ *   npx tsx scripts/seed-collections.ts --only=black-farmers-you-should-know-about,black-art-museums-and-stages
  *
  * Idempotent: upserts the collection on `slug`; items on (collection_id, listing_id)
  * with updates; sections are replaced for the collection on each run.
@@ -133,11 +133,11 @@ This list will grow. If we missed your favorite, that's the point of a starter g
   // that listing's cited source. No new claims are added here. Plain copy, no
   // em dashes (site copy voice).
   {
-    title: 'Black Farms Near You',
-    slug: 'black-farms-near-you',
+    title: 'Black Farmers You Should Know About',
+    slug: 'black-farmers-you-should-know-about',
     subtitle: 'Black-owned farms in six cities selling produce, meat, honey and flowers.',
     description:
-      'Black-owned farms and farm stands near Atlanta, Houston, Chicago, DC, New Orleans and Los Angeles.',
+      'Black farmers growing produce, meat, honey and flowers in and around Atlanta, Houston, Chicago, DC, New Orleans and Los Angeles.',
     body: `Buying straight from a farm keeps the money close to the people who grow the food. These farms sell through CSAs, farm stands, markets and online shops.
 
 Two from each city to start. Check each farm's page for market days and how to order.`,
