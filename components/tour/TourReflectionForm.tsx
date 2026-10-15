@@ -14,7 +14,7 @@ import {
 import { REFLECTION_MIN_LENGTH } from '@/lib/tour/steps'
 import type { TourStepState } from './useTourState'
 
-function ReflectionSubmit() {
+function ReflectionSubmit({ label }: { label: string }) {
   const { pending } = useFormStatus()
   return (
     <button
@@ -23,7 +23,7 @@ function ReflectionSubmit() {
       className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-gold px-4 py-1.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Saving…' : 'Save reflection'}
+      {pending ? 'Saving…' : label}
     </button>
   )
 }
@@ -31,9 +31,18 @@ function ReflectionSubmit() {
 export function TourReflectionForm({
   step,
   onSaved,
+  initialText = '',
+  submitLabel = 'Save reflection',
+  onCancel,
 }: {
   step: TourStepState
-  onSaved: () => void
+  /** Called with the trimmed text once the server has saved it. */
+  onSaved: (text: string) => void
+  /** Starting text: the saved note when a finished step is being edited. */
+  initialText?: string
+  submitLabel?: string
+  /** Shown as a Cancel button when set (editing a finished step). */
+  onCancel?: () => void
 }) {
   const [state, action] = useActionState<ReflectionState, FormData>(
     submitReflectionAction,
@@ -43,15 +52,32 @@ export function TourReflectionForm({
   // <form action={…}> when the action resolves, which would wipe the
   // tester's text on every validation failure (the recorded debt-⑰ defect
   // class). A controlled value survives the reset.
-  const [text, setText] = useState('')
+  const [text, setText] = useState(initialText)
+  // What was in the box when the action resolved, for onSaved. A ref so the
+  // effect below fires once per success, not once per keystroke.
+  const textRef = useRef(initialText)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const savedRef = useRef<HTMLParagraphElement | null>(null)
 
   const succeeded = state !== null && 'success' in state && state.success
   const error = state !== null && 'error' in state ? state.error : null
 
   useEffect(() => {
-    if (succeeded) onSaved()
+    if (succeeded) onSaved(textRef.current.trim())
   }, [succeeded, onSaved])
+
+  // Editing is something the tester just asked for by tapping Edit, so the
+  // cursor goes where they are about to type (WCAG 3.2.2 is about changes they
+  // did NOT ask for). A fresh, empty form does not grab focus.
+  useEffect(() => {
+    if (onCancel === undefined) return
+    const el = textareaRef.current
+    if (el === null) return
+    el.focus({ preventScroll: true })
+    el.setSelectionRange(el.value.length, el.value.length)
+    // Mount only: refocusing on every render would fight the tester.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ⚠ FOCUS, not decoration. When the refetch triggered by `onSaved` flips this
   // step to 'done', this whole subtree unmounts — and the tester's focus was
@@ -96,8 +122,12 @@ export function TourReflectionForm({
         id={`tour-reflection-${step.key}`}
         name="reflection"
         rows={3}
+        ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value)
+          textRef.current = e.target.value
+        }}
         aria-invalid={!!error}
         aria-describedby={errorId}
         placeholder={`At least ${REFLECTION_MIN_LENGTH} characters`}
@@ -108,7 +138,18 @@ export function TourReflectionForm({
           {error}
         </p>
       )}
-      <ReflectionSubmit />
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <ReflectionSubmit label={submitLabel} />
+        {onCancel !== undefined && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="inline-flex min-h-11 items-center rounded-full px-4 py-1.5 font-subhead text-sm text-cream/80 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   )
 }

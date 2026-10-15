@@ -22,6 +22,7 @@ import { ArrowRight, Check, ChevronDown, Crosshair, Pencil } from 'lucide-react'
 import {
   TOUR_STEP_TARGETS,
   planSpotlight,
+  revisitButton,
   travelButton,
   travelHref,
   type LastListing,
@@ -36,6 +37,7 @@ import {
 } from './spotlight'
 import { readLastListing } from './lastListing'
 import { TourReflectionForm } from './TourReflectionForm'
+import { TourDoneStepReview } from './TourDoneStepReview'
 import type { TourStepState } from './useTourState'
 
 /**
@@ -70,6 +72,19 @@ export function TourStepRow({
   const pathname = usePathname()
   const [awayFrom, setAwayFrom] = useState<string | null>(null)
   const [lastListing, setLastListing] = useState<LastListing | null>(null)
+  // Reviewing a finished step (founder, 2026-10-15): "once a test tour item is
+  // completed, I can no longer drop down the instructions for each or review my
+  // response." A done row now keeps its instructions and shows the saved note,
+  // which the tester can edit. The server already treats a resubmit as a
+  // revision (submitReflection.ts upserts on conflict).
+  const [editing, setEditing] = useState(false)
+  const [noteUpdated, setNoteUpdated] = useState(false)
+  // The text just saved, shown until the refetch brings it back from the server.
+  const [savedNote, setSavedNote] = useState<string | null>(null)
+  const [prevExpanded, setPrevExpanded] = useState(expanded)
+  const editButtonRef = useRef<HTMLButtonElement | null>(null)
+  const noteStatusRef = useRef<HTMLParagraphElement | null>(null)
+  const pendingFocus = useRef<'edit' | 'status' | null>(null)
   const rowRef = useRef<HTMLLIElement | null>(null)
   const wasExpanded = useRef(expanded)
   const panelId = `tour-step-panel-${step.key}`
@@ -82,6 +97,26 @@ export function TourStepRow({
   const marker = rowMarker(step.status)
   const done = marker === 'check'
   const awaitingNote = marker === 'pencil'
+
+  // A closed row reopens on the note, not on a half-finished edit.
+  if (expanded !== prevExpanded) {
+    setPrevExpanded(expanded)
+    if (!expanded) {
+      setEditing(false)
+      setNoteUpdated(false)
+    }
+  }
+
+  // The edit form unmounts when it closes, and focus was inside it. Put focus
+  // somewhere that explains what happened instead of letting it fall to <body>:
+  // the "Note updated." line after a save, the Edit button after Cancel.
+  useEffect(() => {
+    if (editing) return
+    const which = pendingFocus.current
+    pendingFocus.current = null
+    if (which === 'status') noteStatusRef.current?.focus({ preventScroll: true })
+    else if (which === 'edit') editButtonRef.current?.focus({ preventScroll: true })
+  }, [editing])
 
   // The rail is a `max-h-[70vh]` panel whose body scrolls. Step 6 sits at the
   // bottom of six rows, so the reflection textarea opened BELOW the fold of the
@@ -158,10 +193,13 @@ export function TourStepRow({
   const target = targetFor(step.key)
   // Where the travel button goes and what it says: the listing the tester was
   // just on when there is one that can count, otherwise the target's own trip.
+  // A finished step keeps its trip (revisitButton) so the tester can go back.
   const trip =
     target === undefined
       ? null
-      : travelButton(target, awayFrom, { last: lastListing, ownListingId, pathname })
+      : done
+        ? revisitButton(target, pathname)
+        : travelButton(target, awayFrom, { last: lastListing, ownListingId, pathname })
   const tripHref = trip?.href ?? null
 
   // A plain function, not useCallback: the React Compiler memoizes it, and a
@@ -182,6 +220,26 @@ export function TourStepRow({
     target?.guide !== undefined && (step.status === 'act' || step.status === 'retry')
       ? target.guide
       : null
+
+  const note = savedNote ?? step.reflection
+
+  function startEdit(): void {
+    setNoteUpdated(false)
+    setEditing(true)
+  }
+
+  function cancelEdit(): void {
+    pendingFocus.current = 'edit'
+    setEditing(false)
+  }
+
+  function handleEdited(text: string): void {
+    pendingFocus.current = 'status'
+    setSavedNote(text)
+    setNoteUpdated(true)
+    setEditing(false)
+    onReflectionSaved()
+  }
 
   return (
     <li ref={rowRef}>
@@ -288,7 +346,38 @@ export function TourStepRow({
           )}
 
           {step.status === 'reflect' && (
-            <TourReflectionForm step={step} onSaved={onReflectionSaved} />
+            <TourReflectionForm
+              step={step}
+              onSaved={onReflectionSaved}
+              initialText={step.reflection ?? ''}
+            />
+          )}
+
+          {done && (
+            <TourDoneStepReview
+              step={step}
+              guide={target?.guide ?? null}
+              showInstructions={target?.kind !== 'in-rail'}
+              note={note}
+              editing={editing}
+              noteUpdated={noteUpdated}
+              editButtonRef={editButtonRef}
+              noteStatusRef={noteStatusRef}
+              onEdit={startEdit}
+              onCancel={cancelEdit}
+              onSaved={handleEdited}
+            />
+          )}
+
+          {done && trip !== null && (
+            <button
+              type="button"
+              onClick={travel}
+              className="mt-3 inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 text-left font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+            >
+              {trip.label}
+              <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+            </button>
           )}
         </div>
       )}

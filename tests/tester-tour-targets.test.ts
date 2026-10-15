@@ -13,6 +13,7 @@ import {
   evidenceStepKeys,
   planSpotlight,
   parseLastListing,
+  revisitButton,
   targetHrefs,
   travelButton,
   travelHref,
@@ -355,5 +356,38 @@ describe('travelButton', () => {
       href: '/search',
       label: search.go,
     })
+  })
+})
+
+// Founder, 2026-10-15: "for browse a collection we need a button that
+// navigates to collections." The button vanished once the step was done.
+describe('revisitButton', () => {
+  const collections = TOUR_STEP_TARGETS.collection_browsed
+
+  it('a finished collection step offers the trip back to /collections', () => {
+    expect(revisitButton(collections, '/')).toEqual({
+      href: '/collections',
+      label: 'Go to collections',
+    })
+    expect(revisitButton(collections, '/collections/some-slug')).toEqual({
+      href: '/collections',
+      label: 'Go to collections',
+    })
+  })
+
+  it('offers nothing on the page the tester is already on', () => {
+    expect(revisitButton(collections, '/collections')).toBeNull()
+  })
+
+  it('every page step offers its own trip, and no other kind does', () => {
+    for (const key of TOUR_STEPS) {
+      const target = TOUR_STEP_TARGETS[key]
+      const button = revisitButton(target, '/somewhere-else')
+      if (target.kind === 'page') {
+        expect(button).toEqual({ href: target.href, label: target.go })
+      } else {
+        expect(button).toBeNull()
+      }
+    }
   })
 })

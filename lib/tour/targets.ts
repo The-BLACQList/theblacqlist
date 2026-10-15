@@ -286,6 +286,27 @@ export function travelButton(
   return { href, label: target.go ?? 'Go' }
 }
 
+/**
+ * The trip a FINISHED step still offers, or null.
+ *
+ * A done row used to drop its button with the rest of its to-do content, so a
+ * tester who had browsed a collection had no way back to the collections from
+ * the rail (founder, 2026-10-15). Only page steps get one: they have a single
+ * route that holds the thing. A listing-scoped step has no such route, and its
+ * note, not a trip, is what a tester comes back for. Never offered on the page
+ * the tester is already on.
+ *
+ * Still a button the tester taps. D-T3 holds: nothing here navigates.
+ */
+export function revisitButton(
+  target: TourTarget,
+  pathname: string
+): { href: string; label: string } | null {
+  if (target.kind !== 'page' || target.href === null || target.go === undefined) return null
+  if (target.href === pathname) return null
+  return { href: target.href, label: target.go }
+}
+
 /** Every href this module can ever send a tester to. The route-safety test walks it. */
 export function targetHrefs(): string[] {
   return TOUR_STEPS.flatMap((key) => {
