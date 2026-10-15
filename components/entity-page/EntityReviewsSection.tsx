@@ -1,8 +1,10 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Star, BadgeCheck, MessageSquare } from 'lucide-react'
 import type { EntityPageData, ReviewItem } from '@/types'
 import { ReviewFormDisclosure } from '@/components/entity-page/ReviewFormDisclosure'
 import { OwnerRespondForm } from '@/components/entity-page/OwnerRespondForm'
+import { buildEntityUrl } from '@/lib/listings/url'
 
 interface Props {
   entity: EntityPageData
@@ -159,8 +161,32 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
   const canReview = !!userId && !isOwner && !hasReviewed
   const hasReviews = entity.reviews && entity.reviews.length > 0
 
-  // Only render if there's something to show
-  if (!hasReviews && !canReview) return null
+  // [Decision — founder, 2026-10-15: a signed-out visitor on a listing with no
+  // reviews used to see nothing. Give them a reason to sign in.] Signed-in
+  // visitors who cannot review (owners, people who already reviewed) still get
+  // nothing, as before.
+  if (!hasReviews && !canReview) {
+    if (userId) return null
+    const returnTo = buildEntityUrl(entity.entity_type, entity.city?.slug, entity.slug)
+    return (
+      <section aria-labelledby="reviews-heading" className="bg-white py-12 md:py-16">
+        <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8">
+          <h2
+            id="reviews-heading"
+            className="font-headline text-[22px] md:text-[28px] text-brand-black mb-2"
+          >
+            No reviews yet. Been here?
+          </h2>
+          <Link
+            href={`/sign-in?next=${encodeURIComponent(returnTo)}`}
+            className="inline-flex min-h-11 items-center font-subhead text-sm font-semibold text-brand-black underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/40"
+          >
+            Sign in to write the first one
+          </Link>
+        </div>
+      </section>
+    )
+  }
 
   const avg =
     entity.avg_rating ??
