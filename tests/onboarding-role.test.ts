@@ -31,7 +31,7 @@ describe('normalizeOnboardingRole', () => {
   })
 
   it.each(['owner', 'vendor', 'event_organizer', 'job_poster', 'sponsor'])(
-    'collapses %s to owner — five of the six sign-up choices mean owner',
+    'collapses %s to owner — legacy sign-up values saved before the two-choice form still mean owner',
     (value) => {
       expect(normalizeOnboardingRole(value)).toBe('owner')
     }
@@ -58,9 +58,9 @@ describe('normalizeOnboardingRole', () => {
 })
 
 describe('every sign-up role choice maps to exactly one of the two branches', () => {
-  it('covers all six values the form offers', () => {
+  it('covers both values the form offers', () => {
     const values = [...signUpSrc.matchAll(/^\s*value: '([a-z_]+)',$/gm)].map((m) => m[1])
-    expect(values).toHaveLength(6)
+    expect(values).toEqual(['supporter', 'owner'])
     expect(values).toContain('supporter')
     for (const value of values) {
       expect(normalizeOnboardingRole(value)).toBe(value === 'supporter' ? 'supporter' : 'owner')

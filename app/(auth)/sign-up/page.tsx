@@ -12,42 +12,22 @@ import { PasswordChecklist } from '@/components/security/PasswordChecklist'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import { cn } from '@/lib/utils'
 
+// [Decision — founder, 2026-10-15: two choices, not six. Every non-supporter
+// option already saved as dbRole 'owner'; the extra labels only made people stop
+// and think. Old stored values (vendor, event_organizer, job_poster, sponsor)
+// still normalize to owner in lib/auth/onboardingRole.ts.]
 const ROLE_OPTIONS = [
   {
     value: 'supporter',
     dbRole: 'supporter',
-    label: "I'm here to discover",
+    label: "I'm looking for businesses",
     description: 'Find and support Black-owned businesses',
   },
   {
     value: 'owner',
     dbRole: 'owner',
-    label: 'I have a business',
+    label: 'I run a business, sell or host events',
     description: 'Claim or create your BLACQList Page',
-  },
-  {
-    value: 'vendor',
-    dbRole: 'owner',
-    label: "I sell products",
-    description: 'List your products and services',
-  },
-  {
-    value: 'event_organizer',
-    dbRole: 'owner',
-    label: 'I organize events',
-    description: 'Promote your events to the community',
-  },
-  {
-    value: 'job_poster',
-    dbRole: 'owner',
-    label: "I'm hiring",
-    description: 'Connect with Black talent',
-  },
-  {
-    value: 'sponsor',
-    dbRole: 'owner',
-    label: "I want to sponsor",
-    description: 'Partner with The BLACQList',
   },
 ] as const
 
@@ -277,7 +257,7 @@ function SignUpContent() {
           <legend className="font-subhead text-sm font-semibold text-brand-black mb-2">
             I am joining as: <span aria-hidden="true">*</span>
           </legend>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {ROLE_OPTIONS.map((option) => {
               const isSelected = selectedRole === option.value
               return (
@@ -286,7 +266,7 @@ function SignUpContent() {
                   className={cn(
                     'flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors',
                     isSelected
-                      ? 'border-brand-black bg-pale-lavender'
+                      ? 'border-brand-black bg-pale-lavender ring-1 ring-brand-black'
                       : 'border-charcoal/20 hover:border-charcoal/40'
                   )}
                 >
