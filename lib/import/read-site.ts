@@ -158,6 +158,11 @@ function phoneKey(raw: string): string | null {
   return digits.length >= 7 && digits.length <= 15 ? digits : null
 }
 
+/** Some sites list several numbers in one field: "(773) 555-0100, (708) 555-0101". */
+function splitPhones(raw: string): string[] {
+  return raw.split(/[,;\/|]|\s+or\s+/i).map((p) => p.trim()).filter(Boolean)
+}
+
 function formatPhone(raw: string): string | null {
   const key = phoneKey(raw)
   if (!key) return null
@@ -241,10 +246,7 @@ function strings(value: unknown): string[] {
 
 function readAddress(value: unknown): FoundAddress | null {
   const first = Array.isArray(value) ? value[0] : value
-  if (typeof first === 'string') {
-    const street = cleanText(first, 200)
-    return street ? { street, city: null, state: null, zip: null } : null
-  }
+  if (typeof first === 'string') return readAddressText(first)
   if (!first || typeof first !== 'object') return null
   const a = first as Json
   const found: FoundAddress = {
@@ -254,6 +256,46 @@ function readAddress(value: unknown): FoundAddress | null {
     zip: cleanText(typeof a.postalCode === 'number' ? String(a.postalCode) : a.postalCode, 20),
   }
   return found.street || found.city || found.state || found.zip ? found : null
+}
+
+const COUNTRY = /^(united states( of america)?|usa|us)$/i
+
+/**
+ * Squarespace and others write the address as one string, usually
+ * "436 E 47th St\nChicago, IL, 60653\nUnited States". Splits out the US
+ * city, state and zip when they are there; otherwise keeps it all as street.
+ */
+function readAddressText(raw: string): FoundAddress | null {
+  const parts = raw
+    .split(/\n|,/)
+    .map((p) => cleanText(p, 200))
+    .filter((p): p is string => Boolean(p))
+  if (parts.length === 0) return null
+  if (parts.length > 1 && COUNTRY.test(parts[parts.length - 1]!)) parts.pop()
+
+  let state: string | null = null
+  let zip: string | null = null
+  const last = parts[parts.length - 1] ?? ''
+  const stateZip = /^([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)$/.exec(last)
+  if (stateZip) {
+    state = stateZip[1]!.toUpperCase()
+    zip = stateZip[2]!
+    parts.pop()
+  } else if (/^\d{5}(?:-\d{4})?$/.test(last)) {
+    zip = last
+    parts.pop()
+  }
+  if (!state && parts.length > 1 && /^[A-Za-z]{2}$/.test(parts[parts.length - 1]!)) {
+    state = parts.pop()!.toUpperCase()
+  }
+
+  // Without a state we can't tell the city from the street, so keep the text whole.
+  if (!state || parts.length < 2) {
+    const street = cleanText(raw.replace(/\n/g, ', '), 200)
+    return street ? { street, city: null, state: null, zip: null } : null
+  }
+  const city = parts.pop()!
+  return { street: parts.join(', ').slice(0, 200), city: city.slice(0, 120), state, zip }
 }
 
 // ── Hours ───────────────────────────────────────────────────────────────────
@@ -436,7 +478,7 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
   // Phones and emails
   const phones: string[] = []
   const emails: string[] = []
-  for (const tel of strings(ld?.telephone)) pushUnique(phones, formatPhone(tel), (p) => phoneKey(p)!)
+  for (const tel of strings(ld?.telephone).flatMap(splitPhones)) pushUnique(phones, formatPhone(tel), (p) => phoneKey(p)!)
   for (const mail of strings(ld?.email)) pushUnique(emails, cleanEmail(mail), (e) => e)
 
   // Links: tel, mailto, socials, and (on link-in-bio pages) the website
@@ -487,6 +529,8 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
     if (photos.length >= MAX_PHOTO_CANDIDATES) return
     const url = toUrl(raw, pageUrl)
     if (!url || !isRasterCandidate(url)) return
+    // An http image on an https page is blocked in the browser. Most hosts serve both.
+    if (url.protocol === 'http:' && page.protocol === 'https:') url.protocol = 'https:'
     const href = url.toString()
     const existing = photos.find((p) => p.url === href)
     if (existing) {
@@ -499,7 +543,11 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
   for (const logo of strings(ld?.logo)) addPhoto(logo, 'logo', null, null)
   const ogImage = meta('meta[property="og:image"]') ?? meta('meta[property="og:image:url"]')
   const ogWidth = Number(meta('meta[property="og:image:width"]') ?? NaN)
-  addPhoto(ogImage, 'photo', Number.isFinite(ogWidth) ? ogWidth : null, null)
+  const ogHeight = Number(meta('meta[property="og:image:height"]') ?? NaN)
+  // Many sites share their wordmark: a file named "logo", or a thin banner.
+  const ogIsLogo =
+    /logo/i.test(ogImage ?? '') || (ogWidth > 0 && ogHeight > 0 && ogWidth / ogHeight > 4)
+  addPhoto(ogImage, ogIsLogo ? 'logo' : 'photo', Number.isFinite(ogWidth) ? ogWidth : null, null)
   for (const image of strings(ld?.image)) addPhoto(image, 'photo', null, null)
 
   for (const img of root.querySelectorAll('img')) {

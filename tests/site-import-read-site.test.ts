@@ -172,6 +172,47 @@ describe('readSite on a link-in-bio page', () => {
   })
 })
 
+// Squarespace's shape: the address as one string, several phones in one
+// field, and the wordmark shared as the page image over http.
+const SQUARESPACE = `<!doctype html>
+<html><head>
+<title>Gallery Example</title>
+<meta property="og:image" content="http://static1.squarespace.com/static/abc/t/1/website+logo-01.png?format=1500w">
+<meta property="og:image:width" content="1500">
+<meta property="og:image:height" content="126">
+<script type="application/ld+json">{"name":"Gallery Example","@type":"WebSite"}</script>
+<script type="application/ld+json">{"legalName":"Gallery Example","address":"436 East 47th Street\\nChicago, IL, 60653\\nUnited States","telephone":"(773) 555-0100, (708) 555-0101","@type":"Organization"}</script>
+</head><body>
+<img src="https://images.squarespace-cdn.com/content/v1/abc/gallery-wall.jpg" data-image-dimensions="2500x1667" alt="The gallery wall">
+</body></html>`
+
+describe('readSite on a Squarespace page', () => {
+  const f = readSite(SQUARESPACE, 'https://www.galleryexample.com/')
+
+  it('splits a one-string address into street, city, state and zip', () => {
+    expect(f.address).toEqual({ street: '436 East 47th Street', city: 'Chicago', state: 'IL', zip: '60653' })
+  })
+
+  it('splits several phones listed in one field', () => {
+    expect(f.phones).toEqual(['(773) 555-0100', '(708) 555-0101'])
+  })
+
+  it('treats a shared wordmark as the logo, not the cover, and asks for it over https', () => {
+    expect(f.suggestedLogo).toBe('https://static1.squarespace.com/static/abc/t/1/website+logo-01.png?format=1500w')
+    expect(f.suggestedCover).toBe('https://images.squarespace-cdn.com/content/v1/abc/gallery-wall.jpg')
+  })
+
+  it('keeps an address it cannot split as the street', () => {
+    const page = SQUARESPACE.replace('436 East 47th Street\\nChicago, IL, 60653\\nUnited States', 'Unit 4, The Old Mill')
+    expect(readSite(page, 'https://www.galleryexample.com/').address).toEqual({
+      street: 'Unit 4, The Old Mill',
+      city: null,
+      state: null,
+      zip: null,
+    })
+  })
+})
+
 describe('readSite hours in the short text form', () => {
   it('reads "Mo-Fr 09:00-17:00" and "Sa,Su 10:00-14:00"', () => {
     const html = `<script type="application/ld+json">{"@type":"Restaurant","name":"X","openingHours":["Mo-Fr 09:00-17:00","Sa,Su 10:00-14:00"]}</script>`
