@@ -38,7 +38,8 @@ export function MoreFilters({ count, children }: Props) {
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'flex min-h-11 w-full items-center justify-between rounded-md py-1',
-          'font-subhead text-sm font-semibold text-brand-black',
+          // Same look as the FilterSection headers it sits beside.
+          'font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/40'
         )}
       >

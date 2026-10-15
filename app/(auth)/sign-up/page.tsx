@@ -257,7 +257,7 @@ function SignUpContent() {
           <legend className="font-subhead text-sm font-semibold text-brand-black mb-2">
             I am joining as: <span aria-hidden="true">*</span>
           </legend>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {ROLE_OPTIONS.map((option) => {
               const isSelected = selectedRole === option.value
               return (
@@ -266,7 +266,7 @@ function SignUpContent() {
                   className={cn(
                     'flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors',
                     isSelected
-                      ? 'border-brand-black bg-pale-lavender'
+                      ? 'border-brand-black bg-pale-lavender ring-1 ring-brand-black'
                       : 'border-charcoal/20 hover:border-charcoal/40'
                   )}
                 >
