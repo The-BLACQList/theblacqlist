@@ -61,7 +61,7 @@ export function mockResponseFor(agent: AgentDefinition, ctx: MockContext): strin
 
     case 'seo_coach_description':
       return clampTitle(
-        `Discover ${listingName}, a Black-owned ${categoryName.toLowerCase()} business in ${cityName}. See hours, services and reviews, then reach out.`,
+        `Discover ${listingName}, a ${categoryName.toLowerCase()} business in ${cityName}. See hours, services and reviews, then reach out.`,
         160
       )
 

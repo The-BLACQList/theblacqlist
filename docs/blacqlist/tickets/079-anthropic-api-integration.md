@@ -2,7 +2,12 @@
 
 ## Status
 
-Draft
+Built differently, 2026-10-15 (piece 2 of the AI plan). The client lives in `lib/ai/anthropic.ts`,
+called only from `generate()` in `lib/ai/provider.ts`, not a `lib/ai/client.ts` singleton. Model is
+**Claude Haiku 5.5 (`claude-haiku-5-5`) for every agent** (founder, GATE-SPEND), set in
+`MODEL_BY_TIER` in `lib/ai/agents.ts`. There is no `DEFAULT_MODEL` and no throw on a missing key: a
+missing key or ceiling means the mock runs. The Haiku 4.5 and Sonnet references below are the
+original draft and are out of date.
 
 ## Phase
 

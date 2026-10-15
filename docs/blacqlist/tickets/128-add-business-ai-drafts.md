@@ -9,7 +9,7 @@
 
 ## Why
 
-The founder wants owners to describe the business in their own words and get drafts they can adjust, for a page that ranks well in search and the right category (or a proposed new one). AI help is free for every new owner, with caps. No model is wired today: there is no AI SDK, `callRealProvider()` throws (`lib/ai/provider.ts:201`), AI is Starter and up only (`lib/stripe/features.ts:35`) but new pages start on Free, and the ticket 104 caps are not built.
+The founder wants owners to describe the business in their own words and get drafts they can adjust, for a page that ranks well in search and the right category (or a proposed new one). AI help is free for every new owner, with caps. As of 2026-10-15 the model is wired (piece 2: Claude Haiku 5.5, `lib/ai/anthropic.ts`, monthly ceiling in `lib/ai/spend.ts`), but off until the key and ceiling are set; AI is Starter and up only (`lib/stripe/features.ts:35`) but new pages start on Free, and the ticket 104 caps are not built.
 
 ## How it works
 
@@ -59,7 +59,7 @@ When the flag is on, the ticket 126 flow gets drafts after "Save my draft". When
 
 ## Gates
 
-- **GATE-SPEND:** model choice, API key and the monthly ceiling. No real calls before this clears.
+- **GATE-SPEND:** model chosen 2026-10-15 (Claude Haiku 5.5). Still open: the API key in staging and the monthly ceiling amount. No real calls before both are set.
 - **Safety-plan exception** for owner text and category proposals in `docs/blacqlist/ai/ai-safety-and-approval-plan.md` `[Needs professional review]`.
 - **Privacy policy update** (add Anthropic as a processor; Turnstile is also missing) and a Terms line that owners are responsible for the text they approve `[Needs professional review]`. The 14-day notice clause applies.
 - **The six AI launch gates** in `docs/blacqlist/ai/ai-agent-roadmap.md:68-78`:

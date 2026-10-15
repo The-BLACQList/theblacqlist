@@ -178,10 +178,11 @@ These variables are not needed for the MVP launch. The subscription/payment flow
 
 | Variable                          | When to set                                                            |
 | --------------------------------- | ---------------------------------------------------------------------- |
-| `ANTHROPIC_API_KEY`               | When AI-powered suggestions (V2) are ready to ship                     |
-| `NEXT_PUBLIC_AI_FEATURES_ENABLED` | Set to `true` only after API key is set and rate limits are configured |
+| `ANTHROPIC_API_KEY`               | Staging first, to test real calls. Production only after the privacy notice naming Anthropic takes effect (earliest 2026-11-02) |
+| `AI_MONTHLY_CEILING_USD`          | Same time as the key, in the same environment. Our monthly ceiling in USD (founder to confirm; $25 suggested). Must be a positive number |
+| `FEATURE_AI_BETA`                 | Turns the owner AI page on. Staging first                              |
 
-The `ai_suggestions` and `ai_generation_requests` tables already exist in the schema (migration 20260511000004) but the application uses mock mode until `ANTHROPIC_API_KEY` is present.
+Updated 2026-10-15. The app calls Claude Haiku 5.5 (`claude-haiku-5-5`, `lib/ai/agents.ts`) only when **both** `ANTHROPIC_API_KEY` and a positive `AI_MONTHLY_CEILING_USD` are set; with either missing it runs the mock and costs nothing. At the ceiling, AI requests pause until the next UTC month (`lib/ai/spend.ts`). Set the Anthropic Console spend limit at or just above the ceiling as a second line. `NEXT_PUBLIC_AI_FEATURES_ENABLED` was never used by the code; the flag is `FEATURE_AI_BETA` (`lib/env.ts`).
 
 ---
 
@@ -224,4 +225,5 @@ Quick reference for which variables are required in each environment at MVP laun
 | `RESEND_FROM_EMAIL`             | Optional                   | `noreply@send.theblacqlist.com`   | `noreply@send.theblacqlist.com` |
 | `NEXT_PUBLIC_SENTRY_DSN`        | Not set                    | Staging DSN                       | Production DSN             |
 | Stripe variables                | Optional                   | Test mode keys                    | Live mode keys (V1)        |
-| Anthropic/Algolia               | Not set                    | Not set                           | Not set until V2           |
+| Anthropic (key + ceiling)       | Not set (mock)             | Set when testing real calls       | After the notice date only |
+| Algolia                         | Not set                    | Not set                           | Not set until V2           |

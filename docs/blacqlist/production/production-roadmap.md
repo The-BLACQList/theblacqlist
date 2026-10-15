@@ -795,7 +795,7 @@ CREATE INDEX ai_agent_runs_created_idx ON ai_agent_runs (created_at DESC);
 **Agent S1: Find-It-For-Me**  
 _"What are you looking for?" → ranked listing results_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User types natural language query in search bar on `/discover`
 - File: `lib/ai/agents/shopper.ts` → `findItForMe()`
 - System prompt (cached): Platform overview + category list + city list
@@ -806,7 +806,7 @@ _"What are you looking for?" → ranked listing results_
 **Agent S2: Support Local Tonight**  
 _Occasion-aware, time-sensitive recommendations_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User taps "Support Tonight" button on discover page
 - File: `lib/ai/agents/shopper.ts` → `supportLocalTonight()`
 - Input: current_time (hour only, no date), city, optional occasion text
@@ -816,7 +816,7 @@ _Occasion-aware, time-sensitive recommendations_
 **Agent S3: Gift Finder**  
 _Gift recommendations by recipient + occasion + budget_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User opens Gift Finder tool (new `/discover` widget)
 - File: `lib/ai/agents/shopper.ts` → `giftFinder()`
 - Input: recipient_type (mom/partner/friend/colleague), occasion, budget_max_cents, city
@@ -826,7 +826,7 @@ _Gift recommendations by recipient + occasion + budget_
 **Agent S4: Event Planner**  
 _Multi-vendor shortlist for events_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User fills "Plan an event" form
 - File: `lib/ai/agents/shopper.ts` → `eventPlanner()`
 - Input: event_type, guest_count, budget_cents, city, categories_needed (e.g., catering, photography)
@@ -836,7 +836,7 @@ _Multi-vendor shortlist for events_
 **Agent S5: Community Spend Insights**  
 _Personal spend analytics from receipts_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: User opens `/account/community-spend`
 - File: `lib/ai/agents/shopper.ts` → `communitySpendInsights()`
 - Input: user's aggregate category totals (no PII; no individual transaction details): `{ restaurant: 340_00, beauty: 120_00, retail: 80_00 }`
@@ -876,7 +876,7 @@ ALTER TABLE profiles
 **Agent C1: Life Shift Advisor**  
 _"I want to shift my [category] spending to Black-owned" → a transition plan_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: User selects a category on `/account/life-shift`
 - File: `lib/ai/agents/companion.ts` → `lifeShiftAdvisor()`
 - Input: `{ category, city, radius_miles, saved_listing_ids: uuid[], spend_categories: string[] }` — no PII
@@ -886,7 +886,7 @@ _"I want to shift my [category] spending to Black-owned" → a transition plan_
 **Agent C2: Everyday Basket Builder**  
 _Maps a weekly shopping list to Black-owned businesses near the user_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User opens `/account/basket` and enters item categories needed this week
 - File: `lib/ai/agents/companion.ts` → `everydayBasketBuilder()`
 - Input: `{ item_categories: string[], city, radius_miles, available_listing_ids: uuid[] }` — listing IDs pre-filtered by city + radius server-side
@@ -897,7 +897,7 @@ _Maps a weekly shopping list to Black-owned businesses near the user_
 **Agent C3: Local Life Concierge**  
 _Daily personalized picks based on behavior + location_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: User opens app / `/account/recommendations` refreshes (at most once per 24h per user)
 - File: `lib/ai/agents/companion.ts` → `localLifeConcierge()`
 - Input: `{ saved_listing_ids: uuid[], top_searched_categories: string[] (anon), city, hour_of_day: number, shift_categories: string[] }` — no user_id, no search text
@@ -908,7 +908,7 @@ _Daily personalized picks based on behavior + location_
 **Agent C4: Provider Matcher**  
 _Finds Black-owned doctors, lawyers, accountants, childcare, and other service providers_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: User selects a provider type on `/discover/providers/[type]`
 - File: `lib/ai/agents/companion.ts` → `providerMatcher()`
 - Input: `{ provider_type, city, preferences: string (freeform, ≤100 chars, e.g., "accepting new patients"), candidate_listing_ids: uuid[] }` — candidate IDs pre-filtered by `listing_type` + city server-side
@@ -919,7 +919,7 @@ _Finds Black-owned doctors, lawyers, accountants, childcare, and other service p
 **Agent C5: Experience Builder**  
 _Plans a full occasion with a complete Black-owned vendor lineup_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: User fills "Plan an experience" form (expanded from existing Event Planner agent)
 - File: `lib/ai/agents/companion.ts` → `experienceBuilder()`
 - Input: `{ occasion_type, date_description (e.g., "summer Saturday"), guest_count, budget_cents, city, vendor_categories_needed: string[] }` — no personal details
@@ -933,7 +933,7 @@ _Plans a full occasion with a complete Black-owned vendor lineup_
 **Agent B1: Page Builder**  
 _Drafts description + tagline from business name + category_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Owner starts business submission or clicks "Get AI help" in editor
 - File: `lib/ai/agents/business.ts` → `pageBuilder()`
 - Input: business_name, category_name, city_name, owner_notes (optional, ≤200 chars)
@@ -943,7 +943,7 @@ _Drafts description + tagline from business name + category_
 **Agent B2: Listing Optimizer**  
 _Checklist of 12 completeness gaps + improvement copy_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Owner opens `/dashboard/pages/[entityId]/ai-suggestions`
 - File: `lib/ai/agents/business.ts` → `listingOptimizer()`
 - Input: listing completeness flags (12 boolean checks: has_description, has_hours, has_logo, has_gallery, has_social, has_cta, has_tagline, has_meta_title, has_meta_description, has_phone, has_website, has_services)
@@ -953,7 +953,7 @@ _Checklist of 12 completeness gaps + improvement copy_
 **Agent B3: SEO & Visibility Coach**  
 _Generates SEO meta title + description_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Owner clicks "Optimize SEO" in SEO section of editor
 - File: `lib/ai/agents/business.ts` → `seoCoach()`
 - Input: listing_name, category_name, city_name, current_meta_title (if any), current_meta_description (if any)
@@ -963,7 +963,7 @@ _Generates SEO meta title + description_
 **Agent B4: Social Caption Generator**  
 _Platform-specific captions for sharing_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Owner clicks "Generate captions" in Social section
 - File: `lib/ai/agents/business.ts` → `socialCaption()`
 - Input: listing_name, tagline, category_name, city_name
@@ -973,7 +973,7 @@ _Platform-specific captions for sharing_
 **Agent B5: Marketplace Merchandising**  
 _Improves product/service listing copy_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Owner clicks "Improve with AI" on product/service edit page
 - File: `lib/ai/agents/business.ts` → `marketplaceMerchandising()`
 - Input: product_name, current_description (≤500 chars), price_display_text, category_name
@@ -983,7 +983,7 @@ _Improves product/service listing copy_
 **Agent B6: Review Response Drafter**  
 _Professional draft response to customer review_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: New published review appears in owner's review queue
 - File: `lib/ai/agents/business.ts` → `reviewResponseDrafter()`
 - Input: review_text (the review content), listing_name, listing_category (no reviewer name/ID)
@@ -993,7 +993,7 @@ _Professional draft response to customer review_
 **Agent B7: Analytics Explainer**  
 _Weekly analytics summary in plain language_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: Owner opens analytics tab; runs at most once per week per listing
 - File: `lib/ai/agents/business.ts` → `analyticsExplainer()`
 - Input: `{ page_views_7d, page_views_30d, cta_clicks_7d, saves_7d, top_search_terms: string[] (no PII) }`
@@ -1007,7 +1007,7 @@ _Weekly analytics summary in plain language_
 **Agent A1: Directory Curator**  
 _Nightly quality scoring + moderation queue flagging_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Nightly Supabase Edge Function cron (00:30 UTC)
 - File: `supabase/functions/directory-curator/index.ts` (new)
 - Input: Batch of listings with completeness_score < 40 (no user data): `[{ listing_id, name, category, completeness_score, missing_fields }]`
@@ -1017,7 +1017,7 @@ _Nightly quality scoring + moderation queue flagging_
 **Agent A2: Verification Support**  
 _Pre-screens claim submissions for admin_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Admin opens a claim review at `/admin/claims/[id]`
 - File: `lib/ai/agents/admin.ts` → `verificationSupport()`
 - Input: Claim submission fields only (role, relationship_to_business, verification_statement) — document images NEVER passed
@@ -1027,7 +1027,7 @@ _Pre-screens claim submissions for admin_
 **Agent A3: Collection Builder**  
 _Suggests listings for curated collections_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Admin clicks "Get AI suggestions" when creating a collection
 - File: `lib/ai/agents/admin.ts` → `collectionBuilder()`
 - Input: collection_theme (admin-typed text), city_filter (optional), existing_listing_ids_in_collection
@@ -1037,7 +1037,7 @@ _Suggests listings for curated collections_
 **Agent A4: Guide Writer**  
 _Drafts city guide section copy_
 
-- Model: Claude Sonnet 4.6
+- Model: Claude Haiku 5.5 (founder, 2026-10-15; was Sonnet 4.6)
 - Trigger: Admin clicks "Draft this section" in guide editor
 - File: `lib/ai/agents/admin.ts` → `guideWriter()`
 - Input: city_name, section_topic (e.g., "Best breakfast spots"), featured_listing_names[] (up to 5)
@@ -1047,7 +1047,7 @@ _Drafts city guide section copy_
 **Agent A5: Social Media Agent**  
 _Auto-drafts platform posts for new verified listings_
 
-- Model: Claude Haiku 4.5
+- Model: Claude Haiku 5.5
 - Trigger: Listing `trust_tier` updated to 'verified' or 'certified' (webhook or DB trigger)
 - File: `lib/ai/agents/admin.ts` → `socialMediaAgent()`
 - Input: listing_name, category_name, city_name, tagline (if set)

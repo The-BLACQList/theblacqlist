@@ -6,7 +6,7 @@ import { loadGenerateContext } from '@/lib/ai/context'
 import { generate, RATE_LIMIT_PER_LISTING_24H } from '@/lib/ai/provider'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
-import { canAccess } from '@/lib/stripe/features'
+import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { createClient } from '@/lib/supabase/server'
 
 export type GenerateSuggestionState =
@@ -20,12 +20,13 @@ export type GenerateSuggestionState =
  * Four things must be true before a single character is generated, checked in
  * this order because each is cheaper than the next: the feature is switched on,
  * the agent exists, the user owns the listing, and the listing's tier includes
- * AI suggestions. Ownership is checked here — `generate()` trusts its caller and
+ * AI suggestions. The plan's monthly allowance is passed to `generate()`, which
+ * enforces it on paid calls. Ownership is checked here — `generate()` trusts its caller and
  * writes with the service role, so this function is the authorization boundary.
  *
- * With `MODEL_BY_TIER` unresolved this always runs the mock path. The returned
- * `provider` is passed back so the UI can label the result honestly rather than
- * assuming which one ran.
+ * Runs the mock path unless `ANTHROPIC_API_KEY` and `AI_MONTHLY_CEILING_USD`
+ * are both set (see `resolveProvider`). The returned `provider` is passed back
+ * so the UI can label the result honestly rather than assuming which one ran.
  */
 export async function generateSuggestionAction(
   _prev: GenerateSuggestionState,
@@ -69,6 +70,7 @@ export async function generateSuggestionAction(
     listingId,
     triggeredBy: owner.user.id,
     context,
+    monthlyQuota: aiQuota(listing.tier),
   })
 
   if (!result.ok) {
@@ -77,6 +79,13 @@ export async function generateSuggestionAction(
         return {
           error: `You've used all ${RATE_LIMIT_PER_LISTING_24H} suggestions for this page today. Try again tomorrow.`,
         }
+      case 'quota_reached':
+        return {
+          error: `You've used all ${result.quota} suggestions your plan includes for this page in the last 30 days.`,
+        }
+      case 'paused':
+        // The monthly spending ceiling is reached, or could not be checked.
+        return { error: 'AI suggestions are paused for now. Please try again later.' }
       case 'rejected':
         // The reason code is not shown. "contains_phone" is meaningful to us and
         // alarming to an owner who did nothing wrong; the audit row keeps it.

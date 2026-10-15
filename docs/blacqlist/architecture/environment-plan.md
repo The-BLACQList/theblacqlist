@@ -233,7 +233,7 @@ Live mode must never be set as a variable in local or staging environments.
 
 ### V2 additions (Anthropic, Algolia)
 
-- `ANTHROPIC_API_KEY`: Set in production only when the AI-powered feature is ready to ship. Configure rate limits in the Anthropic Console before enabling.
+- `ANTHROPIC_API_KEY` + `AI_MONTHLY_CEILING_USD` (2026-10-15): both are needed for a real call; either one missing means mock. Staging first. Production only after the privacy notice naming Anthropic takes effect. Set the Anthropic Console spend limit at or just above the ceiling.
 - `ALGOLIA_ADMIN_API_KEY`: Set in production when the search indexing pipeline is ready. The client-safe search key (`NEXT_PUBLIC_ALGOLIA_SEARCH_KEY`) is set when Algolia search is surfaced to users.
 
 ### Production data rule
@@ -295,7 +295,8 @@ Variables are organized by service group. Phase callouts indicate when each vari
 
 | Variable            | Local | Staging | Production | Description                                                                                                                    | Where to get it              | Server only?      |
 | ------------------- | ----- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- | ----------------- |
-| `ANTHROPIC_API_KEY` | No    | No      | Yes        | Anthropic Claude API key. Production only — AI features ship in V2. Configure rate limits in Anthropic Console before enabling | Anthropic Console → API Keys | Yes — Server only |
+| `ANTHROPIC_API_KEY` | No    | Yes (testing) | After notice date | Anthropic Claude API key. Real calls need this AND `AI_MONTHLY_CEILING_USD`; otherwise mock | Anthropic Console → API Keys | Yes — Server only |
+| `AI_MONTHLY_CEILING_USD` | No | Yes (with key) | With key | Monthly AI spend ceiling in USD, a positive number. At the ceiling, requests pause until next month (`lib/ai/spend.ts`) | Founder decision | Yes — Server only |
 
 ### Group H: Search — Algolia (V2)
 

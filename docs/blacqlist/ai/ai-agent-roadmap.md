@@ -89,7 +89,7 @@ All 6 gates must be cleared:
 - Error handling: failed API calls set `status = 'failed'`; no suggestion row created on failure
 - Rate limiting: Redis (Upstash) or DB-based counter enforcing 10 requests/listing/24h
 
-**Model selection:** Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) for all suggestion agents — lowest cost, sufficient quality for short-form copy. Switch to Sonnet for guide writing and analytics summaries.
+**Model selection (founder, GATE-SPEND 2026-10-15):** Claude Haiku 5.5 (`claude-haiku-5-5`) for every agent, both tiers in `MODEL_BY_TIER`. $0.10 / $0.50 per million input / output tokens; the worst case per call is about $0.002. No Sonnet for now. Revisit only if a specific agent's drafts are measurably weak.
 
 **Agent deployment order (V2 provider):**
 
