@@ -541,3 +541,63 @@ describe('TourRail tester number and the owner without a page', () => {
     expect(src).toContain('once your page is live')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// G. A finished step still opens onto its instructions and the tester's note
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Founder, 2026-10-15: "once a test tour item is completed, I can no longer
+// drop down the instructions for each or review my response." The done panel
+// was empty because everything in it was tied to act/retry/reflect. Source-text
+// guards again (no jsdom here): they catch a deletion, not a behaviour change.
+
+describe('done state — a finished row can be reviewed and edited', () => {
+  const strip = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+  const read = (rel: string) => strip(readFileSync(path.resolve(process.cwd(), rel), 'utf8'))
+  const row = () => read('components/tour/TourStepRow.tsx')
+  const review = () => read('components/tour/TourDoneStepReview.tsx')
+  const form = () => read('components/tour/TourReflectionForm.tsx')
+
+  it('renders the review panel for done rows', () => {
+    expect(row()).toMatch(/\{done\s*&&\s*\(\s*<TourDoneStepReview/)
+  })
+
+  it('shows the instructions and the saved note', () => {
+    const src = review()
+    expect(src).toContain('step.instructions')
+    expect(src).toContain('guide.map')
+    expect(src).toMatch(/\{note\}/)
+  })
+
+  it('offers an edit that starts from the saved note', () => {
+    const src = review()
+    expect(src).toContain('Edit your note')
+    expect(src).toMatch(/initialText=\{note \?\? ''\}/)
+    expect(src).toContain('onCancel={onCancel}')
+  })
+
+  it('the form starts from initialText and offers Cancel only when editing', () => {
+    const src = form()
+    expect(src).toContain('useState(initialText)')
+    expect(src).toMatch(/onCancel !== undefined &&/)
+  })
+
+  it('moves focus somewhere meaningful when the edit form closes', () => {
+    // The form unmounts with focus inside it. Without this, focus falls to
+    // <body> and a keyboard user is dropped out of the rail.
+    const src = row()
+    expect(src).toContain("pendingFocus.current = 'status'")
+    expect(src).toContain("pendingFocus.current = 'edit'")
+    expect(review()).toContain('role="status"')
+  })
+
+  it('uses no em dashes in the new visible copy', () => {
+    const src = review()
+    const visible = src.match(/>[^<>{}]+</g) ?? []
+    for (const text of visible) expect(text).not.toContain('\u2014')
+  })
+})

@@ -117,6 +117,8 @@ interface StepPayload {
   status: 'done' | 'reflect' | 'act' | 'retry'
   prompt: string | null
   message: string | null
+  instructions: string
+  reflection: string | null
 }
 
 interface TourPayload {
@@ -404,5 +406,44 @@ describe('GET /api/tour/state — final_reflection unlocks last', () => {
   it('done once its own reflection is substantive', async () => {
     h.state.rows = [{ step_key: 'final_reflection', reflection: GOOD }]
     expect((await step('final_reflection')).status).toBe('done')
+  })
+})
+
+// A finished step must still open onto something (founder, 2026-10-15: "once a
+// test tour item is completed, I can no longer drop down the instructions for
+// each or review my response"). The route sends both at every status.
+describe('GET /api/tour/state — a done step can be reviewed', () => {
+  it('sends the saved note back on a done gated step', async () => {
+    h.state.rows = [{ step_key: 'search_ran', reflection: GOOD }]
+    const s = await step('search_ran')
+    expect(s.status).toBe('done')
+    expect(s.reflection).toBe(GOOD)
+    expect(s.prompt).toBe(TOUR_STEP_COPY.search_ran.prompt)
+  })
+
+  it('sends a too-short note back so the reflect form starts from it', async () => {
+    h.state.rows = [{ step_key: 'search_ran', reflection: 'ok' }]
+    const s = await step('search_ran')
+    expect(s.status).toBe('reflect')
+    expect(s.reflection).toBe('ok')
+  })
+
+  it('sends no note for un-gated steps or steps with no row', async () => {
+    h.state.rows = [{ step_key: 'listing_opened', reflection: null }]
+    expect((await step('listing_opened')).reflection).toBeNull()
+    expect((await step('search_ran')).reflection).toBeNull()
+  })
+
+  it.each(TOUR_STEPS)('%s: instructions are sent at every status', async (key) => {
+    const s = await step(key)
+    expect(s.instructions).toBe(TOUR_STEP_COPY[key].action)
+  })
+
+  it('keeps the instructions on a done step', async () => {
+    h.state.rows = [{ step_key: 'map_opened', reflection: null }]
+    const s = await step('map_opened')
+    expect(s.status).toBe('done')
+    expect(s.message).toBeNull()
+    expect(s.instructions).toBe(TOUR_STEP_COPY.map_opened.action)
   })
 })

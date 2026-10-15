@@ -49,6 +49,10 @@ export interface TourStepState {
   status: TourStepStatus
   prompt: string | null
   message: string | null
+  /** What the step asks for, at every status (a done row still shows it). */
+  instructions: string
+  /** The tester's saved note for a gated step, or null. */
+  reflection: string | null
 }
 
 export interface TourState {

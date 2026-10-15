@@ -49,6 +49,12 @@ interface TourStepState {
   prompt: string | null
   /** Resolved copy for 'act' and 'retry'; null at 'done' and 'reflect'. */
   message: string | null
+  /** What the step asks the tester to do, at every status, so a finished row
+   *  still shows its instructions when the tester opens it again. */
+  instructions: string
+  /** The tester's saved note for a gated step, or null. Sent back so a done
+   *  row can show it and the edit form can start from it. */
+  reflection: string | null
 }
 
 interface CompletionRow {
@@ -62,17 +68,21 @@ function hasSubstantiveReflection(row: CompletionRow | undefined): boolean {
 
 function stepState(
   key: TourStepKey,
-  status: TourStepStatus
+  status: TourStepStatus,
+  row?: CompletionRow
 ): TourStepState {
   const copy = TOUR_STEP_COPY[key]
+  const gated = isReflectionGated(key)
   return {
     key,
     title: copy.title,
-    gated: isReflectionGated(key),
+    gated,
     status,
     prompt: copy.prompt,
     message:
       status === 'act' ? copy.action : status === 'retry' ? copy.retry : null,
+    instructions: copy.action,
+    reflection: gated ? (row?.reflection ?? null) : null,
   }
 }
 
@@ -84,9 +94,9 @@ function derivedStepState(
   row: CompletionRow | undefined,
   evidence: TourReadResult<boolean>
 ): TourStepState {
-  if (hasSubstantiveReflection(row)) return stepState(key, 'done')
-  if (!evidence.ok) return stepState(key, 'retry')
-  return stepState(key, evidence.value ? 'reflect' : 'act')
+  if (hasSubstantiveReflection(row)) return stepState(key, 'done', row)
+  if (!evidence.ok) return stepState(key, 'retry', row)
+  return stepState(key, evidence.value ? 'reflect' : 'act', row)
 }
 
 export async function GET() {
@@ -126,8 +136,8 @@ export async function GET() {
         // Gated; its evidence is its own witness row, already in hand.
         case 'search_ran': {
           const row = rows.get(key)
-          if (hasSubstantiveReflection(row)) return stepState(key, 'done')
-          return stepState(key, row ? 'reflect' : 'act')
+          if (hasSubstantiveReflection(row)) return stepState(key, 'done', row)
+          return stepState(key, row ? 'reflect' : 'act', row)
         }
         // Un-gated progress ticks: the witness row is the whole step.
         case 'listing_opened':
@@ -143,11 +153,11 @@ export async function GET() {
         // display state, not the gate.)
         case 'final_reflection': {
           const row = rows.get(key)
-          if (hasSubstantiveReflection(row)) return stepState(key, 'done')
+          if (hasSubstantiveReflection(row)) return stepState(key, 'done', row)
           const priorsDone = (['search_ran', 'listing_saved', 'review_or_correction'] as const).every(
             (prior) => hasSubstantiveReflection(rows.get(prior))
           )
-          return stepState(key, priorsDone ? 'reflect' : 'act')
+          return stepState(key, priorsDone ? 'reflect' : 'act', row)
         }
       }
     })
