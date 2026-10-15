@@ -22,6 +22,7 @@ import { ArrowRight, Check, ChevronDown, Crosshair, Pencil } from 'lucide-react'
 import {
   TOUR_STEP_TARGETS,
   planSpotlight,
+  revisitButton,
   travelButton,
   travelHref,
   type LastListing,
@@ -192,10 +193,13 @@ export function TourStepRow({
   const target = targetFor(step.key)
   // Where the travel button goes and what it says: the listing the tester was
   // just on when there is one that can count, otherwise the target's own trip.
+  // A finished step keeps its trip (revisitButton) so the tester can go back.
   const trip =
     target === undefined
       ? null
-      : travelButton(target, awayFrom, { last: lastListing, ownListingId, pathname })
+      : done
+        ? revisitButton(target, pathname)
+        : travelButton(target, awayFrom, { last: lastListing, ownListingId, pathname })
   const tripHref = trip?.href ?? null
 
   // A plain function, not useCallback: the React Compiler memoizes it, and a
@@ -363,6 +367,17 @@ export function TourStepRow({
               onCancel={cancelEdit}
               onSaved={handleEdited}
             />
+          )}
+
+          {done && trip !== null && (
+            <button
+              type="button"
+              onClick={travel}
+              className="mt-3 inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-amber-gold/60 px-4 py-1.5 text-left font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+            >
+              {trip.label}
+              <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+            </button>
           )}
         </div>
       )}

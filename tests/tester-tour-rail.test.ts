@@ -595,6 +595,12 @@ describe('done state — a finished row can be reviewed and edited', () => {
     expect(review()).toContain('role="status"')
   })
 
+  it('a finished page step keeps a button back to its page', () => {
+    const src = row()
+    expect(src).toMatch(/done\s*\?\s*revisitButton\(target, pathname\)/)
+    expect(src).toMatch(/\{done && trip !== null && \(\s*<button[\s\S]*?onClick=\{travel\}/)
+  })
+
   it('uses no em dashes in the new visible copy', () => {
     const src = review()
     const visible = src.match(/>[^<>{}]+</g) ?? []
