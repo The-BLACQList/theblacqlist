@@ -269,6 +269,7 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               socialYoutube={d?.social_youtube ?? null}
               socialTwitter={d?.social_twitter ?? null}
               locked={!canAccess(tier, 'social_links')}
+              hiddenOnPage={!data.socialsShowOnPage}
               showUpgrade={showUpgrade}
             />
           </Anchor>

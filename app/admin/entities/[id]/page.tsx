@@ -39,7 +39,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, category_id, ownership_label, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
+      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, admin_notes, category_id, ownership_label, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -101,6 +101,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
               <Row label="Status" value={<AdminStatusBadge status={listing.status} />} />
               <Row label="Trust tier" value={<AdminStatusBadge status={listing.trust_tier} />} />
               <Row label="Source" value={listing.source} />
+              {listing.admin_notes && <Row label="Notes" value={listing.admin_notes} />}
               <Row
                 label="Submitted by"
                 value={submitterLabel ?? (listing.submitted_by ? UNKNOWN_USER_LABEL : null)}

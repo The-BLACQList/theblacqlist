@@ -17,6 +17,9 @@ const h = vi.hoisted(() => ({
     categories: {} as Record<string, Record<string, unknown>>,
     categorySelects: [] as string[],
     categoryError: null as null | { code: string; message: string },
+    serviceUpdates: [] as Array<{ table: string; row: Record<string, unknown>; filters: unknown[][] }>,
+    geocodeCalls: [] as Array<Record<string, unknown>>,
+    geocodeResult: { lat: 33.75, lng: -84.38 } as null | { lat: number; lng: number },
   },
 }))
 
@@ -69,6 +72,28 @@ vi.mock('@/lib/supabase/server', () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'user-1' } } }) },
     from: (table: string) => builder(table),
   }),
+  createServiceClient: () => ({
+    from: (table: string) => ({
+      update: (row: Record<string, unknown>) => {
+        const entry = { table, row, filters: [] as unknown[][] }
+        h.state.serviceUpdates.push(entry)
+        const chain = {
+          eq: (...args: unknown[]) => {
+            entry.filters.push(args)
+            return chain
+          },
+          then: (resolve: (v: unknown) => unknown) => resolve({ error: null }),
+        }
+        return chain
+      },
+    }),
+  }),
+}))
+vi.mock('@/lib/listings/geocode', () => ({
+  geocodeAddress: async (input: Record<string, unknown>) => {
+    h.state.geocodeCalls.push(input)
+    return h.state.geocodeResult
+  },
 }))
 vi.mock('@/lib/security/rate-limit', () => ({ checkRateLimit: async () => true }))
 vi.mock('@/lib/analytics/server', () => ({ trackServerEvent: () => undefined }))
@@ -113,6 +138,9 @@ beforeEach(() => {
   h.state.cityFilters = []
   h.state.categorySelects = []
   h.state.categoryError = null
+  h.state.serviceUpdates = []
+  h.state.geocodeCalls = []
+  h.state.geocodeResult = { lat: 33.75, lng: -84.38 }
   setCategory('bakeries', 'food-dining')
 })
 
@@ -263,5 +291,116 @@ describe('createListingAction, creator guards', () => {
     h.state.categories = {}
     const res = await createListingAction(null, form())
     expect(res).toMatchObject({ fieldErrors: { category_id: expect.stringContaining('Invalid') } })
+  })
+})
+
+// Ticket 127: what the site import fills in has to survive the draft save.
+const HOURS = {
+  monday: { open: '08:00', close: '17:00', closed: false },
+  tuesday: { open: '08:00', close: '17:00', closed: false },
+  wednesday: { open: '08:00', close: '17:00', closed: false },
+  thursday: { open: '08:00', close: '17:00', closed: false },
+  friday: { open: '08:00', close: '19:00', closed: false },
+  saturday: { open: '09:00', close: '14:00', closed: false },
+  sunday: { open: '09:00', close: '17:00', closed: true },
+}
+
+function detailsRow() {
+  const row = h.state.inserts.listing_details_business?.[0]
+  if (!row) throw new Error('no details insert')
+  return row
+}
+
+describe('createListingAction, site import fields', () => {
+  it('saves Free social links instead of refusing them', async () => {
+    const res = await createListingAction(
+      null,
+      form({ social_instagram: 'https://instagram.com/sweetauburnbread' })
+    )
+    expect(res).toMatchObject({ success: true })
+    expect(detailsRow().social_instagram).toBe('https://instagram.com/sweetauburnbread')
+  })
+
+  it('still refuses a social link that is not a web address', async () => {
+    const res = await createListingAction(null, form({ social_instagram: '@sweetauburnbread' }))
+    expect(res).toMatchObject({ fieldErrors: { social_instagram: expect.any(String) } })
+  })
+
+  it('saves the street address and ZIP with a map pin', async () => {
+    const res = await createListingAction(
+      null,
+      form({ address_line_1: '123 Auburn Ave NE', zip: '30303', city_text: 'Atlanta', state_text: 'GA' })
+    )
+    expect(res).toMatchObject({ success: true })
+    expect(detailsRow()).toMatchObject({
+      address_line_1: '123 Auburn Ave NE',
+      zip: '30303',
+      lat: 33.75,
+      lng: -84.38,
+    })
+    expect(h.state.geocodeCalls).toEqual([
+      { address: '123 Auburn Ave NE', city: 'Atlanta', state: 'GA', zip: '30303' },
+    ])
+  })
+
+  it('saves the address without a pin when geocoding finds nothing', async () => {
+    h.state.geocodeResult = null
+    await createListingAction(null, form({ address_line_1: '123 Auburn Ave NE' }))
+    expect(detailsRow()).toMatchObject({ address_line_1: '123 Auburn Ave NE', lat: null, lng: null })
+  })
+
+  it('keeps an online-only business free of a street address', async () => {
+    await createListingAction(
+      null,
+      form({ location_type: 'virtual', address_line_1: '123 Auburn Ave NE', zip: '30303' })
+    )
+    expect(detailsRow().address_line_1).toBeUndefined()
+    expect(h.state.geocodeCalls).toEqual([])
+  })
+
+  it('refuses a ZIP that is not five digits', async () => {
+    const res = await createListingAction(null, form({ zip: '3030' }))
+    expect(res).toMatchObject({ fieldErrors: { zip: expect.any(String) } })
+  })
+
+  it('saves hours in the shape the open-now display reads', async () => {
+    await createListingAction(null, form({ hours: JSON.stringify(HOURS) }))
+    expect(detailsRow().hours).toEqual(HOURS)
+  })
+
+  it('refuses hours that are missing a day', async () => {
+    const { sunday: _sunday, ...sixDays } = HOURS
+    const res = await createListingAction(null, form({ hours: JSON.stringify(sixDays) }))
+    expect(res).toMatchObject({ fieldErrors: { hours: expect.stringContaining('Check the times') } })
+    expect(h.state.inserts.listings).toBeUndefined()
+  })
+
+  it('refuses hours that are not JSON', async () => {
+    const res = await createListingAction(null, form({ hours: 'mon 8-5' }))
+    expect(res).toMatchObject({ fieldErrors: { hours: expect.any(String) } })
+  })
+
+  it('notes the imported site for the review queue', async () => {
+    await createListingAction(null, form({ imported_from: 'SweetAuburnBread.com' }))
+    expect(h.state.serviceUpdates).toEqual([
+      {
+        table: 'listings',
+        row: { admin_notes: 'Imported from sweetauburnbread.com' },
+        filters: [
+          ['id', 'listing-1'],
+          ['owner_user_id', 'user-1'],
+        ],
+      },
+    ])
+  })
+
+  it('ignores an imported_from value that is not a host name', async () => {
+    await createListingAction(null, form({ imported_from: 'https://evil.test/<script>' }))
+    expect(h.state.serviceUpdates).toEqual([])
+  })
+
+  it('writes no note when the import was not used', async () => {
+    await createListingAction(null, form())
+    expect(h.state.serviceUpdates).toEqual([])
   })
 })

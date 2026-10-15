@@ -23,6 +23,7 @@
 // =============================================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import sharp from 'sharp'
 
 const h = vi.hoisted(() => {
   const state: {
@@ -47,12 +48,14 @@ const h = vi.hoisted(() => {
     uploadBucket: string | null
     uploadPath: string | null
     uploadContentType: string | null
+    uploadedBytes: Buffer | null
     inserted: Record<string, unknown> | null
     removed: { bucket: string; paths: string[] }[]
   } = {
     uploadBucket: null,
     uploadPath: null,
     uploadContentType: null,
+    uploadedBytes: null,
     inserted: null,
     removed: [],
   }
@@ -78,7 +81,8 @@ const h = vi.hoisted(() => {
     storage: {
       from(bucket: string) {
         return {
-          async upload(path: string, _body: unknown, opts: { contentType: string }) {
+          async upload(path: string, body: unknown, opts: { contentType: string }) {
+            calls.uploadedBytes = Buffer.isBuffer(body) ? body : null
             calls.uploadBucket = bucket
             calls.uploadPath = path
             calls.uploadContentType = opts.contentType
@@ -151,11 +155,21 @@ const MAGIC: Record<string, number[]> = {
   'application/pdf': [0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34],
 }
 
+// Listing photos are decoded and re-encoded (ticket 127), so an image body must
+// be a real image. These are 4x4 pixels, padded with zeros when a case needs a
+// file of a given size; decoders stop at the end of the image data.
+const tiny = () => sharp({ create: { width: 4, height: 4, channels: 3, background: '#c9a227' } })
+const REAL: Record<string, Uint8Array> = {
+  'image/jpeg': new Uint8Array(await tiny().jpeg().toBuffer()),
+  'image/png': new Uint8Array(await tiny().png().toBuffer()),
+  'image/webp': new Uint8Array(await tiny().webp().toBuffer()),
+}
+
 function file(type = 'image/jpeg', name = 'photo.jpg', bytes = 3): File {
   // `bytes: 0` is honoured literally — the empty-file case is a real assertion,
   // not a request for a minimum-size file.
   if (bytes === 0) return new File([], name, { type })
-  const magic = MAGIC[type] ?? []
+  const magic = REAL[type] ?? MAGIC[type] ?? []
   const body = new Uint8Array(Math.max(bytes, magic.length))
   body.set(magic)
   return new File([body], name, { type })
@@ -216,6 +230,7 @@ beforeEach(() => {
   h.calls.uploadBucket = null
   h.calls.uploadPath = null
   h.calls.uploadContentType = null
+  h.calls.uploadedBytes = null
   h.calls.inserted = null
   h.calls.removed = []
 })
@@ -358,6 +373,27 @@ describe('the declared type has to match the bytes (ledger 6.3)', () => {
     )
     expect((await body(res)).code).toBe('FILE_CONTENT_MISMATCH')
     expect(res.status).toBe(400)
+  })
+
+  it('refuses a photo whose first bytes are right but whose image data is not', async () => {
+    // The signature check alone passes this; decoding it is what fails.
+    const fake = new File([new Uint8Array([...MAGIC['image/jpeg']!, ...new Array(256).fill(0)])], 'photo.jpg', {
+      type: 'image/jpeg',
+    })
+    const res = await POST(listingMedia({ file: fake }))
+    expect(res.status).toBe(400)
+    expect(await body(res)).toEqual({
+      error: 'We could not read that image. Re-save it as a JPEG or PNG and try again.',
+      code: 'INVALID_IMAGE',
+    })
+    expect(h.calls.uploadBucket).toBeNull()
+  })
+
+  it('stores listing photos without their EXIF data', async () => {
+    const withGps = await tiny().withExif({ IFD0: { Make: 'TestPhone' } }).jpeg().toBuffer()
+    await POST(listingMedia({ file: new File([new Uint8Array(withGps)], 'photo.jpg', { type: 'image/jpeg' }) }))
+    expect(h.calls.uploadBucket).toBe('listing-media')
+    expect(h.calls.uploadedBytes?.includes(Buffer.from('TestPhone'))).toBe(false)
   })
 
   it('accepts a genuine WebP, whose marker sits at byte 8 rather than byte 0', async () => {

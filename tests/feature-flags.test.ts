@@ -204,6 +204,7 @@ describe('getEnabledFeatures', () => {
       'ocrExtraction',
       'paidPostings',
       'postingSubmissions',
+      'siteImport',
       'testerTour',
     ])
   })

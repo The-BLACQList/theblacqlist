@@ -6,6 +6,8 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { createListingAction } from '@/lib/actions/listings/createListing'
+import { siteFormFields, type SiteDraft } from '@/lib/import/siteDraft'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
 import type { GuideCategory } from '@/lib/categories/sorting-guide'
 import { OWNERSHIP_LABEL_META } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
@@ -29,11 +31,14 @@ import { LivePagePreview, type PreviewPart } from '@/components/listings/LivePag
 import { CtaStep } from './CtaStep'
 import { FitStep } from './FitStep'
 import { NameStep } from './NameStep'
+import { SiteImportStep } from './SiteImportStep'
 import { AboutStep, AttestStep, OwnershipStep, TaglineStep } from './TextSteps'
 import { WhereStep, type CityOption } from './WhereStep'
 
 // The rules-first quick start (ticket 126): eight short questions beside a live
 // page, then "Save my draft" creates the draft and opens the finish view.
+// With FEATURE_SITE_IMPORT on, step 0 offers to bring in the owner's own site
+// first (ticket 127); what they keep rides along in the draft as `site`.
 
 const DRAFT_KEY = 'draft-add-business-v2'
 
@@ -53,24 +58,39 @@ interface Props {
   cities: readonly CityOption[]
   /** The owner's sign-in email: the page's contact email and the "Send a message" default. */
   email: string
+  /** FEATURE_SITE_IMPORT: start with "Have a website or link page?". */
+  siteImport?: boolean
 }
+
+type Stage = 'site' | 'steps'
 
 interface Draft {
   answers: QuickStartAnswers
   stepIndex: number
+  /** Missing on drafts saved before step 0 existed. */
+  stage?: Stage
+  site: SiteDraft | null
 }
 
 function readDraft(): Draft {
   try {
     const raw = window.localStorage.getItem(DRAFT_KEY)
-    if (!raw) return { answers: EMPTY_ANSWERS, stepIndex: 0 }
+    if (!raw) return { answers: EMPTY_ANSWERS, stepIndex: 0, site: null }
     const parsed = JSON.parse(raw) as Partial<Draft>
     const stepIndex = Number.isInteger(parsed.stepIndex)
       ? Math.min(Math.max(parsed.stepIndex as number, 0), QUICK_STEPS.length - 1)
       : 0
-    return { answers: { ...EMPTY_ANSWERS, ...(parsed.answers ?? {}) }, stepIndex }
+    // An older draft already under way resumes at its step, not at step 0.
+    const stage: Stage | undefined =
+      parsed.stage === 'site' || parsed.stage === 'steps'
+        ? parsed.stage
+        : parsed.answers
+          ? 'steps'
+          : undefined
+    const site = parsed.site && typeof parsed.site.tempId === 'string' ? parsed.site : null
+    return { answers: { ...EMPTY_ANSWERS, ...(parsed.answers ?? {}) }, stepIndex, stage, site }
   } catch {
-    return { answers: EMPTY_ANSWERS, stepIndex: 0 }
+    return { answers: EMPTY_ANSWERS, stepIndex: 0, site: null }
   }
 }
 
@@ -87,11 +107,13 @@ export function QuickStart(props: Props) {
   return <QuickStartFlow {...props} />
 }
 
-function QuickStartFlow({ categories, cities, email }: Props) {
+function QuickStartFlow({ categories, cities, email, siteImport = false }: Props) {
   const router = useRouter()
   const [initial] = useState(readDraft)
   const [answers, setAnswers] = useState<QuickStartAnswers>(initial.answers)
   const [stepIndex, setStepIndex] = useState(initial.stepIndex)
+  const [stage, setStage] = useState<Stage>(siteImport ? (initial.stage ?? 'site') : 'steps')
+  const [site, setSite] = useState<SiteDraft | null>(siteImport ? initial.site : null)
   const [problem, setProblem] = useState<Missing | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -106,11 +128,11 @@ function QuickStartFlow({ categories, cities, email }: Props) {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, stepIndex }))
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, stepIndex, stage, site }))
     } catch {
       // Private mode or storage full. The flow still works, it just won't resume.
     }
-  }, [answers, stepIndex])
+  }, [answers, stepIndex, stage, site])
 
   useEffect(() => {
     if (navCount === 0) return
@@ -120,6 +142,11 @@ function QuickStartFlow({ categories, cities, email }: Props) {
   }, [navCount])
 
   function update(patch: Partial<QuickStartAnswers>) {
+    // Picking "Call" or "Visit our site" starts with what came from their site.
+    const input = patch.ctaType ? findCta(patch.ctaType)?.input : undefined
+    if (input === 'tel' && !patch.ctaUrl && site?.phone) patch = { ...patch, ctaUrl: site.phone }
+    if (patch.ctaType === 'visit' && !patch.ctaUrl && site?.website)
+      patch = { ...patch, ctaUrl: site.website }
     setAnswers((prev) => ({ ...prev, ...patch }))
     setFormError(null)
     // Clear the message once the owner starts fixing it.
@@ -143,7 +170,19 @@ function QuickStartFlow({ categories, cities, email }: Props) {
   }
 
   function back() {
+    if (stepIndex === 0 && siteImport) {
+      setStage('site')
+      setNavCount((n) => n + 1)
+      return
+    }
     goTo(Math.max(stepIndex - 1, 0))
+  }
+
+  function leaveSite(patch: Partial<QuickStartAnswers> | null, kept: SiteDraft | null) {
+    if (patch) setAnswers((prev) => ({ ...prev, ...patch }))
+    if (kept) setSite(kept)
+    setStage('steps')
+    goTo(0)
   }
 
   function submit() {
@@ -172,13 +211,15 @@ function QuickStartFlow({ categories, cities, email }: Props) {
     fd.set('cta_type', answers.ctaType)
     fd.set('cta_url', answers.ctaUrl.trim())
     if (cta?.input === 'tel') fd.set('phone', answers.ctaUrl.trim())
-    fd.set('email', email)
+    else if (site?.phone) fd.set('phone', site.phone)
+    fd.set('email', site?.email ?? email)
     fd.set('ownership_label', answers.ownership)
     fd.set('ownership_attested', 'true')
     if (answers.fit?.kind === 'request') {
       fd.set('category_request_name', answers.fit.proposedName.trim())
       fd.set('category_request_words', answers.fit.words.trim())
     }
+    if (site) for (const [key, value] of siteFormFields(site)) fd.set(key, value)
 
     startTransition(async () => {
       const result = await createListingAction(null, fd)
@@ -224,9 +265,10 @@ function QuickStartFlow({ categories, cities, email }: Props) {
       locationLabel: locationLabel(answers, cities),
       ownershipLabel: answers.ownership ? OWNERSHIP_LABEL_META[answers.ownership].label : null,
       ctaLabel: findCta(answers.ctaType)?.buttonLabel ?? null,
-      highlight: HIGHLIGHT[step],
+      coverUrl: resolveMediaPath(site?.coverPath),
+      highlight: stage === 'site' ? null : HIGHLIGHT[step],
     }
-  }, [answers, categories, cities, step])
+  }, [answers, categories, cities, step, stage, site])
 
   const stepProps = { answers, onChange: update, problem }
 
@@ -236,67 +278,88 @@ function QuickStartFlow({ categories, cities, email }: Props) {
         <LivePagePreview {...preview} compact />
       </div>
 
-      <form
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (isLast) submit()
-          else next()
-        }}
-        className="flex min-w-0 flex-col gap-6"
-        aria-labelledby="qs-step-title"
-      >
-        <Progress index={stepIndex} />
-
-        <div key={step} className="flex flex-col gap-5">
-          {step === 'ownership' && <OwnershipStep {...stepProps} />}
-          {step === 'name' && <NameStep {...stepProps} />}
-          {step === 'about' && <AboutStep {...stepProps} />}
-          {step === 'fit' && (
-            <FitStep {...stepProps} categories={categories} onPicked={() => goTo(stepIndex + 1)} />
-          )}
-          {step === 'where' && <WhereStep {...stepProps} cities={cities} />}
-          {step === 'cta' && <CtaStep {...stepProps} email={email} />}
-          {step === 'tagline' && <TaglineStep {...stepProps} />}
-          {step === 'attest' && <AttestStep {...stepProps} />}
+      {stage === 'site' ? (
+        <div className="min-w-0">
+          <SiteImportStep
+            answers={answers}
+            cities={cities}
+            signInEmail={email}
+            onDone={(patch, kept) => leaveSite(patch, kept)}
+            onSkip={() => leaveSite(null, null)}
+          />
         </div>
+      ) : (
+        <form
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (isLast) submit()
+            else next()
+          }}
+          className="flex min-w-0 flex-col gap-6"
+          aria-labelledby="qs-step-title"
+        >
+          <Progress index={stepIndex} />
 
-        {formError && (
-          <p
-            role="alert"
-            className="rounded-lg bg-red-50 px-4 py-3 font-subhead text-sm font-semibold text-red-700"
-          >
-            {formError}
-          </p>
-        )}
-
-        <div className="sticky bottom-0 -mx-4 flex items-center gap-3 border-t border-charcoal/10 bg-pale-lavender/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          {stepIndex > 0 && (
-            <button
-              type="button"
-              onClick={back}
-              disabled={pending}
-              className="inline-flex h-12 items-center gap-1.5 rounded-full px-4 font-subhead text-base font-semibold text-brand-black hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black disabled:opacity-50"
-            >
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              Back
-            </button>
-          )}
-          <button
-            type="submit"
-            disabled={pending}
-            className={cn(
-              'ml-auto inline-flex h-12 min-w-[9rem] items-center justify-center gap-2 rounded-full px-6 font-subhead text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2 disabled:opacity-70',
-              isLast
-                ? 'bg-amber-gold text-brand-black hover:brightness-95'
-                : 'bg-brand-black text-white hover:bg-charcoal'
+          <div key={step} className="flex flex-col gap-5">
+            {fromSiteTag(step, site, answers) && (
+              <p className="w-fit rounded-full bg-amber-gold/20 px-3 py-1 font-subhead text-xs font-semibold uppercase tracking-widest text-brand-black">
+                From your site. Check it over.
+              </p>
             )}
-          >
-            {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isLast ? (pending ? 'Saving…' : 'Save my draft') : 'Next'}
-          </button>
-        </div>
-      </form>
+            {step === 'ownership' && <OwnershipStep {...stepProps} />}
+            {step === 'name' && <NameStep {...stepProps} />}
+            {step === 'about' && <AboutStep {...stepProps} />}
+            {step === 'fit' && (
+              <FitStep
+                {...stepProps}
+                categories={categories}
+                onPicked={() => goTo(stepIndex + 1)}
+              />
+            )}
+            {step === 'where' && <WhereStep {...stepProps} cities={cities} />}
+            {step === 'cta' && <CtaStep {...stepProps} email={site?.email ?? email} />}
+            {step === 'tagline' && <TaglineStep {...stepProps} />}
+            {step === 'attest' && <AttestStep {...stepProps} />}
+          </div>
+
+          {formError && (
+            <p
+              role="alert"
+              className="rounded-lg bg-red-50 px-4 py-3 font-subhead text-sm font-semibold text-red-700"
+            >
+              {formError}
+            </p>
+          )}
+
+          <div className="sticky bottom-0 -mx-4 flex items-center gap-3 border-t border-charcoal/10 bg-pale-lavender/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+            {(stepIndex > 0 || siteImport) && (
+              <button
+                type="button"
+                onClick={back}
+                disabled={pending}
+                className="inline-flex h-12 items-center gap-1.5 rounded-full px-4 font-subhead text-base font-semibold text-brand-black hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black disabled:opacity-50"
+              >
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                Back
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={pending}
+              className={cn(
+                'ml-auto inline-flex h-12 min-w-[9rem] items-center justify-center gap-2 rounded-full px-6 font-subhead text-base font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2 disabled:opacity-70',
+                isLast
+                  ? 'bg-amber-gold text-brand-black hover:brightness-95'
+                  : 'bg-brand-black text-white hover:bg-charcoal'
+              )}
+            >
+              {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {isLast ? (pending ? 'Saving…' : 'Save my draft') : 'Next'}
+            </button>
+          </div>
+        </form>
+      )}
 
       <aside className="hidden lg:block" aria-label="Your page so far">
         <div className="sticky top-24 flex flex-col gap-3">
@@ -308,6 +371,16 @@ function QuickStartFlow({ categories, cities, email }: Props) {
       </aside>
     </div>
   )
+}
+
+/** True when this step's answer came from the owner's site. */
+function fromSiteTag(step: QuickStep, site: SiteDraft | null, answers: QuickStartAnswers): boolean {
+  if (!site) return false
+  if (step === 'cta') {
+    const v = answers.ctaUrl.trim()
+    return Boolean(v) && (v === site.phone || v === site.website)
+  }
+  return site.fromSite.includes(step)
 }
 
 /** The input a server field error points at. */

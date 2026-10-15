@@ -106,6 +106,16 @@ export function canAccess(tier: string | null, feature: GatedFeature): boolean {
   return rank >= FEATURE_MIN_TIER[feature]
 }
 
+/**
+ * Whether a page's saved social links appear on it. An owner-made page can
+ * save them on Free (the site import fills them in, ticket 127), and they show
+ * from Starter up. A page we added from public sources shows them on any plan:
+ * those links came with the page, not with a plan.
+ */
+export function socialLinksShowOnPage(source: string | null, tier: string | null): boolean {
+  return source !== 'owner' || canAccess(tier, 'social_links')
+}
+
 // Numeric per-field limits. `null` means unlimited — callers must branch on null before comparing
 // (see `app/api/media/upload/route.ts` for the established pattern).
 //

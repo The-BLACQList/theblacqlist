@@ -72,6 +72,7 @@ export type FeatureFlag =
   | 'ocrExtraction'
   | 'paidPostings'
   | 'postingSubmissions'
+  | 'siteImport'
   | 'testerTour'
 
 // The map is the registry. Adding a flag means adding it here and to the union
@@ -112,6 +113,11 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // published listings of their type and are correct either way — with the flag
   // off they are a real, empty board rather than a page promising a feature.
   postingSubmissions: 'FEATURE_POSTING_SUBMISSIONS',
+  // Gates "Start from your website" on /add-business (ticket 127): step 0, the
+  // read-site and import-photo actions. Off, there is no step 0 and nothing is
+  // ever fetched. The default (on in preview, off in production) lets it be
+  // reviewed on Previews; production waits for the privacy policy update.
+  siteImport: 'FEATURE_SITE_IMPORT',
   // Gates the Tester Tour: the progress rail, the page-render witnesses, the
   // reflection action, and the tour-state API route. The default (on in
   // preview, off in production) is exactly right here — the tour is reviewed on

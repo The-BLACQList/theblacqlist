@@ -29,12 +29,17 @@
 // endpoints were one: lib/security/file-signature.ts, called with the rest of
 // the input validation. Malware scanning is the remaining half of 6.3 and is
 // not here — it needs a scanning service, which is a spend decision.
+//
+// Listing photos now go through lib/media/storeListingImage.ts, shared with
+// the site import (ticket 127). They are decoded and re-encoded first, which
+// strips EXIF data such as a phone photo's GPS position.
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
-import { checkPhotoAdd } from '@/lib/stripe/planChecks'
+import { prepareImage } from '@/lib/media/prepareImage'
+import { listingImageLimit, storeListingImage, type ListingImageRole } from '@/lib/media/storeListingImage'
 import {
   matchesDeclaredType,
   readSignatureHeader,
@@ -55,8 +60,9 @@ const LISTING_MEDIA_ROLES = new Set(['logo', 'cover', 'gallery'])
 // Different authorization shapes, so the caller has to say which.
 const DOC_PURPOSES = new Set(['claim', 'listing_verification'])
 
-// The only source of truth for a stored file's extension. `file.name` is never
-// consulted — a caller may not choose what the object is called on disk.
+// The only source of truth for a stored document's extension. `file.name` is
+// never consulted: a caller may not choose what the object is called on disk.
+// Listing photos take theirs from the re-encoded image instead.
 const MIME_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -76,31 +82,20 @@ const BUCKET_MIMES: Record<string, Set<string>> = {
 
 function getSizeLimit(bucket: string, mediaRole: string | null): number {
   if (bucket === 'listing-media') {
-    if (mediaRole === 'logo') return 2 * 1024 * 1024
-    if (mediaRole === 'cover') return 5 * 1024 * 1024
-    return 3 * 1024 * 1024 // gallery default
+    return listingImageLimit(mediaRole === 'logo' || mediaRole === 'cover' ? mediaRole : 'gallery')
   }
   return 10 * 1024 * 1024
 }
 
-function buildStoragePath(
-  bucket: string,
-  entityId: string,
-  mediaRole: string | null,
-  purpose: string,
-  ext: string
-): string {
+function buildDocumentPath(entityId: string, purpose: string, ext: string): string {
   const uuid = crypto.randomUUID()
-  if (bucket === 'listing-media') {
-    const role = mediaRole ?? 'gallery'
-    return `listings/${entityId}/${role}/${uuid}.${ext}`
-  }
-  // verification-docs
   if (purpose === 'listing_verification') {
     return `listings/${entityId}/verification/${uuid}.${ext}`
   }
   return `claims/${entityId}/${uuid}.${ext}`
 }
+
+const UNREADABLE_IMAGE_ERROR = 'We could not read that image. Re-save it as a JPEG or PNG and try again.'
 
 // Each upload can be 10 MB, so one account looping this endpoint fills storage
 // fast. 60 in ten minutes is well past a full listing gallery plus documents.
@@ -184,37 +179,43 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return bad(SIGNATURE_MISMATCH_ERROR, SIGNATURE_MISMATCH_CODE, 400)
   }
 
-  const serviceClient = createServiceClient()
+  // Listing photos share one path with the site import (ticket 127): decoded
+  // and re-encoded so EXIF data, including a phone's GPS position, never
+  // reaches the public bucket. See lib/media/storeListingImage.ts.
+  if (bucket === 'listing-media') {
+    const prepared = await prepareImage(Buffer.from(await file.arrayBuffer()), file.type)
+    if (!prepared.ok) {
+      return prepared.reason === 'mismatch'
+        ? bad(SIGNATURE_MISMATCH_ERROR, SIGNATURE_MISMATCH_CODE, 400)
+        : bad(UNREADABLE_IMAGE_ERROR, 'INVALID_IMAGE', 400)
+    }
+    const stored = await storeListingImage({
+      supabase,
+      userId: user.id,
+      listingId: entityId,
+      role: (mediaRole ?? 'gallery') as ListingImageRole,
+      image: prepared,
+    })
+    if (!stored.ok) return bad(stored.error, stored.code, stored.status)
+    return NextResponse.json(
+      { data: stored.mediaId ? { path: stored.path, mediaId: stored.mediaId } : { path: stored.path } },
+      { status: 201 }
+    )
+  }
 
   // ---------------------------------------------------------------------
-  // Ownership.
-  //
-  // listing-media: `entity_id` may be a client-generated UUID sent before the
-  // listing row exists (the add-business media step uploads first and creates
-  // the listing with that same id). A missing row is therefore normal and not
-  // a denial — but a row owned by someone else always is.
-  //
-  // verification-docs + listing_verification: the listing must exist and be
-  // owned by the caller. There is no pre-creation case here; the flow is only
-  // reachable from a claimed listing's dashboard.
+  // Verification documents. A claim upload attaches to a client-generated id
+  // before any claim row exists. A listing-verification upload needs a listing
+  // that exists and is owned by the caller; that flow is only reachable from a
+  // claimed listing's dashboard.
   // ---------------------------------------------------------------------
-  let listing: { id: string; owner_user_id: string | null; tier: string | null } | null = null
-
-  if (bucket === 'listing-media' || purpose === 'listing_verification') {
-    const { data } = await supabase
+  if (purpose === 'listing_verification') {
+    const { data: listing } = await supabase
       .from('listings')
-      .select('id, owner_user_id, tier')
+      .select('id, owner_user_id')
       .eq('id', entityId)
       .is('deleted_at', null)
       .maybeSingle()
-    listing = data ?? null
-  }
-
-  if (bucket === 'listing-media' && listing && listing.owner_user_id !== user.id) {
-    return bad('You do not have permission to upload media for this listing.', 'FORBIDDEN', 403)
-  }
-
-  if (purpose === 'listing_verification' && bucket === 'verification-docs') {
     if (!listing || listing.owner_user_id !== user.id) {
       return bad(
         'You do not have permission to upload documents for this listing.',
@@ -224,73 +225,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  const isGallery = bucket === 'listing-media' && (mediaRole === 'gallery' || mediaRole === null)
-
-  // Plan photo limit (ticket 119), counted on gallery photos only. The logo and
-  // cover never get a media_attachments row, so they never count. During
-  // add-business there is no listing row yet, and a new listing always starts
-  // on Free, so the Free limit applies to the photos uploaded there too.
-  if (isGallery) {
-    const { count } = await serviceClient
-      .from('media_attachments')
-      .select('id', { count: 'exact', head: true })
-      .eq('entity_type', 'listing')
-      .eq('entity_id', entityId)
-
-    const limitError = checkPhotoAdd(listing?.tier ?? 'free', count ?? 0)
-    if (limitError) return bad(limitError, 'PLAN_LIMIT', 400)
-  }
-
+  const serviceClient = createServiceClient()
   const ext = MIME_EXT[file.type] ?? 'bin'
-  const contentType = file.type
-  const storagePath = buildStoragePath(bucket, entityId, mediaRole, purpose, ext)
-  const arrayBuffer = await file.arrayBuffer()
+  const storagePath = buildDocumentPath(entityId, purpose, ext)
 
   const { error: uploadError } = await serviceClient.storage
     .from(bucket)
-    .upload(storagePath, arrayBuffer, { contentType, upsert: false })
+    .upload(storagePath, await file.arrayBuffer(), { contentType: file.type, upsert: false })
 
   if (uploadError) {
     return bad('Upload failed.', 'UPLOAD_FAILED', 500)
   }
 
-  if (!isGallery) {
-    return NextResponse.json({ data: { path: storagePath } }, { status: 201 })
-  }
-
-  // Gallery uploads get a media_attachments row. Ordering is appended, not
-  // assumed — two uploads racing for the same slot is a display bug, a lost
-  // object is a support ticket.
-  const { data: last } = await serviceClient
-    .from('media_attachments')
-    .select('display_order')
-    .eq('entity_type', 'listing')
-    .eq('entity_id', entityId)
-    .order('display_order', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const { data: media, error: insertError } = await serviceClient
-    .from('media_attachments')
-    .insert({
-      entity_type: 'listing',
-      entity_id: entityId,
-      file_path: storagePath,
-      file_type: contentType,
-      file_size_bytes: file.size,
-      uploaded_by: user.id,
-      display_order: (last?.display_order ?? -1) + 1,
-    })
-    .select('id')
-    .single()
-
-  if (insertError || !media) {
-    // Compensate: the object is already in the bucket and nothing now points at
-    // it. An orphan in storage is invisible and permanent, so remove it rather
-    // than leave the caller to retry into a growing pile.
-    await serviceClient.storage.from(bucket).remove([storagePath])
-    return bad('Upload failed. Please try again.', 'SERVER_ERROR', 500)
-  }
-
-  return NextResponse.json({ data: { path: storagePath, mediaId: media.id } }, { status: 201 })
+  return NextResponse.json({ data: { path: storagePath } }, { status: 201 })
 }

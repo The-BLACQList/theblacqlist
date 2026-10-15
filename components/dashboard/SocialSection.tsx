@@ -16,6 +16,8 @@ interface Props {
   socialTwitter: string | null
   /** Social links are a Starter feature (ticket 119). */
   locked: boolean
+  /** Saved links stay off the public page until Starter (owner-made pages on Free). */
+  hiddenOnPage?: boolean
   showUpgrade: boolean
 }
 
@@ -67,6 +69,7 @@ export function SocialSection({
   socialYoutube,
   socialTwitter,
   locked,
+  hiddenOnPage = false,
   showUpgrade,
 }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
@@ -115,8 +118,9 @@ export function SocialSection({
 
         {locked && (
           <PlanLimitNote showUpgrade={showUpgrade}>
-            Social links are part of Starter. You can keep or remove the links you have. Adding or
-            changing one needs Starter.
+            {hiddenOnPage
+              ? 'Social links are part of Starter. Your saved links are kept and show on your page once you upgrade. Adding or changing one needs Starter.'
+              : 'Social links are part of Starter. You can keep or remove the links you have. Adding or changing one needs Starter.'}
           </PlanLimitNote>
         )}
 

@@ -1,11 +1,15 @@
 'use server'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { isFeatureEnabled } from '@/lib/env'
 import { trackServerEvent } from '@/lib/analytics/server'
-import { checkDescription, checkSocialLinks } from '@/lib/stripe/planChecks'
+import { checkDescription } from '@/lib/stripe/planChecks'
+import { geocodeAddress } from '@/lib/listings/geocode'
+import { parseWeeklyHours } from '@/lib/listings/hours'
+import type { WeeklyHours } from '@/types'
+import type { Json } from '@/lib/supabase/types'
 import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
 import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
 import {
@@ -33,6 +37,9 @@ export type CreateListingState =
   | null
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const ZIP_RE = /^\d{5}(-\d{4})?$/
+// A bare host name, as step 0 sends it: "example.com", "shop.example.co.uk".
+const HOST_RE = /^(?=.{1,253}$)[a-z0-9-]+(\.[a-z0-9-]+)+$/i
 
 function generateSlug(name: string): string {
   return name
@@ -132,6 +139,13 @@ export async function createListingAction(
   const websiteUrl = formData.get('website_url')?.toString().trim() || null
   const email = formData.get('email')?.toString().trim() || null
   const phone = formData.get('phone')?.toString().trim() || null
+  const addressLine1 = formData.get('address_line_1')?.toString().trim() || null
+  const zip = formData.get('zip')?.toString().trim() || null
+  const hoursRaw = formData.get('hours')?.toString().trim() || null
+  // Set by step 0 when the owner used the site import (ticket 127). Only the
+  // host is kept, so the team can see where a page's first draft came from.
+  const importedFromRaw = formData.get('imported_from')?.toString().trim().toLowerCase() || null
+  const importedFrom = importedFromRaw && HOST_RE.test(importedFromRaw) ? importedFromRaw : null
   const ctaType = formData.get('cta_type')?.toString().trim() ?? ''
   const ctaUrl = formData.get('cta_url')?.toString().trim() || null
   const socialInstagram = formData.get('social_instagram')?.toString().trim() || null
@@ -173,6 +187,7 @@ export async function createListingAction(
   const closesAtRaw = formData.get('closes_at')?.toString().trim() || ''
 
   const fieldErrors: FieldErrors = {}
+  let hours: WeeklyHours | null = null
 
   if (!VALID_ENTITY_TYPES.includes(entityType as (typeof VALID_ENTITY_TYPES)[number])) {
     fieldErrors.entity_type = 'Select a listing type.'
@@ -361,9 +376,22 @@ export async function createListingAction(
         }
       }
     }
-    const socialError = checkSocialLinks('free', Object.fromEntries(socialFields), null)
-    if (socialError) {
-      for (const [key, val] of socialFields) if (val) fieldErrors[key] = socialError
+    // Social links are saved on Free (the site import finds them, ticket 127)
+    // and stay off the public page until Starter: see socialLinksShowOnPage.
+
+    if (addressLine1 && addressLine1.length > 200) {
+      fieldErrors.address_line_1 = 'Street address must be 200 characters or fewer.'
+    }
+    if (zip && !ZIP_RE.test(zip)) {
+      fieldErrors.zip = 'Enter a 5-digit ZIP code.'
+    }
+    if (hoursRaw) {
+      try {
+        hours = parseWeeklyHours(JSON.parse(hoursRaw))
+      } catch {
+        hours = null
+      }
+      if (!hours) fieldErrors.hours = 'Check the times for each open day, then save again.'
     }
 
     // "Suggest a new category": the listing is saved under the closest group
@@ -457,6 +485,14 @@ export async function createListingAction(
       }
     }
   }
+
+  // A street address gets a map pin, as on the dashboard. A null result only
+  // means no pin (lib/listings/geocode.ts), never a failed save.
+  const hasStreetAddress =
+    isBusinessPath && effectiveLocationType !== 'virtual' && addressLine1 !== null
+  const geo = hasStreetAddress
+    ? await geocodeAddress({ address: addressLine1, city: cityText, state: stateText, zip })
+    : null
 
   let slug = generateSlug(name)
   if (!slug) slug = `listing-${Date.now().toString(36)}`
@@ -554,6 +590,11 @@ export async function createListingAction(
           website_url: websiteUrl,
           city_text: cityText,
           state: stateText,
+          ...(hasStreetAddress
+            ? { address_line_1: addressLine1, zip, lat: geo?.lat ?? null, lng: geo?.lng ?? null }
+            : {}),
+          // WeeklyHours is plain JSON; the generated insert type only knows Json.
+          ...(hours ? { hours: hours as unknown as Json } : {}),
           ships_nationwide: shipsNationwide,
           social_instagram: socialInstagram,
           social_facebook: socialFacebook,
@@ -572,6 +613,22 @@ export async function createListingAction(
         : isEvent
           ? 'Failed to save your event details. Please try again.'
           : 'Failed to save your business details. Please try again.',
+    }
+  }
+
+  // Owners cannot write admin_notes (listings_owner_guard), so this note goes
+  // through the service client. It is a hint for the review queue only: a
+  // failure is logged and the draft stands.
+  if (isBusinessPath && importedFrom) {
+    const { error: noteError } = await createServiceClient()
+      .from('listings')
+      .update({ admin_notes: `Imported from ${importedFrom}` })
+      .eq('id', listing.id)
+      .eq('owner_user_id', user.id)
+    if (noteError) {
+      console.error(
+        JSON.stringify({ level: 'error', op: 'create_listing_import_note', listingId: listing.id, code: noteError.code })
+      )
     }
   }
 
@@ -604,6 +661,7 @@ export async function createListingAction(
       category_id: categoryId,
       source: 'web_form',
       has_city: cityId !== null,
+      site_import: Boolean(importedFrom),
       category_requested: Boolean(categoryRequestName) && !warning,
     },
   })
