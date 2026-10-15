@@ -308,7 +308,12 @@ A starting list across six cities. More to come.`,
         blurb: 'Pralines from the first Black woman to own a praline company in New Orleans.',
       },
     ],
-    sections: [],
+    sections: [
+      {
+        heading: 'Before you go',
+        body: `This list runs from sit-down dining rooms to lunch counters, a cafeteria and a praline shop, so hours and how you order change from place to place. Some spots draw a line. Check each page or call ahead before you go.`,
+      },
+    ],
   },
 ]
 
