@@ -6,7 +6,9 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { cn } from '@/lib/utils'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { TourWitness } from '@/components/tour/TourWitness'
@@ -101,10 +103,10 @@ export default async function CollectionDetailPage({ params }: Props) {
     .order('display_order', { ascending: true })
 
   const entries = ((items ?? []) as unknown as CollectionItemRow[]).filter((i) => i.listings)
-  // The column stores a Supabase Storage key, not a URL — the same shape as
-  // listings.cover_image_path — so it has to go through the shared resolver.
-  // Passing the raw key to next/image renders broken.
-  const coverSrc = resolveMediaPath(collection.cover_image_path)
+  // The column stores a Supabase Storage key, a URL, or one of our licensed
+  // editorial photos (`/images/editorial/<file>.webp`). The editorial resolver
+  // handles all three. Passing a raw Storage key to next/image renders broken.
+  const coverSrc = resolveEditorialCover(collection.cover_image_path)
 
   return (
     <main className="min-h-screen bg-pale-lavender">
@@ -123,7 +125,7 @@ export default async function CollectionDetailPage({ params }: Props) {
             fill
             priority
             sizes="100vw"
-            className="object-cover"
+            className={cn('object-cover', PHOTO_FOCAL[coverSrc])}
           />
           <div
             className="absolute inset-0"

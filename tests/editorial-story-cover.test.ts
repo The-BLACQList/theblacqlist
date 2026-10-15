@@ -1,26 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveStoryCover } from '@/lib/editorial/cover'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 
-describe('resolveStoryCover', () => {
+describe('resolveEditorialCover', () => {
   it('renders a licensed editorial photo as a site path', () => {
-    expect(resolveStoryCover('/images/editorial/bbq-plate.webp')).toBe(
+    expect(resolveEditorialCover('/images/editorial/bbq-plate.webp')).toBe(
       '/images/editorial/bbq-plate.webp'
     )
   })
 
   it('still resolves a Storage key and passes a full URL through', () => {
-    expect(resolveStoryCover('stories/cover.jpg')).toBe(
+    expect(resolveEditorialCover('stories/cover.jpg')).toBe(
       `${SUPABASE_URL}/storage/v1/object/public/listing-media/stories/cover.jpg`
     )
-    expect(resolveStoryCover('https://cdn.example.com/c.jpg')).toBe('https://cdn.example.com/c.jpg')
+    expect(resolveEditorialCover('https://cdn.example.com/c.jpg')).toBe(
+      'https://cdn.example.com/c.jpg'
+    )
   })
 
   it.each([null, undefined, ''])('returns null for %s', (value) => {
-    expect(resolveStoryCover(value)).toBeNull()
+    expect(resolveEditorialCover(value)).toBeNull()
   })
 
   it.each([
@@ -29,7 +31,7 @@ describe('resolveStoryCover', () => {
     '/images/cities/atlanta.webp',
     '/images/editorial/x.svg',
   ])('does not treat %s as an editorial photo', (path) => {
-    expect(resolveStoryCover(path)).toBe(resolveMediaPath(path))
+    expect(resolveEditorialCover(path)).toBe(resolveMediaPath(path))
   })
 })
 

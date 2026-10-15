@@ -1,5 +1,9 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, BookOpen } from 'lucide-react'
+
+import { cn } from '@/lib/utils'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
 
 interface Props {
   title: string
@@ -13,6 +17,8 @@ interface Props {
    * section heading is already an `h2`.
    */
   headingLevel?: 'h2' | 'h3'
+  /** Resolved cover URL (lib/editorial/cover.ts). With none, the card is type-only. */
+  coverSrc?: string | null
 }
 
 export function GuideCard({
@@ -22,12 +28,24 @@ export function GuideCard({
   city,
   sectionCount,
   headingLevel: Heading = 'h2',
+  coverSrc,
 }: Props) {
   return (
     <Link
       href={`/guides/${slug}`}
       className="group flex flex-col gap-3 rounded-xl border border-charcoal/10 bg-white p-5 hover:border-amber-gold/40 hover:shadow-md transition-all"
     >
+      {coverSrc && (
+        <div className="relative aspect-[3/2] -mx-5 -mt-5 mb-1 overflow-hidden rounded-t-xl bg-deep-bg">
+          <Image
+            src={coverSrc}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className={cn('object-cover', PHOTO_FOCAL[coverSrc])}
+          />
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div className="size-9 rounded-lg bg-pale-lavender flex items-center justify-center flex-shrink-0">
           <BookOpen className="size-4 text-amber" aria-hidden="true" />

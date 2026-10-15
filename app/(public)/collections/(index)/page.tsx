@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
 import { CollectionCard } from '@/components/editorial/CollectionCard'
-import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 
 export const metadata: Metadata = {
   title: 'Collections | The BLACQList',
@@ -65,7 +65,7 @@ export default async function CollectionsPage() {
                   title={c.title}
                   slug={c.slug}
                   description={c.description}
-                  coverSrc={resolveMediaPath(c.cover_image_path)}
+                  coverSrc={resolveEditorialCover(c.cover_image_path)}
                   listingCount={countMap[c.id] ?? 0}
                 />
               ))}

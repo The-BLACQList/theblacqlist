@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, MapPin } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { cn } from '@/lib/utils'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
 
 interface Props {
@@ -37,7 +41,7 @@ export default async function GuideDetailPage({ params }: Props) {
 
   const { data: guide } = await supabase
     .from('guides')
-    .select('id, title, slug, subtitle, description, city, published_at')
+    .select('id, title, slug, subtitle, description, city, published_at, cover_image_path')
     .eq('slug', slug)
     .eq('status', 'published')
     .single()
@@ -51,6 +55,7 @@ export default async function GuideDetailPage({ params }: Props) {
     .order('display_order', { ascending: true })
 
   const sections = rawSections ?? []
+  const cover = resolveEditorialCover(guide.cover_image_path)
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', {
@@ -96,6 +101,19 @@ export default async function GuideDetailPage({ params }: Props) {
           <time dateTime={guide.published_at} className="font-subhead text-xs text-charcoal-faint">
             {formatDate(guide.published_at)}
           </time>
+        )}
+
+        {cover && (
+          <figure className="relative mt-8 aspect-[16/9] overflow-hidden rounded-[3px] bg-deep-bg">
+            <Image
+              src={cover}
+              alt=""
+              fill
+              priority
+              sizes="(min-width: 752px) 720px, 100vw"
+              className={cn('object-cover', PHOTO_FOCAL[cover])}
+            />
+          </figure>
         )}
       </section>
 

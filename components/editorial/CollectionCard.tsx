@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Layers } from 'lucide-react'
 
 import { CoverImage } from '@/components/media/CoverImage'
+import { PHOTO_FOCAL } from '@/lib/design/surfaces'
 
 interface Props {
   title: string
@@ -9,7 +10,8 @@ interface Props {
   description?: string | null
   listingCount?: number
   /**
-   * `collections.cover_image_path` — a Supabase Storage path or an absolute URL.
+   * `collections.cover_image_path`, already resolved by lib/editorial/cover.ts:
+   * a Supabase Storage URL, an absolute URL, or a licensed editorial photo.
    * Set from the admin collections editor. When absent the card renders the F-1
    * fallback tile rather than a stock photo, same rule as listing covers.
    */
@@ -32,6 +34,7 @@ export function CollectionCard({ title, slug, description, listingCount, coverSr
           seed={slug}
           sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 92vw"
           fallbackSize="card"
+          className={coverSrc ? PHOTO_FOCAL[coverSrc] : undefined}
         />
       </div>
 
