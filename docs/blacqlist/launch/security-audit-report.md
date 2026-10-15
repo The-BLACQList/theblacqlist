@@ -133,7 +133,7 @@ Direct-API IDOR probes (substituted user IDs, param injection) passed in the 202
 | A07 | Auth Failures | Session in httpOnly cookies; 7-day JWT with refresh; middleware refresh verified; email verification required | — | PASS |
 | A08 | Data Integrity | No CSP (see A05); third-party scripts limited to Vercel Analytics/Speed Insights + Sentry (first-party-ish, no ad tech) | Low | Accepted (MVP) |
 | A09 | Logging & Monitoring | `admin_audit_log` records admin mutations (immutable); Sentry configured with PII scrubbing (`lib/observability/sentry-scrub.ts`) | — | PASS |
-| A10 | SSRF | No server-side fetch of user-controlled URLs (spot-check); uploads go to Supabase Storage, not fetched by the server | — | PASS |
+| A10 | SSRF | **Updated 2026-10-15 (ticket 127, site import).** The server now fetches one owner-supplied URL, behind `FEATURE_SITE_IMPORT` (off by default). Every fetch goes through `lib/import/safe-fetch.ts`: http/https only, DNS resolved by our own lookup, and private, loopback, link-local, CGNAT and cloud metadata addresses refused (IPv4 and IPv6, including mapped forms) at connect time and again after each redirect (3 max); 8 s timeout, 2 MB cap, robots.txt honored for the page, sign-in plus per-account and per-IP rate limits. Photos are re-encoded by `sharp` (EXIF removed) and pass the magic-byte and plan-limit checks before storage. Tests in `tests/site-import-*.test.ts` | Low | PASS (with the controls listed); re-check before the flag goes on in prod |
 
 > **Update 2026-10-01:** the CAPTCHA half of this is closed. Cloudflare Turnstile now guards sign-up, sign-in, forgot password, claims, reviews, corrections and the waitlist, with per-account and per-IP limits on top. See the CAPTCHA section of `security-and-privacy-plan.md`.
 

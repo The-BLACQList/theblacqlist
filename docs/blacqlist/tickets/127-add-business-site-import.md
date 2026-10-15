@@ -1,6 +1,6 @@
 # Ticket 127: Bring in what you already have (site import)
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** Blocked on approval
+**Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR on `feat/site-import`, flag off). Packages approved 2026-10-15: `node-html-parser`, `sharp` moved to dependencies
 **Depends on:** 126
 **Gates:** Dependency approval (an HTML parser, and moving `sharp` to dependencies). Privacy and Legal review of the photo-rights line `[Needs professional review]`. Behind `FEATURE_SITE_IMPORT`.
 **Decision record:** [add-business-workshop-2026-10.md](../design/add-business-workshop-2026-10.md)

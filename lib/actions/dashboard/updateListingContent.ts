@@ -7,6 +7,8 @@ import { buildEntityUrl } from '@/lib/listings/url'
 import { geocodeAddress } from '@/lib/listings/geocode'
 import { checkDescription, checkSocialLinks, SOCIAL_FIELDS } from '@/lib/stripe/planChecks'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
+import { parseWeeklyHours } from '@/lib/listings/hours'
+import type { WeeklyHours } from '@/types'
 
 export type UpdateListingContentState =
   | { success: true; savedAt: string }
@@ -146,12 +148,14 @@ export async function updateListingContentAction(
     if (!hoursRaw) {
       detailsUpdate.hours = null
     } else {
+      let parsed: WeeklyHours | null = null
       try {
-        const parsed = JSON.parse(hoursRaw)
-        detailsUpdate.hours = parsed
+        parsed = parseWeeklyHours(JSON.parse(hoursRaw))
       } catch {
-        return { error: 'Invalid hours data. Please try again.' }
+        parsed = null
       }
+      if (!parsed) return { error: 'Check the times for each open day, then save again.' }
+      detailsUpdate.hours = parsed
     }
   }
 

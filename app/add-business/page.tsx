@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { withoutCreatorCategories } from '@/lib/listings/creatorCategories'
 import { QuickStart } from './_components/quick-start/QuickStart'
 
@@ -63,6 +64,7 @@ export default async function AddBusinessPage() {
           categories={withoutCreatorCategories(categories ?? [])}
           cities={cities}
           email={user.email ?? ''}
+          siteImport={isFeatureEnabled('siteImport')}
         />
       </div>
     </main>

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { socialLinksShowOnPage } from '@/lib/stripe/features'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
 import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
 import type {
@@ -49,6 +50,7 @@ type RawRow = {
   location_type: string
   trust_tier: string
   tier: string
+  source: string | null
   ownership_label: string
   is_featured: boolean
   is_sponsored: boolean
@@ -95,7 +97,7 @@ type RawRow = {
 
 const LISTING_SELECT = `
   id, slug, name, tagline, meta_title, meta_description, noindex,
-  entity_type, location_type, trust_tier, tier,
+  entity_type, location_type, trust_tier, tier, source,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id, city_id,
@@ -420,6 +422,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
 
   const det = raw.listing_details_business
   const cityData = raw.cities
+  const showSocials = socialLinksShowOnPage(raw.source, raw.tier)
 
   const details: BusinessDetails = {
     description: det?.description ?? '',
@@ -431,14 +434,23 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     phone: det?.phone ?? null,
     email: det?.email ?? null,
     website_url: det?.website_url ?? null,
-    social: {
-      instagram: det?.social_instagram ?? null,
-      facebook: det?.social_facebook ?? null,
-      linkedin: det?.social_linkedin ?? null,
-      tiktok: det?.social_tiktok ?? null,
-      youtube: det?.social_youtube ?? null,
-      twitter: det?.social_twitter ?? null,
-    } as SocialLinks,
+    social: (showSocials
+      ? {
+          instagram: det?.social_instagram ?? null,
+          facebook: det?.social_facebook ?? null,
+          linkedin: det?.social_linkedin ?? null,
+          tiktok: det?.social_tiktok ?? null,
+          youtube: det?.social_youtube ?? null,
+          twitter: det?.social_twitter ?? null,
+        }
+      : {
+          instagram: null,
+          facebook: null,
+          linkedin: null,
+          tiktok: null,
+          youtube: null,
+          twitter: null,
+        }) as SocialLinks,
     cta_type: (det?.cta_type ?? 'learn-more') as CTAType,
     cta_url: det?.cta_url ?? null,
     cta_label_override: det?.cta_label_override ?? null,

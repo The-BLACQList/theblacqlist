@@ -5,6 +5,7 @@ import { OWNERSHIP_LABEL_META, type OwnershipLabel } from '@/lib/constants/listi
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { loadAttributeGroups, type FacetGroupData } from '@/lib/listings/facets'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { socialLinksShowOnPage } from '@/lib/stripe/features'
 
 // Everything the finish view needs for one business page (tickets 126 and 129).
 // Both mounts call this: /add-business/finish/[listingId] (new mode) and the
@@ -57,6 +58,8 @@ export interface FinishData {
   trustTier: string
   entityType: string
   tier: string | null
+  /** False when saved social links stay off the public page until Starter. */
+  socialsShowOnPage: boolean
   tagline: string | null
   metaTitle: string | null
   metaDescription: string | null
@@ -108,7 +111,7 @@ export async function loadFinishData(
   const { data: row } = await supabase
     .from('listings')
     .select(
-      `id, name, slug, status, trust_tier, entity_type, tier, tagline,
+      `id, name, slug, status, trust_tier, entity_type, tier, source, tagline,
        meta_title, meta_description, cover_image_path, ownership_label,
        categories!listings_category_id_fkey(name),
        cities!listings_city_id_fkey(slug, name, states!cities_state_id_fkey(code)),
@@ -199,6 +202,7 @@ export async function loadFinishData(
     trustTier: row.trust_tier,
     entityType: row.entity_type,
     tier: row.tier ?? null,
+    socialsShowOnPage: socialLinksShowOnPage(row.source ?? null, row.tier ?? null),
     tagline: row.tagline ?? null,
     metaTitle: row.meta_title ?? null,
     metaDescription: row.meta_description ?? null,

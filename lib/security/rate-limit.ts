@@ -35,6 +35,7 @@ export type RateLimitBucket =
   | 'upload'
   | 'video_upload'
   | 'join'
+  | 'site_import'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

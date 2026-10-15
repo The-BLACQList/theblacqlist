@@ -50,7 +50,7 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
   let query = serviceClient
     .from('listings')
     .select(
-      'id, name, entity_type, location_type, status, trust_tier, created_at, tagline, categories(name)',
+      'id, name, entity_type, location_type, status, trust_tier, created_at, tagline, admin_notes, categories(name)',
       { count: 'exact' }
     )
     // Was missing entirely: soft-deleted listings sat in the queue and inflated
@@ -171,6 +171,10 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
                         <p className="font-body text-xs text-charcoal-soft line-clamp-1 mt-0.5">
                           {listing.tagline}
                         </p>
+                      )}
+                      {/* Set by createListing when step 0's site import was used (ticket 127). */}
+                      {listing.admin_notes?.startsWith('Imported from ') && (
+                        <p className="font-body text-xs text-charcoal-soft mt-0.5">{listing.admin_notes}</p>
                       )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
