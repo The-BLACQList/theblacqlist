@@ -217,8 +217,8 @@ A starting list across six cities. More to come.`,
         blurb: 'An African American history museum on Auburn Avenue in Sweet Auburn.',
       },
       {
-        slug: 'hammonds-house-museum',
-        blurb: 'African American fine art, more than 300 works, in one historic home.',
+        slug: 'hammonds-house-museum-atl',
+        blurb: 'A West End museum for fine art of the African diaspora.',
       },
       {
         slug: 'zucot-gallery',
