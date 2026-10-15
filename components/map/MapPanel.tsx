@@ -6,7 +6,7 @@ import { MapCityTabs } from '@/components/map/MapCityTabs'
 import { MapFiltersButton } from '@/components/map/MapFiltersButton'
 import { MapResultsList } from '@/components/map/MapResultsList'
 import { MapSearchInput } from '@/components/map/MapSearchInput'
-import { CITY_VIEWS } from '@/components/map/mapStyle'
+import { CITY_CHOICES } from '@/components/map/mapStyle'
 import { activeFilterCount } from '@/lib/map/filterListings'
 import type { MapFilterProps, MapResultsProps } from '@/lib/map/types'
 
@@ -42,7 +42,7 @@ export function MapPanel(props: Props) {
         <div>
           <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-amber">The map</p>
           <h1 className="mt-1 font-headline text-[52px] font-medium leading-none tracking-[-0.02em] text-ink">
-            {CITY_VIEWS[citySlug]?.label ?? 'The map'}
+            {CITY_CHOICES.find((c) => c.slug === citySlug)?.label ?? 'The map'}
           </h1>
           <p className="mt-2 text-[15px] text-charcoal">
             {loading

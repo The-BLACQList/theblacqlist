@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import type { Map as MlMap, MapLayerMouseEvent } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { buildMapStyle, CITY_VIEWS } from '@/components/map/mapStyle'
+import { ALL_CITIES, buildMapStyle, CITY_VIEWS, initialCity, US_BOUNDS } from '@/components/map/mapStyle'
 import { tileTemplate } from '@/lib/map/tileUrls'
 import { addLandmarkLayers, addListingLayers, DOT_LAYERS } from '@/components/map/mapLayers'
 import { toLandmarkGeoJSON } from '@/lib/map/landmarks'
@@ -45,6 +45,28 @@ const TYPE_LABELS: Record<string, string> = {
  * numbered photo pins; every other listing is a small dot or part of a cluster.
  * The panel and sheet lists are the parallel accessible path to every business.
  */
+/**
+ * Room around the lower 48 for the phone's floating bar and chips (top) and the
+ * card strip (bottom, about 350px tall), so the Gulf cities sit above the sheet.
+ */
+const PHONE_US_PADDING = { top: 150, bottom: 360, left: 16, right: 16 }
+
+function usPadding() {
+  return window.matchMedia('(min-width: 1024px)').matches ? 40 : PHONE_US_PADDING
+}
+
+function readCityParam(): string {
+  return initialCity(new URLSearchParams(window.location.search).get('city'))
+}
+
+/** Keeps `?city=` in step with the choice, so the view can be shared. */
+function writeCityParam(slug: string) {
+  const url = new URL(window.location.href)
+  if (slug === ALL_CITIES) url.searchParams.delete('city')
+  else url.searchParams.set('city', slug)
+  window.history.replaceState(window.history.state, '', url)
+}
+
 export function MapExplore() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
@@ -57,7 +79,8 @@ export function MapExplore() {
   const { listings, loading, loadError } = useMapListings()
   const isDesktop = useIsDesktop()
 
-  const [citySlug, setCitySlug] = useState('atlanta-ga')
+  // The map opens on the whole country unless a link names one city.
+  const [citySlug, setCitySlug] = useState(readCityParam)
   const [filters, setFilters] = useState<MapFilters>(NO_FILTERS)
   // Hover only rings a pin; selection is what opens the card. Kept separate so a
   // second pin click moves the card instead of closing the one it just opened.
@@ -82,18 +105,26 @@ export function MapExplore() {
         .map((value) => ({ value, label: TYPE_LABELS[value]! })),
     [listings]
   )
-  const cityTotal = useMemo(() => listings.filter((l) => l.citySlug === citySlug).length, [listings, citySlug])
+  const cityTotal = useMemo(
+    () => (citySlug === ALL_CITIES ? listings.length : listings.filter((l) => l.citySlug === citySlug).length),
+    [listings, citySlug]
+  )
 
   const filtered = useMemo(() => filterListings(listings, filters), [listings, filters])
   // moveend and zoomend bump viewNonce, which re-reads the viewport bounds.
-  const inView = useMemo(() => {
+  const visible = useMemo(() => {
     if (!mapReady || !map) return []
     const bounds = map.getBounds()
-    const visible = filtered.filter((l) => bounds.contains([l.lng, l.lat]))
-    // Near me answers "what is closest", so distance wins over trust order.
-    return filters.near ? sortByDistance(visible, filters.near) : rankListings(visible)
+    return filtered.filter((l) => bounds.contains([l.lng, l.lat]))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, filters.near, map, mapReady, viewNonce])
+  }, [filtered, map, mapReady, viewNonce])
+  // The list is capped (LIST_LIMIT); the count above it is not, so the whole
+  // country reads as every business, not the first 60.
+  const inView = useMemo(
+    // Near me answers "what is closest", so distance wins over trust order.
+    () => (filters.near ? sortByDistance(visible, filters.near) : rankListings(visible)),
+    [visible, filters.near]
+  )
   const numbers = useMemo(() => pinNumbers(inView, PIN_LIMIT), [inView])
 
   const pins = useMemo<PinSpec[]>(() => {
@@ -145,13 +176,16 @@ export function MapExplore() {
   // Map init
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    // Plain z/x/y tiles from our own origin, cached by the CDN
-    // (lib/map/tileUrls.ts).
+    const opening = CITY_VIEWS[citySlug]
     const m = new maplibregl.Map({
       container: containerRef.current,
-      style: buildMapStyle(tileTemplate(window.location.origin, 'metros')),
-      center: CITY_VIEWS['atlanta-ga']!.center,
-      zoom: CITY_VIEWS['atlanta-ga']!.zoom,
+      style: buildMapStyle(
+        tileTemplate(window.location.origin, 'metros'),
+        tileTemplate(window.location.origin, 'us')
+      ),
+      ...(opening
+        ? { center: opening.center, zoom: opening.zoom }
+        : { bounds: US_BOUNDS, fitBoundsOptions: { padding: usPadding() } }),
       attributionControl: { compact: true },
     })
     mapRef.current = m
@@ -222,8 +256,10 @@ export function MapExplore() {
 
   function flyToCity(slug: string) {
     setCitySlug(slug)
+    writeCityParam(slug)
     const view = CITY_VIEWS[slug]
     if (view) moveTo(view.center, view.zoom)
+    else mapRef.current?.fitBounds(US_BOUNDS, { padding: usPadding(), duration: reduceMotion ? 0 : 1400 })
   }
 
   /** Frames the whole radius, leaving room for the phone bar and sheet. */
@@ -287,7 +323,7 @@ export function MapExplore() {
     reduceMotion,
     listings: inView,
     numbers,
-    inViewCount: inView.length,
+    inViewCount: visible.length,
     loading,
     loadError,
     selectedId,

@@ -37,7 +37,7 @@ const PANELS: readonly Panel[] = [
   {
     index: '02',
     title: 'Support',
-    body: 'Find the businesses near you and spend there.',
+    body: 'Find businesses near you on the map, then spend there.',
     href: '/map',
     photo: '/images/editorial/peach-and-rye-kitchen.webp',
   },

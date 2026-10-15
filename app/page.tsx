@@ -9,6 +9,7 @@ import { PRODUCTS_SERVICES_LOCATION_TYPES } from '@/lib/constants/listing'
 import { expandTypeCategoryIds, listingMatchesType } from '@/lib/listings/type-shortcuts'
 import { HomeHero } from '@/components/home/HomeHero'
 import { HomeTriptych } from '@/components/home/HomeTriptych'
+import { HomeMapBand } from '@/components/home/HomeMapBand'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
 import { HomeCategories, type CategoryTile } from '@/components/home/HomeCategories'
 import { FreshFinds } from '@/components/home/FreshFinds'
@@ -267,6 +268,9 @@ export default async function HomePage() {
       </Reveal>
       <Reveal>
         <HomeCategories categories={categories} />
+      </Reveal>
+      <Reveal>
+        <HomeMapBand />
       </Reveal>
       <Reveal>
         <FreshFinds entities={freshFinds} />

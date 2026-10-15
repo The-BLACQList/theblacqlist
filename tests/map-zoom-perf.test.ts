@@ -82,6 +82,10 @@ describe('plain tile URLs', () => {
     expect(parseTileRequest({ ...ok, z: '0', x: '0', y: '0' })).toEqual({ archive: 'metros', z: 0, x: 0, y: 0 })
   })
 
+  it('reads the country file too', () => {
+    expect(parseTileRequest({ ...ok, archive: 'us', z: '4', x: '3', y: '6' })).toEqual({ archive: 'us', z: 4, x: 3, y: 6 })
+  })
+
   it('keeps an older version working, so open tabs survive a bump', () => {
     expect(parseTileRequest({ ...ok, version: 'v0' })).not.toBeNull()
   })
@@ -119,6 +123,7 @@ describe('plain tiles route', () => {
   it('is used by the map, not the Range route', () => {
     const explore = read('components/map/MapExplore.tsx')
     expect(explore).toContain("tileTemplate(window.location.origin, 'metros')")
+    expect(explore).toContain("tileTemplate(window.location.origin, 'us')")
     expect(explore).not.toContain('pmtiles://')
     expect(read('components/map/mapStyle.ts')).not.toContain('pmtiles://')
   })

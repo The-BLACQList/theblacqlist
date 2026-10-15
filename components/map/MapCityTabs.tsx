@@ -1,6 +1,6 @@
 'use client'
 
-import { CITY_VIEWS } from '@/components/map/mapStyle'
+import { CITY_CHOICES } from '@/components/map/mapStyle'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -16,7 +16,7 @@ export function MapCityTabs({ citySlug, onCity }: Props) {
       aria-label="City"
       className="flex gap-5 overflow-x-auto border-b border-hairline"
     >
-      {Object.entries(CITY_VIEWS).map(([slug, view]) => {
+      {CITY_CHOICES.map(({ slug, label }) => {
         const active = slug === citySlug
         return (
           <button
@@ -29,7 +29,7 @@ export function MapCityTabs({ citySlug, onCity }: Props) {
               active ? 'border-ink text-ink' : 'border-transparent text-charcoal hover:text-ink'
             )}
           >
-            {view.label}
+            {label}
           </button>
         )
       })}

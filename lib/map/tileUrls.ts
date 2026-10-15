@@ -14,7 +14,7 @@
 export const TILES_VERSION = 'v1'
 
 /** The tile files the route can read, by the name used in the URL. */
-export const TILE_ARCHIVES = ['metros'] as const
+export const TILE_ARCHIVES = ['metros', 'us'] as const
 export type TileArchive = (typeof TILE_ARCHIVES)[number]
 
 /** Deepest zoom any tile file holds. Anything deeper is not a tile we have. */

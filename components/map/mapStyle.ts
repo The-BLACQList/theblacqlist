@@ -83,8 +83,47 @@ function landmarkPois(layer: SymbolLayerSpecification): SymbolLayerSpecification
   }
 }
 
-/** `tiles` is a z/x/y template, from tileTemplate() in lib/map/tileUrls.ts. */
-export function buildMapStyle(tiles: string): StyleSpecification {
+/**
+ * Zoom where the detailed metro tiles take over from the country tiles. Below
+ * it the map draws the low-zoom US archive (state lines, coasts and big city
+ * names for the whole lower 48). From it up, the metro archive draws streets.
+ */
+export const DETAIL_ZOOM = 7
+
+/** Country ground that stays under the metro tiles at every zoom. */
+const US_GROUND_LAYERS = new Set(['earth', 'water'])
+
+/**
+ * The two stock layer sets, stacked. The country set sits underneath: its
+ * earth and water fill the whole lower 48 at every zoom, so outside the metros
+ * there is still a coastline, and the rest of it stops at DETAIL_ZOOM. The
+ * metro set starts at DETAIL_ZOOM, so no label or line is drawn twice.
+ */
+function stackedLayers(flavor: Parameters<typeof layers>[1]): LayerSpecification[] {
+  const country = layers('protomaps-us', flavor, { lang: 'en' }).flatMap((l): LayerSpecification[] => {
+    if (l.id === 'background') return [l]
+    if (US_GROUND_LAYERS.has(l.id)) return [{ ...l, id: `us-${l.id}` }]
+    // Points of interest belong to city zooms only. Landcover (forest, farm,
+    // grass) keeps the stock greens the sand palette has no step for, and at
+    // country zoom it would paint most of the map; the plain sand ground reads
+    // better under the city circles.
+    if ((l.minzoom ?? 0) >= DETAIL_ZOOM || l.id === 'pois' || l.id === 'landcover') return []
+    return [{ ...l, id: `us-${l.id}`, maxzoom: DETAIL_ZOOM }]
+  })
+  const metro = layers('protomaps', flavor, { lang: 'en' }).flatMap((l): LayerSpecification[] => {
+    if (l.id === 'background') return []
+    const minzoom = Math.max(l.minzoom ?? 0, DETAIL_ZOOM)
+    if (l.id === 'pois' && l.type === 'symbol') return [landmarkPois({ ...l, minzoom })]
+    return [{ ...l, minzoom } as LayerSpecification]
+  })
+  return [...country, ...metro]
+}
+
+/**
+ * `metroTiles` and `usTiles` are z/x/y templates, from tileTemplate() in
+ * lib/map/tileUrls.ts.
+ */
+export function buildMapStyle(metroTiles: string, usTiles: string): StyleSpecification {
   const base = namedFlavor('light')
   const flavor = {
     ...base,
@@ -133,10 +172,20 @@ export function buildMapStyle(tiles: string): StyleSpecification {
     glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
     sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/light',
     sources: {
+      // The whole lower 48 at zooms 0 to 6 (blacqlist-us-lowzoom.pmtiles).
+      'protomaps-us': {
+        type: 'vector',
+        tiles: [usTiles],
+        minzoom: 0,
+        maxzoom: 6,
+        attribution:
+          '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      },
       protomaps: {
         type: 'vector',
-        tiles: [tiles],
-        minzoom: 0,
+        tiles: [metroTiles],
+        // Its layers start at DETAIL_ZOOM, so no tile below it is ever asked for.
+        minzoom: DETAIL_ZOOM,
         maxzoom: 14,
         attribution:
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
@@ -144,9 +193,7 @@ export function buildMapStyle(tiles: string): StyleSpecification {
     },
     // Landmarks only. Our own landmark list and the listings are added on top
     // at runtime, so they win any label collision with these.
-    layers: layers('protomaps', flavor, { lang: 'en' }).map(
-      (l): LayerSpecification => (l.id === 'pois' && l.type === 'symbol' ? landmarkPois(l) : l)
-    ),
+    layers: stackedLayers(flavor),
   }
 }
 
@@ -172,3 +219,23 @@ export const CITY_VIEWS: Record<string, { center: [number, number]; zoom: number
     'washington-dc': { center: [-77.036873, 38.907192], zoom: 11.2, label: 'Washington DC' },
     'new-orleans-la': { center: [-90.071533, 29.951065], zoom: 10.9, label: 'New Orleans' },
   }
+
+/** The map's opening view: every city at once, framed on the lower 48. */
+export const ALL_CITIES = 'all'
+
+/** South-west and north-east corners of the lower 48, for fitBounds. */
+export const US_BOUNDS: [[number, number], [number, number]] = [
+  [-124.8, 24.5],
+  [-66.9, 49.4],
+]
+
+/** The city choices in display order, with All cities first. */
+export const CITY_CHOICES: Array<{ slug: string; label: string }> = [
+  { slug: ALL_CITIES, label: 'All cities' },
+  ...Object.entries(CITY_VIEWS).map(([slug, view]) => ({ slug, label: view.label })),
+]
+
+/** A `?city=` value the map can open on, else All cities. */
+export function initialCity(param: string | null | undefined): string {
+  return param && Object.hasOwn(CITY_VIEWS, param) ? param : ALL_CITIES
+}
