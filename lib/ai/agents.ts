@@ -137,10 +137,12 @@ export const MOCK_MODEL = 'mock-v1'
 
 /**
  * Written to `ai_generation_requests.prompt_version`. @2 (2026-10-15): neutral
- * ownership wording and the shared system prompt.
+ * ownership wording and the shared system prompt. @3 (2026-10-15): the SEO
+ * title asks for exactly one line, after a staging run returned an over-long
+ * answer one time in five.
  */
 export function promptVersionOf(agent: AgentDefinition): string {
-  return `${agent.templateKey}@2`
+  return `${agent.templateKey}@3`
 }
 
 // Fails the build (via the test suite) if an agent names a template that the

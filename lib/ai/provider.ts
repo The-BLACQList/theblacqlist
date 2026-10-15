@@ -58,6 +58,7 @@ import {
   rejectionCode,
   sanitizeForPrompt,
   validateOutput,
+  type OutputRejection,
 } from './sanitize'
 import { MAX_PROMPT_CHARS, monthlyCeilingUsd, withinMonthlyCeiling } from './spend'
 
@@ -107,7 +108,7 @@ export type GenerateResult =
   | { ok: false; code: 'rate_limited'; retryAfterHours: number }
   | { ok: false; code: 'quota_reached'; quota: number }
   | { ok: false; code: 'paused' }
-  | { ok: false; code: 'rejected'; reason: string }
+  | { ok: false; code: 'rejected'; reason: OutputRejection }
   | { ok: false; code: 'failed' }
 
 /**
@@ -299,8 +300,14 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
     }
   } catch (err) {
     // Only the fixed code is stored: a provider exception can carry request content.
-    if (err instanceof ProviderCallError) await closeFailed(err.code, err.usage)
-    else await closeFailed('provider_error')
+    if (err instanceof ProviderCallError) {
+      await closeFailed(err.code, err.usage)
+      // The model declining is the same outcome for the owner as a refusal our
+      // own check catches: usually the page has too little to work from.
+      if (err.code === 'provider_refusal') return { ok: false, code: 'rejected', reason: 'refusal' }
+    } else {
+      await closeFailed('provider_error')
+    }
     return { ok: false, code: 'failed' }
   }
 

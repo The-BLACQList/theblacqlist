@@ -86,7 +86,7 @@ describe('AI_AGENTS registry', () => {
   it('stamps a prompt version derived from the template key', () => {
     const agent = findAgent('seo_coach_title')
     expect(agent).toBeDefined()
-    expect(promptVersionOf(agent!)).toBe('SEO_TITLE@2')
+    expect(promptVersionOf(agent!)).toBe('SEO_TITLE@3')
   })
 })
 

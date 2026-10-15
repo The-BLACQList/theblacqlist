@@ -103,6 +103,11 @@ describe('ownership wording', () => {
     expect(SYSTEM_PROMPT).toMatch(/who owns the business/)
   })
 
+  it('asks the title writer for one line and nothing else', () => {
+    expect(PROMPT_TEMPLATES.SEO_TITLE).toMatch(/exactly one title on a single line/)
+    expect(PROMPT_TEMPLATES.SEO_TITLE).toMatch(/no options/i)
+  })
+
   it('gives the description writer the owner’s own words to work from', () => {
     expect(PROMPT_TEMPLATES.LISTING_DESCRIPTION).toContain('{{description_excerpt}}')
     expect(PROMPT_TEMPLATES.LISTING_DESCRIPTION).toContain('{{tagline}}')

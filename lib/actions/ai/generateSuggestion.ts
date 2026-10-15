@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { findAgent } from '@/lib/ai/agents'
 import { loadGenerateContext } from '@/lib/ai/context'
 import { generate, RATE_LIMIT_PER_LISTING_24H } from '@/lib/ai/provider'
+import { ownerRejectionMessage } from '@/lib/ai/sanitize'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
 import { aiQuota, canAccess } from '@/lib/stripe/features'
@@ -87,9 +88,7 @@ export async function generateSuggestionAction(
         // The monthly spending ceiling is reached, or could not be checked.
         return { error: 'AI suggestions are paused for now. Please try again later.' }
       case 'rejected':
-        // The reason code is not shown. "contains_phone" is meaningful to us and
-        // alarming to an owner who did nothing wrong; the audit row keeps it.
-        return { error: "That suggestion didn't pass our checks. Try requesting it again." }
+        return { error: ownerRejectionMessage(result.reason) }
       default:
         return { error: 'Could not generate a suggestion right now. Please try again.' }
     }

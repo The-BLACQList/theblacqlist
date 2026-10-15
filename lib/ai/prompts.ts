@@ -36,7 +36,8 @@ Requirements:
 - Include the business name and city
 - Naturally include the category or service type
 - Do not use pipes (|) or all-caps
-- Write only the title text, nothing else`,
+- Write exactly one title on a single line
+- No options, no quotation marks, no labels, no explanation`,
 
   SEO_DESCRIPTION: `Generate a meta description for a local business listing.
 
