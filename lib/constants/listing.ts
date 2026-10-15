@@ -25,6 +25,13 @@ export const VALID_OWNERSHIP_LABELS = ['black_owned', 'ally'] as const
 
 export type OwnershipLabel = (typeof VALID_OWNERSHIP_LABELS)[number]
 
+/**
+ * The approved one-line meaning of the Ally label. One source, so the add-business
+ * step, the filter, and the listing page never drift apart. Legal wording: do not
+ * reword without the founder.
+ */
+export const ALLY_ONE_LINER = 'Not Black-owned, but supports Black-owned businesses.'
+
 export const OWNERSHIP_LABEL_META: Record<
   OwnershipLabel,
   { label: string; shortLabel: string }

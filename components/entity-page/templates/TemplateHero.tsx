@@ -6,6 +6,7 @@ import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
+import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
@@ -126,6 +127,20 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             {typeLabel}
           </span>
         </div>
+
+        {/* What the Ally label means, in the approved words [Decision — founder,
+            2026-10-15: simplicity pass P3]. Visible text, not a tooltip. */}
+        {entity.ownership_label === 'ally' && (
+          <p className="font-body text-xs md:text-[13px] text-off-white/85 mb-3 max-w-xl">
+            <span className="font-semibold">Ally:</span> {ALLY_ONE_LINER}{' '}
+            <Link
+              href="/about#who-we-feature"
+              className="font-semibold text-light-gold underline underline-offset-2 hover:text-white"
+            >
+              What this means
+            </Link>
+          </p>
+        )}
 
         {entity.is_featured && entity.featured_bucket && (
           <p className="font-body text-xs md:text-[13px] text-off-white/85 mb-3 max-w-xl">

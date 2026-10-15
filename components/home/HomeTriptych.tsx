@@ -29,21 +29,21 @@ interface Panel {
 const PANELS: readonly Panel[] = [
   {
     index: '01',
-    title: 'Discover',
+    title: 'Browse the list',
     body: 'Every Black-owned business, one index.',
     href: '/discover',
     photo: '/images/editorial/asha-osei-photography.webp',
   },
   {
     index: '02',
-    title: 'Support',
+    title: 'Find one near you',
     body: 'Find businesses near you on the map, then spend there.',
     href: '/map',
     photo: '/images/editorial/peach-and-rye-kitchen.webp',
   },
   {
     index: '03',
-    title: 'Connect',
+    title: 'See where the money goes',
     body: 'Track the dollars we keep in community.',
     href: '/flow-map',
     photo: '/images/editorial/diaspora-creative-agency.webp',

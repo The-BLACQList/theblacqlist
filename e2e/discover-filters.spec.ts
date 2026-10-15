@@ -211,7 +211,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     )
   })
 
-  test('Where they operate writes ?location_type', async ({ page }) => {
+  test('How to reach them writes ?location_type', async ({ page }) => {
     const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
     const baseline = requireNumber(await resultTotal(page), '/discover')
 
@@ -219,7 +219,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     // enum key `virtual`. Asserting on the label would have hidden a mismatch
     // between the two, so the URL assertion names the stored value.
     // The section starts collapsed, so open it first.
-    await sidebar.locator('summary', { hasText: /^Where they operate$/ }).click()
+    await sidebar.locator('summary', { hasText: /^How to reach them$/ }).click()
     await sidebar.getByRole('button', { name: 'Online only', exact: true }).click()
     await page.waitForURL(/[?&]location_type=virtual/)
     expect(

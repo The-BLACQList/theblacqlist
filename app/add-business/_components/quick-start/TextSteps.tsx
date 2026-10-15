@@ -1,5 +1,6 @@
 'use client'
 
+import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
 import { FIELD_IDS, TAGLINE_MAX, aboutMax } from '@/lib/listings/quickStart'
 import { ChoiceCards } from './ChoiceCards'
@@ -19,7 +20,7 @@ import {
 
 const OWNERSHIP_CHOICES = [
   { value: 'black_owned', title: 'Black-Owned', hint: 'Majority (51%+) Black-owned and operated.' },
-  { value: 'ally', title: 'Ally', hint: 'Not Black-owned, but supports Black-owned businesses.' },
+  { value: 'ally', title: 'Ally', hint: ALLY_ONE_LINER },
 ] as const
 
 export function OwnershipStep({ answers, onChange, problem }: StepProps) {
