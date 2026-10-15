@@ -34,6 +34,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 export const SUGGESTION_EXPIRY_DAYS = 7
 
+/** The states an owner can still act on. */
+export type OpenStatus = 'pending' | 'approved'
+
 export interface OwnedSuggestion {
   id: string
   listingId: string
@@ -59,13 +62,17 @@ function isExpired(createdAt: string): boolean {
  * `expectedStatus` is required, not optional: every caller knows which state it
  * is transitioning from, and passing it means a double-submitted Approve returns
  * "already reviewed" instead of silently approving twice and stamping a second
- * `reviewed_at`.
+ * `reviewed_at`. Edit content (ticket 138) passes both open states, because a
+ * suggestion approved on the retired AI Suggestions page can still be used or
+ * turned down there.
  */
 export async function loadOwnedSuggestion(
   suggestionId: string,
   userId: string,
-  expectedStatus: 'pending' | 'approved'
+  expectedStatus: OpenStatus | readonly OpenStatus[]
 ): Promise<LoadResult> {
+  const allowed: readonly string[] =
+    typeof expectedStatus === 'string' ? [expectedStatus] : expectedStatus
   if (!suggestionId) return { ok: false, error: 'Missing suggestion ID.' }
 
   const supabase = createServiceClient()
@@ -99,7 +106,7 @@ export async function loadOwnedSuggestion(
     }
   }
 
-  if (row.status !== expectedStatus) {
+  if (!allowed.includes(row.status)) {
     return { ok: false, error: `This suggestion has already been ${row.status}.` }
   }
 

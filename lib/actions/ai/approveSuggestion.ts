@@ -44,6 +44,6 @@ export async function approveSuggestionAction(
 
   if (error) return { error: 'Could not save your review. Please try again.' }
 
-  revalidatePath(`/dashboard/pages/${loaded.suggestion.listingId}/ai-suggestions`)
+  revalidatePath(`/dashboard/pages/${loaded.suggestion.listingId}/edit`)
   return { success: true }
 }

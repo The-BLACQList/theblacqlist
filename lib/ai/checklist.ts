@@ -1,6 +1,6 @@
 // Rule-based page optimization checklist.
 // Zero external calls — pure function over listing data fetched server-side.
-// Used by /dashboard/pages/[entityId]/ai-suggestions to compute a page score,
+// Used by the StrengthMeter on Edit content to compute a page score,
 // and (with a tier) by the add-business finish page meter (ticket 126).
 
 import { canAccess, photoLimit } from '@/lib/stripe/features'

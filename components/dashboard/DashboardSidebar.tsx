@@ -88,7 +88,6 @@ export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },
                 { href: `/dashboard/pages/${entityId}/analytics`, label: 'Analytics' },
-                { href: `/dashboard/pages/${entityId}/ai-suggestions`, label: 'AI Suggestions' },
                 { href: `/dashboard/pages/${entityId}/verification`, label: 'Get Verified' },
               ].map(({ href, label }) => {
                 const active = pathname === href || pathname.startsWith(href + '/')

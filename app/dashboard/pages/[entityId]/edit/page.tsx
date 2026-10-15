@@ -19,6 +19,8 @@ import { SeoSection } from '@/components/dashboard/SeoSection'
 import { PublishSection } from '@/components/dashboard/PublishSection'
 import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
+import { getWritingAllowance } from '@/lib/ai/allowance'
+import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -264,8 +266,23 @@ export default async function EditPage({ params }: Props) {
 
   // Every other page (business, creative, service provider, vendor) edits in
   // the same side-by-side finish view a new owner uses (ticket 129).
-  const data = await loadFinishData(supabase, listing.id, owner.user.id)
+  const [data, allowance] = await Promise.all([
+    loadFinishData(supabase, listing.id, owner.user.id),
+    getWritingAllowance(listing.id, listing.tier),
+  ])
   if (!data) notFound()
+  // Writing help sits inside the fields (ticket 138). Off means the switch is
+  // off, so the page renders exactly as it did before.
+  const writingHelp =
+    allowance.state === 'off'
+      ? undefined
+      : {
+          allowance,
+          initial:
+            allowance.state === 'ready'
+              ? await loadOpenSuggestions(supabase as unknown as SupabaseClient, listing.id)
+              : {},
+        }
   const cityB = listing.cities as { slug: string; name: string } | null
   return (
     <div className="max-w-[1100px] space-y-6">
@@ -304,6 +321,7 @@ export default async function EditPage({ params }: Props) {
         data={data}
         mode="edit"
         storageUrl={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`}
+        writingHelp={writingHelp}
       />
     </div>
   )

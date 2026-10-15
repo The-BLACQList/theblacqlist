@@ -5,7 +5,7 @@ import type { ChecklistResult } from '@/lib/ai/checklist'
 import { cn } from '@/lib/utils'
 
 // Short labels and anchors for the finish view (tickets 126 and 129). The
-// checklist's own labels are written for the dashboard suggestions page.
+// checklist's own labels are longer, written for a standalone list.
 export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
   tagline: { label: 'One-line tagline', anchor: '#basics' },
   description: { label: 'About, 100+ characters', anchor: '#about' },

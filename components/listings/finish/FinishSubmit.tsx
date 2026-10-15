@@ -13,7 +13,9 @@ interface Props {
   /** Short labels of the checklist items still open. */
   missing: string[]
   /** Typed but unsaved fields, saved first so nothing is lost on submit. */
-  unsaved: Partial<Record<'name' | 'tagline' | 'description', string>>
+  unsaved: Partial<
+    Record<'name' | 'tagline' | 'description' | 'meta_title' | 'meta_description', string>
+  >
 }
 
 // The send-for-review step for a new business page (ticket 126). The button is
