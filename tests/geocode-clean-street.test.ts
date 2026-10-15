@@ -28,6 +28,11 @@ describe('cleanStreet', () => {
       ['123 Main St #4', '123 Main St'],
       ['123 Main St, Ste. 5', '123 Main St'],
       ['123 Main St Apt 4B', '123 Main St'],
+      // Ordinal floor after the street, a real Atlanta corpus address.
+      ['1230 Peachtree St. NE 19th Fl', '1230 Peachtree St. NE'],
+      ['100 Main St, 3rd Floor', '100 Main St'],
+      ['1200 Foster St NW Suite 120', '1200 Foster St NW'],
+      ['950 Herrington Road, Suite C-114', '950 Herrington Road'],
     ])('%s → %s', (input, expected) => {
       expect(cleanStreet(input)).toBe(expected)
     })
@@ -39,6 +44,12 @@ describe('cleanStreet', () => {
       ['1231 Marion Barry Ave SE', '1231 Marion Barry Ave SE'],
       ['4311 Degnan Blvd', '4311 Degnan Blvd'],
       ['2341 Marietta Blvd NW', '2341 Marietta Blvd NW'],
+      // Unit words inside a street name. These were cut before the fix.
+      ['1725 Winchester Rd', '1725 Winchester Rd'],
+      ['1942 Amsterdam Ave', '1942 Amsterdam Ave'],
+      ['3952 Lancaster Ave', '3952 Lancaster Ave'],
+      ['1200 Foster St NW', '1200 Foster St NW'],
+      ['400 Unity Ave', '400 Unity Ave'],
     ])('%s', (input, expected) => {
       expect(cleanStreet(input)).toBe(expected)
     })
