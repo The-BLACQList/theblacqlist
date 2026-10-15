@@ -144,7 +144,7 @@ Every request also carries a fixed system prompt (`lib/ai/anthropic.ts`): use on
 
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...     # server-side only; never NEXT_PUBLIC_
-AI_MONTHLY_CEILING_USD=25        # required too; without it every call is mock
+AI_MONTHLY_CEILING_USD=30        # required too; without it every call is mock
 ```
 
 This variable is already documented in `docs/blacqlist/architecture/security-and-privacy-plan.md` under "Secret Management" as a planned V2 server-side secret.

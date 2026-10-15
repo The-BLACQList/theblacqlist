@@ -53,10 +53,10 @@ describe('spending ceiling arithmetic', () => {
     expect(worstCaseUsdAnyAgent()).toBeLessThan(0.005)
   })
 
-  it('turns $25 a month into thousands of calls, never more than the ceiling allows', () => {
-    const calls = monthlyCallBudget(25)
+  it('turns $30 a month into thousands of calls, never more than the ceiling allows', () => {
+    const calls = monthlyCallBudget(30)
     expect(calls).toBeGreaterThan(5000)
-    expect(calls * worstCaseUsdAnyAgent()).toBeLessThanOrEqual(25)
+    expect(calls * worstCaseUsdAnyAgent()).toBeLessThanOrEqual(30)
   })
 
   it('caps output tokens just above each agent’s character limit', () => {
