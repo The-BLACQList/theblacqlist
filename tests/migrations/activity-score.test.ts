@@ -102,6 +102,10 @@ const MIGRATION = path.join(
   MIGRATIONS_DIR,
   "20260923000000_activity_ranking.sql",
 )
+const SKIP_MISSING = path.join(
+  MIGRATIONS_DIR,
+  "20261016000000_rollup_skip_missing_listings.sql",
+)
 
 // The minimum schema the chain touches, at the shapes production uses.
 //
@@ -775,6 +779,81 @@ describe.skipIf(!DB_REACHABLE)("20260923000000_activity_ranking", () => {
            WHERE id IN ('${FRESH}', '${VIRAL}');`,
       )
       expect(search(url)).toEqual([VIRAL, FRESH, HOUSE, QUIET, STALE])
+    })
+  })
+})
+
+describe.skipIf(!DB_REACHABLE)("20261016000000_rollup_skip_missing_listings", () => {
+  // A listing deleted after it got events that day. analytics_events has no
+  // foreign key, entity_analytics_daily does.
+  const GONE = "00000000-0000-0000-0000-0000000000ff"
+  const EVENTS = `INSERT INTO analytics_events (event_name, entity_type, entity_id, properties, created_at) VALUES
+     ('page_view',    'listing', '${FRESH}', '{}',                now()),
+     ('page_view',    'listing', '${FRESH}', '{}',                now()),
+     ('save_toggled', 'listing', '${GONE}',  '{"action":"save"}', now()),
+     ('save_toggled', 'listing', '${GONE}',  '{"action":"save"}', now());`
+
+  it("1. before the fix, one deleted listing fails the whole day", async () => {
+    await withScratchDb("rollup_missing_before", async (url) => {
+      baseline(url)
+      exec(url, SEED)
+      applyFile(url, MIGRATION)
+      exec(url, EVENTS)
+
+      const result = aggregate(url)
+      expect(result.status).toBe("failed")
+      expect(result.error ?? "").toContain("foreign key")
+    })
+  })
+
+  it("2. after the fix, the day rolls up, the deleted listing is skipped, and the log says how many", async () => {
+    await withScratchDb("rollup_missing_after", async (url) => {
+      baseline(url)
+      exec(url, SEED)
+      applyFile(url, MIGRATION)
+      applyFile(url, SKIP_MISSING)
+      exec(url, EVENTS)
+
+      const result = aggregate(url)
+      expect(result.status).toBe("success")
+      expect(Number(result.rows_upserted)).toBe(1)
+
+      const rollup = query<{ listing_id: string; page_views: number }>(
+        url,
+        `SELECT listing_id, page_views FROM entity_analytics_daily
+          WHERE snapshot_date = current_date`,
+      )
+      expect(rollup).toHaveLength(1)
+      expect(rollup[0]?.listing_id).toBe(FRESH)
+      expect(Number(rollup[0]?.page_views)).toBe(2)
+
+      const log = query<{ status: string; notes: string }>(
+        url,
+        `SELECT status, notes FROM analytics_job_log ORDER BY created_at DESC LIMIT 1`,
+      )
+      expect(log[0]?.status).toBe("success")
+      expect(log[0]?.notes).toMatch(/^rescored \d+ listings; skipped 2 events for missing listings$/)
+    })
+  })
+
+  it("3. with nothing to skip, the job log notes read exactly as before", async () => {
+    await withScratchDb("rollup_missing_none", async (url) => {
+      baseline(url)
+      exec(url, SEED)
+      applyFile(url, MIGRATION)
+      applyFile(url, SKIP_MISSING)
+      exec(
+        url,
+        `INSERT INTO analytics_events (event_name, entity_type, entity_id, properties, created_at)
+         VALUES ('page_view', 'listing', '${FRESH}', '{}', now());`,
+      )
+
+      expect(aggregate(url).status).toBe("success")
+      const log = query<{ notes: string }>(
+        url,
+        `SELECT notes FROM analytics_job_log ORDER BY created_at DESC LIMIT 1`,
+      )
+      expect(log[0]?.notes).toMatch(/^rescored \d+ listings$/)
     })
   })
 })
