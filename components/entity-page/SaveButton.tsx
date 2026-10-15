@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Bookmark } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SavedToast, showsSavedToast } from '@/components/ui/saved-toast'
 
 /** How long the failure ring and its message stay up before clearing. */
 const FAILURE_MS = 4000
@@ -79,7 +80,9 @@ export function SaveButton({
   // A live region reports CHANGES; before the first one it has nothing to say.
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [toast, setToast] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   const failTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(
@@ -123,7 +126,9 @@ export function SaveButton({
             rollback(next)
             return
           }
+          if (showsSavedToast(pathname)) setToast(true)
         } else {
+          setToast(false)
           const res = await fetch(`/api/saves?listing_id=${listingId}`, { method: 'DELETE' })
           if (!res.ok && res.status !== 204) {
             rollback(next)
@@ -143,9 +148,12 @@ export function SaveButton({
   // Polite live region announces the save/unsave outcome to screen readers
   // (matches SaveIconButton). The button's aria-label is unaffected.
   const liveRegion = (
-    <span className="sr-only" aria-live="polite">
-      {message}
-    </span>
+    <>
+      <span className="sr-only" aria-live="polite">
+        {message}
+      </span>
+      {toast && <SavedToast onClose={() => setToast(false)} />}
+    </>
   )
 
   const colors = SURFACE[surface][saved ? 'saved' : 'unsaved']

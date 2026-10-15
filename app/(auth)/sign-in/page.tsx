@@ -30,6 +30,9 @@ function SignInContent() {
   const next = searchParams.get('next') ?? ''
   const error = searchParams.get('error')
   const accountDeleted = searchParams.get('deleted') === '1'
+  // Set by the Save buttons when a signed-out visitor taps one. Signing in
+  // brings them back to the page; it does not save for them, so don't say so.
+  const fromSave = searchParams.get('action') === 'save'
 
   const [state, action] = useActionState(signInAction, null)
   const [showPassword, setShowPassword] = useState(false)
@@ -51,7 +54,11 @@ function SignInContent() {
   return (
     <>
       <h1 className="font-headline text-[26px] text-brand-black mb-1">Welcome back</h1>
-      <p className="font-subhead text-sm text-charcoal mb-6">Sign in to your BLACQList account.</p>
+      <p className="font-subhead text-sm text-charcoal mb-6">
+        {fromSave
+          ? 'Sign in to save places. We’ll take you right back to this one.'
+          : 'Sign in to your BLACQList account.'}
+      </p>
 
       {accountDeleted && (
         <div

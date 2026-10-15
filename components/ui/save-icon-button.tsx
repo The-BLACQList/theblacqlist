@@ -14,9 +14,11 @@
 // anyone sees; a solid gold chip is.
 
 import { useEffect, useRef, useState, useTransition } from 'react'
+import { usePathname } from 'next/navigation'
 import { Bookmark } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { SavedToast, showsSavedToast } from '@/components/ui/saved-toast'
 
 /** How long the failure ring and its message stay up before clearing. */
 const FAILURE_MS = 4000
@@ -46,6 +48,8 @@ export function SaveIconButton({
   // A live region reports CHANGES; it has nothing to say before the first one.
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [toast, setToast] = useState(false)
+  const pathname = usePathname()
 
   const failTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const popTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -100,8 +104,11 @@ export function SaveIconButton({
               return
             }
             rollback(next)
+            return
           }
+          if (showsSavedToast(pathname)) setToast(true)
         } else {
+          setToast(false)
           const res = await fetch(`/api/saves?listing_id=${listingId}`, { method: 'DELETE' })
           if (!res.ok && res.status !== 204) {
             rollback(next)
@@ -148,6 +155,7 @@ export function SaveIconButton({
       <span className="sr-only" aria-live="polite">
         {message}
       </span>
+      {toast && <SavedToast onClose={() => setToast(false)} />}
     </>
   )
 }

@@ -8,14 +8,7 @@ import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { isCovered } from '@/lib/features/covered'
 import { SoonPill } from '@/components/ui/soon-pill'
-
-const desktopNavLinks = [
-  { label: 'Discover', href: '/discover' },
-  { label: 'Map', href: '/map' },
-  { label: 'Cities', href: '/cities' },
-  { label: 'The Collective', href: '/flow-map' },
-  { label: 'For Business', href: '/for-business' },
-] as const
+import { mainNavLinks } from '@/components/nav/nav-links'
 
 export async function PublicHeader() {
   const supabase = await createClient()
@@ -51,7 +44,7 @@ export async function PublicHeader() {
 
           {/* Desktop nav links */}
           <ul className="hidden md:flex items-center gap-6 flex-1 ml-8">
-            {desktopNavLinks.map((link) => (
+            {mainNavLinks(isSignedIn).map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}

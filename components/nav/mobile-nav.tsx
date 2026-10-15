@@ -17,14 +17,7 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { SoonPill } from '@/components/ui/soon-pill'
-
-const navLinks = [
-  { label: 'Discover', href: '/discover' },
-  { label: 'Map', href: '/map' },
-  { label: 'Cities', href: '/cities' },
-  { label: 'The Collective', href: '/flow-map' },
-  { label: 'For Business', href: '/for-business' },
-] as const
+import { mainNavLinks } from '@/components/nav/nav-links'
 
 interface Props {
   isSignedIn: boolean
@@ -89,7 +82,7 @@ export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
           {/* Nav links */}
           <nav aria-label="Mobile navigation">
             <ul className="flex flex-col gap-1">
-              {navLinks.map((link) => (
+              {mainNavLinks(isSignedIn).map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
