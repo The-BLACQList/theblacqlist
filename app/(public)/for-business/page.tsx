@@ -85,18 +85,34 @@ const eyebrowDark = 'font-subhead text-xs font-bold uppercase tracking-[0.14em] 
 const eyebrowLight = 'font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber'
 const h2 = 'font-headline font-medium text-[30px] md:text-[44px] leading-[1.1] text-balance'
 
-function OwnerButtons() {
+// [Decision, founder, 2026-10-15: one owner door. Every general owner link
+// lands here at #start, on one question: is your business already listed?
+// Find first, since claiming an existing page avoids duplicates.]
+function OwnerChoice() {
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-      <Link href="/claim" className={`${button} bg-gold text-brand-black hover:bg-light-gold`}>
-        Claim your page
-      </Link>
-      <Link
-        href="/add-business"
-        className={`${button} border border-off-white/70 text-off-white hover:bg-off-white/10`}
-      >
-        List a new business
-      </Link>
+    <div
+      id="start"
+      className="scroll-mt-24 flex flex-col gap-4 rounded-[3px] border border-off-white/20 bg-off-white/5 p-5"
+    >
+      <div className="flex flex-col gap-1">
+        <h2 className="font-headline font-medium text-[24px] leading-tight text-off-white text-balance">
+          Is your business already on the list?
+        </h2>
+        <p className="font-body text-base leading-relaxed text-ink-soft">
+          Search for it and claim it, or add it in a few minutes.
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+        <Link href="/claim" className={`${button} bg-gold text-brand-black hover:bg-light-gold`}>
+          Find my business
+        </Link>
+        <Link
+          href="/add-business"
+          className={`${button} border border-off-white/70 text-off-white hover:bg-off-white/10`}
+        >
+          Add my business
+        </Link>
+      </div>
     </div>
   )
 }
@@ -135,7 +151,7 @@ export default async function ForBusinessPage() {
               to every business, labeled Black-Owned or Ally.
             </p>
             <div className="pt-2">
-              <OwnerButtons />
+              <OwnerChoice />
             </div>
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-[3px]">
@@ -258,7 +274,7 @@ export default async function ForBusinessPage() {
           <PricingPlans
             availability={availability}
             showFeatured={false}
-            freeHref="/claim"
+            freeHref="/for-business#start"
             waitlistHref="/pricing#pricing-waitlist"
           />
           <div className="mt-8 flex justify-center">
@@ -293,7 +309,7 @@ export default async function ForBusinessPage() {
               Upgrade any time, or never.
             </p>
             <div className="pt-2">
-              <OwnerButtons />
+              <OwnerChoice />
             </div>
           </div>
         </Container>

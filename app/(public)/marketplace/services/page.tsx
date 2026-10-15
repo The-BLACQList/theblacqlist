@@ -70,7 +70,7 @@ export default async function MarketplaceServicesPage() {
               Service providers are building their listings. Check back soon.
             </p>
             <Link
-              href="/add-business"
+              href="/for-business#start"
               className="inline-flex items-center h-10 px-5 mt-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors"
             >
               List your business

@@ -164,7 +164,7 @@ export default function AboutPage() {
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-6 py-2.5 min-h-[44px] h-auto"
             >
-              <Link href="/for-business">List Your Business</Link>
+              <Link href="/for-business#start">List Your Business</Link>
             </Button>
             <Button
               asChild

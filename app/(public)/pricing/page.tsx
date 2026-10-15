@@ -238,7 +238,7 @@ export default async function PricingPage() {
             asChild
             className="bg-brand-black text-white font-body font-bold hover:bg-charcoal rounded-full px-7 py-3 min-h-[44px] h-auto"
           >
-            <Link href="/for-business">List Your Business Free</Link>
+            <Link href="/for-business#start">List Your Business Free</Link>
           </Button>
         </div>
       </Section>
