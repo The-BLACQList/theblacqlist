@@ -84,6 +84,8 @@ These are planned but not in scope for this build:
 | Event promotion             | Paid amplification for event listings                                             | When Events module launches             |
 | Editorial partnerships      | Paid BLACQLight features and sponsored content slots                              | When editorial pipeline is staffed      |
 | Sponsor campaigns           | Packaged brand sponsorships (City Spotlight, Platform Partner, Community Partner) | When campaign management admin is built |
+| Shopper membership          | **$4.99/mo** for shoppers: higher chat limits, the full Collective, a private spending trail, monthly impact report (decided 2026-10-15, see `pricing-decisions-2026-10-15.md`) | After a waitlist on The Collective shows demand |
+| Collective insights         | Gap finder, supply lanes, spend bands, trend history in Growth and Premium; B2B matching stays free (decided 2026-10-15) | When Growth and Premium open |
 
 ### Marketplace take rate — reconciled to 8% (2026-07-27)
 
