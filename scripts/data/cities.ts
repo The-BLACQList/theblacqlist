@@ -145,9 +145,8 @@ export const SEED_CITIES: SeedCity[] = [
     activeInProd: true,
     provenanceRequired: true,
   },
-  // Batch 1 of national seeding (2026-10-15). Rows exist in `cities` but are
-  // inactive. Turning one on means flipping `is_active` and `activeInProd`
-  // together, after the founder signs off and the city clears `minPublished`.
+  // Batch 1 of national seeding (2026-10-15). Switched on together
+  // once each city cleared `minPublished` [Decision — founder, 2026-10-15].
   {
     slug: 'new-york-ny',
     label: 'New York',
@@ -156,7 +155,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-new-york.json',
     minPublished: 36,
     center: [-74.005974, 40.712776],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -167,7 +166,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-philadelphia.json',
     minPublished: 36,
     center: [-75.165222, 39.952583],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -178,7 +177,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-dallas.json',
     minPublished: 36,
     center: [-96.796988, 32.776664],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -189,7 +188,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-detroit.json',
     minPublished: 36,
     center: [-83.045754, 42.331427],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -200,7 +199,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-baltimore.json',
     minPublished: 36,
     center: [-76.612189, 39.290385],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -211,7 +210,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-memphis.json',
     minPublished: 36,
     center: [-90.048981, 35.149532],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
   {
@@ -222,7 +221,7 @@ export const SEED_CITIES: SeedCity[] = [
     file: 'listings-charlotte.json',
     minPublished: 36,
     center: [-80.843124, 35.227085],
-    activeInProd: false,
+    activeInProd: true,
     provenanceRequired: true,
   },
 ]

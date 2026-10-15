@@ -51,11 +51,12 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
     expect(count ?? 0, 'No published collection — publish one via /admin/collections/new').toBeGreaterThanOrEqual(1)
   })
 
-  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50 / LA·DC·NOLA 40)', async () => {
+  test('M9 — seed data meets thresholds (ATL 150 / HOU 50 / CHI 50 / LA·DC·NOLA 40 / batch 1 cities 36)', async () => {
     const supabase = serviceClient()
     // The threshold is a *published* count, not a row count: the seeder forces
     // `status: 'draft'` on any row marked temp-closed, so a city can carry 42
-    // rows and still fail at 39. Expansion cities launch at 40.
+    // rows and still fail at 39. Expansion cities launch at 40; the seven batch 1
+    // cities (2026-10-15) launch at 36, the bar the founder set for them.
     const cities = [
       { slug: 'atlanta-ga', label: 'ATL', min: 150 },
       { slug: 'houston-tx', label: 'HOU', min: 50 },
@@ -63,6 +64,13 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
       { slug: 'los-angeles-ca', label: 'LA', min: 40 },
       { slug: 'washington-dc', label: 'DC', min: 40 },
       { slug: 'new-orleans-la', label: 'NOLA', min: 40 },
+      { slug: 'new-york-ny', label: 'NYC', min: 36 },
+      { slug: 'philadelphia-pa', label: 'PHL', min: 36 },
+      { slug: 'dallas-tx', label: 'DAL', min: 36 },
+      { slug: 'detroit-mi', label: 'DET', min: 36 },
+      { slug: 'baltimore-md', label: 'BAL', min: 36 },
+      { slug: 'memphis-tn', label: 'MEM', min: 36 },
+      { slug: 'charlotte-nc', label: 'CLT', min: 36 },
     ]
 
     const results: Array<{ label: string; min: number; count: number }> = []
