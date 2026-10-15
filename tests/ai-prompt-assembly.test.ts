@@ -7,9 +7,8 @@
 // asserts the negative: the forbidden fields are absent, and a contact detail
 // typed into a description does not survive the trip.
 //
-// The provider-resolution block asserts the same GATE-SPEND property as
-// tests/ai-agents.test.ts, one level up: even with a credential present, an
-// unresolved model tier means the mock path runs.
+// The provider-resolution block asserts that no single setting starts paid
+// calls: the real provider needs a model, a key, and a monthly ceiling.
 // =============================================================================
 
 import { describe, it, expect, afterEach } from 'vitest'
@@ -97,25 +96,51 @@ describe('buildPromptVars', () => {
 
 describe('resolveProvider', () => {
   const originalKey = process.env.ANTHROPIC_API_KEY
+  const originalCeiling = process.env.AI_MONTHLY_CEILING_USD
 
   afterEach(() => {
     if (originalKey === undefined) delete process.env.ANTHROPIC_API_KEY
     else process.env.ANTHROPIC_API_KEY = originalKey
+    if (originalCeiling === undefined) delete process.env.AI_MONTHLY_CEILING_USD
+    else process.env.AI_MONTHLY_CEILING_USD = originalCeiling
   })
 
-  it('resolves to the mock provider with no credential present', () => {
+  it('resolves to the mock provider with neither setting present', () => {
     delete process.env.ANTHROPIC_API_KEY
+    delete process.env.AI_MONTHLY_CEILING_USD
     expect(resolveProvider(findAgent('seo_coach_title')!).provider).toBe('mock')
   })
 
-  it('still resolves to the mock provider when a credential IS present', () => {
-    // The credential alone must not start spending. Both halves are required:
-    // a resolved MODEL_BY_TIER entry and a key. This is the assertion that would
-    // fail first if a model name were filled in without a GATE-SPEND decision.
+  it('stays on the mock with a key but no ceiling', () => {
+    // The credential alone must not start spending.
     process.env.ANTHROPIC_API_KEY = 'sk-not-a-real-key'
+    delete process.env.AI_MONTHLY_CEILING_USD
     for (const agent of ['seo_coach_title', 'listing_description']) {
       expect(resolveProvider(findAgent(agent)!).provider).toBe('mock')
     }
+  })
+
+  it('stays on the mock with a ceiling but no key', () => {
+    delete process.env.ANTHROPIC_API_KEY
+    process.env.AI_MONTHLY_CEILING_USD = '25'
+    expect(resolveProvider(findAgent('seo_coach_title')!).provider).toBe('mock')
+  })
+
+  it('stays on the mock when the ceiling is zero or not a number', () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-not-a-real-key'
+    for (const ceiling of ['0', '-5', 'twenty', '']) {
+      process.env.AI_MONTHLY_CEILING_USD = ceiling
+      expect(resolveProvider(findAgent('seo_coach_title')!).provider).toBe('mock')
+    }
+  })
+
+  it('uses Anthropic with a key and a ceiling', () => {
+    process.env.ANTHROPIC_API_KEY = 'sk-not-a-real-key'
+    process.env.AI_MONTHLY_CEILING_USD = '25'
+    expect(resolveProvider(findAgent('listing_description')!)).toEqual({
+      provider: 'anthropic',
+      model: 'claude-haiku-5-5',
+    })
   })
 
   it('reports the mock model name so the audit row is attributable', () => {

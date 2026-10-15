@@ -7,10 +7,9 @@
 // drifts, the failure is silent — a suggestion applied to the wrong field, or an
 // agent whose prompt does not exist.
 //
-// The last block is the one that matters most: it asserts that the repo in its
-// current state cannot reach a paid provider. That is a GATE-SPEND property, and
-// a test is the only thing that will notice if somebody fills in a model name
-// while looking at something else.
+// The last block pins the GATE-SPEND decision (2026-10-15, Claude Haiku 5.5 for
+// every tier). Changing a model changes the per-call price, so it should take a
+// deliberate test edit and a matching change to the price table in spend.ts.
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
@@ -87,7 +86,7 @@ describe('AI_AGENTS registry', () => {
   it('stamps a prompt version derived from the template key', () => {
     const agent = findAgent('seo_coach_title')
     expect(agent).toBeDefined()
-    expect(promptVersionOf(agent!)).toBe('SEO_TITLE@1')
+    expect(promptVersionOf(agent!)).toBe('SEO_TITLE@3')
   })
 })
 
@@ -148,13 +147,11 @@ describe('mock tier', () => {
   })
 })
 
-describe('zero-spend guarantee', () => {
-  it('has no model resolved for any tier', () => {
-    // `[Decision — GATE-SPEND pending]` Filling either of these in is a spending
-    // decision. If this test fails, a per-call price was chosen somewhere.
-    for (const tier of Object.keys(MODEL_BY_TIER)) {
-      expect(MODEL_BY_TIER[tier as keyof typeof MODEL_BY_TIER]).toBeNull()
-    }
+describe('model choice (GATE-SPEND, 2026-10-15)', () => {
+  it('uses Claude Haiku 5.5 for every tier', () => {
+    // If this fails, a per-call price changed. Update PRICE_PER_MTOK in
+    // lib/ai/spend.ts in the same change.
+    expect(MODEL_BY_TIER).toEqual({ fast: 'claude-haiku-5-5', quality: 'claude-haiku-5-5' })
   })
 
   it('names the mock model explicitly so audit rows are attributable', () => {

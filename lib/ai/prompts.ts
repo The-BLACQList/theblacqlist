@@ -9,19 +9,23 @@
 export const PROMPT_TEMPLATES = {
   // ─── Business-side agents ────────────────────────────────────────────────
 
-  LISTING_DESCRIPTION: `You are a copywriter helping a Black-owned business get discovered online. Write a compelling business description for "{{listing_name}}", a {{category_name}} business in {{city_name}}.
+  LISTING_DESCRIPTION: `You are a copywriter helping a local business get discovered online. Write a compelling business description for "{{listing_name}}", a {{category_name}} business in {{city_name}}.
+
+What the owner has written so far:
+Tagline: {{tagline}}
+Description: {{description_excerpt}}
 
 The description should:
 - Be 150–250 words
 - Open with the business's core value proposition
-- Highlight what makes this business worth visiting or contacting
+- Highlight what makes this business worth visiting or contacting, using only what the owner wrote
 - Use warm, community-oriented language
 - End with a clear reason to reach out or visit
 - Not include contact information, URLs, or pricing
 
 Write only the description text. No headings, no intro, no explanation.`,
 
-  SEO_TITLE: `Generate a concise, compelling meta title for a Black-owned business listing.
+  SEO_TITLE: `Generate a concise, compelling meta title for a local business listing.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -32,9 +36,10 @@ Requirements:
 - Include the business name and city
 - Naturally include the category or service type
 - Do not use pipes (|) or all-caps
-- Write only the title text, nothing else`,
+- Write exactly one title on a single line
+- No options, no quotation marks, no labels, no explanation`,
 
-  SEO_DESCRIPTION: `Generate a meta description for a Black-owned business listing.
+  SEO_DESCRIPTION: `Generate a meta description for a local business listing.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -48,7 +53,7 @@ Requirements:
 - Do not use quotation marks
 - Write only the meta description text, nothing else`,
 
-  SOCIAL_CAPTION_INSTAGRAM: `Write an Instagram caption for a Black-owned business to share their BLACQList Page.
+  SOCIAL_CAPTION_INSTAGRAM: `Write an Instagram caption for a local business to share their BLACQList Page.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -62,7 +67,7 @@ Requirements:
 - Do not include URLs
 - Write only the caption text and hashtags, nothing else`,
 
-  SOCIAL_CAPTION_FACEBOOK: `Write a Facebook post for a Black-owned business to share their BLACQList Page.
+  SOCIAL_CAPTION_FACEBOOK: `Write a Facebook post for a local business to share their BLACQList Page.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -76,7 +81,7 @@ Requirements:
 - Do not include URLs
 - Write only the post text, nothing else`,
 
-  SOCIAL_CAPTION_X: `Write an X (Twitter) post for a Black-owned business to share their BLACQList Page.
+  SOCIAL_CAPTION_X: `Write an X (Twitter) post for a local business to share their BLACQList Page.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -89,7 +94,7 @@ Requirements:
 - Do not include URLs
 - Write only the post text, nothing else`,
 
-  REVIEW_RESPONSE: `Write a professional, warm response to a customer review for a Black-owned business.
+  REVIEW_RESPONSE: `Write a professional, warm response to a customer review for a local business.
 
 Business name: {{listing_name}}
 Review rating: {{rating}} out of 5 stars
@@ -105,7 +110,7 @@ Requirements:
 - Do not be defensive
 - Write only the response text, nothing else`,
 
-  ANALYTICS_SUMMARY: `Write a plain-language summary of a Black-owned business's recent performance on The BLACQList.
+  ANALYTICS_SUMMARY: `Write a plain-language summary of a local business's recent performance on The BLACQList.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -127,7 +132,7 @@ Requirements:
 
   // ─── Admin / platform agents ─────────────────────────────────────────────
 
-  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList, a platform for Black-owned businesses.
+  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList, a directory of Black-owned and Ally businesses.
 
 Collection name: {{collection_name}}
 Collection description: {{collection_description}}
@@ -144,7 +149,7 @@ For each candidate that fits the collection, provide:
 
 Format your response as a simple list. Only include listings that genuinely fit. If none fit, say so.`,
 
-  GUIDE_SECTION: `Write a section for a city guide on The BLACQList, a platform for discovering Black-owned businesses.
+  GUIDE_SECTION: `Write a section for a city guide on The BLACQList, a directory for discovering Black-owned and Ally businesses.
 
 City: {{city_name}}
 Category: {{category_name}}
@@ -160,7 +165,7 @@ Requirements:
 - End with a brief "why this matters to the community" closing thought
 - Write only the guide section text, nothing else`,
 
-  SOCIAL_POST_ADMIN: `Write a social media post announcing a newly verified Black-owned business on The BLACQList.
+  SOCIAL_POST_ADMIN: `Write a social media post announcing a newly verified business on The BLACQList.
 
 Business name: {{listing_name}}
 Category: {{category_name}}

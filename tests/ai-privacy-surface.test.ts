@@ -38,6 +38,7 @@ function codeOnly(src: string): string {
 
 const CONTEXT = codeOnly(read('lib/ai/context.ts'))
 const PROVIDER = codeOnly(read('lib/ai/provider.ts'))
+const ANTHROPIC = codeOnly(read('lib/ai/anthropic.ts'))
 
 /** Columns that must not appear in any select inside the AI context loader. */
 const FORBIDDEN_COLUMNS = [
@@ -105,10 +106,31 @@ describe('lib/ai/provider.ts — the generation seam', () => {
     expect(varsBlock).not.toContain('triggeredBy')
   })
 
-  it('has no live provider call to make', () => {
-    // `[Decision — GATE-SPEND pending]` The real call site throws rather than
-    // being a plausible stub, so no future edit turns it on by accident.
-    expect(PROVIDER).toContain('provider_not_wired')
+  it('sends the provider only the assembled prompt', () => {
+    // The real call gets the filled template and nothing from the context or the
+    // input directly, so buildPromptVars stays the whole privacy surface.
+    expect(PROVIDER).toContain('callAnthropic({ model, prompt, maxOutputChars: agent.maxOutputChars })')
+  })
+
+  it('checks the monthly ceiling before any paid call', () => {
+    expect(PROVIDER.indexOf('withinMonthlyCeiling()')).toBeGreaterThan(-1)
+    expect(PROVIDER.indexOf('withinMonthlyCeiling()')).toBeLessThan(PROVIDER.indexOf('callAnthropic('))
+  })
+})
+
+describe('lib/ai/anthropic.ts — the only network call', () => {
+  it('logs nothing and keeps no error detail', () => {
+    expect(ANTHROPIC).not.toContain('console.')
+    // Every failure is rethrown as a fixed code. Catching into a variable is the
+    // first step toward storing or logging the SDK message.
+    expect(ANTHROPIC).toContain('} catch {')
+  })
+
+  it('turns thinking off and sets no sampling options', () => {
+    expect(ANTHROPIC).toContain("thinking: { type: 'disabled' }")
+    for (const option of ['temperature', 'top_p', 'top_k', 'budget_tokens']) {
+      expect(ANTHROPIC).not.toContain(option)
+    }
   })
 })
 

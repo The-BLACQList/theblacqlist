@@ -19,6 +19,7 @@ import {
   redactContactPatterns,
   sanitizeForPrompt,
   validateOutput,
+  ownerRejectionMessage,
   rejectionCode,
 } from '@/lib/ai/sanitize'
 
@@ -113,5 +114,18 @@ describe('validateOutput', () => {
 describe('rejectionCode', () => {
   it('namespaces the reason so audit rows are greppable', () => {
     expect(rejectionCode('contains_email')).toBe('output_rejected:contains_email')
+  })
+})
+
+describe('ownerRejectionMessage', () => {
+  it('tells the owner what to add when the model declines', () => {
+    expect(ownerRejectionMessage('refusal')).toMatch(/Add a few lines about your business/)
+  })
+
+  it('never names the reason for a contact-detail rejection', () => {
+    for (const reason of ['contains_email', 'contains_phone', 'too_long', 'empty'] as const) {
+      const message = ownerRejectionMessage(reason)
+      expect(message, reason).toBe("That suggestion didn't pass our checks. Try requesting it again.")
+    }
   })
 })

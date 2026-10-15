@@ -1,6 +1,16 @@
 # Ticket 104 — AI cost guardrails (pre-AI-launch margin protection)
 
-**Phase:** AI (Phase 15) · **Priority:** P1 · **Status:** Draft
+**Phase:** AI (Phase 15) · **Priority:** P1 · **Status:** Partly built (2026-10-15)
+
+> **Built:** the per-listing limit (10 per 24 hours, fails closed, `lib/ai/provider.ts`) and the
+> aggregate **monthly spend ceiling with kill switch** (`lib/ai/spend.ts`, `AI_MONTHLY_CEILING_USD`).
+> The ceiling counts every paid attempt this UTC month at the worst case a call can cost, so timed-out
+> and pending rows are never undercounted; it pauses requests at the ceiling and fails closed if the
+> counter cannot be read or the setting is missing. Also built: the **per-tier monthly quota** from
+> `aiQuota(tier)`, enforced in `generate()` on paid calls: successful `anthropic` generations per listing
+> over a rolling 30 days, mock rows not counted, fails closed. `monthlyQuota` is a required input, so a
+> new caller has to choose. **Not built:** the consumer / per-IP caps. No consumer agent exists yet, so
+> those wait for the first one.
 **Gate:** must ship **before** any live AI provider (`ANTHROPIC_API_KEY`) is connected.
 **Blocks:** Ticket 079 (Anthropic client)
 **Related:** `docs/blacqlist/monetization/pricing-unit-economics.md` (guardrails),

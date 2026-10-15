@@ -17,18 +17,15 @@
  * types rather than guessing a destination, so a future agent added without an
  * apply target fails closed instead of writing somewhere plausible.
  *
- * ── The model is not chosen here ────────────────────────────────────────────
- * Each agent declares a `modelTier` — how much quality the task actually needs —
- * and nothing more. Mapping a tier to a model id costs money per call and is the
- * founder's decision at GATE-SPEND, so it lives in one constant below that is
- * deliberately unresolved. Writing a guessed model id into this table would mean
- * the first real call silently bills against whatever was fashionable when this
- * file was written. See `MODEL_BY_TIER`.
+ * ── The model is chosen in one place ────────────────────────────────────────
+ * Each agent declares a `modelTier`, how much quality the task needs. The tier
+ * maps to a model id in `MODEL_BY_TIER` below, so changing models is a one-line
+ * edit that the spending ceiling's price table (`spend.ts`) has to follow.
  */
 
 import { AGENT_PROMPT_MAP, type PromptTemplateKey } from './prompts'
 
-/** How much model the task needs. Resolved to an id only at GATE-SPEND. */
+/** How much model the task needs. Mapped to a model id in `MODEL_BY_TIER`. */
 export type ModelTier = 'fast' | 'quality'
 
 /** A listing field a suggestion may be applied to, or null for copy-only output. */
@@ -122,29 +119,30 @@ export function findAgent(agentType: string): AgentDefinition | undefined {
 }
 
 /**
- * Tier → model id. **Unresolved on purpose.**
+ * Tier → model id. Founder decision at GATE-SPEND, 2026-10-15: Claude Haiku 5.5
+ * for every tier. These are short, tightly specified copy tasks, and Haiku 5.5
+ * handles them at a tenth of a cent or less per call.
  *
- * Every value here is `null` because choosing a model is choosing a per-call
- * price, and that is a GATE-SPEND decision the founder has not made. The
- * provider reads this map; when a tier resolves to `null` it runs the mock path
- * and logs `provider = 'mock'`. That is the same fail-closed shape the paid job
- * postings use — `lib/stripe/jobPostings.ts` refuses the sale rather than
- * inventing a price when `STRIPE_JOB_POSTING_PRICE_ID` is absent.
- *
- * Filling these in is not sufficient to start spending: `ANTHROPIC_API_KEY` must
- * also be present, and the six V2-Mock gates in the roadmap must be cleared.
+ * A model id here is not enough to start spending. `resolveProvider` also needs
+ * `ANTHROPIC_API_KEY` and `AI_MONTHLY_CEILING_USD`; without both it runs the
+ * mock. If you change a model, update `PRICE_PER_MTOK` in spend.ts with it.
  */
 export const MODEL_BY_TIER: Record<ModelTier, string | null> = {
-  fast: null,
-  quality: null,
+  fast: 'claude-haiku-5-5',
+  quality: 'claude-haiku-5-5',
 }
 
 /** The model label written to the audit row when no real provider ran. */
 export const MOCK_MODEL = 'mock-v1'
 
-/** Written to `ai_generation_requests.prompt_version`. */
+/**
+ * Written to `ai_generation_requests.prompt_version`. @2 (2026-10-15): neutral
+ * ownership wording and the shared system prompt. @3 (2026-10-15): the SEO
+ * title asks for exactly one line, after a staging run returned an over-long
+ * answer one time in five.
+ */
 export function promptVersionOf(agent: AgentDefinition): string {
-  return `${agent.templateKey}@1`
+  return `${agent.templateKey}@3`
 }
 
 // Fails the build (via the test suite) if an agent names a template that the

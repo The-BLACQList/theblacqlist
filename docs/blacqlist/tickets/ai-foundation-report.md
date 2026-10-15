@@ -3,6 +3,14 @@
 **Date:** 2026-05-11  
 **Status:** Foundation complete — no provider connected
 
+> **Update 2026-10-15.** Most of the "not built" rows below are now built (mock provider, approval UI,
+> rate limit, audit row, privacy audit PASS 2026-08-26). The real provider is wired in
+> `lib/ai/anthropic.ts`: Claude Haiku 5.5 for every agent, a fixed system prompt, token counts on the
+> audit row, and a monthly spending ceiling (`lib/ai/spend.ts`). It runs only when both
+> `ANTHROPIC_API_KEY` and `AI_MONTHLY_CEILING_USD` are set; otherwise mock. Not set anywhere yet.
+> Prod stays off until the privacy notice naming Anthropic takes effect. The rest of this report is
+> the original 2026-05-11 record.
+
 ---
 
 ## What Was Built

@@ -2,14 +2,13 @@
  * The provider seam. Everything that turns an owner's click into a pending
  * suggestion runs through `generate()`.
  *
- * ── This file makes no network call, and today it cannot ─────────────────────
- * `MODEL_BY_TIER` resolves every tier to `null` until the founder picks models
- * at GATE-SPEND, and `ANTHROPIC_API_KEY` is set in no environment. When either
- * is missing, `generate()` runs the mock path and logs `provider = 'mock'`. No
- * SDK is installed and no HTTP client is imported here — the paid path is a
- * documented hole at `callRealProvider`, not a code path one env var away from
- * billing. That is the same shape the paid job postings already use: refuse
- * rather than improvise.
+ * ── A paid call needs three things, and the ceiling ──────────────────────────
+ * The real provider runs only when `MODEL_BY_TIER` names a model,
+ * `ANTHROPIC_API_KEY` is set, and `AI_MONTHLY_CEILING_USD` is a positive number.
+ * Missing any one of them, `generate()` runs the mock path and logs
+ * `provider = 'mock'`. With all three, each call is also checked against this
+ * month's ceiling (`spend.ts`) and refused when the ceiling is reached or cannot
+ * be read. The call itself lives in `anthropic.ts`.
  *
  * ── The audit row is written before the suggestion, always ───────────────────
  * `docs/blacqlist/ai/ai-safety-and-approval-plan.md` requires that every
@@ -51,6 +50,7 @@ import {
   promptVersionOf,
   type AgentDefinition,
 } from './agents'
+import { callAnthropic, ProviderCallError, type TokenUsage } from './anthropic'
 import { mockResponseFor, type MockContext } from './mock-responses'
 import { PROMPT_TEMPLATES } from './prompts'
 import {
@@ -58,7 +58,9 @@ import {
   rejectionCode,
   sanitizeForPrompt,
   validateOutput,
+  type OutputRejection,
 } from './sanitize'
+import { MAX_PROMPT_CHARS, monthlyCeilingUsd, withinMonthlyCeiling } from './spend'
 
 /** Requests per listing per rolling 24 hours. */
 export const RATE_LIMIT_PER_LISTING_24H = 10
@@ -94,12 +96,19 @@ export interface GenerateInput {
   /** The user who triggered it. Logged for audit; never placed in a prompt. */
   triggeredBy: string
   context: GenerateContext
+  /**
+   * Paid generations this page may have per 30 days, from `aiQuota(tier)`, or
+   * null for no cap. Required so a new caller has to decide, not forget.
+   */
+  monthlyQuota: number | null
 }
 
 export type GenerateResult =
   | { ok: true; suggestionId: string; provider: 'mock' | 'anthropic' }
   | { ok: false; code: 'rate_limited'; retryAfterHours: number }
-  | { ok: false; code: 'rejected'; reason: string }
+  | { ok: false; code: 'quota_reached'; quota: number }
+  | { ok: false; code: 'paused' }
+  | { ok: false; code: 'rejected'; reason: OutputRejection }
   | { ok: false; code: 'failed' }
 
 /**
@@ -147,8 +156,8 @@ function mockContextOf(ctx: GenerateContext): MockContext {
 }
 
 /**
- * Resolves which provider would run. Exported so a test can assert that the
- * repository in its current state cannot reach a paid provider.
+ * Resolves which provider would run. Exported so a test can assert that no
+ * single setting on its own can start paid calls.
  */
 export function resolveProvider(agent: AgentDefinition): {
   provider: 'mock' | 'anthropic'
@@ -156,7 +165,8 @@ export function resolveProvider(agent: AgentDefinition): {
 } {
   const model = MODEL_BY_TIER[agent.modelTier]
   const hasKey = Boolean(process.env.ANTHROPIC_API_KEY)
-  if (model && hasKey) return { provider: 'anthropic', model }
+  const hasCeiling = monthlyCeilingUsd() !== null
+  if (model && hasKey && hasCeiling) return { provider: 'anthropic', model }
   return { provider: 'mock', model: MOCK_MODEL }
 }
 
@@ -190,20 +200,38 @@ export async function countRecentRequests(listingId: string): Promise<number> {
 }
 
 /**
- * The paid path. Intentionally not implemented.
+ * Counts this listing's successful paid generations in the last 30 days, for
+ * the plan's monthly allowance (`aiQuota` in lib/stripe/features.ts, ticket 104).
  *
- * Wiring this means: an SDK dependency, a resolved model id in `MODEL_BY_TIER`,
- * `ANTHROPIC_API_KEY` in the environment, and the six V2-Mock gates cleared. All
- * four are founder decisions or founder actions, and three of them cost money.
- * Throwing here rather than leaving a plausible stub means no future edit can
- * accidentally turn this into a live call.
+ * Counts successes only, unlike the 24-hour limiter: the allowance is what the
+ * owner's plan includes, and a refused or failed attempt gave them nothing. The
+ * 24-hour limiter and the spending ceiling still count every attempt, so failed
+ * calls stay bounded. Mock rows cost nothing and do not count. Fails closed like the limiter: an unreadable counter
+ * returns `Infinity`, which is over every allowance.
  */
-async function callRealProvider(): Promise<never> {
-  throw new Error('provider_not_wired')
+export async function countSuccessfulLast30Days(listingId: string): Promise<number> {
+  const supabase = createServiceClient()
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const { count, error } = await supabase
+    .from('ai_generation_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('listing_id', listingId)
+    .eq('status', 'completed')
+    .eq('provider', 'anthropic')
+    .gte('created_at', since)
+
+  if (error || count === null) return Number.POSITIVE_INFINITY
+  return count
+}
+
+/** Token counts for the audit row. The mock path records none. */
+function tokenColumns(usage: TokenUsage | null): { request_tokens?: number; response_tokens?: number } {
+  if (!usage) return {}
+  return { request_tokens: usage.inputTokens, response_tokens: usage.outputTokens }
 }
 
 export async function generate(input: GenerateInput): Promise<GenerateResult> {
-  const { agent, listingId, triggeredBy, context } = input
+  const { agent, listingId, triggeredBy, context, monthlyQuota } = input
 
   const used = await countRecentRequests(listingId)
   if (used >= RATE_LIMIT_PER_LISTING_24H) {
@@ -211,6 +239,13 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
   }
 
   const { provider, model } = resolveProvider(agent)
+  // Both paid-only checks run before the audit row, so a refusal adds no rows.
+  if (provider === 'anthropic') {
+    if (monthlyQuota !== null && (await countSuccessfulLast30Days(listingId)) >= monthlyQuota) {
+      return { ok: false, code: 'quota_reached', quota: monthlyQuota }
+    }
+    if (!(await withinMonthlyCeiling())) return { ok: false, code: 'paused' }
+  }
   const supabase = createServiceClient()
 
   // Audit row first — see the header. `pending` until we know how it ended.
@@ -231,10 +266,10 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
   if (requestError || !requestRow) return { ok: false, code: 'failed' }
   const requestId = requestRow.id
 
-  async function closeFailed(errorCode: string): Promise<void> {
+  async function closeFailed(errorCode: string, usage: TokenUsage | null = null): Promise<void> {
     await supabase
       .from('ai_generation_requests')
-      .update({ status: 'failed', error_message: errorCode })
+      .update({ status: 'failed', error_message: errorCode, ...tokenColumns(usage) })
       .eq('id', requestId)
   }
 
@@ -247,19 +282,38 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
     await closeFailed('prompt_empty')
     return { ok: false, code: 'failed' }
   }
+  // The spending ceiling prices every call at this length, so it is a hard limit.
+  if (prompt.length > MAX_PROMPT_CHARS) {
+    await closeFailed('prompt_too_long')
+    return { ok: false, code: 'failed' }
+  }
 
   let raw: string
+  let usage: TokenUsage | null = null
   try {
-    raw = provider === 'mock' ? mockResponseFor(agent, mockContextOf(context)) : await callRealProvider()
-  } catch {
-    // No error detail is stored: a provider exception can carry request content.
-    await closeFailed('provider_error')
+    if (provider === 'mock') {
+      raw = mockResponseFor(agent, mockContextOf(context))
+    } else {
+      const result = await callAnthropic({ model, prompt, maxOutputChars: agent.maxOutputChars })
+      raw = result.text
+      usage = { inputTokens: result.inputTokens, outputTokens: result.outputTokens }
+    }
+  } catch (err) {
+    // Only the fixed code is stored: a provider exception can carry request content.
+    if (err instanceof ProviderCallError) {
+      await closeFailed(err.code, err.usage)
+      // The model declining is the same outcome for the owner as a refusal our
+      // own check catches: usually the page has too little to work from.
+      if (err.code === 'provider_refusal') return { ok: false, code: 'rejected', reason: 'refusal' }
+    } else {
+      await closeFailed('provider_error')
+    }
     return { ok: false, code: 'failed' }
   }
 
   const validated = validateOutput(raw, agent.maxOutputChars)
   if (!validated.ok) {
-    await closeFailed(rejectionCode(validated.reason))
+    await closeFailed(rejectionCode(validated.reason), usage)
     return { ok: false, code: 'rejected', reason: validated.reason }
   }
 
@@ -278,13 +332,13 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
     .single()
 
   if (suggestionError || !suggestionRow) {
-    await closeFailed('suggestion_insert_failed')
+    await closeFailed('suggestion_insert_failed', usage)
     return { ok: false, code: 'failed' }
   }
 
   await supabase
     .from('ai_generation_requests')
-    .update({ status: 'completed', suggestion_id: suggestionRow.id })
+    .update({ status: 'completed', suggestion_id: suggestionRow.id, ...tokenColumns(usage) })
     .eq('id', requestId)
 
   return { ok: true, suggestionId: suggestionRow.id, provider }

@@ -151,3 +151,18 @@ export function validateOutput(raw: string, maxChars: number): OutputValidation 
 export function rejectionCode(reason: OutputRejection): string {
   return `output_rejected:${reason}`
 }
+
+/**
+ * What the owner reads when a suggestion is rejected.
+ *
+ * Most reasons stay vague on purpose: "contains_phone" is meaningful to us and
+ * alarming to an owner who did nothing wrong, and the audit row keeps the code.
+ * A refusal is the exception. It almost always means the page has too little
+ * for the model to work from, so "try again" would only spend another request.
+ */
+export function ownerRejectionMessage(reason: OutputRejection): string {
+  if (reason === 'refusal') {
+    return "There isn't enough on your page yet to write this. Add a few lines about your business, then try again."
+  }
+  return "That suggestion didn't pass our checks. Try requesting it again."
+}

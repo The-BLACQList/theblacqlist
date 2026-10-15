@@ -45,13 +45,13 @@ Use **~$90/mo** as the conservative fixed-cost figure.
 | Driver | Starter $19 | Growth $49 | Premium $99 | Source |
 |---|---|---|---|---|
 | Stripe (2.9% + $0.30) | $0.85 | $1.72 | $3.17 | `[Research — Stripe, 2026]` |
-| AI (Haiku 4.5, gated Starter+, capped) | <$0.10 | <$0.10 | <$0.10 | `[Assumption]` — mock today; $1/$5 per 1M on token-bounded prompts ≈ $0.0025/gen |
+| AI (Haiku 5.5, gated Starter+, capped) | <$0.02 | <$0.02 | <$0.02 | `[Research — Anthropic pricing, 2026-10-15]` $0.10/$0.50 per 1M; worst case ≈ $0.002/gen at the token bounds |
 | Photo storage/egress | ~$0.02 | ~$0.03 | ~$0.05 | `[Assumption]` — Supabase ~$0.021/GB/mo; 10/20/50 photos |
 | Transactional email | negligible | negligible | negligible | `[Assumption]` |
 | **COGS (typical)** | **~$1.00** | **~$1.90** | **~$3.55** | |
 
 **Business-side AI is not a margin threat.** It is in mock mode today (no provider connected), gated
-to paid tiers, and — when live — runs Claude Haiku 4.5 on short, token-bounded prompts, so it costs
+to paid tiers, and — when live — runs Claude Haiku 5.5 on short, token-bounded prompts, so it costs
 cents/paid-listing/mo. The only genuinely uncapped per-listing driver is **Premium's photos**, which
 is why Premium carries a hard cap of 50 (see Guardrails).
 
@@ -116,7 +116,7 @@ them to compute these once there is live data. **Do not report churn/LTV/CAC num
    as "unlimited" to owners but bounds the one real storage/egress tail.
 2. **Per-tier AI quota** (`aiQuota` in `lib/stripe/features.ts`): Free 0 · Starter 10/mo ·
    Growth 100/mo · Premium 500/mo, with a 10/listing/24h burst sub-cap. Required **before any live
-   AI provider is connected** — Ticket 104. Default model Haiku 4.5 (`DEFAULT_MODEL` in
+   AI provider is connected** — Ticket 104. Model Haiku 5.5 (`MODEL_BY_TIER` in `lib/ai/agents.ts`, founder 2026-10-15; formerly `DEFAULT_MODEL` in
    `lib/ai/client.ts`); Sonnet is a deliberate per-agent escalation, never a default.
    This cap is both a cost guardrail and the pricing lever that differentiates Growth and Premium.
 3. **Consumer-agent caps** — per `user_id` (20/day), per IP for unauthenticated callers (5/day), and
@@ -159,4 +159,4 @@ it. The corrections are about ARPU and about which AI surface gets counted.
 - `architecture/tech-stack-decision.md` (infra costs, Anthropic/Haiku decision)
 - `docs/blacqlist/ai/ai-agent-roadmap.md`, `ai/ai-feature-spec.md` (AI model, gating, planned cap)
 - whole-9 venture-studio: `pricing-unit-economics` skill, `subscription-membership-track.md`, `FINANCE_ASSUMPTION_STANDARDS.md`
-- Stripe pricing (2.9% + $0.30); Anthropic Claude pricing (Haiku 4.5 $1/$5 per 1M; Sonnet 5 $3/$15 per 1M)
+- Stripe pricing (2.9% + $0.30); Anthropic Claude pricing (Haiku 5.5 $0.10/$0.50 per 1M, the model in use since 2026-10-15)
