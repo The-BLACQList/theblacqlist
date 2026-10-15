@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
 import { GuideCard } from '@/components/editorial/GuideCard'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 
 export const metadata: Metadata = {
   title: 'City Guides | The BLACQList',
@@ -15,7 +16,7 @@ export default async function GuidesPage() {
 
   const { data: guides } = await supabase
     .from('guides')
-    .select('id, title, slug, subtitle, city')
+    .select('id, title, slug, subtitle, city, cover_image_path')
     .eq('status', 'published')
     .order('published_at', { ascending: false })
 
@@ -73,6 +74,7 @@ export default async function GuidesPage() {
                   subtitle={g.subtitle}
                   city={g.city}
                   sectionCount={sectionMap[g.id] ?? 0}
+                  coverSrc={resolveEditorialCover(g.cover_image_path)}
                 />
               ))}
             </div>

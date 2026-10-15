@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Container } from '@/components/layout/container'
 import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { createClient } from '@/lib/supabase/server'
-import { resolveStoryCover } from '@/lib/editorial/cover'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 import { PHOTO_FOCAL } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 import { editorialKind } from '@/lib/editorial/kind'
@@ -56,7 +56,7 @@ export default async function BLACQLightPage({ searchParams }: Props) {
     DIRECTORY_MAX
   )
   const quote = lead ? firstPullQuote(lead.body) : null
-  const leadCover = lead ? resolveStoryCover(lead.cover_image_path) : null
+  const leadCover = lead ? resolveEditorialCover(lead.cover_image_path) : null
   const leadKind = lead ? editorialKind(lead.tags) : null
 
   return (
@@ -184,7 +184,7 @@ export default async function BLACQLightPage({ searchParams }: Props) {
                       headingLevel="h3"
                       kind={editorialKind(a.tags)}
                       readMinutes={readMinutes(a.body)}
-                      coverSrc={resolveStoryCover(a.cover_image_path)}
+                      coverSrc={resolveEditorialCover(a.cover_image_path)}
                     />
                   ))}
                 </div>

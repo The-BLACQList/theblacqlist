@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/container'
 import { BlogPostCard } from '@/components/editorial/BlogPostCard'
 import { EditorialRichTextDisplay } from '@/components/editorial/EditorialRichTextDisplay'
-import { resolveStoryCover } from '@/lib/editorial/cover'
+import { resolveEditorialCover } from '@/lib/editorial/cover'
 import { PHOTO_FOCAL } from '@/lib/design/surfaces'
 import { cn } from '@/lib/utils'
 import { editorialKind } from '@/lib/editorial/kind'
@@ -88,7 +88,7 @@ export default async function ArticleDetailPage({ params }: Props) {
   ])
 
   const kind = editorialKind(article.tags)
-  const cover = resolveStoryCover(article.cover_image_path)
+  const cover = resolveEditorialCover(article.cover_image_path)
 
   return (
     <main className="min-h-screen bg-off-white">
@@ -195,7 +195,7 @@ export default async function ArticleDetailPage({ params }: Props) {
                   headingLevel="h3"
                   kind={editorialKind(a.tags)}
                   readMinutes={readMinutes(a.body)}
-                  coverSrc={resolveStoryCover(a.cover_image_path)}
+                  coverSrc={resolveEditorialCover(a.cover_image_path)}
                 />
               ))}
             </div>

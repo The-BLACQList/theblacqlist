@@ -21,6 +21,7 @@ export interface RailGuide {
   subtitle: string | null
   city: string | null
   sectionCount: number
+  coverSrc: string | null
 }
 
 interface Props {
@@ -109,6 +110,7 @@ export function EditorialRail({ articles, guides }: Props) {
                   subtitle={g.subtitle}
                   city={g.city}
                   sectionCount={g.sectionCount}
+                  coverSrc={g.coverSrc}
                 />
               )),
             ]}

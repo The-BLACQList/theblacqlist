@@ -7,8 +7,11 @@ added on 2026-09-03**. **Seven** frames added the same day carry an inferred
 clearance that needs one word from the founder — see
 [The 2026-09-03 additions](#the-2026-09-03-additions). **Nine more** were added on
 2026-10-07 and are cleared by name, Canva Pro — see
-[The 2026-10-07 additions](#the-2026-10-07-additions).
-**Last updated:** 2026-10-07
+[The 2026-10-07 additions](#the-2026-10-07-additions). **Five more** were added on
+2026-10-15 as guide and collection covers and need the founder to confirm their
+source, plus one 2026-10-07 frame put to use — see
+[The 2026-10-15 additions](#the-2026-10-15-additions).
+**Last updated:** 2026-10-15
 
 `.claude/rules/3d-assets.md` requires a recorded license per asset before it enters
 the product: source, author, license name, and commercial-use confirmation.
@@ -644,6 +647,55 @@ woman with a notebook and laptop, a man at a desk with paperwork
 `[Observed — visual inspection, 2026-10-07]`. Each is placed with `alt=""` or a
 plain description (the `/for-business` hero), heads a category, banner or story,
 and never sits beside a named business, so restriction 2 holds.
+
+## The 2026-10-15 additions
+
+The founder asked for covers on the two owner guides and the four collections
+`[Decision — founder, 2026-10-15]`. One cover is the fabric-shop frame from the
+2026-10-07 drop (`89.png`), picked by the founder by description: *"the woman in
+the textiles store with the green apron"*. The other five are new PNGs
+(`96.png`–`100.png`, 1920×1280) dropped for this request.
+
+**License.** `89.png` is Canva Pro, cleared on 2026-10-07. The source of
+`96.png`–`100.png` was not stated. They came through the same folder as every other
+frame, so they are presumed Canva Pro, but that is `[Unverified — requires
+confirmation]` until the founder says so. All three restrictions below apply either
+way.
+
+### Source-frame mapping
+
+All six are 1920×1280 WebP, made with `pnpm images:editorial <src> <out> 1920 320`
+`[Measured — sharp metadata and ls, 2026-10-15]`. Cards are 3:2 like the frames.
+The guide page crops to 16:9, and the collection hero is a wide strip that keeps
+about 44% of the frame's height on desktop, so each frame with a person has a
+`PHOTO_FOCAL` entry.
+
+| File | Source | Size | Shows | Used as |
+|---|---|---|---|---|
+| `textile-shop.webp` | `89.png` | 235 KB | Woman in a green apron in a fabric shop | Cover of the guide *Start Here: Your First Week as an Owner* |
+| `gold-star.webp` | `96.png` | 16 KB | A gold star on a peach ground, no people | Cover of the guide *Reviews That Do Real Work* |
+| `chicken-and-waffles.webp` | `97.png` | 164 KB | Fried chicken on a waffle, no people | Cover of the collection *Atlanta Soul Food & Southern Icons* |
+| `greenhouse-grower.webp` | `98.png` | 302 KB | A grower with a tablet in a greenhouse | Cover of the collection *Black Farmers You Should Know About* |
+| `gallery-visit.webp` | `99.png` | 287 KB | A woman smiling in an art gallery | Cover of the collection *Black Art, Museums and Stages* |
+| `beignets-and-coffee.webp` | `100.png` | 132 KB | Beignets and café au lait, no people | Cover of the collection *New Orleans: Creole, Soul and Beyond* |
+
+The covers are DB values (`guides.cover_image_path`,
+`collections.cover_image_path`), so they change through GATE-DATA. All six were
+empty before, so the rollback is setting them back to null.
+
+**`89.png` was marked "Not used" on 2026-10-07** for a cut-out subject with a
+visible halo. The founder chose it anyway. The halo shows at full size around her
+hair and shoulders. It is far less visible on a card.
+
+### Restriction 2
+
+Three frames show identifiable adults: the woman in the fabric shop, the grower,
+and the woman in the gallery `[Observed — visual inspection, 2026-10-15]`. Each sits
+with `alt=""` at the top of a guide or collection, never beside one named business.
+The collection pages do list named businesses further down, but under their own
+photos and below the hero, so the hero does not read as any one business's owner or
+staff. Restriction 2 holds. The grower in particular must not move onto a farm's
+listing.
 
 ---
 

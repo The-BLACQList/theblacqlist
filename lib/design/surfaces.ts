@@ -293,6 +293,23 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // 100% starts to clip the writing hand on the left.
   '/images/editorial/cafe-planning.webp': 'object-[95%_50%]',
 
+  // Guide and collection covers added 2026-10-15. Cards are 3:2 like the frames,
+  // so these only bite on the guide page (16:9) and the collection hero, a wide
+  // strip (~1440x420 on desktop) that keeps about 44% of the frame's height with
+  // the title over its lower part. `gold-star` sits dead center and needs none.
+  // Hair at ~20%, face ~22-38%.
+  '/images/editorial/textile-shop.webp': 'object-[50%_25%]',
+  // Hat brim at ~6%, face ~15-30%, and he stands at the right edge. The phone
+  // hero (375x280) is narrower than 3:2 and crops sideways, so x keeps him in.
+  '/images/editorial/greenhouse-grower.webp': 'object-[80%_5%]',
+  // Raised hand at ~15%, face ~30-45%.
+  '/images/editorial/gallery-visit.webp': 'object-[50%_35%]',
+  // Food, no people. The plate spans ~45-90% and the cups ~15-45%; 55% keeps
+  // the sugared tops of the beignets and the lower half of the cups.
+  '/images/editorial/beignets-and-coffee.webp': 'object-[50%_55%]',
+  // The chicken stack runs ~5-70%, waffle below.
+  '/images/editorial/chicken-and-waffles.webp': 'object-[50%_30%]',
+
   // Skylines. Each value is set from the highest structure in the frame. They
   // were tuned against the pre-plate city tile (~2.53:1, a ~41% cut, centered
   // landing at [20.5%, 79.5%] and shearing the tower tops); the photo region is
