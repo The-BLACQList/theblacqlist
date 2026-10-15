@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Locator, type Page } from '@playwright/test'
 
 /**
  * PR 3b — the discover filters actually filter, on all three pages that read
@@ -21,6 +21,11 @@ import { test, expect, type Page } from '@playwright/test'
  * That makes the assertion deterministic against any database, seeded or live,
  * and independent of whether the faceted RPC is reachable.
  */
+
+// Category, Price and How to reach them sit behind the "More filters" button.
+async function openMoreFilters(sidebar: Locator) {
+  await sidebar.getByRole('button', { name: /^More filters/ }).click()
+}
 
 const NO_SUCH_ATTR = 'zzzz-no-such-attribute-zzzz'
 
@@ -219,6 +224,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     // enum key `virtual`. Asserting on the label would have hidden a mismatch
     // between the two, so the URL assertion names the stored value.
     // The section starts collapsed, so open it first.
+    await openMoreFilters(sidebar)
     await sidebar.locator('summary', { hasText: /^How to reach them$/ }).click()
     await sidebar.getByRole('button', { name: 'Online only', exact: true }).click()
     await page.waitForURL(/[?&]location_type=virtual/)
@@ -247,6 +253,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
   test('Category writes ?category', async ({ page }) => {
     const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
     // Category starts collapsed (see FacetSidebar), so open it first.
+    await openMoreFilters(sidebar)
     await sidebar.locator('summary', { hasText: /^Category$/ }).click()
     const tree = sidebar.getByRole('list', { name: 'Filter by category' })
     const first = tree.getByRole('button', { pressed: false }).first()
@@ -263,6 +270,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
   test('a live price button writes ?price, and a dead one is a zero count', async ({ page }) => {
     const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
     // Price starts collapsed; its buttons are not rendered visible until opened.
+    await openMoreFilters(sidebar)
     await sidebar.locator('summary', { hasText: /^Price$/ }).click()
     const group = sidebar.getByRole('group', { name: 'Filter by price range' })
     const enabled = group.getByRole('button').and(page.locator(':not([disabled])'))

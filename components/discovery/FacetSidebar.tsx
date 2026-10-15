@@ -22,6 +22,8 @@ import { NearYouFilter } from '@/components/discovery/NearYouFilter'
 import { FilterSection } from '@/components/discovery/FilterSection'
 import { CategoryTree } from '@/components/discovery/CategoryTree'
 import type { TreeCategory } from '@/lib/categories/tree'
+import { MoreFilters } from '@/components/discovery/MoreFilters'
+import { countMoreFilters } from '@/components/discovery/moreFiltersCount'
 
 function optionClass(isActive: boolean): string {
   return cn(
@@ -97,6 +99,14 @@ export function FacetSidebar({
   ]
   const hasActiveFilters = clearableKeys.some((k) => !!searchParams.get(k))
 
+  const moreCount = countMoreFilters({
+    category: activeCategory,
+    prices: selectedPrices,
+    locationTypes: selectedLocationTypes,
+    attrs: selectedAttrs,
+    trustTier: activeTrust,
+  })
+
   function clearAll() {
     setParams(clearEntries(clearableKeys, searchParams.get('sort')))
   }
@@ -137,8 +147,8 @@ export function FacetSidebar({
 
       {/* Type opens by default: it is what most visitors reach for first.
           Ownership stays open too, being two buttons and the directory's
-          defining label. Everything else starts closed unless it holds an
-          active filter, which keeps the panel short. Category is closed on
+          defining label. Everything else sits under More filters, and each
+          section there starts closed unless it holds an active filter. Category is closed on
           purpose: open, the tree is two Tab stops per parent, and a keyboard
           user would cross all of them to get from the search box to the
           results (e2e/keyboard-a11y.spec.ts J7). */}
@@ -172,6 +182,59 @@ export function FacetSidebar({
         </div>
       </FilterSection>
 
+      {/* Ownership (Black-Owned / Ally): authoritative label, no per-option counts */}
+      <FilterSection title="Ownership" defaultOpen active={!!activeOwnership}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by ownership">
+          {OWNERSHIP_LABELS.map(({ value, label }) => {
+            const isActive = activeOwnership === value
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setParam('ownership', isActive ? '' : value)}
+                className={optionClass(isActive)}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        {/* The Ally label means this, nowhere else says it in the filter. Wording
+            is the approved one from the add-business step [Decision — founder,
+            2026-10-15: simplicity pass P3]. */}
+        <p className="mt-2 font-subhead text-xs leading-snug text-charcoal-soft">
+          <span className="font-semibold">Ally:</span> {ALLY_ONE_LINER}{' '}
+          <Link
+            href="/about#who-we-feature"
+            className="font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
+          >
+            What this means
+          </Link>
+        </p>
+      </FilterSection>
+
+      {!hideCityFilter && (
+        <FilterSection title="City" active={!!activeCity}>
+          <select
+            value={activeCity}
+            onChange={(e) => setParam('city', e.target.value)}
+            aria-label="Filter by city"
+            className="w-full h-10 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+          >
+            <option value="">All cities</option>
+            {cities.map(({ slug, name }) => (
+              <option key={slug} value={slug}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </FilterSection>
+      )}
+
+      {/* [Decision — founder, 2026-10-15: fewer choices up front. Type, Ownership
+          and City stay visible; the rest sits behind one disclosure.] */}
+      <MoreFilters count={moreCount}>
       {categories.length > 0 && (
         <FilterSection title="Category" active={!!activeCategory}>
           <CategoryTree
@@ -212,39 +275,7 @@ export function FacetSidebar({
         </div>
       </FilterSection>
 
-      {/* Ownership (Black-Owned / Ally): authoritative label, no per-option counts */}
-      <FilterSection title="Ownership" defaultOpen active={!!activeOwnership}>
-        <div className="flex flex-col gap-1" role="group" aria-label="Filter by ownership">
-          {OWNERSHIP_LABELS.map(({ value, label }) => {
-            const isActive = activeOwnership === value
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setParam('ownership', isActive ? '' : value)}
-                className={optionClass(isActive)}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-        {/* The Ally label means this, nowhere else says it in the filter. Wording
-            is the approved one from the add-business step [Decision — founder,
-            2026-10-15: simplicity pass P3]. */}
-        <p className="mt-2 font-subhead text-xs leading-snug text-charcoal-soft">
-          <span className="font-semibold">Ally:</span> {ALLY_ONE_LINER}{' '}
-          <Link
-            href="/about#who-we-feature"
-            className="font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
-          >
-            What this means
-          </Link>
-        </p>
-      </FilterSection>
-
-      {/* Where they operate: the online-only / no-fixed-address axis. Mirrors the
+      {/* How to reach them: the online-only / no-fixed-address axis. Mirrors the
           owner-side "Where you operate" wording. No per-option counts, matching
           Ownership and Trust Level. */}
       <FilterSection title="How to reach them" active={selectedLocationTypes.length > 0}>
@@ -265,24 +296,6 @@ export function FacetSidebar({
           })}
         </div>
       </FilterSection>
-
-      {!hideCityFilter && (
-        <FilterSection title="City" active={!!activeCity}>
-          <select
-            value={activeCity}
-            onChange={(e) => setParam('city', e.target.value)}
-            aria-label="Filter by city"
-            className="w-full h-10 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
-          >
-            <option value="">All cities</option>
-            {cities.map(({ slug, name }) => (
-              <option key={slug} value={slug}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </FilterSection>
-      )}
 
       {/* Attribute groups (Identity & Ownership, Amenities, …) */}
       {groups.map((group) => (
@@ -340,6 +353,7 @@ export function FacetSidebar({
           })}
         </div>
       </FilterSection>
+      </MoreFilters>
     </aside>
   )
 }
