@@ -23,9 +23,8 @@ interface Props {
  * bottom, holding 16:9 of open picture above it. Alt text names the city
  * because the photograph is informative here, not decorative.
  *
- * Only live cities with a skyline in `CITY_PHOTOS` get a tile here. The home
- * page shows the photographed cities; /cities still gives every live city a
- * card, wash or not `[Decision — founder, 2026-10-15]`.
+ * Only live cities with a skyline in `CITY_PHOTOS` get a tile, here and on
+ * /cities `[Decision — founder, 2026-10-15]`.
  */
 export function CityChapters({ cities }: Props) {
   const live = cities.filter((c) => c.isActive && Boolean(CITY_PHOTOS[c.slug]))

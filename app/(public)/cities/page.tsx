@@ -72,8 +72,12 @@ export default async function CitiesPage() {
   }))
 
   // Busiest city leads the bento; ties fall back to alphabetical.
+  //
+  // Only live cities with a skyline in `CITY_PHOTOS` get a card, and the hero
+  // counts match the cards. Live cities without a photo are still on the map,
+  // in search and at /discover/{city} `[Decision — founder, 2026-10-15]`.
   const live = cities
-    .filter((c) => c.is_active)
+    .filter((c) => c.is_active && Boolean(CITY_PHOTOS[c.slug]))
     .sort((a, b) => b.listingCount - a.listingCount || a.name.localeCompare(b.name))
   const comingSoon = cities.filter((c) => !c.is_active)
   const totalListed = live.reduce((sum, c) => sum + c.listingCount, 0)
