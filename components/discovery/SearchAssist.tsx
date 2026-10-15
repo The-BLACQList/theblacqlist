@@ -1,13 +1,11 @@
 // The help a thin search gets instead of a blank page (PR 5).
 //
 // Rendered only when the exact search found fewer than three listings (see
-// shouldAssist in lib/search/assist.ts). Everything it shows comes from
-// getSearchAssist, so every card and count is a real published listing, and
-// every loose result is labeled as a close match, never as an answer.
+// shouldAssist in lib/search/assist.ts). It shows no listings of its own: a
+// search with no match says so plainly, then points to real categories,
+// places and counts from getSearchAssist.
 
 import Link from 'next/link'
-import { CardGrid } from '@/components/ui/card-grid'
-import { EntityCard } from '@/components/entities/EntityCard'
 import type { ListingsParams } from '@/lib/listings/query'
 import { getSearchAssist, type NearbyCity, type SearchAssistData } from '@/lib/services/searchAssist'
 
@@ -26,19 +24,6 @@ function quoted(query: string): string {
 
 function plural(n: number, one: string, many: string): string {
   return `${n.toLocaleString()} ${n === 1 ? one : many}`
-}
-
-function WordList({ words }: { words: string[] }) {
-  return (
-    <>
-      {words.map((w, i) => (
-        <span key={w}>
-          {i > 0 && ', '}
-          <strong className="font-bold">{w}</strong>
-        </span>
-      ))}
-    </>
-  )
 }
 
 function NearbyLine({ prefix, city }: { prefix: string; city: NearbyCity }) {
@@ -60,19 +45,17 @@ function chipCount(chip: SearchAssistData['chips'][number], scopeLabel: string |
 }
 
 export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
-  const { query, exactTotal, scopeLabel, close, chips, gaps, uncovered, nearestToYou, elsewhere, online, explore } =
+  const { query, exactTotal, scopeLabel, chips, gaps, uncovered, nearestToYou, elsewhere, online, explore } =
     data
 
   return (
     <section aria-labelledby="search-assist-heading" className="flex flex-col gap-10 py-6">
       <header className="flex flex-col gap-1">
         <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
-          {exactTotal === 0 ? `No exact match for "${quoted(query)}"` : 'More to explore'}
+          {exactTotal === 0 ? `No results for "${quoted(query)}"` : 'Looking for more?'}
         </h2>
         <p className="font-subhead text-sm text-charcoal max-w-prose">
-          {exactTotal === 0
-            ? 'Here is the closest help we have.'
-            : 'Only a few businesses matched every word, so here are some related ones.'}
+          {exactTotal === 0 ? 'Here is where to look instead.' : 'Only a few businesses matched. Here is where to look next.'}
         </p>
       </header>
 
@@ -88,23 +71,6 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
             )
           )}
           {nearestToYou && <NearbyLine prefix="" city={nearestToYou} />}
-        </div>
-      )}
-
-      {close && (
-        <div>
-          <h3 className={`${subheadClass} [overflow-wrap:anywhere]`}>
-            Close matches for <WordList words={close.words} />
-            {scopeLabel ? ` ${scopeLabel}` : ''}
-          </h3>
-          <p className="font-subhead text-sm text-charcoal mb-4">
-            These match some of your words, not all of them.
-          </p>
-          <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
-            {close.entities.map((entity) => (
-              <EntityCard key={entity.id} entity={entity} />
-            ))}
-          </CardGrid>
         </div>
       )}
 
@@ -151,7 +117,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
           {online && (
             <li className="font-subhead text-sm text-charcoal">
               {plural(online.count, 'business that works', 'businesses that work')} online{' '}
-              {online.count === 1 ? 'matches' : 'match'} some of your words.{' '}
+              {online.count === 1 ? 'matches' : 'match'} &quot;{quoted(online.words)}&quot;.{' '}
               <Link href={online.href} className={linkClass}>
                 See online businesses
               </Link>
@@ -206,7 +172,6 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
 /** Loads the follow-ups for one thin search and renders them. */
 export async function SearchAssist(props: {
   params: ListingsParams
-  exactIds: readonly string[]
   exactTotal: number
 }) {
   let data: SearchAssistData
@@ -218,7 +183,7 @@ export async function SearchAssist(props: {
     return (
       <section aria-labelledby="search-assist-heading" className="py-6 flex flex-col gap-2">
         <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
-          {props.exactTotal === 0 ? `No exact match for "${quoted(props.params.q ?? '')}"` : 'More to explore'}
+          {props.exactTotal === 0 ? `No results for "${quoted(props.params.q ?? '')}"` : 'Looking for more?'}
         </h2>
         <p className="font-subhead text-sm text-charcoal">
           We couldn&apos;t load suggestions just now.{' '}

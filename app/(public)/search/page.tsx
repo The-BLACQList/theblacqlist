@@ -83,7 +83,6 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
   }) ? (
     <SearchAssist
       params={listingParams}
-      exactIds={result.entities.map((e) => e.id)}
       exactTotal={result.total}
     />
   ) : undefined

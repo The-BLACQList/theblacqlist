@@ -19,7 +19,6 @@ import {
   ASSIST_BELOW,
   editDistance,
   findPlaces,
-  looseQuery,
   matchCategories,
   meaningfulWords,
   nearestCity,
@@ -108,7 +107,7 @@ describe('normalizeQuery and stem', () => {
   })
 })
 
-describe('meaningfulWords and looseQuery', () => {
+describe('meaningfulWords', () => {
   it('drops the filler from a question', () => {
     expect(meaningfulWords('How do I travel solo to Japan?')).toEqual(['travel', 'solo', 'japan'])
     expect(meaningfulWords('best plumber near me open now')).toEqual(['plumber'])
@@ -122,11 +121,6 @@ describe('meaningfulWords and looseQuery', () => {
   it('drops ZIP codes, single letters and repeats, and keeps at most six', () => {
     expect(meaningfulWords('barber 30303 x barbers')).toEqual(['barber'])
     expect(meaningfulWords('one two three four five six seven eight nine ten')).toHaveLength(6)
-  })
-
-  it('builds an any-of search, or nothing', () => {
-    expect(looseQuery(['travel', 'solo'])).toBe('travel OR solo')
-    expect(looseQuery([])).toBeNull()
   })
 })
 
@@ -310,18 +304,6 @@ const supabaseMock = {
 
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => supabaseMock }))
 
-vi.mock('@/lib/listings/query', () => ({
-  queryListings: vi.fn(async (p: ListingsParams) => {
-    const hits = matches(p.q ?? null, / OR /.test(p.q ?? '') ? 'any' : 'all', { city: p.city })
-    return {
-      entities: hits.map((h) => ({ id: h.id, name: h.text })),
-      total: hits.length,
-      page: 1,
-      pageSize: 24,
-    }
-  }),
-}))
-
 vi.mock('@/lib/listings/facets', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/lib/listings/facets')>()
   return {
@@ -359,13 +341,12 @@ async function runSearch(q: string, extra: Partial<ListingsParams> = {}) {
   const params: ListingsParams = { q, ...extra }
   // No fixture listing sits inside a radius search, so those find nothing.
   const hits = extra.lat != null ? [] : matches(q, 'all', { city: extra.city })
-  return getSearchAssist({ params, exactIds: hits.map((h) => h.id), exactTotal: hits.length })
+  return getSearchAssist({ params, exactTotal: hits.length })
 }
 
 type Assist = Awaited<ReturnType<typeof getSearchAssist>>
 function helpful(a: Assist): boolean {
   return !!(
-    a.close ||
     a.chips.length ||
     a.gaps.length ||
     a.uncovered.length ||
@@ -410,8 +391,10 @@ describe('getSearchAssist: twenty awkward searches', () => {
     const a = await runSearch('How do I travel solo to Japan?')
     expect(a.gaps).toContain('Travel Agencies')
     expect(a.chips.map((c) => c.slug)).not.toContain('travel-agencies')
-    expect(a.close?.words).toEqual(['travel', 'solo', 'japan'])
-    expect(a.close?.entities.map((e) => e.id)).toEqual(['l-7'])
+    // No listing matches all three words, so it offers ways to explore
+    // instead of a listing that matches only "travel".
+    expect(a).not.toHaveProperty('close')
+    expect(a.explore?.cities.length).toBeGreaterThan(0)
   })
 
   it('plumber near me: offers Plumbing with its real count', async () => {
@@ -423,7 +406,6 @@ describe('getSearchAssist: twenty awkward searches', () => {
 
   it('black owned: no words left, so it shows ways to explore', async () => {
     const a = await runSearch('black owned')
-    expect(a.close).toBeNull()
     expect(a.explore?.cities.map((c) => c.slug)).toContain('atlanta-ga')
     expect(a.explore?.cities.map((c) => c.slug)).not.toContain('detroit-mi')
     expect(a.explore?.categories[0]?.slug).toBe('food-dining')
@@ -452,18 +434,14 @@ describe('getSearchAssist: twenty awkward searches', () => {
     expect(a.elsewhere).toEqual({ count: 1, href: '/search?q=dentist' })
   })
 
-  it('never repeats a listing the exact search already showed', async () => {
-    const a = await runSearch('soul food restaurant')
-    const shown = matches('soul food restaurant', 'all', {}).map((h) => h.id)
-    expect(shown).toEqual(['l-8'])
-    expect(a.close?.entities.map((e) => e.id) ?? []).not.toContain('l-8')
+
+  it('online line: needs every word once the place is off', async () => {
+    const a = await runSearch('travel atlanta')
+    expect(a.online).toEqual({ count: 1, words: 'travel', href: '/search?q=travel&location_type=virtual' })
   })
 
-  it('keeps the page filters on the looser search', async () => {
-    const { queryListings } = await import('@/lib/listings/query')
-    await runSearch('vegan soul food', { category: 'restaurants', price: ['$$'] })
-    expect(queryListings).toHaveBeenCalledWith(
-      expect.objectContaining({ q: 'vegan OR soul OR food', category: 'restaurants', price: ['$$'], page: 1 })
-    )
+  it('online line: never matches on just some of the words', async () => {
+    const a = await runSearch('solo travel atlanta')
+    expect(a.online).toBeNull()
   })
 })
