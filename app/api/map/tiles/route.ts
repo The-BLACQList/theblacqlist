@@ -3,6 +3,11 @@ import type { NextRequest } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 /**
+ * LEGACY. The map now asks for plain z/x/y tiles from
+ * /api/map/tiles/v1/metros/{z}/{x}/{y} (lib/map/tileUrls.ts), which the CDN can
+ * cache. Nothing in the app calls this route any more. It stays so a /map tab
+ * opened before that deploy keeps drawing; remove it after launch week.
+ *
  * Same-origin proxy for the self-hosted PMTiles archive. Browsers can't read
  * the Content-Range header from Supabase Storage cross-origin (not in
  * Access-Control-Expose-Headers), which silently stalls the pmtiles client —
