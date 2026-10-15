@@ -194,12 +194,7 @@ Two from each city to start. Check each farm's page for market days and how to o
         blurb: 'A father and son selling rare heirloom edible plants at Santa Monica markets.',
       },
     ],
-    sections: [
-      {
-        heading: 'Before you go',
-        body: `Many farms sell by pre-order or on set market days, not walk-in. Check the farm's page or site before you drive out.`,
-      },
-    ],
+    sections: [],
   },
   {
     title: 'Black Art, Museums and Stages',
@@ -258,12 +253,7 @@ A starting list across six cities. More to come.`,
         blurb: 'Founded by Dr. Samella Lewis, inside Baldwin Hills Crenshaw Plaza.',
       },
     ],
-    sections: [
-      {
-        heading: 'Before you go',
-        body: `Hours change with shows and seasons. Check each page or call ahead, especially for dance companies and theaters, which perform on set dates.`,
-      },
-    ],
+    sections: [],
   },
   {
     title: 'New Orleans: Creole, Soul and Beyond',
@@ -308,12 +298,7 @@ A starting list across six cities. More to come.`,
         blurb: 'Pralines from the first Black woman to own a praline company in New Orleans.',
       },
     ],
-    sections: [
-      {
-        heading: 'Before you go',
-        body: `This list runs from sit-down dining rooms to lunch counters, a cafeteria and a praline shop, so hours and how you order change from place to place. Some spots draw a line. Check each page or call ahead before you go.`,
-      },
-    ],
+    sections: [],
   },
 ]
 
