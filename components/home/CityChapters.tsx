@@ -20,14 +20,15 @@ interface Props {
  * coming-soon cities stay quiet and typographic (LCI direction).
  *
  * Each live tile is a full-bleed frame with a feathered caption band across its
- * bottom, holding 16:9 of open picture above it. The picture is a skyline where
- * `CITY_PHOTOS` has one and the ember wash where it does not —
- * `PhotoPanelGround` decides, so a city opening without a photograph still
- * renders in the same shape. Alt text names the city because the photograph is
- * informative here, not decorative.
+ * bottom, holding 16:9 of open picture above it. Alt text names the city
+ * because the photograph is informative here, not decorative.
+ *
+ * Only live cities with a skyline in `CITY_PHOTOS` get a tile here. The home
+ * page shows the photographed cities; /cities still gives every live city a
+ * card, wash or not `[Decision — founder, 2026-10-15]`.
  */
 export function CityChapters({ cities }: Props) {
-  const live = cities.filter((c) => c.isActive)
+  const live = cities.filter((c) => c.isActive && Boolean(CITY_PHOTOS[c.slug]))
   const comingSoon = cities.filter((c) => !c.isActive)
   if (live.length === 0) return null
 
