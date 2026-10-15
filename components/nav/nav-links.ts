@@ -3,7 +3,8 @@ export interface NavLink {
   href: string
 }
 
-const PUBLIC_LINKS: NavLink[] = [
+/** The header and mobile menu links, in order. */
+export const MAIN_NAV_LINKS: NavLink[] = [
   { label: 'Discover', href: '/discover' },
   { label: 'Map', href: '/map' },
   { label: 'Cities', href: '/cities' },
@@ -12,17 +13,10 @@ const PUBLIC_LINKS: NavLink[] = [
 ]
 
 /**
- * The header and mobile menu links, in order. Signed-in visitors also get
- * Saved, right after Map.
+ * Signed-in visitors get Saved beside My Account, in the header and the mobile
+ * menu.
  * [Decision — founder, 2026-10-15 (simplicity M1): tester said saved places
- * had "nothing [that] navigates you back to them."]
+ * had "nothing [that] navigates you back to them." Founder placed it on the
+ * account side, not in the main links.]
  */
-export function mainNavLinks(isSignedIn: boolean): NavLink[] {
-  if (!isSignedIn) return PUBLIC_LINKS
-  const afterMap = PUBLIC_LINKS.findIndex((l) => l.href === '/map') + 1
-  return [
-    ...PUBLIC_LINKS.slice(0, afterMap),
-    { label: 'Saved', href: '/account/saved' },
-    ...PUBLIC_LINKS.slice(afterMap),
-  ]
-}
+export const SAVED_LINK: NavLink = { label: 'Saved', href: '/account/saved' }

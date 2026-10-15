@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { X } from 'lucide-react'
 
 /** How long the note stays up. Hovering or focusing it holds it open. */
-const SHOW_MS = 6000
+const SHOW_MS = 8000
 
 interface Props {
   onClose: () => void

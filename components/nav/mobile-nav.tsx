@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, ShieldCheck } from 'lucide-react'
+import { Bookmark, Menu, ShieldCheck } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -17,7 +17,7 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { SoonPill } from '@/components/ui/soon-pill'
-import { mainNavLinks } from '@/components/nav/nav-links'
+import { MAIN_NAV_LINKS, SAVED_LINK } from '@/components/nav/nav-links'
 
 interface Props {
   isSignedIn: boolean
@@ -82,7 +82,7 @@ export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
           {/* Nav links */}
           <nav aria-label="Mobile navigation">
             <ul className="flex flex-col gap-1">
-              {mainNavLinks(isSignedIn).map((link) => (
+              {MAIN_NAV_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -121,6 +121,16 @@ export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
                     </Link>
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"
+                  asChild
+                >
+                  <Link href={SAVED_LINK.href} onClick={() => setIsOpen(false)}>
+                    <Bookmark className="h-4 w-4" aria-hidden="true" />
+                    {SAVED_LINK.label}
+                  </Link>
+                </Button>
                 <Button
                   variant="outline"
                   className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"
