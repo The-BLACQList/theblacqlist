@@ -136,7 +136,7 @@ export default async function MarketplacePage() {
                 Vendor storefronts aren&apos;t open yet. Products will show up here as they do.
               </p>
               <Link
-                href="/add-business"
+                href="/for-business#start"
                 className="inline-flex items-center gap-1.5 mt-4 font-subhead text-sm font-semibold text-amber hover:text-light-gold"
               >
                 List your business <ArrowRight className="size-4" aria-hidden="true" />
@@ -197,7 +197,7 @@ export default async function MarketplacePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
             <Link
-              href="/add-business"
+              href="/for-business#start"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors min-h-[44px]"
             >
               List your business

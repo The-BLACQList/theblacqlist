@@ -45,7 +45,7 @@ export default function ForVendorsPage() {
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/for-business">List your business</Link>
+              <Link href="/for-business#start">List your business</Link>
             </Button>
             <Button
               asChild

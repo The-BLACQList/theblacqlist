@@ -198,7 +198,7 @@ export default function TrustPage() {
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-6 py-2.5 min-h-[44px] h-auto"
             >
-              <Link href="/claim">Claim your business</Link>
+              <Link href="/for-business#start">Claim or add your business</Link>
             </Button>
           </div>
         </div>

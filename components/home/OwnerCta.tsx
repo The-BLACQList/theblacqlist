@@ -14,7 +14,7 @@ export function OwnerCta() {
         </p>
         <div className="flex justify-center gap-3 flex-wrap mt-6">
           <Link
-            href="/for-business"
+            href="/for-business#start"
             className="inline-flex items-center justify-center h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
             List your business

@@ -71,7 +71,7 @@ export default async function MarketplaceProductsPage() {
               Vendors are building their storefronts. Check back soon, or list your own business.
             </p>
             <Link
-              href="/add-business"
+              href="/for-business#start"
               className="inline-flex items-center h-10 px-5 mt-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors"
             >
               List your business

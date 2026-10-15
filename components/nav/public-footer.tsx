@@ -99,8 +99,7 @@ const columns: FooterColumn[] = [
     heading: 'For Businesses',
     links: [
       { label: 'For Business', href: '/for-business', active: true },
-      { label: 'Claim Your Page', href: '/claim', active: true },
-      { label: 'Add Your Business', href: '/add-business', active: true },
+      { label: 'List Your Business', href: '/for-business#start', active: true },
       { label: 'Pricing', href: '/pricing', active: true },
       { label: 'For Vendors', href: '/for-vendors', active: true },
       { label: 'For Sponsors', href: '/for-sponsors', active: true },
