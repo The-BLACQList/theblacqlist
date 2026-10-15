@@ -8,8 +8,8 @@ clearance that needs one word from the founder — see
 [The 2026-09-03 additions](#the-2026-09-03-additions). **Nine more** were added on
 2026-10-07 and are cleared by name, Canva Pro — see
 [The 2026-10-07 additions](#the-2026-10-07-additions). **Five more** were added on
-2026-10-15 as guide and collection covers and need the founder to confirm their
-source, plus one 2026-10-07 frame put to use — see
+2026-10-15 as guide and collection covers and are cleared by name, Canva Pro, plus
+one 2026-10-07 frame put to use — see
 [The 2026-10-15 additions](#the-2026-10-15-additions).
 **Last updated:** 2026-10-15
 
@@ -656,11 +656,9 @@ The founder asked for covers on the two owner guides and the four collections
 the textiles store with the green apron"*. The other five are new PNGs
 (`96.png`–`100.png`, 1920×1280) dropped for this request.
 
-**License.** `89.png` is Canva Pro, cleared on 2026-10-07. The source of
-`96.png`–`100.png` was not stated. They came through the same folder as every other
-frame, so they are presumed Canva Pro, but that is `[Unverified — requires
-confirmation]` until the founder says so. All three restrictions below apply either
-way.
+**License.** `89.png` is Canva Pro, cleared on 2026-10-07. `96.png`–`100.png` are
+Canva Pro too `[Decision — founder, 2026-10-15: "they are"]`. All three restrictions
+below apply.
 
 ### Source-frame mapping
 
