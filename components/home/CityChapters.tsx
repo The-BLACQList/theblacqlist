@@ -35,7 +35,7 @@ export function CityChapters({ cities }: Props) {
     <section aria-labelledby="cities-heading" className="bg-off-white py-12 md:py-16">
       <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10">
         <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mb-1.5">
-          City chapters
+          Cities
         </p>
         <h2 id="cities-heading" className="font-headline text-[26px] md:text-[32px] text-brand-black">
           Your city&apos;s index

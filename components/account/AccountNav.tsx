@@ -52,6 +52,26 @@ interface NavGroup {
 }
 
 /**
+ * Receipts, My spending and The Collective all sit behind the one `collective`
+ * flag (lib/features/opening-soon.ts), so they open and close together. While
+ * it is covered they collapse into a single "The Collective" row with a Soon
+ * pill [Decision — founder, 2026-10-15: simplicity pass H4]. Once it opens, the
+ * three real rows come back. If a feature ever gets its own flag, pass that
+ * feature's own covered state per row here instead of one boolean.
+ */
+export function collectiveItems(receiptCount: number, covered: boolean): NavItem[] {
+  if (covered) return [{ href: '/account/community-spend', label: 'The Collective', soon: true }]
+  // Receipts (what you submit) -> My spending (your own rollup) ->
+  // The Collective (everyone's, aggregate only). The order is the
+  // widening scope. Renamed from "Community spend" (spec Q5, 2026-10-03).
+  return [
+    { href: '/account/receipts', label: 'Receipts', count: receiptCount },
+    { href: '/account/spending', label: 'My spending' },
+    { href: '/account/community-spend', label: 'The Collective' },
+  ]
+}
+
+/**
  * AC-AB account shell navigation: persistent grouped sidebar on desktop
  * (identity block, live counts, no back-links anywhere), horizontal
  * scroll-nav on mobile.
@@ -93,12 +113,7 @@ export function AccountNav({
       items: [
         { href: '/account/claims', label: 'Claims', count: counts.claims, badge: counts.claimsPending },
         { href: '/account/reviews', label: 'Reviews', count: counts.reviews },
-        { href: '/account/receipts', label: 'Receipts', count: counts.receipts, soon: collectiveSoon },
-        // Receipts (what you submit) -> My spending (your own rollup) ->
-        // The Collective (everyone's, aggregate only). The order is the
-        // widening scope. Renamed from "Community spend" (spec Q5, 2026-10-03).
-        { href: '/account/spending', label: 'My spending', soon: collectiveSoon },
-        { href: '/account/community-spend', label: 'The Collective', soon: collectiveSoon },
+        ...collectiveItems(counts.receipts, collectiveSoon),
       ],
     },
     ...(isOwner

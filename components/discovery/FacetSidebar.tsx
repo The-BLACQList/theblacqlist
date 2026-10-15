@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { SlidersHorizontal, Clock } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
+import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
 import {
   useFacetParams,
@@ -228,13 +230,25 @@ export function FacetSidebar({
             )
           })}
         </div>
+        {/* The Ally label means this, nowhere else says it in the filter. Wording
+            is the approved one from the add-business step [Decision — founder,
+            2026-10-15: simplicity pass P3]. */}
+        <p className="mt-2 font-subhead text-xs leading-snug text-charcoal-soft">
+          <span className="font-semibold">Ally:</span> {ALLY_ONE_LINER}{' '}
+          <Link
+            href="/about#who-we-feature"
+            className="font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
+          >
+            What this means
+          </Link>
+        </p>
       </FilterSection>
 
       {/* Where they operate: the online-only / no-fixed-address axis. Mirrors the
           owner-side "Where you operate" wording. No per-option counts, matching
           Ownership and Trust Level. */}
-      <FilterSection title="Where they operate" active={selectedLocationTypes.length > 0}>
-        <div className="flex flex-col gap-1" role="group" aria-label="Filter by where they operate">
+      <FilterSection title="How to reach them" active={selectedLocationTypes.length > 0}>
+        <div className="flex flex-col gap-1" role="group" aria-label="Filter by how to reach them">
           {LOCATION_TYPES.map(({ value, label }) => {
             const isActive = selectedLocationTypes.includes(value)
             return (

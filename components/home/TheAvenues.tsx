@@ -35,6 +35,8 @@ interface Avenue {
   /** The DiscoverBanner key whose frame this tile shows. */
   banner: string
   comingSoon?: boolean
+  /** Switched off: kept in code, not rendered. */
+  hidden?: boolean
 }
 
 // The founder's six categories, verbatim. Composite avenues pass their primary
@@ -55,11 +57,31 @@ const AVENUES: Avenue[] = [
   { key: 'professionals', label: 'Professionals', verb: 'consult & advise', href: '/discover?type=professional', icon: Briefcase, banner: 'professional' },
   { key: 'creatives', label: 'Creatives', verb: 'commission & collect', href: '/discover?type=creative', icon: Palette, banner: 'creative' },
   { key: 'events', label: 'Events', verb: 'pull up', href: '/discover?type=event', icon: CalendarDays, banner: 'event' },
-  { key: 'jobs', label: 'Jobs', verb: 'find your next role', href: '#', icon: Handshake, banner: 'job', comingSoon: true },
+  { key: 'jobs', label: 'Jobs', verb: 'find your next role', href: '#', icon: Handshake, banner: 'job', comingSoon: true,
+    // Hidden for launch [Decision — founder, 2026-10-15: simplicity pass H1].
+    // Flip to false (or delete the flag) when Jobs launches and the tile returns.
+    hidden: true,
+  },
 ]
 
-/** Two-across on phones, three on tablets, six from lg in a max-w-7xl row. */
-const TILE_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 220px'
+/** Two-across on phones, three on tablets, one row from lg in a max-w-7xl row. */
+const TILE_SIZES = '(max-width: 767px) 50vw, (max-width: 1023px) 50vw, 260px'
+
+/**
+ * Grid placement for the tiles that are showing. With five, phones would leave
+ * a lone tile and tablets a hole, so the last tile spans the phone row and the
+ * tablet row is 3 + 2 on a six-column track (3 x span 2, then 2 x span 3). From
+ * lg it is one row, one column per tile.
+ */
+function tileSpan(index: number, total: number): string {
+  const lastOnPhone = total % 2 === 1 && index === total - 1
+  const onSecondTabletRow = total === 5 && index >= 3
+  return cn(
+    lastOnPhone && 'col-span-2',
+    onSecondTabletRow ? 'md:col-span-3' : 'md:col-span-2',
+    'lg:col-span-1'
+  )
+}
 
 const SCRIM =
   'linear-gradient(to top, rgba(8,8,10,0.92) 0%, rgba(8,8,10,0.72) 45%, rgba(8,8,10,0.2) 100%)'
@@ -84,18 +106,26 @@ const SCRIM =
  * announcing the glyph would only duplicate it.
  */
 export function TheAvenues({ counts }: Props) {
+  const visible = AVENUES.filter((a) => !a.hidden)
+
   return (
     <section aria-labelledby="avenues-heading" className="bg-off-white py-10 md:py-12">
       <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10">
         <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mb-1.5">
-          One index, six avenues
+          One index, five avenues
         </p>
         <h2 id="avenues-heading" className="sr-only">
           Explore by kind of business
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-3">
-          {AVENUES.map((avenue) => {
+        <div
+          className={cn(
+            'grid grid-cols-2 md:grid-cols-6 gap-2.5 mt-3',
+            visible.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-6'
+          )}
+        >
+          {visible.map((avenue, index) => {
+            const span = tileSpan(index, visible.length)
             const count = avenue.key === 'jobs' ? 0 : counts[avenue.key]
             const Icon = avenue.icon
 
@@ -107,7 +137,10 @@ export function TheAvenues({ counts }: Props) {
               return (
                 <div
                   key={avenue.key}
-                  className="relative flex flex-col justify-end min-h-[120px] md:min-h-[136px] rounded-xl bg-deep-bg border border-dashed border-white/25 p-4 overflow-hidden"
+                  className={cn(
+                    'relative flex flex-col justify-end min-h-[120px] md:min-h-[136px] rounded-xl bg-deep-bg border border-dashed border-white/25 p-4 overflow-hidden',
+                    span
+                  )}
                 >
                   {photo && (
                     <Image
@@ -141,6 +174,7 @@ export function TheAvenues({ counts }: Props) {
                 href={avenue.href}
                 className={cn(
                   'group relative flex flex-col justify-end min-h-[120px] md:min-h-[136px] rounded-xl bg-deep-bg p-4 overflow-hidden',
+                  span,
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
                 )}
               >

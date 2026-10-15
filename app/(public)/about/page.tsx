@@ -120,7 +120,7 @@ export default function AboutPage() {
         </div>
       </Section>
 
-      <Section variant="white">
+      <Section variant="white" id="who-we-feature">
         <div className="max-w-2xl">
           <SectionHeading subtitle="Our editorial focus, clearly stated.">
             Who We Feature
