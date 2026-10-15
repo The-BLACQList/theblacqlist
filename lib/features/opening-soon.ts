@@ -75,7 +75,7 @@ export const SOON_FEATURES: Record<SoonFeature, SoonFeatureConfig> = {
     ],
     apis: ['/api/flow-map', '/api/community-spend'],
     source: 'soon-collective',
-    blurb: 'See where the community’s money goes, and add your own receipts to the count.',
+    blurb: 'A map that adds up what our community spends at businesses on the list. Upload a receipt and your spend joins the total.',
     points: [
       'Track what you spend with businesses on the list',
       'See your own total and the businesses you support',

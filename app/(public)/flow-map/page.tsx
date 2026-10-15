@@ -316,9 +316,12 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
               ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
               : 'Where does our money go?'}
           </h1>
-          <p className="font-subhead text-sm text-charcoal-soft mt-3 max-w-[520px] leading-relaxed">
-            Every receipt submitted to The BLACQList becomes an anonymized data point in The
-            Collective. No buyer names. No private data. Just where our money goes, together.
+          {/* [Decision — founder, 2026-10-15 (simplicity P4): tester was "still a
+              bit confused on what/how the collective works." Say what it is and
+              how to join in, in two lines.] */}
+          <p className="font-subhead text-base text-charcoal mt-3 max-w-[520px] leading-relaxed">
+            This map adds up what our community spends at businesses on the list. Shop at one,
+            upload the receipt, and your spend joins the total. Nobody’s name is shown.
           </p>
           <div className="flex items-center gap-3 mt-6">
             <Link

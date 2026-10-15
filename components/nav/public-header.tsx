@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Search, ShieldCheck } from 'lucide-react'
+import { Bookmark, Search, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
@@ -8,14 +8,7 @@ import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { isCovered } from '@/lib/features/covered'
 import { SoonPill } from '@/components/ui/soon-pill'
-
-const desktopNavLinks = [
-  { label: 'Discover', href: '/discover' },
-  { label: 'Map', href: '/map' },
-  { label: 'Cities', href: '/cities' },
-  { label: 'The Collective', href: '/flow-map' },
-  { label: 'For Business', href: '/for-business' },
-] as const
+import { MAIN_NAV_LINKS, SAVED_LINK } from '@/components/nav/nav-links'
 
 export async function PublicHeader() {
   const supabase = await createClient()
@@ -29,13 +22,18 @@ export async function PublicHeader() {
   // rendering-strategy change. Admins had no way into /admin except typing it.
   const isAdmin = user ? (await getAdminRole(user.id)) !== null : false
   const collectiveSoon = isCovered('collective')
+  // Signed-in visitors carry Saved, My Account and Sign Out (and Admin), which
+  // overflowed the row below 1100px, so their full nav starts at xl. Literal
+  // classes so Tailwind keeps them.
+  const showFull = isSignedIn ? 'hidden xl:flex' : 'hidden lg:flex'
+  const showCompact = isSignedIn ? 'flex xl:hidden' : 'flex lg:hidden'
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-deep-bg h-14 md:h-16">
       <Container className="h-full">
         <nav
           aria-label="Main navigation"
-          className="flex h-full items-center justify-between gap-4"
+          className="flex h-full items-center justify-between gap-4 whitespace-nowrap"
         >
           {/* Logo: node-Q mark + Jost wordmark */}
           <Link
@@ -49,9 +47,10 @@ export async function PublicHeader() {
             </span>
           </Link>
 
-          {/* Desktop nav links */}
-          <ul className="hidden md:flex items-center gap-6 flex-1 ml-8">
-            {desktopNavLinks.map((link) => (
+          {/* Desktop nav links. Full nav from lg (xl when signed in): at md the
+              links plus Sign In did not fit. */}
+          <ul className={`${showFull} items-center gap-5 xl:gap-6 flex-1 ml-6 xl:ml-8`}>
+            {MAIN_NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -65,7 +64,7 @@ export async function PublicHeader() {
           </ul>
 
           {/* Desktop right zone */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className={`${showFull} items-center gap-3`}>
             <Link
               href="/search"
               aria-label="Search"
@@ -85,6 +84,13 @@ export async function PublicHeader() {
                     Admin
                   </Link>
                 )}
+                <Link
+                  href={SAVED_LINK.href}
+                  className="inline-flex items-center gap-1.5 font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
+                >
+                  <Bookmark className="h-4 w-4" aria-hidden="true" />
+                  {SAVED_LINK.label}
+                </Link>
                 <Link
                   href="/account"
                   className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
@@ -119,7 +125,7 @@ export async function PublicHeader() {
           </div>
 
           {/* Mobile right zone */}
-          <div className="flex md:hidden items-center gap-1">
+          <div className={`${showCompact} items-center gap-1`}>
             <Link
               href="/search"
               aria-label="Search"
