@@ -209,6 +209,11 @@ export function buildMapStyle(metroTiles: string, usTiles: string): StyleSpecifi
  * Los Angeles is the case where those two disagree: its seeded center is
  * downtown, but the listings cluster southwest (Leimert Park, Crenshaw, Baldwin
  * Hills). 10.2 covers the whole 0.143° × 0.159° span from that offset center.
+ *
+ * The seven cities from national seeding batch 1 (2026-10-15) break the
+ * verbatim-center rule on purpose: each is centered on the bounding box of its
+ * own published, pinned listings, so the opening frame shows the corpus rather
+ * than a downtown point it may sit beside. They have no landmark list yet.
  */
 export const CITY_VIEWS: Record<string, { center: [number, number]; zoom: number; label: string }> =
   {
@@ -218,6 +223,13 @@ export const CITY_VIEWS: Record<string, { center: [number, number]; zoom: number
     'los-angeles-ca': { center: [-118.243683, 34.052235], zoom: 10.2, label: 'Los Angeles' },
     'washington-dc': { center: [-77.036873, 38.907192], zoom: 11.2, label: 'Washington DC' },
     'new-orleans-la': { center: [-90.071533, 29.951065], zoom: 10.9, label: 'New Orleans' },
+    'new-york-ny': { center: [-73.956, 40.7425], zoom: 10.9, label: 'New York' },
+    'philadelphia-pa': { center: [-75.183, 39.9825], zoom: 11.4, label: 'Philadelphia' },
+    'dallas-tx': { center: [-96.8425, 32.7625], zoom: 10.6, label: 'Dallas' },
+    'detroit-mi': { center: [-83.092, 42.3865], zoom: 10.9, label: 'Detroit' },
+    'baltimore-md': { center: [-76.6215, 39.2945], zoom: 11.5, label: 'Baltimore' },
+    'memphis-tn': { center: [-90.0005, 35.111], zoom: 11.1, label: 'Memphis' },
+    'charlotte-nc': { center: [-80.827, 35.262], zoom: 11.3, label: 'Charlotte' },
   }
 
 /** The map's opening view: every city at once, framed on the lower 48. */

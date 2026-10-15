@@ -23,8 +23,20 @@ import { LANDMARKS, toLandmarkGeoJSON } from '@/lib/map/landmarks'
 const CITY_RADIUS_DEG = 0.35
 
 describe('our landmark list', () => {
-  it('has entries for every city the map flies to', () => {
-    for (const slug of Object.keys(CITY_VIEWS)) {
+  // The seven batch 1 cities (2026-10-15) joined the map without landmark
+  // lists [Decision — founder, 2026-10-15], so this holds for the first six.
+  const LANDMARK_CITIES = [
+    'atlanta-ga',
+    'houston-tx',
+    'chicago-il',
+    'los-angeles-ca',
+    'washington-dc',
+    'new-orleans-la',
+  ]
+
+  it('has entries for every launch city', () => {
+    for (const slug of LANDMARK_CITIES) {
+      expect(CITY_VIEWS[slug], slug).toBeDefined()
       expect(LANDMARKS.some((l) => l.city === slug), slug).toBe(true)
     }
   })
