@@ -13,6 +13,7 @@ import type { Json } from '@/lib/supabase/types'
 import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
 import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
 import { levelsForCategory, validateLevels } from '@/lib/listings/levels'
+import { loadCategoryLevels } from '@/lib/listings/levelRows'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -420,7 +421,7 @@ export async function createListingAction(
   // 2026-10-08 to 2026-10-11. Two plain lookups can't break that way.
   const { data: category, error: categoryError } = await supabase
     .from('categories')
-    .select('id, slug, parent_id, default_level, allowed_levels')
+    .select('id, slug, parent_id')
     .eq('id', categoryId)
     .eq('is_active', true)
     .maybeSingle()
@@ -440,9 +441,14 @@ export async function createListingAction(
   // The owner's "main role" pick. A pick the category doesn't allow (or none,
   // when the question was skipped) falls back to the category's default
   // rather than failing: the level is never worth losing a new page over.
-  const catLevels = levelsForCategory(category)
-  const levelPick = validateLevels(formData.get('primary_level')?.toString() ?? '', [], catLevels.allowed_levels)
-  const primaryLevel = levelPick.ok ? levelPick.primary : catLevels.default_level
+  // No level columns yet (null map) means no primary_level on the insert;
+  // once the migration runs, the insert trigger fills it from the category.
+  const levelMap = await loadCategoryLevels(supabase, [category.id])
+  const catLevels = levelMap ? (levelMap.get(category.id) ?? levelsForCategory(null)) : null
+  const levelPick = catLevels
+    ? validateLevels(formData.get('primary_level')?.toString() ?? '', [], catLevels.allowed_levels)
+    : null
+  const primaryLevel = catLevels ? (levelPick?.ok ? levelPick.primary : catLevels.default_level) : null
 
   let parentSlug: string | null = null
   if (category.parent_id) {
@@ -541,7 +547,7 @@ export async function createListingAction(
       ownership_label: ownershipLabel,
       ownership_attested: ownershipAttested,
       ownership_attested_at: ownershipAttested ? new Date().toISOString() : null,
-      primary_level: primaryLevel,
+      ...(primaryLevel ? { primary_level: primaryLevel } : {}),
     })
     .select('id')
     .single()

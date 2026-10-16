@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
@@ -52,8 +53,6 @@ type RawRow = {
   tier: string
   source: string | null
   ownership_label: string
-  primary_level?: string | null
-  extra_levels?: string[] | null
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -100,7 +99,7 @@ type RawRow = {
 const LISTING_SELECT = `
   id, slug, name, tagline, meta_title, meta_description, noindex,
   entity_type, location_type, trust_tier, tier, source,
-  ownership_label, primary_level, extra_levels,
+  ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id, city_id,
   categories!listings_category_id_fkey(name, slug),
@@ -129,8 +128,6 @@ function toDiscoveryEntity(raw: RawRow): DiscoveryEntity {
     trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
     tier: raw.tier as DiscoveryEntity['tier'],
     ownership_label: raw.ownership_label as DiscoveryEntity['ownership_label'],
-    primary_level: raw.primary_level ?? 'local',
-    extra_levels: raw.extra_levels ?? [],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -671,6 +668,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     relatedLocalData as unknown as RawRow[] | null,
     relatedAnywhereData as unknown as RawRow[] | null
   ).map(toDiscoveryEntity)
+
+  // The page's own levels and its related cards' in one fail-soft read, kept
+  // out of LISTING_SELECT so a database without the level columns still
+  // renders the page (lib/listings/levelRows.ts).
+  const self: { id: string; primary_level?: string; extra_levels?: string[] } = { id: raw.id }
+  await attachLevels(sb, [self, ...related])
   const relatedEventIds = related.filter((e) => e.entity_type === 'event').map((e) => e.id)
   if (relatedEventIds.length > 0) {
     const { data: relEvRows } = await sb
@@ -714,8 +717,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     trust_tier: raw.trust_tier as EntityPageData['trust_tier'],
     tier: raw.tier as EntityPageData['tier'],
     ownership_label: raw.ownership_label as EntityPageData['ownership_label'],
-    primary_level: raw.primary_level ?? 'local',
-    extra_levels: raw.extra_levels ?? [],
+    primary_level: self.primary_level,
+    extra_levels: self.extra_levels,
     is_featured: raw.is_featured,
     featured_bucket: featuredBucket,
     is_sponsored: raw.is_sponsored,

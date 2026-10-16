@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { attachLevels } from '@/lib/listings/levelRows'
 import type { DiscoveryEntity } from '@/types'
 import {
   resolveFacetParams,
@@ -80,8 +81,6 @@ export type RawRow = {
   trust_tier: string
   tier: string
   ownership_label: string
-  primary_level?: string | null
-  extra_levels?: string[] | null
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -96,7 +95,7 @@ export type RawRow = {
 
 export const NESTED_SELECT = `
   id, slug, name, tagline, entity_type, location_type, category_id, trust_tier, tier,
-  ownership_label, primary_level, extra_levels,
+  ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count,
   categories!listings_category_id_fkey(name, slug),
@@ -118,8 +117,6 @@ export function mapRow(raw: RawRow): DiscoveryEntity {
     trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
     tier: raw.tier as DiscoveryEntity['tier'],
     ownership_label: raw.ownership_label as DiscoveryEntity['ownership_label'],
-    primary_level: raw.primary_level ?? 'local',
-    extra_levels: raw.extra_levels ?? [],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -426,6 +423,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   }
 
   // Identity chips + event dates fetched separately (resilient to missing tables).
+  // Levels too: see lib/listings/levelRows.ts for why they stay out of NESTED_SELECT.
+  await attachLevels(supabase, finalEntities)
   await attachIdentityChips(supabase, finalEntities)
   await attachEventStartDates(supabase, finalEntities)
 

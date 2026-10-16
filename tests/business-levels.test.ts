@@ -25,6 +25,7 @@ import {
   validateLevels,
 } from '@/lib/listings/levels'
 import { levelFilterHref } from '@/lib/listings/url'
+import { attachLevels, loadCategoryLevels } from '@/lib/listings/levelRows'
 import { searchSchema } from '@/lib/validations/search'
 import { hasUnresolved, resolveFacetParams, rpcArgs } from '@/lib/listings/facets'
 import {
@@ -223,9 +224,9 @@ describe('quick start role step', () => {
       /fd\.set\('primary_level', level\)/
     )
     const action = src('lib/actions/listings/createListing.ts')
-    expect(action).toMatch(/default_level, allowed_levels/)
-    expect(action).toMatch(/levelPick\.ok \? levelPick\.primary : catLevels\.default_level/)
-    expect(action).toMatch(/primary_level: primaryLevel/)
+    expect(action).toMatch(/loadCategoryLevels\(supabase, \[category\.id\]\)/)
+    expect(action).toMatch(/levelPick\?\.ok \? levelPick\.primary : catLevels\.default_level/)
+    expect(action).toMatch(/primaryLevel \? \{ primary_level: primaryLevel \} : \{\}/)
   })
 })
 
@@ -256,5 +257,79 @@ describe('surfaces', () => {
     expect(action).toMatch(/\.eq\('owner_user_id', owner\.user\.id\)/)
     expect(action).not.toMatch(/checkAttributeCount/)
     expect(src('components/listings/PageFinishView.tsx')).toMatch(/<LevelSection/)
+  })
+})
+
+// Staging and every Preview run without the level columns until GATE-DATA. A
+// level column inside the main selects made PostgREST reject the whole query:
+// /discover rendered 0 results and every business page 404'd. Levels are read
+// apart and fail soft instead.
+describe('works before the migration', () => {
+  const missingColumn = {
+    from: () => ({
+      select: () => ({
+        in: async () => ({ data: null, error: { code: '42703', message: 'column does not exist' } }),
+      }),
+    }),
+  }
+  const throwing = {
+    from: () => {
+      throw new Error('no in()')
+    },
+  }
+
+  it('keeps level columns out of the main listing selects', () => {
+    for (const file of ['lib/listings/query.ts', 'lib/listings/entityPage.ts']) {
+      const s = src(file)
+      const select = s.match(/(?:NESTED_SELECT|LISTING_SELECT) = `([\s\S]*?)`/)?.[1] ?? ''
+      expect(select).toMatch(/ownership_label/)
+      expect(select).not.toMatch(/primary_level|extra_levels/)
+      expect(s).toMatch(/await attachLevels\(/)
+    }
+    expect(src('app/page.tsx')).toMatch(/await attachLevels\(supabase, freshFinds\)/)
+  })
+
+  it('keeps level columns out of the add-business category selects', () => {
+    expect(src('app/add-business/page.tsx')).toMatch(/\.select\('id, name, slug, parent_id'\)/)
+    expect(src('lib/actions/listings/createListing.ts')).toMatch(/\.select\('id, slug, parent_id'\)/)
+  })
+
+  it('attachLevels reads every card as local when the columns are missing', async () => {
+    const cards: { id: string; primary_level?: string; extra_levels?: string[] }[] = [{ id: 'a' }, { id: 'b' }]
+    await attachLevels(missingColumn, cards)
+    expect(cards).toEqual([
+      { id: 'a', primary_level: 'local', extra_levels: [] },
+      { id: 'b', primary_level: 'local', extra_levels: [] },
+    ])
+    await attachLevels(throwing, cards)
+    expect(cards[0]?.primary_level).toBe('local')
+  })
+
+  it('attachLevels applies stored levels and drops bad values', async () => {
+    const client = {
+      from: () => ({
+        select: () => ({
+          in: async () => ({
+            data: [
+              { id: 'a', primary_level: 'maker', extra_levels: ['supplier', 'nope'] },
+              { id: 'b', primary_level: 'bogus', extra_levels: null },
+            ],
+            error: null,
+          }),
+        }),
+      }),
+    }
+    const cards: { id: string; primary_level?: string; extra_levels?: string[] }[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    await attachLevels(client, cards)
+    expect(cards).toEqual([
+      { id: 'a', primary_level: 'maker', extra_levels: ['supplier'] },
+      { id: 'b', primary_level: 'local', extra_levels: [] },
+      { id: 'c', primary_level: 'local', extra_levels: [] },
+    ])
+  })
+
+  it('loadCategoryLevels returns null (levels off) when the columns are missing', async () => {
+    expect(await loadCategoryLevels(missingColumn, ['x'])).toBeNull()
+    expect(await loadCategoryLevels(throwing, ['x'])).toBeNull()
   })
 })

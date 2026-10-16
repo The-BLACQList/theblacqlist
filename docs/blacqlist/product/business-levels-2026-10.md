@@ -81,6 +81,7 @@ A category added later (by admin or migration) starts as `local` only, allowing 
 - A trigger fills `primary_level` from the category when an insert leaves it empty, so imports and seed scripts need no changes.
 - Both search functions take `p_levels text[]`. `facet_counts` always returns all four `level` rows (zeros included), counting a listing once per level it has. That lets the sidebar tell a real 0 from a database that predates the migration.
 - A level filter is a deep filter: if the database can't apply it, the page says "filters unavailable" rather than retrying without it.
+- Level columns are never part of the main listing or category selects. They are read on their own (`lib/listings/levelRows.ts`) and fail soft, so a database without the migration still shows every business, just with no pills, no Level section and no role step.
 - Migration: `supabase/migrations/20261017000000_business_levels.sql` (GATE-DATA: staging, then prod before merge).
 
 ## Out of scope
