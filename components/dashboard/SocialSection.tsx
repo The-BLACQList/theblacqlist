@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, type ReactNode } from 'react'
 import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
@@ -19,6 +19,8 @@ interface Props {
   /** Saved links stay off the public page until Starter (owner-made pages on Free). */
   hiddenOnPage?: boolean
   showUpgrade: boolean
+  /** Caption help, drawn below the links and outside their form (ticket 138). */
+  caption?: ReactNode
 }
 
 const SOCIAL_FIELDS = [
@@ -71,6 +73,7 @@ export function SocialSection({
   locked,
   hiddenOnPage = false,
   showUpgrade,
+  caption,
 }: Props) {
   const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
   const saveLabel = useSaveLabel()
@@ -101,6 +104,7 @@ export function SocialSection({
             your page.
           </PlanLimitNote>
         </div>
+        {caption && <div className="border-t border-charcoal/8 px-5 py-4">{caption}</div>}
       </div>
     )
   }
@@ -170,6 +174,7 @@ export function SocialSection({
           </button>
         </div>
       </form>
+      {caption && <div className="border-t border-charcoal/8 px-5 py-4">{caption}</div>}
     </div>
   )
 }

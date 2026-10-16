@@ -99,7 +99,7 @@ export async function applySuggestionAction(
   // is reported as the success it was and the row stays `approved` — which reads
   // as "approved but we can't prove it was applied", the accurate statement.
   if (stampError) {
-    revalidatePath(`/dashboard/pages/${listingId}/ai-suggestions`)
+    revalidatePath(`/dashboard/pages/${listingId}/edit`)
     return { success: true }
   }
 
@@ -115,7 +115,6 @@ export async function applySuggestionAction(
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
     }
   }
-  revalidatePath(`/dashboard/pages/${listingId}/ai-suggestions`)
   revalidatePath(`/dashboard/pages/${listingId}/edit`)
 
   return { success: true }

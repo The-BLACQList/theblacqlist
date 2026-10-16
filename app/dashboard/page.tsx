@@ -72,8 +72,8 @@ export default async function DashboardPage() {
             const completeness = [
               // Cover leads the list deliberately: it is the one field that
               // changes how the business appears everywhere else on the site,
-              // and the scored version of this check lives behind the Starter+
-              // AI Suggestions page, so free-tier owners only ever see it here.
+              // and the scored version of this check lives in Edit content's
+              // Starter+ writing help, so free-tier owners only ever see it here.
               { done: !!listing.cover_image_path, label: 'Cover photo' },
               { done: !!listing.tagline, label: 'Tagline' },
               { done: !!details?.description, label: 'Business description' },

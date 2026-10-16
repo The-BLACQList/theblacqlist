@@ -104,7 +104,7 @@ export interface GenerateInput {
 }
 
 export type GenerateResult =
-  | { ok: true; suggestionId: string; provider: 'mock' | 'anthropic' }
+  | { ok: true; suggestionId: string; text: string; provider: 'mock' | 'anthropic' }
   | { ok: false; code: 'rate_limited'; retryAfterHours: number }
   | { ok: false; code: 'quota_reached'; quota: number }
   | { ok: false; code: 'paused' }
@@ -341,5 +341,5 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
     .update({ status: 'completed', suggestion_id: suggestionRow.id, ...tokenColumns(usage) })
     .eq('id', requestId)
 
-  return { ok: true, suggestionId: suggestionRow.id, provider }
+  return { ok: true, suggestionId: suggestionRow.id, text: validated.text, provider }
 }

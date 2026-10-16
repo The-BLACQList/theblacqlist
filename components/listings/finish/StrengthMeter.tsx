@@ -5,7 +5,7 @@ import type { ChecklistResult } from '@/lib/ai/checklist'
 import { cn } from '@/lib/utils'
 
 // Short labels and anchors for the finish view (tickets 126 and 129). The
-// checklist's own labels are written for the dashboard suggestions page.
+// checklist's own labels are longer, written for a standalone list.
 export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
   tagline: { label: 'One-line tagline', anchor: '#basics' },
   description: { label: 'About, 100+ characters', anchor: '#about' },
@@ -23,6 +23,22 @@ export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
 
 export function itemLabel(id: string, fallback: string): string {
   return FINISH_ITEMS[id]?.label ?? fallback
+}
+
+const HIGHLIGHT = ['ring-2', 'ring-amber-gold', 'ring-offset-4']
+
+// Scrolls to an item's section, moves focus there so the next Tab lands on
+// its first field, and rings it for a moment so the eye can find it.
+function goToSection(id: string): void {
+  const anchor = FINISH_ITEMS[id]?.anchor ?? '#basics'
+  const el = document.querySelector<HTMLElement>(anchor)
+  if (!el) return
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  el.focus({ preventScroll: true })
+  history.replaceState(null, '', anchor)
+  el.classList.add(...HIGHLIGHT)
+  window.setTimeout(() => el.classList.remove(...HIGHLIGHT), 1600)
 }
 
 interface Props {
@@ -55,9 +71,11 @@ export function StrengthMeter({ checklist }: Props) {
           <li key={item.id} className="min-w-0 flex-1">
             <button
               type="button"
-              aria-label={`${itemLabel(item.id, item.label)}: ${item.passed ? 'done' : 'not yet'}`}
-              aria-pressed={activeId === item.id}
-              onClick={() => setActiveId((cur) => (cur === item.id ? null : item.id))}
+              aria-label={`${itemLabel(item.id, item.label)}: ${item.passed ? 'done' : 'not yet'}. Go to this part of your page.`}
+              onClick={() => {
+                setActiveId(item.id)
+                goToSection(item.id)
+              }}
               onMouseEnter={() => setActiveId(item.id)}
               onFocus={() => setActiveId(item.id)}
               className="group flex h-8 w-full items-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
@@ -84,7 +102,7 @@ export function StrengthMeter({ checklist }: Props) {
             {!active.passed && active.hint}
           </>
         ) : (
-          'Tap a bar to see what it stands for.'
+          'Tap a bar to go to that part of your page.'
         )}
       </p>
 
@@ -98,6 +116,10 @@ export function StrengthMeter({ checklist }: Props) {
               <li key={item.id}>
                 <a
                   href={FINISH_ITEMS[item.id]?.anchor ?? '#basics'}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    goToSection(item.id)
+                  }}
                   className="inline-flex min-h-9 items-center rounded-full border border-charcoal/15 px-3 font-subhead text-xs text-brand-black hover:border-amber-gold hover:bg-amber-gold/10"
                 >
                   {itemLabel(item.id, item.label)}

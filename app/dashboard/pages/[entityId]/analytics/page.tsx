@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { canAccess } from '@/lib/stripe/features'
+import { getWritingAllowance } from '@/lib/ai/allowance'
 import { PeriodToggle } from './_components/PeriodToggle'
+import { ExplainNumbers } from './_components/ExplainNumbers'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -141,6 +143,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     savesCount,
     dailyResult,
     searchQueriesResult,
+    writingAllowance,
   ] = await Promise.all([
     supabase
       .from('analytics_events')
@@ -223,6 +226,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       .eq('clicked_listing_id', entityId)
       .gte('created_at', sinceIso)
       .limit(200),
+
+    // Off or locked means no "Explain my numbers" card (ticket 138).
+    getWritingAllowance(listing.id, listing.tier),
   ])
 
   const views = viewsCount.count ?? 0
@@ -254,6 +260,10 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         </div>
         <PeriodToggle period={period} />
       </div>
+
+      {writingAllowance.state === 'ready' && (
+        <ExplainNumbers listingId={listing.id} allowance={writingAllowance} />
+      )}
 
       {/* Lifetime totals */}
       <div>

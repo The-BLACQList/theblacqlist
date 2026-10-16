@@ -1,10 +1,15 @@
 'use client'
 
-import { useActionState, useState } from 'react'
-import { useSaveLabel } from './SaveLabel'
+import { useActionState } from 'react'
+import { useLivePage, useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
+import {
+  updateListingContentAction,
+  type UpdateListingContentState,
+} from '@/lib/actions/dashboard/updateListingContent'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import { SuggestionPanel, useFieldHelp } from '@/components/listings/finish/WritingHelp'
+import type { Suggestion } from '@/lib/ai/writingHelp'
 
 interface Props {
   listingId: string
@@ -14,6 +19,8 @@ interface Props {
   showUpgrade: boolean
   /** Unsaved typing, for a live preview beside the form (ticket 129). */
   onDraftChange?: (patch: { description: string }) => void
+  /** An open suggestion from earlier, shown under the box (ticket 138). */
+  initialSuggestion?: Suggestion
 }
 
 export function AboutSection({
@@ -22,10 +29,23 @@ export function AboutSection({
   charLimit,
   showUpgrade,
   onDraftChange,
+  initialSuggestion,
 }: Props) {
-  const [state, formAction, isPending] = useActionState(updateListingContentAction, null)
+  const field = useFieldHelp('listing_description', description ?? '', initialSuggestion, (v) =>
+    onDraftChange?.({ description: v })
+  )
+  const [state, formAction, isPending] = useActionState(
+    async (prev: UpdateListingContentState, formData: FormData) => {
+      const result = await updateListingContentAction(prev, formData)
+      if (result && 'success' in result) field.markSaved()
+      return result
+    },
+    null
+  )
   const saveLabel = useSaveLabel()
-  const [chars, setChars] = useState(description?.length ?? 0)
+  const live = useLivePage()
+  const value = field.state.value
+  const chars = value.length
   // A description saved before the limit existed stays as it is. Only an edit
   // has to fit, so say that plainly instead of letting the save fail.
   const savedOverLimit = charLimit !== null && (description?.length ?? 0) > charLimit
@@ -41,6 +61,7 @@ export function AboutSection({
       </div>
       <form action={formAction} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
+        {field.usedId && <input type="hidden" name="ai_suggestion_id" value={field.usedId} />}
 
         <div>
           <label
@@ -53,11 +74,8 @@ export function AboutSection({
             id="about-description"
             name="description"
             rows={6}
-            defaultValue={description ?? ''}
-            onChange={(e) => {
-              setChars(e.target.value.length)
-              onDraftChange?.({ description: e.target.value })
-            }}
+            value={value}
+            onChange={(e) => field.setValue(e.target.value)}
             aria-describedby="about-description-count"
             placeholder="Describe your business, its history, and what makes it special…"
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
@@ -69,6 +87,8 @@ export function AboutSection({
             {charLimit === null ? `${chars} characters` : `${chars} of ${charLimit} characters`}
           </p>
         </div>
+
+        <SuggestionPanel field={field} fieldId="about-description" charLimit={charLimit} />
 
         {charLimit !== null && (savedOverLimit || overLimit) && (
           <PlanLimitNote showUpgrade={showUpgrade}>
@@ -87,18 +107,22 @@ export function AboutSection({
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
-        {state && 'success' in state && (
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
-            <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
-            <p className="font-body text-sm text-green-700">Saved.</p>
-          </div>
-        )}
+        <div role="status">
+          {state && 'success' in state && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+              <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
+              <p className="font-body text-sm text-green-700">
+                About text saved.{live && " It's on your page now."}
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-end pt-1">
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             {isPending ? 'Saving…' : saveLabel}

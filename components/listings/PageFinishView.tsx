@@ -32,6 +32,8 @@ import { StrengthMeter, itemLabel } from './finish/StrengthMeter'
 import { GoogleCard } from './finish/GoogleCard'
 import { FinishSubmit } from './finish/FinishSubmit'
 import { useLeaveGuard } from './finish/useLeaveGuard'
+import { CaptionHelp, WritingHelpProvider, WritingHelpStrip } from './finish/WritingHelp'
+import { CLOSING_NOTE, type InitialSuggestions, type WritingAllowance } from '@/lib/ai/writingHelp'
 
 // The side-by-side finish view: every section of a business page on the left,
 // the page itself on the right. One component for both mounts (tickets 126 and
@@ -44,14 +46,24 @@ interface Props {
   warning?: 'request' | null
   /** Public storage base, `${SUPABASE_URL}/storage/v1/object/public`. */
   storageUrl: string
+  /** Writing help in the fields (ticket 138). Left out on a new page. */
+  writingHelp?: { allowance: WritingAllowance; initial: InitialSuggestions }
 }
 
-type Draft = { name: string; tagline: string; description: string }
+type Draft = {
+  name: string
+  tagline: string
+  description: string
+  meta_title: string
+  meta_description: string
+}
 
 const DRAFT_LABELS: Record<keyof Draft, string> = {
   name: 'business name',
   tagline: 'tagline',
   description: 'about',
+  meta_title: 'search title',
+  meta_description: 'search description',
 }
 
 // The owner edit page sits beside the dashboard sidebar, so it has less room
@@ -72,18 +84,21 @@ const LAYOUT = {
 
 function Anchor({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <div id={id} className="scroll-mt-24">
+    // tabIndex -1 lets the strength bars move focus here (see goToSection).
+    <div id={id} tabIndex={-1} className="scroll-mt-24 rounded-xl outline-none transition-shadow">
       {children}
     </div>
   )
 }
 
-export function PageFinishView({ data, mode, warning = null, storageUrl }: Props) {
+export function PageFinishView({ data, mode, warning = null, storageUrl, writingHelp }: Props) {
   const d = data.details
   const saved: Draft = {
     name: data.name,
     tagline: data.tagline ?? '',
     description: d?.description ?? '',
+    meta_title: data.metaTitle ?? '',
+    meta_description: data.metaDescription ?? '',
   }
   const [draft, setDraft] = useState<Draft>(saved)
   const patchDraft = (patch: Partial<Draft>) => setDraft((cur) => ({ ...cur, ...patch }))
@@ -96,8 +111,19 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
     return out
     // `saved` is rebuilt from props each render; its fields are the real deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, saved.name, saved.tagline, saved.description])
+  }, [
+    draft,
+    saved.name,
+    saved.tagline,
+    saved.description,
+    saved.meta_title,
+    saved.meta_description,
+  ])
   const unsavedKeys = Object.keys(unsaved) as (keyof Draft)[]
+  // Each "Not saved yet" line sits under the cards it is about.
+  const isSearchKey = (k: keyof Draft) => k === 'meta_title' || k === 'meta_description'
+  const topUnsaved = unsavedKeys.filter((k) => !isSearchKey(k))
+  const searchUnsaved = unsavedKeys.filter(isSearchKey)
 
   const rootRef = useRef<HTMLDivElement>(null)
   useLeaveGuard(rootRef, unsavedKeys.length > 0)
@@ -108,8 +134,8 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
   const checklist = computePageChecklist(
     {
       tagline: draft.tagline || null,
-      meta_title: data.metaTitle,
-      meta_description: data.metaDescription,
+      meta_title: draft.meta_title || null,
+      meta_description: draft.meta_description || null,
       cover_image_path: data.coverImagePath,
     },
     d ? { ...d, description: draft.description || null } : null,
@@ -137,7 +163,10 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
   const layout = LAYOUT[mode]
   const asideLabel = mode === 'new' ? 'Your page so far' : 'Your page'
 
-  return (
+  const helpReady = writingHelp?.allowance.state === 'ready'
+  const initial = writingHelp?.initial ?? {}
+
+  const view = (
     <SaveLabelProvider live={isLive}>
       <div ref={rootRef} className={layout.grid}>
         <div className="flex min-w-0 flex-col gap-6">
@@ -170,6 +199,8 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
 
           <StrengthMeter checklist={checklist} />
 
+          {writingHelp && <WritingHelpStrip />}
+
           <Anchor id="basics">
             <BasicInfoSection
               listingId={data.id}
@@ -186,12 +217,13 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               charLimit={descriptionCharLimit(tier)}
               showUpgrade={showUpgrade}
               onDraftChange={patchDraft}
+              initialSuggestion={initial.listing_description}
             />
           </Anchor>
 
-          {unsavedKeys.length > 0 && (
+          {topUnsaved.length > 0 && (
             <p aria-live="polite" className="-mt-3 font-body text-xs text-amber">
-              Not saved yet: {unsavedKeys.map((k) => DRAFT_LABELS[k]).join(', ')}.
+              Not saved yet: {topUnsaved.map((k) => DRAFT_LABELS[k]).join(', ')}.
             </p>
           )}
 
@@ -271,6 +303,9 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               locked={!canAccess(tier, 'social_links')}
               hiddenOnPage={!data.socialsShowOnPage}
               showUpgrade={showUpgrade}
+              caption={
+                helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined
+              }
             />
           </Anchor>
 
@@ -305,9 +340,16 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               }}
               metaTitle={data.metaTitle}
               metaDescription={data.metaDescription}
-              description={d?.description ?? null}
+              onDraftChange={patchDraft}
+              initial={initial}
             />
           </Anchor>
+
+          {searchUnsaved.length > 0 && (
+            <p aria-live="polite" className="-mt-3 font-body text-xs text-amber">
+              Not saved yet: {searchUnsaved.map((k) => DRAFT_LABELS[k]).join(', ')}.
+            </p>
+          )}
 
           {isNewDraft ? (
             <FinishSubmit
@@ -324,6 +366,10 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
               entityType={data.entityType}
             />
           )}
+
+          {helpReady && (
+            <p className="font-body text-xs leading-relaxed text-charcoal-soft">{CLOSING_NOTE}</p>
+          )}
         </div>
 
         <aside className={layout.aside} aria-label={asideLabel}>
@@ -336,5 +382,13 @@ export function PageFinishView({ data, mode, warning = null, storageUrl }: Props
         </aside>
       </div>
     </SaveLabelProvider>
+  )
+
+  return writingHelp ? (
+    <WritingHelpProvider listingId={data.id} allowance={writingHelp.allowance}>
+      {view}
+    </WritingHelpProvider>
+  ) : (
+    view
   )
 }

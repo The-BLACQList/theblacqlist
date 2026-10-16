@@ -9,9 +9,13 @@ import type { Json } from '@/lib/supabase/types'
 export type RejectSuggestionState = { success: true } | { error: string } | null
 
 const MAX_REASON_CHARS = 200
+const OPEN = ['pending', 'approved'] as const
 
 /**
- * Marks a pending suggestion `rejected`, with an optional reason.
+ * Marks an open suggestion `rejected`, with an optional reason. Not this on
+ * Edit content runs this for both Send and Skip (ticket 138). A suggestion that
+ * was approved on the old page and still shows under its field can be rejected
+ * too, so both open statuses are accepted.
  *
  * The reason is optional and stays optional. Requiring one would turn "this isn't
  * how I talk about my business" into a form to fill in, and the predictable result
@@ -36,7 +40,7 @@ export async function rejectSuggestionAction(
     return { error: `Keep the reason under ${MAX_REASON_CHARS} characters.` }
   }
 
-  const loaded = await loadOwnedSuggestion(suggestionId, owner.user.id, 'pending')
+  const loaded = await loadOwnedSuggestion(suggestionId, owner.user.id, OPEN)
   if (!loaded.ok) return { error: loaded.error }
 
   const supabase = createServiceClient()
@@ -61,10 +65,10 @@ export async function rejectSuggestionAction(
       metadata: (reason ? { ...existing, rejection_reason: reason } : existing) as Json,
     })
     .eq('id', loaded.suggestion.id)
-    .eq('status', 'pending')
+    .in('status', OPEN)
 
   if (error) return { error: 'Could not save your review. Please try again.' }
 
-  revalidatePath(`/dashboard/pages/${loaded.suggestion.listingId}/ai-suggestions`)
+  revalidatePath(`/dashboard/pages/${loaded.suggestion.listingId}/edit`)
   return { success: true }
 }

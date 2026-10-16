@@ -8,6 +8,7 @@ import { geocodeAddress } from '@/lib/listings/geocode'
 import { checkDescription, checkSocialLinks, SOCIAL_FIELDS } from '@/lib/stripe/planChecks'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 import { parseWeeklyHours } from '@/lib/listings/hours'
+import { markSuggestionUsed } from '@/lib/ai/markUsed'
 import type { WeeklyHours } from '@/types'
 
 export type UpdateListingContentState =
@@ -202,6 +203,31 @@ export async function updateListingContentAction(
       .upsert({ listing_id: listingId, ...detailsUpdate }, { onConflict: 'listing_id' })
 
     if (error) return { error: 'Failed to save business details. Please try again.' }
+  }
+
+  // ── A suggestion the owner put in with Use this is now saved (ticket 138).
+  //    markSuggestionUsed never throws, and its result does not change ours:
+  //    the owner's save already succeeded. ─────────────────────────────────
+  //    One id per field (the Google card has two), each checked on its own.
+  const aiSuggestionIds = [
+    ...new Set(
+      formData
+        .getAll('ai_suggestion_id')
+        .map((v) => v.toString().trim())
+        .filter(Boolean)
+    ),
+  ].slice(0, 3)
+  for (const suggestionId of aiSuggestionIds) {
+    await markSuggestionUsed({
+      suggestionId,
+      listingId,
+      userId: owner.user.id,
+      saved: {
+        description,
+        meta_title: metaTitle,
+        meta_description: metaDescription,
+      },
+    })
   }
 
   // ── Revalidate the editor route so the just-saved value shows without a hard
