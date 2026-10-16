@@ -157,6 +157,10 @@ export type OutputRejection =
   | 'refusal'
   | 'contains_email'
   | 'contains_phone'
+  // The /add-business drafts (lib/ai/onboarding.ts): not the JSON shape asked
+  // for, or a category code that was never offered.
+  | 'invalid_shape'
+  | 'not_a_candidate'
 
 export type OutputValidation =
   | { ok: true; text: string }

@@ -114,6 +114,34 @@ export const AI_AGENTS: readonly AgentDefinition[] = [
   },
 ] as const
 
+/**
+ * The /add-business drafts agent (ticket 128). Deliberately NOT in `AI_AGENTS`:
+ * it is not offered on the dashboard, it never writes an `ai_suggestions` row,
+ * and the owner applies each draft through the ordinary save path by tapping
+ * "Use this". It runs through `generate()` so it gets the same audit row,
+ * ceiling, redaction and validation as every other agent.
+ *
+ * `suggestionType` is never written anywhere. It exists to satisfy the shape.
+ * `maxOutputChars` covers the five drafts as one JSON object (the longest legal
+ * answer is about 750 characters) with room for the keys.
+ */
+export const ONBOARDING_AGENT: AgentDefinition = {
+  agentType: 'onboarding_drafts',
+  templateKey: 'ONBOARDING_DRAFTS',
+  suggestionType: 'none',
+  label: 'Page drafts',
+  blurb: 'A category, tagline, about and search text to start your page.',
+  modelTier: 'fast',
+  applyTarget: null,
+  maxOutputChars: 1200,
+}
+
+/**
+ * Written to `ai_generation_requests.prompt_version` for the drafts agent. It
+ * has its own counter because its template changes on its own schedule.
+ */
+export const ONBOARDING_PROMPT_VERSION = 'ONBOARDING_DRAFTS@1'
+
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)
 }
@@ -148,7 +176,7 @@ export function promptVersionOf(agent: AgentDefinition): string {
 // Fails the build (via the test suite) if an agent names a template that the
 // prompt map does not route. The map is the contract prompts.ts documents.
 export function agentsWithUnroutedTemplates(): string[] {
-  return AI_AGENTS.filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
+  return [...AI_AGENTS, ONBOARDING_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
     (a) => a.agentType
   )
 }

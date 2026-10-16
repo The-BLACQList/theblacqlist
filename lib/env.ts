@@ -65,6 +65,7 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 // handler, a server action, or a request-scoped Server Component).
 export type FeatureFlag =
   | 'aiBeta'
+  | 'aiOnboarding'
   | 'collectiveOpen'
   | 'earnedFeatured'
   | 'jobsOpen'
@@ -79,6 +80,13 @@ export type FeatureFlag =
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   aiBeta: 'FEATURE_AI_BETA',
+  // Gates the drafts on /add-business (ticket 128): after "Save my draft", one
+  // generation suggests a category, tagline, about, search title and search
+  // description. Off, the flow is exactly what it was before: no call, no audit
+  // row, no cards. Closed by default on EVERY deployment (see CLOSED_BY_DEFAULT),
+  // because a Preview with a key set would otherwise send real owner words to
+  // the provider before the privacy notice takes effect (Mon 2026-11-02).
+  aiOnboarding: 'FEATURE_AI_ONBOARDING',
   // Opening-soon covers (ticket 122). While one is off, proxy.ts shows
   // /soon/<feature> in place of the feature's pages and its public data APIs
   // answer 403. The full list of covered paths is lib/features/opening-soon.ts.
@@ -134,8 +142,11 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
 // Flags that default to off on EVERY deployment, not just production. The
 // opening-soon covers are the thing under review here: if they defaulted open on
 // Previews, the cover would be invisible exactly where the founder checks it
-// (2026-10-05). Each still opens with an explicit `=true`.
+// (2026-10-05). The /add-business drafts are here for a different reason: they
+// send owner text to a model, so no deployment should start doing that without
+// someone deciding to. Each still opens with an explicit `=true`.
 const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
+  'aiOnboarding',
   'collectiveOpen',
   'jobsOpen',
   'marketplaceOpen',

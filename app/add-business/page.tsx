@@ -65,6 +65,7 @@ export default async function AddBusinessPage() {
           cities={cities}
           email={user.email ?? ''}
           siteImport={isFeatureEnabled('siteImport')}
+          aiOnboarding={isFeatureEnabled('aiOnboarding')}
         />
       </div>
     </main>

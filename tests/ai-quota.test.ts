@@ -13,6 +13,7 @@ let result: { count: number | null; error: unknown } = { count: 0, error: null }
 const query = {
   select: (cols: unknown, opts: unknown) => (calls.push(['select', cols, opts]), query),
   eq: (col: unknown, val: unknown) => (calls.push(['eq', col, val]), query),
+  neq: (col: unknown, val: unknown) => (calls.push(['neq', col, val]), query),
   gte: (col: unknown, val: unknown) => (calls.push(['gte', col, val]), Promise.resolve(result)),
 }
 
@@ -37,6 +38,8 @@ describe('countSuccessfulLast30Days', () => {
     expect(calls).toContainEqual(['eq', 'status', 'completed'])
     // Mock rows cost nothing, so they never use up a plan's allowance.
     expect(calls).toContainEqual(['eq', 'provider', 'anthropic'])
+    // The /add-business drafts have their own caps (ticket 128) and never count here.
+    expect(calls).toContainEqual(['neq', 'agent_type', 'onboarding_drafts'])
     const since = calls.find((c) => c[0] === 'gte')?.[2] as string
     const days = (before - Date.parse(since)) / (24 * 60 * 60 * 1000)
     expect(days).toBeGreaterThan(29.99)
