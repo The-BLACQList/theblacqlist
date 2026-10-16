@@ -15,6 +15,11 @@
  * into a prompt through a column that is on the allowlist. The allowlist governs
  * which fields; this governs what is inside them.
  *
+ * What comes out of owner text before any prompt: email addresses, phone
+ * numbers, street addresses and P.O. boxes, and the signed-in owner's own name
+ * (redact.ts). That list is the Privacy Policy's promise, so shrinking it is a
+ * policy change, not a refactor.
+ *
  * ── Outbound: the model can hand back PII it was never given ─────────────────
  * A model asked for a call to action will sometimes invent a phone number. If
  * that reaches `listings.meta_description` it is published, wrong, and looks
@@ -34,6 +39,15 @@
  * forbids logging.
  */
 
+import {
+  PromptRedactionError,
+  REDACTED,
+  redactOwnerName,
+  redactStreetAddresses,
+} from './redact'
+
+export { ownerNameTerms, PromptRedactionError, REDACTED } from './redact'
+
 /** Longest description excerpt that may enter a prompt. */
 export const MAX_DESCRIPTION_CHARS = 500
 /** Longest review text that may enter a prompt (Review Response agent only). */
@@ -49,6 +63,11 @@ const EMAIL_PATTERN = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
 // (555) 555 0100, +1.555.555.0100. Deliberately does not match a bare 4-digit
 // year or a price.
 const PHONE_PATTERN = /(?:\+?\d[\s().-]{0,2}){9,}\d/
+// Global copies for redaction, so every match is replaced and not just the
+// first. Kept separate because `.test()` on a global pattern carries state
+// between calls, which would make validateOutput skip matches.
+const EMAIL_PATTERN_ALL = new RegExp(EMAIL_PATTERN.source, 'gi')
+const PHONE_PATTERN_ALL = new RegExp(PHONE_PATTERN.source, 'g')
 
 /**
  * Refusal phrases. Matched at the start only — a description that discusses what
@@ -83,20 +102,49 @@ export function stripHtml(input: string): string {
 }
 
 export function redactContactPatterns(input: string): string {
-  return input.replace(EMAIL_PATTERN, '[removed]').replace(PHONE_PATTERN, '[removed]')
+  return input.replace(EMAIL_PATTERN_ALL, REDACTED).replace(PHONE_PATTERN_ALL, REDACTED)
 }
 
+/** Per-request redaction settings for {@link sanitizeForPrompt}. */
+export interface PromptRedaction {
+  /**
+   * From `ownerNameTerms(names, businessName)`. Empty when the owner has no name
+   * on file. Leave it empty for the business name field itself: the owner's
+   * name is never removed from the name of their own business.
+   */
+  ownerNameTerms: readonly string[]
+}
+
+export const NO_NAME_REDACTION: PromptRedaction = { ownerNameTerms: [] }
+
 /**
- * Prepares one free-text field for prompt assembly: tags out, contact details
- * out, length capped.
+ * Prepares one field for prompt assembly: tags out, email and phone out, street
+ * addresses out, the owner's own name out, length capped.
+ *
+ * Fails closed. If any redaction step throws, this throws
+ * {@link PromptRedactionError} (a fixed code, no text) instead of returning the
+ * text half-cleaned, and the caller must not send the prompt.
  *
  * Truncation happens last so the cap is on what actually gets sent, and it cuts
  * on a word boundary — a prompt ending mid-word invites the model to complete
  * the word rather than the task.
  */
-export function sanitizeForPrompt(input: string | null | undefined, maxChars: number): string {
+export function sanitizeForPrompt(
+  input: string | null | undefined,
+  maxChars: number,
+  redaction: PromptRedaction = NO_NAME_REDACTION
+): string {
   if (!input) return ''
-  const cleaned = redactContactPatterns(stripHtml(input))
+  let cleaned: string
+  try {
+    cleaned = redactOwnerName(
+      redactStreetAddresses(redactContactPatterns(stripHtml(input))),
+      redaction.ownerNameTerms
+    )
+  } catch {
+    // Deliberately drops the error: it could quote the text being cleaned.
+    throw new PromptRedactionError()
+  }
   if (cleaned.length <= maxChars) return cleaned
   const cut = cleaned.slice(0, maxChars)
   const lastSpace = cut.lastIndexOf(' ')

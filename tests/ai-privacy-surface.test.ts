@@ -106,6 +106,21 @@ describe('lib/ai/provider.ts — the generation seam', () => {
     expect(varsBlock).not.toContain('triggeredBy')
   })
 
+  it('uses the owner name only to redact, never as a prompt var', () => {
+    // The names reach buildPromptVars only as terms to remove. The raw list
+    // must not, or a name could be placed into a template by mistake.
+    const varsBlock = PROVIDER.slice(
+      PROVIDER.indexOf('export function buildPromptVars'),
+      PROVIDER.indexOf('function mockContextOf')
+    )
+    expect(varsBlock).not.toContain('ownerNames')
+    // Assembly is inside a try that closes the audit row instead of sending.
+    expect(PROVIDER).toContain("closeFailed('prompt_redaction_failed')")
+    expect(PROVIDER.indexOf("closeFailed('prompt_redaction_failed')")).toBeLessThan(
+      PROVIDER.indexOf('callAnthropic(')
+    )
+  })
+
   it('sends the provider only the assembled prompt', () => {
     // The real call gets the filled template and nothing from the context or the
     // input directly, so buildPromptVars stays the whole privacy surface.
