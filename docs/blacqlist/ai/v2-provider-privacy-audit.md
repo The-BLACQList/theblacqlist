@@ -10,6 +10,21 @@
 
 This audit is a prerequisite for the first real provider call. It does not clear gates 1, 5, or 6, and it does not authorize spend.
 
+> **Update, 2026-10-16 (ticket 128, onboarding drafts, PR #240).** A second prompt builder,
+> `buildOnboardingPromptVars()` in `lib/ai/onboarding.ts`. The verdict holds. What it does:
+> - **An allowlist, not a row.** It takes an `OnboardingContext` with six keys only: business name,
+>   city name, owner words, imported site text, category candidates and groups. No email, phone,
+>   address, owner id or listing id is in the type.
+> - **Codes, not ids.** Categories go in as `C1`, `G1` codes; the reply is mapped back on the server
+>   and a code that was not offered rejects the whole answer.
+> - **One shared 500-character cap** for owner words and imported site text, both through
+>   `sanitizeForPrompt()` with the owner's name redacted (`ownerNameTerms` keeps only name words that
+>   are also in the business name). Site text sits in a marked block, and `neutralize()` strips
+>   brackets, braces and backticks so pasted text cannot fake the marker.
+> - **The business name and city use `NO_NAME_REDACTION`**, since they are public page facts.
+> - **No suggestion row.** The call goes through `generate()` with the audit row first; drafts are
+>   returned to the owner and never stored in `ai_suggestions`. The audit row holds no text.
+>
 > **Update, 2026-10-15 (real provider wired, mock still the default).** Re-read for the Haiku 5.5 wiring
 > (`lib/ai/anthropic.ts`, `lib/ai/spend.ts`). The verdict holds. What changed:
 > - **A fixed system prompt** now goes with every call (`SYSTEM_PROMPT` in `anthropic.ts`). It contains

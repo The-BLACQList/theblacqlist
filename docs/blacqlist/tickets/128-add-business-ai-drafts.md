@@ -1,6 +1,6 @@
 # Ticket 128: AI drafts and category help on /add-business
 
-**Phase:** V2 · **Priority:** P2 · **Status:** Blocked on gates
+**Phase:** V2 · **Priority:** P2 · **Status:** In review ([PR #240](https://github.com/The-BLACQList/theblacqlist/pull/240), draft; flag off, real calls still wait on the gates)
 **Depends on:** 126 (and 127 for reading imported text)
 **Gates:** GATE-SPEND, safety-plan exception, privacy policy and Terms update, the six AI launch gates. Behind `FEATURE_AI_ONBOARDING`, off by default.
 **Decision record:** [add-business-workshop-2026-10.md](../design/add-business-workshop-2026-10.md)
