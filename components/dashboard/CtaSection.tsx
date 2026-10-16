@@ -1,9 +1,10 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateCtaAction } from '@/lib/actions/dashboard/updateCta'
+import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 
 interface Props {
   listingId: string
@@ -33,7 +34,16 @@ const CTA_OPTIONS: { value: string; label: string; requiresUrl: boolean }[] = [
 ]
 
 export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Props) {
-  const [state, formAction, isPending] = useActionState(updateCtaAction, null)
+  const {
+    state,
+    pending: isPending,
+    collective,
+    formProps,
+  } = useSectionSave({
+    id: 'main-button',
+    label: 'Main button',
+    action: updateCtaAction,
+  })
   const saveLabel = useSaveLabel()
   const [selectedType, setSelectedType] = useState(ctaType ?? '')
 
@@ -50,7 +60,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
           The main button shown on your public page. Choose the action that best fits your business.
         </p>
       </div>
-      <form action={formAction} className="px-5 py-4 space-y-4">
+      <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
 
         <div>
@@ -130,23 +140,27 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
-        {state && 'success' in state && (
+        {!collective && state && 'success' in state && (
           <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
             <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-green-700">Saved.</p>
           </div>
         )}
 
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : saveLabel}
-          </button>
-        </div>
+        {collective ? (
+          <CollectiveSubmit />
+        ) : (
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {isPending ? 'Saving…' : saveLabel}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

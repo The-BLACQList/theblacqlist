@@ -61,9 +61,9 @@ export function StorefrontTemplate({
 
       {/* The id lives on the call site, never inside EntityAtAGlance — every
           template wraps it, so an id in the component would be duplicated.
-          Unconditional here (unlike the microsite templates, which gate on
-          hasVisit) because EntityAtAGlance also carries the social row, which
-          a listing can have with no address, hours, phone or email. */}
+          Unconditional on every template because EntityAtAGlance also carries
+          the social row, which a listing can have with no address, hours,
+          phone or email. */}
       <div id="visit" className="scroll-mt-32">
         <EntityAtAGlance entity={entity} />
       </div>

@@ -1,6 +1,5 @@
 'use client'
 
-import { useActionState } from 'react'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
 import {
@@ -11,6 +10,7 @@ import {
 } from '@/lib/listings/seo'
 import { useLivePage, useSaveLabel } from '@/components/dashboard/SaveLabel'
 import { SuggestionPanel, useFieldHelp } from './WritingHelp'
+import { CollectiveSubmit, useSectionSave } from './ProfileSave'
 import type { InitialSuggestions } from '@/lib/ai/writingHelp'
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
   seoFields: ListingSeoFields
   metaTitle: string | null
   metaDescription: string | null
-  /** Unsaved typing, for the checklist and the "Not saved yet" line. */
+  /** Unsaved typing, for the checklist. */
   onDraftChange?: (patch: { meta_title?: string; meta_description?: string }) => void
   /** Open suggestions from earlier for the two fields (ticket 138). */
   initial?: InitialSuggestions
@@ -68,8 +68,15 @@ export function GoogleCard({
   const saveLabel = useSaveLabel()
   const live = useLivePage()
 
-  const [state, formAction, isPending] = useActionState(
-    async (prev: SaveState, formData: FormData): Promise<SaveState> => {
+  const {
+    state,
+    pending: isPending,
+    collective,
+    formProps,
+  } = useSectionSave({
+    id: 'google',
+    label: 'How you show up on Google',
+    action: async (prev: SaveState, formData: FormData): Promise<SaveState> => {
       const nextTitle = formData.get('meta_title')?.toString().trim() ?? ''
       const nextDesc = formData.get('meta_description')?.toString().trim() ?? ''
       const result = await updateListingContentAction(null, formData)
@@ -81,8 +88,7 @@ export function GoogleCard({
         saved: savedLabel(nextTitle !== (metaTitle ?? ''), nextDesc !== (metaDescription ?? '')),
       }
     },
-    null
-  )
+  })
 
   const hasSaved = Boolean(metaTitle?.trim() || metaDescription?.trim())
   const rules = rulesSeo(seoFields)
@@ -135,7 +141,7 @@ export function GoogleCard({
           </div>
         )}
 
-        <form action={formAction} className="flex flex-col gap-5">
+        <form {...formProps} className="flex flex-col gap-5">
           <input type="hidden" name="listing_id" value={listingId} />
           {title.usedId && <input type="hidden" name="ai_suggestion_id" value={title.usedId} />}
           {desc.usedId && <input type="hidden" name="ai_suggestion_id" value={desc.usedId} />}
@@ -212,7 +218,7 @@ export function GoogleCard({
             </div>
           )}
           <div role="status">
-            {state && 'saved' in state && (
+            {!collective && state && 'saved' in state && (
               <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
                 <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
                 <p className="font-body text-sm text-green-700">
@@ -223,16 +229,20 @@ export function GoogleCard({
             )}
           </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto"
-            >
-              {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {isPending ? 'Saving…' : saveLabel}
-            </button>
-          </div>
+          {collective ? (
+            <CollectiveSubmit />
+          ) : (
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto"
+              >
+                {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+                {isPending ? 'Saving…' : saveLabel}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </section>

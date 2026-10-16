@@ -38,24 +38,32 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
   const hasPortfolio = entity.images.length > 0
   const hasCapabilities = entity.details.services.length > 0
   const hasStory = Boolean(entity.details.description?.trim())
-  const hasVisit = Boolean(
-    entity.details.address || entity.details.hours || entity.details.phone || entity.details.email
-  )
 
   const tabs: AnchorTab[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'visit', label: 'Visit' },
     ...(hasPortfolio ? [{ id: 'portfolio', label: 'Portfolio' }] : []),
     ...(hasCapabilities ? [{ id: 'capabilities', label: 'Capabilities' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasPortfolio ? [{ id: 'gallery', label: 'Gallery' }] : []),
     { id: 'reviews', label: 'Reviews' },
-    ...(hasVisit ? [{ id: 'visit', label: 'Visit' }] : []),
   ]
 
   return (
     <>
       <TemplateHero entity={entity} initialSaved={initialSaved} variant="creative" />
       <EntityAnchorTabs tabs={tabs} />
-      <TemplateInfoRail entity={entity} />
+      <div id="overview" className="scroll-mt-32">
+        <TemplateInfoRail entity={entity} />
+      </div>
+
+      {/* At a Glance sits right under the quick facts on every template
+          (ticket 140). Unconditional, as on Storefront, because it also
+          carries the social row, which a page can have with no address,
+          hours, phone or email. */}
+      <div id="visit" className="scroll-mt-32">
+        <EntityAtAGlance entity={entity} />
+      </div>
 
       <Reveal>
       <div className="bg-white">
@@ -111,11 +119,6 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
 
       <EntityUpcomingEvents entity={entity} />
 
-      {hasVisit && (
-        <div id="visit" className="scroll-mt-32">
-          <EntityAtAGlance entity={entity} />
-        </div>
-      )}
 
       <Reveal>
         <EntityFaqSection faqs={entity.faqs} />
