@@ -58,6 +58,13 @@ const COMING_SOON_ALLOWED_PATHS = [
   '/verify-email',
   '/forgot-password',
   '/reset-password',
+  // Public legal pages (2026-10-16). They hold no secrets, and the policy
+  // update notice email links to them, so a signed-out reader must be able to
+  // open them while the gate is up. Their /upcoming pages ride along as
+  // segments beneath each path.
+  '/privacy',
+  '/terms',
+  '/cookies',
 ]
 
 export async function proxy(request: NextRequest) {
