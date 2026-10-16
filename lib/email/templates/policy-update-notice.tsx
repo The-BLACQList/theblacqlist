@@ -13,16 +13,17 @@ import {
 import { POLICY_UPDATE } from '@/lib/legal/policyUpdate'
 
 /**
- * The 14-day notice for the October 2026 policy update (ticket 139). Privacy
- * §10 and Terms §13 promise this email to registered users before the change
- * takes effect, so it is a service message, not marketing: it goes to every
- * confirmed account and carries no promotion.
+ * The notice for the October 2026 policy update (ticket 139). The update took
+ * effect on October 16, 2026, the day it was posted, so this tells registered
+ * users what changed after the fact. It is a service message, not marketing:
+ * it goes to every confirmed account and carries no promotion.
  *
- * [Needs professional review] The founder approved this copy on 2026-10-16
- * ahead of counsel. If counsel asks for changes, update it before any resend.
+ * [Needs professional review] The founder approved this copy and the same-day
+ * effective date on 2026-10-16 ahead of counsel. If counsel asks for changes,
+ * update it before any resend.
  *
- * Dates come from lib/legal/policyUpdate.ts so the email, the banners and the
- * page switch can never disagree.
+ * Dates come from lib/legal/policyUpdate.ts so the email and the pages can
+ * never disagree.
  */
 
 interface PolicyUpdateNoticeEmailProps {
@@ -30,7 +31,7 @@ interface PolicyUpdateNoticeEmailProps {
 }
 
 export function policyUpdateNoticeSubject(): string {
-  return `We're updating our Privacy Policy and Terms on ${POLICY_UPDATE.effectiveOnLabel}`
+  return "We've updated our Privacy Policy and Terms"
 }
 
 export function PolicyUpdateNoticeEmail({
@@ -41,7 +42,7 @@ export function PolicyUpdateNoticeEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>{`What's changing on ${effective}. You don't need to do anything.`}</Preview>
+      <Preview>{`What changed on ${effective}. You don't need to do anything.`}</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -50,17 +51,17 @@ export function PolicyUpdateNoticeEmail({
 
           <Section style={content}>
             <Text style={eyebrow}>Policy update</Text>
-            <Text style={heading}>We&rsquo;re updating our Privacy Policy and Terms</Text>
+            <Text style={heading}>We&rsquo;ve updated our Privacy Policy and Terms</Text>
 
             <Text style={paragraph}>
-              On {effective}, updated versions of our Privacy Policy, Terms of Service, and Cookie
-              Policy take effect. Here&rsquo;s what&rsquo;s changing.
+              On {effective}, we updated our Privacy Policy, Terms of Service, and Cookie Policy.
+              The new versions are in effect now. Here&rsquo;s what changed.
             </Text>
 
             <Text style={item}>
               <strong style={itemTitle}>Optional AI writing help for business owners.</strong>{' '}
-              Owners can ask for drafts of their page&rsquo;s tagline, About section, and search
-              text. To write them, we send a short, cleaned description of the business to
+              Owners can choose to get drafts of their page&rsquo;s tagline, About section, and
+              search text when they set up a new page, or ask for them later. To write them, we send a short, cleaned description of the business to
               Anthropic, the company that makes the Claude AI model. We take out email addresses,
               phone numbers, street addresses, and the owner&rsquo;s name first, and we never attach
               account details or receipts. Nothing goes on a page until the owner chooses to use it.
@@ -80,17 +81,17 @@ export function PolicyUpdateNoticeEmail({
               them.
             </Text>
 
-            <Button href={`${siteUrl}/privacy/upcoming`} style={button}>
+            <Button href={`${siteUrl}/privacy`} style={button}>
               Read the updated Privacy Policy
             </Button>
 
             <Text style={paragraph}>
               You can also read the updated{' '}
-              <a href={`${siteUrl}/terms/upcoming`} style={inlineLink}>
+              <a href={`${siteUrl}/terms`} style={inlineLink}>
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href={`${siteUrl}/cookies/upcoming`} style={inlineLink}>
+              <a href={`${siteUrl}/cookies`} style={inlineLink}>
                 Cookie Policy
               </a>
               .
@@ -99,9 +100,9 @@ export function PolicyUpdateNoticeEmail({
             <Hr style={divider} />
 
             <Text style={paragraph}>
-              You don&rsquo;t need to do anything. If you keep using The BLACQList on or after{' '}
-              {effective}, the updated versions apply. If you don&rsquo;t agree with them, you can
-              delete your account in your account settings before then.
+              You don&rsquo;t need to do anything. If you keep using The BLACQList, the updated
+              versions apply. If you don&rsquo;t agree with them, you can delete your account in
+              your account settings at any time.
             </Text>
             <Text style={paragraph}>
               Questions? Email us at{' '}

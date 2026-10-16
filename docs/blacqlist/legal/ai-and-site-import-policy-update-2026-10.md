@@ -4,6 +4,19 @@
 
 _Drafted: 2026-10-15 · Updated: 2026-10-16 · Reviewers: Legal + Privacy agents · Status: **POSTED 2026-10-16 on founder approval; counsel review to follow.** The founder approved the text on their own word and merged it (ticket 139); any change counsel asks for goes in as a follow-up. The new text sits behind a "Takes effect" date, and the notice email goes only when the founder runs it, by the end of Mon Oct 19._
 
+### Change: effective the day it was posted (2026-10-16)
+
+The founder put the prod AI key in on 2026-10-16, ahead of the planned Nov 2 date, and then chose to make the update **take effect on Oct 16, 2026**, the day it was posted, because the notice email had not gone out yet. Status of finding F10 after this change:
+
+| Item | Rating | State |
+|---|---|---|
+| 14-day email promise (Privacy §10, Terms §13, June 30 text) not met for accounts that existed before Oct 16 | **High** | Accepted by the founder. Consult attorney. |
+| Owner gets the AI help only by choice, with a note at the point of use saying what goes to Anthropic, after taking out email addresses, phone numbers, street addresses and the owner's name, and linking `/privacy#ai-writing-help` | Mitigation | Built (QuickStart "Write first drafts" box, ticked by default, can be unticked) |
+| "We've updated" email to every confirmed account | Mitigation | Template and script ready. **The founder sends it promptly.** |
+| Counsel review of the same-day effective date and of whether the default-ticked box is enough consent | **Medium** | Unverified. Requires confirmation. |
+
+→ **Docs**: none. The page text did not change, only the date it applies from.
+
 ### Founder decisions (2026-10-16)
 
 | Decision | Choice |

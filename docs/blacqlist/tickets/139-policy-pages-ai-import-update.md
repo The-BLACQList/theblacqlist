@@ -6,6 +6,8 @@
 **Source text:** `docs/blacqlist/legal/ai-and-site-import-policy-update-2026-10.md`
 **Decision record:** on 2026-10-16 the founder chose to build now, then approved the text on their own word and merged it the same day, with counsel review to follow. The update was posted Fri Oct 16, the email goes out by the end of Mon Oct 19, and it takes effect Mon Nov 2, 2026. Street address and owner name are removed before sending (#239). The "Black-owned only" wording (F13) and the Vercel Analytics row (F14) are folded in. The AI safety-plan exception is approved. Only registered accounts get the email.
 
+**Change 2026-10-16 (later the same day):** the founder put the prod Anthropic key in early, so real AI drafts went live on /add-business. Because the notice email had not gone out yet, the founder chose to make the update take effect on the day it was posted, **Fri Oct 16, 2026**, instead of Nov 2. `effectiveAt` is now Oct 16, so the main pages show the new text, the banners no longer show, and the /upcoming pages redirect. The email is now a past-tense "We've updated" notice that links the live pages, and the send script no longer has a send-by window. This breaks the 14-day email promise in the June 30 Privacy §10 and Terms §13 for existing accounts (accepted by the founder, counsel to review). To limit the gap: the AI drafts in /add-business now run only when the owner leaves a "Write first drafts" box ticked, with a short note right there saying what goes to Anthropic and a link to the policy, and the notice email goes out promptly. The rest of this ticket describes the original Nov 2 plan.
+
 ---
 
 ## Why

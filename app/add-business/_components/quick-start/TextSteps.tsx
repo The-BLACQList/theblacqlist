@@ -151,3 +151,49 @@ export function AttestStep({ answers, onChange, problem }: StepProps) {
     </>
   )
 }
+
+interface DraftsChoiceProps {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}
+
+/**
+ * The owner's choice to get AI drafts after "Save my draft" (ticket 128). The
+ * Privacy Policy calls the writing help optional, so it only runs when this
+ * box is ticked, and the note says what leaves our site before it does.
+ */
+export function DraftsChoice({ checked, onChange }: DraftsChoiceProps) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label
+        htmlFor="qs-want-drafts"
+        className="flex cursor-pointer items-start gap-3 rounded-xl border border-charcoal/20 bg-white p-4"
+      >
+        <input
+          id="qs-want-drafts"
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          aria-describedby="qs-want-drafts-note"
+          className="mt-0.5 size-5 shrink-0 accent-brand-black"
+        />
+        <span className="font-subhead text-sm leading-relaxed text-charcoal">
+          Write first drafts of my tagline, About and search text.
+        </span>
+      </label>
+      <p id="qs-want-drafts-note" className={HINT_CLASS}>
+        To write them, we send what you told us to Anthropic, our AI provider, after taking out email
+        addresses, phone numbers, street addresses and your name. Nothing goes on your page until you
+        choose it.{' '}
+        <a
+          href="/privacy#ai-writing-help"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-brand-black underline underline-offset-2"
+        >
+          Privacy Policy
+        </a>
+      </p>
+    </div>
+  )
+}
