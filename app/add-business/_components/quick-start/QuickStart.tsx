@@ -32,7 +32,7 @@ import { CtaStep } from './CtaStep'
 import { FitStep } from './FitStep'
 import { NameStep } from './NameStep'
 import { SiteImportStep } from './SiteImportStep'
-import { AboutStep, AttestStep, OwnershipStep, TaglineStep } from './TextSteps'
+import { AboutStep, AttestStep, DraftsChoice, OwnershipStep, TaglineStep } from './TextSteps'
 import { WhereStep, type CityOption } from './WhereStep'
 
 // The rules-first quick start (ticket 126): eight short questions beside a live
@@ -124,6 +124,8 @@ function QuickStartFlow({
   const [site, setSite] = useState<SiteDraft | null>(siteImport ? initial.site : null)
   const [problem, setProblem] = useState<Missing | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  // AI drafts after saving are opt-out by the owner on the last step (ticket 128).
+  const [wantDrafts, setWantDrafts] = useState(true)
   const [pending, startTransition] = useTransition()
   // What to focus after the next render: a field with a problem, else the step heading.
   const focusNext = useRef<string | null>(null)
@@ -239,7 +241,7 @@ function QuickStartFlow({
         }
         const params = new URLSearchParams()
         if (result.warning) params.set('warning', 'request')
-        if (aiOnboarding) {
+        if (aiOnboarding && wantDrafts) {
           params.set('drafts', '1')
           // Imported about text goes to the drafts as quoted text, not as the owner's words.
           if (fromSiteTag('about', site, answers)) params.set('from', 'site')
@@ -336,6 +338,9 @@ function QuickStartFlow({
             {step === 'cta' && <CtaStep {...stepProps} email={site?.email ?? email} />}
             {step === 'tagline' && <TaglineStep {...stepProps} />}
             {step === 'attest' && <AttestStep {...stepProps} />}
+            {step === 'attest' && aiOnboarding && (
+              <DraftsChoice checked={wantDrafts} onChange={setWantDrafts} />
+            )}
           </div>
 
           {formError && (
