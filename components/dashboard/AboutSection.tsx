@@ -1,6 +1,5 @@
 'use client'
 
-import { useActionState } from 'react'
 import { useLivePage, useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import {
@@ -9,6 +8,7 @@ import {
 } from '@/lib/actions/dashboard/updateListingContent'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 import { SuggestionPanel, useFieldHelp } from '@/components/listings/finish/WritingHelp'
+import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 import type { Suggestion } from '@/lib/ai/writingHelp'
 
 interface Props {
@@ -34,14 +34,20 @@ export function AboutSection({
   const field = useFieldHelp('listing_description', description ?? '', initialSuggestion, (v) =>
     onDraftChange?.({ description: v })
   )
-  const [state, formAction, isPending] = useActionState(
-    async (prev: UpdateListingContentState, formData: FormData) => {
+  const {
+    state,
+    pending: isPending,
+    collective,
+    formProps,
+  } = useSectionSave({
+    id: 'about',
+    label: 'About',
+    action: async (prev: UpdateListingContentState, formData: FormData) => {
       const result = await updateListingContentAction(prev, formData)
       if (result && 'success' in result) field.markSaved()
       return result
     },
-    null
-  )
+  })
   const saveLabel = useSaveLabel()
   const live = useLivePage()
   const value = field.state.value
@@ -59,7 +65,7 @@ export function AboutSection({
           Tell the community about your business. Who you are, what you do, and why it matters.
         </p>
       </div>
-      <form action={formAction} className="px-5 py-4 space-y-4">
+      <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
         {field.usedId && <input type="hidden" name="ai_suggestion_id" value={field.usedId} />}
 
@@ -108,7 +114,7 @@ export function AboutSection({
           </div>
         )}
         <div role="status">
-          {state && 'success' in state && (
+          {!collective && state && 'success' in state && (
             <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
               <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
               <p className="font-body text-sm text-green-700">
@@ -118,16 +124,20 @@ export function AboutSection({
           )}
         </div>
 
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto"
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : saveLabel}
-          </button>
-        </div>
+        {collective ? (
+          <CollectiveSubmit />
+        ) : (
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors sm:w-auto"
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {isPending ? 'Saving…' : saveLabel}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

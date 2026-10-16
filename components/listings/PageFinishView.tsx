@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
@@ -32,7 +32,7 @@ import { SaveLabelProvider } from '@/components/dashboard/SaveLabel'
 import { StrengthMeter, itemLabel } from './finish/StrengthMeter'
 import { GoogleCard } from './finish/GoogleCard'
 import { FinishSubmit } from './finish/FinishSubmit'
-import { useLeaveGuard } from './finish/useLeaveGuard'
+import { ProfileSaveProvider, SaveBar } from './finish/ProfileSave'
 import { CaptionHelp, WritingHelpProvider, WritingHelpStrip } from './finish/WritingHelp'
 import { CLOSING_NOTE, type InitialSuggestions, type WritingAllowance } from '@/lib/ai/writingHelp'
 import type { TextField } from '@/lib/ai/onboardingCards'
@@ -56,12 +56,13 @@ interface Props {
 }
 
 // Which section shows each draft card's field, and that field's draft key.
-const CARD_TARGET: Record<TextField, { section: 'basics' | 'about' | 'google'; key: keyof Draft }> = {
-  tagline: { section: 'basics', key: 'tagline' },
-  about: { section: 'about', key: 'description' },
-  searchTitle: { section: 'google', key: 'meta_title' },
-  searchDescription: { section: 'google', key: 'meta_description' },
-}
+const CARD_TARGET: Record<TextField, { section: 'basics' | 'about' | 'google'; key: keyof Draft }> =
+  {
+    tagline: { section: 'basics', key: 'tagline' },
+    about: { section: 'about', key: 'description' },
+    searchTitle: { section: 'google', key: 'meta_title' },
+    searchDescription: { section: 'google', key: 'meta_description' },
+  }
 
 type Draft = {
   name: string
@@ -69,14 +70,6 @@ type Draft = {
   description: string
   meta_title: string
   meta_description: string
-}
-
-const DRAFT_LABELS: Record<keyof Draft, string> = {
-  name: 'business name',
-  tagline: 'tagline',
-  description: 'about',
-  meta_title: 'search title',
-  meta_description: 'search description',
 }
 
 // The owner edit page sits beside the dashboard sidebar, so it has less room
@@ -122,7 +115,9 @@ export function PageFinishView({
   }
   // A field saved from a draft card bridges the moment until the page's props
   // catch up (the save revalidates this page). Once the prop moves, it wins.
-  const [applied, setApplied] = useState<Partial<Record<keyof Draft, { value: string; before: string }>>>({})
+  const [applied, setApplied] = useState<
+    Partial<Record<keyof Draft, { value: string; before: string }>>
+  >({})
   // The sections read their props once, so a saved draft card remounts the
   // section that shows it.
   const [mounts, setMounts] = useState({ basics: 0, about: 0, google: 0 })
@@ -153,30 +148,7 @@ export function PageFinishView({
     })
   }
 
-  const unsaved = useMemo(() => {
-    const out: Partial<Draft> = {}
-    for (const key of Object.keys(saved) as (keyof Draft)[]) {
-      if (draft[key] !== saved[key]) out[key] = draft[key]
-    }
-    return out
-    // `saved` is rebuilt from props each render; its fields are the real deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    draft,
-    saved.name,
-    saved.tagline,
-    saved.description,
-    saved.meta_title,
-    saved.meta_description,
-  ])
-  const unsavedKeys = Object.keys(unsaved) as (keyof Draft)[]
-  // Each "Not saved yet" line sits under the cards it is about.
-  const isSearchKey = (k: keyof Draft) => k === 'meta_title' || k === 'meta_description'
-  const topUnsaved = unsavedKeys.filter((k) => !isSearchKey(k))
-  const searchUnsaved = unsavedKeys.filter(isSearchKey)
-
   const rootRef = useRef<HTMLDivElement>(null)
-  useLeaveGuard(rootRef, unsavedKeys.length > 0)
 
   const tier = data.tier
   const showUpgrade = (TIER_RANK[tier ?? 'free'] ?? 0) === 0
@@ -218,243 +190,233 @@ export function PageFinishView({
 
   const view = (
     <SaveLabelProvider live={isLive}>
-      <div ref={rootRef} className={layout.grid}>
-        <div className="flex min-w-0 flex-col gap-6">
-          {isLive && (
-            <div className="flex gap-3 rounded-xl border border-charcoal/10 bg-white px-4 py-3">
-              <Radio className="mt-0.5 size-4 shrink-0 text-green-600" aria-hidden="true" />
-              <p className="font-body text-sm leading-relaxed text-brand-black">
-                Your page is live. Each save puts that change on your public page right away.
-              </p>
-            </div>
-          )}
-
-          {warning === 'request' && (
-            <div
-              role="status"
-              className="flex gap-3 rounded-xl border border-amber-gold/40 bg-amber-gold/10 px-4 py-3"
-            >
-              <Info className="mt-0.5 size-4 shrink-0 text-amber" aria-hidden="true" />
-              <p className="font-body text-sm leading-relaxed text-brand-black">
-                Your page is saved under{' '}
-                <span className="font-semibold">{data.categoryName ?? 'a close category'}</span> for
-                now. Our team will look at the new category you asked for and email you either way.
-              </p>
-            </div>
-          )}
-
-          <div className={layout.topPreview}>
-            <LivePagePreview {...preview} compact />
-          </div>
-
-          <StrengthMeter checklist={checklist} />
-
-          {onboardingDrafts && (
-            <OnboardingDrafts
-              listingId={data.id}
-              autoStart={onboardingDrafts.autoStart}
-              aboutFromSite={onboardingDrafts.aboutFromSite}
-              aboutLimit={descriptionCharLimit(tier)}
-              onApplied={onDraftApplied}
-            />
-          )}
-
-          {writingHelp && <WritingHelpStrip />}
-
-          <Anchor id="basics">
-            <BasicInfoSection
-              key={`basics-${mounts.basics}`}
-              listingId={data.id}
-              name={data.name}
-              tagline={saved.tagline || null}
-              onDraftChange={patchDraft}
-            />
-          </Anchor>
-
-          <Anchor id="about">
-            <AboutSection
-              key={`about-${mounts.about}`}
-              listingId={data.id}
-              description={saved.description || null}
-              charLimit={descriptionCharLimit(tier)}
-              showUpgrade={showUpgrade}
-              onDraftChange={patchDraft}
-              initialSuggestion={initial.listing_description}
-            />
-          </Anchor>
-
-          {topUnsaved.length > 0 && (
-            <p aria-live="polite" className="-mt-3 font-body text-xs text-amber">
-              Not saved yet: {topUnsaved.map((k) => DRAFT_LABELS[k]).join(', ')}.
-            </p>
-          )}
-
-          <Anchor id="photos">
-            <MediaGrid
-              media={data.media}
-              supabaseStorageUrl={storageUrl}
-              listingId={data.id}
-              coverImagePath={data.coverImagePath}
-            />
-          </Anchor>
-
-          <Anchor id="main-button">
-            <CtaSection
-              listingId={data.id}
-              ctaType={d?.cta_type ?? null}
-              ctaUrl={d?.cta_url ?? null}
-              ctaLabelOverride={d?.cta_label_override ?? null}
-            />
-          </Anchor>
-
-          <Anchor id="contact">
-            <ContactSection
-              listingId={data.id}
-              phone={d?.phone ?? null}
-              email={d?.email ?? null}
-              websiteUrl={d?.website_url ?? null}
-              addressLine1={d?.address_line_1 ?? null}
-              addressLine2={d?.address_line_2 ?? null}
-              state={d?.state ?? null}
-              zip={d?.zip ?? null}
-            />
-          </Anchor>
-
-          <Anchor id="hours">
-            <HoursSection listingId={data.id} hours={d?.hours ?? null} />
-          </Anchor>
-
-          <Anchor id="services">
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-charcoal/10 bg-white">
-                <div className="border-b border-charcoal/8 px-5 py-4">
-                  <h2 className="font-headline text-base text-brand-black">
-                    Services and offerings
-                  </h2>
-                  <p className="mt-0.5 font-body text-xs text-charcoal-soft">
-                    What you offer: services, products, or classes.
-                  </p>
-                </div>
-                <div className="px-5 py-4">
-                  <OfferingsList services={data.services} />
-                </div>
+      <ProfileSaveProvider live={isLive} rootRef={rootRef}>
+        <div ref={rootRef} className={layout.grid}>
+          <div className="flex min-w-0 flex-col gap-6">
+            {isLive && (
+              <div className="flex gap-3 rounded-xl border border-charcoal/10 bg-white px-4 py-3">
+                <Radio className="mt-0.5 size-4 shrink-0 text-green-600" aria-hidden="true" />
+                <p className="font-body text-sm leading-relaxed text-brand-black">
+                  Your page is live. Changes go on your public page when you tap Publish changes.
+                </p>
               </div>
-              <AddOfferingForm listingId={data.id} />
-            </div>
-          </Anchor>
+            )}
 
-          {data.levels && data.levels.allowed.length > 1 && (
-            <Anchor id="role">
-              <LevelSection
+            {warning === 'request' && (
+              <div
+                role="status"
+                className="flex gap-3 rounded-xl border border-amber-gold/40 bg-amber-gold/10 px-4 py-3"
+              >
+                <Info className="mt-0.5 size-4 shrink-0 text-amber" aria-hidden="true" />
+                <p className="font-body text-sm leading-relaxed text-brand-black">
+                  Your page is saved under{' '}
+                  <span className="font-semibold">{data.categoryName ?? 'a close category'}</span>{' '}
+                  for now. Our team will look at the new category you asked for and email you either
+                  way.
+                </p>
+              </div>
+            )}
+
+            <div className={layout.topPreview}>
+              <LivePagePreview {...preview} compact />
+            </div>
+
+            <StrengthMeter checklist={checklist} />
+
+            {onboardingDrafts && (
+              <OnboardingDrafts
                 listingId={data.id}
-                primary={data.levels.primary}
-                extras={data.levels.extras}
-                allowed={data.levels.allowed}
+                autoStart={onboardingDrafts.autoStart}
+                aboutFromSite={onboardingDrafts.aboutFromSite}
+                aboutLimit={descriptionCharLimit(tier)}
+                onApplied={onDraftApplied}
+              />
+            )}
+
+            {writingHelp && <WritingHelpStrip />}
+
+            <Anchor id="basics">
+              <BasicInfoSection
+                key={`basics-${mounts.basics}`}
+                listingId={data.id}
+                name={data.name}
+                tagline={saved.tagline || null}
+                onDraftChange={patchDraft}
               />
             </Anchor>
-          )}
 
-          <Anchor id="details">
-            <AttributesSection
+            <Anchor id="about">
+              <AboutSection
+                key={`about-${mounts.about}`}
+                listingId={data.id}
+                description={saved.description || null}
+                charLimit={descriptionCharLimit(tier)}
+                showUpgrade={showUpgrade}
+                onDraftChange={patchDraft}
+                initialSuggestion={initial.listing_description}
+              />
+            </Anchor>
+
+            <Anchor id="contact">
+              <ContactSection
+                listingId={data.id}
+                phone={d?.phone ?? null}
+                email={d?.email ?? null}
+                websiteUrl={d?.website_url ?? null}
+                addressLine1={d?.address_line_1 ?? null}
+                addressLine2={d?.address_line_2 ?? null}
+                state={d?.state ?? null}
+                zip={d?.zip ?? null}
+              />
+            </Anchor>
+
+            <Anchor id="hours">
+              <HoursSection listingId={data.id} hours={d?.hours ?? null} />
+            </Anchor>
+
+            <Anchor id="photos">
+              <MediaGrid
+                media={data.media}
+                supabaseStorageUrl={storageUrl}
+                listingId={data.id}
+                coverImagePath={data.coverImagePath}
+              />
+            </Anchor>
+
+            <Anchor id="main-button">
+              <CtaSection
+                listingId={data.id}
+                ctaType={d?.cta_type ?? null}
+                ctaUrl={d?.cta_url ?? null}
+                ctaLabelOverride={d?.cta_label_override ?? null}
+              />
+            </Anchor>
+
+            <Anchor id="services">
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl border border-charcoal/10 bg-white">
+                  <div className="border-b border-charcoal/8 px-5 py-4">
+                    <h2 className="font-headline text-base text-brand-black">
+                      Services and offerings
+                    </h2>
+                    <p className="mt-0.5 font-body text-xs text-charcoal-soft">
+                      What you offer: services, products, or classes.
+                    </p>
+                  </div>
+                  <div className="px-5 py-4">
+                    <OfferingsList services={data.services} />
+                  </div>
+                </div>
+                <AddOfferingForm listingId={data.id} />
+              </div>
+            </Anchor>
+
+            {data.levels && data.levels.allowed.length > 1 && (
+              <Anchor id="role">
+                <LevelSection
+                  listingId={data.id}
+                  primary={data.levels.primary}
+                  extras={data.levels.extras}
+                  allowed={data.levels.allowed}
+                />
+              </Anchor>
+            )}
+
+            <Anchor id="details">
+              <AttributesSection
+                listingId={data.id}
+                groups={data.attributeGroups}
+                selectedValueIds={data.selectedValueIds}
+                limit={attributeLimit(tier)}
+                showUpgrade={showUpgrade}
+              />
+            </Anchor>
+
+            <Anchor id="social">
+              <SocialSection
+                listingId={data.id}
+                socialInstagram={d?.social_instagram ?? null}
+                socialFacebook={d?.social_facebook ?? null}
+                socialLinkedin={d?.social_linkedin ?? null}
+                socialTiktok={d?.social_tiktok ?? null}
+                socialYoutube={d?.social_youtube ?? null}
+                socialTwitter={d?.social_twitter ?? null}
+                locked={!canAccess(tier, 'social_links')}
+                hiddenOnPage={!data.socialsShowOnPage}
+                showUpgrade={showUpgrade}
+                caption={
+                  helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined
+                }
+              />
+            </Anchor>
+
+            <Anchor id="video">
+              <VideoSection
+                listingId={data.id}
+                videoEmbedUrl={data.videoEmbedUrl}
+                videoPath={data.videoPath}
+                storageUrl={storageUrl}
+                locked={!canAccess(tier, 'listing_video')}
+                showUpgrade={showUpgrade}
+              />
+            </Anchor>
+
+            <LinksSection listingId={data.id} links={data.links} />
+
+            <FaqSection
               listingId={data.id}
-              groups={data.attributeGroups}
-              selectedValueIds={data.selectedValueIds}
-              limit={attributeLimit(tier)}
+              faqs={data.faqs}
+              limit={faqLimit(tier)}
               showUpgrade={showUpgrade}
             />
-          </Anchor>
 
-          <Anchor id="social">
-            <SocialSection
-              listingId={data.id}
-              socialInstagram={d?.social_instagram ?? null}
-              socialFacebook={d?.social_facebook ?? null}
-              socialLinkedin={d?.social_linkedin ?? null}
-              socialTiktok={d?.social_tiktok ?? null}
-              socialYoutube={d?.social_youtube ?? null}
-              socialTwitter={d?.social_twitter ?? null}
-              locked={!canAccess(tier, 'social_links')}
-              hiddenOnPage={!data.socialsShowOnPage}
-              showUpgrade={showUpgrade}
-              caption={
-                helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined
-              }
-            />
-          </Anchor>
+            <Anchor id="google">
+              <GoogleCard
+                key={`google-${mounts.google}`}
+                listingId={data.id}
+                publicUrl={data.publicUrl}
+                seoFields={{
+                  name: preview.name,
+                  tagline: preview.tagline || null,
+                  description: preview.description || null,
+                  categoryName: data.categoryName,
+                  locationLabel: data.locationLabel,
+                }}
+                metaTitle={saved.meta_title || null}
+                metaDescription={saved.meta_description || null}
+                onDraftChange={patchDraft}
+                initial={initial}
+              />
+            </Anchor>
 
-          <VideoSection
-            listingId={data.id}
-            videoEmbedUrl={data.videoEmbedUrl}
-            videoPath={data.videoPath}
-            storageUrl={storageUrl}
-            locked={!canAccess(tier, 'listing_video')}
-            showUpgrade={showUpgrade}
-          />
+            <SaveBar />
 
-          <LinksSection listingId={data.id} links={data.links} />
+            {isNewDraft ? (
+              <FinishSubmit listingId={data.id} name={data.name} missing={missing} />
+            ) : (
+              <PublishSection
+                listingId={data.id}
+                status={data.status}
+                trustTier={data.trustTier}
+                entityType={data.entityType}
+              />
+            )}
 
-          <FaqSection
-            listingId={data.id}
-            faqs={data.faqs}
-            limit={faqLimit(tier)}
-            showUpgrade={showUpgrade}
-          />
-
-          <Anchor id="google">
-            <GoogleCard
-              key={`google-${mounts.google}`}
-              listingId={data.id}
-              publicUrl={data.publicUrl}
-              seoFields={{
-                name: preview.name,
-                tagline: preview.tagline || null,
-                description: preview.description || null,
-                categoryName: data.categoryName,
-                locationLabel: data.locationLabel,
-              }}
-              metaTitle={saved.meta_title || null}
-              metaDescription={saved.meta_description || null}
-              onDraftChange={patchDraft}
-              initial={initial}
-            />
-          </Anchor>
-
-          {searchUnsaved.length > 0 && (
-            <p aria-live="polite" className="-mt-3 font-body text-xs text-amber">
-              Not saved yet: {searchUnsaved.map((k) => DRAFT_LABELS[k]).join(', ')}.
-            </p>
-          )}
-
-          {isNewDraft ? (
-            <FinishSubmit
-              listingId={data.id}
-              name={data.name}
-              missing={missing}
-              unsaved={unsaved}
-            />
-          ) : (
-            <PublishSection
-              listingId={data.id}
-              status={data.status}
-              trustTier={data.trustTier}
-              entityType={data.entityType}
-            />
-          )}
-
-          {helpReady && (
-            <p className="font-body text-xs leading-relaxed text-charcoal-soft">{CLOSING_NOTE}</p>
-          )}
-        </div>
-
-        <aside className={layout.aside} aria-label={asideLabel}>
-          <div className="sticky top-24 flex flex-col gap-3">
-            <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft">
-              {asideLabel}
-            </p>
-            <LivePagePreview {...preview} />
+            {helpReady && (
+              <p className="font-body text-xs leading-relaxed text-charcoal-soft">{CLOSING_NOTE}</p>
+            )}
           </div>
-        </aside>
-      </div>
+
+          <aside className={layout.aside} aria-label={asideLabel}>
+            <div className="sticky top-24 flex flex-col gap-3">
+              <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft">
+                {asideLabel}
+              </p>
+              <LivePagePreview {...preview} />
+            </div>
+          </aside>
+        </div>
+      </ProfileSaveProvider>
     </SaveLabelProvider>
   )
 
