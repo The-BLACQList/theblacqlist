@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test'
 
-// Ownership label pivot (Black-Owned / Ally).
+// Ownership label: Black-owned is the default and goes unsaid; Ally is quiet.
+// Founder decision 2026-10-16: no Black-Owned pill on cards, no Ownership
+// filter, and the card pill slot carries a category chip that filters
+// /discover. The legal pages still define both labels.
 // NOTE: requires migration 20260707000000_listings_ownership_label applied to the
 // local DB (adds listings.ownership_label + the faceted RPC's ownership arg).
-// Without it, discover/search queries error — the same prerequisite as any other
-// schema change in this repo.
 
-test.describe('Ownership label — Black-Owned / Ally', () => {
+test.describe('Ownership label and card category chips', () => {
   test('Terms §4 ships both ownership definitions', async ({ request }) => {
     const res = await request.get('/terms')
     expect(res.status()).toBe(200)
@@ -21,24 +22,27 @@ test.describe('Ownership label — Black-Owned / Ally', () => {
     expect(await res.text()).toMatch(/Ally/i)
   })
 
-  test('Discover exposes the Ownership filter control', async ({ page }) => {
+  test('Discover has no Ownership filter and cards carry no Black-Owned pill', async ({ page }) => {
     await page.goto('/discover')
-    await expect(page.getByText('Ownership', { exact: true }).first()).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Black-Owned' }).first()).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Ally' }).first()).toBeVisible()
+    const cards = page.locator('article')
+    await expect(cards.first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ownership' })).toHaveCount(0)
+    await expect(cards.getByText('Black-Owned', { exact: true })).toHaveCount(0)
+    await expect(cards.getByText('Unclaimed', { exact: true })).toHaveCount(0)
   })
 
-  test('Selecting the Black-Owned facet filters and shows the badge', async ({ page }) => {
+  test('A card category chip filters discover', async ({ page }) => {
     await page.goto('/discover')
-    await page.getByRole('button', { name: 'Black-Owned' }).first().click()
-    await expect(page).toHaveURL(/ownership=black_owned/)
-    // All seeded listings are Black-Owned, so results and the badge remain.
-    await expect(page.getByText('Black-Owned').first()).toBeVisible()
+    const chip = page.locator('article').getByRole('link', { name: /^More in / }).first()
+    await expect(chip).toBeVisible()
+    const name = (await chip.textContent())?.trim() ?? ''
+    await chip.click()
+    await expect(page).toHaveURL(/[?&]category=/)
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
   })
 
-  test('Selecting the Ally facet updates the URL', async ({ page }) => {
-    await page.goto('/discover')
-    await page.getByRole('button', { name: 'Ally' }).first().click()
-    await expect(page).toHaveURL(/ownership=ally/)
+  test('An old ?ownership= link still loads with a removable chip', async ({ page }) => {
+    await page.goto('/discover?ownership=ally')
+    await expect(page.getByRole('button', { name: /^Ally Remove filter$/ }).first()).toBeVisible()
   })
 })

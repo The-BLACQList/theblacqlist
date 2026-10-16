@@ -1,10 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { SlidersHorizontal, Clock } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
 import {
   useFacetParams,
@@ -15,7 +13,6 @@ import {
 import {
   ENTITY_TYPES,
   TRUST_TIERS,
-  OWNERSHIP_LABELS,
   LOCATION_TYPES,
 } from '@/components/discovery/facetConstants'
 import { NearYouFilter } from '@/components/discovery/NearYouFilter'
@@ -85,7 +82,6 @@ export function FacetSidebar({
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
-  const activeOwnership = searchParams.get('ownership') ?? ''
   const openNow = searchParams.get('open_now') === '1'
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
@@ -180,38 +176,6 @@ export function FacetSidebar({
             )
           })}
         </div>
-      </FilterSection>
-
-      {/* Ownership (Black-Owned / Ally): authoritative label, no per-option counts */}
-      <FilterSection title="Ownership" defaultOpen active={!!activeOwnership}>
-        <div className="flex flex-col gap-1" role="group" aria-label="Filter by ownership">
-          {OWNERSHIP_LABELS.map(({ value, label }) => {
-            const isActive = activeOwnership === value
-            return (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setParam('ownership', isActive ? '' : value)}
-                className={optionClass(isActive)}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-        {/* The Ally label means this, nowhere else says it in the filter. Wording
-            is the approved one from the add-business step [Decision — founder,
-            2026-10-15: simplicity pass P3]. */}
-        <p className="mt-2 font-subhead text-xs leading-snug text-charcoal-soft">
-          <span className="font-semibold">Ally:</span> {ALLY_ONE_LINER}{' '}
-          <Link
-            href="/about#who-we-feature"
-            className="font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
-          >
-            What this means
-          </Link>
-        </p>
       </FilterSection>
 
       {!hideCityFilter && (

@@ -17,7 +17,6 @@ import { loadLinkedListings, type LinkedListing } from '@/lib/editorial/linkedLi
 import {
   OWNERSHIP_LABEL_META,
   TRUST_TIER_META,
-  type OwnershipLabel,
   type TrustTier,
 } from '@/lib/constants/listing'
 
@@ -210,8 +209,9 @@ function tierLabel(tier: string): string {
   return TRUST_TIER_META[tier as TrustTier]?.label ?? tier
 }
 
-function ownershipLabel(label: string): string {
-  return OWNERSHIP_LABEL_META[label as OwnershipLabel]?.label ?? label
+/** Only Ally is named; Black-owned is the default and goes unsaid (2026-10-16). */
+function allySuffix(label: string): string {
+  return label === 'ally' ? ` · ${OWNERSHIP_LABEL_META.ally.label}` : ''
 }
 
 /** One card per published listing the story links to (max 3). */
@@ -238,7 +238,8 @@ function FeaturedInStory({ listings }: { listings: LinkedListing[] }) {
                 </p>
               )}
               <p className="font-subhead text-xs font-semibold uppercase tracking-[0.1em] text-gold">
-                {tierLabel(l.trustTier)} · {ownershipLabel(l.ownershipLabel)}
+                {tierLabel(l.trustTier)}
+                {allySuffix(l.ownershipLabel)}
               </p>
             </div>
             <Link

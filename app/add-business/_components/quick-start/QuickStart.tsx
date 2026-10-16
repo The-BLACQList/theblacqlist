@@ -90,7 +90,10 @@ function readDraft(): Draft {
           ? 'steps'
           : undefined
     const site = parsed.site && typeof parsed.site.tempId === 'string' ? parsed.site : null
-    return { answers: { ...EMPTY_ANSWERS, ...(parsed.answers ?? {}) }, stepIndex, stage, site }
+    const answers = { ...EMPTY_ANSWERS, ...(parsed.answers ?? {}) }
+    // Drafts saved before Black-owned became the default carry ''.
+    if (answers.ownership !== 'ally') answers.ownership = 'black_owned'
+    return { answers, stepIndex, stage, site }
   } catch {
     return { answers: EMPTY_ANSWERS, stepIndex: 0, site: null }
   }
@@ -280,7 +283,8 @@ function QuickStartFlow({
       description: answers.about.trim(),
       categoryName,
       locationLabel: locationLabel(answers, cities),
-      ownershipLabel: answers.ownership ? OWNERSHIP_LABEL_META[answers.ownership].label : null,
+      // Matches the live page: only Ally is named (2026-10-16).
+      ownershipLabel: answers.ownership === 'ally' ? OWNERSHIP_LABEL_META.ally.label : null,
       ctaLabel: findCta(answers.ctaType)?.buttonLabel ?? null,
       coverUrl: resolveMediaPath(site?.coverPath),
       highlight: stage === 'site' ? null : HIGHLIGHT[step],

@@ -61,12 +61,9 @@ test.describe('L. Cross-browser critical paths', () => {
     // (Not `page.locator('form').first()`: the site header carries its own
     // search form, which is collapsed at 375px and would fail the mobile cell
     // for a reason that has nothing to do with this path.)
-    await expect(page.getByRole('group', { name: 'Business ownership' })).toBeVisible()
-    // The radios are visually hidden inside their cards, so click the label.
-    // Anchored regex, not a substring: the Ally card's hint reads "Not
-    // Black-owned, but supports Black-owned businesses", so a plain
-    // 'Black-Owned' name matches both cards.
-    await page.getByText(/^Black-Owned$/).click()
+    // The first step is a welcome with Black-owned preselected (2026-10-16), so
+    // Next advances without a choice. The Ally switch is a quiet text button.
+    await expect(page.getByRole('button', { name: 'Not Black-owned? List as an Ally' })).toBeVisible()
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await expect(page.locator('#qs-name')).toBeVisible()
 

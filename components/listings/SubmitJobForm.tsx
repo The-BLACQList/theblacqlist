@@ -332,6 +332,8 @@ export function SubmitJobForm({ categories }: Props) {
                 name="ownership_label"
                 value={value}
                 required
+                // Black-owned is the default; Ally stays one tap away (2026-10-16).
+                defaultChecked={value === 'black_owned'}
                 className="h-4 w-4 border-charcoal/30 accent-brand-black"
               />
               <span className="font-subhead text-sm text-brand-black">

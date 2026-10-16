@@ -11,7 +11,7 @@ import { SponsoredImpression, SponsoredLink } from '@/components/entities/Sponso
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity, LocationType } from '@/types'
-import { buildEntityUrl } from '@/lib/listings/url'
+import { buildEntityUrl, categoryFilterHref } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 interface EntityCardProps {
@@ -20,19 +20,12 @@ interface EntityCardProps {
   isPriority?: boolean
 }
 
-// Exhaustive over EntityType by design — a missing key renders an empty badge.
-// 'restaurant' and 'service_provider' were absent until 2026-08-13 because the TS
-// union omitted them while the DB served them.
-const ENTITY_TYPE_LABELS: Record<DiscoveryEntity['entity_type'], string> = {
-  business: 'Business',
-  restaurant: 'Restaurant',
-  service_provider: 'Service',
-  professional: 'Professional',
-  creative: 'Creative',
-  vendor: 'Vendor',
+// Only events and jobs keep a type pill: "Event" and "Job" tell a shopper
+// something the category doesn't. Every other type is covered by the category
+// chip (founder decision 2026-10-16), so "Business" no longer repeats on each card.
+const TYPE_PILL_LABELS: Partial<Record<DiscoveryEntity['entity_type'], string>> = {
   event: 'Event',
   job: 'Job',
-  creator: 'Creator',
 }
 
 /**
@@ -82,6 +75,8 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
+  const categoryHref = categoryFilterHref(entity.category)
+  const typePill = TYPE_PILL_LABELS[entity.entity_type]
 
   // Set only on cards the sponsored path spliced in (lib/listings/query.ts), so
   // the client islands below mount on at most three cards per page. The rest of
@@ -141,16 +136,31 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
 
       {/* Card body */}
       <div className="flex flex-col flex-1 p-4 gap-2">
-        {/* Badge order: ownership label → trust (claimed/unclaimed) → entity type */}
+        {/* Pill order: category chip (filters) → Ally (only when Ally) → trust
+            (only when earned) → type (events and jobs only). No Black-Owned or
+            Unclaimed pill: neither helps a shopper narrow things down. */}
         <div className="flex items-center gap-2 flex-wrap">
+          {categoryHref && (
+            <Link
+              href={categoryHref as Route}
+              aria-label={`More in ${entity.category.name}`}
+              className="relative inline-flex items-center rounded-full border border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5 hover:bg-charcoal/5 hover:border-charcoal/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
+            >
+              {entity.category.name}
+            </Link>
+          )}
           <OwnershipBadge label={entity.ownership_label} size="small" />
-          <StatusBadge tier={entity.trust_tier} size="small" />
-          <Badge
-            variant="outline"
-            className="rounded-full border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5 h-auto"
-          >
-            {ENTITY_TYPE_LABELS[entity.entity_type]}
-          </Badge>
+          {entity.trust_tier !== 'unclaimed' && (
+            <StatusBadge tier={entity.trust_tier} size="small" />
+          )}
+          {typePill && (
+            <Badge
+              variant="outline"
+              className="rounded-full border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5 h-auto"
+            >
+              {typePill}
+            </Badge>
+          )}
         </div>
 
         {/* Name */}
@@ -166,12 +176,8 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
           )}
         </h3>
 
-        {/* Category + location */}
-        <p className="text-xs font-subhead text-charcoal">
-          {entity.category.name}
-          <span className="mx-1 text-charcoal-faint">·</span>
-          {locationStr}
-        </p>
+        {/* Location (the category now sits in the chip above) */}
+        <p className="text-xs font-subhead text-charcoal">{locationStr}</p>
 
         {/* Event date (event cards only) */}
         {entity.entity_type === 'event' && entity.event_starts_at && (

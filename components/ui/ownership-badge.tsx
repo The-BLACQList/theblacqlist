@@ -8,6 +8,11 @@ interface OwnershipBadgeProps {
   className?: string
 }
 
+// Renders for `ally` only. Every listing is assumed Black-owned, so a
+// Black-Owned pill adds noise without adding information; Ally is the one case
+// that needs saying (founder decision 2026-10-16). The label data itself is
+// unchanged and still drives the Terms disclosure and moderation.
+//
 // The ownership label (Black-Owned / Ally) is DISTINCT from the trust-tier badge
 // (unclaimed/claimed/verified/certified). Trust badges signal verification; this
 // signals who the business is. Colors are deliberately separated from the gold
@@ -19,6 +24,7 @@ const LABEL_CLASSES: Record<OwnershipLabel, string> = {
 }
 
 export function OwnershipBadge({ label, size = 'small', className }: OwnershipBadgeProps) {
+  if (label !== 'ally') return null
   const sizeClasses = size === 'small' ? 'h-[26px] px-2 text-[12px]' : 'h-[32px] px-3 text-[14px]'
 
   return (

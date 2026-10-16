@@ -1,9 +1,7 @@
 'use client'
 
-import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
 import { FIELD_IDS, TAGLINE_MAX, aboutMax } from '@/lib/listings/quickStart'
-import { ChoiceCards } from './ChoiceCards'
 import {
   CharCount,
   HINT_CLASS,
@@ -18,27 +16,38 @@ import {
 
 // The short steps: ownership, what you do, one line, and the confirmation.
 
-const OWNERSHIP_CHOICES = [
-  { value: 'black_owned', title: 'Black-Owned', hint: 'Majority (51%+) Black-owned and operated.' },
-  { value: 'ally', title: 'Ally', hint: ALLY_ONE_LINER },
-] as const
-
+// Black-owned is the default, so step 1 reads as a welcome, not a sorting
+// question. Ally stays available behind a quiet link (founder decision
+// 2026-10-16: "we center who we center"). The last step still asks the owner to
+// attest to whichever one is set.
 export function OwnershipStep({ answers, onChange, problem }: StepProps) {
+  const ally = answers.ownership === 'ally'
   return (
     <>
-      <StepIntro title="Which best describes your business?">
-        The BLACQList centers Black-owned businesses. Businesses that support the community are
-        welcome too. Every page is clearly labeled.
+      <StepIntro title={ally ? 'Listing as an Ally' : 'Welcome to The BLACQList'}>
+        {ally ? (
+          <>
+            An Ally business is not itself majority Black-owned, and supports Black-owned
+            businesses. Its page carries a small Ally label.
+          </>
+        ) : (
+          <>
+            The BLACQList centers Black-owned businesses: 51% or more Black or African American
+            ownership, with the owners running the business.
+          </>
+        )}
       </StepIntro>
-      <ChoiceCards
-        name="ownership"
-        legend="Business ownership"
-        idPrefix="qs-ownership"
-        choices={OWNERSHIP_CHOICES}
-        value={answers.ownership}
-        onChange={(v) => onChange({ ownership: v as 'black_owned' | 'ally' })}
-        describedBy={problem ? 'qs-error' : undefined}
-      />
+      <p className={HINT_CLASS} aria-live="polite">
+        <button
+          id={FIELD_IDS.ownership}
+          type="button"
+          onClick={() => onChange({ ownership: ally ? 'black_owned' : 'ally' })}
+          aria-describedby={problem ? 'qs-error' : undefined}
+          className="font-semibold text-brand-black underline underline-offset-2 hover:text-amber min-h-[44px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black"
+        >
+          {ally ? 'Switch back: my business is Black-owned' : 'Not Black-owned? List as an Ally'}
+        </button>
+      </p>
       <StepError problem={problem} />
     </>
   )
