@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { loginAsAdmin, loginAsOwner } from './helpers/auth'
 import {
   FIXTURE_ABSENT_ID,
@@ -50,26 +50,29 @@ test.describe('owner dashboard', () => {
     expect(res?.status()).toBe(404)
   })
 
+  // The editor has one save bar for the whole page (ticket 140). It reads
+  // "Save changes" on a draft and "Publish changes" on a live page, and its
+  // result line confirms once for every card it saved.
+  const saveBar = (page: Page) => page.getByRole('button', { name: /^(Save|Publish) changes$/ })
+  const SAVED = /^(Saved\.|Published\. Your changes are on your page now\.)$/
+
   test('TA-11 — basic info saves, and the required name is enforced', async ({ page }) => {
     await page.goto(`/dashboard/pages/${FIXTURE_OWNED_ID}/edit`)
 
-    // Scoped to the section's own form — the editor renders ~11 sections, each
-    // with its own "Save" button, so an unscoped role query is ambiguous.
-    const basicInfo = page.locator('form').filter({ has: page.locator('#bi-name') })
-
-    // Client-side first: name is required, so clearing it must block submission
+    // Client-side first: name is required, so clearing it must block the save
     // rather than round-trip an empty name to the server.
     await page.locator('#bi-name').fill('')
-    await basicInfo.getByRole('button', { name: 'Save' }).click()
+    await saveBar(page).click()
     await expect(page.locator('#bi-name')).toHaveJSProperty('validity.valueMissing', true)
-    await expect(basicInfo.getByText('Saved.', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Check Basics first.', { exact: true })).toBeVisible()
+    await expect(page.getByText(SAVED)).toHaveCount(0)
 
     // Then a real save. Tagline, not name: the name is asserted by
     // cross-browser.spec.ts and global-setup only reconciles it between runs.
     await page.locator('#bi-name').fill(FIXTURE_OWNED_NAME)
     await page.locator('#bi-tagline').fill('Fixture tagline set by e2e.')
-    await basicInfo.getByRole('button', { name: 'Save' }).click()
-    await expect(basicInfo.getByText('Saved.', { exact: true })).toBeVisible()
+    await saveBar(page).click()
+    await expect(page.getByText(SAVED)).toBeVisible()
   })
 
   test('TA-12 — contact section rejects a non-https website server-side', async ({ page }) => {
@@ -79,12 +82,13 @@ test.describe('owner dashboard', () => {
     // #c-website is a plain text input — nothing client-side stops this value.
     // The guard is updateListingContent.ts, which is the point of the case.
     await page.locator('#c-website').fill('http://insecure.example.com')
-    await contact.getByRole('button', { name: 'Save' }).click()
+    await saveBar(page).click()
     await expect(contact.getByRole('alert')).toContainText('must start with https://')
+    await expect(page.getByText(/^Couldn't save Contact\./)).toBeVisible()
 
     await page.locator('#c-website').fill('https://fixture.example.com')
-    await contact.getByRole('button', { name: 'Save' }).click()
-    await expect(contact.getByText('Saved.', { exact: true })).toBeVisible()
+    await saveBar(page).click()
+    await expect(page.getByText(SAVED)).toBeVisible()
   })
 
   test('TA-14 — services manager renders and guards unknown services', async ({ page }) => {

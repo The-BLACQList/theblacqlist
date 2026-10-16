@@ -170,20 +170,18 @@ describe('the #visit anchor exists wherever the helper can return it', () => {
     expect(source(file)).toContain('id="visit"')
   })
 
-  it('the templates gate that anchor on a superset of the helper\'s condition', () => {
-    // hasVisit = address || hours || phone || email. The helper only reaches its
-    // '#visit' step after phone and email have already been ruled out, so its
-    // condition (address || hours) is strictly narrower — the anchor is always
-    // present when the helper returns it, and no option plumbing is needed.
+  it('the templates render that anchor unconditionally, right after the quick facts', () => {
+    // Ticket 140: At a Glance sits right under the info rail on every template
+    // and is never gated, so the helper's '#visit' step always lands on it, and
+    // the Visit tab is second, after Overview.
     for (const file of [
       'components/entity-page/templates/ProfessionalTemplate.tsx',
       'components/entity-page/templates/CreativeTemplate.tsx',
     ]) {
       const src = source(file)
-      expect(src).toMatch(/const hasVisit = Boolean\(/)
-      const clause = src.slice(src.indexOf('const hasVisit'), src.indexOf('const hasVisit') + 200)
-      expect(clause).toContain('address')
-      expect(clause).toContain('hours')
+      expect(src).not.toContain('hasVisit')
+      expect(src).toMatch(/<TemplateInfoRail[\s\S]{0,400}id="visit"[\s\S]{0,120}<EntityAtAGlance/)
+      expect(src).toMatch(/\{ id: 'overview', label: 'Overview' \},\s*\{ id: 'visit', label: 'Visit' \}/)
     }
   })
 

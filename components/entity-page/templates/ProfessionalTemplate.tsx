@@ -39,17 +39,14 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
   const hasServices = entity.details.services.length > 0
   const hasStory = Boolean(entity.details.description?.trim())
   const hasGallery = entity.images.length > 0
-  const hasVisit = Boolean(
-    entity.details.address || entity.details.hours || entity.details.phone || entity.details.email
-  )
 
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
+    { id: 'visit', label: 'Visit' },
     ...(hasServices ? [{ id: 'services', label: 'Services' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasGallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
     { id: 'reviews', label: 'Reviews' },
-    ...(hasVisit ? [{ id: 'visit', label: 'Visit' }] : []),
   ]
 
   return (
@@ -58,6 +55,14 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       <EntityAnchorTabs tabs={tabs} />
       <div id="overview" className="scroll-mt-32">
         <TemplateInfoRail entity={entity} />
+      </div>
+
+      {/* At a Glance sits right under the quick facts on every template
+          (ticket 140). Unconditional, as on Storefront, because it also
+          carries the social row, which a page can have with no address,
+          hours, phone or email. */}
+      <div id="visit" className="scroll-mt-32">
+        <EntityAtAGlance entity={entity} />
       </div>
 
       {/* Main content + sticky trust aside */}
@@ -113,11 +118,6 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
 
       <EntityUpcomingEvents entity={entity} />
 
-      {hasVisit && (
-        <div id="visit" className="scroll-mt-32">
-          <EntityAtAGlance entity={entity} />
-        </div>
-      )}
 
       <Reveal>
         <EntityFaqSection faqs={entity.faqs} />

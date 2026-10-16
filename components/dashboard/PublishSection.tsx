@@ -3,8 +3,15 @@
 import { useActionState, useEffect } from 'react'
 import Link from 'next/link'
 import { Loader2, CheckCircle, AlertCircle, Globe, EyeOff, Clock } from 'lucide-react'
-import { updateListingStatusAction } from '@/lib/actions/dashboard/updateListingStatus'
-import { submitListingForReviewAction } from '@/lib/actions/listings/submitListingForReview'
+import {
+  updateListingStatusAction,
+  type UpdateListingStatusState,
+} from '@/lib/actions/dashboard/updateListingStatus'
+import {
+  submitListingForReviewAction,
+  type SubmitForReviewState,
+} from '@/lib/actions/listings/submitListingForReview'
+import { useProfileSave } from '@/components/listings/finish/ProfileSave'
 
 interface Props {
   listingId: string
@@ -42,9 +49,22 @@ export function PublishSection({
   entityType,
   jobQuota,
 }: Props) {
-  const [state, formAction, isPending] = useActionState(updateListingStatusAction, null)
+  // Inside the finish view, publishing or sending for review saves every
+  // changed card first (ticket 140). A failed save stops here; the save bar
+  // says which card and moves focus to it. Unpublish needs no save.
+  const profile = useProfileSave()
+  const [state, formAction, isPending] = useActionState(
+    async (prev: UpdateListingStatusState, form: FormData) => {
+      if (form.get('action') === 'publish' && profile && !(await profile.saveAll())) return prev
+      return updateListingStatusAction(prev, form)
+    },
+    null
+  )
   const [submitState, submitAction, isSubmitting] = useActionState(
-    submitListingForReviewAction,
+    async (prev: SubmitForReviewState, form: FormData) => {
+      if (profile && !(await profile.saveAll())) return prev
+      return submitListingForReviewAction(prev, form)
+    },
     null
   )
 
