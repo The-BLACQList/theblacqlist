@@ -14,8 +14,8 @@
 // Pure data and date math, so pages, the email template and tests can all use it.
 
 export const POLICY_UPDATE = {
-  /** The day the new text is posted and the notice email is sent. */
-  postedOnLabel: 'October 19, 2026',
+  /** The day the new text was posted. The notice email can go out up to sendBy. */
+  postedOnLabel: 'October 16, 2026',
   /** The day the new text takes effect, as people read it. */
   effectiveOnLabel: 'November 2, 2026',
   /**

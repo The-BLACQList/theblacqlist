@@ -18,8 +18,8 @@ import { POLICY_UPDATE } from '@/lib/legal/policyUpdate'
  * takes effect, so it is a service message, not marketing: it goes to every
  * confirmed account and carries no promotion.
  *
- * [Needs professional review] Counsel reads this copy along with the new
- * policy text before scripts/ops/send-policy-notice.ts is ever run.
+ * [Needs professional review] The founder approved this copy on 2026-10-16
+ * ahead of counsel. If counsel asks for changes, update it before any resend.
  *
  * Dates come from lib/legal/policyUpdate.ts so the email, the banners and the
  * page switch can never disagree.

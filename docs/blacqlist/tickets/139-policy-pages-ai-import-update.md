@@ -4,7 +4,7 @@
 **Depends on:** #239 (street address and owner name removed before text reaches the AI)
 **Gates:** counsel sign-off on the page text and the email. The founder merges, and the founder runs the send script. No migration.
 **Source text:** `docs/blacqlist/legal/ai-and-site-import-policy-update-2026-10.md`
-**Decision record:** on 2026-10-16 the founder chose to build now and post after review. The update is posted and emailed Mon Oct 19, 2026, and takes effect Mon Nov 2, 2026. Street address and owner name are removed before sending (#239). The "Black-owned only" wording (F13) and the Vercel Analytics row (F14) are folded in. The AI safety-plan exception is approved. Only registered accounts get the email.
+**Decision record:** on 2026-10-16 the founder chose to build now, then approved the text on their own word and merged it the same day, with counsel review to follow. The update was posted Fri Oct 16, the email goes out by the end of Mon Oct 19, and it takes effect Mon Nov 2, 2026. Street address and owner name are removed before sending (#239). The "Black-owned only" wording (F13) and the Vercel Analytics row (F14) are folded in. The AI safety-plan exception is approved. Only registered accounts get the email.
 
 ---
 

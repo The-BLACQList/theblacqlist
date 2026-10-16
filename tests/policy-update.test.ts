@@ -32,10 +32,10 @@ describe('the policy update switch (ticket 139)', () => {
 
   it('says "Takes effect" before the switch and "In effect since" after', () => {
     expect(nextVersionSubtitle(at('2026-10-20T12:00:00Z'))).toBe(
-      'Last updated: October 19, 2026 · Takes effect: November 2, 2026'
+      'Last updated: October 16, 2026 · Takes effect: November 2, 2026'
     )
     expect(nextVersionSubtitle(at('2026-11-02T12:00:00Z'))).toBe(
-      'Last updated: October 19, 2026 · In effect since: November 2, 2026'
+      'Last updated: October 16, 2026 · In effect since: November 2, 2026'
     )
   })
 

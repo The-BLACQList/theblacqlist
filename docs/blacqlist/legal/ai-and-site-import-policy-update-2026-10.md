@@ -2,7 +2,7 @@
 
 > **Disclaimer:** This output is informational and does not constitute legal advice. Requirements vary by jurisdiction, business type, and product specifics. Consult a licensed attorney for guidance applicable to your situation before relying on any of the following.
 
-_Drafted: 2026-10-15 · Updated: 2026-10-16 · Reviewers: Legal + Privacy agents · Status: **BUILT, NOT POSTED.** The new text is on the pages behind a "Takes effect" date (ticket 139), waiting for counsel. Nothing is live until the founder merges, and the notice email goes only when the founder runs it._
+_Drafted: 2026-10-15 · Updated: 2026-10-16 · Reviewers: Legal + Privacy agents · Status: **POSTED 2026-10-16 on founder approval; counsel review to follow.** The founder approved the text on their own word and merged it (ticket 139); any change counsel asks for goes in as a follow-up. The new text sits behind a "Takes effect" date, and the notice email goes only when the founder runs it, by the end of Mon Oct 19._
 
 ### Founder decisions (2026-10-16)
 
@@ -342,7 +342,8 @@ The allowlist above names listing columns. During /add-business there may be no 
 
 | Step | Example date |
 |---|---|
-| New text posted (marked "Takes effect [date]") and notice email sent to all registered users | **Monday 2026-10-19** |
+| New text posted (marked "Takes effect [date]") | **Friday 2026-10-16** (done) |
+| Notice email sent to all registered users | **by the end of Monday 2026-10-19** |
 | 14 days later, the earliest effective date | **Monday 2026-11-02** |
 | Recommended effective date (one buffer day for late sends and time zones) | **Tuesday 2026-11-03** |
 
