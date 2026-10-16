@@ -64,7 +64,8 @@ export interface QuickStartAnswers {
 }
 
 export const EMPTY_ANSWERS: QuickStartAnswers = {
-  ownership: '',
+  // Black-owned is the default; Ally is a quiet opt-in on step 1 (2026-10-16).
+  ownership: 'black_owned',
   name: '',
   about: '',
   fit: null,
@@ -269,7 +270,7 @@ export interface Missing {
 }
 
 export const FIELD_IDS = {
-  ownership: 'qs-ownership-black_owned',
+  ownership: 'qs-ownership-toggle',
   name: 'qs-name',
   about: 'qs-about',
   fit: 'qs-fit',
@@ -289,7 +290,7 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
     case 'ownership':
       return a.ownership
         ? null
-        : { step, fieldId: FIELD_IDS.ownership, reason: 'Pick Black-Owned or Ally.' }
+        : { step, fieldId: FIELD_IDS.ownership, reason: 'Confirm how your business is owned.' }
     case 'name': {
       const n = a.name.trim().length
       if (n < NAME_MIN) return { step, fieldId: FIELD_IDS.name, reason: 'Add your business name.' }

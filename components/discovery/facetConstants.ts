@@ -32,11 +32,6 @@ export const TRUST_TIERS: { value: string; label: string }[] = [
   { value: 'certified', label: 'BLACQList Certified' },
 ]
 
-export const OWNERSHIP_LABELS: { value: string; label: string }[] = [
-  { value: 'black_owned', label: 'Black-Owned' },
-  { value: 'ally', label: 'Ally' },
-]
-
 // Every entity_type the DB serves now has a chip above, so this map needs no
 // extra entries. It previously carried 'restaurant' and 'service_provider' as
 // hand-added overrides under a comment calling them "DB-only types outside the
@@ -53,6 +48,11 @@ export const TRUST_TIER_LABEL: Record<string, string> = Object.fromEntries(
   TRUST_TIERS.map((t) => [t.value, t.label])
 )
 
-export const OWNERSHIP_LABEL_MAP: Record<string, string> = Object.fromEntries(
-  OWNERSHIP_LABELS.map((t) => [t.value, t.label])
-)
+// The Ownership facet was removed from the sidebar (founder decision
+// 2026-10-16: every listing is assumed Black-owned, Ally is not advertised).
+// The `?ownership=` param still parses, so an old bookmarked link keeps a
+// removable chip in ActiveFilterChips. This map is what that chip reads.
+export const OWNERSHIP_LABEL_MAP: Record<string, string> = {
+  black_owned: 'Black-Owned',
+  ally: 'Ally',
+}

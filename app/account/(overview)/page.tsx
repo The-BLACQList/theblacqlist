@@ -12,7 +12,6 @@ import { signOutAction } from '@/lib/actions/auth/signOut'
 import {
   OWNERSHIP_LABEL_META,
   TRUST_TIER_META,
-  type OwnershipLabel,
   type TrustTier,
 } from '@/lib/constants/listing'
 import { EGO_MAX_NODES_WIDE, summarizeEgoSpend, type EgoReceipt } from '@/lib/account/egoNetwork'
@@ -99,11 +98,11 @@ const STAT_DIVIDERS = [
   'pl-4 border-l max-lg:mt-4 max-lg:border-t',
 ]
 
-/** "{Tier} · {Black-Owned or Ally}". The tier shows only from Claimed up. */
+/** "{Tier} · Ally". The tier shows only from Claimed up; only Ally is named. */
 function trustLine(trustTier: string | null, ownershipLabel: string | null): string {
   const tier =
     trustTier && trustTier !== 'unclaimed' ? TRUST_TIER_META[trustTier as TrustTier]?.label : null
-  const label = ownershipLabel ? OWNERSHIP_LABEL_META[ownershipLabel as OwnershipLabel]?.label : null
+  const label = ownershipLabel === 'ally' ? OWNERSHIP_LABEL_META.ally.label : null
   return [tier, label].filter(Boolean).join(' · ')
 }
 

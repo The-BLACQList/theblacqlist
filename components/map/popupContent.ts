@@ -17,14 +17,15 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
  */
 export function buildPopupContent(listing: MapListing): HTMLElement {
   const open = listing.hours ? isOpenNow(listing.hours) : null
-  const ownership = listing.ownershipLabel === 'ally' ? 'Ally' : 'Black-Owned'
+  // Black-owned is the default and goes unsaid; only Ally is named (2026-10-16).
+  const ownership = listing.ownershipLabel === 'ally' ? 'Ally' : null
   const rating =
     listing.avgRating !== null && listing.reviewCount > 0
       ? `${listing.avgRating.toFixed(1)} stars, ${listing.reviewCount} reviews`
       : null
 
   const root = el('div', 'blacq-popup')
-  root.appendChild(el('p', 'blacq-popup-tier', `${ownership} · ${TIER_LABEL[listing.trustTier]}`))
+  root.appendChild(el('p', 'blacq-popup-tier', [ownership, TIER_LABEL[listing.trustTier]].filter(Boolean).join(' · ')))
   root.appendChild(el('h2', 'blacq-popup-name', listing.name))
   root.appendChild(
     el('p', 'blacq-popup-meta', [listing.category, open?.label, rating].filter(Boolean).join(' · '))

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'For Business | The BLACQList',
   description:
-    'Claim your page for free, keep your details right, and see how people find you. Open to every business, labeled Black-Owned or Ally.',
+    'Claim your page for free, keep your details right, and see how people find you. Open to every business.',
 }
 
 // Ticket 115, For Business A ("Documentary"). Spec:
@@ -148,7 +148,7 @@ export default async function ForBusinessPage() {
             </h1>
             <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[52ch]">
               Claim your page for free, keep your details right, and see how people find you. Open
-              to every business, labeled Black-Owned or Ally.
+              to every business.
             </p>
             <div className="pt-2">
               <OwnerChoice />

@@ -7,7 +7,7 @@ import { QuickStart } from './_components/quick-start/QuickStart'
 export const metadata = {
   title: 'Add Your Business | The BLACQList',
   description:
-    'List your business on The BLACQList. Black-owned businesses and allies who support them are welcome. Every listing is clearly labeled.',
+    'List your business on The BLACQList, the home for Black-owned businesses. Adding your page is free.',
 }
 
 export interface CategoryOption {

@@ -128,8 +128,8 @@ export default function AboutPage() {
           <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
             <p>
               The BLACQList is an editorial directory built to center and elevate Black-owned
-              businesses. Every listing is clearly labeled so you always know exactly who
-              you&rsquo;re supporting.
+              businesses. A business that isn&rsquo;t Black-owned carries an Ally label, so you
+              always know exactly who you&rsquo;re supporting.
             </p>
             <p>
               <strong>Black-Owned</strong> means a business in which Black or African American

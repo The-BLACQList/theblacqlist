@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Route } from 'next'
 import { Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
@@ -10,6 +11,7 @@ import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
+import { categoryFilterHref } from '@/lib/listings/url'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 import { ContactLink } from '@/components/entity-page/ContactLink'
@@ -30,16 +32,11 @@ interface Props {
   variant: TemplateHeroVariant
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  business: 'Business',
-  restaurant: 'Restaurant',
-  vendor: 'Vendor',
-  professional: 'Professional',
-  service_provider: 'Professional',
-  creative: 'Creative',
+// Only events and jobs keep a type pill; every other type is covered by the
+// category chip (founder decision 2026-10-16).
+const TYPE_PILL_LABELS: Record<string, string> = {
   event: 'Event',
   job: 'Job',
-  creator: 'Creator',
 }
 
 // The hero gets shorter as the page below it gets more utilitarian: a portfolio
@@ -74,8 +71,11 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
   const ctaHref = getCtaHref(entity)
-  const typeLabel = TYPE_LABELS[entity.entity_type as string] ?? 'Business'
-  const locationLine = [entity.category?.name, entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null]
+  const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
+  // Creatives already carry the category as the gold eyebrow, so they get no chip.
+  const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
+  // When the chip shows the category, the line under the name keeps the city only.
+  const locationLine = [categoryHref ? null : entity.category?.name, entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null]
     .filter(Boolean)
     .join(' · ')
 
@@ -121,11 +121,25 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         )}
 
         <div className="flex items-center gap-2 flex-wrap mb-3">
+          {categoryHref && entity.category?.name && (
+            <Link
+              href={categoryHref as Route}
+              aria-label={`More in ${entity.category.name}`}
+              className="relative inline-flex items-center h-[26px] px-2.5 rounded-full border border-off-white/40 font-subhead text-[12px] font-semibold text-off-white hover:bg-off-white/10 hover:border-off-white/70 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-off-white after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
+            >
+              {entity.category.name}
+            </Link>
+          )}
           <OwnershipBadge label={entity.ownership_label} size="small" />
-          <StatusBadge tier={entity.trust_tier} size="small" explain />
-          <span className="inline-flex items-center h-[26px] px-2.5 rounded-full border border-off-white/40 font-subhead text-[12px] font-semibold text-off-white">
-            {typeLabel}
-          </span>
+          {/* Unclaimed stays in the trust panel, next to "Claim this listing". */}
+          {entity.trust_tier !== 'unclaimed' && (
+            <StatusBadge tier={entity.trust_tier} size="small" explain />
+          )}
+          {typePill && (
+            <span className="inline-flex items-center h-[26px] px-2.5 rounded-full border border-off-white/40 font-subhead text-[12px] font-semibold text-off-white">
+              {typePill}
+            </span>
+          )}
         </div>
 
         {/* What the Ally label means, in the approved words [Decision — founder,

@@ -18,3 +18,17 @@ export function buildEntityUrl(
 ): string {
   return `/${citySlug || 'online'}/${entityType}/${listingSlug}`
 }
+
+/**
+ * Where a category chip on a card or listing hero points: the discover page
+ * filtered to that category (children included, via resolveFacetParams).
+ * Returns null for a missing slug or the `general` fallback that `mapRow`
+ * fills in when a listing has no category, since that slug matches no row.
+ */
+export function categoryFilterHref(
+  category: { slug?: string | null } | null | undefined
+): string | null {
+  const slug = category?.slug
+  if (!slug || slug === 'general') return null
+  return `/discover?category=${encodeURIComponent(slug)}`
+}

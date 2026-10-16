@@ -134,7 +134,9 @@ describe('Save my draft', () => {
   })
 
   it('names the first missing step in order', () => {
-    expect(firstMissing(EMPTY_ANSWERS)?.step).toBe('ownership')
+    // Ownership defaults to Black-owned (2026-10-16), so a fresh start's first gap is the name.
+    expect(EMPTY_ANSWERS.ownership).toBe('black_owned')
+    expect(firstMissing(EMPTY_ANSWERS)?.step).toBe('name')
     expect(firstMissing({ ...COMPLETE, about: 'Cuts' })?.step).toBe('about')
     expect(firstMissing({ ...COMPLETE, attested: false })?.step).toBe('attest')
   })
