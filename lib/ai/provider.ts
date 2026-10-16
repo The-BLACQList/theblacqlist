@@ -55,10 +55,13 @@ import { mockResponseFor, type MockContext } from './mock-responses'
 import { PROMPT_TEMPLATES } from './prompts'
 import {
   MAX_DESCRIPTION_CHARS,
+  NO_NAME_REDACTION,
+  ownerNameTerms,
   rejectionCode,
   sanitizeForPrompt,
   validateOutput,
   type OutputRejection,
+  type PromptRedaction,
 } from './sanitize'
 import { MAX_PROMPT_CHARS, monthlyCeilingUsd, withinMonthlyCeiling } from './spend'
 
@@ -97,6 +100,13 @@ export interface GenerateInput {
   triggeredBy: string
   context: GenerateContext
   /**
+   * The signed-in owner's name(s) on file, from `loadOwnerNames`. Used only to
+   * remove the name from the tagline and description; never placed in a prompt.
+   * An empty array means no name on file. Required so a new caller has to
+   * decide, not forget.
+   */
+  ownerNames: readonly string[]
+  /**
    * Paid generations this page may have per 30 days, from `aiQuota(tier)`, or
    * null for no cap. Required so a new caller has to decide, not forget.
    */
@@ -126,14 +136,22 @@ export function fillTemplate(template: string, vars: Record<string, string>): st
  * Every value is either a name, a city, a category, an aggregate count, or a
  * sanitized excerpt. This is where the privacy audit (V2-Mock gate 2) should
  * look, and it is short on purpose so that audit is possible in one reading.
+ *
+ * `redaction` carries the owner's name terms. They are removed from the owner's
+ * own text (tagline, description) and deliberately not from the business name,
+ * which may be named after the owner. Every field still loses email, phone and
+ * street addresses. Throws `PromptRedactionError` if redaction fails.
  */
-export function buildPromptVars(ctx: GenerateContext): Record<string, string> {
+export function buildPromptVars(
+  ctx: GenerateContext,
+  redaction: PromptRedaction = NO_NAME_REDACTION
+): Record<string, string> {
   return {
     listing_name: sanitizeForPrompt(ctx.listingName, 200),
     category_name: sanitizeForPrompt(ctx.categoryName, 100),
     city_name: sanitizeForPrompt(ctx.cityName, 100),
-    tagline: sanitizeForPrompt(ctx.tagline, 200),
-    description_excerpt: sanitizeForPrompt(ctx.description, MAX_DESCRIPTION_CHARS),
+    tagline: sanitizeForPrompt(ctx.tagline, 200, redaction),
+    description_excerpt: sanitizeForPrompt(ctx.description, MAX_DESCRIPTION_CHARS, redaction),
     page_views_30d: String(ctx.pageViews30d),
     cta_clicks_30d: String(ctx.ctaClicks30d),
     saves_30d: String(ctx.saves30d),
@@ -142,13 +160,13 @@ export function buildPromptVars(ctx: GenerateContext): Record<string, string> {
   }
 }
 
-function mockContextOf(ctx: GenerateContext): MockContext {
+function mockContextOf(ctx: GenerateContext, redaction: PromptRedaction): MockContext {
   return {
     listingName: ctx.listingName,
     categoryName: ctx.categoryName,
     cityName: ctx.cityName,
     tagline: ctx.tagline,
-    descriptionExcerpt: sanitizeForPrompt(ctx.description, MAX_DESCRIPTION_CHARS),
+    descriptionExcerpt: sanitizeForPrompt(ctx.description, MAX_DESCRIPTION_CHARS, redaction),
     pageViews30d: ctx.pageViews30d,
     ctaClicks30d: ctx.ctaClicks30d,
     saves30d: ctx.saves30d,
@@ -231,7 +249,7 @@ function tokenColumns(usage: TokenUsage | null): { request_tokens?: number; resp
 }
 
 export async function generate(input: GenerateInput): Promise<GenerateResult> {
-  const { agent, listingId, triggeredBy, context, monthlyQuota } = input
+  const { agent, listingId, triggeredBy, context, monthlyQuota, ownerNames } = input
 
   const used = await countRecentRequests(listingId)
   if (used >= RATE_LIMIT_PER_LISTING_24H) {
@@ -277,7 +295,21 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
   // is what keeps `buildPromptVars` exercised by the same code that will feed the
   // real provider — a prompt bug that only appears once billing is on is the
   // worst possible place to find one.
-  const prompt = fillTemplate(PROMPT_TEMPLATES[agent.templateKey], buildPromptVars(context))
+  //
+  // Redaction fails closed: if removing addresses or the owner's name throws,
+  // nothing is sent and the audit row closes with a fixed code.
+  let prompt: string
+  let mockContext: MockContext
+  try {
+    const redaction: PromptRedaction = {
+      ownerNameTerms: ownerNameTerms(ownerNames, context.listingName),
+    }
+    prompt = fillTemplate(PROMPT_TEMPLATES[agent.templateKey], buildPromptVars(context, redaction))
+    mockContext = mockContextOf(context, redaction)
+  } catch {
+    await closeFailed('prompt_redaction_failed')
+    return { ok: false, code: 'failed' }
+  }
   if (!prompt.trim()) {
     await closeFailed('prompt_empty')
     return { ok: false, code: 'failed' }
@@ -292,7 +324,7 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
   let usage: TokenUsage | null = null
   try {
     if (provider === 'mock') {
-      raw = mockResponseFor(agent, mockContextOf(context))
+      raw = mockResponseFor(agent, mockContext)
     } else {
       const result = await callAnthropic({ model, prompt, maxOutputChars: agent.maxOutputChars })
       raw = result.text

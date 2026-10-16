@@ -3,6 +3,7 @@
 import { findAgent } from '@/lib/ai/agents'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadGenerateContext } from '@/lib/ai/context'
+import { loadOwnerNames } from '@/lib/ai/ownerName'
 import { generate, RATE_LIMIT_PER_LISTING_24H } from '@/lib/ai/provider'
 import {
   dailyLimitMessage,
@@ -85,12 +86,20 @@ export async function generateSuggestionAction(
   const context = await loadGenerateContext(listingId)
   if (!context) return { error: 'Listing not found.', code: 'invalid' }
 
+  // The owner's name is read only so it can be taken out of their text before
+  // the prompt is built. If it cannot be read, nothing is sent (fail closed).
+  const ownerNames = await loadOwnerNames(owner.user.id)
+  if (!ownerNames.ok) {
+    return { error: "Couldn't write a suggestion right now. Try again.", code: 'failed' }
+  }
+
   const result = await generate({
     agent,
     listingId,
     triggeredBy: owner.user.id,
     context,
     monthlyQuota: aiQuota(listing.tier),
+    ownerNames: ownerNames.names,
   })
   const allowance = await getWritingAllowance(listingId, listing.tier)
 

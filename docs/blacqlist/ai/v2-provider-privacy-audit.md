@@ -87,7 +87,7 @@ Two properties of this shape do the actual work:
 |---|---|
 | `listings.name`, `.tagline` | Yes — `context.ts:51` |
 | `categories.name`, `cities.name` | Yes — joined at `context.ts:51` |
-| `listing_details_business.description`, excerpt ≤ 500, no contact info | Yes — `context.ts:64`, truncated at `MAX_DESCRIPTION_CHARS = 500` and contact-redacted by `sanitizeForPrompt` |
+| `listing_details_business.description`, excerpt ≤ 500, no contact info | Yes — `context.ts:64`, truncated at `MAX_DESCRIPTION_CHARS = 500` and contact-, address- and owner-name-redacted by `sanitizeForPrompt` |
 | Aggregated analytics counts | Yes — five head-count queries |
 | `listings.status`, `price_range`, `cta_type`, `listing_hours`, `reviews.rating` aggregate | **Allowed but not used.** Narrower than the policy permits, which is the correct direction to be wrong in. |
 
@@ -117,7 +117,7 @@ A `select('*')` against `listings` would pull `meta_title`, `meta_description`, 
 `lib/ai/sanitize.ts` is not part of prompt assembly but is the reason `description` — the one free-text, owner-typed field in the allowlist — is safe to include.
 
 **Inbound (`sanitizeForPrompt`, applied to every string in `buildPromptVars`):**
-`stripHtml` → `redactContactPatterns` → word-boundary truncate. `EMAIL_PATTERN` and `PHONE_PATTERN` are documented as *"deliberately loose — a false positive costs one refused generation the owner can retry; a false negative publishes a contact detail."* `PHONE_PATTERN` is written not to match a bare 4-digit year or a price. That asymmetry is the right one and should not be tightened for tidiness.
+`stripHtml` → `redactContactPatterns` → `redactStreetAddresses` → `redactOwnerName` → word-boundary truncate. Added 2026-10-16: street addresses, P.O. boxes and the signed-in owner's own name now come out too (`lib/ai/redact.ts`). The owner name is not removed from the business name field. If redaction throws, `generate()` closes the audit row as `prompt_redaction_failed` and sends nothing. `EMAIL_PATTERN` and `PHONE_PATTERN` are documented as *"deliberately loose — a false positive costs one refused generation the owner can retry; a false negative publishes a contact detail."* `PHONE_PATTERN` is written not to match a bare 4-digit year or a price. That asymmetry is the right one and should not be tightened for tidiness.
 
 **Outbound (`validateOutput`):** rejects on `empty | too_long | refusal | contains_email | contains_phone`. A rejected response **never becomes a suggestion** — `provider.ts:261` closes the audit row `failed` and returns, with no branch that writes a suggestion row. `rejectionCode()` returns `output_rejected:${reason}`, and *"the offending text is never stored, so there is no path from a failed generation back to the content that failed."*
 
