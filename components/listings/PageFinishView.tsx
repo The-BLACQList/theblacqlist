@@ -34,6 +34,8 @@ import { FinishSubmit } from './finish/FinishSubmit'
 import { useLeaveGuard } from './finish/useLeaveGuard'
 import { CaptionHelp, WritingHelpProvider, WritingHelpStrip } from './finish/WritingHelp'
 import { CLOSING_NOTE, type InitialSuggestions, type WritingAllowance } from '@/lib/ai/writingHelp'
+import type { TextField } from '@/lib/ai/onboardingCards'
+import { OnboardingDrafts } from './finish/OnboardingDrafts'
 
 // The side-by-side finish view: every section of a business page on the left,
 // the page itself on the right. One component for both mounts (tickets 126 and
@@ -48,6 +50,16 @@ interface Props {
   storageUrl: string
   /** Writing help in the fields (ticket 138). Left out on a new page. */
   writingHelp?: { allowance: WritingAllowance; initial: InitialSuggestions }
+  /** Drafts after "Save my draft" (ticket 128). Only on a new page with the flag on. */
+  onboardingDrafts?: { autoStart: boolean; aboutFromSite: boolean }
+}
+
+// Which section shows each draft card's field, and that field's draft key.
+const CARD_TARGET: Record<TextField, { section: 'basics' | 'about' | 'google'; key: keyof Draft }> = {
+  tagline: { section: 'basics', key: 'tagline' },
+  about: { section: 'about', key: 'description' },
+  searchTitle: { section: 'google', key: 'meta_title' },
+  searchDescription: { section: 'google', key: 'meta_description' },
 }
 
 type Draft = {
@@ -91,17 +103,54 @@ function Anchor({ id, children }: { id: string; children: React.ReactNode }) {
   )
 }
 
-export function PageFinishView({ data, mode, warning = null, storageUrl, writingHelp }: Props) {
+export function PageFinishView({
+  data,
+  mode,
+  warning = null,
+  storageUrl,
+  writingHelp,
+  onboardingDrafts,
+}: Props) {
   const d = data.details
-  const saved: Draft = {
+  const fromProps: Draft = {
     name: data.name,
     tagline: data.tagline ?? '',
     description: d?.description ?? '',
     meta_title: data.metaTitle ?? '',
     meta_description: data.metaDescription ?? '',
   }
+  // A field saved from a draft card bridges the moment until the page's props
+  // catch up (the save revalidates this page). Once the prop moves, it wins.
+  const [applied, setApplied] = useState<Partial<Record<keyof Draft, { value: string; before: string }>>>({})
+  // The sections read their props once, so a saved draft card remounts the
+  // section that shows it.
+  const [mounts, setMounts] = useState({ basics: 0, about: 0, google: 0 })
+  const saved = { ...fromProps }
+  for (const key of Object.keys(applied) as (keyof Draft)[]) {
+    const a = applied[key]
+    if (a && fromProps[key] === a.before) saved[key] = a.value
+  }
   const [draft, setDraft] = useState<Draft>(saved)
   const patchDraft = (patch: Partial<Draft>) => setDraft((cur) => ({ ...cur, ...patch }))
+
+  function onDraftApplied(field: TextField, value: string) {
+    const { section, key } = CARD_TARGET[field]
+    const nextSaved = { ...saved, [key]: value }
+    setApplied((cur) => ({ ...cur, [key]: { value, before: fromProps[key] } }))
+    setMounts((m) => ({ ...m, [section]: m[section] + 1 }))
+    // The remounted section starts from what is saved, so its other unsaved
+    // edits go back to saved too.
+    const sectionKeys: Record<typeof section, (keyof Draft)[]> = {
+      basics: ['name', 'tagline'],
+      about: ['description'],
+      google: ['meta_title', 'meta_description'],
+    }
+    setDraft((cur) => {
+      const next = { ...cur }
+      for (const k of sectionKeys[section]) next[k] = nextSaved[k]
+      return next
+    })
+  }
 
   const unsaved = useMemo(() => {
     const out: Partial<Draft> = {}
@@ -199,21 +248,33 @@ export function PageFinishView({ data, mode, warning = null, storageUrl, writing
 
           <StrengthMeter checklist={checklist} />
 
+          {onboardingDrafts && (
+            <OnboardingDrafts
+              listingId={data.id}
+              autoStart={onboardingDrafts.autoStart}
+              aboutFromSite={onboardingDrafts.aboutFromSite}
+              aboutLimit={descriptionCharLimit(tier)}
+              onApplied={onDraftApplied}
+            />
+          )}
+
           {writingHelp && <WritingHelpStrip />}
 
           <Anchor id="basics">
             <BasicInfoSection
+              key={`basics-${mounts.basics}`}
               listingId={data.id}
               name={data.name}
-              tagline={data.tagline}
+              tagline={saved.tagline || null}
               onDraftChange={patchDraft}
             />
           </Anchor>
 
           <Anchor id="about">
             <AboutSection
+              key={`about-${mounts.about}`}
               listingId={data.id}
-              description={d?.description ?? null}
+              description={saved.description || null}
               charLimit={descriptionCharLimit(tier)}
               showUpgrade={showUpgrade}
               onDraftChange={patchDraft}
@@ -329,6 +390,7 @@ export function PageFinishView({ data, mode, warning = null, storageUrl, writing
 
           <Anchor id="google">
             <GoogleCard
+              key={`google-${mounts.google}`}
               listingId={data.id}
               publicUrl={data.publicUrl}
               seoFields={{
@@ -338,8 +400,8 @@ export function PageFinishView({ data, mode, warning = null, storageUrl, writing
                 categoryName: data.categoryName,
                 locationLabel: data.locationLabel,
               }}
-              metaTitle={data.metaTitle}
-              metaDescription={data.metaDescription}
+              metaTitle={saved.meta_title || null}
+              metaDescription={saved.meta_description || null}
               onDraftChange={patchDraft}
               initial={initial}
             />

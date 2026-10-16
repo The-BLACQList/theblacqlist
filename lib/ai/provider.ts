@@ -47,11 +47,21 @@ import { createServiceClient } from '@/lib/supabase/server'
 import {
   MOCK_MODEL,
   MODEL_BY_TIER,
+  ONBOARDING_AGENT,
+  ONBOARDING_PROMPT_VERSION,
   promptVersionOf,
   type AgentDefinition,
 } from './agents'
 import { callAnthropic, ProviderCallError, type TokenUsage } from './anthropic'
 import { mockResponseFor, type MockContext } from './mock-responses'
+import {
+  buildOnboardingPromptVars,
+  mockOnboardingResponse,
+  parseOnboardingDrafts,
+  type DraftRequest,
+  type OnboardingContext,
+  type OnboardingDrafts,
+} from './onboarding'
 import { PROMPT_TEMPLATES } from './prompts'
 import {
   MAX_DESCRIPTION_CHARS,
@@ -67,6 +77,11 @@ import { MAX_PROMPT_CHARS, monthlyCeilingUsd, withinMonthlyCeiling } from './spe
 
 /** Requests per listing per rolling 24 hours. */
 export const RATE_LIMIT_PER_LISTING_24H = 10
+
+/** /add-business drafts per page, ever (ticket 128). */
+export const ONBOARDING_DRAFTS_PER_PAGE = 5
+/** /add-business drafts per owner per rolling 24 hours, across all their pages. */
+export const ONBOARDING_DRAFTS_PER_DAY = 20
 
 /**
  * Everything a prompt is allowed to see.
@@ -112,6 +127,26 @@ export interface GenerateInput {
    */
   monthlyQuota: number | null
 }
+
+/** The /add-business drafts (ticket 128). See lib/ai/onboarding.ts. */
+export interface OnboardingGenerateInput {
+  kind: 'onboarding'
+  /** The draft page. The caller has proved the signed-in user owns it. */
+  listingId: string
+  /** The signed-in owner. Logged for audit and counted for the daily cap; never placed in a prompt. */
+  triggeredBy: string
+  context: OnboardingContext
+  /** From `loadOwnerNames`. Used only to redact; never placed in a prompt. */
+  ownerNames: readonly string[]
+  request: DraftRequest
+}
+
+export type OnboardingGenerateResult =
+  | { ok: true; drafts: OnboardingDrafts; provider: 'mock' | 'anthropic' }
+  | { ok: false; code: 'rate_limited'; scope: 'page' | 'day' }
+  | { ok: false; code: 'paused' }
+  | { ok: false; code: 'rejected'; reason: OutputRejection }
+  | { ok: false; code: 'failed' }
 
 export type GenerateResult =
   | { ok: true; suggestionId: string; text: string; provider: 'mock' | 'anthropic' }
@@ -236,10 +271,58 @@ export async function countSuccessfulLast30Days(listingId: string): Promise<numb
     .eq('listing_id', listingId)
     .eq('status', 'completed')
     .eq('provider', 'anthropic')
+    // The /add-business drafts have their own caps and never use up a plan's
+    // allowance: Free owners get them too, and the dashboard help stays intact.
+    .neq('agent_type', ONBOARDING_AGENT.agentType)
     .gte('created_at', since)
 
   if (error || count === null) return Number.POSITIVE_INFINITY
   return count
+}
+
+/**
+ * The kill switch: `AI_KILL_SWITCH` (added with ticket 128), read on every call
+ * so setting it and redeploying stops every generation, mock included, without
+ * a code change. The monthly ceiling (ticket 104) already pauses paid calls when
+ * `AI_MONTHLY_CEILING_USD` is unset; this one also stops the mock. Fails closed: unset, blank, 0, false, off or no leave AI running, and
+ * any other value, typos included, stops it.
+ */
+export function aiKillSwitchOn(): boolean {
+  const value = process.env.AI_KILL_SWITCH?.trim().toLowerCase()
+  if (!value) return false
+  return !['0', 'false', 'off', 'no'].includes(value)
+}
+
+/**
+ * Counts /add-business draft attempts, for the page cap (this listing, ever) or
+ * the day cap (this owner, rolling 24 hours). Attempts, not successes, like the
+ * listing limiter above, and for the same reason.
+ *
+ * Fails closed with `Infinity`, which is over both caps. Not the general rate
+ * limiter in lib/security/rate-limit.ts: that one fails open on purpose, which
+ * is right for public search and wrong for spend.
+ */
+export async function countOnboardingAttempts(
+  scope: { listingId: string } | { ownerId: string }
+): Promise<number> {
+  const supabase = createServiceClient()
+  let query = supabase
+    .from('ai_generation_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('agent_type', ONBOARDING_AGENT.agentType)
+  query =
+    'listingId' in scope
+      ? query.eq('listing_id', scope.listingId)
+      : query
+          .eq('created_by', scope.ownerId)
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+  try {
+    const { count, error } = await query
+    if (error || count === null) return Number.POSITIVE_INFINITY
+    return count
+  } catch {
+    return Number.POSITIVE_INFINITY
+  }
 }
 
 /** Token counts for the audit row. The mock path records none. */
@@ -248,7 +331,14 @@ function tokenColumns(usage: TokenUsage | null): { request_tokens?: number; resp
   return { request_tokens: usage.inputTokens, response_tokens: usage.outputTokens }
 }
 
-export async function generate(input: GenerateInput): Promise<GenerateResult> {
+export async function generate(input: OnboardingGenerateInput): Promise<OnboardingGenerateResult>
+export async function generate(input: GenerateInput): Promise<GenerateResult>
+export async function generate(
+  input: GenerateInput | OnboardingGenerateInput
+): Promise<GenerateResult | OnboardingGenerateResult> {
+  // Before anything else, for every agent: a stopped switch adds no rows.
+  if (aiKillSwitchOn()) return { ok: false, code: 'paused' }
+  if ('kind' in input) return generateOnboarding(input)
   const { agent, listingId, triggeredBy, context, monthlyQuota, ownerNames } = input
 
   const used = await countRecentRequests(listingId)
@@ -374,4 +464,109 @@ export async function generate(input: GenerateInput): Promise<GenerateResult> {
     .eq('id', requestId)
 
   return { ok: true, suggestionId: suggestionRow.id, text: validated.text, provider }
+}
+
+/**
+ * The /add-business drafts. Same order as the dashboard path above, with its own
+ * caps in place of the plan allowance (Free owners included) and no suggestion
+ * row: the drafts go back to the caller and nothing is saved until the owner
+ * taps "Use this".
+ */
+async function generateOnboarding(input: OnboardingGenerateInput): Promise<OnboardingGenerateResult> {
+  const { listingId, triggeredBy, context, ownerNames, request } = input
+  const agent = ONBOARDING_AGENT
+
+  // Caps first, and each fails closed: an unreadable count is over the cap.
+  if ((await countOnboardingAttempts({ listingId })) >= ONBOARDING_DRAFTS_PER_PAGE) {
+    return { ok: false, code: 'rate_limited', scope: 'page' }
+  }
+  if ((await countOnboardingAttempts({ ownerId: triggeredBy })) >= ONBOARDING_DRAFTS_PER_DAY) {
+    return { ok: false, code: 'rate_limited', scope: 'day' }
+  }
+
+  const { provider, model } = resolveProvider(agent)
+  if (provider === 'anthropic' && !(await withinMonthlyCeiling())) {
+    return { ok: false, code: 'paused' }
+  }
+  const supabase = createServiceClient()
+
+  // Audit row first, exactly as above.
+  const { data: requestRow, error: requestError } = await supabase
+    .from('ai_generation_requests')
+    .insert({
+      listing_id: listingId,
+      agent_type: agent.agentType,
+      prompt_version: ONBOARDING_PROMPT_VERSION,
+      model,
+      provider,
+      status: 'pending',
+      created_by: triggeredBy,
+    })
+    .select('id')
+    .single()
+
+  if (requestError || !requestRow) return { ok: false, code: 'failed' }
+  const requestId = requestRow.id
+
+  async function closeFailed(errorCode: string, usage: TokenUsage | null = null): Promise<void> {
+    await supabase
+      .from('ai_generation_requests')
+      .update({ status: 'failed', error_message: errorCode, ...tokenColumns(usage) })
+      .eq('id', requestId)
+  }
+
+  let prompt: string
+  let mockRaw: string
+  try {
+    const redaction: PromptRedaction = {
+      ownerNameTerms: ownerNameTerms(ownerNames, context.businessName),
+    }
+    const built = buildOnboardingPromptVars(context, redaction, request)
+    prompt = fillTemplate(PROMPT_TEMPLATES[agent.templateKey], built.vars)
+    mockRaw = mockOnboardingResponse(built.safe, context, request)
+  } catch {
+    await closeFailed('prompt_redaction_failed')
+    return { ok: false, code: 'failed' }
+  }
+  if (!prompt.trim()) {
+    await closeFailed('prompt_empty')
+    return { ok: false, code: 'failed' }
+  }
+  if (prompt.length > MAX_PROMPT_CHARS) {
+    await closeFailed('prompt_too_long')
+    return { ok: false, code: 'failed' }
+  }
+
+  let raw: string
+  let usage: TokenUsage | null = null
+  try {
+    if (provider === 'mock') {
+      raw = mockRaw
+    } else {
+      const result = await callAnthropic({ model, prompt, maxOutputChars: agent.maxOutputChars })
+      raw = result.text
+      usage = { inputTokens: result.inputTokens, outputTokens: result.outputTokens }
+    }
+  } catch (err) {
+    if (err instanceof ProviderCallError) {
+      await closeFailed(err.code, err.usage)
+      if (err.code === 'provider_refusal') return { ok: false, code: 'rejected', reason: 'refusal' }
+    } else {
+      await closeFailed('provider_error')
+    }
+    return { ok: false, code: 'failed' }
+  }
+
+  const parsed = parseOnboardingDrafts(raw, context)
+  if (!parsed.ok) {
+    await closeFailed(rejectionCode(parsed.reason), usage)
+    return { ok: false, code: 'rejected', reason: parsed.reason }
+  }
+
+  await supabase
+    .from('ai_generation_requests')
+    .update({ status: 'completed', ...tokenColumns(usage) })
+    .eq('id', requestId)
+
+  return { ok: true, drafts: parsed.drafts, provider }
 }

@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
 
@@ -11,13 +12,13 @@ export const metadata = {
 
 interface Props {
   params: Promise<{ listingId: string }>
-  searchParams: Promise<{ warning?: string }>
+  searchParams: Promise<{ warning?: string; drafts?: string; from?: string }>
 }
 
 // Step two of /add-business (ticket 126): the draft exists, now the owner fills
 // in the rest beside a live view of the page and sends it for review.
 export default async function FinishPage({ params, searchParams }: Props) {
-  const [{ listingId }, { warning }] = await Promise.all([params, searchParams])
+  const [{ listingId }, { warning, drafts, from }] = await Promise.all([params, searchParams])
   if (!/^[0-9a-f-]{36}$/i.test(listingId)) notFound()
 
   const supabase = await createClient()
@@ -30,6 +31,11 @@ export default async function FinishPage({ params, searchParams }: Props) {
   if (!data) notFound()
 
   const storageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`
+  // Drafts for a new page (ticket 128). Flag off: nothing changes on this page.
+  const onboardingDrafts =
+    isFeatureEnabled('aiOnboarding') && data.status === 'draft' && data.entityType !== 'creator'
+      ? { autoStart: drafts === '1', aboutFromSite: from === 'site' }
+      : undefined
 
   return (
     <main className="min-h-screen bg-pale-lavender px-4 pt-16 pb-16">
@@ -52,6 +58,7 @@ export default async function FinishPage({ params, searchParams }: Props) {
           mode="new"
           warning={warning === 'request' ? 'request' : null}
           storageUrl={storageUrl}
+          onboardingDrafts={onboardingDrafts}
         />
       </div>
     </main>

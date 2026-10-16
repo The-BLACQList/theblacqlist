@@ -196,7 +196,7 @@ describe('getEnabledFeatures', () => {
     expect(getEnabledFeatures()).toEqual([])
   })
 
-  it('lists every flag but the opening-soon covers in a bare preview deployment', async () => {
+  it('lists every flag but the closed-by-default ones in a bare preview deployment', async () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',

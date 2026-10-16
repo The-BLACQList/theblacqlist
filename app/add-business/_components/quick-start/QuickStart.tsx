@@ -60,6 +60,8 @@ interface Props {
   email: string
   /** FEATURE_SITE_IMPORT: start with "Have a website or link page?". */
   siteImport?: boolean
+  /** FEATURE_AI_ONBOARDING: the finish view opens with drafts (ticket 128). */
+  aiOnboarding?: boolean
 }
 
 type Stage = 'site' | 'steps'
@@ -107,7 +109,13 @@ export function QuickStart(props: Props) {
   return <QuickStartFlow {...props} />
 }
 
-function QuickStartFlow({ categories, cities, email, siteImport = false }: Props) {
+function QuickStartFlow({
+  categories,
+  cities,
+  email,
+  siteImport = false,
+  aiOnboarding = false,
+}: Props) {
   const router = useRouter()
   const [initial] = useState(readDraft)
   const [answers, setAnswers] = useState<QuickStartAnswers>(initial.answers)
@@ -229,7 +237,14 @@ function QuickStartFlow({ categories, cities, email, siteImport = false }: Props
         } catch {
           // Nothing to clean up.
         }
-        const qs = result.warning ? '?warning=request' : ''
+        const params = new URLSearchParams()
+        if (result.warning) params.set('warning', 'request')
+        if (aiOnboarding) {
+          params.set('drafts', '1')
+          // Imported about text goes to the drafts as quoted text, not as the owner's words.
+          if (fromSiteTag('about', site, answers)) params.set('from', 'site')
+        }
+        const qs = params.size > 0 ? `?${params.toString()}` : ''
         router.push(`/add-business/finish/${result.listingId}${qs}`)
         return
       }
