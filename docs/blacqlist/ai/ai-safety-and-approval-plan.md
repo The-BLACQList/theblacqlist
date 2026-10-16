@@ -176,7 +176,7 @@ Before assembling any prompt:
 7. Remove the signed-in owner's own name (profile name and sign-up name) from the tagline and description. It is never removed from the business name, and a name word that is also in the business name is kept ("Keisha's Kitchen" keeps "Keisha")
 8. If any of these steps fails, nothing is sent (fail closed)
 
-Everything removed becomes `[removed]`. This list is what backs the Privacy Policy line "We don't send your phone number, email, street address or your own name to the AI."
+Everything removed becomes `[removed]`. This list backs the updated Privacy Policy "AI writing help" section (ticket 139, PR #227): we take out email, phone, street address and the owner's name, a name that is part of the business name stays, and the filter can miss things.
 
 ### Output Validation
 
