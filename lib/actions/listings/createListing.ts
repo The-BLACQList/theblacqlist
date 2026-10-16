@@ -12,6 +12,8 @@ import type { WeeklyHours } from '@/types'
 import type { Json } from '@/lib/supabase/types'
 import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
 import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
+import { levelsForCategory, validateLevels } from '@/lib/listings/levels'
+import { loadCategoryLevels } from '@/lib/listings/levelRows'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -436,6 +438,18 @@ export async function createListingAction(
     }
   }
 
+  // The owner's "main role" pick. A pick the category doesn't allow (or none,
+  // when the question was skipped) falls back to the category's default
+  // rather than failing: the level is never worth losing a new page over.
+  // No level columns yet (null map) means no primary_level on the insert;
+  // once the migration runs, the insert trigger fills it from the category.
+  const levelMap = await loadCategoryLevels(supabase, [category.id])
+  const catLevels = levelMap ? (levelMap.get(category.id) ?? levelsForCategory(null)) : null
+  const levelPick = catLevels
+    ? validateLevels(formData.get('primary_level')?.toString() ?? '', [], catLevels.allowed_levels)
+    : null
+  const primaryLevel = catLevels ? (levelPick?.ok ? levelPick.primary : catLevels.default_level) : null
+
   let parentSlug: string | null = null
   if (category.parent_id) {
     const { data: parent, error: parentError } = await supabase
@@ -533,6 +547,7 @@ export async function createListingAction(
       ownership_label: ownershipLabel,
       ownership_attested: ownershipAttested,
       ownership_attested_at: ownershipAttested ? new Date().toISOString() : null,
+      ...(primaryLevel ? { primary_level: primaryLevel } : {}),
     })
     .select('id')
     .single()

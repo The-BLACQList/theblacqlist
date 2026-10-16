@@ -341,7 +341,9 @@ export type Database = {
       }
       categories: {
         Row: {
+          allowed_levels: string[]
           created_at: string
+          default_level: string
           description: string | null
           display_order: number
           icon: string | null
@@ -353,7 +355,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allowed_levels?: string[]
           created_at?: string
+          default_level?: string
           description?: string | null
           display_order?: number
           icon?: string | null
@@ -365,7 +369,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allowed_levels?: string[]
           created_at?: string
+          default_level?: string
           description?: string | null
           display_order?: number
           icon?: string | null
@@ -1541,6 +1547,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           entity_type: string
+          extra_levels: string[]
           flag_status: string
           id: string
           is_featured: boolean
@@ -1561,6 +1568,7 @@ export type Database = {
           ownership_attested: boolean
           ownership_attested_at: string | null
           ownership_label: string
+          primary_level: string
           published_at: string | null
           review_count: number
           save_count: number
@@ -1602,6 +1610,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           entity_type: string
+          extra_levels?: string[]
           flag_status?: string
           id?: string
           is_featured?: boolean
@@ -1622,6 +1631,7 @@ export type Database = {
           ownership_attested?: boolean
           ownership_attested_at?: string | null
           ownership_label?: string
+          primary_level?: string
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -1663,6 +1673,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           entity_type?: string
+          extra_levels?: string[]
           flag_status?: string
           id?: string
           is_featured?: boolean
@@ -1683,6 +1694,7 @@ export type Database = {
           ownership_attested?: boolean
           ownership_attested_at?: string | null
           ownership_label?: string
+          primary_level?: string
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -3062,6 +3074,7 @@ export type Database = {
           p_city_id?: string
           p_entity_type?: string
           p_lat?: number
+          p_levels?: string[]
           p_lng?: number
           p_location_type?: string
           p_location_types?: string[]
@@ -3128,6 +3141,7 @@ export type Database = {
           p_city_id?: string
           p_entity_type?: string
           p_lat?: number
+          p_levels?: string[]
           p_limit?: number
           p_lng?: number
           p_location_type?: string

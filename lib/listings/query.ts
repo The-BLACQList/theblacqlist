@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { attachLevels } from '@/lib/listings/levelRows'
 import type { DiscoveryEntity } from '@/types'
 import {
   resolveFacetParams,
@@ -25,6 +26,8 @@ export interface ListingsParams {
   /** Multi-select; one CSV URL key. See RawFacetParams.location_type. */
   location_type?: string[]
   ownership?: string
+  /** Business levels, multi-select. See lib/listings/levels.ts. */
+  level?: string[]
   price?: string[]
   attrs?: string[]
   open_now?: boolean
@@ -236,6 +239,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     trust_tier: params.trust_tier,
     location_type: params.location_type,
     ownership: params.ownership,
+    level: params.level,
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
@@ -276,7 +280,12 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // Radius belongs in this list for the same reason as the rest, and one more:
   // splicing a sponsored business 200 miles away into a "within 5 miles" result
   // set is not a placement, it is a wrong answer.
+  //
+  // A level pick is deep too: the legacy fallback below has no level columns to
+  // read on a database without the migration, and a sponsored maker spliced
+  // into "Suppliers" is the same wrong answer.
   const deepFilter = !!(
+    resolved.p_levels ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||
@@ -414,6 +423,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   }
 
   // Identity chips + event dates fetched separately (resilient to missing tables).
+  // Levels too: see lib/listings/levelRows.ts for why they stay out of NESTED_SELECT.
+  await attachLevels(supabase, finalEntities)
   await attachIdentityChips(supabase, finalEntities)
   await attachEventStartDates(supabase, finalEntities)
 

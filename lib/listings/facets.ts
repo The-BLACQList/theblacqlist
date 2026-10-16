@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
+import { BUSINESS_LEVELS, isBusinessLevel } from '@/lib/listings/levels'
 import {
   expandTypeCategoryIds,
   isMappedType,
@@ -98,6 +99,12 @@ export interface FacetCounts {
   category?: Record<string, number>
   /** entity type → count, ignoring the current type pick. Same undefined rule. */
   type?: Record<string, number>
+  /**
+   * business level → count, ignoring the current level pick. A listing counts
+   * once for its main level and once per extra. Undefined when the database
+   * predates the level migration; the sidebar then hides the Level section.
+   */
+  level?: Record<string, number>
 }
 
 /** Raw (URL) facet inputs before slug → id resolution. */
@@ -114,6 +121,8 @@ export interface RawFacetParams {
    */
   location_type?: string[]
   ownership?: string
+  /** Business levels, multi-select, validated upstream. Matches main OR extra level. */
+  level?: string[]
   price?: string[]
   attrs?: string[]
   open_now?: boolean
@@ -137,6 +146,11 @@ export interface UnresolvedFacets {
   city?: string
   category?: string
   attrs?: string[]
+  /**
+   * Level values that are not one of the four. `?level=suplier` must come back
+   * empty, not as the whole directory, the same rule as an unknown attribute.
+   */
+  levels?: string[]
 }
 
 /**
@@ -155,7 +169,12 @@ export interface FacetResolution {
 
 /** True when any requested slug failed to resolve. */
 export function hasUnresolved(u: UnresolvedFacets): boolean {
-  return !!(u.city || u.category || (u.attrs && u.attrs.length > 0))
+  return !!(
+    u.city ||
+    u.category ||
+    (u.attrs && u.attrs.length > 0) ||
+    (u.levels && u.levels.length > 0)
+  )
 }
 
 /** Resolved RPC arguments (ids instead of slugs). */
@@ -189,6 +208,13 @@ export interface ResolvedFacetParams {
    */
   p_type_category_ids: string[] | null
   p_type_location_types: string[] | null
+  /**
+   * Business levels (grower / maker / supplier / local), added by
+   * 20261017000000_business_levels.sql. Matches a listing whose main level OR
+   * any extra level is in the set. Never sent as NULL (see rpcArgs), so a
+   * request without a level pick is the same call the older functions accept.
+   */
+  p_levels: string[] | null
 }
 
 /** The two keys only the 20260924000000 signatures accept. */
@@ -214,6 +240,10 @@ type RpcFn = (
 export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<string, unknown> {
   const out: Record<string, unknown> = { ...args }
   for (const k of TYPE_KEYS) if (out[k] == null) delete out[k]
+  // Same rule for the level key. There is deliberately no retry without it: a
+  // level pick the database cannot honor must fail (the caller shows "filters
+  // unavailable"), not quietly come back as the whole directory.
+  if (out.p_levels == null) delete out.p_levels
   return out
 }
 
@@ -236,7 +266,7 @@ async function callWithTypeFallback(
 ): Promise<{ data: unknown; error: unknown }> {
   const rpc = supabase.rpc.bind(supabase) as unknown as RpcFn
   const first = await rpc(fn, args)
-  if (!first.error || !TYPE_KEYS.some((k) => k in args)) return first
+  if (!first.error || !TYPE_KEYS.some((k) => k in args) || 'p_levels' in args) return first
   return rpc(fn, withoutTypeKeys(args))
 }
 
@@ -362,6 +392,10 @@ export async function resolveFacetParams(
   const typeCategoryIds = mappedType ? expandTypeCategoryIds(raw.type, categoryNodes) : []
   const typeLocations = mappedType ? [...typeLocationTypes(raw.type)] : []
 
+  const levels = BUSINESS_LEVELS.filter((l) => raw.level?.includes(l))
+  const unknownLevels = (raw.level ?? []).filter((l) => l && !isBusinessLevel(l))
+  if (unknownLevels.length > 0) unresolved.levels = unknownLevels
+
   const price =
     raw.price?.filter((p): p is PriceRange => (PRICE_RANGES as string[]).includes(p)) ?? []
 
@@ -388,6 +422,7 @@ export async function resolveFacetParams(
       p_radius_miles: raw.radius ?? null,
       p_type_category_ids: typeCategoryIds.length > 0 ? typeCategoryIds : null,
       p_type_location_types: typeLocations.length > 0 ? typeLocations : null,
+      p_levels: levels.length > 0 ? levels : null,
     },
     unresolved,
   }
@@ -501,6 +536,7 @@ export async function getFacetCounts(
     if (row.facet_kind === 'attribute') counts.attribute[row.facet_key] = n
     else if (row.facet_kind === 'price') counts.price[row.facet_key] = n
     else if (row.facet_kind === 'open_now') counts.openNow = n
+    else if (row.facet_kind === 'level') (counts.level ??= {})[row.facet_key] = n
     else if (row.facet_kind === 'cell') {
       const cell = parseCellKey(row.facet_key, n)
       if (cell) cells.push(cell)

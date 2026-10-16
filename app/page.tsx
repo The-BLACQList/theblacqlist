@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
+import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { resolveEditorialCover } from '@/lib/editorial/cover'
@@ -182,6 +183,7 @@ export default async function HomePage() {
   }))
 
   const freshFinds = ((freshRes.data ?? []) as unknown as RawRow[]).map(mapRow)
+  await attachLevels(supabase, freshFinds)
 
   // Showcase carousel: real pages, preferring distinct entity types with covers
   const showcaseRaw = (showcaseRes.data ?? []) as unknown as ShowcaseRaw[]

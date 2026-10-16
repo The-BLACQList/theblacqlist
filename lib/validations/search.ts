@@ -4,6 +4,7 @@ import {
   VALID_LOCATION_TYPES,
   VALID_OWNERSHIP_LABELS,
 } from '@/lib/constants/listing'
+import { BUSINESS_LEVELS } from '@/lib/listings/levels'
 
 /** Splits a comma-separated query param into a trimmed, de-duplicated array. */
 const csvArray = z
@@ -89,6 +90,10 @@ export const searchSchema = z.object({
   // not tell. Enum-validated off the canonical constant for the same reason as
   // the two above — no retyped list.
   ownership: z.enum(VALID_OWNERSHIP_LABELS).optional(),
+  // Business level (grower / maker / supplier / local), multi-select. Same
+  // elementwise rule as location_type: dropping an unknown value would widen
+  // `?level=suplier` to the whole directory, so it is a 400 instead.
+  level: csvEnum(BUSINESS_LEVELS),
   // Faceted filters (CSV in the URL): price=$,$$  attrs=delivery,vegan-options
   price: csvArray,
   attrs: csvArray,

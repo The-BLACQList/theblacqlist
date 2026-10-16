@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { OWNERSHIP_LABEL_META, type OwnershipLabel } from '@/lib/constants/listing'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { loadAttributeGroups, type FacetGroupData } from '@/lib/listings/facets'
+import { levelsForCategory, isBusinessLevel, type BusinessLevel } from '@/lib/listings/levels'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
 
@@ -80,6 +81,11 @@ export interface FinishData {
   videoPath: string | null
   links: { id: string; link_type: string; url: string; label: string | null }[]
   faqs: { id: string; question: string; answer: string }[]
+  /**
+   * Main level, extras and what the category allows (business levels).
+   * Null when the columns aren't there yet (a database before the migration).
+   */
+  levels: { primary: BusinessLevel; extras: BusinessLevel[]; allowed: BusinessLevel[] } | null
 }
 
 const DETAIL_COLUMNS = `
@@ -135,6 +141,7 @@ export async function loadFinishData(
     { data: mediaRows },
     { data: serviceRows },
     { data: groupRows },
+    { data: levelRow, error: levelError },
   ] = await Promise.all([
     loadAttributeGroups(supabase, row.entity_type),
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
@@ -166,6 +173,14 @@ export async function loadFinishData(
       .eq('listing_id', row.id)
       .order('display_order', { ascending: true }),
     supabase.from('services').select('id, group_label').eq('listing_id', row.id),
+    // Its own read so a database without the level columns still loads the page.
+    supabase
+      .from('listings')
+      .select(
+        'primary_level, extra_levels, categories!listings_category_id_fkey(default_level, allowed_levels)'
+      )
+      .eq('id', row.id)
+      .maybeSingle(),
   ])
 
   // One-to-one embeds come back as an object; guard the array shape too.
@@ -194,6 +209,24 @@ export async function loadFinishData(
   }))
 
   const ownership = row.ownership_label as OwnershipLabel | null
+
+  const levelData = levelError ? null : (levelRow as {
+    primary_level?: string | null
+    extra_levels?: string[] | null
+    categories?: unknown
+  } | null)
+  const categoryLevels = levelsForCategory(
+    one<{ default_level: string | null; allowed_levels: string[] | null }>(levelData?.categories)
+  )
+  const levels = levelData
+    ? {
+        primary: isBusinessLevel(levelData.primary_level)
+          ? levelData.primary_level
+          : categoryLevels.default_level,
+        extras: (levelData.extra_levels ?? []).filter(isBusinessLevel),
+        allowed: categoryLevels.allowed_levels,
+      }
+    : null
 
   return {
     id: row.id,
@@ -224,5 +257,6 @@ export async function loadFinishData(
       (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
       [],
     faqs: (faqRows as { id: string; question: string; answer: string }[] | null) ?? [],
+    levels,
   }
 }

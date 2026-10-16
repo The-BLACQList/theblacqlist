@@ -106,7 +106,7 @@ These will not be built at any phase without a new product decision:
 - **Job board as a standalone product** — Job listings are one entity type on The BLACQList, not a separate product.
 - **Crowdfunding or donations** — Not a GoFundMe competitor.
 - **User-generated content beyond reviews and corrections** — No blog posts, no photo uploads from general users, no community boards.
-- **B2B tools** — Business-to-business transactions, procurement tools, or supplier directories are out of scope.
+- **B2B tools** — Business-to-business transactions and procurement tools are out of scope. Since 2026-10-16 every listing carries a level (Grower, Maker, Supplier, Local business) that shoppers can filter by (`business-levels-2026-10.md`); links between businesses and B2B matching stay with The Collective phase 2.
 - **International listings** — US-only at launch. International is a future decision, not a current architecture concern.
 
 ---

@@ -33,6 +33,9 @@ export class UnknownFilterValueError extends Error {
     if (unresolved.attrs?.length) {
       fields.attrs = `No attribute with slug ${unresolved.attrs.map((s) => `"${s}"`).join(', ')}.`
     }
+    if (unresolved.levels?.length) {
+      fields.level = `No level ${unresolved.levels.map((s) => `"${s}"`).join(', ')}.`
+    }
     this.fields = fields
   }
 }
@@ -123,6 +126,7 @@ export async function searchListings(
     trust_tier: params.trust_tier,
     location_type: params.location_type,
     ownership: params.ownership,
+    level: params.level,
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
@@ -165,8 +169,13 @@ export async function searchListings(
   // with an arbitrary order for a sort the caller explicitly asked for.
   // searchSchema already rejects sort=distance without coordinates, so reaching
   // here with it means the coordinates are present and the RPC can honor it.
+  //
+  // A level pick goes through the RPC too: it matches the main level OR any
+  // extra, which only the function expresses, and keeping one definition of
+  // "supplier" is the same reason `q` moved here.
   if (
     q ||
+    resolved.p_levels ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||

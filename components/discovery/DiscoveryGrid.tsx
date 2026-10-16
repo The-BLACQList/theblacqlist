@@ -4,6 +4,7 @@ import { CardGrid } from '@/components/ui/card-grid'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityCard } from '@/components/entities/EntityCard'
 import type { DiscoveryEntity } from '@/types'
+import { BUSINESS_LEVELS, LEVEL_META } from '@/lib/listings/levels'
 
 interface DiscoveryGridProps {
   entities: DiscoveryEntity[]
@@ -25,6 +26,8 @@ interface DiscoveryGridProps {
   clearLocationUrl?: string
   /** The page with every filter dropped. The way out of filtersUnavailable. */
   clearFiltersUrl?: string
+  /** The level filter as the URL carries it (`?level=`). Drives its own empty state. */
+  levels?: string[]
   /**
    * Follow-up help for a thin search (components/discovery/SearchAssist.tsx).
    * With no results it takes the place of the plain empty state; with one or
@@ -157,7 +160,7 @@ function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string
         These filters are unavailable right now
       </p>
       <p className="font-subhead text-sm text-charcoal max-w-md">
-        We could not apply the price, amenity, or hours filters just now, and we
+        We could not apply the price, amenity, hours, or level filters just now, and we
         are not going to show you results that ignore them. Try again in a
         moment, or browse without those filters.
       </p>
@@ -166,6 +169,39 @@ function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string
           Browse every business
         </Link>
       )}
+    </div>
+  )
+}
+
+/**
+ * A level filter with nothing in it is a gap, not a dead end. The Collective
+ * maps where the supply chain is thin, and this is the same idea on Discover:
+ * say plainly that nobody is listed yet and ask the visitor to add one.
+ */
+function LevelEmptyState({
+  nouns,
+  clearFiltersUrl,
+}: {
+  nouns: string[]
+  clearFiltersUrl?: string
+}) {
+  const what = nouns.length > 1 ? `${nouns.slice(0, -1).join(', ')} or ${nouns.at(-1)}` : nouns[0]
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">No {what} listed yet</p>
+      <p className="font-subhead text-sm text-charcoal max-w-sm">
+        Know one? Add them so shoppers can find them.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
+        <Link href="/add-business" className={linkClass}>
+          Add a business
+        </Link>
+        {clearFiltersUrl && (
+          <Link scroll={false} href={clearFiltersUrl} className={linkClass}>
+            Browse every business
+          </Link>
+        )}
+      </div>
     </div>
   )
 }
@@ -193,6 +229,7 @@ export function DiscoveryGrid({
   widerRadiusUrl,
   clearLocationUrl,
   clearFiltersUrl,
+  levels,
   assist,
 }: DiscoveryGridProps) {
   if (isLoading) return <LoadingGrid />
@@ -213,7 +250,13 @@ export function DiscoveryGrid({
           {assist}
         </>
       )
-    return assist ?? <EmptyState query={query} />
+    if (assist) return assist
+    const levelNouns = BUSINESS_LEVELS.filter((l) => levels?.includes(l)).map(
+      (l) => LEVEL_META[l].emptyNoun
+    )
+    if (levelNouns.length > 0)
+      return <LevelEmptyState nouns={levelNouns} clearFiltersUrl={clearFiltersUrl} />
+    return <EmptyState query={query} />
   }
 
   const showing = Math.min(currentPage * entities.length, total)

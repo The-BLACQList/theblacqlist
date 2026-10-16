@@ -17,6 +17,7 @@ import {
   fitOptions,
   fitQuery,
   nextFitLayer,
+  type FitChoice,
   type FitLayer,
 } from '@/lib/listings/quickStart'
 import { FitSuggest } from './FitSuggest'
@@ -25,7 +26,7 @@ import { HINT_CLASS, StepError, StepIntro, type StepProps } from './shared'
 interface Props extends StepProps {
   categories: readonly GuideCategory[]
   /** Called after a tap that settles the category, to move to the next step. */
-  onPicked: () => void
+  onPicked: (fit: FitChoice) => void
 }
 
 const OPTION_CLASS =
@@ -63,8 +64,9 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
   }
 
   function choose(cat: GuideCategory, answerId?: string) {
-    onChange({ fit: { kind: 'category', categoryId: cat.id, answerId } })
-    onPicked()
+    const fit: FitChoice = { kind: 'category', categoryId: cat.id, answerId }
+    onChange({ fit })
+    onPicked(fit)
   }
 
   function notQuite() {

@@ -22,6 +22,7 @@ import { HoursSection } from '@/components/dashboard/HoursSection'
 import { OfferingsList } from '@/components/dashboard/OfferingsList'
 import { AddOfferingForm } from '@/components/dashboard/AddOfferingForm'
 import { AttributesSection } from '@/components/dashboard/AttributesSection'
+import { LevelSection } from '@/components/dashboard/LevelSection'
 import { SocialSection } from '@/components/dashboard/SocialSection'
 import { VideoSection } from '@/components/dashboard/VideoSection'
 import { LinksSection } from '@/components/dashboard/LinksSection'
@@ -341,6 +342,17 @@ export function PageFinishView({
               <AddOfferingForm listingId={data.id} />
             </div>
           </Anchor>
+
+          {data.levels && data.levels.allowed.length > 1 && (
+            <Anchor id="role">
+              <LevelSection
+                listingId={data.id}
+                primary={data.levels.primary}
+                extras={data.levels.extras}
+                allowed={data.levels.allowed}
+              />
+            </Anchor>
+          )}
 
           <Anchor id="details">
             <AttributesSection

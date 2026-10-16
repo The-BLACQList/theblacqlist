@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 import { withoutCreatorCategories } from '@/lib/listings/creatorCategories'
 import { QuickStart } from './_components/quick-start/QuickStart'
+import { loadCategoryLevels } from '@/lib/listings/levelRows'
 
 export const metadata = {
   title: 'Add Your Business | The BLACQList',
@@ -25,7 +26,7 @@ export default async function AddBusinessPage() {
 
   if (!user) redirect('/sign-in?next=/add-business')
 
-  const [{ data: categories }, { data: cityRows }] = await Promise.all([
+  const [{ data: categoryRows }, { data: cityRows }] = await Promise.all([
     supabase
       .from('categories')
       .select('id, name, slug, parent_id')
@@ -37,6 +38,18 @@ export default async function AddBusinessPage() {
       .eq('is_active', true)
       .order('name'),
   ])
+
+  // Level rules drive "What's your main role?". Read apart so a database
+  // without the level columns still lists every category (the step is then
+  // skipped, since a category with no rules reads as local only).
+  const levelMap = await loadCategoryLevels(
+    supabase,
+    (categoryRows ?? []).map((c) => c.id)
+  )
+  const categories = (categoryRows ?? []).map((c) => {
+    const levels = levelMap?.get(c.id)
+    return levels ? { ...c, ...levels } : c
+  })
 
   const cities = (cityRows ?? []).map((c) => ({
     id: c.id,
@@ -61,7 +74,7 @@ export default async function AddBusinessPage() {
         </div>
 
         <QuickStart
-          categories={withoutCreatorCategories(categories ?? [])}
+          categories={withoutCreatorCategories(categories)}
           cities={cities}
           email={user.email ?? ''}
           siteImport={isFeatureEnabled('siteImport')}

@@ -11,6 +11,8 @@
  *     nothing starts at the groups, so the owner can never get stuck.
  *   - what is still missing when the owner taps "Save my draft" early
  *   - which step a server field error belongs to
+ *   - when "What's your main role?" shows: only after a category that allows
+ *     more than one level (lib/listings/levels.ts), so most owners skip it
  *
  * Rules only, no AI. Pure and client-safe.
  */
@@ -27,12 +29,19 @@ import {
   findWhere,
   searchGuide,
 } from '@/lib/categories/sorting-guide'
+import {
+  isBusinessLevel,
+  levelsForCategory,
+  type BusinessLevel,
+  type CategoryLevels,
+} from '@/lib/listings/levels'
 
 export const QUICK_STEPS = [
   'ownership',
   'name',
   'about',
   'fit',
+  'role',
   'where',
   'cta',
   'tagline',
@@ -40,6 +49,12 @@ export const QUICK_STEPS = [
 ] as const
 
 export type QuickStep = (typeof QUICK_STEPS)[number]
+
+/** A guide category plus its level alignment (categories.default_level / allowed_levels). */
+export type QuickCategory = GuideCategory & {
+  default_level?: string | null
+  allowed_levels?: readonly string[] | null
+}
 
 export type FitChoice =
   /** `answerId` is the group the owner tapped, when they came through the groups. */
@@ -51,6 +66,8 @@ export interface QuickStartAnswers {
   name: string
   about: string
   fit: FitChoice | null
+  /** The owner's main role. Empty means "the category's default". */
+  level: BusinessLevel | ''
   where: GuideWhereId | ''
   cityId: string
   /** Only when "My city isn't listed". */
@@ -69,6 +86,7 @@ export const EMPTY_ANSWERS: QuickStartAnswers = {
   name: '',
   about: '',
   fit: null,
+  level: '',
   where: '',
   cityId: '',
   cityText: '',
@@ -260,6 +278,70 @@ export function pickFor(
   })
 }
 
+// ── "What's your main role?" ───────────────────────────────────────────────
+
+/**
+ * The levels the picked category allows, or null when there is nothing to ask:
+ * no category yet, or a category that allows one level only. A new category
+ * request uses its group, which is where the listing is saved.
+ */
+export function roleOptions(
+  a: Pick<QuickStartAnswers, 'fit'>,
+  categories: readonly QuickCategory[]
+): CategoryLevels | null {
+  const cat = categories.find((c) => c.id === fitCategoryId(a.fit))
+  if (!cat) return null
+  const levels = levelsForCategory(cat)
+  return levels.allowed_levels.length > 1 ? levels : null
+}
+
+/**
+ * The level that will be saved: the owner's pick when the category allows it,
+ * else the category's default. A pick left over from an earlier category falls
+ * back quietly instead of blocking the save.
+ */
+export function chosenLevel(
+  a: Pick<QuickStartAnswers, 'fit' | 'level'>,
+  categories: readonly QuickCategory[]
+): BusinessLevel | null {
+  const cat = categories.find((c) => c.id === fitCategoryId(a.fit))
+  if (!cat) return null
+  const levels = levelsForCategory(cat)
+  return isBusinessLevel(a.level) && levels.allowed_levels.includes(a.level)
+    ? a.level
+    : levels.default_level
+}
+
+/** False for a step this owner never sees (today only "role"). */
+export function stepApplies(
+  step: QuickStep,
+  a: Pick<QuickStartAnswers, 'fit'>,
+  categories: readonly QuickCategory[]
+): boolean {
+  return step !== 'role' || roleOptions(a, categories) !== null
+}
+
+/** The steps this owner sees, in order. Drives Next, Back and "Step 3 of 8". */
+export function visibleSteps(
+  a: Pick<QuickStartAnswers, 'fit'>,
+  categories: readonly QuickCategory[]
+): QuickStep[] {
+  return QUICK_STEPS.filter((s) => stepApplies(s, a, categories))
+}
+
+/** The index in QUICK_STEPS of the next (dir 1) or previous (dir -1) step that applies. */
+export function adjacentStepIndex(
+  index: number,
+  dir: 1 | -1,
+  a: Pick<QuickStartAnswers, 'fit'>,
+  categories: readonly QuickCategory[]
+): number {
+  let i = index + dir
+  while (i > 0 && i < QUICK_STEPS.length - 1 && !stepApplies(QUICK_STEPS[i]!, a, categories))
+    i += dir
+  return Math.min(Math.max(i, 0), QUICK_STEPS.length - 1)
+}
+
 // ── What is still missing ──────────────────────────────────────────────────
 
 export interface Missing {
@@ -275,6 +357,7 @@ export const FIELD_IDS = {
   about: 'qs-about',
   fit: 'qs-fit',
   requestName: 'qs-request-name',
+  role: 'qs-role',
   where: 'qs-where-visit',
   city: 'qs-city',
   cityText: 'qs-city-text',
@@ -335,6 +418,9 @@ export function stepProblem(step: QuickStep, a: QuickStartAnswers): Missing | nu
       }
       return null
     }
+    case 'role':
+      // Always answered: the category's default stands until the owner picks.
+      return null
     case 'where':
       if (!a.where)
         return { step, fieldId: FIELD_IDS.where, reason: 'Pick where customers get what you do.' }
@@ -392,6 +478,7 @@ export function stepForServerField(field: string): QuickStep | null {
   if (field === 'tagline') return 'tagline'
   if (field === 'category_id' || field === 'entity_type' || field.startsWith('category_request'))
     return 'fit'
+  if (field === 'primary_level') return 'role'
   if (field === 'location_type' || field === 'city_id') return 'where'
   if (field === 'cta_type' || field === 'cta_url' || field === 'phone') return 'cta'
   return null
