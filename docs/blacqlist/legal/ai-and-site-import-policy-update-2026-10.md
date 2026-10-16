@@ -2,7 +2,20 @@
 
 > **Disclaimer:** This output is informational and does not constitute legal advice. Requirements vary by jurisdiction, business type, and product specifics. Consult a licensed attorney for guidance applicable to your situation before relying on any of the following.
 
-_Drafted: 2026-10-15 · Reviewers: Legal + Privacy agents · Status: **DRAFT, nothing published**. No app page, component, or live policy text was changed._
+_Drafted: 2026-10-15 · Updated: 2026-10-16 · Reviewers: Legal + Privacy agents · Status: **BUILT, NOT POSTED.** The new text is on the pages behind a "Takes effect" date (ticket 139), waiting for counsel. Nothing is live until the founder merges, and the notice email goes only when the founder runs it._
+
+### Founder decisions (2026-10-16)
+
+| Decision | Choice |
+|---|---|
+| Review | Build now, post and send only after counsel signs off |
+| Dates | Posted and emailed **Mon Oct 19, 2026**, takes effect **Mon Nov 2, 2026** (14 days). If the email slips, both dates move day for day (`lib/legal/policyUpdate.ts`) |
+| F7 (address and owner name) | **Remove them before sending.** Built in PR #239. The "What we never send" line became "What we never add" plus a line that the filter can miss things, because #239 keeps a first name that is part of the business name and does not catch addresses without a street word |
+| F13 ("Black-owned only" wording) | Fixed, folded into the update |
+| F14 (Vercel Analytics row) | Added, folded into the update |
+| Safety-plan exception (§6) | Approved, added to `docs/blacqlist/ai/ai-safety-and-approval-plan.md` |
+| Who gets the email | Registered accounts with a confirmed email only. Waitlist subscribers are not emailed |
+| Ticket number | The page change is ticket **139** (138 was taken by Edit content) |
 _Covers: ticket 127 (site import), ticket 128 (AI drafts on /add-business), and the existing dashboard AI suggestions (`lib/ai/*`)._
 _Folder: this file lives in `docs/blacqlist/legal/`, next to the earlier reviews (`privacy-terms-compliance-review.md`, `attorney-redline-2026-07-01.md`). Jurisdiction scope is the one pinned on 2026-06-20 in `privacy-terms-compliance-review.md`: US-focused (Georgia, Texas, Illinois markets), CCPA/CPRA for California visitors, GDPR not an MVP blocker._
 
@@ -116,7 +129,7 @@ _Accuracy conditions for sub-section A (do not publish until each is true):_ the
 >
 > **What we send:** your business name, your city, category names, and the words you type or bring in from your website to describe your business. We cut that text to 500 characters and remove anything that looks like an email address or phone number first. For a page that's already live, the writing help can also use your current tagline and About text, and simple totals like how many people viewed your page in the last 30 days. It never gets anything about who those people are.
 >
-> **What we never send:** your account name, your email address, your phone number, your street address, your password or login details, or your receipts. [See note on F7 below.]
+> **What we never add:** we don't attach your account name, your email address, your phone number, your street address, your password or login details, or your receipts to what we send. [Reworded 2026-10-16 to match PR #239, see note on F7 below.]
 >
 > **You decide what's used.** Nothing an AI writes goes on your page until you choose to use it. You can edit a draft, ask for another, or skip it. AI drafts can be wrong, so read them before you use them.
 >
@@ -126,7 +139,7 @@ _Accuracy conditions for sub-section A (do not publish until each is true):_ the
 >
 > **It's optional.** You can set up and run your page without it.
 
-_Note on F7:_ the "never send" line is only fully true if address and owner-name redaction is added for free text (see F7 handoff). If that is not built before launch, replace the last sentence of "What we send" and the "What we never send" paragraph with: "We remove email addresses and phone numbers from that text. We don't add your account name, contact details, or street address to what we send. If the words you write or bring in mention a street address or a person's name, they're sent as written, so leave out anything you don't want shared." [Needs professional review]
+_Note on F7 (resolved 2026-10-16: redaction built in PR #239, wording above adjusted to its limits):_ the "never send" line is only fully true if address and owner-name redaction is added for free text (see F7 handoff). If that is not built before launch, replace the last sentence of "What we send" and the "What we never send" paragraph with: "We remove email addresses and phone numbers from that text. We don't add your account name, contact details, or street address to what we send. If the words you write or bring in mention a street address or a person's name, they're sent as written, so leave out anything you don't want shared." [Needs professional review]
 
 ### 3.4 Section 6, Third-Party Services: add two rows (F1, F2) and widen one (F14)
 
@@ -273,7 +286,7 @@ _Counsel note:_ whether AI-generated text is copyrightable at all is unsettled. 
 
 ## 6. Safety-plan exception text (drop-in for `ai-safety-and-approval-plan.md`)
 
-Proposed new section, to be inserted after "Privacy Guardrails → Prompt Assembly Rules" in `docs/blacqlist/ai/ai-safety-and-approval-plan.md`. **Not applied.** The founder approves before anyone edits the plan. [Needs professional review]
+Proposed new section, to be inserted after "Privacy Guardrails → Prompt Assembly Rules" in `docs/blacqlist/ai/ai-safety-and-approval-plan.md`. **Applied 2026-10-16** (founder approved), with guardrail 1 updated for PR #239. [Needs professional review]
 
 ```markdown
 ### Exception: owner onboarding drafts (tickets 127 and 128)

@@ -96,6 +96,14 @@ describe('a failed auth link fails legibly', () => {
     }
   })
 
+  it('lets the legal pages and their upcoming versions through', async () => {
+    // The policy update notice email links here, and readers open it signed out.
+    for (const path of ['/privacy', '/terms', '/cookies', '/privacy/upcoming', '/terms/upcoming', '/cookies/upcoming']) {
+      const res = await proxy(request(path))
+      expect(redirectedTo(res), path).toBeNull()
+    }
+  })
+
   it('still lets the auth callback and the API through', async () => {
     for (const path of ['/auth/callback', '/api/health', '/coming-soon']) {
       const res = await proxy(request(path))
@@ -121,8 +129,10 @@ describe('the gate is still a gate', () => {
 
   it('does not let a near-miss path slip past an allowlisted prefix', async () => {
     // `startsWith('/sign-in')` alone would have allowed this.
-    const res = await proxy(request('/sign-inbox'))
-    expect(redirectedTo(res)).toBe('/coming-soon')
+    for (const path of ['/sign-inbox', '/privacy-center', '/termsheet']) {
+      const res = await proxy(request(path))
+      expect(redirectedTo(res), path).toBe('/coming-soon')
+    }
   })
 
   it('drops the query string when it does bounce', async () => {

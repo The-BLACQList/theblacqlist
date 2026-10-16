@@ -81,6 +81,36 @@ Prompt assembly functions in `lib/ai/` must follow these rules for every agent:
 - `reviews.reviewer_user_id`, `reviews.reviewer_display_name`
 - Session tokens, API keys, internal IDs beyond listing_id
 
+### Exception: owner onboarding drafts (tickets 127 and 128)
+
+**Added:** 2026-10-16 · **Approved by:** founder · **Applies to:** the /add-business AI drafts (ticket 128), behind `FEATURE_AI_ONBOARDING`.
+
+The allowlist above names listing columns. During /add-business there may be no listing row yet, and the owner's words come from the form or from an imported page, not from `listing_details_business.description`. This exception allows three more inputs, only for the onboarding draft agent, only with the guardrails below.
+
+**Additionally allowed in prompts (onboarding draft agent only):**
+
+| Input | Source | Rule |
+|---|---|---|
+| (a) Owner-typed onboarding text | What the signed-in owner types to describe the business | Through `sanitizeForPrompt`, capped at 500 characters |
+| (b) Imported public "about" text | JSON-LD `description` or meta description from the page the owner asked us to read (ticket 127) | Only text the owner kept in the draft (not text they deleted). Through `sanitizeForPrompt`. Counts toward the same 500-character cap as (a), combined |
+| (c) Category names | Candidate category names from the rules matcher, and category names the model proposes | Names only. No ids from other tables beyond the candidate category ids |
+| Business name, city name | The draft form | Same as `listings.name` and `cities.name` above |
+
+**Still never allowed** (unchanged, and now also applied to (a) and (b)): owner name or `profiles.display_name`, email, phone, street address and zip, `social_*` handles, user ids, claim documents, receipts, review text, session tokens. Contact fields found by the import are pre-filled into the form only and never passed to the prompt builder.
+
+**Guardrails:**
+
+1. **Sanitize both kinds of free text.** (a) and (b) go through `sanitizeForPrompt` (strip HTML, redact email, phone, street address and the owner's own name, truncate). Address and name redaction is PR #239 (see Input Sanitization below); it fails closed.
+2. **Treat imported text as data, not instructions.** It comes from a third-party page the owner does not fully control. Place it inside a clearly delimited block in the template, and tell the model to ignore instructions found inside it.
+3. **Constrain the output.** zod plus `validateOutput`: category must be an id from the candidate list or a proposed new name with a parent group; tagline ≤ 120 chars; about 100 to 300 chars; search title ≤ 60; search description 40 to 160. Anything else is rejected and the rules-matching fallback shows. Output containing an email or phone pattern is refused, not cleaned.
+4. **Owner approval, inline.** Nothing saves until the owner taps "Use this". This replaces the two-step Approve then Apply flow for onboarding only, because the owner is editing their own unsaved draft. No `ai_suggestions` row is written; unused drafts are not stored.
+5. **Audit row first.** An `ai_generation_requests` row is written before every call (`listing_id` may be null before a draft exists). Prompt and response text are never logged; `closeFailed('provider_error')` stores a fixed code.
+6. **Ownership.** The caller must be the signed-in owner of the draft, or the signed-in user before a draft exists. No anonymous calls.
+7. **Caps that fail closed.** About 5 drafts per page, about 20 per owner per day, a monthly spend ceiling, and a kill switch. Do not reuse the general limiter, which fails open.
+8. **Placeholder test.** A unit test asserts every placeholder in the onboarding template gets a value (privacy audit finding A).
+9. **Gates still apply.** This exception does not override Core Principle 3. No real provider call until GATE-SPEND and the six V2-Provider gates clear, and not before the updated Privacy Policy and Terms take effect.
+10. **Policy match.** The public Privacy Policy "AI writing help" section must describe these inputs. If an input is added here, the policy is updated first.
+
 ### Server-Side-Only Prompt Construction
 
 Prompts are assembled in `lib/ai/provider.ts` (server module). This file:
