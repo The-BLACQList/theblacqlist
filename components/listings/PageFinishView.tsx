@@ -84,7 +84,8 @@ const LAYOUT = {
 
 function Anchor({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <div id={id} className="scroll-mt-24">
+    // tabIndex -1 lets the strength bars move focus here (see goToSection).
+    <div id={id} tabIndex={-1} className="scroll-mt-24 rounded-xl outline-none transition-shadow">
       {children}
     </div>
   )
