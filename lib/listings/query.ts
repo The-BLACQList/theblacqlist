@@ -25,6 +25,8 @@ export interface ListingsParams {
   /** Multi-select; one CSV URL key. See RawFacetParams.location_type. */
   location_type?: string[]
   ownership?: string
+  /** Business levels, multi-select. See lib/listings/levels.ts. */
+  level?: string[]
   price?: string[]
   attrs?: string[]
   open_now?: boolean
@@ -78,6 +80,8 @@ export type RawRow = {
   trust_tier: string
   tier: string
   ownership_label: string
+  primary_level?: string | null
+  extra_levels?: string[] | null
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -92,7 +96,7 @@ export type RawRow = {
 
 export const NESTED_SELECT = `
   id, slug, name, tagline, entity_type, location_type, category_id, trust_tier, tier,
-  ownership_label,
+  ownership_label, primary_level, extra_levels,
   is_featured, is_sponsored, logo_path, cover_image_path,
   avg_rating, review_count, save_count,
   categories!listings_category_id_fkey(name, slug),
@@ -114,6 +118,8 @@ export function mapRow(raw: RawRow): DiscoveryEntity {
     trust_tier: raw.trust_tier as DiscoveryEntity['trust_tier'],
     tier: raw.tier as DiscoveryEntity['tier'],
     ownership_label: raw.ownership_label as DiscoveryEntity['ownership_label'],
+    primary_level: raw.primary_level ?? 'local',
+    extra_levels: raw.extra_levels ?? [],
     is_featured: raw.is_featured,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
@@ -236,6 +242,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     trust_tier: params.trust_tier,
     location_type: params.location_type,
     ownership: params.ownership,
+    level: params.level,
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
@@ -276,7 +283,12 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // Radius belongs in this list for the same reason as the rest, and one more:
   // splicing a sponsored business 200 miles away into a "within 5 miles" result
   // set is not a placement, it is a wrong answer.
+  //
+  // A level pick is deep too: the legacy fallback below has no level columns to
+  // read on a database without the migration, and a sponsored maker spliced
+  // into "Suppliers" is the same wrong answer.
   const deepFilter = !!(
+    resolved.p_levels ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||

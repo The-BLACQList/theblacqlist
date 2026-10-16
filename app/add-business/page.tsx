@@ -28,7 +28,8 @@ export default async function AddBusinessPage() {
   const [{ data: categories }, { data: cityRows }] = await Promise.all([
     supabase
       .from('categories')
-      .select('id, name, slug, parent_id')
+      // default_level / allowed_levels drive "What's your main role?".
+      .select('id, name, slug, parent_id, default_level, allowed_levels')
       .eq('is_active', true)
       .order('display_order'),
     supabase

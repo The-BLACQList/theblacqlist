@@ -11,7 +11,8 @@ import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
-import { categoryFilterHref } from '@/lib/listings/url'
+import { categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
+import { levelPill, extraLevelLabels } from '@/lib/listings/levels'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 import { ContactLink } from '@/components/entity-page/ContactLink'
@@ -74,6 +75,12 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
   // Creatives already carry the category as the gold eyebrow, so they get no chip.
   const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
+  // Grower, Maker or Supplier only; local goes unsaid. Extras read "Also: ...".
+  const levelText = isCreative ? null : levelPill(entity.primary_level)
+  const levelHref = levelFilterHref(entity.primary_level)
+  const alsoLevels = isCreative
+    ? []
+    : extraLevelLabels(entity.extra_levels).filter((l) => l !== 'Local business')
   // When the chip shows the category, the line under the name keeps the city only.
   const locationLine = [categoryHref ? null : entity.category?.name, entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null]
     .filter(Boolean)
@@ -129,6 +136,19 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             >
               {entity.category.name}
             </Link>
+          )}
+          {levelText && levelHref && (
+            <Link
+              href={levelHref as Route}
+              className="relative inline-flex items-center h-[26px] px-2.5 rounded-full border border-dashed border-off-white/40 font-subhead text-[12px] font-semibold text-off-white/90 hover:bg-off-white/10 hover:border-off-white/70 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-off-white after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
+            >
+              {levelText}
+            </Link>
+          )}
+          {alsoLevels.length > 0 && (
+            <span className="font-subhead text-[12px] font-semibold text-off-white/80">
+              Also: {alsoLevels.join(', ')}
+            </span>
           )}
           <OwnershipBadge label={entity.ownership_label} size="small" />
           {/* Unclaimed stays in the trust panel, next to "Claim this listing". */}

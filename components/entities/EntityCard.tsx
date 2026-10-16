@@ -11,7 +11,8 @@ import { SponsoredImpression, SponsoredLink } from '@/components/entities/Sponso
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity, LocationType } from '@/types'
-import { buildEntityUrl, categoryFilterHref } from '@/lib/listings/url'
+import { buildEntityUrl, categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
+import { levelPill, LEVEL_META, isBusinessLevel } from '@/lib/listings/levels'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 interface EntityCardProps {
@@ -76,6 +77,9 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
   const locationStr = getLocationString(entity)
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
   const categoryHref = categoryFilterHref(entity.category)
+  // Grower, Maker or Supplier only. Local is the default and goes unsaid.
+  const levelText = levelPill(entity.primary_level)
+  const levelHref = levelFilterHref(entity.primary_level)
   const typePill = TYPE_PILL_LABELS[entity.entity_type]
 
   // Set only on cards the sponsored path spliced in (lib/listings/query.ts), so
@@ -136,9 +140,10 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
 
       {/* Card body */}
       <div className="flex flex-col flex-1 p-4 gap-2">
-        {/* Pill order: category chip (filters) → Ally (only when Ally) → trust
-            (only when earned) → type (events and jobs only). No Black-Owned or
-            Unclaimed pill: neither helps a shopper narrow things down. */}
+        {/* Pill order: category chip (filters) → level (Grower, Maker or
+            Supplier only) → Ally (only when Ally) → trust (only when earned) →
+            type (events and jobs only). No Black-Owned, Unclaimed or Local
+            pill: none of them helps a shopper narrow things down. */}
         <div className="flex items-center gap-2 flex-wrap">
           {categoryHref && (
             <Link
@@ -147,6 +152,15 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
               className="relative inline-flex items-center rounded-full border border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5 hover:bg-charcoal/5 hover:border-charcoal/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
             >
               {entity.category.name}
+            </Link>
+          )}
+          {levelText && levelHref && isBusinessLevel(entity.primary_level) && (
+            <Link
+              href={levelHref as Route}
+              aria-label={`More ${LEVEL_META[entity.primary_level].emptyNoun}`}
+              className="relative inline-flex items-center rounded-full border border-dashed border-charcoal/30 text-charcoal/80 text-[11px] font-subhead font-semibold px-2 py-0.5 hover:bg-charcoal/5 hover:border-charcoal/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
+            >
+              {levelText}
             </Link>
           )}
           <OwnershipBadge label={entity.ownership_label} size="small" />

@@ -21,6 +21,7 @@ import { CategoryTree } from '@/components/discovery/CategoryTree'
 import type { TreeCategory } from '@/lib/categories/tree'
 import { MoreFilters } from '@/components/discovery/MoreFilters'
 import { countMoreFilters } from '@/components/discovery/moreFiltersCount'
+import { BUSINESS_LEVELS, LEVEL_META } from '@/lib/listings/levels'
 
 function optionClass(isActive: boolean): string {
   return cn(
@@ -88,6 +89,11 @@ export function FacetSidebar({
   // Multi-select as of 2026-09-04: Products & Services is four location types at
   // once, so this reads like price/attrs rather than the single-value facets.
   const selectedLocationTypes = getCsv('location_type')
+  const selectedLevels = getCsv('level')
+  // Undefined when the database predates the level migration. The section then
+  // stays hidden rather than offering a filter the search cannot answer.
+  const levelCounts = counts.level
+  const showLevels = countsOff || levelCounts !== undefined || selectedLevels.length > 0
 
   const clearableKeys = [
     ...(hideCityFilter ? FACET_KEYS.filter((k) => k !== 'city') : FACET_KEYS),
@@ -142,8 +148,8 @@ export function FacetSidebar({
       </label>
 
       {/* Type opens by default: it is what most visitors reach for first.
-          Ownership stays open too, being two buttons and the directory's
-          defining label. Everything else sits under More filters, and each
+          Level stays open too, being four buttons the Collective maps.
+          Everything else sits under More filters, and each
           section there starts closed unless it holds an active filter. Category is closed on
           purpose: open, the tree is two Tab stops per parent, and a keyboard
           user would cross all of them to get from the search box to the
@@ -177,6 +183,34 @@ export function FacetSidebar({
           })}
         </div>
       </FilterSection>
+
+      {/* Where a business sits in the supply chain, the same four levels The
+          Collective maps. Multi-select, matching a main level or an extra.
+          Every level stays visible and clickable at 0: an empty level is a gap
+          worth showing ("No suppliers listed yet"), not a dead control.
+          Spec: docs/blacqlist/product/business-levels-2026-10.md. */}
+      {showLevels && (
+        <FilterSection title="Level" defaultOpen active={selectedLevels.length > 0}>
+          <div className="flex flex-col gap-1" role="group" aria-label="Filter by level">
+            {BUSINESS_LEVELS.map((level) => {
+              const isActive = selectedLevels.includes(level)
+              const n = levelCounts ? (levelCounts[level] ?? 0) : null
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => toggleCsv('level', level)}
+                  className={cn('flex items-center', optionClass(isActive))}
+                >
+                  {LEVEL_META[level].plural}
+                  {!countsOff && n !== null && <CountTag n={n} active={isActive} />}
+                </button>
+              )
+            })}
+          </div>
+        </FilterSection>
+      )}
 
       {!hideCityFilter && (
         <FilterSection title="City" active={!!activeCity}>

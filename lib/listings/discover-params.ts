@@ -48,6 +48,8 @@ export type DiscoverSearchParams = {
   trust_tier?: string
   location_type?: string
   ownership?: string
+  /** Business level CSV: grower, maker, supplier, local. */
+  level?: string
   price?: string
   attrs?: string
   open_now?: string
@@ -128,6 +130,7 @@ export function parseDiscoverParams(
     trust_tier: params.trust_tier,
     location_type: csv(params.location_type),
     ownership: params.ownership,
+    level: csv(params.level),
     price: csv(params.price),
     attrs: csv(params.attrs),
     open_now: isOpenNow(params),

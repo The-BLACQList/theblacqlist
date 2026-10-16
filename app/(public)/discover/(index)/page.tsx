@@ -128,6 +128,7 @@ async function DiscoverContent({
           radiusMiles={location?.radius ?? null}
           radiusUnavailable={result.radiusUnavailable ?? false}
           filtersUnavailable={result.filtersUnavailable ?? false}
+          levels={params.level?.split(',')}
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
           clearFiltersUrl="/discover"

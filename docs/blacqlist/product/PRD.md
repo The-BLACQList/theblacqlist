@@ -1153,7 +1153,7 @@ The following are explicitly deferred. Do not build any of these until the MVP g
 | Multi-city editorial automation           | V2                     | Manual editorial first; automation after patterns emerge             |
 | Community forums or message boards        | Never (current vision) | Not a social network                                                 |
 | Complex multi-tenancy / white-label       | Future                 | No confirmed demand at this stage                                    |
-| B2B procurement or supplier directory     | Future                 | Different product category                                           |
+| B2B procurement or supplier matching      | Future                 | Shoppers can filter by Supplier, Maker and Grower now (business-levels-2026-10.md). Links between businesses and B2B matching stay with The Collective phase 2. |
 | International listings                    | Future                 | US-only; international is a V4+ decision                             |
 | Recurring events                          | V2                     | Single events first; recurring adds scheduling complexity            |
 | On-platform job applications              | V3                     | Apply link off-platform is sufficient at V1                          |

@@ -32,3 +32,12 @@ export function categoryFilterHref(
   if (!slug || slug === 'general') return null
   return `/discover?category=${encodeURIComponent(slug)}`
 }
+
+/**
+ * Where a card's level pill links: Discover filtered to that level. Null for
+ * local (which never shows a pill) and anything unrecognised.
+ */
+export function levelFilterHref(level: string | null | undefined): string | null {
+  if (level !== 'grower' && level !== 'maker' && level !== 'supplier') return null
+  return `/discover?level=${level}`
+}

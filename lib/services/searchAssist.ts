@@ -88,6 +88,7 @@ const NO_FILTERS: ResolvedFacetParams = {
   p_radius_miles: null,
   p_type_category_ids: null,
   p_type_location_types: null,
+  p_levels: null,
 }
 
 type CategoryRow = {

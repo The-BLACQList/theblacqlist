@@ -16,6 +16,7 @@ import {
   LOCATION_TYPE_LABEL,
 } from '@/components/discovery/facetConstants'
 import { parseLocationFromQuery } from '@/lib/listings/location-params'
+import { isBusinessLevel, LEVEL_META } from '@/lib/listings/levels'
 
 interface ActiveFilterChipsProps {
   groups: FacetGroupData[]
@@ -82,6 +83,13 @@ export function ActiveFilterChips({
     chips.push({
       label: LOCATION_TYPE_LABEL[value] ?? value,
       onRemove: () => removeCsv('location_type', value),
+    })
+
+  // One chip per level, so "Makers" can go while "Suppliers" stays.
+  for (const value of getCsv('level'))
+    chips.push({
+      label: isBusinessLevel(value) ? LEVEL_META[value].plural : value,
+      onRemove: () => removeCsv('level', value),
     })
 
   // One chip for the whole location filter, not three. Removing it takes the

@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils'
 import { createListingAction } from '@/lib/actions/listings/createListing'
 import { siteFormFields, type SiteDraft } from '@/lib/import/siteDraft'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
-import type { GuideCategory } from '@/lib/categories/sorting-guide'
 import { OWNERSHIP_LABEL_META } from '@/lib/constants/listing'
 import { firstSentence } from '@/lib/listings/draftSeed'
 import {
   EMPTY_ANSWERS,
   FIELD_IDS,
   QUICK_STEPS,
+  adjacentStepIndex,
+  chosenLevel,
   findCta,
   firstMissing,
   fitCategoryId,
@@ -22,8 +23,10 @@ import {
   pickFor,
   stepForServerField,
   stepProblem,
+  visibleSteps,
   whereLocationType,
   type Missing,
+  type QuickCategory,
   type QuickStartAnswers,
   type QuickStep,
 } from '@/lib/listings/quickStart'
@@ -31,6 +34,7 @@ import { LivePagePreview, type PreviewPart } from '@/components/listings/LivePag
 import { CtaStep } from './CtaStep'
 import { FitStep } from './FitStep'
 import { NameStep } from './NameStep'
+import { RoleStep } from './RoleStep'
 import { SiteImportStep } from './SiteImportStep'
 import { AboutStep, AttestStep, DraftsChoice, OwnershipStep, TaglineStep } from './TextSteps'
 import { WhereStep, type CityOption } from './WhereStep'
@@ -47,6 +51,7 @@ const HIGHLIGHT: Record<QuickStep, PreviewPart | null> = {
   name: 'name',
   about: 'about',
   fit: 'category',
+  role: 'category',
   where: 'location',
   cta: 'cta',
   tagline: 'tagline',
@@ -54,7 +59,7 @@ const HIGHLIGHT: Record<QuickStep, PreviewPart | null> = {
 }
 
 interface Props {
-  categories: readonly GuideCategory[]
+  categories: readonly QuickCategory[]
   cities: readonly CityOption[]
   /** The owner's sign-in email: the page's contact email and the "Send a message" default. */
   email: string
@@ -179,7 +184,7 @@ function QuickStartFlow({
       goTo(stepIndex, p)
       return
     }
-    goTo(Math.min(stepIndex + 1, QUICK_STEPS.length - 1))
+    goTo(adjacentStepIndex(stepIndex, 1, answers, categories))
   }
 
   function back() {
@@ -188,7 +193,7 @@ function QuickStartFlow({
       setNavCount((n) => n + 1)
       return
     }
-    goTo(Math.max(stepIndex - 1, 0))
+    goTo(adjacentStepIndex(stepIndex, -1, answers, categories))
   }
 
   function leaveSite(patch: Partial<QuickStartAnswers> | null, kept: SiteDraft | null) {
@@ -211,6 +216,8 @@ function QuickStartFlow({
     fd.set('entity_type', pick?.entityType ?? 'business')
     fd.set('name', answers.name.trim())
     fd.set('category_id', fitCategoryId(answers.fit))
+    const level = chosenLevel(answers, categories)
+    if (level) fd.set('primary_level', level)
     fd.set('description', answers.about.trim())
     fd.set('tagline', answers.tagline.trim())
     fd.set('location_type', whereLocationType(answers.where))
@@ -320,7 +327,7 @@ function QuickStartFlow({
           className="flex min-w-0 flex-col gap-6"
           aria-labelledby="qs-step-title"
         >
-          <Progress index={stepIndex} />
+          <Progress steps={visibleSteps(answers, categories)} current={step} />
 
           <div key={step} className="flex flex-col gap-5">
             {fromSiteTag(step, site, answers) && (
@@ -335,9 +342,12 @@ function QuickStartFlow({
               <FitStep
                 {...stepProps}
                 categories={categories}
-                onPicked={() => goTo(stepIndex + 1)}
+                // The fit just changed, so read the role question's rule off
+                // the new answer rather than the render's stale one.
+                onPicked={(fit) => goTo(adjacentStepIndex(stepIndex, 1, { fit }, categories))}
               />
             )}
+            {step === 'role' && <RoleStep {...stepProps} categories={categories} />}
             {step === 'where' && <WhereStep {...stepProps} cities={cities} />}
             {step === 'cta' && <CtaStep {...stepProps} email={site?.email ?? email} />}
             {step === 'tagline' && <TaglineStep {...stepProps} />}
@@ -418,6 +428,8 @@ function serverFieldId(step: QuickStep, field: string): string {
       return FIELD_IDS.about
     case 'fit':
       return field === 'category_request_name' ? FIELD_IDS.requestName : FIELD_IDS.fit
+    case 'role':
+      return FIELD_IDS.role
     case 'where':
       return FIELD_IDS.where
     case 'cta':
@@ -429,15 +441,17 @@ function serverFieldId(step: QuickStep, field: string): string {
   }
 }
 
-function Progress({ index }: { index: number }) {
-  const total = QUICK_STEPS.length
+/** Counts only the steps this owner sees, so a skipped role question never shows as a gap. */
+function Progress({ steps, current }: { steps: readonly QuickStep[]; current: QuickStep }) {
+  const total = steps.length
+  const index = Math.max(steps.indexOf(current), 0)
   return (
     <div className="flex flex-col gap-2">
       <p className="font-subhead text-sm font-semibold text-charcoal-soft tabular-nums">
         Step {index + 1} of {total}
       </p>
       <div className="flex gap-1" aria-hidden="true">
-        {QUICK_STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <span
             key={s}
             className={cn(
