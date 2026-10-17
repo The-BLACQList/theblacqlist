@@ -152,9 +152,10 @@ export async function searchListings(
   // "dentist" query returned nothing here while /discover's RPC path was the
   // thing actually being fixed. Recall now lives in exactly one place — the
   // function — so a query can never mean two things depending on which page
-  // asked. The old pg_trgm fallback is gone with it; the RPC's
-  // word_similarity() clause is its replacement and is strictly wider (it reads
-  // tagline and category name, not just name).
+  // asked. The old pg_trgm fallback is gone with it; the RPC's typo clause is
+  // its replacement. Since 20261018000000_search_tighter.sql that clause is
+  // strict_word_similarity() on the name only: the wider tagline and category
+  // version matched junk ("barber" found Bar-B-Q) and hid the assist help.
   //
   // That fallback was also dead code, not a working feature being traded away:
   // search_by_similarity is defined in no migration in this repo and does not
