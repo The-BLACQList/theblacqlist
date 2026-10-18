@@ -198,7 +198,8 @@ interface ListingInput {
   // the JSON is cast rather than parsed (see loadCorpus below).
   location_type: 'physical' | 'virtual' | 'hybrid' | 'service_area' | 'national' | 'traveling'
   status: 'published' | 'draft'
-  is_featured: boolean
+  /** Ignored. Featured is earned weekly (20261005000000_earned_featured.sql), never seeded. */
+  is_featured?: boolean
   /**
    * Optional: the three original corpus files predate migration
    * 20260707000000, which added the column with a 'black_owned' default. Rows
@@ -308,7 +309,8 @@ async function seedCity(
           status: listing.status,
           tier: 'free',
           trust_tier: 'unclaimed',
-          is_featured: listing.is_featured,
+          // Seeded flags sorted 30 unearned "Featured" cards to the top of /discover (2026-10-16).
+          is_featured: false,
           ownership_label: listing.ownership_label ?? 'black_owned',
           save_count: 0,
           review_count: 0,
