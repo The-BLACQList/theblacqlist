@@ -3,9 +3,12 @@ import {
   checkAttributeCount,
   checkDescription,
   checkFaqAdd,
+  checkLinkAdd,
   checkPhotoAdd,
   checkSocialLinks,
   checkVideo,
+  isSocialLinkType,
+  socialLinksAllowed,
 } from '@/lib/stripe/planChecks'
 
 // Ticket 119. Each check gets the same three cases: allowed, blocked, and the
@@ -81,6 +84,67 @@ describe('checkSocialLinks', () => {
 
   it('ignores fields the form did not send', () => {
     expect(checkSocialLinks('free', { social_facebook: undefined }, null)).toBeNull()
+  })
+
+  // Ticket 133: socials are free on creator pages.
+  it('allows a Free creator to add and change links', () => {
+    expect(checkSocialLinks('free', { social_tiktok: link }, null, 'creator')).toBeNull()
+    expect(
+      checkSocialLinks(
+        'free',
+        { social_instagram: 'https://instagram.com/other' },
+        { social_instagram: link },
+        'creator'
+      )
+    ).toBeNull()
+  })
+
+  it('still blocks a Free business when the type is passed', () => {
+    expect(checkSocialLinks('free', { social_instagram: link }, null, 'business')).toMatch(
+      /part of Starter/
+    )
+  })
+})
+
+describe('socialLinksAllowed', () => {
+  it('is true for creators on every plan', () => {
+    expect(socialLinksAllowed('free', 'creator')).toBe(true)
+    expect(socialLinksAllowed(null, 'creator')).toBe(true)
+  })
+
+  it('follows the plan for every other type', () => {
+    expect(socialLinksAllowed('free', 'business')).toBe(false)
+    expect(socialLinksAllowed('free', 'creative')).toBe(false)
+    expect(socialLinksAllowed('free')).toBe(false)
+    expect(socialLinksAllowed('starter', 'business')).toBe(true)
+  })
+})
+
+describe('checkLinkAdd (Links section)', () => {
+  it('treats the six profile types as social and the rest as not', () => {
+    for (const t of ['instagram', 'facebook', 'linkedin', 'tiktok', 'youtube', 'twitter']) {
+      expect(isSocialLinkType(t)).toBe(true)
+    }
+    for (const t of ['website', 'booking', 'menu', 'order', 'other']) {
+      expect(isSocialLinkType(t)).toBe(false)
+    }
+  })
+
+  it('blocks a Free business from adding a social profile, with the Social section message', () => {
+    expect(checkLinkAdd('free', 'instagram', 'business')).toBe(
+      checkSocialLinks('free', { social_instagram: 'https://instagram.com/x' }, null)
+    )
+    expect(checkLinkAdd(null, 'tiktok', 'restaurant')).toMatch(/part of Starter/)
+  })
+
+  it('allows a Free business to add a non-social link', () => {
+    expect(checkLinkAdd('free', 'menu', 'business')).toBeNull()
+    expect(checkLinkAdd('free', 'website', 'business')).toBeNull()
+  })
+
+  it('allows Starter businesses and Free creators to add social profiles', () => {
+    expect(checkLinkAdd('starter', 'instagram', 'business')).toBeNull()
+    expect(checkLinkAdd('free', 'youtube', 'creator')).toBeNull()
   })
 })
 
