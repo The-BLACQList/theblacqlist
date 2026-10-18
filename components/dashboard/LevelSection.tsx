@@ -1,11 +1,12 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useState } from 'react'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 
 import { useSaveLabel } from './SaveLabel'
 import { LEVEL_META, type BusinessLevel } from '@/lib/listings/levels'
 import { updateListingLevelsAction } from '@/lib/actions/dashboard/updateListingLevels'
+import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 
 // "Your role": the main level plus extras (docs/blacqlist/product/business-levels-2026-10.md).
 // Hidden when the category allows one level, so most owners never see it.
@@ -20,7 +21,16 @@ interface Props {
 }
 
 export function LevelSection({ listingId, primary, extras, allowed }: Props) {
-  const [state, formAction, isPending] = useActionState(updateListingLevelsAction, null)
+  const {
+    state,
+    pending: isPending,
+    collective,
+    formProps,
+  } = useSectionSave({
+    id: 'role',
+    label: 'Your role',
+    action: updateListingLevelsAction,
+  })
   const saveLabel = useSaveLabel()
   const [main, setMain] = useState<BusinessLevel>(primary)
   const [also, setAlso] = useState(() => new Set(extras.filter((e) => e !== primary)))
@@ -56,7 +66,7 @@ export function LevelSection({ listingId, primary, extras, allowed }: Props) {
           Shoppers can filter by grower, maker, supplier or local business.
         </p>
       </div>
-      <form action={formAction} className="px-5 py-4 space-y-5">
+      <form {...formProps} className="px-5 py-4 space-y-5">
         <input type="hidden" name="listing_id" value={listingId} />
 
         <fieldset>
@@ -121,23 +131,27 @@ export function LevelSection({ listingId, primary, extras, allowed }: Props) {
             <p className="font-body text-sm text-red-700">{state.error}</p>
           </div>
         )}
-        {state && 'success' in state && (
+        {!collective && state && 'success' in state && (
           <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
             <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-green-700">Saved.</p>
           </div>
         )}
 
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : saveLabel}
-          </button>
-        </div>
+        {collective ? (
+          <CollectiveSubmit />
+        ) : (
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {isPending ? 'Saving…' : saveLabel}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

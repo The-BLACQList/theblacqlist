@@ -1,9 +1,9 @@
 'use client'
 
-import { useActionState } from 'react'
 import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
+import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 
 interface Props {
   listingId: string
@@ -61,7 +61,12 @@ export function ContactSection({
   state,
   zip,
 }: Props) {
-  const [formState, formAction, isPending] = useActionState(updateListingContentAction, null)
+  const {
+    state: formState,
+    pending: isPending,
+    collective,
+    formProps,
+  } = useSectionSave({ id: 'contact', label: 'Contact', action: updateListingContentAction })
   const saveLabel = useSaveLabel()
 
   return (
@@ -69,7 +74,7 @@ export function ContactSection({
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Contact & location</h2>
       </div>
-      <form action={formAction} className="px-5 py-4 space-y-4">
+      <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,23 +130,27 @@ export function ContactSection({
             <p className="font-body text-sm text-red-700">{formState.error}</p>
           </div>
         )}
-        {formState && 'success' in formState && (
+        {!collective && formState && 'success' in formState && (
           <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
             <CheckCircle className="size-4 text-green-600 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm text-green-700">Saved.</p>
           </div>
         )}
 
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : saveLabel}
-          </button>
-        </div>
+        {collective ? (
+          <CollectiveSubmit />
+        ) : (
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+              {isPending ? 'Saving…' : saveLabel}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   )

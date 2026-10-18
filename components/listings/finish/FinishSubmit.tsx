@@ -4,25 +4,23 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, Loader2, Send } from 'lucide-react'
-import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
 import { submitListingForReviewAction } from '@/lib/actions/listings/submitListingForReview'
+import { useProfileSave } from './ProfileSave'
 
 interface Props {
   listingId: string
   name: string
   /** Short labels of the checklist items still open. */
   missing: string[]
-  /** Typed but unsaved fields, saved first so nothing is lost on submit. */
-  unsaved: Partial<
-    Record<'name' | 'tagline' | 'description' | 'meta_title' | 'meta_description', string>
-  >
 }
 
 // The send-for-review step for a new business page (ticket 126). The button is
 // never disabled: a thin page can still go to review, the list just says what
-// would make it stronger.
-export function FinishSubmit({ listingId, name, missing, unsaved }: Props) {
+// would make it stronger. Unsaved card edits go through the page-wide Save
+// first (ticket 140), so nothing typed is lost on submit.
+export function FinishSubmit({ listingId, name, missing }: Props) {
   const router = useRouter()
+  const profile = useProfileSave()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -30,17 +28,8 @@ export function FinishSubmit({ listingId, name, missing, unsaved }: Props) {
     setBusy(true)
     setError(null)
     try {
-      const fields = Object.entries(unsaved)
-      if (fields.length > 0) {
-        const save = new FormData()
-        save.set('listing_id', listingId)
-        for (const [key, value] of fields) save.set(key, value ?? '')
-        const saved = await updateListingContentAction(null, save)
-        if (saved && 'error' in saved) {
-          setError(saved.error)
-          return
-        }
-      }
+      // The save bar shows what failed and moves focus to that card.
+      if (profile && !(await profile.saveAll())) return
 
       const form = new FormData()
       form.set('listing_id', listingId)
@@ -49,7 +38,8 @@ export function FinishSubmit({ listingId, name, missing, unsaved }: Props) {
         setError(result.error)
         return
       }
-      router.push(`/add-business/submitted?name=${encodeURIComponent(unsaved.name ?? name)}`)
+      const typed = document.querySelector<HTMLInputElement>('#bi-name')?.value.trim()
+      router.push(`/add-business/submitted?name=${encodeURIComponent(typed || name)}`)
     } catch {
       setError('Something went wrong. Your page is still saved. Please try again.')
     } finally {
