@@ -163,7 +163,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
               {levelText}
             </Link>
           )}
-          <OwnershipBadge label={entity.ownership_label} size="small" />
+          <OwnershipBadge label={entity.ownership_label} entityType={entity.entity_type} size="small" />
           {entity.trust_tier !== 'unclaimed' && (
             <StatusBadge tier={entity.trust_tier} size="small" />
           )}

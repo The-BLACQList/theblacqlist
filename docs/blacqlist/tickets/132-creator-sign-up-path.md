@@ -2,14 +2,14 @@
 
 **Phase:** V1.5 · **Priority:** P1 · **Status:** Ready
 **Depends on:** 131 (creator type and groups), 126 (add-business quick start), 129 (finish view)
-**Gates:** Copy. The Black Creator / Ally Creator definitions, the 18+ wording and the new `/terms#creator-listings` section need founder sign-off and a legal review before merge. No migration.
+**Gates:** Copy. The Ally Creator definition, the 18+ wording and the new `/terms#creator-listings` section need founder sign-off and a legal review before merge. No migration.
 **Decision record:** `docs/blacqlist/features/creators-and-influencers.md`
 
 ---
 
 ## Why
 
-`[Decision — founder, 2026-10-08]` Creators add themselves only; we never publish a person's page without their consent. The label is "Black Creator / Ally Creator". Creator tags don't count toward the Free plan's 3-tag limit. Sign-up is open at launch, with no invite links.
+`[Decision — founder, 2026-10-08]` Creators add themselves only; we never publish a person's page without their consent. The label was "Black Creator / Ally Creator"; `[Decision — founder, 2026-10-19]` only an ally page is labeled ("Ally Creator"), and there is no Black Creator label. Creator tags don't count toward the Free plan's 3-tag limit. Sign-up is open at launch, with no invite links.
 
 The quick start is worded for a business ("What's your business called?"). A creator needs the same flow worded for a person, plus an adult check: the Terms already say 18+, and sign-up never asks.
 
@@ -42,7 +42,7 @@ Out:
 | Name | What's your business called? | What do people call you? |
 | Place | Where is it? | Where are you based? City optional; none means Online (`virtual`) |
 | Main button | Business choices | Message / Follow / Work with me (link) |
-| Label | Black-Owned / Ally | **Black Creator:** "I'm a Black creator." **Ally Creator:** "I'm not Black, and I support Black-owned businesses and creators." |
+| Label | Black-Owned / Ally (only Ally is shown) | No label by default ("I'm a Black creator" in the attest box). **Ally Creator:** "I'm not Black, and I support Black-owned businesses and creators." Only Ally Creator is ever shown (2026-10-19). |
 | Attest | Accuracy + terms | Adds "I'm 18 or older." Terms link goes to `/terms#creator-listings` |
 
 **Finish view** (`components/listings/PageFinishView.tsx`):
@@ -60,7 +60,7 @@ Out:
 | Save the partner switch | `updateListingContent.ts` |
 | Skip creator groups in the Free cap; enforce 3 niches, 1 audience size | `updateListingAttributes.ts`, `checkAttributeCount` in `lib/stripe/planChecks.ts` |
 
-**Moderation.** New creator pages go through the existing `new_submission` queue. Add a creator section to the moderation policy (`.claude/rules/moderation-policy.md`, `moderate-queue` skill): the label matches the person, linked profiles exist and belong to them, the audience range is plausible, the creator is an adult, no minors shown as the creator.
+**Moderation.** New creator pages go through the existing `new_submission` queue. Add a creator section to the admin review guide (`docs/blacqlist/admin/editorial-review-guide.md`; the moderation-policy file and `moderate-queue` skill named in the plan do not exist): the label matches the person, linked profiles exist and belong to them, the audience range is plausible, the creator is an adult, no minors shown as the creator.
 
 ## Acceptance criteria
 

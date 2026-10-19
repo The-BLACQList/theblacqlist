@@ -35,3 +35,10 @@ export function isCreatorCategory(
 export function withoutCreatorCategories<T extends CategoryLike>(categories: readonly T[]): T[] {
   return categories.filter((c) => !isCreatorCategory(c, categories))
 }
+
+/** The Creators subcategories, in display order: what the creator path offers. */
+export function creatorSubcategories<T extends CategoryLike>(categories: readonly T[]): T[] {
+  const parent = categories.find((c) => c.slug === CREATOR_PARENT_SLUG && !c.parent_id)
+  if (!parent) return []
+  return categories.filter((c) => c.parent_id === parent.id)
+}

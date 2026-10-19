@@ -150,7 +150,7 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
               Also: {alsoLevels.join(', ')}
             </span>
           )}
-          <OwnershipBadge label={entity.ownership_label} size="small" />
+          <OwnershipBadge label={entity.ownership_label} entityType={entity.entity_type} size="small" />
           {/* Unclaimed stays in the trust panel, next to "Claim this listing". */}
           {entity.trust_tier !== 'unclaimed' && (
             <StatusBadge tier={entity.trust_tier} size="small" explain />

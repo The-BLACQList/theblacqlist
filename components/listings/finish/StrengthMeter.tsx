@@ -19,6 +19,8 @@ export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
   service: { label: 'A service', anchor: '#services' },
   meta_title: { label: 'Search title', anchor: '#google' },
   meta_description: { label: 'Search description', anchor: '#google' },
+  niche: { label: 'A niche', anchor: '#details' },
+  sample: { label: 'A sample post or video', anchor: '#video' },
 }
 
 export function itemLabel(id: string, fallback: string): string {

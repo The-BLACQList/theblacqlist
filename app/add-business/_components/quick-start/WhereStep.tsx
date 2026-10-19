@@ -30,7 +30,8 @@ interface Props extends StepProps {
   cities: readonly CityOption[]
 }
 
-export function WhereStep({ answers, onChange, problem, cities }: Props) {
+export function WhereStep({ answers, onChange, problem, cities, mode }: Props) {
+  const creator = mode === 'creator'
   const [showOther, setShowOther] = useState(
     () => !answers.cityId && (answers.cityText !== '' || answers.stateText !== '')
   )
@@ -38,22 +39,37 @@ export function WhereStep({ answers, onChange, problem, cities }: Props) {
 
   return (
     <>
-      <StepIntro title="Where do customers get what you do?" />
-      <ChoiceCards
-        name="where"
-        legend="Where customers get what you do"
-        idPrefix="qs-where"
-        choices={WHERE_CHOICES}
-        value={answers.where}
-        onChange={(v) => onChange({ where: v as GuideWhereId })}
-        describedBy={whereProblem ? ERROR_ID : undefined}
-      />
+      {creator ? (
+        // Creators are always online pages. A city is optional and adds them
+        // to that city's pages too.
+        <StepIntro title="Where are you based?">
+          Optional. Pick a city to show up on that city&apos;s pages too. Leave it blank and your
+          page is listed as Online.
+        </StepIntro>
+      ) : (
+        <>
+          <StepIntro title="Where do customers get what you do?" />
+          <ChoiceCards
+            name="where"
+            legend="Where customers get what you do"
+            idPrefix="qs-where"
+            choices={WHERE_CHOICES}
+            value={answers.where}
+            onChange={(v) => onChange({ where: v as GuideWhereId })}
+            describedBy={whereProblem ? ERROR_ID : undefined}
+          />
+        </>
+      )}
 
-      {answers.where && answers.where !== 'online' && (
+      {(creator || (answers.where && answers.where !== 'online')) && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor={FIELD_IDS.city} className={LABEL_CLASS}>
-              {answers.where === 'visit' ? 'City' : 'Main city you serve'}
+              {creator
+                ? 'City (optional)'
+                : answers.where === 'visit'
+                  ? 'City'
+                  : 'Main city you serve'}
             </label>
             <select
               id={FIELD_IDS.city}
@@ -70,7 +86,7 @@ export function WhereStep({ answers, onChange, problem, cities }: Props) {
               className={inputClass(problem?.fieldId === FIELD_IDS.city)}
               {...fieldA11y(problem, FIELD_IDS.city)}
             >
-              <option value="">Pick your city</option>
+              <option value="">{creator ? 'No city, list me as Online' : 'Pick your city'}</option>
               {cities.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.stateCode ? `${c.name}, ${c.stateCode}` : c.name}
