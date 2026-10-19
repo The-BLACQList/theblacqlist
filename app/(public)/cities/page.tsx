@@ -73,14 +73,14 @@ export default async function CitiesPage() {
 
   // Busiest city leads the bento; ties fall back to alphabetical.
   //
-  // Only live cities with a skyline in `CITY_PHOTOS` get a card, and the hero
-  // counts match the cards. Live cities without a photo are still on the map,
-  // in search and at /discover/{city} `[Decision — founder, 2026-10-15]`.
+  // Only live cities with a skyline in `CITY_PHOTOS` get a card. Live cities
+  // without a photo are still on the map, in search and at /discover/{city}
+  // `[Decision — founder, 2026-10-15]`. The hero has no "cities live ·
+  // businesses listed" line `[Decision — founder, 2026-10-19]`.
   const live = cities
     .filter((c) => c.is_active && Boolean(CITY_PHOTOS[c.slug]))
     .sort((a, b) => b.listingCount - a.listingCount || a.name.localeCompare(b.name))
   const comingSoon = cities.filter((c) => !c.is_active)
-  const totalListed = live.reduce((sum, c) => sum + c.listingCount, 0)
 
   return (
     <main className="min-h-screen bg-pale-lavender">
@@ -97,20 +97,6 @@ export default async function CitiesPage() {
             Every chapter is a real index of the businesses, professionals, and creatives in one
             metro, claimed, verified, and kept current by the people who run them.
           </p>
-
-          {live.length > 0 && (
-            <p className="font-subhead text-sm text-charcoal-soft mt-6">
-              <span className="font-semibold text-brand-black">{live.length}</span>{' '}
-              {live.length === 1 ? 'city' : 'cities'} live
-              <span className="text-charcoal-faint mx-2" aria-hidden="true">
-                ·
-              </span>
-              <span className="font-semibold text-brand-black">
-                {totalListed.toLocaleString()}
-              </span>{' '}
-              {totalListed === 1 ? 'business' : 'businesses'} listed
-            </p>
-          )}
         </Container>
       </section>
 
