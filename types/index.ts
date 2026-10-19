@@ -169,6 +169,9 @@ export interface BusinessDetails {
   video_embed_url: string | null
   /** Public URL of a video the owner uploaded (ticket 130). Set only when there is no link. */
   video_file_url: string | null
+  /** The map pin, when the listing has one. Used for "distance from you". */
+  lat: number | null
+  lng: number | null
   services: ServiceItem[]
 }
 

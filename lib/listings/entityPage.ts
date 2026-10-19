@@ -93,6 +93,8 @@ type RawRow = {
     cta_label_override: string | null
     hours: unknown
     ships_nationwide: boolean
+    lat: number | null
+    lng: number | null
   } | null
 }
 
@@ -112,7 +114,7 @@ const LISTING_SELECT = `
     state, zip, phone, email, website_url,
     social_instagram, social_facebook, social_linkedin,
     social_tiktok, social_youtube, social_twitter,
-    cta_type, cta_url, cta_label_override, hours, ships_nationwide
+    cta_type, cta_url, cta_label_override, hours, ships_nationwide, lat, lng
   )
 `
 
@@ -458,6 +460,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ships_nationwide: det?.ships_nationwide ?? raw.ships_nationwide,
     ...videoFields(videoData),
     hours: (det?.hours as WeeklyHours | null) ?? null,
+    // Only a real pin counts. The map route applies the same number check.
+    lat: typeof det?.lat === 'number' ? det.lat : null,
+    lng: typeof det?.lng === 'number' ? det.lng : null,
     services: (servicesData ?? []).map((s) => ({
       id: s.id,
       name: s.name,
