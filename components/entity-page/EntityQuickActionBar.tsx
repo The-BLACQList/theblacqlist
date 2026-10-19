@@ -8,6 +8,7 @@ import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { trackContactTap } from '@/lib/analytics/contactTap'
+import { directionsUrl } from '@/lib/listings/directions'
 import type { EntityPageData } from '@/types'
 
 interface Props {
@@ -39,18 +40,13 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
     return () => observer.disconnect()
   }, [])
 
-  const mapsHref = entity.details.address
-    ? `https://maps.google.com/?q=${encodeURIComponent(
-        [
-          entity.details.address,
-          entity.details.city_name,
-          entity.details.state_abbr,
-          entity.details.zip,
-        ]
-          .filter(Boolean)
-          .join(', ')
-      )}`
-    : null
+  const mapsHref = directionsUrl({
+    name: entity.name,
+    street: entity.details.address,
+    city: entity.details.city_name,
+    state: entity.details.state_abbr,
+    zip: entity.details.zip,
+  })
 
   // Website, call and directions taps count toward the weekly Featured score.
   const tap = (href: string) => () => trackContactTap(entity.id, href, 'action_bar')

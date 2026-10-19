@@ -1,3 +1,4 @@
+import { directionsUrl } from '@/lib/listings/directions'
 import { isOpenNow } from '@/lib/listings/openStatus'
 import { TIER_LABEL, type MapListing } from '@/lib/map/types'
 
@@ -34,13 +35,26 @@ export function buildPopupContent(listing: MapListing): HTMLElement {
   const actions = el('div', 'blacq-popup-actions')
   const view = el('a', 'blacq-popup-primary', 'View page')
   view.href = listing.href
-  const directions = el('a', 'blacq-popup-secondary')
-  directions.href = `https://maps.google.com/?q=${listing.lat},${listing.lng}`
-  directions.target = '_blank'
-  directions.rel = 'noopener noreferrer'
-  directions.setAttribute('aria-label', `Directions to ${listing.name}, opens in a new tab`)
-  directions.innerHTML = DIRECTIONS_ICON // constant markup, no listing data
-  actions.append(view, directions)
+  actions.append(view)
+  // Name and address, so Google shows the place instead of coordinates.
+  const directionsHref = directionsUrl({
+    name: listing.name,
+    street: listing.street,
+    city: listing.cityName,
+    state: listing.state,
+    zip: listing.zip,
+    lat: listing.lat,
+    lng: listing.lng,
+  })
+  if (directionsHref) {
+    const directions = el('a', 'blacq-popup-secondary')
+    directions.href = directionsHref
+    directions.target = '_blank'
+    directions.rel = 'noopener noreferrer'
+    directions.setAttribute('aria-label', `Directions to ${listing.name}, opens in a new tab`)
+    directions.innerHTML = DIRECTIONS_ICON // constant markup, no listing data
+    actions.append(directions)
+  }
   root.appendChild(actions)
   return root
 }

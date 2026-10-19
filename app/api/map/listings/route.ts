@@ -19,12 +19,16 @@ interface Row {
   is_sponsored: boolean
   cover_image_path: string | null
   categories: { name: string; slug: string } | null
-  cities: { slug: string; name: string } | null
+  cities: { slug: string; name: string; states: { code: string } | null } | null
   listing_details_business: {
     lat: number | null
     lng: number | null
     hours: unknown
     price_range: string | null
+    address_line_1: string | null
+    city_text: string | null
+    state: string | null
+    zip: string | null
   } | null
 }
 
@@ -39,7 +43,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from('listings')
     .select(
-      'id, name, slug, entity_type, trust_tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name), listing_details_business(lat, lng, hours, price_range)'
+      'id, name, slug, entity_type, trust_tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name, states!cities_state_id_fkey(code)), listing_details_business(lat, lng, hours, price_range, address_line_1, city_text, state, zip)'
     )
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -82,7 +86,12 @@ export async function GET() {
           category: row.categories?.name ?? null,
           categorySlug: row.categories?.slug ?? null,
           citySlug: row.cities?.slug ?? null,
-          cityName: row.cities?.name ?? null,
+          cityName: row.cities?.name ?? d.city_text ?? null,
+          // The same address the public page shows, so directions open on the
+          // business instead of raw coordinates.
+          street: d.address_line_1 ?? null,
+          state: row.cities?.states?.code ?? d.state ?? null,
+          zip: d.zip ?? null,
           trustTier: row.trust_tier,
           logoSrc,
           ownershipLabel: row.ownership_label,
