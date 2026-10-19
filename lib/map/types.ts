@@ -12,6 +12,10 @@ export interface MapListing {
   categorySlug: string | null
   citySlug: string | null
   cityName: string | null
+  /** Street line, state code and zip, for the directions link. */
+  street: string | null
+  state: string | null
+  zip: string | null
   trustTier: TrustTier
   logoSrc: string | null
   ownershipLabel: string

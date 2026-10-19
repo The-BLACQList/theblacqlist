@@ -7,6 +7,7 @@
 import { Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { trackContactTap } from '@/lib/analytics/contactTap'
+import { directionsUrl } from '@/lib/listings/directions'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
 import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
@@ -118,8 +119,14 @@ export function EntityAtAGlance({ entity }: Props) {
         .join('\n')
     : null
 
-  const mapsHref = fullAddress
-    ? `https://maps.google.com/?q=${encodeURIComponent(fullAddress.replace(/\n/g, ', '))}`
+  const mapsHref = hasAddress
+    ? directionsUrl({
+        name: entity.name,
+        street: [details.address, details.address_line2].filter(Boolean).join(' '),
+        city: details.city_name,
+        state: details.state_abbr,
+        zip: details.zip,
+      })
     : null
 
   const hasSocial = Object.values(details.social).some(Boolean)
