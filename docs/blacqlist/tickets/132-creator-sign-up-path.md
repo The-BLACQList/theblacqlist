@@ -42,7 +42,7 @@ Out:
 | Name | What's your business called? | What do people call you? |
 | Place | Where is it? | Where are you based? City optional; none means Online (`virtual`) |
 | Main button | Business choices | Message / Follow / Work with me (link) |
-| Label | Black-Owned / Ally (only Ally is shown) | No label by default ("I'm a Black creator" in the attest box). **Ally Creator:** "I'm not Black, and I support Black-owned businesses and creators." Only Ally Creator is ever shown (2026-10-19). |
+| Label | Black-Owned / Ally (only Ally is shown) | No label by default (the attest box makes no race statement, 2026-10-19). **Ally Creator:** "I'm not Black, and I support Black-owned businesses and creators." Only Ally Creator is ever shown (2026-10-19). |
 | Attest | Accuracy + terms | Adds "I'm 18 or older." Terms link goes to `/terms#creator-listings` |
 
 **Finish view** (`components/listings/PageFinishView.tsx`):

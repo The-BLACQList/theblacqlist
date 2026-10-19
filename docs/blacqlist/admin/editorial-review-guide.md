@@ -69,7 +69,7 @@ Ticket 132. Creator pages (`entity_type = 'creator'`) arrive in the same `new_su
 
 5. **No minors shown as the creator.** The profile photo and sample content should not present a child as the creator, including "kid influencer" accounts run by a parent. Escalate these rather than approving.
 
-6. **The label is the one they attested.** A creator either attests "I'm a Black creator" (no label shown) or lists as an "Ally Creator" (the only label shown). It is the creator's own attestation, just like the business label. The "What NOT to check" rules above apply in full: do not investigate or guess anyone's race from photos or names. Escalate only when the creator's own public profiles directly say something different from the label they chose.
+6. **The label is the one they attested.** A creator either takes no label (the default; since 2026-10-19 no one is asked to state they are Black) or lists as an "Ally Creator" (the only label shown). It is the creator's own attestation, just like the business label. The "What NOT to check" rules above apply in full: do not investigate or guess anyone's race from photos or names. Escalate only when the creator's own public profiles directly say something different from the label they chose.
 
 ### Partnership switch
 

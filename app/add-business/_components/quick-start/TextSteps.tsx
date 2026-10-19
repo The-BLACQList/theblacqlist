@@ -18,14 +18,15 @@ import {
 
 // Black-owned is the default, so step 1 reads as a welcome, not a sorting
 // question. Ally stays available behind a quiet link (founder decision
-// 2026-10-16: "we center who we center"; creators the same, 2026-10-19). The
-// last step still asks the owner to attest to whichever one is set.
+// 2026-10-16: "we center who we center"; creators the same, 2026-10-19). Only
+// Ally is ever shown, so only an ally attests to a label on the last step
+// (founder, 2026-10-19: no one is asked to state they are Black).
 export function OwnershipStep({ answers, onChange, problem, mode }: StepProps) {
   const ally = answers.ownership === 'ally'
   const creator = mode === 'creator'
   let toggle: string
-  if (creator) toggle = ally ? "Switch back: I'm a Black creator" : 'Not Black? List as an Ally Creator'
-  else toggle = ally ? 'Switch back: my business is Black-owned' : 'Not Black-owned? List as an Ally'
+  if (creator) toggle = ally ? 'Switch back: no Ally Creator label' : 'Not Black? List as an Ally Creator'
+  else toggle = ally ? 'Switch back: no Ally label' : 'Not Black-owned? List as an Ally'
   let title = 'Welcome to The BLACQList'
   if (ally) title = creator ? 'Listing as an Ally Creator' : 'Listing as an Ally'
   return (
@@ -163,7 +164,7 @@ export function AttestStep({ answers, onChange, problem, mode }: StepProps) {
         <span className="font-subhead text-sm leading-relaxed text-charcoal">
           {ally
             ? 'I own or run this business. It supports Black-owned businesses and is not itself majority Black-owned (it will be labeled "Ally"). What I entered is accurate.'
-            : 'I own or run this business. It is majority Black-owned (51% or more Black or African American ownership and operational control). What I entered is accurate.'}
+            : 'I own or run this business. What I entered is accurate.'}
         </span>
       </label>
       <p className={HINT_CLASS}>
@@ -256,7 +257,7 @@ function CreatorAttestStep({ answers, onChange, problem }: StepProps) {
         <span className={CHECK_TEXT}>
           {ally
             ? 'This page is about me, and I run the accounts it links to. I\'m not Black, and I support Black-owned businesses and creators (it will be labeled "Ally Creator"). What I entered is accurate.'
-            : 'This page is about me, and I run the accounts it links to. I\'m a Black creator. What I entered is accurate.'}
+            : 'This page is about me, and I run the accounts it links to. What I entered is accurate.'}
         </span>
       </label>
       <label htmlFor={FIELD_IDS.age} className={CHECK_CARD}>
