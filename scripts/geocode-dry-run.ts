@@ -154,7 +154,9 @@ const ZIP_PREFIXES: Record<string, string[]> = {
   'chicago-il': ['60'],
   // 93510 is Acton, LA County's Antelope Valley.
   'los-angeles-ca': ['90', '91', '93510'],
-  'washington-dc': ['20'],
+  // 20xxx is DC and the Maryland suburbs. 220 to 223 is Northern Virginia
+  // (Fairfax, Arlington, Alexandria), the DCA and IAD side of the metro.
+  'washington-dc': ['20', '220', '221', '222', '223'],
   'new-orleans-la': ['70'],
 }
 

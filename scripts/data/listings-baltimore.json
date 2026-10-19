@@ -1622,5 +1622,111 @@
       ],
       "note": "Black-owned per Downtown Partnership (Black-owned BOOST storefront program, owner Bryan Robinson). Active: ma.to venue page lists 2026 events at 106 N Eutaw St (Aug to Nov 2026), own site copyright 2025, Bromo Arts District page lists the address. Phone and founded year left null."
     }
+  },
+  {
+    "name": "More Than Java Cafe",
+    "slug": "more-than-java-cafe",
+    "tagline": "Cozy cafe for coffee, breakfast and lunch inside historic Savage Mill",
+    "description": "A cafe started by a husband and wife, now in the New Weave Building at historic Savage Mill after moving from Laurel. It serves coffee with breakfast and lunch, Wednesday to Saturday from 8 to 3.",
+    "listing_type": "business",
+    "city_slug": "baltimore-md",
+    "category_slug": "food-dining",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "8600 Foundry St",
+    "city_text": "Savage",
+    "state": "MD",
+    "zip": "20763",
+    "phone": null,
+    "website_url": "https://www.morethanjavacafe.com",
+    "social_instagram": "https://instagram.com/morethanjavacafe",
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-19",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.savagemill.com/merchants/more-than-java (exists/open: address, phone, Wed-Sat 8-3 hours)",
+        "https://www.morethanjavacafe.com/ (own site; footer dated 2019)",
+        "https://visitmaryland.org/article/black-owned-restaurants-capital-region (Black-owned list: More Than Java Cafe, Savage)"
+      ],
+      "note": "Address and hours from Savage Mill merchant page. Black-owned per Visit Maryland's Black-owned roundup (Uber Eats also tags it Black-owned). Own site lists (301) 490-3200 but its footer is 2019; Savage Mill page lists (301) 317-3943, used here. Nearest stop: Savage MARC (Camden Line), about 2.5 mi; BWI about 10 mi (estimates). Phone left null: own site and Savage Mill page give different numbers. Added for tester ask (BWI airport coverage), 2026-10-19."
+    }
+  },
+  {
+    "name": "AppleCore's Bake Shoppe",
+    "slug": "applecores-bake-shoppe",
+    "tagline": "Scratch made cheesecakes, scones and banana pudding in east Columbia",
+    "description": "A small Black and woman owned bakery making cheesecakes, scones and banana pudding from scratch. Vegan and gluten free options are on hand. Open Tuesday to Saturday.",
+    "listing_type": "business",
+    "city_slug": "baltimore-md",
+    "category_slug": "food-dining",
+    "location_type": "physical",
+    "status": "published",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "6945 Oakland Mills Rd, Suite A",
+    "city_text": "Columbia",
+    "state": "MD",
+    "zip": "21045",
+    "phone": "(301) 778-7962",
+    "website_url": null,
+    "social_instagram": "https://instagram.com/applecore_bakes",
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-19",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.visithowardcounty.com/listings/applecores-bake-shoppe/10713/ (exists: address, phone, Tue-Fri 10-6, Sat 9-3)",
+        "https://www.visithowardcounty.com/blog/post/celebrate-juneteenth-in-howard-county/ (Black-owned: 'Black and woman-owned bakery', June 15 2026)"
+      ],
+      "note": "Address and hours from Visit Howard County listing. Black-owned per Visit Howard County Juneteenth post (2026). No website shown (orders email at applecorebakes.com), so left null. Nearest stop: Dorsey MARC (Camden Line), about 5 mi (estimate). Added for tester ask (BWI airport coverage), 2026-10-19."
+    }
+  },
+  {
+    "name": "Tapville Social Columbia",
+    "slug": "tapville-social-columbia",
+    "tagline": "Self pour taps and American plates inside The Mall in Columbia",
+    "description": "A Black and woman owned bar where you order from a tablet at your table and pour your own drinks from self serve taps. It serves American food and sits inside The Mall in Columbia.",
+    "listing_type": "business",
+    "city_slug": "baltimore-md",
+    "category_slug": "food-dining",
+    "location_type": "physical",
+    "status": "draft",
+    "is_featured": false,
+    "ownership_label": "black_owned",
+    "address_line_1": "10300 Little Patuxent Pkwy",
+    "city_text": "Columbia",
+    "state": "MD",
+    "zip": "21044",
+    "phone": "(443) 420-7030",
+    "website_url": null,
+    "social_instagram": null,
+    "cta_type": "visit",
+    "cta_url": null,
+    "price_range": null,
+    "founded_year": null,
+    "hours": [],
+    "links": [],
+    "_verified": {
+      "on": "2026-10-19",
+      "verdict": "confirmed",
+      "sources": [
+        "https://www.visithowardcounty.com/listings/tapville-social/10478/ (exists: address, phone)",
+        "https://www.visithowardcounty.com/blog/post/celebrate-juneteenth-in-howard-county/ (Black-owned: 'Black, woman-owned bar', June 15 2026)"
+      ],
+      "note": "Address from Visit Howard County listing. Black-owned per Visit Howard County (2026). Tapville Social is a multi-location brand; the Black-owned label applies to this Columbia location. CAVEAT: Mall in Columbia is about 6 mi from the nearest MARC station, slightly past the 5 mi guide. Nearest stop: Savage or Dorsey MARC (Camden Line), about 6 mi (estimate). Held as draft 2026-10-19: about 6 mi from MARC, past the 5 mi radius, and the label rests on one county list. Added for tester ask (BWI airport coverage), 2026-10-19."
+    }
   }
 ]
