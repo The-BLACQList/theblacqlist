@@ -11,6 +11,7 @@ import { directionsUrl } from '@/lib/listings/directions'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
 import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
+import { DistanceFromYou } from '@/components/entity-page/DistanceFromYou'
 
 type Day = keyof WeeklyHours
 const DAYS: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -161,19 +162,26 @@ export function EntityAtAGlance({ entity }: Props) {
                   Location
                 </p>
                 {hasAddress && mapsHref ? (
-                  <a
-                    href={mapsHref}
-                    onClick={() => trackContactTap(entity.id, mapsHref, 'at_a_glance')}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-start gap-2 font-body text-sm text-charcoal hover:text-brand-black group"
-                  >
-                    <MapPin
-                      className="size-4 mt-0.5 text-amber flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span className="group-hover:underline whitespace-pre-line">{fullAddress}</span>
-                  </a>
+                  <>
+                    <a
+                      href={mapsHref}
+                      onClick={() => trackContactTap(entity.id, mapsHref, 'at_a_glance')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-start gap-2 font-body text-sm text-charcoal hover:text-brand-black group"
+                    >
+                      <MapPin
+                        className="size-4 mt-0.5 text-amber flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span className="group-hover:underline whitespace-pre-line">
+                        {fullAddress}
+                      </span>
+                    </a>
+                    {details.lat != null && details.lng != null && (
+                      <DistanceFromYou lat={details.lat} lng={details.lng} />
+                    )}
+                  </>
                 ) : (
                   <p className="font-body text-sm text-charcoal">
                     {LOCATION_TYPE_META[entity.location_type].label}
