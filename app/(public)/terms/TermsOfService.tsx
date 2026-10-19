@@ -115,16 +115,17 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               label-conditional warranty below are legally load-bearing (they interact
               with the §1981 / editorial-directory analysis in
               docs/blacqlist/legal/legal-pages-and-discrimination-risk-review.md and the
-              attorney redline). Have counsel review before this ships to production. */}
+              attorney redline). Have counsel review before this ships to production.
+              Labels are Ally-only from 2026-10-16 (#243); this wording caught up 2026-10-19. */}
           <section id="business-listings" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">4. Business Listings</h2>
             <p>
               <strong>Editorial focus.</strong> The BLACQList is an editorial directory that centers
-              and elevates Black-owned businesses. Every business is labeled either
-              &ldquo;Black-Owned&rdquo; or &ldquo;Ally.&rdquo; &ldquo;Black-Owned&rdquo; means a
-              business in which Black or African American individual(s) hold majority ownership
-              (≥51%) and exercise meaningful operational control or management authority.
-              &ldquo;Ally&rdquo; means a business that supports Black-owned businesses but is not
+              and elevates Black-owned businesses, meaning businesses in which Black or African
+              American individual(s) hold majority ownership (≥51%) and exercise meaningful
+              operational control or management authority. Business listings carry no ownership
+              label, except that a business that is not majority Black-owned may be listed as an
+              &ldquo;Ally,&rdquo; meaning a business that supports Black-owned businesses but is not
               itself majority Black-owned. How listings are presented and prioritized is an
               editorial decision. The weekly Featured badge is earned by activity, as described on
               our How Ranking Works page. We reserve the right to decline, remove, or re-label any
@@ -135,9 +136,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               <li>They have authority to represent the business (as an owner, partner, or authorized agent)</li>
               <li>All information submitted is accurate, complete, and not misleading</li>
               <li>
-                The ownership label they select is accurate: a &ldquo;Black-Owned&rdquo; listing is
-                genuinely majority Black-owned (≥51% Black or African American ownership and
-                operational control), and an &ldquo;Ally&rdquo; listing supports Black-owned
+                If they list as an Ally, that label is accurate: the business supports Black-owned
                 businesses and is not itself majority Black-owned
               </li>
               {isNext ? (

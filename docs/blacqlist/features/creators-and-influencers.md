@@ -95,7 +95,7 @@ Creators use the add-business quick start at `/add-business?as=creator`, worded 
 - "What do people call you?"
 - "Where are you based?" City is optional. Without one, the page is Online.
 - Main button: Message, Follow, or Work with me.
-- Label: none by default (the attest box says "I'm a Black creator"), or **Ally Creator** ("I'm not Black, and I support Black-owned businesses and creators"). Only Ally Creator shows on the page (2026-10-19).
+- Label: none by default (the attest box makes no race statement, 2026-10-19), or **Ally Creator** ("I'm not Black, and I support Black-owned businesses and creators"). Only Ally Creator shows on the page (2026-10-19).
 - "I'm 18 or older." The Terms already say 18+, and sign-up never asked until now.
 
 The finish view adds a Creator details section (niche, platforms, audience size) and the partner switch. Social links are free on creator pages.
