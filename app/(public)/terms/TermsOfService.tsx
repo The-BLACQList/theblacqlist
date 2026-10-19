@@ -223,6 +223,14 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
             </p>
           </section>
 
+          {/* [Needs professional review] The aggregation-consent bullet below was
+              corrected (founder decision 2026-08-17, merged 2026-10-19): it
+              previously described an account-settings opt-out, which the product
+              does not provide. What exists is a per-receipt choice that locks when
+              a reviewer approves the receipt (lib/actions/spend/updateReceiptSubmission.ts).
+              Narrowing a stated consent term is a change counsel should see.
+              tests/opt-out-copy.test.ts pins the corrected wording to the guard
+              that enforces it. */}
           <section id="receipt-data" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">6. Receipt and Spend Data</h2>
             <p>When you submit receipts through the community spend feature, you confirm that:</p>
@@ -230,7 +238,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               <li>The receipt represents a genuine transaction you made</li>
               <li>You are the submitting party and have the right to upload the receipt</li>
               <li>You consent to your spend data being reviewed by our team for verification purposes</li>
-              <li>You consent to your anonymized spend data being included in community aggregate totals, unless you opt out in your account settings</li>
+              <li>You consent to your anonymized spend data being included in community aggregate totals, unless you opt that receipt out when you submit it, or from Account &rarr; Receipts before it is approved</li>
             </ul>
             <p>
               Submitting fraudulent receipts, receipts for transactions you did not make, or
