@@ -6,6 +6,7 @@ import { requireOwner } from '@/lib/dashboard/guard'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { canAccess } from '@/lib/stripe/features'
 import { getWritingAllowance } from '@/lib/ai/allowance'
+import { bucketTrend, periodsFor, resolvePeriod, type TrendPoint } from '@/lib/analytics/periods'
 import { PeriodToggle } from './_components/PeriodToggle'
 import { ExplainNumbers } from './_components/ExplainNumbers'
 
@@ -24,14 +25,13 @@ function StatCard({ label, value, sub }: { label: string; value: number | string
   )
 }
 
-function TrendBar({ value, max, date }: { value: number; max: number; date: string }) {
+function TrendBar({ value, max, point }: { value: number; max: number; point: TrendPoint }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
-  const label = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
   return (
-    <div className="flex flex-col items-center gap-1 flex-1 min-w-0" title={`${label}: ${value}`}>
+    <div
+      className="flex flex-col items-center gap-1 flex-1 min-w-0"
+      title={`${point.title}: ${value}`}
+    >
       <div className="w-full flex items-end justify-center" style={{ height: 64 }}>
         <div
           className="w-full bg-amber-gold/70 rounded-t-sm transition-all"
@@ -39,29 +39,23 @@ function TrendBar({ value, max, date }: { value: number; max: number; date: stri
         />
       </div>
       <span className="font-body text-[9px] text-charcoal-faint truncate w-full text-center">
-        {label.split(' ')[1]}
+        {point.label}
       </span>
     </div>
   )
 }
 
 function MiniChart({
-  rows,
+  points,
   valueKey,
   label,
 }: {
-  rows: {
-    snapshot_date: string
-    page_views: number
-    cta_clicks: number
-    saves: number
-    shares: number
-  }[]
+  points: TrendPoint[]
   valueKey: 'page_views' | 'cta_clicks' | 'saves' | 'shares'
   label: string
 }) {
-  const max = rows.reduce((m, r) => Math.max(m, r[valueKey]), 0)
-  if (rows.length === 0 || max === 0) {
+  const max = points.reduce((m, r) => Math.max(m, r[valueKey]), 0)
+  if (points.length === 0 || max === 0) {
     return (
       <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-6 text-center">
         <p className="font-body text-xs text-charcoal-faint">No {label.toLowerCase()} data yet.</p>
@@ -71,13 +65,8 @@ function MiniChart({
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-5">
       <div className="flex items-end gap-0.5 w-full">
-        {rows.map((row) => (
-          <TrendBar
-            key={row.snapshot_date}
-            value={row[valueKey]}
-            max={max}
-            date={row.snapshot_date}
-          />
+        {points.map((point) => (
+          <TrendBar key={point.key} value={point[valueKey]} max={max} point={point} />
         ))}
       </div>
     </div>
@@ -87,8 +76,6 @@ function MiniChart({
 export default async function AnalyticsPage({ params, searchParams }: Props) {
   const { entityId } = await params
   const { period: periodParam } = await searchParams
-  const period: '7d' | '30d' = periodParam === '7d' ? '7d' : '30d'
-  const days = period === '7d' ? 7 : 30
 
   const owner = await requireOwner()
   const supabase = await createClient()
@@ -130,8 +117,12 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     )
   }
 
+  // The window comes from the plan (ticket 105): Starter reads up to 30 days,
+  // Growth and Premium up to 12 months. A range the plan does not include
+  // falls back to 30 days instead of reading more history than the plan holds.
+  const period = resolvePeriod(periodParam, listing.tier)
   const now = new Date()
-  const sinceDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1_000)
+  const sinceDate = new Date(now.getTime() - period.days * 24 * 60 * 60 * 1_000)
   const sinceDateStr = sinceDate.toISOString().slice(0, 10)
   const sinceIso = sinceDate.toISOString()
 
@@ -238,6 +229,11 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
   const sv = savesCount.count ?? 0
 
   const dailyRows = dailyResult.data ?? []
+  // Daily bars up to 30 days, weekly for 90 days, monthly for 12 months, so a
+  // long range still fits the card on a phone.
+  const trend = bucketTrend(dailyRows, period.bucket)
+  const trendCadence =
+    period.bucket === 'day' ? 'daily' : period.bucket === 'week' ? 'weekly' : 'monthly'
 
   // Aggregate top search queries client-side
   const queryCounts: Record<string, number> = {}
@@ -249,8 +245,6 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     .slice(0, 10)
     .map(([query, count]) => ({ query, count }))
 
-  const periodLabel = period === '7d' ? 'last 7 days' : 'last 30 days'
-
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -258,7 +252,10 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
           <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
-        <PeriodToggle period={period} />
+        <PeriodToggle
+          period={period.key}
+          options={periodsFor(listing.tier).map(({ key, label }) => ({ key, label }))}
+        />
       </div>
 
       {writingAllowance.state === 'ready' && (
@@ -280,7 +277,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {/* Period metric cards */}
       <div>
         <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-          {periodLabel === 'last 7 days' ? 'Last 7 days' : 'Last 30 days'}
+          {period.heading}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label="Page views" value={views} />
@@ -308,9 +305,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         <div className="space-y-4">
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Page views, daily
+              Page views, {trendCadence}
             </h2>
-            <MiniChart rows={dailyRows} valueKey="page_views" label="Page views" />
+            <MiniChart points={trend} valueKey="page_views" label="Page views" />
           </div>
           {/*
             DELIBERATELY NARROWER THAN THE TILE ABOVE, AND LABELLED TO SAY SO.
@@ -328,21 +325,21 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           */}
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Page CTA clicks, daily
+              Page CTA clicks, {trendCadence}
             </h2>
-            <MiniChart rows={dailyRows} valueKey="cta_clicks" label="Page CTA clicks" />
+            <MiniChart points={trend} valueKey="cta_clicks" label="Page CTA clicks" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Saves, daily
+              Saves, {trendCadence}
             </h2>
-            <MiniChart rows={dailyRows} valueKey="saves" label="Saves" />
+            <MiniChart points={trend} valueKey="saves" label="Saves" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Shares, daily
+              Shares, {trendCadence}
             </h2>
-            <MiniChart rows={dailyRows} valueKey="shares" label="Shares" />
+            <MiniChart points={trend} valueKey="shares" label="Shares" />
           </div>
         </div>
       )}
@@ -350,7 +347,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {/* Top search queries */}
       <div>
         <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-          Top search queries, {periodLabel}
+          Top search queries, {period.heading.toLowerCase()}
         </h2>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {topQueries.length === 0 ? (

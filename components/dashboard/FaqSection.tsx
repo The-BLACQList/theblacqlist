@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useRef, useEffect } from 'react'
-import { Loader2, Plus, AlertCircle, Trash2 } from 'lucide-react'
+import { Loader2, Plus, AlertCircle, Trash2, EyeOff } from 'lucide-react'
 import { addListingFaqAction } from '@/lib/actions/dashboard/addListingFaq'
 import { deleteListingFaqAction } from '@/lib/actions/dashboard/deleteListingFaq'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
@@ -19,6 +19,8 @@ interface Props {
   /** Plan FAQ limit, or null for no limit (ticket 119). */
   limit: number | null
   showUpgrade: boolean
+  /** Questions the public page leaves out after a move to a lower plan (ticket 105). */
+  hiddenIds?: ReadonlySet<string>
 }
 
 function DeleteFaqButton({ faqId }: { faqId: string }) {
@@ -45,7 +47,7 @@ function DeleteFaqButton({ faqId }: { faqId: string }) {
   )
 }
 
-export function FaqSection({ listingId, faqs, limit, showUpgrade }: Props) {
+export function FaqSection({ listingId, faqs, limit, showUpgrade, hiddenIds }: Props) {
   const [state, formAction, isPending] = useActionState(addListingFaqAction, null)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -81,6 +83,12 @@ export function FaqSection({ listingId, faqs, limit, showUpgrade }: Props) {
                   <p className="font-body text-xs text-charcoal-soft mt-0.5 line-clamp-2">
                     {faq.answer}
                   </p>
+                  {hiddenIds?.has(faq.id) && (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-pale-lavender px-2 py-0.5 font-subhead text-xs font-semibold text-charcoal">
+                      <EyeOff className="size-3" aria-hidden="true" />
+                      Hidden on your page
+                    </span>
+                  )}
                 </div>
                 <DeleteFaqButton faqId={faq.id} />
               </li>

@@ -13,6 +13,7 @@ import {
   X,
   ImagePlus,
   Star,
+  EyeOff,
 } from 'lucide-react'
 import { deleteMediaAction } from '@/lib/actions/dashboard/deleteMedia'
 import { updateMediaAltTextAction } from '@/lib/actions/dashboard/updateMediaAltText'
@@ -32,6 +33,8 @@ interface Props {
   listingId: string
   /** `listings.cover_image_path` — the file path of the photo currently used as the cover. */
   coverImagePath: string | null
+  /** Photos the public page leaves out after a move to a lower plan (ticket 105). */
+  hiddenIds?: ReadonlySet<string>
 }
 
 function AltTextForm({ item }: { item: MediaItem }) {
@@ -104,11 +107,13 @@ function MediaCard({
   supabaseStorageUrl,
   listingId,
   isCover,
+  hidden,
 }: {
   item: MediaItem
   supabaseStorageUrl: string
   listingId: string
   isCover: boolean
+  hidden: boolean
 }) {
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteMediaAction, null)
   const [coverState, coverAction, isSettingCover] = useActionState(setCoverImageAction, null)
@@ -131,6 +136,11 @@ function MediaCard({
         {isCover && (
           <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-gold text-brand-black font-subhead text-[11px] font-bold">
             <Star className="size-3 fill-current" aria-hidden="true" /> Cover
+          </span>
+        )}
+        {hidden && (
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white text-charcoal font-subhead text-[11px] font-bold">
+            <EyeOff className="size-3" aria-hidden="true" /> Hidden on your page
           </span>
         )}
         <form action={deleteAction} className="absolute top-2 right-2">
@@ -374,7 +384,13 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
   )
 }
 
-export function MediaGrid({ media, supabaseStorageUrl, listingId, coverImagePath }: Props) {
+export function MediaGrid({
+  media,
+  supabaseStorageUrl,
+  listingId,
+  coverImagePath,
+  hiddenIds,
+}: Props) {
   const hasCover = !!coverImagePath
 
   return (
@@ -409,6 +425,7 @@ export function MediaGrid({ media, supabaseStorageUrl, listingId, coverImagePath
                 supabaseStorageUrl={supabaseStorageUrl}
                 listingId={listingId}
                 isCover={item.file_path === coverImagePath}
+                hidden={hiddenIds?.has(item.id) ?? false}
               />
             ))}
           </ul>

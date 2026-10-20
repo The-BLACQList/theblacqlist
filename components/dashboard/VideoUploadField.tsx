@@ -16,8 +16,6 @@ import {
 
 interface Props {
   listingId: string
-  /** The page already has an uploaded video, so this picks its replacement. */
-  replacing: boolean
   /** The page is public, so a finished upload shows there straight away. */
   live: boolean
 }
@@ -53,7 +51,7 @@ function putFile(
   })
 }
 
-export function VideoUploadField({ listingId, replacing, live }: Props) {
+export function VideoUploadField({ listingId, live }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const xhrRef = useRef<XMLHttpRequest | null>(null)
@@ -127,9 +125,7 @@ export function VideoUploadField({ listingId, replacing, live }: Props) {
             className="size-7 text-charcoal/25 group-hover:text-amber/50 mx-auto mb-2 transition-colors"
             aria-hidden="true"
           />
-          <p className="font-subhead text-sm font-semibold text-charcoal-soft">
-            {replacing ? 'Choose a new video' : 'Upload a video'}
-          </p>
+          <p className="font-subhead text-sm font-semibold text-charcoal-soft">Upload a video</p>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             MP4, MOV or WebM, up to {formatMegabytes(LISTING_VIDEO_MAX_BYTES)}
           </p>
