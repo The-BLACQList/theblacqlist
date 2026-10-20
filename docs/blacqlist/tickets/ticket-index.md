@@ -113,7 +113,7 @@
 | [103](103-faceted-filtering-identity-facets.md) | Faceted filtering + Identity & Ownership facets | V1 | P2 | 029 | ✅ Done | Verified on staging 2026-06-22 — migrations + attribute data applied, listings reconciled, 32/32 a11y green, filters live on /discover |
 | [104](104-ai-generation-rate-limit.md) | AI cost guardrails — per-tier quotas, consumer caps, spend ceiling, kill-switch | Phase 15 | P1 | — | Yes | **Blocks 079.** Must ship before `ANTHROPIC_API_KEY` is connected |
 | [105](105-enforce-tier-limits-at-call-sites.md) | Enforce the new tier limits at every call site | Phase 14 | P1 | 076, 078 | Yes | Server-side enforcement for the reworked `lib/stripe/features.ts`; without it `/pricing` promises differentiation the server does not enforce |
-| [106](106-events-module-ui.md) | Events module UI (Growth tier) | V1.5 | P2 | 105 | After deps | Entity exists (`20260622000007`); `/events` page is a SHELL |
+| [106](106-events-module-ui.md) | Owner events on business pages (Growth tier) | V1.5 | P2 | 105, 119 | Done | PR open, merges after the flip. Events tab (New, Edit, Unpublish, allowance), Growth gate at create, nightly sweep unpublishes past events; no upgrade copy while Growth is not for sale; no migration |
 | [107](107-team-members.md) | Team members block (Growth tier) | V1.5 | P3 | 105 | After deps | New table; `teamMemberLimit(tier)` — Growth 5, Premium unlimited |
 | [108](108-coupons-and-deals.md) | Coupons & deals (Premium tier) | V1.5 | P2 | 105 | After deps | Reveal counts are an intent signal, never labeled as confirmed revenue |
 | [109](109-booking-requests.md) | Booking & appointment requests (Premium tier) | V1.5 | P2 | 105 | After deps | Request-and-confirm only; unauthenticated write endpoint needs 104's abuse posture |

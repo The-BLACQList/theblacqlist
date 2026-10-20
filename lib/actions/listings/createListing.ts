@@ -14,6 +14,8 @@ import { firstSentence, foldFounderStory } from '@/lib/listings/draftSeed'
 import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
 import { levelsForCategory, validateLevels } from '@/lib/listings/levels'
 import { loadCategoryLevels } from '@/lib/listings/levelRows'
+import { canAccess } from '@/lib/stripe/features'
+import { eventQuotaFor, EVENTS_NEED_GROWTH_MESSAGE } from '@/lib/stripe/jobPostings'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -181,6 +183,8 @@ export async function createListingAction(
   const venueAddress = formData.get('venue_address')?.toString().trim() || null
   const ticketUrl = formData.get('ticket_url')?.toString().trim() || null
   const priceText = formData.get('price_text')?.toString().trim() || null
+  // Set when the owner starts the event from a page's Events tab (ticket 106).
+  const organizerRaw = formData.get('organizer_listing_id')?.toString().trim() || ''
 
   // Job-only fields (read regardless; used only when entityType === 'job').
   const isJob = entityType === 'job'
@@ -436,6 +440,45 @@ export async function createListingAction(
     return { error: 'Please fix the errors below.', fieldErrors }
   }
 
+  // Events, ticket 106. Two checks before anything is written.
+  //
+  // The plan gate. Below Growth an event can never be published, so a draft
+  // would only be a dead end; say so now, with the upgrade line. At the cap a
+  // draft is still fine: the owner can unpublish another event and submit this
+  // one, and submitListingForReview checks the count then. Behind paidPostings
+  // like the submit check, so the two gates switch on together.
+  //
+  // The host page. Only a business-shaped page this owner controls can host
+  // the event; anything else is refused rather than silently dropped, because
+  // the owner asked for this page by name.
+  let organizerId: string | null = null
+  if (isEvent) {
+    if (isFeatureEnabled('paidPostings')) {
+      const quotaRead = await eventQuotaFor(supabase, user.id)
+      if (!quotaRead.ok) {
+        return { error: 'Could not check your event allowance right now. Please try again.' }
+      }
+      if (!canAccess(quotaRead.value.tier, 'events')) {
+        return { error: EVENTS_NEED_GROWTH_MESSAGE }
+      }
+    }
+    if (organizerRaw) {
+      const { data: org } = UUID_RE.test(organizerRaw)
+        ? await supabase
+            .from('listings')
+            .select('id, entity_type')
+            .eq('id', organizerRaw)
+            .eq('owner_user_id', user.id)
+            .is('deleted_at', null)
+            .maybeSingle()
+        : { data: null }
+      if (!org || org.entity_type === 'event' || org.entity_type === 'job') {
+        return { error: 'That page could not host this event. Start it again from your page.' }
+      }
+      organizerId = org.id
+    }
+  }
+
   // No embedded parent here. A hinted embed from categories to itself
   // (categories!categories_parent_id_fkey) fails in PostgREST with PGRST200,
   // and reading that error as "not found" refused every new page from
@@ -619,6 +662,7 @@ export async function createListingAction(
           price_text: priceText,
           cta_type: 'get-tickets',
           cta_url: ticketUrl,
+          organizer_listing_id: organizerId,
         })
       ).error
     : (
