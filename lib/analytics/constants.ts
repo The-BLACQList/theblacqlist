@@ -68,7 +68,7 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  * dashboard is a paid feature — a declared-but-unemitted name renders as a
  * confident zero, which is worse than an absent metric.
  *
- *   Emitted: page_view, search_performed, cta_click, save_toggled,
+ *   Emitted: page_view, cta_click, save_toggled,
  *            share_initiated, claim_submitted, listing_submitted,
  *            hero_cta_click, action_bar_cta_click
  *            + the three SERVER_ONLY_EVENTS above.
@@ -101,9 +101,16 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *   (award_weekly_featured), so changing their shape changes who wins.
  *
  *   Declared, nothing emits them yet: filter_applied, collection_viewed,
- *            guide_viewed,
+ *            guide_viewed, search_performed,
  *            marketplace_product_viewed, marketplace_cta_click,
  *            review_submitted, claim_started, receipt_submitted.
+ *
+ *   search_performed was written by lib/services/search.ts for every search,
+ *   full query text, kept with no end date, and read by nothing. Ticket 142
+ *   (2026-10-20) removed that write: searches are now logged only when they
+ *   come back empty, anonymously, in search_events with a 90-day purge
+ *   (lib/search/zeroResultLog.ts). Do not start emitting this name again
+ *   without its own privacy review.
  *
  *   MARKETPLACE_CTA_CLICK IS A TRAP. The marketplace does emit CTA clicks — it
  *   just emits them as plain `cta_click` (above), not under this name. Nothing

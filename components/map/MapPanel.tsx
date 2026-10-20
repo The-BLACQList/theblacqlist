@@ -56,6 +56,9 @@ export function MapPanel(props: Props) {
             id="map-search-desktop"
             value={filters.query}
             onChange={(query) => onFilters({ query })}
+            onEnter={props.onPlaceSearch}
+            placeHit={props.placeHit}
+            onGoToPlace={props.onGoToPlace}
           />
           <MapFiltersButton
             count={activeFilterCount(filters)}

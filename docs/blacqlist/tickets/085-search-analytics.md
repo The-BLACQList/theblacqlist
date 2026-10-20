@@ -4,6 +4,8 @@
 
 Draft
 
+> **Update 2026-10-20 (ticket 142):** the founder chose to log only searches with zero results, kept anonymous for 90 days. So this page now shows the zero-result table only. The trending / top queries table is out, because logging every search would need its own privacy review. See [142](142-search-phase-2.md).
+
 ## Phase
 
 Phase 16: Analytics and Reporting

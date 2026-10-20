@@ -17,6 +17,7 @@ import {
 import { TourWitness } from '@/components/tour/TourWitness'
 import { SearchAssist } from '@/components/discovery/SearchAssist'
 import { shouldAssist } from '@/lib/search/assist'
+import { logZeroResultSearch } from '@/lib/search/zeroResultLog'
 
 export const metadata: Metadata = {
   title: 'Search | The BLACQList',
@@ -62,6 +63,17 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
     q: query,
   }
   const result = await queryListings(listingParams)
+
+  // Anonymous zero-result log (ticket 142). Skipped when a radius or deep
+  // filter could not run: that zero is an outage, not a gap in the directory.
+  logZeroResultSearch({
+    query,
+    resultCount: result.total,
+    page,
+    citySlug: params.city,
+    categorySlug: params.category,
+    degraded: Boolean(result.radiusUnavailable || result.filtersUnavailable),
+  })
 
   const nextPageUrl =
     result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined

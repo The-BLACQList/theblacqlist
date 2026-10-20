@@ -1,5 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { createClient } from '@/lib/supabase/server'
 import {
   resolveFacetParams,
   searchFacetedIds,
@@ -10,7 +9,7 @@ import {
   type UnresolvedFacets,
 } from '@/lib/listings/facets'
 import { typeOrFilter } from '@/lib/listings/type-shortcuts'
-import type { Json } from '@/lib/supabase/types'
+import { logZeroResultSearch } from '@/lib/search/zeroResultLog'
 import type { SearchQueryParams } from '@/lib/validations/search'
 
 /**
@@ -139,6 +138,10 @@ export async function searchListings(
 
   const cityId = resolved.p_city_id
   const categoryId = resolved.p_category_id
+  // Zero-result searches only, anonymous, kept 90 days (ticket 142). The
+  // RPC path throws on an outage instead of answering degraded, so any zero
+  // that reaches here is a real "we have nothing for this".
+  const zeroResultLog = { query: q, page: params.page, cityId, categorySlug: params.category }
 
   // Deep facets (attributes / price / open-now / radius) are implemented only in
   // search_listings_faceted — PostgREST cannot express them against this table.
@@ -209,10 +212,10 @@ export async function searchListings(
 
     // Coordinates are deliberately NOT passed here and must never be added.
     // They are precise enough to place a person at an address; the query is the
-    // only thing entitled to see them, and analytics_events is retained. City
-    // and category are the coarse location signal this event is allowed to
-    // carry. See data-privacy.md ("minimize what you pull").
-    void logSearchEvent(q, faceted.total, cityId, categoryId)
+    // only thing entitled to see them, and search_events is retained. City and
+    // category are the coarse location signal this log is allowed to carry.
+    // See data-privacy.md ("minimize what you pull").
+    logZeroResultSearch({ ...zeroResultLog, resultCount: faceted.total })
     return { results, total: faceted.total }
   }
 
@@ -274,28 +277,6 @@ export async function searchListings(
   const results: SearchResult[] = data ? (data as unknown as RawSearchRow[]).map(mapRow) : []
   const total = count ?? 0
 
-  void logSearchEvent(q, total, cityId, categoryId)
+  logZeroResultSearch({ ...zeroResultLog, resultCount: total })
   return { results, total }
-}
-
-function logSearchEvent(
-  query: string | undefined,
-  resultCount: number,
-  cityId: string | undefined | null,
-  categoryId: string | undefined | null
-): void {
-  try {
-    const serviceClient = createServiceClient()
-    void serviceClient.from('analytics_events').insert({
-      event_name: ANALYTICS_EVENTS.SEARCH_PERFORMED,
-      properties: {
-        query: query ?? null,
-        result_count: resultCount,
-        city_id: cityId ?? null,
-        category_id: categoryId ?? null,
-      } as Json,
-    })
-  } catch {
-    // Analytics failures must not affect search responses
-  }
 }
