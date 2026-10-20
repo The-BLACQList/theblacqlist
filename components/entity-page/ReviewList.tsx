@@ -86,7 +86,7 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
             </p>
           )}
           {review.body && (
-            <p className="font-body text-sm text-charcoal/80 leading-relaxed">{review.body}</p>
+            <p className="font-body text-sm text-charcoal leading-relaxed">{review.body}</p>
           )}
         </article>
       ))}

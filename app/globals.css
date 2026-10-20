@@ -11,7 +11,7 @@
   --color-brand-black: #000000; /* ink — unchanged */
   --color-charcoal: #595758; /* neutral-700 — unchanged (7.2:1 on white) */
   --color-charcoal-soft: #6b6b6b; /* AA-passing muted text (5.3:1) — replaces text-charcoal/50–70 */
-  --color-charcoal-faint: #737373; /* AA-passing faint/hint text (4.7:1) — replaces text-charcoal/30–40 */
+  --color-charcoal-faint: #6d6d6d; /* AA-passing faint/hint text: 5.2:1 on white, 4.7:1 on off-white, 4.55:1 on pale-lavender. Replaces text-charcoal/30-40 */
   --color-ink: #1d1c1d; /* map pins and chips: warm ink, softer than brand black */
   --color-hairline: #ddd8d2; /* panel and chip borders on off-white */
   --color-ink-soft: #b5b5b7; /* dark-surface muted text (9.8:1 on ground) — the dark-side counterpart to charcoal-soft; replaces text-white/70 */

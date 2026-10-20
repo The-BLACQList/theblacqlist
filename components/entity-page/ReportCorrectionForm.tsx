@@ -65,7 +65,7 @@ export function ReportCorrectionForm({
           data-tour="report-correction"
           className={
             triggerClassName ??
-            'inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-charcoal/80 underline underline-offset-2 transition-colors'
+            'inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft hover:text-charcoal underline underline-offset-2 transition-colors'
           }
         >
           <Flag className={triggerClassName ? 'size-4' : 'size-3'} aria-hidden="true" />

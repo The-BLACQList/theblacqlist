@@ -16,7 +16,7 @@ function CompletenessItem({ done, label }: { done: boolean; label: string }) {
         <Circle className="size-4 text-charcoal/25 shrink-0" aria-hidden="true" />
       )}
       <span
-        className={`font-body text-sm ${done ? 'text-charcoal-soft line-through' : 'text-charcoal/80'}`}
+        className={`font-body text-sm ${done ? 'text-charcoal-soft line-through' : 'text-charcoal'}`}
       >
         {label}
       </span>

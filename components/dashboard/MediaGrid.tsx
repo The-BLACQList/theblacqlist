@@ -323,7 +323,7 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
           <p className="font-subhead text-sm font-semibold text-charcoal-soft group-hover:text-charcoal-soft">
             Click to choose a photo
           </p>
-          <p className="font-body text-xs text-charcoal/35 mt-0.5">
+          <p className="font-body text-xs text-charcoal-faint mt-0.5">
             JPEG, PNG, WebP or GIF · any size
           </p>
         </button>

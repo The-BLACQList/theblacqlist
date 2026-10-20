@@ -250,7 +250,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
           </div>
         )}
         {state && 'success' in state && (
-          <div className="flex items-center gap-2 text-green-600">
+          <div className="flex items-center gap-2 text-success">
             <CheckCircle className="size-4 shrink-0" aria-hidden="true" />
             <p className="font-body text-sm">Saved.</p>
           </div>

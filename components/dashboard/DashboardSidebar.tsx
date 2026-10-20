@@ -79,7 +79,7 @@ export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
         {/* Page-specific nav when on a page route */}
         {entityId && (
           <div className="pt-2 mt-2 md:pt-3 md:mt-1 border-t border-white/10">
-            <p className="px-3 pb-1 font-subhead text-[10px] uppercase tracking-widest text-white/30">
+            <p className="px-3 pb-1 font-subhead text-[10px] uppercase tracking-widest text-ink-soft">
               This page
             </p>
             <div className="flex gap-1 overflow-x-auto md:block">
@@ -114,7 +114,7 @@ export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
       {/* Footer */}
       {ownerEmail && (
         <div className="flex items-baseline justify-between gap-3 px-4 py-2 md:block md:px-5 md:py-4 border-t border-white/10">
-          <p className="font-mono text-[10px] text-white/30 truncate">{ownerEmail}</p>
+          <p className="font-mono text-[10px] text-ink-soft truncate">{ownerEmail}</p>
           <Link
             href="/account"
             className="shrink-0 font-subhead text-xs text-white/50 hover:text-white/80 md:mt-0.5 block"
