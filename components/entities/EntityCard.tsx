@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { SaveIconButton } from '@/components/ui/save-icon-button'
 import { SponsoredImpression, SponsoredLink } from '@/components/entities/SponsoredTracking'
 import { CoverImage } from '@/components/media/CoverImage'
+import { CardDistance } from '@/components/entities/CardDistance'
 import { cn } from '@/lib/utils'
 import type { DiscoveryEntity, LocationType } from '@/types'
 import { buildEntityUrl, categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
@@ -19,6 +20,8 @@ interface EntityCardProps {
   entity: DiscoveryEntity
   className?: string
   isPriority?: boolean
+  /** Show "About N mi from you" under the location (ticket 141). Needs a CardDistanceProvider above. */
+  showDistance?: boolean
 }
 
 // Only events and jobs keep a type pill: "Event" and "Job" tell a shopper
@@ -72,7 +75,12 @@ function formatEventDate(iso: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-export function EntityCard({ entity, className, isPriority = false }: EntityCardProps) {
+export function EntityCard({
+  entity,
+  className,
+  isPriority = false,
+  showDistance = false,
+}: EntityCardProps) {
   const href = getEntityHref(entity)
   const locationStr = getLocationString(entity)
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
@@ -192,6 +200,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
 
         {/* Location (the category now sits in the chip above) */}
         <p className="text-xs font-subhead text-charcoal">{locationStr}</p>
+        {showDistance && <CardDistance entity={entity} />}
 
         {/* Event date (event cards only) */}
         {entity.entity_type === 'event' && entity.event_starts_at && (
