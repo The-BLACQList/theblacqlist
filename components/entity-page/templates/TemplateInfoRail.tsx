@@ -1,5 +1,7 @@
 import type { EntityPageData, LocationType } from '@/types'
+import { Handshake } from 'lucide-react'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
+import { partnershipLine } from '@/lib/listings/partnerships'
 
 interface Props {
   entity: EntityPageData
@@ -47,7 +49,9 @@ export function TemplateInfoRail({ entity }: Props) {
   }
 
   const hasHours = Boolean(entity.details.hours)
-  if (items.length === 0 && !hasHours) return null
+  // Ticket 134: the owner's "Open to partnerships" switch, with its own icon.
+  const partners = partnershipLine(entity.entity_type, entity.open_to_partnerships)
+  if (items.length === 0 && !hasHours && !partners) return null
 
   return (
     <div className="bg-off-white border-b border-charcoal/10">
@@ -67,6 +71,12 @@ export function TemplateInfoRail({ entity }: Props) {
               {item}
             </li>
           ))}
+          {partners && (
+            <li className="flex items-center gap-2 font-subhead text-[13.5px] text-charcoal">
+              <Handshake className="size-4 shrink-0 text-charcoal" aria-hidden="true" />
+              {partners}
+            </li>
+          )}
         </ul>
       </div>
     </div>

@@ -23,26 +23,37 @@ async function safely(
 }
 
 /**
- * Sets primary_level and extra_levels on each entity, in place. Fail-soft:
- * on any error every entity reads as local with no extras (no pill).
+ * Sets primary_level, extra_levels and open_to_partnerships on each entity,
+ * in place. Fail-soft: on any error every entity reads as local with no
+ * extras and not open to partnerships (no pills).
+ *
+ * open_to_partnerships (ticket 134) rides on this read because it is the same
+ * kind of thing: a small card pill that is never worth an error page.
  */
 export async function attachLevels(
   supabase: unknown,
-  entities: { id: string; primary_level?: string; extra_levels?: string[] }[]
+  entities: {
+    id: string
+    primary_level?: string
+    extra_levels?: string[]
+    open_to_partnerships?: boolean
+  }[]
 ): Promise<void> {
   for (const e of entities) {
     e.primary_level = 'local'
     e.extra_levels = []
+    e.open_to_partnerships = false
   }
   if (entities.length === 0) return
   const ids = [...new Set(entities.map((e) => e.id))]
   const { data, error } = await safely(() =>
-    (supabase as LooseClient).from('listings').select('id, primary_level, extra_levels').in('id', ids)
+    (supabase as LooseClient).from('listings').select('id, primary_level, extra_levels, open_to_partnerships').in('id', ids)
   )
   if (error || !data) return
 
-  const byId = new Map<string, { primary_level: unknown; extra_levels: unknown }>()
-  for (const row of data as { id: string; primary_level: unknown; extra_levels: unknown }[]) {
+  type Row = { id: string; primary_level: unknown; extra_levels: unknown; open_to_partnerships: unknown }
+  const byId = new Map<string, Row>()
+  for (const row of data as Row[]) {
     byId.set(row.id, row)
   }
   for (const e of entities) {
@@ -50,6 +61,7 @@ export async function attachLevels(
     if (!row) continue
     if (isBusinessLevel(row.primary_level)) e.primary_level = row.primary_level
     e.extra_levels = Array.isArray(row.extra_levels) ? row.extra_levels.filter(isBusinessLevel) : []
+    e.open_to_partnerships = row.open_to_partnerships === true
   }
 }
 

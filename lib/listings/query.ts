@@ -31,6 +31,8 @@ export interface ListingsParams {
   price?: string[]
   attrs?: string[]
   open_now?: boolean
+  /** "Open to partnerships" (ticket 134). */
+  partners?: boolean
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -243,6 +245,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     price: params.price,
     attrs: params.attrs,
     open_now: params.open_now,
+    partners: params.partners,
     lat: params.lat,
     lng: params.lng,
     radius: params.radius,
@@ -284,8 +287,13 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // A level pick is deep too: the legacy fallback below has no level columns to
   // read on a database without the migration, and a sponsored maker spliced
   // into "Suppliers" is the same wrong answer.
+  //
+  // "Open to partnerships" is deep for the same reason: the legacy fallback
+  // cannot read the switch, and a sponsored page with it off would sit under a
+  // chip that says every result has it on.
   const deepFilter = !!(
     resolved.p_levels ||
+    resolved.p_open_to_partnerships ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||

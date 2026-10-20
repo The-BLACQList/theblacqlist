@@ -161,6 +161,7 @@ test.describe('Discover filters — every facet reaches the query', () => {
     { key: 'location_type', value: 'virtual' },
     { key: 'price', value: '$$' },
     { key: 'open_now', value: '1' },
+    { key: 'partners', value: '1' },
   ]
 
   for (const { key, value } of KEYS) {
@@ -205,16 +206,9 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     expect(requireNumber(await resultTotal(page), '/discover after Clear all')).toBe(baseline)
   })
 
-  test('Ownership writes ?ownership', async ({ page }) => {
-    const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
-    const baseline = requireNumber(await resultTotal(page), '/discover')
-
-    await sidebar.getByRole('button', { name: 'Ally', exact: true }).click()
-    await page.waitForURL(/[?&]ownership=ally/)
-    expect(requireNumber(await resultTotal(page), '/discover?ownership=ally')).toBeLessThanOrEqual(
-      baseline
-    )
-  })
+  // No sidebar test for Ownership: the control came out of the sidebar on
+  // 2026-10-16 (#243). Old ?ownership links still narrow the results, which
+  // the facet loop above checks on all three pages.
 
   test('How to reach them writes ?location_type', async ({ page }) => {
     const sidebar = page.getByRole('complementary', { name: 'Discovery filters' })
@@ -248,6 +242,26 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     const filtered = await resultTotal(page)
     skipIfUnavailable(filtered, '/discover?open_now=1')
     expect(filtered).toBeLessThanOrEqual(baseline)
+  })
+
+  test('Open to partnerships writes ?partners, shows a chip, and the chip clears it', async ({
+    page,
+  }) => {
+    const baseline = requireNumber(await resultTotal(page), '/discover')
+
+    // click(), not check(), for the same URL-controlled reason as Open now.
+    await page.getByRole('checkbox', { name: 'Open to partnerships' }).click()
+    await page.waitForURL(/[?&]partners=1/)
+    const filtered = await resultTotal(page)
+    skipIfUnavailable(filtered, '/discover?partners=1')
+    expect(filtered).toBeLessThanOrEqual(baseline)
+
+    const chips = page.getByLabel('Active filters')
+    const chip = chips.getByRole('button', { name: /^Open to partnerships/ })
+    await expect(chip).toBeVisible()
+    await chip.click()
+    await page.waitForURL((url) => !url.searchParams.has('partners'))
+    await expect(page.getByRole('checkbox', { name: 'Open to partnerships' })).not.toBeChecked()
   })
 
   test('Category writes ?category', async ({ page }) => {
@@ -293,14 +307,14 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
 
     await sidebar.getByRole('button', { name: 'Businesses', exact: true }).click()
     await page.waitForURL(/[?&]type=business/)
-    await sidebar.getByRole('button', { name: 'Ally', exact: true }).click()
-    await page.waitForURL(/[?&]ownership=ally/)
+    await sidebar.getByRole('checkbox', { name: /Open to partnerships/ }).click()
+    await page.waitForURL(/[?&]partners=1/)
 
     // The second click must not clobber the first: each facet setter rewrites
     // one key on top of the existing params.
     const url = new URL(page.url())
     expect(url.searchParams.get('type')).toBe('business')
-    expect(url.searchParams.get('ownership')).toBe('ally')
+    expect(url.searchParams.get('partners')).toBe('1')
   })
 })
 
@@ -328,9 +342,11 @@ test.describe('Discover — type shortcuts and keyword relevance', () => {
     const n = requireNumber(await totalAt(page, '/discover?q=photographer'), '?q=photographer')
     expect(n, 'the directory must have at least one photography match').toBeGreaterThan(0)
 
+    // Name plus the category chip. Since 2026-10-16 the category is the first
+    // pill above the name (a link into ?category=), not the line under it.
     const first = page.locator('article').first()
     const name = (await first.getByRole('heading', { level: 3 }).textContent()) ?? ''
-    const category = (await first.locator('h3 + p').textContent()) ?? ''
+    const category = (await first.locator('a[href*="category="]').first().textContent()) ?? ''
     expect(`${name} ${category}`, 'the first card must be about photography').toMatch(/photo/i)
   })
 
@@ -342,5 +358,43 @@ test.describe('Discover — type shortcuts and keyword relevance', () => {
 
     await totalAt(page, '/discover?q=photographer')
     await expect(page.locator('article').getByText('Sponsored', { exact: true })).toHaveCount(0)
+  })
+})
+
+// Ticket 134. The badge and the filter read the same column, so every card the
+// filter returns must carry the badge text. That is the browser's way of saying
+// "only pages with the switch on appear".
+test.describe('Open to partnerships (134)', () => {
+  test('every card on ?partners=1 shows the partnership badge', async ({ page }) => {
+    const total = await totalAt(page, '/discover?partners=1')
+    skipIfUnavailable(total, '/discover?partners=1')
+    test.skip(total === 0, 'no page has the partnerships switch on in this database')
+
+    const cards = page.locator('article')
+    const n = await cards.count()
+    expect(n).toBeGreaterThan(0)
+    for (let i = 0; i < n; i++) {
+      await expect(cards.nth(i)).toContainText(/Open to (partnerships|brand deals)/)
+    }
+  })
+
+  test('no match shows "No results for these filters" and Clear filters', async ({ page }) => {
+    await page.goto(`/discover?partners=1&attrs=${NO_SUCH_ATTR}`)
+    await expect(page.getByText('No results for these filters')).toBeVisible()
+    await page.getByRole('link', { name: 'Clear filters' }).click()
+    await page.waitForURL((url) => url.pathname === '/discover' && url.search === '')
+  })
+
+  test.describe('at phone width', () => {
+    test.use({ viewport: { width: 375, height: 812 } })
+
+    test('the filter sheet carries the checkbox and it writes ?partners', async ({ page }) => {
+      await page.goto('/discover')
+      await page.getByRole('button', { name: 'Filters', exact: true }).click()
+      const sheet = page.getByRole('dialog', { name: 'Filters' })
+      await expect(sheet).toBeVisible()
+      await sheet.getByRole('checkbox', { name: 'Open to partnerships' }).click()
+      await page.waitForURL(/[?&]partners=1/)
+    })
   })
 })
