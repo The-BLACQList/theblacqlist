@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersHorizontal, Clock } from 'lucide-react'
+import { SlidersHorizontal, Clock, Handshake } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
@@ -84,6 +84,7 @@ export function FacetSidebar({
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
   const openNow = searchParams.get('open_now') === '1'
+  const partners = searchParams.get('partners') === '1'
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
   // Multi-select as of 2026-09-04: Products & Services is four location types at
@@ -145,6 +146,19 @@ export function FacetSidebar({
         <Clock className="size-4 text-charcoal" aria-hidden="true" />
         <span className="text-sm font-subhead text-brand-black">Open now</span>
         {!countsOff && <CountTag n={counts.openNow} />}
+      </label>
+
+      {/* Open to partnerships (ticket 134). No count: facet_counts has no
+          partnerships row, and a missing badge is honest where a 0 would not be. */}
+      <label className="flex items-center gap-2 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={partners}
+          onChange={() => setParam('partners', partners ? '' : '1')}
+          className="rounded border-charcoal/30 text-brand-black focus:ring-brand-black/20"
+        />
+        <Handshake className="size-4 text-charcoal" aria-hidden="true" />
+        <span className="text-sm font-subhead text-brand-black">Open to partnerships</span>
       </label>
 
       {/* Type opens by default: it is what most visitors reach for first.
