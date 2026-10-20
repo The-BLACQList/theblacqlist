@@ -145,7 +145,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
               </p>
             )}
             {review.body ? (
-              <p className="font-body text-sm text-charcoal/80 leading-relaxed whitespace-pre-wrap">
+              <p className="font-body text-sm text-charcoal leading-relaxed whitespace-pre-wrap">
                 {review.body}
               </p>
             ) : (

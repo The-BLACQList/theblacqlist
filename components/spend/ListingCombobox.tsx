@@ -177,7 +177,7 @@ export function ListingCombobox({
 
         <div className="flex items-center justify-between gap-3 rounded-lg border border-charcoal/20 bg-pale-lavender/30 px-3 py-2.5">
           <span className="flex min-w-0 items-center gap-2">
-            <Check className="size-4 flex-shrink-0 text-amber-gold" aria-hidden="true" />
+            <Check className="size-4 flex-shrink-0 text-amber" aria-hidden="true" />
             <span className="truncate font-body text-sm text-brand-black">
               {selected.name}
               {selected.cityName && (

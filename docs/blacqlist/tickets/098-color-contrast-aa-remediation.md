@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — footer fixed; muted-text and brand-token items remaining
+Done (2026-10-20). PR open, merges after the Oct 27 flip.
 
 ## Phase
 
@@ -69,10 +69,10 @@ As a low-vision user, I want all text — including helper text, hints, and badg
 ## Acceptance Criteria
 
 - [x] Footer contrast meets AA (Finding 1).
-- [ ] Findings 2–7 remediated to ≥4.5:1 (normal text) / ≥3:1 (large text & UI components).
-- [ ] Brand-color decisions for amber-as-text and the Claimed badge confirmed against the design system (`docs/blacqlist/design/`).
-- [ ] Contrast probe shows zero Serious `color-contrast` violations across the five key routes.
-- [ ] No regression to J12/J13 (amber-button and charcoal-on-cream pairs still pass).
+- [x] Findings 2–7 remediated to ≥4.5:1 (normal text) / ≥3:1 (large text & UI components).
+- [x] Brand-color decisions for amber-as-text and the Claimed badge confirmed against the design system (`docs/blacqlist/design/`).
+- [x] Contrast probe shows zero Serious `color-contrast` violations across the five key routes.
+- [x] No regression to J12/J13 (amber-button and charcoal-on-cream pairs still pass).
 
 ---
 
@@ -121,3 +121,26 @@ The audit surfaced that **`bg-pale-lavender` `#eceae6` shaves ~0.8 off every AA-
 - `text-white/40` on the dark auth panel = **3.75** (sign-in / sign-up)
 
 These are **not** fixable by darkening `--color-amber` (it would drop the focus-ring below 3:1 on dark) — they are a **design-surface decision**: lighten pale-lavender toward white (≈`#f2f0ee` clears amber + charcoal-soft), or define darker tokens for tinted/dark surfaces. They are Serious (not Critical), non-blocking, and belong to this ticket's coordinated muted-text pass — **owner/design call on the pale-lavender shade.**
+
+---
+
+## RESOLUTION — 2026-10-20 (closed)
+
+Findings 2 to 7 were already fixed on main before this pass: amber-as-text (`--color-amber #8f6600`, 2026-06-20), the Claimed badge (`#2563EB`, b2b9305), the sign-up muted text (BRM-01), and the pale-lavender surface (lightened to `#f2f0ee`). This pass cleared what was left and added a gate so it stays fixed.
+
+What changed:
+
+| Where                                                   | Before                           | After                                   | Why                                                                         |
+| ------------------------------------------------------- | -------------------------------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| `--color-charcoal-faint`                                | `#737373`                        | `#6d6d6d`                               | 4.55:1 on pale-lavender, 5.2:1 on white                                     |
+| Dashboard and admin dark sidebars                       | `text-white/30`, `text-white/40` | `text-ink-soft`                         | about 9.8:1 on the dark ground                                              |
+| Live page preview caption                               | `text-white/45`                  | `text-white/60`                         | clears 4.5:1 on its dark panel                                              |
+| Card, review, at-a-glance, dashboard, admin review text | `text-charcoal/80`               | `text-charcoal`                         | `/80` read 3.86:1 on tinted surfaces                                        |
+| "Open now", offerings, job and event status text        | `text-green-600` (3.21:1)        | `text-success` (`#157347`, about 6.4:1) | green-600 fails as text; it stays on aria-hidden icons, where 3:1 is enough |
+| Media grid hint                                         | `text-charcoal/…`                | `text-charcoal-faint`                   | token, not opacity                                                          |
+| Spend combobox warning                                  | yellow text                      | `text-amber`                            | amber-on-light rule                                                         |
+| Admin separator dots                                    | announced                        | `aria-hidden="true"`                    | decoration, not content                                                     |
+
+**The gate.** `e2e/contrast.spec.ts` now has a "color contrast scan (098)" block. It runs axe's `color-contrast` rule alone, at every impact level, on 11 public and auth screens, one listing page and the admin claims queue, and fails on any hit (`e2e/helpers/axe.ts` `expectNoContrastViolations`). The scan runs with reduced motion so it reads each element's settled color: with motion on, axe could land mid-fade on the `.blacq-reveal` sections and report a blended color nobody sees.
+
+Verified 2026-10-20 against staging: `e2e/contrast.spec.ts` and `e2e/a11y.spec.ts` pass 34 of 34, including J12 and J13. The a11y scans now skip the inside of embedded YouTube and Vimeo players: axe flagged YouTube's own markup there, which we cannot change. Our iframe and its title are still scanned. `tsc --noEmit` is clean, and lint shows 0 errors.

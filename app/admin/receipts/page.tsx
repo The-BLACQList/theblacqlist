@@ -142,11 +142,15 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                         <span className="font-subhead text-xs text-charcoal-soft">
                           {formatDollars(receipt.amount_cents)}
                         </span>
-                        <span className="text-charcoal/20">·</span>
+                        <span aria-hidden="true" className="text-charcoal/20">
+                          ·
+                        </span>
                         <span className="font-subhead text-xs text-charcoal-soft">
                           {receipt.purchase_date}
                         </span>
-                        <span className="text-charcoal/20">·</span>
+                        <span aria-hidden="true" className="text-charcoal/20">
+                          ·
+                        </span>
                         <span className="font-body text-xs text-charcoal-faint">
                           Submitted {formatDate(receipt.created_at)}
                         </span>

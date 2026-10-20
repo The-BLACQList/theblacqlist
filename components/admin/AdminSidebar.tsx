@@ -69,7 +69,7 @@ export function AdminSidebar({ role, counts }: Props) {
         <GoldBrandMark className="h-8 w-8 shrink-0" />
         <div>
           <p className="font-headline text-white text-lg leading-tight">BLACQList</p>
-          <p className="font-subhead text-xs text-white/40 mt-0.5">Admin panel</p>
+          <p className="font-subhead text-xs text-ink-soft mt-0.5">Admin panel</p>
         </div>
       </div>
 

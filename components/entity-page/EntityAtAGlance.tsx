@@ -89,7 +89,7 @@ function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
     <span
       suppressHydrationWarning
       className={`inline-flex items-center gap-1.5 font-subhead text-sm ${
-        status.open ? 'text-green-600' : 'text-charcoal-soft'
+        status.open ? 'text-success' : 'text-charcoal-soft'
       }`}
     >
       <span
@@ -208,7 +208,7 @@ export function EntityAtAGlance({ entity }: Props) {
                           <td className="py-1 pr-4 font-subhead font-medium w-10">
                             {DAY_LABELS[day]}
                           </td>
-                          <td className="py-1 text-charcoal/80">
+                          <td className="py-1 text-charcoal">
                             {h.closed ? 'Closed' : `${formatTime(h.open)} – ${formatTime(h.close)}`}
                           </td>
                         </tr>

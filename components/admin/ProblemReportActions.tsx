@@ -78,7 +78,9 @@ export function ProblemReportActions({ reportId, status, prRef }: Props) {
                     Mark triaged
                   </button>
                 </form>
-                <span className="text-charcoal/20">·</span>
+                <span aria-hidden="true" className="text-charcoal/20">
+                  ·
+                </span>
               </>
             )}
             <form action={dismissDispatch}>

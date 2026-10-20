@@ -121,7 +121,7 @@ function ServiceRow({ service }: { service: Service }) {
             </div>
           )}
           {state && 'success' in state && (
-            <div className="flex items-center gap-1.5 text-green-600">
+            <div className="flex items-center gap-1.5 text-success">
               <CheckCircle className="size-3.5 shrink-0" aria-hidden="true" />
               <p className="font-body text-xs">Saved.</p>
             </div>
