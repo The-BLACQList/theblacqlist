@@ -126,6 +126,8 @@ async function DiscoverContent({
           nextPageUrl={nextPageUrl}
           currentPage={page}
           radiusMiles={location?.radius ?? null}
+          showDistance
+          origin={location ? { lat: location.lat, lng: location.lng } : null}
           radiusUnavailable={result.radiusUnavailable ?? false}
           filtersUnavailable={result.filtersUnavailable ?? false}
           levels={params.level?.split(',')}

@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { CardGrid } from '@/components/ui/card-grid'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityCard } from '@/components/entities/EntityCard'
+import { CardDistanceProvider } from '@/components/entities/CardDistance'
+import type { LatLng } from '@/lib/map/distance'
 import type { DiscoveryEntity } from '@/types'
 import { BUSINESS_LEVELS, LEVEL_META } from '@/lib/listings/levels'
 
@@ -34,6 +36,13 @@ interface DiscoveryGridProps {
    * two it sits under the grid.
    */
   assist?: ReactNode
+  /**
+   * Show "About N mi from you" on each card (ticket 141). Discover and Search
+   * only. The position is found in the browser, never on the server.
+   */
+  showDistance?: boolean
+  /** The Near You point from the URL, used before the browser's location. */
+  origin?: LatLng | null
 }
 
 const linkClass =
@@ -231,6 +240,8 @@ export function DiscoveryGrid({
   clearFiltersUrl,
   levels,
   assist,
+  showDistance = false,
+  origin = null,
 }: DiscoveryGridProps) {
   if (isLoading) return <LoadingGrid />
   if (error) return <ErrorState message={error} />
@@ -261,6 +272,19 @@ export function DiscoveryGrid({
 
   const showing = Math.min(currentPage * entities.length, total)
 
+  const grid = (
+    <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
+      {entities.map((entity, i) => (
+        <EntityCard
+          key={entity.id}
+          entity={entity}
+          isPriority={i === 0}
+          showDistance={showDistance}
+        />
+      ))}
+    </CardGrid>
+  )
+
   return (
     <section aria-label="Discovery results">
       {/* Result count + the single site-wide ranking disclosure.
@@ -281,11 +305,7 @@ export function DiscoveryGrid({
         </Link>
       </div>
 
-      <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
-        {entities.map((entity, i) => (
-          <EntityCard key={entity.id} entity={entity} isPriority={i === 0} />
-        ))}
-      </CardGrid>
+      {showDistance ? <CardDistanceProvider origin={origin}>{grid}</CardDistanceProvider> : grid}
 
       {nextPageUrl && (
         <div className="flex justify-center mt-10">
