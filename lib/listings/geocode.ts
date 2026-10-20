@@ -15,7 +15,7 @@
  * boundary fix below). The 7 left are addresses neither source knows.
  */
 
-const USER_AGENT = 'TheBLACQList/1.0 (hello@theblacqlist.com)'
+export const USER_AGENT = 'TheBLACQList/1.0 (hello@theblacqlist.com)'
 
 /**
  * A trailing unit designator: an optional separator, one or more unit keywords
