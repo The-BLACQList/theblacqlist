@@ -70,6 +70,9 @@ export interface DiscoveryEntity {
   sponsored_placement_id?: string
   /** 1–3, the slot this placement was served into. Sponsored cards only. */
   sponsored_position?: number
+  /** The map pin, when the listing has one. Drives the card distance line (ticket 141). */
+  lat?: number | null
+  lng?: number | null
 }
 
 // ─── CTA Types ────────────────────────────────────────────────────────────────

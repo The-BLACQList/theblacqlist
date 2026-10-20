@@ -92,7 +92,11 @@ export type RawRow = {
   save_count: number
   categories: { name: string; slug: string } | null
   cities: { name: string; slug: string; states: { code: string } | null } | null
-  listing_details_business: { description: string | null } | null
+  listing_details_business: {
+    description: string | null
+    lat?: number | null
+    lng?: number | null
+  } | null
 }
 
 export const NESTED_SELECT = `
@@ -102,7 +106,7 @@ export const NESTED_SELECT = `
   avg_rating, review_count, save_count,
   categories!listings_category_id_fkey(name, slug),
   cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
-  listing_details_business(description)
+  listing_details_business(description, lat, lng)
 `
 
 const IDENTITY_GROUP_ID = 'a1000000-0000-0000-0000-000000000001'
@@ -135,6 +139,8 @@ export function mapRow(raw: RawRow): DiscoveryEntity {
           state_abbr: raw.cities.states?.code ?? '',
         }
       : null,
+    lat: raw.listing_details_business?.lat ?? null,
+    lng: raw.listing_details_business?.lng ?? null,
   }
 }
 

@@ -99,6 +99,8 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
         nextPageUrl={nextPageUrl}
         currentPage={page}
         radiusMiles={location?.radius ?? null}
+        showDistance
+        origin={location ? { lat: location.lat, lng: location.lng } : null}
         radiusUnavailable={result.radiusUnavailable ?? false}
         filtersUnavailable={result.filtersUnavailable ?? false}
         widerRadiusUrl={widerRadiusUrl}
