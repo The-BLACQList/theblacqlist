@@ -1,78 +1,138 @@
 # Ticket 105 — Enforce the new tier limits at every call site
 
-**Phase:** Monetization (Phase 14) · **Priority:** P1 · **Status:** Draft
+**Phase:** Monetization (Phase 14) · **Priority:** P1 · **Status:** Done (PR open, merges after the flip)
 **Depends on:** 076 (tier upgrade flow), 078 (webhook)
-**Related:** `lib/stripe/features.ts`, `monetization/time-to-1m-and-ai-margin-review.md`
+**Related:** `lib/stripe/features.ts`, `lib/stripe/planChecks.ts`, `lib/stripe/downgrade.ts`,
+`monetization/time-to-1m-and-ai-margin-review.md`
 
 ---
 
 ## Why this is P1
 
-The 2026-07-27 re-ladder rewrote `lib/stripe/features.ts` into a full entitlement map (26 gated
-features + 11 per-field limits) and rewrote the `/pricing` copy to match. **Only one limit is
-actually enforced in code today** — photos, in `lib/actions/dashboard/uploadMedia.ts`.
+The 2026-07-27 re-ladder rewrote `lib/stripe/features.ts` into a full entitlement map and rewrote
+the `/pricing` copy to match. Until every limit with a real feature behind it is checked on the
+server, the pricing page promises more than the server enforces. This ticket closes that gap for
+every surface that exists today.
 
-Until this ticket ships, the pricing page **promises differentiation the server does not enforce**.
-That is worse than the flat ladder it replaced: a Starter customer can use Growth features, and the
-ARPU gain the re-ladder was built for does not materialize. This ticket is what makes the ladder real.
+## Founder decisions (2026-10-20)
 
-## Current enforcement state
+- **Scope:** finish every gate and limit that has a real feature behind it. Gates for features
+  that are not built yet ship inside those tickets (107 to 112), which stay "Not built".
+- **Videos:** Starter 1, Growth 3, Premium unlimited, stored in a new `listing_videos` table.
+- **Downgrade:** content over the new plan's limit is hidden on the page, never deleted, and comes
+  back on upgrade.
+- **Copy (D-M):** Growth and Premium are not for sale yet, so only Free pages are told to upgrade.
+  A paid page at its limit reads "Remove one to add another."
 
-| Entitlement | Helper | Enforced? |
-|---|---|---|
-| Photos | `photoLimit` | ✅ `lib/actions/dashboard/uploadMedia.ts:48` |
-| Analytics access | `canAccess(…, 'analytics')` | ✅ `app/dashboard/pages/[entityId]/analytics/page.tsx:101` |
-| AI suggestions access | `canAccess(…, 'ai_suggestions')` | ✅ `app/dashboard/pages/[entityId]/ai-suggestions/page.tsx:66` |
-| Review response | `canAccess(…, 'review_response')` | ✅ `lib/actions/owner/submitReviewResponse.ts:43` |
-| Everything else (22 gates, 10 limits) | — | ❌ **declared but unwired** |
+## Enforcement, as built
 
-Note `priority_placement` has **no reader anywhere** — it was declared before the re-ladder and is
-still unread, so moving it Starter→Growth had no runtime effect. It needs a real reader in search
-ranking (see AC 3).
+Every check runs in a server action. The editor shows the same message before the owner tries,
+but hiding a button is never the gate.
 
-## Acceptance criteria
+| Limit or gate | Free | Starter | Growth | Premium | Where it is checked |
+|---|---|---|---|---|---|
+| Photos | 1 | 10 | 25 | 50 | `checkPhotoAdd` in `lib/media/storeListingImage.ts` |
+| Videos | 0 | 1 | 3 | unlimited | `checkVideoAdd` in `lib/actions/dashboard/updateListingVideo.ts` (link, upload start, upload finish) and the `listing_videos` insert policy |
+| Common questions | 0 | 5 | unlimited | unlimited | `checkFaqAdd` in `lib/actions/dashboard/addListingFaq.ts` |
+| Filter details | 3 | 10 | unlimited | unlimited | `checkAttributeCount` in `lib/actions/dashboard/updateListingAttributes.ts` (creator groups have their own caps) |
+| Description | 300 chars | unlimited | unlimited | unlimited | `checkDescription` in `updateListingContent.ts` and `createListing.ts` |
+| Social links | not included | included | included | included | `checkSocialLinks` in `updateListingContent.ts`, `checkLinkAdd` in `addListingLink.ts` |
+| Products and services (combined) | 0 | 0 | 25 | unlimited | `marketplaceAllowances` in `lib/marketplace/entitlements.ts` |
+| Events | 0 | 0 | 3 | unlimited | Ticket 106 (PR #255): `canAccess(tier, 'events')` in the create and submit actions, plus the live per-owner `eventQuotaFor` |
+| Analytics | locked | 7 and 30 days | up to 12 months | up to 12 months | `resolvePeriod` in `lib/analytics/periods.ts` bounds the query itself, not just the chart |
+| Review responses | | | | | `canAccess(…, 'review_response')` in `submitReviewResponse.ts` |
+| AI writing help | | | | | `canAccess(…, 'ai_suggestions')` in `lib/ai/allowance.ts` and `generateSuggestion.ts` |
+| Priority placement | | | | | Already read in SQL: `20260809000000_search_tier_tiebreak.sql` |
 
-**1. Field limits enforced server-side, in server actions — never UI-only.** Use `isAtLimit(tier,
-key, count)` so the null-means-unlimited branch is not re-derived per call site:
+### Videos
 
-- `videos` — listing video add/update action (`20260622000002_listing_video.sql`)
-- `faqs` — FAQ add action (`20260622000004_listing_faqs.sql`)
-- `attributes` — attribute/tag assignment (`20260622000000_attributes_taxonomy.sql`)
-- `products` — marketplace product **and** service creation, counted **combined** against one cap
-- `events` — active event creation (`20260622000007_event_entity.sql`); cap counts *active* only
-- `teamMembers`, `locations` — once tickets 107 and 110 land
-- `descriptionChars` — listing description save; validate on the server, and show the remaining
-  count in the editor so Free users see the cap before they hit it
+- New table `listing_videos` (migration `20261020000000_tier_limits_videos.sql`): `kind`
+  embed or file, `embed_url`, `file_path`, `position`, audit fields, RLS like `listing_media`.
+- Backfilled once from `listing_details_business.video_embed_url` and `video_path`. The old
+  columns stay for now; dropping them is a later migration after the founder approves.
+- The insert policy also enforces the limit in the database. It counts through the
+  `SECURITY DEFINER` function `owned_listing_video_count(listing_id)`, because a policy that
+  queries its own table recurses ("infinite recursion detected in policy"). The function answers
+  only for the listing's owner.
+- Owners can always remove and reorder, even on a lower plan.
+- `VideoSection.tsx` is a list editor (add link, upload, remove, move up and down).
+  `EntityVideoSection.tsx` shows every video the plan allows.
 
-**2. Feature gates enforced at the render and mutation boundary.** Every `GatedFeature` with a
-consuming surface checks `canAccess` in the server component or server action — not in a client
-component, and not by hiding a button. Gating the UI without gating the action is not a gate.
+### Analytics window
 
-**3. `priority_placement` gets a real reader.** Apply it in the faceted search ranking RPC
-(`20260622001_search_listings_faceted_rpc.sql`) so Growth+ listings sort above Starter and Free
-within the same relevance band. Sponsored placement stays visually labeled and separate — this is
-organic ranking weight, not an ad slot.
+- Starter picks 7 or 30 days. Growth and Premium also get 90 days and 12 months.
+- An unknown or not-included `?period=` falls back to 30 days, so a Starter page can never read
+  Growth-depth data from the network response.
+- 90 days shows weekly bars and 12 months shows monthly bars, so the chart fits on a phone.
+- Free keeps the lock card.
 
-**4. `analyticsHistoryDays` bounds the query, not just the chart.** The owner analytics dashboard
-must not fetch 365 days and render 30 — pass the tier's window into the query so a Starter customer
-cannot read Growth-depth data from the network response.
+## Downgrade: hidden, never deleted
 
-**5. Downgrade behavior is defined and non-destructive.** When a subscription downgrades or lapses,
-content over the new cap is **hidden, never deleted** — surplus photos/videos/FAQs/products become
-inactive and are restored on re-upgrade. A billing lapse must never destroy an owner's content.
-Add this to the webhook path (078) and cover it with a test.
+- **Rule.** Caps apply only when the page is on a lower plan than the best one it has had.
+  `listings.peak_tier` (new, same migration) holds that best plan. A trigger raises it whenever
+  `tier` goes up and never lowers it. End users cannot write it. It was backfilled from the
+  current tier and from past subscriptions.
+- **Why peak_tier** (an addition to the plan): without it, a page that never paid but was loaded
+  with platform content (seeds, imports) would lose content on its first read. With it, only a
+  real move down trims anything.
+- **Where.** At read time. The Stripe webhook already writes `listings.tier`; nothing in storage
+  changes, so an upgrade brings everything back at once.
+  - Public page (`lib/listings/entityPage.ts`): photos, videos, common questions, filter details,
+    upcoming events on the host page, and the description (cut at a whole word, full text kept).
+  - Owner editor (`lib/listings/hiddenContent.ts`): the same caps in the same order, so items the
+    page leaves out are tagged "Hidden on your page".
+  - `HiddenContentNotice` lists what is hidden in plain words and says nothing was deleted.
+- **Tester free month.** A tester's free Growth month raises `peak_tier` to growth. When it ends,
+  Growth-only extras (a 2nd and 3rd video, photos past 10) hide until the page is on Growth again.
+  That is the intended behaviour, and the notice explains it.
 
-**6. Every limit has a friendly typed error**, matching the existing photo-cap copy pattern:
-"Your plan includes up to N X. Upgrade to add more." Never a raw 400/429.
+## Typed errors
+
+Every limit returns a plain message, never a raw 400 or 429:
+
+- Free: "A video is part of Starter. Upgrade to add one to your page."
+- Paid page at its limit: "Your plan includes up to 3 videos. Remove one to add another."
+
+## Gates with nothing to guard yet
+
+| Gate | Why it is not wired here |
+|---|---|
+| `service_menu_pricing` | Covered: Free and Starter cannot add services (`products: 0`) |
+| `review_criteria` | Set per category; there is no owner surface |
+| `editorial_eligibility`, `priority_support`, `dedicated_support`, `analytics_advanced` | Operational, or no feature exists |
+| `teamMembers` (107), `coupons` (108), `booking` (109), `locations` (110), category exclusivity (111), spend panel (112), `sonnet_agents` | Ship with those tickets |
+
+## Known gaps
+
+- **Products and services after a downgrade** are not hidden yet. The marketplace has its own
+  listing and checkout path; hiding there waits for the marketplace work in the post-launch order.
+  New ones are still blocked by `marketplaceAllowances`.
+- **Events in the editor notice.** The host page drops events past the cap, but the dashboard
+  notice does not count them yet, because events are separate listings edited on their own page.
 
 ## Out of scope
 
-- Building the features that do not exist yet (107–112 cover those). This ticket wires the limits
-  for surfaces that already exist and leaves hooks for the rest.
-- AI quota enforcement — that is Ticket 104, which reads `aiQuota` from the same map.
+- Building features that do not exist yet (107 to 112).
+- AI quota enforcement (Ticket 104, which reads `aiQuota` from the same map).
 
-## Test plan
+## Release notes
 
-Extend `tests/feature-gating.test.ts` (entitlement matrix already covered there) with **action-level**
-tests: for each limited field, seed a listing at `limit - 1`, assert one more succeeds, assert the
-next fails with the typed error. Add a downgrade test asserting hide-not-delete.
+- **Migrate before merge.** Apply `20261020000000_tier_limits_videos.sql` to prod after the flip,
+  on the founder's word, before this PR merges. The new code reads `listing_videos` and
+  `peak_tier`. Both reads fail soft, so a missing migration breaks nothing, but existing videos
+  would not show until it runs.
+- Rollback: the migration file lists the drop statements in a comment.
+
+## Tests
+
+- `tests/plan-checks.test.ts`: every limit's message on Free, Starter and Growth.
+- `tests/listing-video-actions.test.ts`: link, upload start and finish, remove, move; limits per
+  plan; foreign paths, bad files and idempotent retries.
+- `tests/downgrade.test.ts`: `isDowngraded`, `shownLimits`, `capList`, `capDescription`,
+  `hiddenLine`, and `hiddenContent` (approved photos only, finished questions only, creator
+  groups excluded).
+- `tests/analytics-periods.test.ts`: ranges per plan, fallback, weekly and monthly bars.
+- `tests/migrations/tier-limits-videos.test.ts` (real Postgres): backfill runs once, shape
+  checks, insert limits per plan, the count function answers only for the owner, remove and
+  reorder stay open, anon reads published pages only, `peak_tier` backfill, trigger and write
+  lock.

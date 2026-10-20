@@ -40,6 +40,8 @@ export interface FinishMedia {
   file_type: string
   alt_text: string | null
   display_order: number | null
+  /** Only approved photos show on the page, so only they count toward what shows. */
+  is_approved?: boolean | null
 }
 
 export interface FinishService {
@@ -50,6 +52,14 @@ export interface FinishService {
   is_featured: boolean | null
   display_order: number
   group_label?: string | null
+}
+
+/** One page video (ticket 105), in the owner's order. */
+export interface FinishVideo {
+  id: string
+  kind: 'embed' | 'file'
+  embed_url: string | null
+  file_path: string | null
 }
 
 export interface FinishData {
@@ -76,9 +86,14 @@ export interface FinishData {
   hoursCount: number
   attributeGroups: FacetGroupData[]
   selectedValueIds: string[]
-  videoEmbedUrl: string | null
-  /** Storage path of an uploaded video (ticket 130). A page has a link or a file, not both. */
-  videoPath: string | null
+  /** The page's videos, links and uploads (tickets 105 and 130), in order. */
+  videos: FinishVideo[]
+  /**
+   * The highest paid plan the page has had (listings.peak_tier). With `tier`
+   * it decides what a lower plan hides (lib/stripe/downgrade.ts). Null when
+   * the page never paid, or the column isn't there yet.
+   */
+  peakTier: string | null
   links: { id: string; link_type: string; url: string; label: string | null }[]
   faqs: { id: string; question: string; answer: string }[]
   /**
@@ -137,7 +152,7 @@ export async function loadFinishData(
   const [
     attributeGroups,
     { data: attrRows },
-    { data: videoRow },
+    { data: videoRows },
     { data: linkRows },
     { data: faqRows },
     { data: mediaRows },
@@ -149,11 +164,11 @@ export async function loadFinishData(
     loadAttributeGroups(supabase, row.entity_type),
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
     supabase
-      .from('listing_details_business')
-      // '*' so a database without video_path (ticket 130) still loads the link.
-      .select('*')
+      .from('listing_videos')
+      .select('id, kind, embed_url, file_path')
       .eq('listing_id', row.id)
-      .maybeSingle(),
+      .order('position')
+      .order('created_at'),
     supabase
       .from('listing_links')
       .select('id, link_type, url, label')
@@ -166,7 +181,7 @@ export async function loadFinishData(
       .order('display_order', { ascending: true }),
     supabase
       .from('media_attachments')
-      .select('id, file_path, file_type, alt_text, display_order')
+      .select('id, file_path, file_type, alt_text, display_order, is_approved')
       .eq('entity_id', row.id)
       .eq('entity_type', 'listing')
       .order('display_order', { ascending: true }),
@@ -184,7 +199,8 @@ export async function loadFinishData(
       )
       .eq('id', row.id)
       .maybeSingle(),
-    // '*' so a database without open_to_partnerships (ticket 131) still loads.
+    // '*' so a database without open_to_partnerships (ticket 131) or
+    // peak_tier (ticket 105) still loads.
     supabase.from('listings').select('*').eq('id', row.id).maybeSingle(),
   ])
 
@@ -257,8 +273,8 @@ export async function loadFinishData(
     hoursCount: countOpenDays(details?.hours ?? null),
     attributeGroups,
     selectedValueIds: ((attrRows as { value_id: string }[] | null) ?? []).map((r) => r.value_id),
-    videoEmbedUrl: (videoRow as { video_embed_url?: string | null } | null)?.video_embed_url ?? null,
-    videoPath: (videoRow as { video_path?: string | null } | null)?.video_path ?? null,
+    videos: (videoRows as FinishVideo[] | null) ?? [],
+    peakTier: (partnerRow as { peak_tier?: string | null } | null)?.peak_tier ?? null,
     links:
       (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
       [],

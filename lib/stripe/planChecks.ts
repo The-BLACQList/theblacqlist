@@ -4,6 +4,8 @@ import {
   descriptionCharLimit,
   faqLimit,
   photoLimit,
+  TIER_RANK,
+  videoLimit,
 } from '@/lib/stripe/features'
 
 // Ticket 119. The plan limits the pricing cards promise, checked on save.
@@ -11,8 +13,15 @@ import {
 // One policy for every check here: keep what exists, block new additions above
 // the limit. A check fails only when the owner adds or changes the gated thing.
 // Saving an unrelated field (hours, phone) never fails because of content the
-// listing already had, and removing gated content is always allowed. A listing
-// that downgrades keeps what it had (logged as an open item, 2026-10-03).
+// listing already had, and removing gated content is always allowed.
+//
+// A listing that moves to a lower plan keeps everything it saved. Content over
+// the new limits is hidden on the public page, never deleted, and comes back on
+// upgrade ([Decision — founder, 2026-10-20], lib/stripe/downgrade.ts).
+//
+// Upgrade copy: only a Free page is told to upgrade, because Starter is the one
+// plan on sale. Growth and Premium are not for sale yet (D-M), so a paid page
+// at its limit is told how to make room instead.
 //
 // Each function returns a message the owner can act on, or null when the save
 // may go ahead. The callers own the reads; these stay pure so they are easy to
@@ -118,7 +127,7 @@ export function checkAttributeCount(
 ): string | null {
   const limit = attributeLimit(tier)
   if (limit === null || nextCount <= limit || nextCount <= previousCount) return null
-  return `Your plan includes up to ${limit} details customers filter by. Remove one, or upgrade for more.`
+  return `Your plan includes up to ${limit} details customers filter by. ${makeRoom(tier, 'Remove one, or upgrade for more.')}`
 }
 
 /** Adding one FAQ. `existingCount` is how many the listing has now. */
@@ -126,24 +135,32 @@ export function checkFaqAdd(tier: string | null, existingCount: number): string 
   const limit = faqLimit(tier)
   if (limit === null || existingCount < limit) return null
   if (limit === 0) return 'Common questions are part of Starter. Upgrade to add them to your page.'
-  return `Your plan includes up to ${limit} common questions. Remove one, or upgrade for more.`
+  return `Your plan includes up to ${limit} common questions. ${makeRoom(tier, 'Remove one, or upgrade for more.')}`
 }
 
-/** Page video, a link or an upload. Clearing is always allowed, and so is saving the same one. */
-export function checkVideo(
-  tier: string | null,
-  next: string | null,
-  previous: string | null | undefined
-): string | null {
-  if (!norm(next)) return null
-  if (norm(next) === norm(previous)) return null
-  if (canAccess(tier, 'listing_video')) return null
-  return 'A video is part of Starter. Upgrade to add one to your page.'
+/**
+ * Adding one page video, a link or an upload. `existingCount` is how many the
+ * page has now. Removing and reordering are always allowed.
+ */
+export function checkVideoAdd(tier: string | null, existingCount: number): string | null {
+  const limit = videoLimit(tier)
+  if (limit === null || existingCount < limit) return null
+  if (limit === 0) return 'A video is part of Starter. Upgrade to add one to your page.'
+  return `Your plan includes ${limit === 1 ? '1 video' : `up to ${limit} videos`}. ${makeRoom(tier, 'Upgrade to add more.')}`
 }
 
 /** Adding one gallery photo. `existingCount` counts gallery photos only. */
 export function checkPhotoAdd(tier: string | null, existingCount: number): string | null {
   const limit = photoLimit(tier)
   if (limit === null || existingCount < limit) return null
-  return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. Upgrade to add more.`
+  return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. ${makeRoom(tier, 'Upgrade to add more.')}`
+}
+
+/**
+ * The second sentence of a limit message. Free gets `freeText`, which may
+ * mention upgrading (Starter is on sale). A paid plan is told how to make room,
+ * since the next plan up is not for sale yet.
+ */
+function makeRoom(tier: string | null, freeText: string): string {
+  return (TIER_RANK[tier ?? 'free'] ?? 0) > 0 ? 'Remove one to add another.' : freeText
 }

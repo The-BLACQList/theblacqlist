@@ -155,6 +155,14 @@ export interface SocialLinks {
   twitter: string | null
 }
 
+export interface EntityVideo {
+  id: string
+  /** A YouTube or Vimeo link. Null for an uploaded file. */
+  embed_url: string | null
+  /** Public URL of an uploaded file. Null for a link. */
+  file_url: string | null
+}
+
 export interface BusinessDetails {
   description: string
   hours: WeeklyHours | null
@@ -171,9 +179,12 @@ export interface BusinessDetails {
   cta_url: string | null
   cta_label_override: string | null
   ships_nationwide: boolean
-  video_embed_url: string | null
-  /** Public URL of a video the owner uploaded (ticket 130). Set only when there is no link. */
-  video_file_url: string | null
+  /**
+   * The page's videos in the owner's order (ticket 105): a YouTube/Vimeo link
+   * or the public URL of an uploaded file (ticket 130). After a downgrade only
+   * the ones the plan shows are here.
+   */
+  videos: EntityVideo[]
   /** The map pin, when the listing has one. Used for "distance from you". */
   lat: number | null
   lng: number | null

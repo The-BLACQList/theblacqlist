@@ -1,0 +1,35 @@
+import { EyeOff } from 'lucide-react'
+import { HIDDEN_NOTICE_FOOTNOTE, hiddenLine, type HiddenCount } from '@/lib/stripe/downgrade'
+
+interface Props {
+  counts: HiddenCount[]
+}
+
+// Ticket 105. After a move to a lower plan, tells the owner what their public
+// page leaves out. Nothing is deleted; each section below tags the items.
+export function HiddenContentNotice({ counts }: Props) {
+  if (counts.length === 0) return null
+  return (
+    <div
+      role="status"
+      className="flex gap-3 rounded-xl border border-charcoal/10 bg-pale-lavender px-4 py-3"
+    >
+      <EyeOff className="mt-0.5 size-4 shrink-0 text-charcoal-soft" aria-hidden="true" />
+      <div className="min-w-0 space-y-1">
+        <p className="font-subhead text-sm font-semibold text-brand-black">
+          Some of your page is hidden on your current plan
+        </p>
+        <ul className="space-y-0.5">
+          {counts.map((c) => (
+            <li key={c.kind} className="font-body text-sm leading-relaxed text-charcoal">
+              {hiddenLine(c)}
+            </li>
+          ))}
+        </ul>
+        <p className="font-body text-xs leading-relaxed text-charcoal-soft">
+          {HIDDEN_NOTICE_FOOTNOTE}
+        </p>
+      </div>
+    </div>
+  )
+}

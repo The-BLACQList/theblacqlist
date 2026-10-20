@@ -1532,6 +1532,47 @@ export type Database = {
           },
         ]
       }
+      listing_videos: {
+        Row: {
+          created_at: string
+          embed_url: string | null
+          file_path: string | null
+          id: string
+          kind: string
+          listing_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          embed_url?: string | null
+          file_path?: string | null
+          id?: string
+          kind: string
+          listing_id: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          embed_url?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          listing_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_videos_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           admin_notes: string | null
@@ -1568,6 +1609,7 @@ export type Database = {
           ownership_attested: boolean
           ownership_attested_at: string | null
           ownership_label: string
+          peak_tier: string | null
           primary_level: string
           published_at: string | null
           review_count: number
@@ -1631,6 +1673,7 @@ export type Database = {
           ownership_attested?: boolean
           ownership_attested_at?: string | null
           ownership_label?: string
+          peak_tier?: string | null
           primary_level?: string
           published_at?: string | null
           review_count?: number
@@ -1694,6 +1737,7 @@ export type Database = {
           ownership_attested?: boolean
           ownership_attested_at?: string | null
           ownership_label?: string
+          peak_tier?: string | null
           primary_level?: string
           published_at?: string | null
           review_count?: number

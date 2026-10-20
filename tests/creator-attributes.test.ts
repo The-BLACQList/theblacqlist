@@ -107,8 +107,7 @@ describe('creatorChecklistFacts', () => {
   ]
   const base: Omit<CreatorChecklistInput, 'selectedValueIds'> = {
     attributeGroups: groups,
-    videoEmbedUrl: null,
-    videoPath: null,
+    videos: [],
     links: [],
   }
 
@@ -124,8 +123,7 @@ describe('creatorChecklistFacts', () => {
   it('a video embed, an uploaded video or a link counts as a sample', () => {
     const facts = (extra: Partial<typeof base>) =>
       creatorChecklistFacts({ ...base, selectedValueIds: [], ...extra }).hasSample
-    expect(facts({ videoEmbedUrl: 'https://youtu.be/x' })).toBe(true)
-    expect(facts({ videoPath: 'listing/video.mp4' })).toBe(true)
+    expect(facts({ videos: [{ id: 'v1' }] })).toBe(true)
     expect(facts({ links: [{}] })).toBe(true)
   })
 
