@@ -2925,10 +2925,13 @@ export type Database = {
           rail_closed_at: string | null
           started_at: string
           stripe_checkout_session_id: string | null
+          stripe_subscription_schedule_id: string | null
           tester_number: number
           tester_user_id: string
           trial_granted_at: string | null
           updated_at: string
+          upgrade_reminder_sent_at: string | null
+          upgrade_trial_ends_at: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -2941,10 +2944,13 @@ export type Database = {
           rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
+          stripe_subscription_schedule_id?: string | null
           tester_number?: number
           tester_user_id: string
           trial_granted_at?: string | null
           updated_at?: string
+          upgrade_reminder_sent_at?: string | null
+          upgrade_trial_ends_at?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -2957,10 +2963,13 @@ export type Database = {
           rail_closed_at?: string | null
           started_at?: string
           stripe_checkout_session_id?: string | null
+          stripe_subscription_schedule_id?: string | null
           tester_number?: number
           tester_user_id?: string
           trial_granted_at?: string | null
           updated_at?: string
+          upgrade_reminder_sent_at?: string | null
+          upgrade_trial_ends_at?: string | null
         }
         Relationships: [
           {

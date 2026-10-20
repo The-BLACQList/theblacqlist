@@ -20,6 +20,7 @@ const ready = (listingId: string): FreeMonthState => ({
   currentTier: 'free',
   openTier: null,
   attach: false,
+  paying: false,
 })
 
 describe('freeMonthHold', () => {
@@ -35,7 +36,7 @@ describe('freeMonthHold', () => {
     expect(freeMonthHold(ready(OTHER), PAGE)).toBeNull()
   })
 
-  it('holds when this page is one the owner can pick, unless it already pays', () => {
+  it('holds when this page is one the owner can pick, paying or not (ticket 136)', () => {
     const page = (listingId: string, paid: boolean) => ({
       listingId,
       listingName: null,
@@ -47,17 +48,25 @@ describe('freeMonthHold', () => {
     ).toBe('ready')
     expect(
       freeMonthHold({ status: 'pick', pages: [page(PAGE, true), page(OTHER, false)] }, PAGE)
-    ).toBeNull()
+    ).toBe('ready')
+    expect(freeMonthHold({ status: 'pick', pages: [page(OTHER, false)] }, PAGE)).toBeNull()
   })
 
-  it('does not hold once the month is used or saved, or for non-testers', () => {
+  it('holds for a page that already pays, so a bigger plan points at the month', () => {
+    const paying: FreeMonthState = {
+      status: 'ready',
+      listingId: PAGE,
+      listingName: 'Hampton Greens',
+      currentTier: 'starter',
+      openTier: null,
+      attach: false,
+      paying: true,
+    }
+    expect(freeMonthHold(paying, PAGE)).toBe('ready')
+  })
+
+  it('does not hold once the month is used, or for non-testers', () => {
     expect(freeMonthHold({ status: 'used', tier: 'starter' }, PAGE)).toBeNull()
-    expect(
-      freeMonthHold(
-        { status: 'saved', listingId: PAGE, listingName: null, currentTier: 'starter' },
-        PAGE
-      )
-    ).toBeNull()
     expect(freeMonthHold(null, PAGE)).toBeNull()
   })
 })

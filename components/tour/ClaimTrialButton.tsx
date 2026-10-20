@@ -5,7 +5,9 @@
 // tier guard, the compare-and-set, the idempotency key, release-on-failure.
 // This button just POSTs the tier and follows the URL. On a tier whose
 // checkout is already open the route hands back the same session, so
-// `resume` only changes the label, never the call.
+// `resume` only changes the label, never the call. For a page that already
+// pays (ticket 136) the route puts the month on that plan and hands back a
+// link to this page, so the pending label says so instead of "checkout".
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
@@ -17,12 +19,19 @@ interface Props {
   plan: TesterTrialTier
   /** e.g. "Use it on Starter" or "Resume checkout". */
   label: string
+  /** Shown while the claim runs. Defaults to "Opening checkout…". */
+  pendingLabel?: string
   /** The page to put the month on, only for an owner tester whose
    *  enrollment has no listing yet. The route checks it is theirs. */
   listingId?: string
 }
 
-export function ClaimTrialButton({ plan, label, listingId }: Props) {
+export function ClaimTrialButton({
+  plan,
+  label,
+  pendingLabel = 'Opening checkout…',
+  listingId,
+}: Props) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -61,7 +70,7 @@ export function ClaimTrialButton({ plan, label, listingId }: Props) {
         className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-amber-gold px-5 font-body text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {pending ? 'Opening checkout…' : label}
+        {pending ? pendingLabel : label}
       </button>
       {error && (
         <p role="alert" className="mt-2 font-body text-xs text-red-600">
