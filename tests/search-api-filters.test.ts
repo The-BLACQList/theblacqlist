@@ -107,6 +107,13 @@ function row(
   }
 }
 
+// The zero-result log (ticket 142) runs in after(), which needs a request
+// scope a unit test does not have. tests/zero-result-log.test.ts covers it.
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  after: vi.fn(),
+}))
+
 vi.mock('@/lib/supabase/server', () => {
   // A chainable, thenable query builder. Awaiting it at any point in the chain
   // applies the recorded filters to CORPUS, so "this narrowed the set" is a real

@@ -53,6 +53,15 @@ export interface MapFilters {
   near: NearMe | null
 }
 
+/** A place the search box words point to (ticket 142), from /api/places/lookup. */
+export interface MapPlace {
+  /** As shown on the row: "Decatur, GA". */
+  label: string
+  lat: number
+  lng: number
+  zoom: number
+}
+
 export interface MapOption {
   value: string
   label: string
@@ -72,6 +81,12 @@ export interface MapFilterProps {
   onRadius: (miles: number) => void
   /** True while the browser is still working out where the visitor is. */
   locating: boolean
+  /** The place the search words name, after Enter. Null when they name none. */
+  placeHit: MapPlace | null
+  /** Enter in the search box: asks whether the words name a place. */
+  onPlaceSearch: () => void
+  /** Moves the map to `placeHit` and clears the search. */
+  onGoToPlace: () => void
 }
 
 /** What the results list (desktop panel or phone sheet) needs. */

@@ -21,7 +21,7 @@ import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
 import { radiusBounds } from '@/lib/map/distance'
 import { NO_FILTERS, filterListings, sortByDistance } from '@/lib/map/filterListings'
 import { PIN_LIMIT, pinNumbers, rankListings } from '@/lib/map/rankListings'
-import type { MapFilters, MapListing, NearMe } from '@/lib/map/types'
+import type { MapFilters, MapListing, MapPlace, NearMe } from '@/lib/map/types'
 import { useNearMeOverlay } from '@/components/map/useNearMeOverlay'
 
 export type { MapListing }
@@ -86,6 +86,10 @@ export function MapExplore() {
   // second pin click moves the card instead of closing the one it just opened.
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // The place the search words name, after Enter (ticket 142). Each lookup gets
+  // a number, so a slow answer for old words never shows under new ones.
+  const [placeHit, setPlaceHit] = useState<MapPlace | null>(null)
+  const placeRequest = useRef(0)
 
   const reduceMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -305,9 +309,45 @@ export function MapExplore() {
     fitNear(near)
   }
 
+  /** Enter in the search box: do the words name a place? A miss shows nothing. */
+  async function searchPlace() {
+    const q = filters.query.trim()
+    const request = ++placeRequest.current
+    setPlaceHit(null)
+    if (q.length < 2 || q.length > 100) return
+    try {
+      const res = await fetch(`/api/places/lookup?q=${encodeURIComponent(q)}`)
+      if (!res.ok) return
+      const body = (await res.json()) as { data: MapPlace | null }
+      if (request === placeRequest.current) setPlaceHit(body.data ?? null)
+    } catch {
+      // A place miss never gets in the way of the pin filter.
+    }
+  }
+
+  /**
+   * Moves to the place and clears the words, so the pins there show. Near me
+   * goes off too, or its radius would hide them, and no city tab claims the view.
+   */
+  function goToPlace() {
+    if (!placeHit) return
+    placeRequest.current++
+    moveTo([placeHit.lng, placeHit.lat], placeHit.zoom)
+    setPlaceHit(null)
+    setFilters((f) => ({ ...f, query: '', near: null }))
+    setCitySlug(ALL_CITIES)
+    writeCityParam(ALL_CITIES)
+  }
+
   const filterProps = {
     filters,
-    onFilters: (patch: Partial<MapFilters>) => setFilters((f) => ({ ...f, ...patch })),
+    onFilters: (patch: Partial<MapFilters>) => {
+      if (patch.query !== undefined) {
+        placeRequest.current++
+        setPlaceHit(null)
+      }
+      setFilters((f) => ({ ...f, ...patch }))
+    },
     categories,
     entityTypes,
     citySlug,
@@ -315,6 +355,9 @@ export function MapExplore() {
     onNearMe: findNearMe,
     onRadius: setRadius,
     locating,
+    placeHit,
+    onPlaceSearch: searchPlace,
+    onGoToPlace: goToPlace,
   }
   const drawerProps = {
     ...filterProps,

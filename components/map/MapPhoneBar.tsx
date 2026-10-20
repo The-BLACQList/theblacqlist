@@ -40,6 +40,9 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
           id="map-search-phone"
           value={filters.query}
           onChange={(query) => onFilters({ query })}
+          onEnter={filterProps.onPlaceSearch}
+          placeHit={filterProps.placeHit}
+          onGoToPlace={filterProps.onGoToPlace}
         />
         <MapFiltersButton
           iconOnly
