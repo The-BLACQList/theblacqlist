@@ -9,6 +9,8 @@ const h = vi.hoisted(() => {
     user: { id: 'u1', email: 'tester@example.com' } as { id: string; email: string } | null,
     enrollment: null as Record<string, unknown> | null,
     sessionId: null as string | null,
+    scheduleId: null as string | null,
+    trialEndsAt: null as string | null,
     listing: { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u1', deleted_at: null } as Record<
       string,
       unknown
@@ -63,7 +65,11 @@ const h = vi.hoisted(() => {
         select: () => q,
         eq: () => q,
         maybeSingle: async () => ({
-          data: { stripe_checkout_session_id: state.sessionId },
+          data: {
+            stripe_checkout_session_id: state.sessionId,
+            stripe_subscription_schedule_id: state.scheduleId,
+            upgrade_trial_ends_at: state.trialEndsAt,
+          },
           error: null,
         }),
       }
@@ -71,12 +77,20 @@ const h = vi.hoisted(() => {
     },
   }))
   const retrieveSession = vi.fn()
+  const retrieveSchedule = vi.fn()
   const isFeatureEnabled = vi.fn(() => {
     state.flagReads++
     return false
   })
 
-  return { state, createClient, createServiceClient, retrieveSession, isFeatureEnabled }
+  return {
+    state,
+    createClient,
+    createServiceClient,
+    retrieveSession,
+    retrieveSchedule,
+    isFeatureEnabled,
+  }
 })
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -84,7 +98,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: h.createServiceClient,
 }))
 vi.mock('@/lib/stripe/client', () => ({
-  stripe: { checkout: { sessions: { retrieve: h.retrieveSession } } },
+  stripe: {
+    checkout: { sessions: { retrieve: h.retrieveSession } },
+    subscriptionSchedules: { retrieve: h.retrieveSchedule },
+  },
 }))
 vi.mock('@/lib/env', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/env')>()),
@@ -103,6 +120,8 @@ beforeEach(() => {
     trial_granted_at: null,
   }
   h.state.sessionId = null
+  h.state.scheduleId = null
+  h.state.trialEndsAt = null
   h.state.listing = { name: 'Hampton Greens', tier: 'free', owner_user_id: 'u1', deleted_at: null }
   h.state.liveSubs = []
   h.state.subsError = null
@@ -131,6 +150,7 @@ describe('getFreeMonthState', () => {
       currentTier: 'free',
       openTier: null,
       attach: false,
+      paying: false,
     })
     expect(h.state.flagReads).toBe(0)
   })
@@ -170,10 +190,89 @@ describe('getFreeMonthState', () => {
     expect(h.retrieveSession).not.toHaveBeenCalled()
   })
 
-  it('saved when the listing already pays', async () => {
+  it('ready, paying, when the listing already pays (ticket 136)', async () => {
     h.state.listing = { name: 'Hampton Greens', tier: 'starter', owner_user_id: 'u1', deleted_at: null }
     h.state.liveSubs = [{ id: 'sub-1' }]
-    expect(await getFreeMonthState()).toMatchObject({ status: 'saved', currentTier: 'starter' })
+    expect(await getFreeMonthState()).toMatchObject({
+      status: 'ready',
+      currentTier: 'starter',
+      paying: true,
+    })
+  })
+
+  describe('a month put on the existing plan (ticket 136)', () => {
+    const END = Math.floor(Date.now() / 1000) + 10 * 86400
+    const schedule = (over: Record<string, unknown> = {}) => ({
+      id: 'sub_sched_1',
+      status: 'active',
+      end_behavior: 'release',
+      metadata: {
+        tour_enrollment_id: 'enr-1',
+        tour_phases: 'set',
+        upgrade_tier: 'growth',
+        return_tier: 'starter',
+        return_price_id: 'price_starter',
+      },
+      phases: [
+        {
+          start_date: END - 30 * 86400,
+          end_date: END,
+          trial_end: END,
+          metadata: { plan_slug: 'growth' },
+          items: [{ price: 'price_growth' }],
+        },
+        {
+          start_date: END,
+          end_date: END + 30 * 86400,
+          trial_end: null,
+          metadata: { plan_slug: 'starter' },
+          items: [{ price: 'price_starter' }],
+        },
+      ],
+      ...over,
+    })
+
+    beforeEach(() => {
+      h.state.enrollment!.trial_granted_at = '2026-10-20T00:00:00Z'
+      h.state.scheduleId = 'sub_sched_1'
+      h.state.listing = { name: 'Hampton Greens', tier: 'growth', owner_user_id: 'u1', deleted_at: null }
+    })
+
+    it('used, with when it ends and what it goes back to', async () => {
+      h.retrieveSchedule.mockResolvedValue(schedule())
+      expect(await getFreeMonthState()).toEqual({
+        status: 'used',
+        tier: 'growth',
+        upgrade: {
+          tier: 'growth',
+          returnTier: 'starter',
+          endsAt: END,
+          cancelling: false,
+          running: true,
+        },
+      })
+      expect(h.retrieveSession).not.toHaveBeenCalled()
+    })
+
+    it('says so when the tester asked to end the plan then', async () => {
+      h.retrieveSchedule.mockResolvedValue(schedule({ end_behavior: 'cancel' }))
+      expect(await getFreeMonthState()).toMatchObject({
+        status: 'used',
+        upgrade: { cancelling: true, running: true },
+      })
+    })
+
+    it('ready again while an upgrade that stopped partway waits to be finished', async () => {
+      h.retrieveSchedule.mockResolvedValue(schedule({ metadata: {} }))
+      h.state.liveSubs = [{ id: 'sub-1' }]
+      h.state.listing = { name: 'Hampton Greens', tier: 'starter', owner_user_id: 'u1', deleted_at: null }
+      expect(await getFreeMonthState()).toMatchObject({ status: 'ready', paying: true })
+    })
+
+    it('no card when Stripe can’t be read', async () => {
+      h.retrieveSchedule.mockRejectedValue(new Error('stripe down'))
+      expect(await getFreeMonthState()).toBeNull()
+    })
   })
 
   it('used, with the tier, once the checkout went through', async () => {
@@ -245,17 +344,21 @@ describe('getFreeMonthState: owner link with no page yet', () => {
       currentTier: 'free',
       openTier: null,
       attach: true,
+      paying: false,
     })
   })
 
-  it('saved when the one live page already pays', async () => {
+  it('ready, paying, when the one live page already pays (ticket 136)', async () => {
     h.state.ownedListings = [{ id: 'l1', name: 'Hampton Greens', tier: 'starter', status: 'published' }]
     h.state.liveSubs = [{ listing_id: 'l1' }]
     expect(await getFreeMonthState()).toEqual({
-      status: 'saved',
+      status: 'ready',
       listingId: 'l1',
       listingName: 'Hampton Greens',
       currentTier: 'starter',
+      openTier: null,
+      attach: true,
+      paying: true,
     })
   })
 

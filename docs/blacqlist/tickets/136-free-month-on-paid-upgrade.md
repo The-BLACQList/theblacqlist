@@ -1,6 +1,6 @@
 # Ticket 136: Use the free month on an upgrade when the listing already pays
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** Blocked (until Growth or Premium is about to open)
+**Phase:** V1.5 · **Priority:** P1 · **Status:** Done (PR open, merges after the flip)
 **Depends on:** the free-month-any-tier change (tester-tour-spec.md §4.4)
 **Gates:** PAYMENTS (plan approved by the founder before build), GATE-DATA (one nullable column on `tour_enrollments`), a passing Stripe **test-mode** run. **Must ship before Growth or Premium get a monthly price ID**, or a paying tester's saved month has nowhere to go.
 **Decision record:** `docs/blacqlist/product/tester-tour-spec.md` §4.4
@@ -28,41 +28,61 @@ Out:
 
 ## How it works
 
-**Stripe.** Put the existing subscription on a Subscription Schedule (`subscriptionSchedules.create({ from_subscription })`), then update it to two phases:
+**Stripe.** Put the existing subscription on a Subscription Schedule (`subscriptionSchedules.create({ from_subscription })`), then update it to three phases. A test-clock probe on 2026-10-20 showed two phases can't do it: a schedule that releases after the trial leaves the subscription on Growth, and day 31 bills $49.
 
 | Phase | Price | Length | Billing |
 |---|---|---|---|
-| 1 | The picked tier's monthly price | 30 days | `trial: true`, so nothing is charged |
-| 2 | The subscription's current price | Until changed | As before, on the card already on file |
+| 1 | The current Starter price | From the period start until now | Already paid; cut short at the claim |
+| 2 | The picked tier's monthly price | 30 days | `trial: true`, so nothing is charged |
+| 3 | The Starter price again | One month | `billing_cycle_anchor: 'phase_start'`, so $19 is charged on day 31 |
 
-The schedule's `end_behavior` is `release`, so after phase 2 starts the subscription is an ordinary one again.
+`proration_behavior: 'none'` throughout, and `end_behavior: 'release'`, so after phase 3 the subscription is an ordinary Starter one again. `assertUpgradeSafe` (`lib/tour/upgrade.ts`) throws before any Stripe call unless the last phase is the price the tester had, so a tester can never be billed for the higher tier.
 
-**Webhook.** None expected. `handleSubscriptionUpsert` already re-resolves the tier from the live price, so phase 1 lands the listing on the picked tier and phase 2 puts it back. Confirm this in the test-mode run; don't assume it.
+**Webhook.** No change. `handleSubscriptionUpsert` resolves the tier from the live price, and `trialing` keeps access, so the listing reads Growth for the 30 days and Starter after. `handleSubscriptionDeleted` drops the page to Free when a tester who chose to end the plan reaches day 30. Covered in `tests/subscription-upsert.test.ts` (the ticket 136 block).
 
-**Route.** In `/api/tour/claim`, the live-subscription branch of `guardBeforeClaim` stops refusing when the listing has exactly one live subscription on a lower tier. It goes down a new path instead: compare-and-set, then the schedule calls with the idempotency key `tour-upgrade:${enrollmentId}`, then persist the schedule id. On failure, release the claim, and release the schedule if one was created.
+**Route.** In `/api/tour/claim`, a listing with exactly one live, monthly, lower-tier subscription takes the upgrade path instead of 409 `ALREADY_SUBSCRIBED`: guards, compare-and-set, then the schedule calls. The create key is `tour-upgrade:${enrollmentId}:${grantedAt}` and the update key is `tour-upgrade:${scheduleId}:${tier}`. The schedule id is saved as soon as the create returns, so a retry finishes the same schedule instead of making a second. After the phases are asked for, nothing is ever released: if the answer was lost, the next click reads the schedule and finishes. These cases are refused in plain words and spend nothing:
 
-**Data (GATE-DATA).** Add `stripe_subscription_schedule_id text NULL` to `tour_enrollments`. Add a CHECK that it requires `trial_granted_at`, mirroring the session-id CHECK. Add a CHECK so a row can't hold both a checkout session id and a schedule id. The founder runs the migration on staging first, then prod, before merge.
+| Code | When |
+|---|---|
+| `MULTIPLE_PLANS` | More than one live subscription on the page |
+| `TOP_PLAN` / `NOT_AN_UPGRADE` | Already on Premium, or the picked tier isn't higher |
+| `PAYMENT_PAST_DUE` | The last payment failed |
+| `PLAN_TRIALING` / `PLAN_ENDING` | The plan is in its own trial, or set to cancel |
+| `NOT_MONTHLY` | An annual plan (handled by hand through support) |
+| `PLAN_CHANGE_PENDING` | The subscription already has someone else's schedule |
 
-**Card.** The `saved` state becomes `ready`, offering only the tiers above the current one. The `used` state also reads from the schedule id.
+**Ending the plan.** `POST /api/tour/upgrade/end` with `{ cancel: boolean }` sets the schedule's `end_behavior` to `cancel` (the plan ends on day 30, no charge) or puts the Starter phase back. The schedule id comes from the caller's own enrollment, never the body.
 
-## Decisions to make before build
+**Reminder.** The daily `/api/cron/expiry` sweep (`lib/tour/upgradeReminder.ts`) finds months ending within 5 days, stamps `upgrade_reminder_sent_at` first (so it goes once), then sends. It skips a tester who chose to end the plan. It also backfills `upgrade_trial_ends_at` if the claim didn't manage to write it. Stripe's own `trial_will_end` fires on day 27, so we don't use it.
 
-1. **Prorations.** The tester already paid for the current Starter period. Pick one:
-   - Set `proration_behavior: 'none'` on the phase change. This is simplest, but the tester loses the unused part of the Starter period.
-   - Start phase 1 at the next renewal date, so the free month starts when the paid month ends. This is the fairest option, but the tester waits up to a month.
-2. **Cancel during the month.** If the tester cancels while in phase 1, does the listing drop to Free at once, or at the end of the 30 days?
-3. **The owner's email or receipt copy** saying what happens on day 31: "You go back to Starter at $19 a month."
+**Data (GATE-DATA).** Migration `20261021000000_tour_upgrade_schedule.sql`: three nullable columns on `tour_enrollments` (`stripe_subscription_schedule_id` UNIQUE, `upgrade_trial_ends_at`, `upgrade_reminder_sent_at`) and four CHECKs (schedule requires `trial_granted_at`; never both a checkout session and a schedule; end date requires a schedule; reminder requires an end date). No RLS change. Applied to staging; prod runs after the flip, before merge.
+
+**Card.** For a paying page, `saved` becomes `ready` and offers only the tiers above the current one. While the month runs, the card shows the end date, what comes after, and an "End my plan when the free month ends" button (with undo).
+
+## Decisions (founder, 2026-10-20)
+
+1. **Prorations.** None. 30 days of the higher tier free; Starter billing pauses and comes back on day 31. The unused part of the Starter period the tester already paid for is not refunded. (The other option, starting the free month at the next renewal, was not picked.)
+2. **Cancel during the month.** The plan ends after day 30, with no charge.
+3. **Reminder.** One email five days before the month ends (day 25). Copy, shown to the founder before merge:
+   - Subject: "Your free Growth month ends soon"
+   - "Your free Growth month ends on [date]."
+   - "You'll go back to Starter at $19/month. Nothing to do if that's what you want."
+   - "If you'd rather end your plan when the free month ends, you can do that from your dashboard before [date]. You won't be charged."
+   - Button: "See your plan"
 
 ## Acceptance criteria
 
-- Given a tester paying for Starter whose Growth plan is open, when they pick Growth on the free-month card, then the listing is on Growth, no charge is made for 30 days, and on day 31 it is back on Starter at the Starter price.
-- Given the same tester clicks twice or retries after a lost response, then exactly one schedule exists.
-- Given the schedule call fails, then the month is not spent and the listing is unchanged.
-- Given a listing with two live subscriptions, then the claim refuses and spends nothing.
-- A Stripe **test-mode** run with test clocks covers day 0, day 30 and day 31, and the webhook-synced `listings.tier` is right at each step.
+- [x] Given a tester paying for Starter whose Growth plan is open, when they pick Growth on the free-month card, then the listing is on Growth, no charge is made for 30 days, and on day 31 it is back on Starter at the Starter price. (Clock script: A and B, days 0, 29, 31, 62; `tests/subscription-upsert.test.ts`)
+- [x] Given the same tester clicks twice or retries after a lost response, then exactly one schedule exists. (Clock script: A third click, B lost answer; `tests/tour-upgrade.test.ts`)
+- [x] Given the schedule call fails, then the month is not spent and the listing is unchanged. (Clock script: A failed try; `tests/tester-tour-claim.test.ts`)
+- [x] Given a listing with two live subscriptions, then the claim refuses and spends nothing. (`tests/tester-tour-claim.test.ts`, `MULTIPLE_PLANS`)
+- [x] A Stripe **test-mode** run with test clocks covers day 0, day 30 and day 31. (`scripts/stripe/free-month-upgrade-clock.ts`, all checks passed 2026-10-20.) The script checks the live price at each step. The webhook's mapping from that price to `listings.tier` is covered by unit tests, and on the Preview against staging.
+- [x] Given a tester who ends the plan mid-month, then nothing is charged and the plan ends on day 30. (Clock script: C; `tests/tour-upgrade-end.test.ts`)
+- [x] Given a month ending in 5 days, then one reminder goes out, never to a tester who ended the plan. (`tests/tour-upgrade-reminder.test.ts`)
 
 ## QA notes
 
 - Use Stripe test clocks; never real time.
 - No live-mode Stripe writes until the founder approves.
-- Re-run `tester-tour-claim.test.ts`. The `ALREADY_SUBSCRIBED` test changes from "refused" to "takes the upgrade path".
+- Re-run `tester-tour-claim.test.ts`. The `ALREADY_SUBSCRIBED` test now takes the upgrade path.
+- Re-run the clock script: `STRIPE_SECRET_KEY=sk_test_... npx tsx scripts/stripe/free-month-upgrade-clock.ts`. It refuses any key that isn't a test key and cleans up after itself.

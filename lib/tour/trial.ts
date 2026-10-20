@@ -42,6 +42,11 @@ import type Stripe from 'stripe'
 
 export const TESTER_TRIAL_DAYS = 30
 
+// Statuses that still hold paid access (mirrors KEEPS_ACCESS in
+// lib/services/billing/webhookHandlers.ts). Lives here, not in freeMonth.ts,
+// so freeMonth.ts and upgrade.ts can both read it without importing each other.
+export const LIVE_STATUSES = ['active', 'trialing', 'past_due']
+
 /** The tiers the free month can go on. The tester picks one; a tier only
  *  works once its plan row has a monthly Stripe price, so Growth and Premium
  *  wait until they open. The webhook re-resolves the tier from the live price,

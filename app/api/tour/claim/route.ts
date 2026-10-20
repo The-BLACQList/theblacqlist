@@ -6,7 +6,6 @@ import { getPlanMeta } from '@/lib/stripe/plans'
 import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
 import {
-  LIVE_STATUSES,
   listingCanTakeFreeMonth,
   listingIsOwnedBy,
   resolveTrialClaimer,
@@ -19,6 +18,18 @@ import {
   TESTER_TRIAL_TIERS,
   type TesterTrialTier,
 } from '@/lib/tour/trial'
+import {
+  findUpgradeTarget,
+  FREE_MONTH_STARTED_URL,
+  isMarked,
+  isRefusal,
+  liveSubscriptionIds,
+  MULTIPLE_PLANS,
+  putFreeMonthOn,
+  recordFreeMonthEnd,
+  type UpgradeRefusal,
+  type UpgradeTarget,
+} from '@/lib/tour/upgrade'
 
 // The Tester Tour's claim route (tester-tour-spec.md §4.3): a completed tour
 // converts into one free month (a 30-day card-less trial) on the paid tier the
@@ -27,7 +38,14 @@ import {
 //
 // Body: `{ plan?: 'starter' | 'growth' | 'premium', listingId?: uuid }`. With no
 // plan, a fresh claim lands on Starter (so a tab opened before the tier choice
-// still works) and a resume hands back whatever checkout is already open.
+// still works), or on the next tier up for a page that already pays, and a
+// resume hands back whatever checkout is already open.
+//
+// A page that already pays (ticket 136, founder 2026-10-20) takes the month as
+// 30 days of a higher tier on its existing subscription, through a Stripe
+// subscription schedule. lib/tour/upgrade.ts holds that path and its safety
+// check. The claim is the same compare-and-set either way; the schedule id is
+// its record, the way the checkout session id is for a page with no plan.
 //
 // `listingId` is for an owner tester whose link had no page (2026-10-11): their
 // enrollment has is_owner set and no listing. They name a live page they own,
@@ -40,7 +58,8 @@ import {
 //
 //   1. The plan/price guard runs BEFORE the compare-and-set. A tier with no
 //      monthly price is not open yet, and asking for it must not burn the
-//      tester's one claim (§4.3.2). Same for a listing that already pays.
+//      tester's one claim (§4.3.2). Same for a paid plan the month can't go
+//      on (annual, past due, ending, two plans): see findUpgradeTarget.
 //   2. The compare-and-set on `trial_granted_at` runs BEFORE Stripe is called.
 //      `.select('id')` makes a zero-row update observable, so of two
 //      concurrent claims exactly one proceeds and Stripe is called once.
@@ -53,10 +72,11 @@ import {
 //      can switch tiers) is keyed on the session it replaces:
 //      `tour-trial:<enrollmentId>:<priorSessionId>`.
 //   4. Release-on-failure puts `trial_granted_at` back to null ONLY when it
-//      still holds the exact timestamp this request wrote and no session id
-//      has been persisted — so a release can never clobber a concurrent or
-//      later winner, and never violates the DB CHECK that a session id
-//      requires a claim.
+//      still holds the exact timestamp this request wrote and no session or
+//      schedule id has been persisted — so a release can never clobber a
+//      concurrent or later winner, and never violates the DB CHECKs that a
+//      session or schedule id requires a claim. Once a schedule id is saved
+//      the claim stays, and the next click finishes the schedule.
 //
 // The session's metadata carries the same five keys as the ordinary checkout
 // route and NO `purpose` key — on purpose. webhookHandlers.ts must treat this
@@ -72,16 +92,6 @@ export const dynamic = 'force-dynamic'
 const CLAIM_FAILED = {
   error: 'Couldn’t start your free month just now. Try again in a moment.',
   code: 'SERVER_ERROR',
-} as const
-
-// Answer 2 (founder, 2026-10-10): a tester who already pays keeps the free
-// month for a bigger plan. Putting a trial on top of a live subscription is
-// unsafe today (two subscriptions, one listings.tier), so the claim waits for
-// ticket 136 and is NOT spent here.
-const ALREADY_SUBSCRIBED = {
-  error:
-    'Your listing already has a paid plan, so we’re saving your free month for an upgrade. It will be ready when Growth and Premium open.',
-  code: 'ALREADY_SUBSCRIBED',
 } as const
 
 const claimBodySchema = z
@@ -228,14 +238,36 @@ export async function POST(request: Request) {
     //   session expired         → no subscription ever existed; open a fresh
     //                             one, keyed on the session it replaces.
     //   session complete        → the free month is real. 409.
+    //   schedule, phases set    → the free month is on the existing plan.
+    //                             Send them to the card that says so.
+    //   schedule, phases unset  → an upgrade stopped partway. Finish it.
     if (viewer.enrollment.trialGrantedAt !== null) {
       const { data: row, error: rowError } = await serviceClient
         .from('tour_enrollments')
-        .select('stripe_checkout_session_id')
+        .select('stripe_checkout_session_id, stripe_subscription_schedule_id')
         .eq('id', enrollmentId)
         .maybeSingle()
       if (rowError || !row) {
         return NextResponse.json(CLAIM_FAILED, { status: 500 })
+      }
+      // The stored timestamp, in the same form the claim wrote it, so the
+      // schedule's idempotency key matches across requests.
+      const grantedAtIso = new Date(viewer.enrollment.trialGrantedAt).toISOString()
+
+      const scheduleId = row.stripe_subscription_schedule_id
+      if (scheduleId !== null) {
+        const known = await stripe.subscriptionSchedules.retrieve(scheduleId)
+        if (isMarked(known)) {
+          await recordFreeMonthEnd(serviceClient, enrollmentId, known)
+          return NextResponse.json({ data: { url: FREE_MONTH_STARTED_URL } })
+        }
+        const guard = await guardBeforeClaim(serviceClient, requested, listingId)
+        if (guard instanceof NextResponse) return guard
+        if (guard.kind !== 'upgrade') return NextResponse.json(CLAIM_FAILED, { status: 500 })
+        return upgradeResponse(await putFreeMonthOn(stripe, serviceClient, {
+          ...upgradeBase(base, guard, grantedAtIso),
+          persistedScheduleId: scheduleId,
+        }))
       }
 
       let tier: TesterTrialTier = requested ?? TESTER_TRIAL_PLAN_SLUG
@@ -264,7 +296,12 @@ export async function POST(request: Request) {
       // Recovery paths share the guards below. No release-on-failure applies
       // here — this request did not perform the compare-and-set, so it owns
       // no claim to give back.
-      const guard = await guardBeforeClaim(serviceClient, tier, listingId)
+      const priorSessionId = row.stripe_checkout_session_id
+      const guard = await guardBeforeClaim(
+        serviceClient,
+        priorSessionId === null ? requested : tier,
+        listingId
+      )
       if (guard instanceof NextResponse) return guard
 
       if (toClose !== null) {
@@ -278,14 +315,30 @@ export async function POST(request: Request) {
         }
       }
 
-      const response = await createTrialSession({ ...base, tier, plan: guard, idempotencyKey })
+      if (guard.kind === 'upgrade') {
+        // The page started paying after this claim was taken (an ordinary
+        // checkout). An expired or closed trial checkout made no subscription,
+        // so its id is cleared before the schedule takes its place.
+        if (priorSessionId !== null) {
+          const { error: clearError } = await serviceClient
+            .from('tour_enrollments')
+            .update({ stripe_checkout_session_id: null })
+            .eq('id', enrollmentId)
+            .eq('stripe_checkout_session_id', priorSessionId)
+          if (clearError) return NextResponse.json(CLAIM_FAILED, { status: 500 })
+        }
+        return upgradeResponse(await putFreeMonthOn(stripe, serviceClient, {
+          ...upgradeBase(base, guard, grantedAtIso),
+          persistedScheduleId: null,
+        }))
+      }
+
+      const response = await createTrialSession({ ...base, tier: guard.tier, plan: guard.plan, idempotencyKey })
       return response ?? NextResponse.json(CLAIM_FAILED, { status: 500 })
     }
 
-    const tier: TesterTrialTier = requested ?? TESTER_TRIAL_PLAN_SLUG
-
-    // ── Open tier and no live plan, BEFORE the claim ─────────────────────────
-    const guard = await guardBeforeClaim(serviceClient, tier, listingId)
+    // ── Open tier, and a plan the month can go on, BEFORE the claim ──────────
+    const guard = await guardBeforeClaim(serviceClient, requested, listingId)
     if (guard instanceof NextResponse) return guard
 
     // ── The compare-and-set (§4.3.1): claim BEFORE Stripe ────────────────────
@@ -323,11 +376,29 @@ export async function POST(request: Request) {
       return NextResponse.json(ALREADY_CLAIMED, { status: 409 })
     }
 
+    if (guard.kind === 'upgrade') {
+      try {
+        const result = await putFreeMonthOn(stripe, serviceClient, {
+          ...upgradeBase(base, guard, grantedAtIso),
+          persistedScheduleId: null,
+        })
+        // A refusal comes before any schedule id is saved, so the claim goes back.
+        if (!result.ok) await releaseClaim(serviceClient, enrollmentId, grantedAtIso)
+        return upgradeResponse(result)
+      } catch (err) {
+        // Released only if no schedule id was saved. Otherwise the claim stays
+        // and the card's button finishes the schedule on the next click.
+        console.error('Tour free month on an existing plan failed after compare-and-set:', err)
+        await releaseClaim(serviceClient, enrollmentId, grantedAtIso)
+        return NextResponse.json(CLAIM_FAILED, { status: 500 })
+      }
+    }
+
     try {
       const response = await createTrialSession({
         ...base,
-        tier,
-        plan: guard,
+        tier: guard.tier,
+        plan: guard.plan,
         idempotencyKey: `tour-trial:${enrollmentId}`,
       })
       if (response) return response
@@ -354,23 +425,44 @@ interface OpenPlan {
   priceId: string
 }
 
+type Guarded =
+  | { kind: 'checkout'; tier: TesterTrialTier; plan: OpenPlan }
+  | { kind: 'upgrade'; tier: TesterTrialTier; plan: OpenPlan; target: UpgradeTarget }
+
 /**
- * The two refusals that must never spend the claim, checked before it:
+ * The refusals that must never spend the claim, checked before it:
  *
+ *   - the listing has more than one live plan, or one the month can't go on
+ *     (annual, past due, trialing, set to end, a change already scheduled).
+ *     A second subscription would share one `listings.tier`, so the month
+ *     never opens a new checkout on a page that pays; it goes on the plan the
+ *     page has (ticket 136);
  *   - the tier is not open (no active plan row with a monthly price). 422
- *     PLAN_NOT_OPEN, and the month keeps waiting;
- *   - the listing already holds a live subscription. Two subscriptions would
- *     share one `listings.tier`, and the trial ending on day 30 would fire
- *     customer.subscription.deleted against a listing that is still paid for.
- *     409, and the month is saved for an upgrade (ticket 136).
+ *     PLAN_NOT_OPEN, and the month keeps waiting.
  *
- * Returns the plan to check out on, or the refusal response.
+ * With no tier asked for, the month goes on Starter for a page with no plan
+ * and on the next tier up for a page that pays. Returns which path to take,
+ * or the refusal response.
  */
 async function guardBeforeClaim(
   serviceClient: ReturnType<typeof createServiceClient>,
-  tier: TesterTrialTier,
+  requested: TesterTrialTier | null,
   listingId: string
-): Promise<OpenPlan | NextResponse> {
+): Promise<Guarded | NextResponse> {
+  const live = await liveSubscriptionIds(serviceClient, listingId)
+  if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
+  if (live.length > 1) return refuse(MULTIPLE_PLANS)
+
+  let tier: TesterTrialTier = requested ?? TESTER_TRIAL_PLAN_SLUG
+  let target: UpgradeTarget | null = null
+  const [subscriptionId] = live
+  if (subscriptionId !== undefined) {
+    const found = await findUpgradeTarget(stripe, serviceClient, subscriptionId, requested)
+    if (isRefusal(found)) return refuse(found)
+    target = found
+    tier = found.tier
+  }
+
   const { data: plan, error: planError } = await serviceClient
     .from('plans')
     .select('id, stripe_price_id_monthly')
@@ -390,26 +482,40 @@ async function guardBeforeClaim(
     )
   }
 
-  const live = await listingHasLivePlan(serviceClient, listingId)
-  if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
-  if (live) return NextResponse.json(ALREADY_SUBSCRIBED, { status: 409 })
-
-  return { planId: plan.id, priceId: plan.stripe_price_id_monthly }
+  const open: OpenPlan = { planId: plan.id, priceId: plan.stripe_price_id_monthly }
+  return target
+    ? { kind: 'upgrade', tier, plan: open, target }
+    : { kind: 'checkout', tier, plan: open }
 }
 
-/** true / false for a clear answer; null when the lookup itself failed. */
-async function listingHasLivePlan(
-  serviceClient: ReturnType<typeof createServiceClient>,
+function refuse(refusal: UpgradeRefusal): NextResponse {
+  return NextResponse.json({ error: refusal.error, code: refusal.code }, { status: refusal.status })
+}
+
+interface ClaimBase {
+  enrollmentId: string
   listingId: string
-): Promise<boolean | null> {
-  const { data, error } = await serviceClient
-    .from('subscriptions')
-    .select('id')
-    .eq('listing_id', listingId)
-    .in('status', LIVE_STATUSES)
-    .limit(1)
-  if (error) return null
-  return (data?.length ?? 0) > 0
+  userId: string
+}
+
+function upgradeBase(
+  base: ClaimBase,
+  guard: Extract<Guarded, { kind: 'upgrade' }>,
+  grantedAtIso: string
+) {
+  return {
+    enrollmentId: base.enrollmentId,
+    grantedAtIso,
+    userId: base.userId,
+    listingId: base.listingId,
+    target: guard.target,
+    plan: guard.plan,
+  }
+}
+
+function upgradeResponse(result: Awaited<ReturnType<typeof putFreeMonthOn>>): NextResponse {
+  if (!result.ok) return refuse(result.refusal)
+  return NextResponse.json({ data: { url: FREE_MONTH_STARTED_URL } })
 }
 
 interface TrialSessionInput {
@@ -483,10 +589,11 @@ async function createTrialSession(input: TrialSessionInput): Promise<NextRespons
 }
 
 /**
- * Give back a claim this request made and could not consummate. Guarded three
+ * Give back a claim this request made and could not consummate. Guarded four
  * ways: the exact enrollment, the exact timestamp this request wrote, and no
- * persisted session id — so it can never undo a different request's claim and
- * never violates the session-requires-claim DB CHECK.
+ * persisted session or schedule id — so it can never undo a different
+ * request's claim and never violates the DB CHECKs that those ids require a
+ * claim.
  */
 async function releaseClaim(
   serviceClient: ReturnType<typeof createServiceClient>,
@@ -500,6 +607,7 @@ async function releaseClaim(
       .eq('id', enrollmentId)
       .eq('trial_granted_at', grantedAtIso)
       .is('stripe_checkout_session_id', null)
+      .is('stripe_subscription_schedule_id', null)
   } catch {
     // A failed release leaves the enrollment claimed-with-no-session, which
     // the recovery branch turns back into a working claim on the next request.
