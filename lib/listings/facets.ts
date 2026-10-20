@@ -126,6 +126,8 @@ export interface RawFacetParams {
   price?: string[]
   attrs?: string[]
   open_now?: boolean
+  /** Only pages whose owner turned on "Open to partnerships" (ticket 134). */
+  partners?: boolean
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -215,6 +217,12 @@ export interface ResolvedFacetParams {
    * request without a level pick is the same call the older functions accept.
    */
   p_levels: string[] | null
+  /**
+   * Pages with "Open to partnerships" on (ticket 134). The argument is on both
+   * functions since 20261008010000_creator_entity.sql. TRUE or never sent (see
+   * rpcArgs): the functions read NULL and FALSE alike as "no filter".
+   */
+  p_open_to_partnerships: true | null
 }
 
 /** The two keys only the 20260924000000 signatures accept. */
@@ -244,6 +252,7 @@ export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<stri
   // level pick the database cannot honor must fail (the caller shows "filters
   // unavailable"), not quietly come back as the whole directory.
   if (out.p_levels == null) delete out.p_levels
+  if (out.p_open_to_partnerships == null) delete out.p_open_to_partnerships
   return out
 }
 
@@ -266,7 +275,13 @@ async function callWithTypeFallback(
 ): Promise<{ data: unknown; error: unknown }> {
   const rpc = supabase.rpc.bind(supabase) as unknown as RpcFn
   const first = await rpc(fn, args)
-  if (!first.error || !TYPE_KEYS.some((k) => k in args) || 'p_levels' in args) return first
+  if (
+    !first.error ||
+    !TYPE_KEYS.some((k) => k in args) ||
+    'p_levels' in args ||
+    'p_open_to_partnerships' in args
+  )
+    return first
   return rpc(fn, withoutTypeKeys(args))
 }
 
@@ -423,6 +438,7 @@ export async function resolveFacetParams(
       p_type_category_ids: typeCategoryIds.length > 0 ? typeCategoryIds : null,
       p_type_location_types: typeLocations.length > 0 ? typeLocations : null,
       p_levels: levels.length > 0 ? levels : null,
+      p_open_to_partnerships: raw.partners ? true : null,
     },
     unresolved,
   }

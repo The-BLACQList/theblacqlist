@@ -46,6 +46,8 @@ export interface DiscoveryEntity {
   primary_level?: string
   /** Extra business levels the filter also matches. */
   extra_levels?: string[]
+  /** Owner switched on "Open to partnerships" (ticket 134). Attached fail-soft. */
+  open_to_partnerships?: boolean
   is_featured: boolean
   is_sponsored: boolean
   logo_path: string | null
@@ -302,6 +304,8 @@ export interface EntityPageData {
   primary_level?: string
   /** Extra levels, shown as "Also: Supplier". */
   extra_levels?: string[]
+  /** Owner switched on "Open to partnerships" (ticket 134). Attached fail-soft. */
+  open_to_partnerships?: boolean
   is_featured: boolean
   /**
    * The bucket the listing won Featured in, from its latest featured_awards

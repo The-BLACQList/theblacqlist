@@ -677,7 +677,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   // The page's own levels and its related cards' in one fail-soft read, kept
   // out of LISTING_SELECT so a database without the level columns still
   // renders the page (lib/listings/levelRows.ts).
-  const self: { id: string; primary_level?: string; extra_levels?: string[] } = { id: raw.id }
+  const self: {
+    id: string
+    primary_level?: string
+    extra_levels?: string[]
+    open_to_partnerships?: boolean
+  } = { id: raw.id }
   await attachLevels(sb, [self, ...related])
   const relatedEventIds = related.filter((e) => e.entity_type === 'event').map((e) => e.id)
   if (relatedEventIds.length > 0) {
@@ -724,6 +729,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ownership_label: raw.ownership_label as EntityPageData['ownership_label'],
     primary_level: self.primary_level,
     extra_levels: self.extra_levels,
+    open_to_partnerships: self.open_to_partnerships,
     is_featured: raw.is_featured,
     featured_bucket: featuredBucket,
     is_sponsored: raw.is_sponsored,

@@ -60,6 +60,8 @@ export type DiscoverSearchParams = {
    * `canonicalOpenNowQuery`.
    */
   open?: string
+  /** "Open to partnerships" (ticket 134). `1` is the only spelling. */
+  partners?: string
   /** "Near You" — all three or none. See lib/listings/location-params.ts. */
   lat?: string
   lng?: string
@@ -84,6 +86,28 @@ export function parsePage(raw: string | undefined): number {
 /** Every spelling of "open now" that has ever been linked. */
 function isOpenNow(params: DiscoverSearchParams): boolean {
   return params.open_now === '1' || params.open_now === 'true' || params.open === 'now'
+}
+
+/**
+ * True when the URL carries any sidebar filter. Drives the "No results for
+ * these filters" empty state, which offers Clear filters; with no filter on,
+ * an empty page has nothing to clear. `q`, the Near You keys and `sort` are
+ * left out: search and distance have their own empty states.
+ */
+export function hasFacetFilters(params: DiscoverSearchParams): boolean {
+  return Boolean(
+    params.type ||
+    params.category ||
+    params.city ||
+    params.trust_tier ||
+    params.location_type ||
+    params.ownership ||
+    params.level ||
+    params.price ||
+    params.attrs ||
+    params.partners ||
+    isOpenNow(params)
+  )
 }
 
 /**
@@ -134,6 +158,7 @@ export function parseDiscoverParams(
     price: csv(params.price),
     attrs: csv(params.attrs),
     open_now: isOpenNow(params),
+    partners: params.partners === '1',
     lat: location?.lat,
     lng: location?.lng,
     radius: location?.radius,

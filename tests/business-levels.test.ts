@@ -155,7 +155,7 @@ describe('the level filter', () => {
   })
 
   it('never retries without p_levels', () => {
-    expect(src('lib/listings/facets.ts')).toMatch(/'p_levels' in args\) return first/)
+    expect(src('lib/listings/facets.ts')).toMatch(/'p_levels' in args \|\|\s*'p_open_to_partnerships' in args\s*\)\s*return first/)
   })
 })
 
@@ -298,8 +298,8 @@ describe('works before the migration', () => {
     const cards: { id: string; primary_level?: string; extra_levels?: string[] }[] = [{ id: 'a' }, { id: 'b' }]
     await attachLevels(missingColumn, cards)
     expect(cards).toEqual([
-      { id: 'a', primary_level: 'local', extra_levels: [] },
-      { id: 'b', primary_level: 'local', extra_levels: [] },
+      { id: 'a', primary_level: 'local', extra_levels: [], open_to_partnerships: false },
+      { id: 'b', primary_level: 'local', extra_levels: [], open_to_partnerships: false },
     ])
     await attachLevels(throwing, cards)
     expect(cards[0]?.primary_level).toBe('local')
@@ -311,8 +311,8 @@ describe('works before the migration', () => {
         select: () => ({
           in: async () => ({
             data: [
-              { id: 'a', primary_level: 'maker', extra_levels: ['supplier', 'nope'] },
-              { id: 'b', primary_level: 'bogus', extra_levels: null },
+              { id: 'a', primary_level: 'maker', extra_levels: ['supplier', 'nope'], open_to_partnerships: true },
+              { id: 'b', primary_level: 'bogus', extra_levels: null, open_to_partnerships: 'yes' },
             ],
             error: null,
           }),
@@ -322,9 +322,9 @@ describe('works before the migration', () => {
     const cards: { id: string; primary_level?: string; extra_levels?: string[] }[] = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
     await attachLevels(client, cards)
     expect(cards).toEqual([
-      { id: 'a', primary_level: 'maker', extra_levels: ['supplier'] },
-      { id: 'b', primary_level: 'local', extra_levels: [] },
-      { id: 'c', primary_level: 'local', extra_levels: [] },
+      { id: 'a', primary_level: 'maker', extra_levels: ['supplier'], open_to_partnerships: true },
+      { id: 'b', primary_level: 'local', extra_levels: [], open_to_partnerships: false },
+      { id: 'c', primary_level: 'local', extra_levels: [], open_to_partnerships: false },
     ])
   })
 
