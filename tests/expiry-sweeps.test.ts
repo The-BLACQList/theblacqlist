@@ -56,7 +56,12 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('@/lib/audit/system', () => ({ writeSystemAuditLog: h.writeSystemAuditLog }))
 
 import { SUGGESTION_EXPIRY_DAYS } from '@/lib/ai/review'
-import { expireStaleSuggestions, unpublishExpiredJobPostings } from '@/lib/services/expiry/sweeps'
+import {
+  EVENT_NO_END_GRACE_HOURS,
+  expireStaleSuggestions,
+  unpublishExpiredJobPostings,
+  unpublishPastEvents,
+} from '@/lib/services/expiry/sweeps'
 
 const DAY_MS = 24 * 60 * 60 * 1_000
 const NOW = new Date('2026-08-17T08:00:00.000Z')
@@ -371,5 +376,117 @@ describe('unpublishExpiredJobPostings', () => {
 
     expect(fake.tablesTouched()).not.toContain('listings')
     expect(result).toEqual({ lapsed: 0, unpublished: 0, renewed: 1 })
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ticket 106: events that are over leave the public lists. /events, search and
+// the map filter only on status, so without this a past event stays listed.
+describe('unpublishPastEvents', () => {
+  const HOUR_MS = 60 * 60 * 1_000
+  const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString()
+  const ahead = (ms: number) => new Date(NOW.getTime() + ms).toISOString()
+
+  it('unpublishes an event whose end time has passed, with one audit row', async () => {
+    const fake = makeFakeClient({
+      listings: [ok([{ id: 'e1' }]), ok([{ id: 'e1' }])],
+      listing_details_event: ok([
+        { listing_id: 'e1', starts_at: ago(3 * HOUR_MS), ends_at: ago(HOUR_MS) },
+      ]),
+    })
+
+    const result = await unpublishPastEvents(fake.client, NOW)
+
+    expect(fake.argsOf('listings', 'update', 1)).toEqual([{ status: 'unpublished' }])
+    expect(fake.argsOf('listings', 'in', 1)).toEqual(['id', ['e1']])
+    expect(result).toEqual({ past: 1, unpublished: 1 })
+    expect(h.writeSystemAuditLog).toHaveBeenCalledTimes(1)
+    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'event_ended', targetId: 'e1' })
+    )
+  })
+
+  it('leaves an event that is still running', async () => {
+    const fake = makeFakeClient({
+      listings: ok([{ id: 'e1' }]),
+      listing_details_event: ok([
+        { listing_id: 'e1', starts_at: ago(HOUR_MS), ends_at: ahead(HOUR_MS) },
+      ]),
+    })
+
+    expect(await unpublishPastEvents(fake.client, NOW)).toEqual({ past: 0, unpublished: 0 })
+    expect(fake.calls.filter((c) => c.table === 'listings')).toHaveLength(1)
+  })
+
+  // A daily 08:00 UTC run would otherwise take down an all-day event dated
+  // midnight local time a few hours into its own day.
+  it('gives an event with no end time a grace window after it starts', async () => {
+    const inside = makeFakeClient({
+      listings: ok([{ id: 'e1' }]),
+      listing_details_event: ok([
+        {
+          listing_id: 'e1',
+          starts_at: ago((EVENT_NO_END_GRACE_HOURS - 1) * HOUR_MS),
+          ends_at: null,
+        },
+      ]),
+    })
+    expect((await unpublishPastEvents(inside.client, NOW)).past).toBe(0)
+
+    const outside = makeFakeClient({
+      listings: [ok([{ id: 'e1' }]), ok([{ id: 'e1' }])],
+      listing_details_event: ok([
+        {
+          listing_id: 'e1',
+          starts_at: ago((EVENT_NO_END_GRACE_HOURS + 1) * HOUR_MS),
+          ends_at: null,
+        },
+      ]),
+    })
+    expect(await unpublishPastEvents(outside.client, NOW)).toEqual({ past: 1, unpublished: 1 })
+  })
+
+  it('leaves a published event with no details row alone', async () => {
+    const fake = makeFakeClient({
+      listings: ok([{ id: 'e1' }]),
+      listing_details_event: ok([]),
+    })
+
+    expect(await unpublishPastEvents(fake.client, NOW)).toEqual({ past: 0, unpublished: 0 })
+  })
+
+  it('reads only live events, and constrains the update the same way', async () => {
+    const fake = makeFakeClient({
+      listings: [ok([{ id: 'e1' }]), ok([])],
+      listing_details_event: ok([
+        { listing_id: 'e1', starts_at: ago(3 * HOUR_MS), ends_at: ago(HOUR_MS) },
+      ]),
+    })
+
+    const result = await unpublishPastEvents(fake.client, NOW)
+
+    for (const nth of [0, 1]) {
+      expect(fake.allArgsOf('listings', 'eq', nth)).toEqual([
+        ['entity_type', 'event'],
+        ['status', 'published'],
+      ])
+      expect(fake.argsOf('listings', 'is', nth)).toEqual(['deleted_at', null])
+    }
+    // Counted from what the database changed, not from the candidate list.
+    expect(result).toEqual({ past: 1, unpublished: 0 })
+    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
+  })
+
+  it('does not read event times when nothing is published', async () => {
+    const fake = makeFakeClient({ listings: ok([]) })
+
+    expect(await unpublishPastEvents(fake.client, NOW)).toEqual({ past: 0, unpublished: 0 })
+    expect(fake.tablesTouched()).not.toContain('listing_details_event')
+  })
+
+  it('throws on a read error rather than reporting nothing past', async () => {
+    const fake = makeFakeClient({ listings: fail('permission denied') })
+
+    await expect(unpublishPastEvents(fake.client, NOW)).rejects.toThrow(/permission denied/)
   })
 })

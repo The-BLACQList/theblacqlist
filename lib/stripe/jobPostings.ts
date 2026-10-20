@@ -156,6 +156,20 @@ export async function ownerPlanTier(
   return { ok: true, value: best }
 }
 
+/**
+ * What an owner sees when they cannot post an event. Shared by the create and
+ * submit actions so both say the same thing. "Growth" rather than "a paid
+ * plan", because Starter is paid and still has no events. Neither line says
+ * "upgrade": Growth and Premium are not for sale yet (decision D-M), so the
+ * Events tab decides whether to show an upgrade link from plan availability.
+ */
+export const EVENTS_NEED_GROWTH_MESSAGE =
+  'Events come with the Growth plan. Your current plan does not include them.'
+
+export function eventCapMessage(limit: number): string {
+  return `Your plan includes ${limit} active event${limit === 1 ? '' : 's'} at a time. Unpublish one to post this event.`
+}
+
 export type EventQuota = {
   /** null means unlimited. */
   limit: number | null

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { writeSystemAuditLog } from '@/lib/audit/system'
 import { SUGGESTION_EXPIRY_DAYS } from '@/lib/ai/review'
+import { isEventOver } from '@/lib/events/eventOver'
 
 /**
  * =============================================================================
@@ -200,4 +201,95 @@ export async function unpublishExpiredJobPostings(
   }
 
   return { lapsed: lapsedIds.length, unpublished: unpublishedIds.length, renewed }
+}
+
+export interface EventSweepResult {
+  /** Published events whose time has passed. */
+  past: number
+  /** Of those, the ones actually moved `published` → `unpublished`. */
+  unpublished: number
+}
+
+export { EVENT_NO_END_GRACE_HOURS } from '@/lib/events/eventOver'
+
+interface EventTimeRow {
+  listing_id: string
+  starts_at: string | null
+  ends_at: string | null
+}
+
+/**
+ * Unpublishes events that are over, so they leave /events, search and the
+ * map (ticket 106). The host page block already skips them by date; the
+ * public lists filter only on status, so this is what keeps them honest.
+ *
+ * Over is {@link isEventOver}, shared with the owner's Events tab. A published
+ * event with no details row at all is left alone, because an unknown date is
+ * not a past one.
+ *
+ * Reads the live events first, so the work is bounded by what is published
+ * now rather than by every event ever held. Unpublishing also frees the slot
+ * in the owner's event allowance, which counts pending and published events.
+ * The UPDATE re-states type, status and deleted_at, like the job sweep.
+ */
+export async function unpublishPastEvents(
+  supabase: AnyClient,
+  now: Date = new Date()
+): Promise<EventSweepResult> {
+  const { data: live, error } = await supabase
+    .from('listings')
+    .select('id')
+    .eq('entity_type', 'event')
+    .eq('status', 'published')
+    .is('deleted_at', null)
+
+  if (error) {
+    throw new Error(`published event read failed: ${error.message}`)
+  }
+
+  const liveIds = ((live ?? []) as { id: string }[]).map((row) => row.id)
+  if (liveIds.length === 0) return { past: 0, unpublished: 0 }
+
+  const { data: times, error: timesError } = await supabase
+    .from('listing_details_event')
+    .select('listing_id, starts_at, ends_at')
+    .in('listing_id', liveIds)
+
+  if (timesError) {
+    throw new Error(`event time read failed: ${timesError.message}`)
+  }
+
+  const pastIds = ((times ?? []) as EventTimeRow[])
+    .filter((row) => row.listing_id && isEventOver(row.starts_at, row.ends_at, now))
+    .map((row) => row.listing_id)
+
+  if (pastIds.length === 0) return { past: 0, unpublished: 0 }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('listings')
+    .update({ status: 'unpublished' })
+    .in('id', pastIds)
+    .eq('entity_type', 'event')
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .select('id')
+
+  if (updateError) {
+    throw new Error(`past event unpublish failed: ${updateError.message}`)
+  }
+
+  const unpublishedIds = ((updated ?? []) as { id: string }[]).map((row) => row.id)
+
+  for (const listingId of unpublishedIds) {
+    await writeSystemAuditLog({
+      actorUserId: null,
+      action: 'event_ended',
+      targetTable: 'listings',
+      targetId: listingId,
+      beforeState: { status: 'published' },
+      afterState: { status: 'unpublished', reason: 'event_ended' },
+    })
+  }
+
+  return { past: pastIds.length, unpublished: unpublishedIds.length }
 }
