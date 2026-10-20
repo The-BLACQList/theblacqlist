@@ -10,9 +10,11 @@ import type { CategoryOption } from '@/app/add-business/page'
 
 interface Props {
   categories: CategoryOption[]
+  /** Set when the event is started from a page's Events tab (ticket 106). */
+  host?: { id: string; name: string }
 }
 
-export function SubmitEventForm({ categories }: Props) {
+export function SubmitEventForm({ categories, host }: Props) {
   const router = useRouter()
   const [state, formAction, isPending] = useActionState(createListingAction, null)
   const [isOnline, setIsOnline] = useState(false)
@@ -42,6 +44,15 @@ export function SubmitEventForm({ categories }: Props) {
       {/* Events center a Black-owned business or creator (see attestation below),
           so they carry the black_owned ownership label. */}
       <input type="hidden" name="ownership_label" value="black_owned" />
+      {host && (
+        <>
+          <input type="hidden" name="organizer_listing_id" value={host.id} />
+          <p className="font-subhead text-sm text-charcoal-soft">
+            Hosted by <span className="font-semibold text-brand-black">{host.name}</span>. It shows on
+            that page once it is live.
+          </p>
+        </>
+      )}
 
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className={labelCls}>

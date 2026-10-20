@@ -86,6 +86,7 @@ export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
               {[
                 { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
+                { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },
                 { href: `/dashboard/pages/${entityId}/analytics`, label: 'Analytics' },
                 { href: `/dashboard/pages/${entityId}/verification`, label: 'Get Verified' },

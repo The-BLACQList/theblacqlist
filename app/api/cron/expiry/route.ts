@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { refuseUnauthorizedCron } from '@/lib/cron/auth'
 import { isFeatureEnabled } from '@/lib/env'
-import { expireStaleSuggestions, unpublishExpiredJobPostings } from '@/lib/services/expiry/sweeps'
+import {
+  expireStaleSuggestions,
+  unpublishExpiredJobPostings,
+  unpublishPastEvents,
+} from '@/lib/services/expiry/sweeps'
 import { createServiceClient } from '@/lib/supabase/server'
 
 /**
  * =============================================================================
- * Daily expiry cron — the scheduled half of two time-based rules
+ * Daily expiry cron — the scheduled half of three time-based rules
  * =============================================================================
  *
  * The rules themselves live in `lib/services/expiry/sweeps.ts`, which is where
@@ -17,7 +21,7 @@ import { createServiceClient } from '@/lib/supabase/server'
  * The CRON_SECRET check is shared with the other cron routes and fails closed.
  * See `lib/cron/auth.ts`.
  *
- * ── Why both sweeps run even if one fails ───────────────────────────────────
+ * ── Why every sweep runs even if one fails ──────────────────────────────────
  * They share nothing. Letting a failing suggestion sweep silently cancel the
  * job sweep would hide a listing staying published past its paid window behind
  * an unrelated error. Each is caught separately, both always attempted, and the
@@ -59,6 +63,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   } else {
     results.jobPostings = { skipped: 'paidPostings feature flag is off' }
+  }
+
+  // Not gated: an event that is over should leave the public lists whether or
+  // not paid postings are on (ticket 106).
+  try {
+    results.pastEvents = await unpublishPastEvents(supabase, now)
+  } catch (err) {
+    failures.push('pastEvents')
+    results.pastEvents = { error: err instanceof Error ? err.message : 'unknown error' }
+    console.error('[cron/expiry] past event sweep failed:', err)
   }
 
   return NextResponse.json(
