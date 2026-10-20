@@ -33,11 +33,13 @@ const h = vi.hoisted(() => {
       listing_id: 'l1' as string | null,
       trial_granted_at: null as string | null,
       stripe_checkout_session_id: null as string | null,
+      stripe_subscription_schedule_id: null as string | null,
+      upgrade_trial_ends_at: null as string | null,
     },
     // What the claim compare-and-set returns instead, e.g. a unique-index hit.
     casError: null as { code: string; message: string } | null,
     // subscriptions rows the live-plan guard sees for the listing.
-    liveSubs: [] as { id: string }[],
+    liveSubs: [] as { stripe_subscription_id: string | null }[],
     // The listing row the ownership recheck reads, and whether that read fails.
     listing: { owner_user_id: 'u1', deleted_at: null, status: 'published' } as {
       owner_user_id: string | null
@@ -56,6 +58,11 @@ const h = vi.hoisted(() => {
   const createSession = vi.fn()
   const retrieveSession = vi.fn()
   const expireSession = vi.fn()
+  // Ticket 136: the month on a page that already pays.
+  const retrieveSubscription = vi.fn()
+  const createSchedule = vi.fn()
+  const updateSchedule = vi.fn()
+  const retrieveSchedule = vi.fn()
 
   function runUpdate(q: { table: string; payload: Record<string, unknown>; filters: Filter[]; wantsRows: boolean }) {
     state.updates.push({ table: q.table, payload: q.payload, filters: q.filters })
@@ -66,11 +73,19 @@ const h = vi.hoisted(() => {
       }
     } else if ('stripe_checkout_session_id' in q.payload) {
       state.log.push('persist')
+    } else if ('stripe_subscription_schedule_id' in q.payload) {
+      state.log.push('persist-schedule')
     }
 
     const row = state.row as unknown as Record<string, unknown>
+    // Timestamps compare as instants, the way Postgres compares timestamptz,
+    // so '…00Z' and '…00.000Z' are the same claim.
+    const same = (x: unknown, y: unknown) =>
+      x === y ||
+      (typeof x === 'string' && typeof y === 'string' && /^\d{4}-\d\d-\d\dT/.test(x) &&
+        Date.parse(x) === Date.parse(y))
     const matches = q.filters.every((f) =>
-      f.kind === 'is' ? row[f.col] === f.val : row[f.col] === f.val
+      f.kind === 'is' ? row[f.col] === f.val : same(row[f.col], f.val)
     )
     if (matches) Object.assign(row, q.payload)
     return {
@@ -112,8 +127,14 @@ const h = vi.hoisted(() => {
         },
         async maybeSingle() {
           if (q.table === 'plans') {
-            const key = q.filters.find((f) => f.col === 'plan_key')?.val as string
-            return { data: state.plans[key] ?? null, error: null }
+            const key = q.filters.find((f) => f.col === 'plan_key')?.val as string | undefined
+            if (key !== undefined) return { data: state.plans[key] ?? null, error: null }
+            // The upgrade path looks a plan up by the price the page pays.
+            const price = q.filters.find((f) => f.col === 'stripe_price_id_monthly')?.val
+            const hit = Object.entries(state.plans).find(
+              ([, p]) => p !== null && p.stripe_price_id_monthly === price
+            )
+            return { data: hit ? { ...hit[1], plan_key: hit[0] } : null, error: null }
           }
           if (q.table === 'listings') {
             state.log.push('owner-check')
@@ -121,7 +142,10 @@ const h = vi.hoisted(() => {
           }
           if (q.table === 'tour_enrollments') {
             return {
-              data: { stripe_checkout_session_id: state.row.stripe_checkout_session_id },
+              data: {
+                stripe_checkout_session_id: state.row.stripe_checkout_session_id,
+                stripe_subscription_schedule_id: state.row.stripe_subscription_schedule_id,
+              },
               error: null,
             }
           }
@@ -146,7 +170,18 @@ const h = vi.hoisted(() => {
     },
   }))
 
-  return { state, resolveTrialClaimer, createSession, retrieveSession, expireSession, createServiceClient }
+  return {
+    state,
+    resolveTrialClaimer,
+    createSession,
+    retrieveSession,
+    expireSession,
+    retrieveSubscription,
+    createSchedule,
+    updateSchedule,
+    retrieveSchedule,
+    createServiceClient,
+  }
 })
 
 // Only the resolver is doubled; LIVE_STATUSES stays the real list. The real
@@ -162,10 +197,94 @@ vi.mock('@/lib/stripe/client', () => ({
     checkout: {
       sessions: { create: h.createSession, retrieve: h.retrieveSession, expire: h.expireSession },
     },
+    subscriptions: { retrieve: h.retrieveSubscription },
+    subscriptionSchedules: {
+      create: h.createSchedule,
+      update: h.updateSchedule,
+      retrieve: h.retrieveSchedule,
+    },
   },
 }))
 
 import { POST as claimRoute } from '@/app/api/tour/claim/route'
+import { FREE_MONTH_STARTED_URL } from '@/lib/tour/upgrade'
+
+const NOW = 1_792_000_000
+const DAY = 86_400
+
+/** A plain monthly Starter subscription on l1, the kind the month can go on. */
+function liveStarter(over: Record<string, unknown> = {}) {
+  return {
+    id: 'sub_1',
+    status: 'active',
+    cancel_at_period_end: false,
+    cancel_at: null,
+    items: {
+      data: [
+        { price: { id: 'price_starter_monthly', recurring: { interval: 'month', interval_count: 1 } } },
+      ],
+    },
+    metadata: { user_id: 'u1', listing_id: 'l1' },
+    schedule: null,
+    ...over,
+  }
+}
+
+/** The schedule Stripe makes from the subscription: one phase, no metadata. */
+function pristineSchedule() {
+  return {
+    id: 'sub_sched_1',
+    status: 'active',
+    end_behavior: 'release',
+    metadata: {},
+    current_phase: { start_date: NOW - 10 * DAY, end_date: NOW + 20 * DAY },
+    phases: [
+      {
+        start_date: NOW - 10 * DAY,
+        end_date: NOW + 20 * DAY,
+        trial_end: null,
+        metadata: {},
+        items: [{ price: 'price_starter_monthly', quantity: 1 }],
+      },
+    ],
+  }
+}
+
+/** The same schedule once the free-month phases are set. */
+function markedSchedule() {
+  return {
+    id: 'sub_sched_1',
+    status: 'active',
+    end_behavior: 'release',
+    metadata: {
+      tour_enrollment_id: 'enr-1',
+      tour_phases: 'set',
+      upgrade_tier: 'growth',
+      return_tier: 'starter',
+      return_price_id: 'price_starter_monthly',
+    },
+    phases: [
+      {
+        start_date: NOW,
+        end_date: NOW + 30 * DAY,
+        trial_end: NOW + 30 * DAY,
+        metadata: { plan_slug: 'growth' },
+        items: [{ price: 'price_growth_monthly', quantity: 1 }],
+      },
+      {
+        start_date: NOW + 30 * DAY,
+        end_date: NOW + 61 * DAY,
+        trial_end: null,
+        metadata: { plan_slug: 'starter' },
+        items: [{ price: 'price_starter_monthly', quantity: 1 }],
+      },
+    ],
+  }
+}
+
+function openGrowth() {
+  h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
+}
 
 /** POST the claim. No argument sends an empty body (the old one-button call). */
 function POST(body?: unknown) {
@@ -197,7 +316,14 @@ beforeEach(() => {
     growth: { id: 'plan-growth', stripe_price_id_monthly: null },
     premium: null,
   }
-  h.state.row = { id: 'enr-1', listing_id: 'l1', trial_granted_at: null, stripe_checkout_session_id: null }
+  h.state.row = {
+    id: 'enr-1',
+    listing_id: 'l1',
+    trial_granted_at: null,
+    stripe_checkout_session_id: null,
+    stripe_subscription_schedule_id: null,
+    upgrade_trial_ends_at: null,
+  }
   h.state.casError = null
   h.state.liveSubs = []
   h.state.listing = { owner_user_id: 'u1', deleted_at: null, status: 'published' }
@@ -208,6 +334,15 @@ beforeEach(() => {
     h.state.log.push('stripe:create')
     return { id: 'cs_tour_1', url: 'https://checkout.stripe.test/tour' }
   })
+  h.createSchedule.mockImplementation(async () => {
+    h.state.log.push('schedule:create')
+    return pristineSchedule()
+  })
+  h.updateSchedule.mockImplementation(async () => {
+    h.state.log.push('schedule:update')
+    return markedSchedule()
+  })
+  h.retrieveSchedule.mockImplementation(async () => pristineSchedule())
   process.env.NEXT_PUBLIC_APP_URL = 'https://app.test'
 })
 
@@ -439,17 +574,21 @@ describe('POST /api/tour/claim — an enrollment with a listing', () => {
 })
 
 describe('POST /api/tour/claim — trial vs paid', () => {
-  it('409 ALREADY_SUBSCRIBED when the listing already has a live plan, WITHOUT burning the claim', async () => {
-    h.state.liveSubs = [{ id: 'sub-row-1' }]
+  it('a paying page asks for the next tier up, and waits WITHOUT burning the claim while it is closed', async () => {
+    h.state.liveSubs = [{ stripe_subscription_id: 'sub_1' }]
+    h.retrieveSubscription.mockResolvedValue(liveStarter())
     const res = await POST()
-    expect(res.status).toBe(409)
-    expect((await res.json()).code).toBe('ALREADY_SUBSCRIBED')
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.code).toBe('PLAN_NOT_OPEN')
+    expect(body.error).toMatch(/^Growth isn’t open yet/)
     // The guard runs before the compare-and-set, so the claim is intact and
-    // Stripe was never called.
+    // Stripe was never asked to change anything.
     expect(h.state.log).not.toContain('cas')
     expect(h.state.updates).toHaveLength(0)
     expect(h.state.row.trial_granted_at).toBeNull()
     expect(h.createSession).not.toHaveBeenCalled()
+    expect(h.createSchedule).not.toHaveBeenCalled()
   })
 
   it('runs the live-plan check before the compare-and-set', async () => {
@@ -458,14 +597,21 @@ describe('POST /api/tour/claim — trial vs paid', () => {
     expect(h.state.log.indexOf('live-check')).toBeLessThan(h.state.log.indexOf('cas'))
   })
 
-  it('refuses a recovery-path trial too when the listing picked up a plan meanwhile', async () => {
+  it('a recovery-path claim goes on the plan when the listing picked one up meanwhile', async () => {
     h.state.viewer!.enrollment.trialGrantedAt = '2026-08-31T00:00:00Z'
     h.state.row.trial_granted_at = '2026-08-31T00:00:00Z'
-    h.state.liveSubs = [{ id: 'sub-row-1' }]
+    openGrowth()
+    h.state.liveSubs = [{ stripe_subscription_id: 'sub_1' }]
+    h.retrieveSubscription.mockResolvedValue(liveStarter())
     const res = await POST()
-    expect(res.status).toBe(409)
-    expect((await res.json()).code).toBe('ALREADY_SUBSCRIBED')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { url: FREE_MONTH_STARTED_URL } })
     expect(h.createSession).not.toHaveBeenCalled()
+    expect(h.state.row.stripe_subscription_schedule_id).toBe('sub_sched_1')
+    // Keyed on the stored claim, so a retry reaches the same schedule.
+    expect(h.createSchedule.mock.calls[0]![1]).toEqual({
+      idempotencyKey: 'tour-upgrade:enr-1:2026-08-31T00:00:00.000Z',
+    })
   })
 })
 
@@ -694,16 +840,14 @@ describe('POST /api/tour/claim — any paid tier (founder, 2026-10-10)', () => {
     expect(h.createSession).toHaveBeenCalledTimes(1)
   })
 
-  it('a tester already paying is refused WITHOUT spending the month (saved for ticket 136)', async () => {
-    h.state.plans.growth = { id: 'plan-growth', stripe_price_id_monthly: 'price_growth_monthly' }
-    h.state.liveSubs = [{ id: 'sub-row-1' }]
+  it('a tester already paying gets the month on the bigger plan, with no checkout (ticket 136)', async () => {
+    openGrowth()
+    h.state.liveSubs = [{ stripe_subscription_id: 'sub_1' }]
+    h.retrieveSubscription.mockResolvedValue(liveStarter())
     const res = await POST({ plan: 'growth' })
-    expect(res.status).toBe(409)
-    const body = await res.json()
-    expect(body.code).toBe('ALREADY_SUBSCRIBED')
-    expect(body.error).toMatch(/saving your free month/)
-    expect(h.state.log).not.toContain('cas')
-    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { url: FREE_MONTH_STARTED_URL } })
+    expect(h.createSession).not.toHaveBeenCalled()
   })
 })
 
@@ -768,5 +912,153 @@ describe('POST /api/tour/claim — switching tiers on an open checkout', () => {
     const res = await POST()
     expect(res.status).toBe(200)
     expect(h.createSession.mock.calls[0]![0].metadata.plan_slug).toBe('growth')
+  })
+})
+
+describe('POST /api/tour/claim — the month on a page that pays (ticket 136)', () => {
+  beforeEach(() => {
+    openGrowth()
+    h.state.liveSubs = [{ stripe_subscription_id: 'sub_1' }]
+    h.retrieveSubscription.mockResolvedValue(liveStarter())
+  })
+
+  it('claims first, then makes the schedule, records it, and sets the phases', async () => {
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    expect(h.state.log).toEqual([
+      'owner-check',
+      'live-check',
+      'cas',
+      'schedule:create',
+      'persist-schedule',
+      'schedule:update',
+    ])
+    expect(h.createSchedule.mock.calls[0]![0]).toEqual({ from_subscription: 'sub_1' })
+    expect(h.state.row.stripe_subscription_schedule_id).toBe('sub_sched_1')
+    expect(h.state.row.upgrade_trial_ends_at).toBe(new Date((NOW + 30 * DAY) * 1000).toISOString())
+  })
+
+  it('asks Stripe for 30 free days of Growth, then Starter again, with no proration', async () => {
+    await POST({ plan: 'growth' })
+    const [id, params, opts] = h.updateSchedule.mock.calls[0]!
+    expect(id).toBe('sub_sched_1')
+    expect(opts).toEqual({ idempotencyKey: 'tour-upgrade:sub_sched_1:growth' })
+    expect(params.end_behavior).toBe('release')
+    expect(params.proration_behavior).toBe('none')
+    expect(params.metadata.tour_phases).toBe('set')
+    const [now, trial, back] = params.phases
+    expect(now).toMatchObject({ start_date: NOW - 10 * DAY, end_date: 'now' })
+    expect(trial).toMatchObject({
+      items: [{ price: 'price_growth_monthly', quantity: 1 }],
+      trial: true,
+      duration: { interval: 'day', interval_count: 30 },
+      proration_behavior: 'none',
+    })
+    expect(trial.metadata).toMatchObject({ listing_id: 'l1', plan_slug: 'growth', plan_id: 'plan-growth' })
+    expect(back).toMatchObject({
+      items: [{ price: 'price_starter_monthly', quantity: 1 }],
+      billing_cycle_anchor: 'phase_start',
+      proration_behavior: 'none',
+    })
+    expect(back.metadata).toMatchObject({ plan_slug: 'starter', plan_id: 'plan-starter' })
+    for (const p of params.phases) expect('purpose' in (p.metadata ?? {})).toBe(false)
+  })
+
+  it.each([
+    ['an annual plan', { items: { data: [{ price: { id: 'price_starter_annual', recurring: { interval: 'year', interval_count: 1 } } }] } }, 409, 'NOT_MONTHLY'],
+    ['a payment past due', { status: 'past_due' }, 409, 'PAYMENT_PAST_DUE'],
+    ['a plan set to end', { cancel_at_period_end: true }, 409, 'PLAN_ENDING'],
+    ['a plan in its own trial', { status: 'trialing' }, 409, 'PLAN_TRIALING'],
+  ])('refuses %s WITHOUT spending the month', async (_label, over, status, code) => {
+    h.retrieveSubscription.mockResolvedValue(liveStarter(over))
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(status)
+    expect((await res.json()).code).toBe(code)
+    expect(h.state.log).not.toContain('cas')
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.createSchedule).not.toHaveBeenCalled()
+  })
+
+  it('refuses two live plans on one page', async () => {
+    h.state.liveSubs = [{ stripe_subscription_id: 'sub_1' }, { stripe_subscription_id: 'sub_2' }]
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('MULTIPLE_PLANS')
+    expect(h.retrieveSubscription).not.toHaveBeenCalled()
+    expect(h.state.row.trial_granted_at).toBeNull()
+  })
+
+  it('refuses a tier that is not above the one the page has', async () => {
+    const res = await POST({ plan: 'starter' })
+    expect(res.status).toBe(422)
+    expect((await res.json()).code).toBe('NOT_AN_UPGRADE')
+    expect(h.state.row.trial_granted_at).toBeNull()
+  })
+
+  it('refuses when someone else’s change is already scheduled, and gives the claim back', async () => {
+    h.retrieveSubscription.mockResolvedValue(liveStarter({ schedule: 'sub_sched_other' }))
+    h.retrieveSchedule.mockResolvedValue({
+      ...pristineSchedule(),
+      id: 'sub_sched_other',
+      phases: [...pristineSchedule().phases, ...pristineSchedule().phases],
+    })
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(409)
+    expect((await res.json()).code).toBe('PLAN_CHANGE_PENDING')
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.updateSchedule).not.toHaveBeenCalled()
+  })
+
+  it('adopts a pristine schedule left by a lost create instead of making a second one', async () => {
+    h.retrieveSubscription.mockResolvedValue(liveStarter({ schedule: 'sub_sched_1' }))
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    expect(h.createSchedule).not.toHaveBeenCalled()
+    expect(h.updateSchedule).toHaveBeenCalledTimes(1)
+  })
+
+  it('a Stripe failure before a schedule exists gives the month back', async () => {
+    h.createSchedule.mockRejectedValue(new Error('stripe down'))
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(500)
+    expect(h.state.row.trial_granted_at).toBeNull()
+    expect(h.state.row.stripe_subscription_schedule_id).toBeNull()
+    expect(h.state.log).toContain('release')
+  })
+
+  it('a failed phase update keeps the claim, and the next click finishes the same schedule', async () => {
+    h.updateSchedule.mockRejectedValueOnce(new Error('timeout'))
+    const first = await POST({ plan: 'growth' })
+    expect(first.status).toBe(500)
+    // Never released once a schedule id is saved (see lib/tour/upgrade.ts).
+    expect(h.state.row.trial_granted_at).not.toBeNull()
+    expect(h.state.row.stripe_subscription_schedule_id).toBe('sub_sched_1')
+
+    h.state.viewer!.enrollment.trialGrantedAt = h.state.row.trial_granted_at
+    const second = await POST({ plan: 'growth' })
+    expect(second.status).toBe(200)
+    expect(await second.json()).toEqual({ data: { url: FREE_MONTH_STARTED_URL } })
+    expect(h.createSchedule).toHaveBeenCalledTimes(1)
+    expect(h.updateSchedule).toHaveBeenCalledTimes(2)
+  })
+
+  it('an update whose answer was lost but landed counts as done', async () => {
+    h.updateSchedule.mockRejectedValueOnce(new Error('timeout'))
+    h.retrieveSchedule.mockResolvedValue(markedSchedule())
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    expect(h.state.row.trial_granted_at).not.toBeNull()
+  })
+
+  it('a click after the month is on sends the tester to the card, changing nothing', async () => {
+    h.state.viewer!.enrollment.trialGrantedAt = '2026-10-20T00:00:00Z'
+    h.state.row.trial_granted_at = '2026-10-20T00:00:00Z'
+    h.state.row.stripe_subscription_schedule_id = 'sub_sched_1'
+    h.retrieveSchedule.mockResolvedValue(markedSchedule())
+    const res = await POST({ plan: 'growth' })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ data: { url: FREE_MONTH_STARTED_URL } })
+    expect(h.retrieveSubscription).not.toHaveBeenCalled()
+    expect(h.updateSchedule).not.toHaveBeenCalled()
   })
 })

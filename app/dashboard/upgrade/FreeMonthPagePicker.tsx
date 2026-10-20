@@ -11,7 +11,8 @@ import type { TesterTrialTier } from '@/lib/tour/trial'
 export interface PickablePage {
   listingId: string
   listingName: string
-  /** Already on a live plan, so the month can't start on it yet. */
+  /** Already on a live plan, so the month goes on a bigger plan for 30
+   *  days, then the page goes back to the plan it has (ticket 136). */
   paid: boolean
   tiers: { tier: TesterTrialTier; name: string; open: boolean }[]
 }
@@ -34,20 +35,19 @@ export function FreeMonthPagePicker({ pages }: Props) {
         <ul className="space-y-2">
           {pages.map((p) => (
             <li key={p.listingId}>
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-charcoal/10 bg-white px-4 py-2 has-[:checked]:border-amber-gold has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-charcoal/10 bg-white px-4 py-2 has-[:checked]:border-amber-gold">
                 <input
                   type="radio"
                   name={groupName}
                   value={p.listingId}
                   checked={picked === p.listingId}
-                  disabled={p.paid}
                   onChange={() => setPicked(p.listingId)}
                   className="size-4 accent-amber-gold"
                 />
                 <span className="font-body text-sm text-brand-black">{p.listingName}</span>
                 {p.paid && (
                   <span className="ml-auto font-body text-xs text-charcoal-faint">
-                    Already on a paid plan
+                    Has a plan: 30 days of a bigger one free
                   </span>
                 )}
               </label>
@@ -61,6 +61,11 @@ export function FreeMonthPagePicker({ pages }: Props) {
           className="grid grid-cols-1 gap-3 sm:grid-cols-3"
           aria-label={`Plans for ${page.listingName}`}
         >
+          {page.tiers.length === 0 && (
+            <li className="font-body text-xs text-charcoal-soft sm:col-span-3">
+              This page is already on our top plan. Pick another page.
+            </li>
+          )}
           {page.tiers.map(({ tier, name, open }) => (
             <li
               key={tier}
@@ -71,6 +76,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
                 <ClaimTrialButton
                   plan={tier}
                   label={`Use it on ${name}`}
+                  pendingLabel={page.paid ? 'Starting your free month…' : undefined}
                   listingId={page.listingId}
                 />
               ) : (

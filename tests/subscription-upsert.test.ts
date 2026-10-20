@@ -512,3 +512,53 @@ describe('a downgrade never strips a plan another subscription still pays for', 
     expect(h.captured.listingUpdate).toEqual({ tier: 'premium' })
   })
 })
+
+// Ticket 136: a tester's free month on a bigger plan runs on a subscription
+// schedule. The subscription keeps its Starter checkout metadata the whole time;
+// only the live price and status change. The listing must read Growth while the
+// month is trialing, then Starter again once the return phase starts.
+describe('the free month on a paid upgrade (ticket 136)', () => {
+  const GROWTH_ROW = {
+    id: 'plan_growth',
+    plan_key: 'growth',
+    stripe_price_id_monthly: 'price_growth_monthly',
+    stripe_price_id_yearly: 'price_growth_yearly',
+  }
+  const STARTER_ROW = {
+    id: 'plan_starter',
+    plan_key: 'starter',
+    stripe_price_id_monthly: 'price_starter_monthly',
+    stripe_price_id_yearly: 'price_starter_yearly',
+  }
+
+  function scheduled(status: Stripe.Subscription.Status, priceId: string) {
+    const sub = makeSub(priceId)
+    return {
+      ...sub,
+      status,
+      metadata: { ...sub.metadata, plan_id: 'plan_starter', plan_slug: 'starter' },
+    } as Stripe.Subscription
+  }
+
+  it('day 0: a trialing subscription on the Growth price reads Growth', async () => {
+    h.state.planRow = GROWTH_ROW
+    await handleSubscriptionUpsert(makeFakeClient(), scheduled('trialing', 'price_growth_monthly'))
+    expect(h.captured.listingUpdate).toEqual({ tier: 'growth' })
+    expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_growth')
+  })
+
+  it('day 31: back on the Starter price and active, it reads Starter', async () => {
+    h.state.planRow = STARTER_ROW
+    await handleSubscriptionUpsert(makeFakeClient(), scheduled('active', 'price_starter_monthly'))
+    expect(h.captured.listingUpdate).toEqual({ tier: 'starter' })
+    expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_starter')
+  })
+
+  it('a plan ended at the close of the month drops the page to free', async () => {
+    await handleSubscriptionDeleted(makeFakeClient(), {
+      ...scheduled('canceled', 'price_growth_monthly'),
+      canceled_at: 1_702_600_000,
+    } as Stripe.Subscription)
+    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
+  })
+})

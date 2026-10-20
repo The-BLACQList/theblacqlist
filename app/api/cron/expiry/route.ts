@@ -3,21 +3,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { refuseUnauthorizedCron } from '@/lib/cron/auth'
 import { isFeatureEnabled } from '@/lib/env'
 import { expireStaleSuggestions, unpublishExpiredJobPostings } from '@/lib/services/expiry/sweeps'
+import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendFreeMonthReminders } from '@/lib/tour/upgradeReminder'
 
 /**
  * =============================================================================
- * Daily expiry cron — the scheduled half of two time-based rules
+ * Daily expiry cron — the scheduled half of three time-based rules
  * =============================================================================
  *
- * The rules themselves live in `lib/services/expiry/sweeps.ts`, which is where
- * the tests are. This file is auth and plumbing on purpose.
+ * The rules themselves live in `lib/services/expiry/sweeps.ts` and, for the
+ * tester free-month reminder (ticket 136), `lib/tour/upgradeReminder.ts`.
+ * That is where the tests are. This file is auth and plumbing on purpose.
  *
  * ── Auth ────────────────────────────────────────────────────────────────────
  * The CRON_SECRET check is shared with the other cron routes and fails closed.
  * See `lib/cron/auth.ts`.
  *
- * ── Why both sweeps run even if one fails ───────────────────────────────────
+ * ── Why every sweep runs even if one fails ──────────────────────────────────
  * They share nothing. Letting a failing suggestion sweep silently cancel the
  * job sweep would hide a listing staying published past its paid window behind
  * an unrelated error. Each is caught separately, both always attempted, and the
@@ -59,6 +62,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   } else {
     results.jobPostings = { skipped: 'paidPostings feature flag is off' }
+  }
+
+  // Not flag-gated: the free month outlives the tour (founder, 2026-10-10).
+  try {
+    results.freeMonthReminders = await sendFreeMonthReminders(supabase, stripe, now)
+  } catch (err) {
+    failures.push('freeMonthReminders')
+    results.freeMonthReminders = { error: err instanceof Error ? err.message : 'unknown error' }
+    console.error('[cron/expiry] free-month reminder sweep failed:', err)
   }
 
   return NextResponse.json(
