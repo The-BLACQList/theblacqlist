@@ -30,11 +30,17 @@ function toEmbedSrc(url: string | null): string | null {
 }
 
 export function EntityVideoSection({ entity }: { entity: EntityPageData }) {
-  // An uploaded video (ticket 130) plays in the browser's own player. A link
-  // plays in the YouTube or Vimeo embed. The page has one or the other.
-  const fileSrc = entity.details.video_file_url
-  const src = fileSrc ? null : toEmbedSrc(entity.details.video_embed_url)
-  if (!fileSrc && !src) return null
+  // Each video is an uploaded file (ticket 130), played in the browser's own
+  // player, or a link, played in the YouTube or Vimeo embed. A link we can't
+  // embed is skipped. Videos show in the owner's order (ticket 105).
+  type Playable = { id: string; fileSrc: string | null; embedSrc: string | null }
+  const videos = entity.details.videos.flatMap((v): Playable[] => {
+    if (v.file_url) return [{ id: v.id, fileSrc: v.file_url, embedSrc: null }]
+    const embedSrc = toEmbedSrc(v.embed_url)
+    return embedSrc ? [{ id: v.id, fileSrc: null, embedSrc }] : []
+  })
+  if (videos.length === 0) return null
+  const many = videos.length > 1
 
   return (
     <section aria-labelledby="video-heading" className="bg-cream py-12 md:py-16">
@@ -45,30 +51,40 @@ export function EntityVideoSection({ entity }: { entity: EntityPageData }) {
         >
           Watch
         </h2>
-        <div className="md:max-w-3xl">
-          <div className="relative w-full aspect-video overflow-hidden rounded-xl bg-deep-bg">
-            {fileSrc ? (
-              // #t=0.1 makes Safari draw the first frame instead of a black box.
-              <video
-                src={`${fileSrc}#t=0.1`}
-                controls
-                playsInline
-                preload="metadata"
-                className="absolute inset-0 size-full"
-                aria-label={`${entity.name} video`}
-              />
-            ) : (
-              <iframe
-                src={src ?? undefined}
-                title={`${entity.name} video`}
-                className="absolute inset-0 size-full"
-                loading="lazy"
-                allow="encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-            )}
-          </div>
-        </div>
+        <ul className={many ? 'grid gap-6 md:grid-cols-2' : 'md:max-w-3xl'}>
+          {videos.map((v, i) => {
+            const label = many
+              ? `${entity.name} video ${i + 1} of ${videos.length}`
+              : `${entity.name} video`
+            return (
+              <li
+                key={v.id}
+                className="relative w-full aspect-video overflow-hidden rounded-xl bg-deep-bg"
+              >
+                {v.fileSrc ? (
+                  // #t=0.1 makes Safari draw the first frame instead of a black box.
+                  <video
+                    src={`${v.fileSrc}#t=0.1`}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="absolute inset-0 size-full"
+                    aria-label={label}
+                  />
+                ) : (
+                  <iframe
+                    src={v.embedSrc ?? undefined}
+                    title={label}
+                    className="absolute inset-0 size-full"
+                    loading="lazy"
+                    allow="encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                )}
+              </li>
+            )
+          })}
+        </ul>
       </div>
     </section>
   )

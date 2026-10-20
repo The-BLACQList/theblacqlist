@@ -6,13 +6,7 @@ import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import { socialLinksAllowed } from '@/lib/stripe/planChecks'
-import {
-  TIER_RANK,
-  attributeLimit,
-  canAccess,
-  descriptionCharLimit,
-  faqLimit,
-} from '@/lib/stripe/features'
+import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit } from '@/lib/stripe/features'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
@@ -30,6 +24,8 @@ import { SocialSection } from '@/components/dashboard/SocialSection'
 import { VideoSection } from '@/components/dashboard/VideoSection'
 import { LinksSection } from '@/components/dashboard/LinksSection'
 import { FaqSection } from '@/components/dashboard/FaqSection'
+import { HiddenContentNotice } from '@/components/dashboard/HiddenContentNotice'
+import { hiddenContent } from '@/lib/listings/hiddenContent'
 import { PublishSection } from '@/components/dashboard/PublishSection'
 import { SaveLabelProvider } from '@/components/dashboard/SaveLabel'
 import { StrengthMeter, itemLabel } from './finish/StrengthMeter'
@@ -155,6 +151,18 @@ export function PageFinishView({
 
   const tier = data.tier
   const showUpgrade = (TIER_RANK[tier ?? 'free'] ?? 0) === 0
+  // Ticket 105: what the public page leaves out after a move to a lower plan.
+  // Uses the saved description, the same text the page shows.
+  const hidden = hiddenContent({
+    tier,
+    peakTier: data.peakTier,
+    description: d?.description ?? null,
+    media: data.media,
+    videos: data.videos,
+    faqs: data.faqs,
+    attributeGroups: data.attributeGroups,
+    selectedValueIds: data.selectedValueIds,
+  })
 
   const checklist = computePageChecklist(
     {
@@ -222,6 +230,8 @@ export function PageFinishView({
               </div>
             )}
 
+            <HiddenContentNotice counts={hidden.counts} />
+
             <div className={layout.topPreview}>
               <LivePagePreview {...preview} compact />
             </div>
@@ -287,6 +297,7 @@ export function PageFinishView({
                 supabaseStorageUrl={storageUrl}
                 listingId={data.id}
                 coverImagePath={data.coverImagePath}
+                hiddenIds={hidden.hiddenIds}
               />
             </Anchor>
 
@@ -369,10 +380,10 @@ export function PageFinishView({
             <Anchor id="video">
               <VideoSection
                 listingId={data.id}
-                videoEmbedUrl={data.videoEmbedUrl}
-                videoPath={data.videoPath}
+                videos={data.videos}
+                tier={tier}
+                hiddenIds={hidden.hiddenIds}
                 storageUrl={storageUrl}
-                locked={!canAccess(tier, 'listing_video')}
                 showUpgrade={showUpgrade}
               />
             </Anchor>
@@ -384,6 +395,7 @@ export function PageFinishView({
               faqs={data.faqs}
               limit={faqLimit(tier)}
               showUpgrade={showUpgrade}
+              hiddenIds={hidden.hiddenIds}
             />
 
             <Anchor id="google">

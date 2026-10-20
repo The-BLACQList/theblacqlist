@@ -70,8 +70,7 @@ export function splitAttributePicks(
 export interface CreatorChecklistInput {
   attributeGroups: readonly { slug: string; values: readonly { id: string }[] }[]
   selectedValueIds: readonly string[]
-  videoEmbedUrl: string | null
-  videoPath: string | null
+  videos: readonly unknown[]
   links: readonly unknown[]
 }
 
@@ -84,6 +83,6 @@ export function creatorChecklistFacts(page: CreatorChecklistInput): {
   const nicheIds = new Set(niche?.values.map((v) => v.id) ?? [])
   return {
     nicheCount: page.selectedValueIds.filter((id) => nicheIds.has(id)).length,
-    hasSample: !!(page.videoEmbedUrl || page.videoPath || page.links.length > 0),
+    hasSample: page.videos.length > 0 || page.links.length > 0,
   }
 }
