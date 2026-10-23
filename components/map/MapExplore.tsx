@@ -105,8 +105,12 @@ export function MapExplore() {
         .map((value) => ({ value, label: TYPE_LABELS[value]! })),
     [listings]
   )
+  // The panel line reads "N Black-owned businesses", so Ally listings stay on
+  // the map but are not counted in it.
   const cityTotal = useMemo(
-    () => (citySlug === ALL_CITIES ? listings.length : listings.filter((l) => l.citySlug === citySlug).length),
+    () =>
+      listings.filter((l) => l.ownershipLabel !== 'ally' && (citySlug === ALL_CITIES || l.citySlug === citySlug))
+        .length,
     [listings, citySlug]
   )
 

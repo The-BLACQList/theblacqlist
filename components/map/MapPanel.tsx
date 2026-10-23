@@ -47,7 +47,7 @@ export function MapPanel(props: Props) {
           <p className="mt-2 text-[15px] text-charcoal">
             {loading
               ? 'Loading businesses'
-              : `${cityTotal} Black-Owned and Ally ${cityTotal === 1 ? 'business' : 'businesses'}`}
+              : `${cityTotal} Black-owned ${cityTotal === 1 ? 'business' : 'businesses'}`}
           </p>
         </div>
         <MapCityTabs citySlug={citySlug} onCity={onCity} />

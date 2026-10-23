@@ -132,7 +132,7 @@ Requirements:
 
   // ─── Admin / platform agents ─────────────────────────────────────────────
 
-  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList, a directory of Black-owned and Ally businesses.
+  COLLECTION_SUGGESTION: `Suggest listings that belong in a curated collection on The BLACQList, a directory of Black-owned businesses.
 
 Collection name: {{collection_name}}
 Collection description: {{collection_description}}
@@ -149,7 +149,7 @@ For each candidate that fits the collection, provide:
 
 Format your response as a simple list. Only include listings that genuinely fit. If none fit, say so.`,
 
-  GUIDE_SECTION: `Write a section for a city guide on The BLACQList, a directory for discovering Black-owned and Ally businesses.
+  GUIDE_SECTION: `Write a section for a city guide on The BLACQList, a directory for discovering Black-owned businesses.
 
 City: {{city_name}}
 Category: {{category_name}}

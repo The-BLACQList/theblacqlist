@@ -88,7 +88,7 @@ export function rulesSeo(f: ListingSeoFields): { title: string; description: str
   if (!description) description = fit(parts[0] ?? '', SEO_DESCRIPTION_MAX)
   if (description.length < SEO_DESCRIPTION_MIN) {
     description = fit(
-      `${description} Support Black-owned and ally businesses on The BLACQList.`.trim(),
+      `${description} Support Black-owned businesses on The BLACQList.`.trim(),
       SEO_DESCRIPTION_MAX
     )
   }
