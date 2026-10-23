@@ -113,7 +113,7 @@ export function HomeMapBand() {
             See every business on the map
           </h2>
           <p className="font-body text-[15px] text-charcoal mt-3 max-w-[44ch] text-pretty">
-            Find Black-owned and ally businesses near you or wherever you are headed. Start from the
+            Find Black-owned businesses near you or wherever you are headed. Start from the
             whole country, then zoom in.
           </p>
           <Link
