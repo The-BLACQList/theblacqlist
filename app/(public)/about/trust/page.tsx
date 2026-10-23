@@ -154,19 +154,15 @@ export default function TrustPage() {
 
       <Section variant="white">
         <div className="max-w-2xl">
-          <SectionHeading subtitle="Ownership is labeled, never hidden.">
-            Black-Owned and Ally
-          </SectionHeading>
+          <SectionHeading subtitle="Honest about who owns it.">Ownership</SectionHeading>
           <div className="mt-4 space-y-4 font-subhead text-base text-charcoal leading-relaxed">
             <p>
-              Every listing is labeled either <strong>Black-Owned</strong> or <strong>Ally</strong>{' '}
-              so you always know who you are supporting. Moderation checks that the label matches
-              reality — an honestly labeled Ally is welcome, and a business presented as Black-Owned
-              when it is not is what we act on.
+              Moderation checks that a listing is honest about who owns the business. A business
+              presented as Black-owned when it is not is what we act on.
             </p>
             <p>
-              The label is never tied to price. Every paid tier costs the same for every business
-              regardless of which label it carries.{' '}
+              Ownership is never tied to price. Every paid tier costs the same for every business,
+              whoever owns it.{' '}
               <Link
                 href="/how-ranking-works"
                 className="text-amber hover:text-light-gold underline underline-offset-2 font-semibold"

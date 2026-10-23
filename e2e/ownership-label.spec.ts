@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test'
 // Ownership label: Black-owned is the default and goes unsaid; Ally is quiet.
 // Founder decision 2026-10-16: no Black-Owned pill on cards, no Ownership
 // filter, and the card pill slot carries a category chip that filters
-// /discover. The legal pages still define both labels.
+// /discover. The legal pages still define both labels. Since 2026-10-23 the
+// site's own copy names Ally only on Terms, Privacy and the add-business path.
 // NOTE: requires migration 20260707000000_listings_ownership_label applied to the
 // local DB (adds listings.ownership_label + the faceted RPC's ownership arg).
 
@@ -16,10 +17,14 @@ test.describe('Ownership label and card category chips', () => {
     expect(html).toMatch(/Ally/i)
   })
 
-  test('About page describes the Ally label', async ({ request }) => {
+  // Founder 2026-10-23: no Ally listings yet, so About stops naming Ally but
+  // still says listing and every plan are open to every business.
+  test('About page says every business can list, without naming Ally', async ({ request }) => {
     const res = await request.get('/about')
     expect(res.status()).toBe(200)
-    expect(await res.text()).toMatch(/Ally/i)
+    const html = await res.text()
+    expect(html).toMatch(/open to every business/i)
+    expect(html).not.toMatch(/\bAlly\b/)
   })
 
   test('Discover has no Ownership filter and cards carry no Black-Owned pill', async ({ page }) => {
