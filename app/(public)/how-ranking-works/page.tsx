@@ -153,11 +153,9 @@ export default function HowRankingWorksPage() {
             </p>
             <p>
               <span className="font-semibold">
-                The ownership label is not part of this, in either direction.
+                Who owns a business is not part of this, in either direction.
               </span>{' '}
-              Every listing shows whether it is <span className="font-semibold">Black-Owned</span>{' '}
-              or an <span className="font-semibold">Ally</span>, and neither label moves a business
-              up or down.
+              Ownership never moves a business up or down.
             </p>
           </section>
 
@@ -211,12 +209,12 @@ export default function HowRankingWorksPage() {
               </li>
               <li>
                 <span className="font-semibold">
-                  The two labels cost exactly the same and buy exactly the same things.
+                  Every business pays the same and gets the same.
                 </span>{' '}
-                Every plan is sold to every business at the same price whether it is Black-Owned or
-                an Ally, and no plan, placement, or badge is offered to one label and withheld from
-                the other. The label is shown on every listing and it does not change the order of
-                results. No plan can buy a label, and no label can be bought.
+                Every plan is sold to every business at the same price, whoever owns it, and no
+                plan, placement, or badge is offered to some businesses and withheld from others
+                because of who owns them. Ownership does not change the order of results, and no
+                plan can buy a label.
               </li>
               <li>
                 <span className="font-semibold">Reviews and ratings are not for sale.</span> A paid
