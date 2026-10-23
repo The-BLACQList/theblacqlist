@@ -92,10 +92,13 @@ describe('how-ranking-works page', () => {
     expect(copy).toContain('recalculate the whole directory once a night')
   })
 
-  it('states that the ownership label does not affect order', () => {
-    expect(copy).toContain('The ownership label is not part of this, in either direction.')
-    expect(copy).toContain('neither label moves a business up')
-    expect(copy).toContain('it does not change the order of results')
+  // 2026-10-23: the page stopped naming Ally (no Ally listings yet), so the
+  // neutrality claim is worded by ownership instead of by label. Same promise.
+  it('states that ownership does not affect order or price', () => {
+    expect(copy).toContain('Who owns a business is not part of this, in either direction.')
+    expect(copy).toContain('Ownership never moves a business up or down.')
+    expect(copy).toContain('Ownership does not change the order of results')
+    expect(copy).toContain('Every plan is sold to every business at the same price, whoever owns it')
   })
 
   it('no longer claims the ownership label changes the order', () => {
