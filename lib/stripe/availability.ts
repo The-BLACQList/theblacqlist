@@ -53,3 +53,13 @@ export function isPlanPurchasable(
   if (!entry) return false
   return cycle === 'annual' ? entry.annual : entry.monthly
 }
+
+// True when the tier can be bought on either cycle. Copy that says a tier is
+// "open" or "coming" reads this, so Growth can open alone (ticket 143) and the
+// prose around it follows the same data as the cards.
+export function isTierOpen(availability: PlanAvailability, slug: PlanSlug): boolean {
+  return (
+    isPlanPurchasable(availability, slug, 'monthly') ||
+    isPlanPurchasable(availability, slug, 'annual')
+  )
+}

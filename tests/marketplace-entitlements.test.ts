@@ -270,6 +270,37 @@ describe('assertCanAddMarketplaceItem', () => {
     expect(refusal?.fieldErrors?.['listing_id']).toBeTruthy()
   })
 
+  it('names Growth once Growth can be bought (ticket 143)', async () => {
+    install({
+      marketplace_products: ok([]),
+      marketplace_services: ok([]),
+      plans: ok([
+        { plan_key: 'growth', stripe_price_id_monthly: 'price_g_mo', stripe_price_id_yearly: null },
+      ]),
+    })
+
+    const refusal = await assertCanAddMarketplaceItem('L1', 'starter', 'product')
+
+    expect(refusal?.error).toMatch(/Growth/)
+    expect(refusal?.error).not.toMatch(/isn't open yet/i)
+    // Premium is still closed; the refusal must not point at it.
+    expect(refusal?.error).not.toMatch(/premium/i)
+    expect(refusal?.fieldErrors?.['listing_id']).toBeTruthy()
+  })
+
+  it('keeps the not-open message when only Premium is priced', async () => {
+    install({
+      marketplace_products: ok([]),
+      marketplace_services: ok([]),
+      plans: ok([
+        { plan_key: 'premium', stripe_price_id_monthly: 'price_p_mo', stripe_price_id_yearly: null },
+      ]),
+    })
+
+    const refusal = await assertCanAddMarketplaceItem('L1', 'free', 'product')
+    expect(refusal?.error).toContain("isn't open yet")
+  })
+
   it('refuses rather than allows when the count cannot be read', async () => {
     install({ marketplace_products: fail('timeout'), marketplace_services: ok([]) })
 

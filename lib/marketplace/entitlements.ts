@@ -1,4 +1,5 @@
 import { canAccess, isAtLimit, productLimit } from '@/lib/stripe/features'
+import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
 import { createServiceClient } from '@/lib/supabase/server'
 
 /**
@@ -119,11 +120,18 @@ export async function assertCanAddMarketplaceItem(
   if (!allowance) return { error: 'Could not check your plan. Please try again.' }
   if (allowance.canAddMore) return null
 
-  // Storefronts need Growth+ (FEATURE_MIN_TIER.storefront === 2), and Growth and
-  // Premium are deliberately not for sale — decision D-M, 2026-09-01. So there is
-  // no upgrade to point at: telling an owner to buy Growth sends them to /pricing,
-  // where it renders disabled. Say it is not open yet and offer the waitlist.
+  // Storefronts need Growth+ (FEATURE_MIN_TIER.storefront === 2). Growth was
+  // withheld from sale (decision D-M, 2026-09-01) and opens on its own before
+  // Premium (ticket 143). While it is closed, naming it would send the owner to
+  // a disabled card, so say selling is not open yet. Once it can be bought, say
+  // storefronts come with Growth. Availability is read only on this path.
   if (!allowance.tierIncludesStorefront) {
+    if (await growthIsOpen()) {
+      return {
+        error: `This business page's plan doesn't include a storefront. Storefronts come with Growth, which you can move to from Upgrade in your dashboard.`,
+        fieldErrors: { listing_id: 'This business page needs Growth to open a storefront.' },
+      }
+    }
     return {
       error: `Selling in the BLACQList Marketplace isn't open yet — we're not selling vendor access while ${kind === 'product' ? 'product' : 'service'} listings are still being built. Join the waitlist and we'll email you the day it opens.`,
       fieldErrors: { listing_id: 'This business page cannot open a storefront yet.' },
@@ -134,4 +142,13 @@ export async function assertCanAddMarketplaceItem(
     error: `This business page has used all ${allowance.limit} of its marketplace listings. Archive one you're no longer offering to free up a slot.`,
     fieldErrors: { listing_id: 'No marketplace slots left on this business page.' },
   }
+}
+
+/**
+ * Whether Growth can be bought right now, read from the live `plans` table the
+ * same way the pricing cards read it. Fails closed: a read error reports Growth
+ * as closed, so no copy points an owner at a plan the checkout would refuse.
+ */
+export async function growthIsOpen(): Promise<boolean> {
+  return isTierOpen(await getPlanAvailability(createServiceClient()), 'growth')
 }

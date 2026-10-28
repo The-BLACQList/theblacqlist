@@ -16,7 +16,7 @@ import { describe, it, expect } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { Database } from '@/lib/supabase/types'
-import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
+import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 
 type PlanRow = {
   plan_key: string | null
@@ -103,5 +103,31 @@ describe('isPlanPurchasable', () => {
     expect(
       isPlanPurchasable({ free: { monthly: true, annual: true } }, 'free', 'monthly')
     ).toBe(false)
+  })
+})
+
+// Ticket 143: Growth opens on its own before Premium. The copy that names what
+// is open or coming reads isTierOpen, so a tier with either cycle priced counts
+// as open and a tier with neither counts as coming.
+describe('isTierOpen', () => {
+  const availability = {
+    starter: { monthly: true, annual: true },
+    growth: { monthly: true, annual: false },
+    premium: { monthly: false, annual: false },
+  }
+
+  it('is true when either cycle can be bought', () => {
+    expect(isTierOpen(availability, 'starter')).toBe(true)
+    expect(isTierOpen(availability, 'growth')).toBe(true)
+    expect(isTierOpen({ growth: { monthly: false, annual: true } }, 'growth')).toBe(true)
+  })
+
+  it('is false when neither cycle can be bought, or the tier is missing', () => {
+    expect(isTierOpen(availability, 'premium')).toBe(false)
+    expect(isTierOpen({}, 'growth')).toBe(false)
+  })
+
+  it('never calls Free open', () => {
+    expect(isTierOpen({ free: { monthly: true, annual: true } }, 'free')).toBe(false)
   })
 })

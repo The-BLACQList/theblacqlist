@@ -8,7 +8,7 @@ import { ServiceForm } from '@/components/marketplace/ServiceForm'
 import { NoListingsNotice } from '@/components/dashboard/NoListingsNotice'
 import { AllowanceNotice } from '@/components/marketplace/AllowanceNotice'
 import { createServiceAction } from '@/lib/actions/marketplace/createService'
-import { marketplaceAllowances } from '@/lib/marketplace/entitlements'
+import { growthIsOpen, marketplaceAllowances } from '@/lib/marketplace/entitlements'
 
 export const metadata: Metadata = { title: 'New Service | Dashboard' }
 
@@ -29,6 +29,11 @@ export default async function NewServicePage() {
     owned.map((l) => ({ id: l.id, tier: l.tier }))
   )
   const names = Object.fromEntries(owned.map((l) => [l.id, l.name]))
+  // Read only when some page has no storefront, the one case the notice
+  // points at a plan.
+  const growthOpen = allowances.some((a) => !a.tierIncludesStorefront)
+    ? await growthIsOpen()
+    : false
 
   // Services draw on the same allowance as products — one combined counter.
   const eligibleIds = new Set(allowances.filter((a) => a.canAddMore).map((a) => a.listingId))
@@ -56,7 +61,12 @@ export default async function NewServicePage() {
         <NoListingsNotice kind="service" />
       ) : (
         <>
-          <AllowanceNotice allowances={allowances} names={names} kind="service" />
+          <AllowanceNotice
+            allowances={allowances}
+            names={names}
+            kind="service"
+            growthOpen={growthOpen}
+          />
           {eligible.length > 0 && (
             <div className="rounded-xl border border-charcoal/10 bg-white p-6">
               <ServiceForm

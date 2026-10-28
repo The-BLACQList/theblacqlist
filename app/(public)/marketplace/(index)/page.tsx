@@ -4,6 +4,7 @@ import { Package, Briefcase, Store, ArrowRight } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
 import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
+import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
 import { ProductCard } from '@/components/marketplace/ProductCard'
 import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
@@ -63,6 +64,14 @@ export default async function MarketplacePage() {
 
   const hasProducts = products.length > 0
   const hasServices = services.length > 0
+
+  // Storefronts need Growth. The copy below says selling is open only when the
+  // live `plans` table can sell Growth (ticket 143). The page is cached for an
+  // hour, so the copy follows the price IDs within that window.
+  const growthOpen = isTierOpen(await getPlanAvailability(serviceClient), 'growth')
+  const emptyLine = growthOpen
+    ? 'Storefronts are just opening.'
+    : "Vendor storefronts aren't open yet."
 
   return (
     <div className="min-h-screen bg-cream">
@@ -137,7 +146,7 @@ export default async function MarketplacePage() {
               <Package className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No products yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
-                Vendor storefronts aren&apos;t open yet. Products will show up here as they do.
+                {emptyLine} Products will show up here as businesses add them.
               </p>
               <Link
                 href="/for-business#start"
@@ -180,24 +189,25 @@ export default async function MarketplacePage() {
               <Briefcase className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
               <p className="font-subhead text-sm font-semibold text-brand-black">No services yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 max-w-xs mx-auto">
-                Vendor storefronts aren&apos;t open yet. Services will show up here as they do.
+                {emptyLine} Services will show up here as businesses add them.
               </p>
             </div>
           )}
         </section>
 
-        {/* Vendor CTA. Deliberately does NOT say "sell here" — vendor storefronts
-            are Growth+ and Growth is not purchasable (decision D-M, 2026-09-01),
-            so a "start selling" CTA would route a business owner to a paywall
-            they cannot pass. Getting listed is free and real, so that is the
-            offer; /for-vendors is the honest "not open yet" page behind it. */}
+        {/* Vendor CTA. Storefronts are Growth+. While Growth cannot be bought
+            (decision D-M, 2026-09-01), a "start selling" CTA would route an
+            owner to a paywall they cannot pass, so the offer is the free
+            listing. Once Growth opens (ticket 143), the CTA says selling comes
+            with Growth. /for-vendors follows the same availability. */}
         <section className="rounded-xl bg-pale-lavender px-6 py-10 text-center">
           <h2 className="font-headline text-2xl text-brand-black">
-            Get listed now. Sell here later.
+            {growthOpen ? 'Sell here with Growth.' : 'Get listed now. Sell here later.'}
           </h2>
           <p className="font-body text-sm text-charcoal-soft mt-2 max-w-md mx-auto">
-            Vendor storefronts aren&apos;t open yet. Adding your business to the directory is free,
-            and it&apos;s where every storefront will start.
+            {growthOpen
+              ? 'Start with a free listing, then move it to the Growth plan to add up to 25 products and services.'
+              : "Vendor storefronts aren't open yet. Adding your business to the directory is free, and it's where every storefront will start."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
             <Link
@@ -210,7 +220,7 @@ export default async function MarketplacePage() {
               href="/for-vendors"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors min-h-[44px]"
             >
-              When selling opens
+              {growthOpen ? 'How selling works' : 'When selling opens'}
             </Link>
           </div>
         </section>

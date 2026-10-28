@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 import { Container } from '@/components/layout/container'
 import { createClient } from '@/lib/supabase/server'
-import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
+import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 import { PricingPlans } from '../pricing/PricingPlans'
 
 // Plan availability comes from the live `plans` table, same as /pricing. A
@@ -120,12 +120,17 @@ function OwnerChoice() {
 export default async function ForBusinessPage() {
   const supabase = await createClient()
   const availability = await getPlanAvailability(supabase)
-  // Only true while Starter is the one paid tier on sale. Read from the same
-  // availability the cards use, so the line disappears when a tier opens.
-  const onlyStarterOpen =
-    isPlanPurchasable(availability, 'starter', 'monthly') &&
-    !isPlanPurchasable(availability, 'growth', 'monthly') &&
-    !isPlanPurchasable(availability, 'premium', 'monthly')
+  // Names what is open and what is still coming, read from the same
+  // availability the cards use. Growth can open before Premium (ticket 143);
+  // once every paid tier is open the line goes away.
+  const starterOpen = isPlanPurchasable(availability, 'starter', 'monthly')
+  const growthOpen = isTierOpen(availability, 'growth')
+  const premiumOpen = isTierOpen(availability, 'premium')
+  const openLine = !starterOpen || premiumOpen
+    ? null
+    : growthOpen
+      ? 'Starter and Growth are open now. Premium opens once everything in it works.'
+      : 'Starter is open now. Growth and Premium open once everything in them works.'
 
   return (
     <>
@@ -265,9 +270,9 @@ export default async function ForBusinessPage() {
             <h2 id="plans-heading" className={`${h2} text-ink`}>
               Start free. Grow when you&apos;re ready.
             </h2>
-            {onlyStarterOpen && (
+            {openLine && (
               <p className="font-body text-lg leading-relaxed text-charcoal max-w-[52ch]">
-                Starter is open now. Growth and Premium open once everything in them works.
+                {openLine}
               </p>
             )}
           </div>
