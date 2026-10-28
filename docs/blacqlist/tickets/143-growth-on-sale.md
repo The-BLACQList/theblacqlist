@@ -48,6 +48,15 @@ Out:
 - Given the same, when a Starter owner submits the create-product action directly, then the refusal names Growth and does not say selling isn't open.
 - Given any tier, when an owner opens their analytics page, then there is no "Top search queries" panel.
 
+## Before merge
+
+This PR is built on main, and #256 is not on main yet. Once #256 merges, rebase this PR and add the Growth offer to the two places #256 creates:
+
+- `makeRoom()` in `lib/stripe/planChecks.ts`: a Starter page at a limit gets "Upgrade to Growth" linking to `/dashboard/upgrade` when `isTierOpen(availability, 'growth')`.
+- `hiddenLine()` in `lib/stripe/downgrade.ts`: the same link under the same condition. Update the "never promises an upgrade" test in `tests/downgrade.test.ts` so it only holds while Growth is closed.
+
+Expect a small conflict in `app/dashboard/pages/[entityId]/analytics/page.tsx`, since both PRs edit it.
+
 ## Order to sell (after the flip, each step on the founder's word)
 
 1. Free switch-ons first: site import, #253 partnerships, one real job then `FEATURE_JOBS_OPEN`. Confirm `FEATURE_PAID_POSTINGS` and `FEATURE_POSTING_SUBMISSIONS` in Vercel.
