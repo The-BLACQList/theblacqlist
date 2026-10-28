@@ -119,6 +119,15 @@ describe('hiddenLine', () => {
     )
   })
 
+  it('names the storefront when products or services are hidden', () => {
+    expect(hiddenLine({ kind: 'products', hidden: 3, limit: 0 })).toBe(
+      "3 products are hidden on your page. Your plan doesn't include a storefront."
+    )
+    expect(hiddenLine({ kind: 'services', hidden: 1, limit: 0 })).toBe(
+      "1 service is hidden on your page. Your plan doesn't include a storefront."
+    )
+  })
+
   it('explains the description is saved in full', () => {
     expect(hiddenLine({ kind: 'description', hidden: 1, limit: 300 })).toBe(
       'Your page shows the first 300 characters of your description. The rest is saved.'

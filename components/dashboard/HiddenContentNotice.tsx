@@ -3,11 +3,13 @@ import { HIDDEN_NOTICE_FOOTNOTE, hiddenLine, type HiddenCount } from '@/lib/stri
 
 interface Props {
   counts: HiddenCount[]
+  /** Replaces the default footnote, for a kind that is hidden all or nothing. */
+  footnote?: string
 }
 
 // Ticket 105. After a move to a lower plan, tells the owner what their public
 // page leaves out. Nothing is deleted; each section below tags the items.
-export function HiddenContentNotice({ counts }: Props) {
+export function HiddenContentNotice({ counts, footnote = HIDDEN_NOTICE_FOOTNOTE }: Props) {
   if (counts.length === 0) return null
   return (
     <div
@@ -26,9 +28,7 @@ export function HiddenContentNotice({ counts }: Props) {
             </li>
           ))}
         </ul>
-        <p className="font-body text-xs leading-relaxed text-charcoal-soft">
-          {HIDDEN_NOTICE_FOOTNOTE}
-        </p>
+        <p className="font-body text-xs leading-relaxed text-charcoal-soft">{footnote}</p>
       </div>
     </div>
   )

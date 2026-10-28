@@ -102,11 +102,35 @@ Every limit returns a plain message, never a raw 400 or 429:
 | `editorial_eligibility`, `priority_support`, `dedicated_support`, `analytics_advanced` | Operational, or no feature exists |
 | `teamMembers` (107), `coupons` (108), `booking` (109), `locations` (110), category exclusivity (111), spend panel (112), `sonnet_agents` | Ship with those tickets |
 
+## Products and services after a downgrade
+
+`[Decision — founder, 2026-10-28]` a page below Growth keeps its products and services, hidden
+from the public, never deleted. They show again the moment the page is on Growth or Premium.
+
+A storefront is a Growth feature, so this is all or nothing, not a count cap like photos.
+
+- **RLS:** migration `20261028000000_marketplace_hide_below_growth.sql` recreates
+  `marketplace_products_read` and `marketplace_services_read`. The public branch also requires the
+  page to be on `growth` or `premium`. The owner branch is unchanged. This narrows access. Test:
+  `tests/migrations/marketplace-hide-below-growth.test.ts`.
+- **App layer:** the seven public paths read through the service client, which skips RLS, so each
+  one filters on `STOREFRONT_TIERS` from `lib/marketplace/visibility.ts`: `/marketplace`,
+  `/marketplace/products`, `/marketplace/services`, both detail pages (404 when hidden), `/vendors`
+  and `/vendors/[slug]` (a non-vendor page with nothing visible 404s).
+- **Owner:** `/dashboard/products` and `/dashboard/services` show the hidden notice ("Your plan
+  doesn't include a storefront") and tag each hidden row "Hidden on your page". The public link
+  is left off those rows.
+- **Release:** the migration is GATE-DATA. Apply it to staging, then prod, before this PR merges.
+
 ## Known gaps
 
-- **Products and services after a downgrade** are not hidden yet. The marketplace has its own
-  listing and checkout path; hiding there waits for the marketplace work in the post-launch order.
-  New ones are still blocked by `marketplaceAllowances`.
+- **Premium to Growth with more than 25 items.** A page that drops from Premium to Growth keeps
+  showing every product and service; nothing caps the public list at 25. No page can be on Premium
+  while Premium is not for sale, so this must be built before Premium opens.
+- **Status and deletion on the marketplace list pages.** `/marketplace`, `/marketplace/products`
+  and `/marketplace/services` read through the service client and never checked
+  `listings.status = 'published'` or `deleted_at`, which RLS does. Older than this ticket; worth a
+  small follow-up.
 - **Events in the editor notice.** The host page drops events past the cap, but the dashboard
   notice does not count them yet, because events are separate listings edited on their own page.
 

@@ -3,6 +3,7 @@ import { Package } from 'lucide-react'
 import Link from 'next/link'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 import { ProductCard } from '@/components/marketplace/ProductCard'
 
 export const metadata: Metadata = {
@@ -18,9 +19,11 @@ export default async function MarketplaceProductsPage() {
   const { data: rows } = await serviceClient
     .from('marketplace_products')
     .select(
-      'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings(name, slug)'
+      'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings!inner(name, slug)'
     )
     .eq('status', 'active')
+    // Ticket 105: hidden while the page is below Growth (lib/marketplace/visibility.ts).
+    .in('listings.tier', STOREFRONT_TIERS)
     .order('created_at', { ascending: false })
     .limit(48)
 

@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Plus, Package, ExternalLink } from 'lucide-react'
+import { Plus, Package, ExternalLink, EyeOff } from 'lucide-react'
 
 import { requireOwner } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { CreatedBanner } from '@/components/marketplace/CreatedBanner'
+import { HiddenContentNotice } from '@/components/dashboard/HiddenContentNotice'
+import { sellsPublicly } from '@/lib/marketplace/visibility'
+import { STOREFRONT_HIDDEN_FOOTNOTE } from '@/lib/stripe/downgrade'
 
 export const metadata: Metadata = { title: 'Products | Dashboard' }
 
@@ -26,13 +29,17 @@ export default async function DashboardProductsPage({ searchParams }: Props) {
   // Fetch owner's listing IDs
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, name')
+    .select('id, name, tier')
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
 
   const listingIds = (listings ?? []).map((l) => l.id)
   const listingNameById: Record<string, string> = {}
   for (const l of listings ?? []) listingNameById[l.id] = l.name
+  // Ticket 105: a page below Growth keeps its items, hidden from the public.
+  const hiddenListingIds = new Set(
+    (listings ?? []).filter((l) => !sellsPublicly(l.tier)).map((l) => l.id)
+  )
 
   const { data: rows } =
     listingIds.length > 0
@@ -46,6 +53,7 @@ export default async function DashboardProductsPage({ searchParams }: Props) {
   const products = (rows ?? []).map((p) => ({
     ...p,
     listing_name: listingNameById[p.listing_id] ?? '—',
+    hidden: p.status === 'active' && hiddenListingIds.has(p.listing_id),
   }))
 
   function formatPrice(cents: number): string {
@@ -56,9 +64,15 @@ export default async function DashboardProductsPage({ searchParams }: Props) {
     })
   }
 
+  const hiddenCount = products.filter((x) => x.hidden).length
+
   return (
     <div className="max-w-4xl space-y-6">
       <CreatedBanner status={created} kind="product" />
+      <HiddenContentNotice
+        counts={hiddenCount > 0 ? [{ kind: 'products', hidden: hiddenCount, limit: 0 }] : []}
+        footnote={STOREFRONT_HIDDEN_FOOTNOTE}
+      />
 
       <div className="flex items-center justify-between">
         <div>
@@ -133,10 +147,16 @@ export default async function DashboardProductsPage({ searchParams }: Props) {
                     >
                       {p.status}
                     </span>
+                    {p.hidden && (
+                      <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-pale-lavender px-2 py-0.5 font-subhead text-xs font-semibold text-charcoal">
+                        <EyeOff className="size-3" aria-hidden="true" />
+                        Hidden on your page
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {p.status === 'active' && p.global_slug && (
+                      {p.status === 'active' && !p.hidden && p.global_slug && (
                         <Link
                           href={`/marketplace/products/${p.global_slug}`}
                           target="_blank"

@@ -86,7 +86,15 @@ export function capDescription(text: string, limit: number | null): string {
 
 /** One kind of content and how much of it is hidden. */
 export interface HiddenCount {
-  kind: 'photos' | 'videos' | 'faqs' | 'attributes' | 'events' | 'description'
+  kind:
+    | 'photos'
+    | 'videos'
+    | 'faqs'
+    | 'attributes'
+    | 'events'
+    | 'products'
+    | 'services'
+    | 'description'
   hidden: number
   limit: number
 }
@@ -97,6 +105,8 @@ const NOUNS: Record<Exclude<HiddenCount['kind'], 'description'>, [string, string
   faqs: ['common question', 'common questions'],
   attributes: ['filter detail', 'filter details'],
   events: ['upcoming event', 'upcoming events'],
+  products: ['product', 'products'],
+  services: ['service', 'services'],
 }
 
 /**
@@ -112,7 +122,9 @@ export function hiddenLine(h: HiddenCount): string {
   const noun = h.hidden === 1 ? one : many
   const verb = h.hidden === 1 ? 'is' : 'are'
   if (h.limit === 0) {
-    return `${h.hidden} ${noun} ${verb} hidden on your page. Your plan doesn't include ${many}.`
+    // Products and services come with a storefront, which is how plans name it.
+    const missing = h.kind === 'products' || h.kind === 'services' ? 'a storefront' : many
+    return `${h.hidden} ${noun} ${verb} hidden on your page. Your plan doesn't include ${missing}.`
   }
   const cap = h.limit === 1 ? one : many
   return `${h.hidden} ${noun} ${verb} hidden on your page. Your plan shows up to ${h.limit} ${cap}.`
@@ -120,3 +132,7 @@ export function hiddenLine(h: HiddenCount): string {
 
 export const HIDDEN_NOTICE_FOOTNOTE =
   'Nothing was deleted. Hidden items come back if your plan includes them again. Your page shows the first ones in each list, so removing one lets the next one show.'
+
+/** Products and services are hidden all or nothing, so the list footnote does not fit. */
+export const STOREFRONT_HIDDEN_FOOTNOTE =
+  'Nothing was deleted. Your products and services show again if your plan includes a storefront again.'

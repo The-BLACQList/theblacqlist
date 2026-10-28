@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Store, MapPin, Package, Briefcase, ArrowRight, AlertTriangle } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 
 export const metadata: Metadata = {
   title: 'Storefronts | BLACQList Marketplace',
@@ -38,21 +39,22 @@ export default async function VendorsIndexPage() {
   // state as a genuinely empty catalog — so without this, an operator cannot tell
   // "no data" from "broken query." That ambiguity is what a broken column name in
   // the select shape below costs, and it has cost it before.
-  const [
-    { data: productRows, error: productError },
-    { data: serviceRows, error: serviceError },
-  ] = await Promise.all([
-    serviceClient
-      .from('marketplace_products')
-      .select('listing_id')
-      .eq('status', 'active')
-      .limit(MAX_OFFERING_ROWS),
-    serviceClient
-      .from('marketplace_services')
-      .select('listing_id')
-      .eq('status', 'active')
-      .limit(MAX_OFFERING_ROWS),
-  ])
+  const [{ data: productRows, error: productError }, { data: serviceRows, error: serviceError }] =
+    await Promise.all([
+      serviceClient
+        .from('marketplace_products')
+        .select('listing_id, listings!inner(tier)')
+        .eq('status', 'active')
+        // Ticket 105: hidden while the page is below Growth (lib/marketplace/visibility.ts).
+        .in('listings.tier', STOREFRONT_TIERS)
+        .limit(MAX_OFFERING_ROWS),
+      serviceClient
+        .from('marketplace_services')
+        .select('listing_id, listings!inner(tier)')
+        .eq('status', 'active')
+        .in('listings.tier', STOREFRONT_TIERS)
+        .limit(MAX_OFFERING_ROWS),
+    ])
 
   // A failure here does not blank the page — it silently collapses sellerIds to
   // [], which drops the query to the vendor-only branch and hides every

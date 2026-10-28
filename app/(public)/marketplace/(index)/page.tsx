@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Package, Briefcase, Store, ArrowRight } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 import { ProductCard } from '@/components/marketplace/ProductCard'
 import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
@@ -21,9 +22,11 @@ export default async function MarketplacePage() {
   const { data: productRows } = await serviceClient
     .from('marketplace_products')
     .select(
-      'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings(name, slug)'
+      'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id, listings!inner(name, slug)'
     )
     .eq('status', 'active')
+    // Ticket 105: hidden while the page is below Growth (lib/marketplace/visibility.ts).
+    .in('listings.tier', STOREFRONT_TIERS)
     .order('created_at', { ascending: false })
     .limit(8)
 
@@ -31,9 +34,10 @@ export default async function MarketplacePage() {
   const { data: serviceRows } = await serviceClient
     .from('marketplace_services')
     .select(
-      'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings(name, slug)'
+      'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id, listings!inner(name, slug)'
     )
     .eq('status', 'active')
+    .in('listings.tier', STOREFRONT_TIERS)
     .order('created_at', { ascending: false })
     .limit(8)
 
