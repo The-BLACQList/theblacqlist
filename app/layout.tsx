@@ -8,6 +8,7 @@ import { ChromeGate } from '@/components/layout/chrome-gate'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
 import { TourRailMount } from '@/components/tour/TourRailMount'
 import { ReportProblemMount } from '@/components/feedback/ReportProblemMount'
+import { AssistantMount } from '@/components/assistant/AssistantMount'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -107,6 +108,9 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ReportProblemMount />
         </Suspense>
+        {/* Site assistant (ticket 147) — renders nothing unless its flag is
+            on; hides itself on non-public pages. */}
+        <AssistantMount />
         <Analytics />
         <SpeedInsights />
       </body>

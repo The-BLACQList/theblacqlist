@@ -262,6 +262,21 @@ These are caught at the approval step — owners and admins are responsible for 
 
 ---
 
+## Visitor assistant (ticket 147)
+
+The Ask button on public pages and, with `FEATURE_AI_ASSISTANT` on, the home bar. Added 2026-10-29.
+
+- **The model writes need names only.** Each name is at most 40 characters of letters, numbers, spaces and `& ' -`. A name that fails falls back to its category name, and a need with neither is dropped. Every other line the visitor reads is fixed text we wrote.
+- **Every business comes from our search.** The model picks a city slug, category slugs, up to 3 single-word keywords per need and an open-now flag, all checked against the allow-list. Cards come from `queryListings`; sponsored cards are dropped. The model never names a business.
+- **No match is said plainly.** When a need has nothing, the ladder runs: the same thing in the nearest city we list, then a close kind of business in the same place, then "Not on The BLACQList yet." A place we don't cover gets a fixed notice first.
+- **History is capped and never stored.** The client sends at most the last 3 asks from this tab; the server keeps the last 3 and runs each through `sanitizeForPrompt` and `stripLinks`. The chat lives in `sessionStorage` in the visitor's tab only.
+- **Location never reaches the model.** Near me coordinates are rounded and go only to the search.
+- **One model call per turn, no tool loop.** Prompt at most 4000 characters, short output cap, `ASSISTANT_AGENT` in the worst-case spend set.
+- **Spend and abuse limits.** Per IP: 8 a minute and 40 a day (`ai_assistant` bucket). The monthly ceiling and the shared visitor sub-budget (guide and assistant together) apply. The kill switch and the flag both fall back to plain search.
+- **Logging.** One `ai_generation_requests` row per call (`visitor_assistant`, `VISITOR_ASSISTANT@1`), with no visitor text stored.
+
+---
+
 ## Approval UI Requirements (V2 Mock)
 
 When approval UI is built in V2 Mock phase, the following UX rules apply:

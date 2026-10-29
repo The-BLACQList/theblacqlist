@@ -64,6 +64,7 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 // 'force-dynamic'` — or read the flag somewhere already dynamic (a route
 // handler, a server action, or a request-scoped Server Component).
 export type FeatureFlag =
+  | 'aiAssistant'
   | 'aiBeta'
   | 'aiGuide'
   | 'aiOnboarding'
@@ -80,6 +81,11 @@ export type FeatureFlag =
 // The map is the registry. Adding a flag means adding it here and to the union
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
+  // Gates the site assistant (ticket 147): the gold Ask button on public pages,
+  // and the home guide's answers when it is on. Off, there is no button and the
+  // home guide works as in ticket 146. Closed by default on EVERY deployment
+  // (see CLOSED_BY_DEFAULT), because it sends visitor words to a model.
+  aiAssistant: 'FEATURE_AI_ASSISTANT',
   aiBeta: 'FEATURE_AI_BETA',
   // Gates the visitor guide on the home page hero (ticket 146): "Tell me what
   // you need" turns a visitor's words into our own filters and shows real
@@ -154,6 +160,7 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
 // deployment should start doing that without someone deciding to. Each still
 // opens with an explicit `=true`.
 const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
+  'aiAssistant',
   'aiGuide',
   'aiOnboarding',
   'collectiveOpen',

@@ -3,9 +3,18 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, LoaderCircle } from 'lucide-react'
+import { ArrowRight, LoaderCircle, MessageCircle } from 'lucide-react'
 
+import { askAssistant } from '@/lib/actions/ai/assistant'
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
+import type { AssistantResponse } from '@/lib/ai/assistant-limits'
+import { addTurn, setAssistantOpen } from '@/lib/assistant/store'
+import {
+  ASSISTANT_LINK,
+  AssistantReply,
+  AssistantSkeleton,
+  replyStatus,
+} from '@/components/assistant/AssistantAnswer'
 import { fallbackHref, GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS, withChip } from '@/lib/ai/guide-limits'
 import { EntityCard } from '@/components/entities/EntityCard'
 import { HeroQuickFilters, type NearPoint, type QuickFilter } from '@/components/home/HeroQuickFilters'
@@ -13,6 +22,7 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type Results = Extract<GuideResponse, { kind: 'results' }>
+type AssistantAnswer = { ask: string; reply: Extract<AssistantResponse, { kind: 'answer' }> }
 
 const FALLBACK_STATUS = "Couldn't match that. Showing search results for what you typed."
 const NO_LOCATION_STATUS = "Couldn't get your location. Type a city instead, or try Near me again."
@@ -40,12 +50,24 @@ const LINK =
  *
  * The words stay in this component's state and the one server call. Nothing
  * here stores or logs them.
+ *
+ * With `assistant` on (ticket 147) the bar asks the site assistant instead and
+ * shows its need groups here. "Keep chatting" copies the turn into this tab's
+ * chat and opens the corner panel.
  */
-export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
+export function AiGuide({
+  filters,
+  assistant = false,
+}: {
+  filters: readonly QuickFilter[]
+  assistant?: boolean
+}) {
   const router = useRouter()
   const [text, setText] = useState('')
   const [near, setNear] = useState<NearPoint | null>(null)
   const [answer, setAnswer] = useState<Results | null>(null)
+  const [assistantAnswer, setAssistantAnswer] = useState<AssistantAnswer | null>(null)
+  const [kept, setKept] = useState(false)
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -54,16 +76,36 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
   const focusAnswer = useRef(false)
 
   useEffect(() => {
-    if (answer && focusAnswer.current) {
+    if ((answer || assistantAnswer) && focusAnswer.current) {
       focusAnswer.current = false
       answerRef.current?.focus()
     }
-  }, [answer])
+  }, [answer, assistantAnswer])
 
   function ask(words: string, at: NearPoint | null) {
     if (pending) return
     setAnswer(null)
+    setAssistantAnswer(null)
     setStatus('Finding matches…')
+    if (assistant) {
+      startTransition(async () => {
+        let reply: AssistantResponse
+        try {
+          reply = await askAssistant({ message: words, near: at })
+        } catch {
+          reply = { kind: 'fallback', href: fallbackHref(words), reason: 'error' }
+        }
+        if (reply.kind === 'fallback') {
+          setStatus(FALLBACK_STATUS)
+          router.push(reply.href)
+          return
+        }
+        setKept(false)
+        setAssistantAnswer({ ask: words, reply })
+        setStatus(replyStatus(reply))
+      })
+      return
+    }
     startTransition(async () => {
       let res: GuideResponse
       try {
@@ -182,9 +224,36 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
         {status}
       </p>
 
-      {(pending || answer) && (
+      {(pending || answer || assistantAnswer) && (
         <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-          {pending ? <GuideSkeleton /> : answer && <GuideAnswer answer={answer} />}
+          {pending ? (
+            assistant ? (
+              <div className="rounded-2xl bg-brand-black/60 backdrop-blur-sm p-3 sm:p-4">
+                <AssistantSkeleton layout="page" />
+              </div>
+            ) : (
+              <GuideSkeleton />
+            )
+          ) : assistantAnswer ? (
+            <div className="rounded-2xl bg-brand-black/60 backdrop-blur-sm p-3 sm:p-4">
+              <AssistantReply ask={assistantAnswer.ask} reply={assistantAnswer.reply} layout="page" headingLevel={2} />
+              <button
+                type="button"
+                onClick={() => {
+                  // Once per answer, so a second tap only reopens the panel.
+                  if (!kept) addTurn(assistantAnswer.ask, assistantAnswer.reply)
+                  setKept(true)
+                  setAssistantOpen(true)
+                }}
+                className={ASSISTANT_LINK}
+              >
+                <MessageCircle className="size-4" aria-hidden="true" />
+                Keep chatting
+              </button>
+            </div>
+          ) : (
+            answer && <GuideAnswer answer={answer} />
+          )}
         </div>
       )}
     </div>

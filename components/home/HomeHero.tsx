@@ -21,8 +21,17 @@ const QUICK_FILTERS = [
  * `aiGuide` (ticket 146, FEATURE_AI_GUIDE, read on the server in app/page.tsx)
  * swaps the search bar for the AI guide, which also covers name search and
  * takes the chips under it. With it off the hero is exactly the old one.
+ *
+ * `assistant` (ticket 147, FEATURE_AI_ASSISTANT) puts the same bar on the site
+ * assistant's answers, with "Keep chatting" into the corner panel.
  */
-export function HomeHero({ aiGuide = false }: { aiGuide?: boolean }) {
+export function HomeHero({
+  aiGuide = false,
+  assistant = false,
+}: {
+  aiGuide?: boolean
+  assistant?: boolean
+}) {
   return (
     <section
       aria-label="Search The BLACQList"
@@ -59,9 +68,9 @@ export function HomeHero({ aiGuide = false }: { aiGuide?: boolean }) {
         <h1 className="font-headline text-[42px] md:text-[60px] lg:text-[68px] text-white leading-[1.05] text-balance max-w-[16ch]">
           Find &amp; Be Found.
         </h1>
-        {aiGuide ? (
+        {aiGuide || assistant ? (
           <div className="mt-6 max-w-3xl">
-            <AiGuide filters={QUICK_FILTERS} />
+            <AiGuide filters={QUICK_FILTERS} assistant={assistant} />
           </div>
         ) : (
           <>

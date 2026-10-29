@@ -39,6 +39,7 @@ export type RateLimitBucket =
   | 'place_lookup'
   | 'place_lookup_upstream'
   | 'ai_guide'
+  | 'ai_assistant'
 
 const DEFAULT_WINDOW_SECONDS = 60
 

@@ -263,7 +263,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <HomeHero aiGuide={isFeatureEnabled('aiGuide')} />
+      <HomeHero aiGuide={isFeatureEnabled('aiGuide')} assistant={isFeatureEnabled('aiAssistant')} />
       <Reveal>
         <TheAvenues counts={avenueCounts} />
       </Reveal>
