@@ -153,14 +153,16 @@ describe('Near me placement', () => {
     expect(hero).toContain('<HeroQuickFilters filters={QUICK_FILTERS} />')
     const chips = read('components/home/HeroQuickFilters.tsx')
     expect(chips.indexOf("'Near me'")).toBeLessThan(chips.indexOf('filters.map('))
-    expect(chips).toContain('nearMeHref(pos.coords.latitude, pos.coords.longitude)')
+    expect(chips).toContain('(pos) => done({ lat: pos.coords.latitude, lng: pos.coords.longitude })')
+    expect(chips).toContain('router.push(near ? nearMeHref(near.lat, near.lng) : FALLBACK_HREF)')
   })
 
   // Founder 2026-10-03: no settings message between the visitor and results.
   it('a blocked or failed location still opens Discover, with no settings message', () => {
     const chips = read('components/home/HeroQuickFilters.tsx')
     expect(chips).toContain("const FALLBACK_HREF = '/discover'")
-    expect(chips).toContain('() => router.push(FALLBACK_HREF)')
+    expect(chips).toContain('() => done(null)')
+    expect(chips).toContain('router.push(near ? nearMeHref(near.lat, near.lng) : FALLBACK_HREF)')
     expect(chips).not.toMatch(/browser settings/i)
   })
 

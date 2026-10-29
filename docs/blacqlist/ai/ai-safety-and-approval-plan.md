@@ -128,6 +128,8 @@ The guide is the first anonymous AI surface. A visitor types what they need in t
 
 **Never allowed:** anything about the visitor beyond their words (IP, location, account, cookies), any listing text, review text, owner data.
 
+Near me (added 2026-10-29): the position is checked with zod, rounded to 3 decimals and passed only to our own search (`lat`, `lng`, `radius`, `sort=distance`). It is never in the prompt, the audit row or the logs. "Near me" with no other words skips the model. The plain words search for business names runs next to the model call and needs no model.
+
 **Guardrails:**
 
 1. **Nothing stored.** The visitor's words are not written to any table or log. No `console` calls in the guide. The audit row keeps the agent, prompt version, model, provider, status, a fixed error code and token counts. `listing_id` and `created_by` are null.

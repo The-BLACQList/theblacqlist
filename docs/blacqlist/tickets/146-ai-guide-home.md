@@ -9,7 +9,8 @@
 2. **Allow-lists from live data.** Categories and cities come from the database at request time. Anything the model returns that isn't on the list is dropped.
 3. **Nothing is stored.** The visitor's words go to Anthropic to be understood and nowhere else. The audit row keeps no text.
 4. **Plain search is always the way out.** Any failure sends the visitor to `/search?q=<their words>`.
-5. **Name search stays.** It moves under the guide as "Or search by name".
+5. **One bar.** The guide is the hero's only bar and covers name search too (founder, 2026-10-29). The chips sit under it and feed it.
+6. **Near me, search only.** Near me under the bar sends a rounded position to our own search. It never goes to the model and is never stored (founder, 2026-10-29, reversing the earlier Out item).
 
 ---
 
@@ -22,7 +23,9 @@ Most people don't think in categories. They type "somewhere to get my hair braid
 In:
 
 - **Flag.** `FEATURE_AI_GUIDE` in `lib/env.ts`, closed by default. With it off the hero renders exactly as before.
-- **Hero layout with the flag on** (`components/home/HomeHero.tsx`): the headline, then the guide ("Tell me what you need", up to 200 characters, an **Ask** button), then a smaller "Or search by name" with the existing search bar, then the quick-filter chips. `app/page.tsx` reads the flag on the server and passes it as a prop. The hero photo stays the only preloaded image.
+- **Hero layout with the flag on** (`components/home/HomeHero.tsx`): the headline, then the guide ("Tell me what you need" with a small AI tag, up to 200 characters, an **Ask** button), then the quick-filter chips under it. There is no second search bar and no hint line.
+- **Name search in the bar.** A plain words search runs next to the model call. Businesses whose name holds the typed words (whole words, 3 or more characters) show first under "Matching names", up to 3, and are not repeated below. If the model fails but a name matched, the visitor still gets those cards.
+- **Chips feed the bar** (`components/home/HeroQuickFilters.tsx`, guide mode). Restaurants, Beauty & Grooming, Professionals and Open now add their words to the bar and ask. Near me is a switch: on, it gets the browser's position, rounds it (`roundCoord`, 3 decimals) and asks with it; on again, it turns off. A blocked position asks without it. "Near me" with nothing else skips the model and costs nothing. A city named in the words wins over Near me. With the flag off the chips are links, as before. `app/page.tsx` reads the flag on the server and passes it as a prop. The hero photo stays the only preloaded image.
 - **The guide** (`components/home/AiGuide.tsx`, client): results show inline under the box. Skeleton cards while it works, up to 6 `EntityCard`s, a one-line summary built from the matched filters, a **See all** link, and one help page link when the words point at one. An empty answer gets a short note and the See all link. A fallback answer sends the visitor to plain search. Results are announced through an `aria-live="polite"` region. Targets are at least 44px and it works at 375px.
 - **Server action** (`lib/actions/ai/guide.ts`). Checks run in this order and every one fails to plain search:
   1. The flag is on.
@@ -34,7 +37,7 @@ In:
 - Then the words are cleaned and redacted (emails, phone numbers and links never reach the model), the model is called on the fast tier, and its JSON answer is checked against the allow-lists.
 - **Pure helpers** (`lib/ai/guide.ts`): the input rules, the allow-list filter, the answer parser, the summary, the See all link, the fallback link, the budget math and the mock mapper. Mock mode (no API key) is a fixed keyword mapper so dev and tests never call a model.
 - **Audit row.** One `ai_generation_requests` row per model call: `agent_type = 'visitor_guide'`, no listing, no user, no text. The column has no CHECK, so no migration.
-- **Privacy Policy.** One line in the AI section about the home page guide, and the Anthropic row in section 6 now names it.
+- **Privacy Policy.** One line in the AI section about the home page guide (including Near me: rounded, search only, not sent to the AI, not saved), and the Anthropic row in section 6 now names it.
 - **Safety plan.** A "Visitor guide" section in `docs/blacqlist/ai/ai-safety-and-approval-plan.md`.
 
 Out:
@@ -42,13 +45,15 @@ Out:
 - Turnstile on the guide. It needs a widget on the home page, a single-use token per ask and a Cloudflare script on the busiest page. The per-IP caps, the 40% share and the monthly ceiling bound the cost instead. Revisit if the guide's share fills up from abuse.
 - Chat, follow-up questions or any text the model writes for visitors.
 - Saving what visitors ask, even anonymously. The guide does not write to the zero-result search log.
-- Near You (location) in the guide.
 - Sponsored cards in guide results. They're dropped so no sponsored impression is counted from the guide.
 
 ## Acceptance criteria
 
 - **Given** `FEATURE_AI_GUIDE` is off, **when** the home page renders, **then** the hero is exactly the old one: headline, tagline, search bar, chips.
-- **Given** the flag is on, **when** the home page renders, **then** the hero shows the headline, the guide, "Or search by name" with the search bar, and the chips, in that order.
+- **Given** the flag is on, **when** the home page renders, **then** the hero shows the headline, the guide and the chips under it, with no second search bar.
+- **Given** a visitor types a business name, **when** they ask, **then** that business shows first under "Matching names" and is not repeated in the guide's cards.
+- **Given** Near me is on, **when** the visitor asks, **then** the rounded position goes to our search (`lat`, `lng`, `radius=10`, `sort=distance`) and is not in the prompt, the audit row or the logs.
+- **Given** the bar has words, **when** a chip is tapped, **then** its words are added once and the guide asks again.
 - **Given** the flag is on, **when** a visitor asks "soul food in Atlanta open now", **then** up to 6 cards show, with a summary like `Showing Soul Food in Atlanta, open now.` and a See all link that opens the same filters.
 - **Given** the model returns a category, city or page that isn't on the live list, **when** the answer is checked, **then** that value is dropped and the rest still works.
 - **Given** the kill switch is on, the rate limit is hit, the ceiling is reached or the guide's share is used up, **when** a visitor asks, **then** they land on `/search?q=<their words>` with no model call.

@@ -19,8 +19,8 @@ const QUICK_FILTERS = [
  * The hero image is the page's only preloaded image (LCP guardrail).
  *
  * `aiGuide` (ticket 146, FEATURE_AI_GUIDE, read on the server in app/page.tsx)
- * puts the visitor guide first and moves name search under it. With it off the
- * hero is exactly the old one.
+ * swaps the search bar for the AI guide, which also covers name search and
+ * takes the chips under it. With it off the hero is exactly the old one.
  */
 export function HomeHero({ aiGuide = false }: { aiGuide?: boolean }) {
   return (
@@ -60,31 +60,9 @@ export function HomeHero({ aiGuide = false }: { aiGuide?: boolean }) {
           Find &amp; Be Found.
         </h1>
         {aiGuide ? (
-          <>
-            <div className="mt-6 max-w-3xl">
-              <AiGuide />
-            </div>
-            <div className="mt-8 max-w-xl">
-              <p
-                id="hero-name-search-label"
-                className="font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-off-white/80 mb-2"
-              >
-                Or search by name
-              </p>
-              <Suspense
-                fallback={<div className="h-11 rounded-full bg-white/90" aria-hidden="true" />}
-              >
-                <SearchBar
-                  placeholder='Try "barber", "soul food" or a city'
-                  targetPath="/search"
-                  formLabel="Search by name"
-                  labelledBy="hero-name-search-label"
-                  onDark
-                />
-              </Suspense>
-            </div>
-            <HeroQuickFilters filters={QUICK_FILTERS} />
-          </>
+          <div className="mt-6 max-w-3xl">
+            <AiGuide filters={QUICK_FILTERS} />
+          </div>
         ) : (
           <>
             <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">

@@ -12,8 +12,27 @@ const FALLBACK_HREF = '/discover'
 const CHIP =
   'inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full border border-off-white/40 bg-off-white/10 text-off-white font-subhead text-[13px] font-semibold backdrop-blur-sm hover:bg-off-white/20 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
 
+export interface QuickFilter {
+  label: string
+  href: string
+}
+
+export interface NearPoint {
+  lat: number
+  lng: number
+}
+
 interface Props {
-  filters: readonly { label: string; href: string }[]
+  filters: readonly QuickFilter[]
+  /**
+   * Guide mode (ticket 146). Set, the chips feed the AI bar instead of opening
+   * a page: a chip hands over its label, Near me hands over a position (or
+   * null when there is none to use).
+   */
+  onPick?: (words: string) => void
+  onNear?: (near: NearPoint | null) => void
+  /** Guide mode only: Near me is switched on. */
+  nearOn?: boolean
 }
 
 /**
@@ -23,20 +42,37 @@ interface Props {
  * timed out) it still opens Discover, so the visitor never hits a dead end or
  * a settings message on the home page. The position is only rounded and put
  * in that URL; it is never logged or stored here.
+ *
+ * In guide mode Near me is a switch: on, it hands the guide a position; on
+ * again, it turns off. The other chips ask the guide instead of linking.
  */
-export function HeroQuickFilters({ filters }: Props) {
+export function HeroQuickFilters({ filters, onPick, onNear, nearOn = false }: Props) {
   const router = useRouter()
   const [locating, setLocating] = useState(false)
+  const guideMode = Boolean(onPick && onNear)
 
   function findNearMe() {
+    if (guideMode && nearOn) {
+      onNear?.(null)
+      return
+    }
+    // Leaving the page keeps the spinner up until the next page shows.
+    const done = (near: NearPoint | null) => {
+      if (!guideMode) {
+        router.push(near ? nearMeHref(near.lat, near.lng) : FALLBACK_HREF)
+        return
+      }
+      setLocating(false)
+      onNear?.(near)
+    }
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      router.push(FALLBACK_HREF)
+      done(null)
       return
     }
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
-      (pos) => router.push(nearMeHref(pos.coords.latitude, pos.coords.longitude)),
-      () => router.push(FALLBACK_HREF),
+      (pos) => done({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => done(null),
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
     )
   }
@@ -50,7 +86,8 @@ export function HeroQuickFilters({ filters }: Props) {
             onClick={findNearMe}
             disabled={locating}
             aria-busy={locating}
-            className={`${CHIP} disabled:cursor-wait`}
+            aria-pressed={guideMode ? nearOn : undefined}
+            className={`${CHIP} disabled:cursor-wait aria-pressed:bg-gold aria-pressed:text-brand-black aria-pressed:border-gold`}
           >
             {locating ? (
               <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
@@ -62,9 +99,15 @@ export function HeroQuickFilters({ filters }: Props) {
         </li>
         {filters.map((filter) => (
           <li key={filter.label}>
-            <Link href={filter.href} className={CHIP}>
-              {filter.label}
-            </Link>
+            {guideMode ? (
+              <button type="button" onClick={() => onPick?.(filter.label)} className={CHIP}>
+                {filter.label}
+              </button>
+            ) : (
+              <Link href={filter.href} className={CHIP}>
+                {filter.label}
+              </Link>
+            )}
           </li>
         ))}
       </ul>

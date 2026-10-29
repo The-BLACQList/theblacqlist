@@ -4,7 +4,8 @@
  * The home page visitor guide (ticket 146).
  *
  * Checks, in order. Every one sends the visitor to plain search on a "no":
- *   1. the input is 1 to 200 characters after trimming
+ *   1. the input is 1 to 200 characters after trimming, plus an optional
+ *      Near me position (checked, then rounded to about 110 m)
  *   2. FEATURE_AI_GUIDE is on (read again here, at request time)
  *   3. the AI kill switch is off
  *   4. Turnstile: skipped in v1. It needs a widget, a single-use token per ask
@@ -17,6 +18,13 @@
  * Mock mode (no key, no ceiling) skips 6 and 7 the way generate() does: it
  * costs nothing. It still writes the audit row, with provider 'mock'.
  *
+ * The bar also covers name search: a plain words search runs next to the model
+ * call, and businesses whose name holds the typed words show first. If the
+ * model fails but a name matched, the visitor still gets those cards.
+ *
+ * Near me: the rounded position goes to our own search only, never into the
+ * prompt. "Near me" with no other words skips the model.
+ *
  * Nothing the visitor typed is stored or logged. The audit row keeps the
  * agent, the model and the outcome code only. There is no console call here on
  * purpose; please keep it that way.
@@ -28,6 +36,7 @@ import { isFeatureEnabled } from '@/lib/env'
 import { GUIDE_AGENT, GUIDE_PROMPT_VERSION } from '@/lib/ai/agents'
 import { callAnthropic, ProviderCallError, type TokenUsage } from '@/lib/ai/anthropic'
 import {
+  GUIDE_MAX_NAME_MATCHES,
   GUIDE_MAX_RESULTS,
   GUIDE_PAGES,
   GUIDE_PER_DAY,
@@ -37,10 +46,14 @@ import {
   buildSeeAllHref,
   buildSummary,
   fallbackHref,
-  guideInputSchema,
+  guideAskSchema,
   hasSearchFilters,
   isEmptyGuide,
+  isNameMatch,
+  isNearOnlyText,
   mockGuideAnswer,
+  nearOnlyFilters,
+  normalizeWords,
   parseGuideAnswer,
   stripLinks,
   withinGuideBudget,
@@ -55,6 +68,7 @@ import {
   monthlyCeilingUsd,
   withinMonthlyCeiling,
 } from '@/lib/ai/spend'
+import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
 import { queryListings } from '@/lib/listings/query'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -63,7 +77,10 @@ import type { DiscoveryEntity } from '@/types'
 export type GuideResponse =
   | {
       kind: 'results'
-      summary: string
+      /** Businesses whose name holds the typed words. Shown first. */
+      nameMatches: DiscoveryEntity[]
+      /** Null when the guide itself found nothing to say; name matches only. */
+      summary: string | null
       results: DiscoveryEntity[]
       seeAllHref: string
       page: { label: string; href: string } | null
@@ -107,6 +124,7 @@ async function findListings(filters: GuideFilters): Promise<{ filters: GuideFilt
       category: f.category?.slug,
       city: f.city?.slug,
       open_now: f.openNow || undefined,
+      ...(f.near ? { lat: f.near.lat, lng: f.near.lng, radius: DEFAULT_RADIUS_MILES, sort: 'distance' } : {}),
       page: 1,
     })
     // Sponsored cards are dropped so the guide never counts an impression.
@@ -121,12 +139,25 @@ async function findListings(filters: GuideFilters): Promise<{ filters: GuideFilt
   return { filters: wider, results: await run(wider) }
 }
 
+/** The plain words search behind the bar: names that hold the words, no sponsored cards. */
+async function findNameMatches(query: string): Promise<DiscoveryEntity[]> {
+  const { entities } = await queryListings({ q: query, page: 1 })
+  return entities
+    .filter((e) => !e.sponsored_placement_id && isNameMatch(e.name, query))
+    .slice(0, GUIDE_MAX_NAME_MATCHES)
+}
+
+function rawText(input: unknown): string {
+  if (typeof input === 'string') return input
+  if (input && typeof input === 'object' && 'text' in input && typeof input.text === 'string') return input.text
+  return ''
+}
+
 export async function askGuide(input: unknown): Promise<GuideResponse> {
   // 1. Input.
-  const parsed = guideInputSchema.safeParse(input)
-  const raw = typeof input === 'string' ? input : ''
-  if (!parsed.success) return fallback(raw)
-  const text = parsed.data
+  const parsed = guideAskSchema.safeParse(input)
+  if (!parsed.success) return fallback(rawText(input))
+  const { text, near } = parsed.data
 
   // 2. Flag. 3. Kill switch.
   if (!isFeatureEnabled('aiGuide')) return fallback(text)
@@ -141,6 +172,23 @@ export async function askGuide(input: unknown): Promise<GuideResponse> {
     checkRateLimit({ bucket: 'ai_guide', identifier: `day:${ip}`, limit: GUIDE_PER_DAY, windowSeconds: 86_400 }),
   ])
   if (!minuteOk || !dayOk) return fallback(text)
+
+  // Near me and nothing else: there is nothing for the model to read.
+  if (near && isNearOnlyText(text)) {
+    try {
+      const found = await findListings(nearOnlyFilters(text, near))
+      return {
+        kind: 'results',
+        nameMatches: [],
+        summary: buildSummary(found.filters, found.results.length),
+        results: found.results,
+        seeAllHref: buildSeeAllHref(found.filters),
+        page: null,
+      }
+    } catch {
+      return fallback(text)
+    }
+  }
 
   // 6. and 7. Paid calls only.
   const { provider, model } = resolveProvider(GUIDE_AGENT)
@@ -165,8 +213,20 @@ export async function askGuide(input: unknown): Promise<GuideResponse> {
     }
     if (!words.trim()) return fallback(text)
 
+    // The name search runs while the model thinks. Its failure is never fatal.
+    const nameQuery = normalizeWords(words)
+    const names: Promise<DiscoveryEntity[]> =
+      nameQuery.length >= 3 ? findNameMatches(nameQuery).catch(() => []) : Promise.resolve([])
+
+    /** Any later "no": the name matches if there are some, else plain search. */
+    async function namesOrFallback(): Promise<GuideResponse> {
+      const nameMatches = await names
+      if (nameMatches.length === 0) return fallback(text)
+      return { kind: 'results', nameMatches, summary: null, results: [], seeAllHref: fallbackHref(text), page: null }
+    }
+
     const built = buildGuidePrompt(words, allow)
-    if (!built) return fallback(text)
+    if (!built) return namesOrFallback()
 
     const supabase = createServiceClient()
     const { data: row, error: rowError } = await supabase
@@ -182,7 +242,7 @@ export async function askGuide(input: unknown): Promise<GuideResponse> {
       })
       .select('id')
       .single()
-    if (rowError || !row) return fallback(text)
+    if (rowError || !row) return namesOrFallback()
     const requestId = row.id
 
     async function close(errorCode: string | null, usage: TokenUsage | null = null): Promise<void> {
@@ -213,29 +273,40 @@ export async function askGuide(input: unknown): Promise<GuideResponse> {
       }
     } catch (err) {
       await close(err instanceof ProviderCallError ? err.code : 'provider_error', err instanceof ProviderCallError ? err.usage : null)
-      return fallback(text)
+      return namesOrFallback()
     }
 
     const checked = parseGuideAnswer(answer, built.offered, words)
     if (!checked.ok) {
       await close(rejectionCode(checked.reason), usage)
-      return fallback(text)
+      return namesOrFallback()
     }
     await close(null, usage)
 
-    const filters = checked.filters
-    if (isEmptyGuide(filters)) return fallback(text)
+    // A named city wins over Near me: the visitor said where they mean.
+    const filters = { ...checked.filters, near: checked.filters.city ? null : near }
+    if (isEmptyGuide(filters)) return namesOrFallback()
 
     const page = filters.page ? { ...GUIDE_PAGES[filters.page] } : null
     if (!hasSearchFilters(filters)) {
-      return { kind: 'results', summary: buildSummary(filters, 0), results: [], seeAllHref: fallbackHref(text), page }
+      return {
+        kind: 'results',
+        nameMatches: await names,
+        summary: buildSummary(filters, 0),
+        results: [],
+        seeAllHref: fallbackHref(text),
+        page,
+      }
     }
 
-    const found = await findListings(filters)
+    const [found, nameMatches] = await Promise.all([findListings(filters), names])
+    const shown = new Set(nameMatches.map((e) => e.id))
+    const results = found.results.filter((e) => !shown.has(e.id))
     return {
       kind: 'results',
+      nameMatches,
       summary: buildSummary(found.filters, found.results.length),
-      results: found.results,
+      results,
       seeAllHref: buildSeeAllHref(found.filters),
       page,
     }

@@ -111,10 +111,14 @@ import {
   buildSeeAllHref,
   buildSummary,
   fallbackHref,
+  guideAskSchema,
   guideCallBudget,
   hasSearchFilters,
+  isNameMatch,
+  isNearOnlyText,
   mockGuideAnswer,
   parseGuideAnswer,
+  withChip,
   withinGuideBudget,
   type GuideAllowList,
   type GuideFilters,
@@ -245,6 +249,17 @@ describe('links and summary', () => {
     expect(buildSeeAllHref(filters())).toBe('/discover')
   })
 
+  it('adds the rounded point, the default radius and distance order for Near me', () => {
+    const near = { lat: 33.749, lng: -84.388 }
+    expect(buildSeeAllHref(filters({ category: soulFood, near }))).toBe(
+      '/discover?category=soul-food&lat=33.749&lng=-84.388&radius=10&sort=distance'
+    )
+    expect(buildSummary(filters({ near }), 3)).toBe('Showing places near you.')
+    expect(buildSummary(filters({ category: soulFood, near, openNow: true }), 3)).toBe('Showing Soul Food near you, open now.')
+    // A named city reads as the city, never "near you".
+    expect(buildSummary(filters({ city: atlanta, near }), 1)).toBe('Showing places in Atlanta.')
+  })
+
   it('builds the summary only from checked values', () => {
     expect(buildSummary(filters({ category: soulFood, city: atlanta, openNow: true }), 4)).toBe(
       'Showing Soul Food in Atlanta, open now.'
@@ -260,6 +275,44 @@ describe('links and summary', () => {
       buildSummary(filters({ page: 'jobs' }), 0),
     ]
     for (const line of lines) expect(line).not.toMatch(/[\u2013\u2014]/)
+  })
+})
+
+describe('the ask input', () => {
+  it('takes plain text or text plus a Near me point, and rounds the point', () => {
+    expect(guideAskSchema.parse('soul food')).toEqual({ text: 'soul food', near: null })
+    expect(guideAskSchema.parse({ text: 'barber', near: { lat: 33.748995, lng: -84.387982 } })).toEqual({
+      text: 'barber',
+      near: { lat: 33.749, lng: -84.388 },
+    })
+    expect(guideAskSchema.parse({ text: 'barber', near: null })).toEqual({ text: 'barber', near: null })
+  })
+
+  it('rejects a point out of range, extra keys and empty text', () => {
+    expect(guideAskSchema.safeParse({ text: 'barber', near: { lat: 91, lng: 0 } }).success).toBe(false)
+    expect(guideAskSchema.safeParse({ text: 'barber', near: { lat: 0, lng: 181 } }).success).toBe(false)
+    expect(guideAskSchema.safeParse({ text: 'barber', near: { lat: 0, lng: 0, acc: 5 } }).success).toBe(false)
+    expect(guideAskSchema.safeParse({ text: 'barber', city: 'atlanta' }).success).toBe(false)
+    expect(guideAskSchema.safeParse({ text: '  ' }).success).toBe(false)
+  })
+
+  it('knows a Near me ask with nothing else in it', () => {
+    expect(isNearOnlyText('near me')).toBe(true)
+    expect(isNearOnlyText('Near me, open now')).toBe(true)
+    expect(isNearOnlyText('barber near me')).toBe(false)
+  })
+
+  it('adds a chip to what the visitor typed, once', () => {
+    expect(withChip('', 'Restaurants')).toBe('restaurants')
+    expect(withChip('  Atlanta ', 'Open now')).toBe('Atlanta open now')
+    expect(withChip('soul food open now', 'Open now')).toBe('soul food open now')
+    expect(withChip('a'.repeat(GUIDE_MAX_INPUT), 'Professionals')).toHaveLength(GUIDE_MAX_INPUT)
+  })
+
+  it('matches names on whole words only', () => {
+    expect(isNameMatch("Mama's Soul Kitchen", 'soul kitchen')).toBe(true)
+    expect(isNameMatch('Soulful Cuts', 'soul')).toBe(false)
+    expect(isNameMatch('Ox Bar', 'ox')).toBe(false)
   })
 })
 
@@ -376,6 +429,8 @@ describe('mockGuideAnswer', () => {
 // ─── The action ──────────────────────────────────────────────────────────────
 
 const ENTITY = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: `Place ${id}`, slug: id, ...extra })
+/** The guide's own searches; the name search sends only q and page. */
+const guideCalls = () => h.queryCalls.filter((c) => 'category' in c)
 
 describe('askGuide', () => {
   const consoleSpies: Array<ReturnType<typeof vi.spyOn>> = []
@@ -468,7 +523,70 @@ describe('askGuide', () => {
     })
     if (res.kind !== 'results') throw new Error('expected results')
     expect(res.results.map((e) => e.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
-    expect(h.queryCalls[0]).toEqual({ q: undefined, category: 'soul-food', city: 'atlanta', open_now: true, page: 1 })
+    expect(guideCalls()[0]).toEqual({ q: undefined, category: 'soul-food', city: 'atlanta', open_now: true, page: 1 })
+    expect(h.queryCalls[0]).toEqual({ q: 'soul food in atlanta open now', page: 1 })
+  })
+
+  it('shows businesses whose name holds the words first, with no repeats below', async () => {
+    h.entities = [ENTITY('a', { name: 'Atlanta Soul Food Kitchen' }), ENTITY('b'), ENTITY('c')]
+    const res = await askGuide('soul food')
+    if (res.kind !== 'results') throw new Error('expected results')
+    expect(res.nameMatches.map((e) => e.id)).toEqual(['a'])
+    expect(res.results.map((e) => e.id)).toEqual(['b', 'c'])
+    expect(res.summary).not.toBeNull()
+  })
+
+  it('still shows name matches when the model fails', async () => {
+    h.provider = 'anthropic'
+    h.callAnthropic.mockRejectedValue(new ProviderCallError('provider_error'))
+    h.entities = [ENTITY('a', { name: 'Peach Cobbler Factory' }), ENTITY('b')]
+    expect(await askGuide('peach cobbler')).toEqual({
+      kind: 'results',
+      nameMatches: [h.entities[0]],
+      summary: null,
+      results: [],
+      seeAllHref: '/search?q=peach%20cobbler',
+      page: null,
+    })
+  })
+
+  it('sends a Near me point to our search only, never into the prompt', async () => {
+    h.provider = 'anthropic'
+    h.callAnthropic.mockResolvedValue({
+      text: '{"category":"barbershops","city":null,"keywords":[],"open_now":false,"page":null}',
+      inputTokens: 300,
+      outputTokens: 30,
+    })
+    const res = await askGuide({ text: 'barber', near: { lat: 33.748995, lng: -84.387982 } })
+    const call = h.callAnthropic.mock.calls[0]![0] as { prompt: string; system: string }
+    for (const piece of ['33.7', '84.3', 'lat', 'lng']) {
+      expect(call.prompt).not.toContain(piece)
+      expect(call.system).not.toContain(piece)
+    }
+    expect(guideCalls()[0]).toMatchObject({ category: 'barbershops', lat: 33.749, lng: -84.388, radius: 10, sort: 'distance' })
+    expect(res).toMatchObject({
+      summary: 'Showing Barbershops near you.',
+      seeAllHref: '/discover?category=barbershops&lat=33.749&lng=-84.388&radius=10&sort=distance',
+    })
+    expect(JSON.stringify([h.inserts, h.updates])).not.toContain('33.7')
+  })
+
+  it('lets a named city win over Near me', async () => {
+    await askGuide({ text: 'soul food in atlanta', near: { lat: 40.7, lng: -74 } })
+    const call = guideCalls()[0]!
+    expect(call.city).toBe('atlanta')
+    expect(call).not.toHaveProperty('lat')
+  })
+
+  it('answers "near me" alone with no model call and no audit row', async () => {
+    h.provider = 'anthropic'
+    const res = await askGuide({ text: 'near me open now', near: { lat: 33.749, lng: -84.388 } })
+    expect(h.callAnthropic).not.toHaveBeenCalled()
+    expect(h.inserts).toHaveLength(0)
+    expect(h.queryCalls).toEqual([
+      { q: undefined, category: undefined, city: undefined, open_now: true, lat: 33.749, lng: -84.388, radius: 10, sort: 'distance', page: 1 },
+    ])
+    expect(res).toMatchObject({ kind: 'results', nameMatches: [], summary: 'Showing places near you, open now.', page: null })
   })
 
   it('writes one audit row with no listing, no user and no visitor text', async () => {
@@ -502,11 +620,12 @@ describe('askGuide', () => {
     const original = h.queryCalls.push.bind(h.queryCalls)
     h.queryCalls.push = (...items) => {
       calls += 1
-      if (calls === 2) h.entities = [ENTITY('z')]
+      // 1 is the name search, 2 the first guide search, 3 the retry.
+      if (calls === 3) h.entities = [ENTITY('z')]
       return original(...items)
     }
     const res = await askGuide('oxtails soul food atlanta')
-    expect(h.queryCalls.map((c) => c.q)).toEqual(['oxtails', undefined])
+    expect(guideCalls().map((c) => c.q)).toEqual(['oxtails', undefined])
     expect(res).toMatchObject({ kind: 'results', summary: 'Showing Soul Food in Atlanta.', seeAllHref: '/discover?category=soul-food&city=atlanta' })
   })
 
@@ -559,6 +678,6 @@ describe('askGuide', () => {
       results: [],
       page: { label: 'Add your business', href: '/add-business' },
     })
-    expect(h.queryCalls).toHaveLength(0)
+    expect(guideCalls()).toHaveLength(0)
   })
 })

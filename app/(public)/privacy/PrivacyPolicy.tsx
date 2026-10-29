@@ -224,8 +224,14 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   and cities. Before we send them, we take out anything that looks like an email
                   address, a phone number, a street address, or a link. We don&apos;t save what you
                   type, and we don&apos;t link it to you or your account. We only keep a record that
-                  the guide was used (when, and whether it worked). If you&apos;d rather not use AI,
-                  search by name works just the same.
+                  the guide was used (when, and whether it worked). If you tap Near me under the
+                  guide, we round your location to about a city block and use it only to sort that
+                  search by distance. We don&apos;t send it to Anthropic and we don&apos;t save it. If
+                  you&apos;d rather not use AI, our{' '}
+                  <Link href="/search" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
+                    Search page
+                  </Link>{' '}
+                  works without it.
                 </p>
               </>
             )}

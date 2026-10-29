@@ -6,55 +6,57 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, LoaderCircle, Sparkles } from 'lucide-react'
 
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
-import { fallbackHref, GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS } from '@/lib/ai/guide-limits'
+import { fallbackHref, GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS, withChip } from '@/lib/ai/guide-limits'
 import { EntityCard } from '@/components/entities/EntityCard'
+import { HeroQuickFilters, type NearPoint, type QuickFilter } from '@/components/home/HeroQuickFilters'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type Results = Extract<GuideResponse, { kind: 'results' }>
 
 const FALLBACK_STATUS = "Couldn't match that. Showing search results for what you typed."
+const NO_LOCATION_STATUS = "Couldn't get your location. Type a city instead, or try Near me again."
 
 /** One short line for screen readers; the cards themselves are not announced. */
 function statusFor(answer: Results): string {
-  const n = Math.min(answer.results.length, GUIDE_MAX_RESULTS)
+  const n = answer.nameMatches.length + Math.min(answer.results.length, GUIDE_MAX_RESULTS)
+  const count = n === 1 ? '1 match' : `${n} matches`
+  if (answer.summary === null) return `${count} by name below.`
   if (n === 0) return answer.summary
-  return `${answer.summary} ${n === 1 ? '1 match' : `${n} matches`} below.`
+  return `${answer.summary} ${count} below.`
 }
 
 const LINK =
   'inline-flex items-center gap-1.5 min-h-11 font-subhead text-sm font-semibold text-gold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm'
 
 /**
- * The home page visitor guide (ticket 146). The visitor says what they need;
- * the server turns it into filters we already have and sends back real cards.
+ * The home page visitor guide (ticket 146), and the hero's only search bar.
+ * The visitor says what they need, or a business name; the server turns it
+ * into filters we already have and sends back real cards, name matches first.
  * Any failure sends them to plain search with their own words.
+ *
+ * The chips under the bar feed it. Near me is a switch whose position goes to
+ * our search only, rounded, and never to the AI.
  *
  * The words stay in this component's state and the one server call. Nothing
  * here stores or logs them.
  */
-export function AiGuide() {
+export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
   const router = useRouter()
   const [text, setText] = useState('')
+  const [near, setNear] = useState<NearPoint | null>(null)
   const [answer, setAnswer] = useState<Results | null>(null)
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const words = text.trim()
+  function ask(words: string, at: NearPoint | null) {
     if (pending) return
-    if (!words) {
-      setStatus("Type what you're looking for, then press Ask.")
-      inputRef.current?.focus()
-      return
-    }
     setAnswer(null)
     setStatus('Finding matches…')
     startTransition(async () => {
       let res: GuideResponse
       try {
-        res = await askGuide(words)
+        res = await askGuide(at ? { text: words, near: at } : words)
       } catch {
         res = { kind: 'fallback', href: fallbackHref(words) }
       }
@@ -68,6 +70,45 @@ export function AiGuide() {
     })
   }
 
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const words = text.trim()
+    if (pending) return
+    if (!words) {
+      if (near) {
+        ask('near me', near)
+        return
+      }
+      setStatus("Type what you're looking for, then press Ask.")
+      inputRef.current?.focus()
+      return
+    }
+    ask(words, near)
+  }
+
+  function onPick(label: string) {
+    if (pending) return
+    const next = withChip(text, label)
+    setText(next)
+    ask(next, near)
+  }
+
+  function onNear(point: NearPoint | null) {
+    if (near) {
+      // Near me was on; this tap turns it off.
+      setNear(null)
+      setStatus('Near me is off.')
+      return
+    }
+    if (!point) {
+      setStatus(NO_LOCATION_STATUS)
+      if (text.trim()) ask(text.trim(), null)
+      return
+    }
+    setNear(point)
+    ask(text.trim() || 'near me', point)
+  }
+
   return (
     <div>
       <form
@@ -77,8 +118,18 @@ export function AiGuide() {
         aria-label="Ask the guide"
       >
         <div className="flex-1 min-w-0">
-          <label htmlFor="ai-guide-input" className="block font-subhead text-sm font-semibold text-off-white mb-2">
+          <label
+            htmlFor="ai-guide-input"
+            className="flex items-center gap-2 font-subhead text-sm font-semibold text-off-white mb-2"
+          >
             Tell me what you need
+            <span
+              aria-hidden="true"
+              className="rounded-full border border-gold/70 px-1.5 py-px font-subhead text-[11px] font-bold uppercase tracking-[0.08em] text-gold"
+            >
+              AI
+            </span>
+            <span className="sr-only">(answered with AI)</span>
           </label>
           <div className="relative">
             <Sparkles
@@ -94,8 +145,7 @@ export function AiGuide() {
               maxLength={GUIDE_MAX_INPUT}
               autoComplete="off"
               enterKeyHint="search"
-              placeholder="Soul food in Atlanta, open now"
-              aria-describedby="ai-guide-hint"
+              placeholder="Soul food in Atlanta, or a business name"
               className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
             />
           </div>
@@ -109,9 +159,8 @@ export function AiGuide() {
           Ask
         </button>
       </form>
-      <p id="ai-guide-hint" className="font-body text-sm text-off-white/80 mt-2">
-        Say it in your own words. We use AI to match it to our listings and don&apos;t save what you type.
-      </p>
+
+      <HeroQuickFilters filters={filters} onPick={onPick} onNear={onNear} nearOn={near !== null} />
 
       {/* Always mounted, so screen readers hear each short status once. */}
       <p role="status" className="sr-only">
@@ -141,23 +190,37 @@ function GuideSkeleton() {
   )
 }
 
+function CardGrid({ entities }: { entities: Results['results'] }) {
+  return (
+    <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3 list-none p-0 m-0">
+      {entities.map((entity) => (
+        <li key={entity.id} className="min-w-0">
+          <EntityCard entity={entity} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function GuideAnswer({ answer }: { answer: Results }) {
-  const { summary, results, seeAllHref, page } = answer
+  const { nameMatches, summary, results, seeAllHref, page } = answer
+  const nothing = results.length === 0 && nameMatches.length === 0
   return (
     <div className="rounded-2xl bg-brand-black/60 backdrop-blur-sm p-3 sm:p-4">
       <h2 className="sr-only">Matches for your request</h2>
-      <p className="font-body text-sm md:text-base text-off-white">{summary}</p>
 
-      {results.length > 0 && (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3 list-none p-0 m-0">
-          {results.slice(0, GUIDE_MAX_RESULTS).map((entity) => (
-            <li key={entity.id} className="min-w-0">
-              <EntityCard entity={entity} />
-            </li>
-          ))}
-        </ul>
+      {nameMatches.length > 0 && (
+        <div className={summary !== null ? 'mb-4' : undefined}>
+          <h3 className="font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-off-white/85">
+            Matching names
+          </h3>
+          <CardGrid entities={nameMatches} />
+        </div>
       )}
-      {results.length === 0 && !page && (
+
+      {summary !== null && <p className="font-body text-sm md:text-base text-off-white">{summary}</p>}
+      {results.length > 0 && <CardGrid entities={results.slice(0, GUIDE_MAX_RESULTS)} />}
+      {nothing && !page && (
         <p className="font-body text-sm text-off-white/85 mt-2">
           Try fewer words, or see everything close to it.
         </p>
@@ -165,7 +228,7 @@ function GuideAnswer({ answer }: { answer: Results }) {
 
       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2">
         {/* A site question gets its page only; "see all" would be an empty search. */}
-        {(results.length > 0 || !page) && (
+        {(!nothing || !page) && (
           <Link href={seeAllHref} className={LINK}>
             See all matches
             <ArrowRight className="size-4" aria-hidden="true" />

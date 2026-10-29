@@ -19,6 +19,7 @@
 
 import { z } from 'zod'
 
+import { DEFAULT_RADIUS_MILES, roundCoord } from '../listings/location-params'
 import { GUIDE_AGENT } from './agents'
 import { GUIDE_MAX_INPUT } from './guide-limits'
 import { PROMPT_TEMPLATES } from './prompts'
@@ -27,7 +28,7 @@ import { validateOutput, type OutputRejection } from './sanitize'
 
 // ─── Limits ──────────────────────────────────────────────────────────────────
 
-export { GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS, fallbackHref } from './guide-limits'
+export { GUIDE_MAX_INPUT, GUIDE_MAX_NAME_MATCHES, GUIDE_MAX_RESULTS, fallbackHref, withChip } from './guide-limits'
 
 /** Per IP, per minute. */
 export const GUIDE_PER_MINUTE = 5
@@ -58,6 +59,32 @@ Rules:
 // ─── Input ───────────────────────────────────────────────────────────────────
 
 export const guideInputSchema = z.string().trim().min(1).max(GUIDE_MAX_INPUT)
+
+/** Where the visitor is, from Near me. Rounded to about 110 m before use. */
+export interface GuideNear {
+  lat: number
+  lng: number
+}
+
+const guideNearSchema = z.strictObject({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+})
+
+/**
+ * What askGuide takes: the visitor's words alone, or the words plus a Near me
+ * position. The position is rounded here, on the server, whatever the browser
+ * sent. It goes to our own search only and never into the prompt.
+ */
+export const guideAskSchema = z.union([
+  guideInputSchema.transform((text) => ({ text, near: null as GuideNear | null })),
+  z
+    .strictObject({ text: guideInputSchema, near: guideNearSchema.nullable().optional() })
+    .transform(({ text, near }) => ({
+      text,
+      near: near ? { lat: roundCoord(near.lat), lng: roundCoord(near.lng) } : null,
+    })),
+])
 
 // ─── Help pages ──────────────────────────────────────────────────────────────
 
@@ -103,6 +130,8 @@ export interface GuideFilters {
   keywords: string[]
   openNow: boolean
   page: GuidePageKey | null
+  /** Set by the server from Near me, never by the model. */
+  near?: GuideNear | null
 }
 
 /** What the model may send back. Loose on purpose: the allow-list does the real check. */
@@ -188,7 +217,9 @@ export function applyAllowList(raw: RawGuideAnswer, allow: GuideAllowList, visit
 
 /** True when there is something to search for. */
 export function hasSearchFilters(filters: GuideFilters): boolean {
-  return Boolean(filters.category || filters.city || filters.keywords.length > 0 || filters.openNow)
+  return Boolean(
+    filters.category || filters.city || filters.keywords.length > 0 || filters.openNow || filters.near
+  )
 }
 
 /** True when the answer gave us nothing at all to show. */
@@ -280,7 +311,7 @@ function describe(filters: GuideFilters): string {
   else if (filters.category) subject = filters.category.name
   else if (keyword) subject = keyword
   else subject = 'places'
-  const where = filters.city ? ` in ${filters.city.name}` : ''
+  const where = filters.city ? ` in ${filters.city.name}` : filters.near ? ' near you' : ''
   const when = filters.openNow ? ', open now' : ''
   return `${subject}${where}${when}`
 }
@@ -303,6 +334,12 @@ export function buildSeeAllHref(filters: GuideFilters): string {
   if (filters.category) params.set('category', filters.category.slug)
   if (filters.city) params.set('city', filters.city.slug)
   if (filters.openNow) params.set('open_now', '1')
+  if (filters.near) {
+    params.set('lat', String(filters.near.lat))
+    params.set('lng', String(filters.near.lng))
+    params.set('radius', String(DEFAULT_RADIUS_MILES))
+    params.set('sort', 'distance')
+  }
   const query = params.toString()
   const base = q ? '/search' : '/discover'
   return query ? `${base}?${query}` : base
@@ -338,6 +375,9 @@ const MOCK_SYNONYMS: Record<string, readonly string[]> = {
   lunch: ['restaurant', 'food'],
   brunch: ['restaurant', 'food'],
   food: ['restaurant', 'food'],
+  restaurant: ['restaurant', 'food'],
+  restaurants: ['restaurant', 'food'],
+  professionals: ['professional'],
   coffee: ['coffee', 'cafe'],
   lawyer: ['legal', 'law', 'professional'],
   attorney: ['legal', 'law', 'professional'],
@@ -368,6 +408,33 @@ const STOPWORDS = new Set(
     'where who with you open now late'
   ).split(' ')
 )
+
+/**
+ * True when Near me is all the words ask for ("near me", "open now near me").
+ * Then there is nothing for the model to read, so the server searches nearby
+ * without calling it.
+ */
+export function isNearOnlyText(text: string): boolean {
+  return normalizeWords(text)
+    .split(' ')
+    .filter(Boolean)
+    .every((word) => STOPWORDS.has(word))
+}
+
+/** The filters for a Near me ask with no other words. */
+export function nearOnlyFilters(text: string, near: GuideNear): GuideFilters {
+  const openNow = /\bopen (now|late|right now)\b/.test(normalizeWords(text))
+  return { category: null, city: null, keywords: [], openNow, page: null, near }
+}
+
+/**
+ * A name match: the visitor's whole words, in order, inside the business name.
+ * "busy bee" matches "Busy Bee Cafe"; "soul food atlanta" matches nothing.
+ */
+export function isNameMatch(name: string, normalizedQuery: string): boolean {
+  if (normalizedQuery.length < 3) return false
+  return ` ${normalizeWords(name)} `.includes(` ${normalizedQuery} `)
+}
 
 function containsPhrase(padded: string, phrase: string): boolean {
   if (!phrase) return false
