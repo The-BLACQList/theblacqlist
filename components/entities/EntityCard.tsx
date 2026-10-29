@@ -158,7 +158,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
             <Link
               href={levelHref as Route}
               aria-label={`More ${LEVEL_META[entity.primary_level].emptyNoun}`}
-              className="relative inline-flex items-center rounded-full border border-dashed border-charcoal/30 text-charcoal/80 text-[11px] font-subhead font-semibold px-2 py-0.5 hover:bg-charcoal/5 hover:border-charcoal/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
+              className="relative inline-flex items-center rounded-full border border-dashed border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5 hover:bg-charcoal/5 hover:border-charcoal/50 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']"
             >
               {levelText}
             </Link>

@@ -92,7 +92,7 @@ export function LivePagePreview({
             <p
               className={cn(
                 'mt-1 font-body text-sm text-white/80 line-clamp-2',
-                !tagline && 'text-white/45',
+                !tagline && 'text-white/60',
                 mark(highlight === 'tagline')
               )}
             >

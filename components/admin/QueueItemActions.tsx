@@ -38,7 +38,9 @@ export function QueueItemActions({ queueId, revalidatePath = '/admin/reports' }:
           Resolve
         </button>
       </form>
-      <span className="text-charcoal/20">·</span>
+      <span aria-hidden="true" className="text-charcoal/20">
+        ·
+      </span>
       <form action={dismissDispatch}>
         <input type="hidden" name="queue_id" value={queueId} />
         <input type="hidden" name="decision" value="dismissed" />

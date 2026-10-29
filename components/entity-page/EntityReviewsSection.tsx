@@ -143,9 +143,7 @@ function ReviewCard({
               )}
             </p>
           </div>
-          <p className="font-body text-sm text-charcoal/80 leading-relaxed">
-            {review.owner_response}
-          </p>
+          <p className="font-body text-sm text-charcoal leading-relaxed">{review.owner_response}</p>
         </div>
       )}
 

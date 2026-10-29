@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test'
+import { expectNoContrastViolations } from './helpers/axe'
+import { loginAsAdmin } from './helpers/auth'
 
 type Rgb = { r: number; g: number; b: number }
 
@@ -73,5 +75,58 @@ test.describe('J. Accessibility — color contrast', () => {
     expect(ratio, `hero CTA contrast was ${ratio.toFixed(2)}:1 (${fg} on ${bg})`).toBeGreaterThanOrEqual(
       AA_NORMAL
     )
+  })
+})
+
+// Ticket 098: a live axe color-contrast scan, zero violations at any impact.
+const CONTRAST_SCREENS = [
+  '/',
+  '/discover',
+  '/search',
+  '/collections',
+  '/for-business',
+  '/about',
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/privacy',
+  '/how-ranking-works',
+]
+
+test.describe('J. Accessibility — color contrast scan (098)', () => {
+  // Reduced motion turns off the .blacq-reveal fade, so axe reads each
+  // element's settled color. With motion on, a scan can land mid-fade and
+  // report a blended color nobody actually sees (the home eyebrow read as
+  // #ede6d5 on white while fading in to amber).
+  test.use({ contextOptions: { reducedMotion: 'reduce' } })
+
+  for (const path of CONTRAST_SCREENS) {
+    test(`098 — ${path} has no color-contrast violations`, async ({ page }) => {
+      await page.goto(path)
+      // Not networkidle: the Turnstile widget on the auth pages keeps the
+      // network busy, so that wait never settles. The heading means the
+      // page has rendered, which is all the scan needs.
+      await page.waitForLoadState('load')
+      await page.getByRole('heading', { level: 1 }).first().waitFor()
+      await expectNoContrastViolations(page, path)
+    })
+  }
+
+  test('098 — a listing page has no color-contrast violations', async ({ page }) => {
+    await page.goto('/discover')
+    await page
+      .locator('section[aria-label="Discovery results"]')
+      .getByRole('link', { name: 'View Page' })
+      .first()
+      .click()
+    await page.waitForURL((url) => /^\/[^/]+\/[^/]+\/[^/]+/.test(url.pathname), { timeout: 60_000 })
+    await page.waitForLoadState('networkidle')
+    await expectNoContrastViolations(page, 'listing page')
+  })
+
+  test('098 — the admin panel has no color-contrast violations', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.waitForLoadState('networkidle')
+    await expectNoContrastViolations(page, '/admin/claims')
   })
 })
