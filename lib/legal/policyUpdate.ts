@@ -60,3 +60,13 @@ export const TERMS_PAID_PLANS = {
   postedOnLabel: 'October 29, 2026',
   anchor: 'paid-plans',
 } as const
+
+/**
+ * Privacy Policy section 6 adds OpenStreetMap (Nominatim), finding F3 of the
+ * search zero-result log review (ticket 142). The founder approved it on
+ * 2026-10-29, effective on posting, so it doesn't use the dated switch above.
+ * Change this label if the page goes live on a later day.
+ */
+export const PRIVACY_PROVIDERS_UPDATE = {
+  postedOnLabel: 'October 29, 2026',
+} as const

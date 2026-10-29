@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Section } from '@/components/layout/section'
 import { PageHeader } from '@/components/layout/page-header'
-import { nextVersionSubtitle, type PolicyVersion } from '@/lib/legal/policyUpdate'
+import { PRIVACY_PROVIDERS_UPDATE, type PolicyVersion } from '@/lib/legal/policyUpdate'
 
 interface PrivacyPolicyProps {
   /** `current` is the June 30 text. `next` adds the October 2026 update (ticket 139). */
@@ -21,7 +21,11 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
       <Section variant="pale-lavender">
         <PageHeader
           title="Privacy Policy"
-          subtitle={isNext ? nextVersionSubtitle() : 'Last updated: June 30, 2026'}
+          subtitle={
+            isNext
+              ? `Last updated: ${PRIVACY_PROVIDERS_UPDATE.postedOnLabel}`
+              : 'Last updated: June 30, 2026'
+          }
         />
         {notice}
       </Section>
@@ -405,6 +409,21 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                             className="text-amber hover:underline"
                           >
                             anthropic.com/legal/privacy
+                          </a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="border-b border-gray-200 p-3">OpenStreetMap (Nominatim)</td>
+                        <td className="border-b border-gray-200 p-3">Puts business addresses on the map, and finds the place name or ZIP code you type into the map search. It gets only the address or the words you typed, sent from our server</td>
+                        <td className="border-b border-gray-200 p-3">
+                          <a
+                            href="https://osmfoundation.org/wiki/Privacy_Policy"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="OpenStreetMap Foundation privacy policy (opens in new window)"
+                            className="text-amber hover:underline"
+                          >
+                            osmfoundation.org/wiki/Privacy_Policy
                           </a>
                         </td>
                       </tr>

@@ -132,7 +132,7 @@ export interface PlaceHit {
 // What people type for the cities we have rows for. Two letters are allowed
 // here, unlike state codes (usStates.ts), because these are the forms people
 // really search with and none of them is an everyday word.
-const CITY_NICKNAMES: Readonly<Record<string, string>> = {
+export const CITY_NICKNAMES: Readonly<Record<string, string>> = {
   atl: 'atlanta-ga',
   nola: 'new-orleans-la',
   chitown: 'chicago-il',
