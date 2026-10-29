@@ -218,6 +218,15 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 <p>
                   <strong>It&apos;s optional.</strong> You can set up and run your page without it.
                 </p>
+                <p>
+                  <strong>The home page guide.</strong> If you type what you need into the guide on our
+                  home page, we send those words to Anthropic so it can match them to our categories
+                  and cities. Before we send them, we take out anything that looks like an email
+                  address, a phone number, a street address, or a link. We don&apos;t save what you
+                  type, and we don&apos;t link it to you or your account. We only keep a record that
+                  the guide was used (when, and whether it worked). If you&apos;d rather not use AI,
+                  search by name works just the same.
+                </p>
               </>
             )}
           </section>
@@ -399,7 +408,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide that matches what a visitor types to our categories and cities (not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"

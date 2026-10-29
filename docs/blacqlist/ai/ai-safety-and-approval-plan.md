@@ -111,6 +111,36 @@ The allowlist above names listing columns. During /add-business there may be no 
 9. **Gates still apply.** This exception does not override Core Principle 3. No real provider call until GATE-SPEND and the six V2-Provider gates clear, and not before the updated Privacy Policy and Terms take effect.
 10. **Policy match.** The public Privacy Policy "AI writing help" section must describe these inputs. If an input is added here, the policy is updated first.
 
+### Visitor guide (ticket 146)
+
+**Added:** 2026-10-29 · **Approved by:** founder (ticket 146 spec) · **Applies to:** the home page visitor guide, behind `FEATURE_AI_GUIDE` (off unless set).
+
+The guide is the first anonymous AI surface. A visitor types what they need in their own words, and the model maps those words to filters we already have. The model never writes text a visitor reads. Every line on the page is built by our code from checked values.
+
+**Allowed in prompts (visitor guide only):**
+
+| Input | Source | Rule |
+|---|---|---|
+| Visitor's words | What the visitor types into the guide | 1 to 200 characters. Through `sanitizeForPrompt` (strip HTML, redact email, phone and street address), then links removed and brackets and braces taken out. Placed inside a delimited block the model is told to treat as information |
+| Category codes | Active `categories.slug` rows, read at request time | Codes only. If the list makes the prompt too long, top-level codes only |
+| City codes | Active `cities.slug` rows, read at request time | Codes only |
+| Help page codes | The fixed list in `lib/ai/guide.ts` (`GUIDE_PAGES`) | Codes only |
+
+**Never allowed:** anything about the visitor beyond their words (IP, location, account, cookies), any listing text, review text, owner data.
+
+**Guardrails:**
+
+1. **Nothing stored.** The visitor's words are not written to any table or log. No `console` calls in the guide. The audit row keeps the agent, prompt version, model, provider, status, a fixed error code and token counts. `listing_id` and `created_by` are null.
+2. **Allow-lists, not trust.** The answer must be JSON (`category`, `city`, `keywords`, `open_now`, `page`) and pass zod. Any category, city or page not on the list offered is dropped, never corrected. A keyword survives only if every word in it is one the visitor typed, so no model-written word reaches the summary or the search. At most 3 keywords.
+3. **Output checks.** `validateOutput` runs first with a 400-character cap. An email or phone in the answer, a refusal, or anything that doesn't parse sends the visitor to plain search.
+4. **Plain search is the way out.** Every failure returns `/search?q=<the visitor's words>`, so a stopped or broken guide never blocks finding something.
+5. **Checks in order:** the flag, the kill switch, Turnstile (skipped in v1, see below), a per-IP rate limit (5 a minute, 30 a day, bucket `ai_guide`), the monthly ceiling, then the guide's own share (under 40% of the monthly call budget). The last two run only on paid calls, as in `generate()`.
+6. **Fail-closed where it costs money.** The per-IP limiter is the shared durable limiter and fails open, so it is not the cost guard. The monthly ceiling and the 40% share count `ai_generation_requests` rows and fail closed: an unreadable count stops paid guide calls.
+7. **Turnstile is skipped in v1.** It would need a widget on the home page, a single-use token per ask and a Cloudflare script on the busiest page. The share, the ceiling and the per-IP caps bound the cost. Revisit if the share fills from abuse.
+8. **Spend bound holds.** The guide uses its own system prompt, which a test keeps no longer than `SYSTEM_PROMPT`. The prompt is kept under `MAX_PROMPT_CHARS`, and the output cap is 400 characters, under the largest owner agent. So `worstCaseUsdPerCall` still prices every guide call.
+9. **No sponsored impressions.** Sponsored cards are dropped from guide results.
+10. **Policy match.** The public Privacy Policy describes the guide in the AI section and names it in the Anthropic row in section 6. If an input is added here, the policy is updated first.
+
 ### Server-Side-Only Prompt Construction
 
 Prompts are assembled in `lib/ai/provider.ts` (server module). This file:

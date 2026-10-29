@@ -23,7 +23,7 @@ The Growth card promised eight things. Three had nothing behind them, and three 
 
 In:
 
-- **Growth card trim** (`lib/stripe/plans.ts`). Growth now lists five lines: Everything in Starter, up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days. The `features.ts` keys for team members, priority support and advanced analytics stay, since ticket 107 needs them.
+- **Growth card trim** (`lib/stripe/plans.ts`). Growth now lists five lines: Everything in Starter, up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days. Ticket 146 (2026-10-29) adds a sixth line, AI writing help, right after Everything in Starter. The `features.ts` keys for team members, priority support and advanced analytics stay, since ticket 107 needs them.
 - **No "Top search queries" panel** on `/dashboard/pages/[entityId]/analytics`. Nothing writes `search_events.clicked_listing_id`, and owners have no read on `search_events`, so the panel was empty on every tier. It comes back with the feature.
 - **"Growth opens alone" copy.** Every line below reads `isTierOpen()` (new in `lib/stripe/availability.ts`), which uses the same live `plans` data as the cards. Restoring Growth's price IDs flips the copy with no deploy.
   - `/pricing`: the subtitle, the FAQ ("What does Growth add?", "When is Premium available?"), the waitlist heading and the bottom CTA. The metadata is neutral.
@@ -48,7 +48,7 @@ Out:
 ## Acceptance criteria
 
 - Given Growth has no price IDs, when anyone visits `/pricing`, `/for-business`, `/for-vendors` or `/marketplace`, then the copy reads exactly as it does on main today, apart from the neutral pricing metadata.
-- Given Growth has a monthly or annual price ID and Premium has neither, when a visitor opens `/pricing`, then the Growth card shows exactly five lines, the FAQ asks "When is Premium available?", and the waitlist offers only Premium and the add-ons.
+- Given Growth has a monthly or annual price ID and Premium has neither, when a visitor opens `/pricing`, then the Growth card shows exactly six lines (five from this ticket plus the AI line from ticket 146), the FAQ asks "When is Premium available?", and the waitlist offers only Premium and the add-ons.
 - Given the same, when a Starter owner opens Add product, then the notice says storefronts come with Growth and links to `/dashboard/upgrade`.
 - Given the same, when a Starter owner submits the create-product action directly, then the refusal names Growth and does not say selling isn't open.
 - Given any tier, when an owner opens their analytics page, then there is no "Top search queries" panel.

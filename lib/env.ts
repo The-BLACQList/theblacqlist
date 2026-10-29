@@ -65,6 +65,7 @@ export const TESTER_FLYER_CODE = process.env.TESTER_FLYER_CODE ?? ''
 // handler, a server action, or a request-scoped Server Component).
 export type FeatureFlag =
   | 'aiBeta'
+  | 'aiGuide'
   | 'aiOnboarding'
   | 'collectiveOpen'
   | 'earnedFeatured'
@@ -80,6 +81,12 @@ export type FeatureFlag =
 // above, which is what makes `isFeatureEnabled` typo-proof at the call site.
 const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   aiBeta: 'FEATURE_AI_BETA',
+  // Gates the visitor guide on the home page hero (ticket 146): "Tell me what
+  // you need" turns a visitor's words into our own filters and shows real
+  // listings. Off, the hero is exactly what it was before and the server action
+  // sends every ask to plain search. Closed by default on EVERY deployment (see
+  // CLOSED_BY_DEFAULT), because it sends visitor words to a model.
+  aiGuide: 'FEATURE_AI_GUIDE',
   // Gates the drafts on /add-business (ticket 128): after "Save my draft", one
   // generation suggests a category, tagline, about, search title and search
   // description. Off, the flow is exactly what it was before: no call, no audit
@@ -142,10 +149,12 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
 // Flags that default to off on EVERY deployment, not just production. The
 // opening-soon covers are the thing under review here: if they defaulted open on
 // Previews, the cover would be invisible exactly where the founder checks it
-// (2026-10-05). The /add-business drafts are here for a different reason: they
-// send owner text to a model, so no deployment should start doing that without
-// someone deciding to. Each still opens with an explicit `=true`.
+// (2026-10-05). The /add-business drafts and the home page visitor guide are
+// here for a different reason: they send owner or visitor text to a model, so no
+// deployment should start doing that without someone deciding to. Each still
+// opens with an explicit `=true`.
 const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
+  'aiGuide',
   'aiOnboarding',
   'collectiveOpen',
   'jobsOpen',

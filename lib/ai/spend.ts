@@ -29,7 +29,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { AI_AGENTS, ONBOARDING_AGENT } from './agents'
+import { AI_AGENTS, GUIDE_AGENT, ONBOARDING_AGENT } from './agents'
 import { maxTokensFor, SYSTEM_PROMPT } from './anthropic'
 
 /** Longest filled template `generate()` will send. Longer prompts are refused. */
@@ -58,7 +58,9 @@ export function worstCaseUsdPerCall(maxOutputChars: number): number {
  * the arithmetic one line long.
  */
 export function worstCaseUsdAnyAgent(): number {
-  return Math.max(...[...AI_AGENTS, ONBOARDING_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars)))
+  return Math.max(
+    ...[...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars))
+  )
 }
 
 /** `AI_MONTHLY_CEILING_USD` as a positive number, or null when unset or invalid. */
@@ -74,7 +76,7 @@ export function monthlyCallBudget(ceilingUsd: number): number {
   return Math.floor(ceilingUsd / worstCaseUsdAnyAgent())
 }
 
-function startOfMonthUtc(now: Date): string {
+export function startOfMonthUtc(now: Date): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString()
 }
 
@@ -99,4 +101,23 @@ export async function withinMonthlyCeiling(now: Date = new Date()): Promise<bool
 
   if (error || count === null) return false
   return count < monthlyCallBudget(ceiling)
+}
+
+/**
+ * Paid attempts by one agent since the first of the month (UTC), whatever their
+ * status. The home page visitor guide (ticket 146) uses it for its own share of
+ * the budget. Fails closed: an unreadable counter returns `Infinity`, which is
+ * over every share.
+ */
+export async function countAgentAttemptsThisMonth(agentType: string, now: Date = new Date()): Promise<number> {
+  const supabase = createServiceClient()
+  const { count, error } = await supabase
+    .from('ai_generation_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('provider', 'anthropic')
+    .eq('agent_type', agentType)
+    .gte('created_at', startOfMonthUtc(now))
+
+  if (error || count === null) return Number.POSITIVE_INFINITY
+  return count
 }
