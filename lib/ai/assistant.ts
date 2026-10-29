@@ -445,6 +445,19 @@ export function closeLine(needName: string, where: string | null, parentName: st
     : `No ${needName} yet. Close to it: ${parentName} (${total})`
 }
 
+/** The same broad kind (not the exact thing) in the nearest city we list. */
+export function nearestCloseLine(
+  placeLabel: string | null,
+  needName: string,
+  cityName: string,
+  kindName: string,
+  total: number
+): string {
+  return placeLabel
+    ? `No ${needName} in ${placeLabel} yet. Close to it in ${cityName}: ${kindName} (${total})`
+    : `No ${needName} yet. Close to it in ${cityName}: ${kindName} (${total})`
+}
+
 /** For a place we don't cover and can't put on a map. */
 export function elsewhereLine(placeLabel: string, total: number): string {
   return `Not in ${placeLabel} yet. Elsewhere on The BLACQList (${total})`

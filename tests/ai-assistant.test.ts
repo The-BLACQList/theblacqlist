@@ -519,6 +519,38 @@ describe('askAssistant', () => {
     expect(h.lookupPlace.mock.calls[0]![0]).toBe('Alaska')
   })
 
+  it('calls the whole category a close option, not the thing, when the keywords find nothing', async () => {
+    modelSays({
+      city: 'detroit',
+      needs: [
+        { name: 'Catering', category: 'food-dining', keywords: ['catering'] },
+        { name: 'Soul food', category: 'food-dining', keywords: ['soul'] },
+      ],
+    })
+    h.search = (p) => {
+      if (p.category !== 'food-dining' || p.city !== 'detroit') return []
+      if (p.q === 'soul') return [ENTITY('soul')]
+      return p.q ? [] : [ENTITY('food1'), ENTITY('food2')]
+    }
+    const res = answerOf(await askAssistant({ message: 'catering and soul food in detroit' }))
+    expect(res.needs.map((n) => [n.name, n.status, n.line, n.seeAllHref])).toEqual([
+      ['Catering', 'close', 'No Catering in Detroit yet. Close to it: Food & Dining (2)', '/discover?category=food-dining&city=detroit'],
+      ['Soul food', 'found', '1 in Detroit', '/search?q=soul&category=food-dining&city=detroit'],
+    ])
+  })
+
+  it('says the nearest city has the kind, not the thing, when only the category matches there', async () => {
+    modelSays({ city: null, place: null, needs: [{ name: 'Thai restaurant', category: 'food-dining', keywords: ['thai'] }] })
+    h.lookupPlace.mockResolvedValue({ place: { label: 'Alaska', lat: 61.2, lng: -149.9, zoom: 4 }, cacheable: true })
+    h.search = (p) => (p.category === 'food-dining' && p.city === 'chicago' && !p.q ? [ENTITY('chi-food')] : [])
+    const res = answerOf(await askAssistant({ message: 'Black-owned Thai restaurant in Alaska' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'close',
+      line: 'No Thai restaurant in Alaska yet. Close to it in Chicago: Food & Dining (1)',
+      seeAllHref: '/discover?category=food-dining&city=chicago',
+    })
+  })
+
   it('offers listings elsewhere when the place cannot be put on a map', async () => {
     modelSays({ city: null, place: null, needs: [{ name: 'Thai restaurant', category: 'thai' }] })
     h.search = (p) => (p.category === 'thai' && !p.city ? [ENTITY('t1'), ENTITY('t2')] : [])
