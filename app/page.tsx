@@ -19,6 +19,7 @@ import { MicrositeShowcase } from '@/components/home/MicrositeShowcase'
 import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
 import { isCovered } from '@/lib/features/covered'
+import { isFeatureEnabled } from '@/lib/env'
 import { BlacqlightFeature, type FeaturedArticle } from '@/components/home/BlacqlightFeature'
 import { EditorialRail, type RailArticle, type RailGuide } from '@/components/home/EditorialRail'
 import { OwnerCta } from '@/components/home/OwnerCta'
@@ -262,7 +263,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <HomeHero />
+      <HomeHero aiGuide={isFeatureEnabled('aiGuide')} />
       <Reveal>
         <TheAvenues counts={avenueCounts} />
       </Reveal>

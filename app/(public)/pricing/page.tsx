@@ -6,8 +6,10 @@ import { SectionHeading } from '@/components/ui/section-heading'
 import { PageHeader } from '@/components/layout/page-header'
 import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
+import { aiQuota } from '@/lib/stripe/features'
 import { PLANS } from '@/lib/stripe/plans'
 import { PricingPlans } from './PricingPlans'
 import { LaunchWaitlist, type WaitlistOption } from '@/components/marketing/LaunchWaitlist'
@@ -39,7 +41,11 @@ const WAITLIST_SOURCE: Record<string, string> = {
   premium: 'pricing-premium',
 }
 
-function faqItems(growthOpen: boolean) {
+// AI writing help leads while FEATURE_AI_BETA is on (ticket 146). The numbers
+// come from aiQuota(), the same as the plan cards.
+function faqItems(growthOpen: boolean, aiOn: boolean) {
+  const starterAi = aiOn ? `AI writing help with ${aiQuota('starter')} drafts every 30 days, ` : ''
+  const growthAi = aiOn ? `${aiQuota('growth')} AI drafts every 30 days, ` : ''
   return [
   {
     q: 'Is listing my business really free?',
@@ -47,13 +53,13 @@ function faqItems(growthOpen: boolean) {
   },
   {
     q: 'What does Starter add?',
-    a: `Starter adds up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
+    a: `Starter adds ${starterAi}up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
   },
   ...(growthOpen
     ? [
         {
           q: 'What does Growth add?',
-          a: 'Growth adds up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days.',
+          a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days.`,
         },
         {
           q: 'When is Premium available?',
@@ -66,6 +72,14 @@ function faqItems(growthOpen: boolean) {
           a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
         },
       ]),
+  ...(aiOn
+    ? [
+        {
+          q: 'How does AI writing help work?',
+          a: "On Edit content, tap a Write button under your about text, search title, or search description, or ask for an Instagram caption. You get a draft written from what's already on your page. Change any word, and nothing goes live until you save. Explain my numbers gives you a plain read on your last 30 days. Each draft uses one from your plan's monthly allowance.",
+        },
+      ]
+    : []),
   {
     q: 'How does annual billing work?',
     a: 'Choose annual at checkout and you save about 20%, a little more than two months free. You can switch between monthly and annual anytime from your billing portal.',
@@ -99,6 +113,8 @@ export default async function PricingPage() {
   const supabase = await createClient()
   const availability = await getPlanAvailability(supabase)
   const growthOpen = isTierOpen(availability, 'growth')
+  const aiOn = isFeatureEnabled('aiBeta')
+  const aiLead = aiOn ? 'Paid plans come with AI writing help for your page. ' : ''
 
   // A tier earns a waitlist slot when neither cycle can be bought. Offering one
   // for a tier that is merely annual-only would send a buyer to a form instead
@@ -116,7 +132,7 @@ export default async function PricingPage() {
     .filter((o) => o.value !== 'pricing-addons')
     .map((o) => o.label)
   const stillBuilding = joinNames([...closedTiers, 'the visibility add-ons'])
-  const faq = faqItems(growthOpen)
+  const faq = faqItems(growthOpen, aiOn)
 
   return (
     <>
@@ -126,8 +142,8 @@ export default async function PricingPage() {
           title="BLACQList Pricing"
           subtitle={
             growthOpen
-              ? 'Getting listed is always free. Starter adds richer media, review responses, and your analytics dashboard. Growth adds a storefront, events, and job postings. Pay monthly or save about 20% with annual billing. Premium is on the way.'
-              : 'Getting listed is always free. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.'
+              ? `Getting listed is always free. ${aiLead}Starter adds richer media, review responses, and your analytics dashboard. Growth adds a storefront, events, and job postings. Pay monthly or save about 20% with annual billing. Premium is on the way.`
+              : `Getting listed is always free. ${aiLead}Starter adds richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.`
           }
         />
       </Section>

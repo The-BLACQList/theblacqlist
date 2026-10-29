@@ -74,6 +74,12 @@ export async function callAnthropic(input: {
   model: string
   prompt: string
   maxOutputChars: number
+  /**
+   * Replaces SYSTEM_PROMPT for a caller that isn't writing owner copy (the
+   * home page visitor guide, ticket 146). It must be no longer than
+   * SYSTEM_PROMPT, or the spend bound in lib/ai/spend.ts no longer holds.
+   */
+  system?: string
 }): Promise<ProviderResult> {
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
@@ -86,7 +92,7 @@ export async function callAnthropic(input: {
     response = await client.messages.create({
       model: input.model,
       max_tokens: maxTokensFor(input.maxOutputChars),
-      system: SYSTEM_PROMPT,
+      system: input.system ?? SYSTEM_PROMPT,
       thinking: { type: 'disabled' },
       messages: [{ role: 'user', content: input.prompt }],
     })

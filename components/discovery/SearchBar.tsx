@@ -11,11 +11,20 @@ interface SearchBarProps {
   placeholder?: string
   /** Destination path when the form is submitted. Defaults to /search. */
   targetPath?: string
+  /** Names the search landmark when a page has more than one. */
+  formLabel?: string
+  /** Id of a visible label outside the bar; replaces the hidden one. */
+  labelledBy?: string
+  /** On a dark photo: a gold focus outline the dark can show. */
+  onDark?: boolean
 }
 
 export function SearchBar({
   placeholder = 'Search businesses, categories, or cities…',
   targetPath = '/search',
+  formLabel,
+  labelledBy,
+  onDark = false,
 }: SearchBarProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -48,11 +57,14 @@ export function SearchBar({
     <form
       onSubmit={handleSubmit}
       role="search"
+      aria-label={formLabel}
       className="flex items-center gap-2 w-full max-w-2xl"
     >
-      <label htmlFor="discovery-search" className="sr-only">
-        Search businesses
-      </label>
+      {!labelledBy && (
+        <label htmlFor="discovery-search" className="sr-only">
+          Search businesses
+        </label>
+      )}
       <div className="relative flex-1">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-charcoal-soft pointer-events-none"
@@ -65,7 +77,12 @@ export function SearchBar({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full h-11 pl-9 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+          aria-labelledby={labelledBy}
+          className={`w-full h-11 pl-9 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-sm text-brand-black placeholder:text-charcoal-faint focus:border-brand-black ${
+            onDark
+              ? 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
+              : 'focus:outline-none focus:ring-2 focus:ring-brand-black/20'
+          }`}
         />
       </div>
       <Button

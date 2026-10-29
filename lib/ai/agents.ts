@@ -142,6 +142,31 @@ export const ONBOARDING_AGENT: AgentDefinition = {
  */
 export const ONBOARDING_PROMPT_VERSION = 'ONBOARDING_DRAFTS@1'
 
+/**
+ * The home page visitor guide (ticket 146). It maps a visitor's words to our
+ * own filters (a category, a city, a few of their words, open now, a help page)
+ * and never writes text a visitor reads. It runs through
+ * `lib/actions/ai/guide.ts`, not `generate()`: there is no listing, no owner and
+ * no suggestion, so it has its own caps (per IP, plus a share of the monthly
+ * budget) and writes an audit row with no listing and no user.
+ *
+ * `maxOutputChars` covers one small JSON object. The longest legal answer is
+ * about 200 characters.
+ */
+export const GUIDE_AGENT: AgentDefinition = {
+  agentType: 'visitor_guide',
+  templateKey: 'VISITOR_GUIDE',
+  suggestionType: 'none',
+  label: 'Visitor guide',
+  blurb: 'Turns what a visitor needs into search filters.',
+  modelTier: 'fast',
+  applyTarget: null,
+  maxOutputChars: 400,
+}
+
+/** Written to `ai_generation_requests.prompt_version` for the visitor guide. */
+export const GUIDE_PROMPT_VERSION = 'VISITOR_GUIDE@2'
+
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)
 }
@@ -176,7 +201,7 @@ export function promptVersionOf(agent: AgentDefinition): string {
 // Fails the build (via the test suite) if an agent names a template that the
 // prompt map does not route. The map is the contract prompts.ts documents.
 export function agentsWithUnroutedTemplates(): string[] {
-  return [...AI_AGENTS, ONBOARDING_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
+  return [...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
     (a) => a.agentType
   )
 }

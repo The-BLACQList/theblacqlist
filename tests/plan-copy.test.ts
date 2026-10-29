@@ -14,6 +14,7 @@ import path from 'node:path'
 
 import { PLANS, getPlanMeta } from '@/lib/stripe/plans'
 import {
+  aiQuota,
   attributeLimit,
   canAccess,
   descriptionCharLimit,
@@ -38,7 +39,6 @@ describe('PLANS copy', () => {
       expect(line).not.toMatch(/\$299/)
       expect(line).not.toMatch(/exclusiv/i)
       expect(line).not.toMatch(/powered by/i)
-      expect(line).not.toMatch(/\bAI\b/)
       expect(line).not.toMatch(/homepage/i)
     }
   })
@@ -52,6 +52,23 @@ describe('PLANS copy', () => {
     for (const slug of ['starter', 'growth', 'premium'] as const) {
       for (const line of getPlanMeta(slug).features) expect(line).not.toMatch(/verified/i)
     }
+  })
+})
+
+describe('AI lines match the AI quota', () => {
+  it('Free has no AI line, since its quota is 0', () => {
+    expect(aiQuota('free')).toBe(0)
+    for (const line of getPlanMeta('free').features) expect(line).not.toMatch(/\bAI\b/)
+  })
+
+  it('each paid plan names its quota, right after "Everything in"', () => {
+    for (const slug of ['starter', 'growth', 'premium'] as const) {
+      const features = getPlanMeta(slug).features
+      expect(features[0]).toMatch(/^Everything in /)
+      expect(features[1]).toBe(`AI writing help: ${aiQuota(slug)} drafts every 30 days`)
+    }
+    expect(getPlanMeta('starter').features[1]).toBe('AI writing help: 10 drafts every 30 days')
+    expect(getPlanMeta('growth').features[1]).toBe('AI writing help: 100 drafts every 30 days')
   })
 })
 
@@ -114,7 +131,7 @@ describe('Growth and Premium lists match their limits', () => {
   // behind them yet. Put a line back only with the feature that makes it true.
   it('Growth does not promise search terms, team members or 1-day support', () => {
     const growth = getPlanMeta('growth').features
-    expect(growth).toHaveLength(5)
+    expect(growth).toHaveLength(6)
     const text = growth.join(' ').toLowerCase()
     expect(text).not.toContain('search terms')
     expect(text).not.toContain('team member')

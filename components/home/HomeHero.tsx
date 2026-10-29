@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Suspense } from 'react'
 import { SearchBar } from '@/components/discovery/SearchBar'
 import { HeroQuickFilters } from '@/components/home/HeroQuickFilters'
+import { AiGuide } from '@/components/home/AiGuide'
 
 const QUICK_FILTERS = [
   { label: 'Open now', href: '/discover?open_now=1' },
@@ -16,8 +17,12 @@ const QUICK_FILTERS = [
  * Near me leads the chips; it is the one client piece, so the hero stays a
  * server component.
  * The hero image is the page's only preloaded image (LCP guardrail).
+ *
+ * `aiGuide` (ticket 146, FEATURE_AI_GUIDE, read on the server in app/page.tsx)
+ * swaps the search bar for the AI guide, which also covers name search and
+ * takes the chips under it. With it off the hero is exactly the old one.
  */
-export function HomeHero() {
+export function HomeHero({ aiGuide = false }: { aiGuide?: boolean }) {
   return (
     <section
       aria-label="Search The BLACQList"
@@ -54,17 +59,27 @@ export function HomeHero() {
         <h1 className="font-headline text-[42px] md:text-[60px] lg:text-[68px] text-white leading-[1.05] text-balance max-w-[16ch]">
           Find &amp; Be Found.
         </h1>
-        <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
-          Every kind of Black-owned enterprise: brick & mortar, products & services, professionals, creatives, events, and more. One living index.
-        </p>
+        {aiGuide ? (
+          <div className="mt-6 max-w-3xl">
+            <AiGuide filters={QUICK_FILTERS} />
+          </div>
+        ) : (
+          <>
+            <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
+              Every kind of Black-owned enterprise: brick & mortar, products & services, professionals, creatives, events, and more. One living index.
+            </p>
 
-        <div className="mt-7 max-w-xl">
-          <Suspense fallback={<div className="h-12 rounded-full bg-white/90" aria-hidden="true" />}>
-            <SearchBar placeholder='Try "barber", "soul food" or a city' targetPath="/search" />
-          </Suspense>
-        </div>
+            <div className="mt-7 max-w-xl">
+              <Suspense
+                fallback={<div className="h-12 rounded-full bg-white/90" aria-hidden="true" />}
+              >
+                <SearchBar placeholder='Try "barber", "soul food" or a city' targetPath="/search" />
+              </Suspense>
+            </div>
 
-        <HeroQuickFilters filters={QUICK_FILTERS} />
+            <HeroQuickFilters filters={QUICK_FILTERS} />
+          </>
+        )}
       </div>
     </section>
   )

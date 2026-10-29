@@ -3,8 +3,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { Container } from '@/components/layout/container'
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
+import { aiQuota } from '@/lib/stripe/features'
 import { PricingPlans } from '../pricing/PricingPlans'
 
 // Plan availability comes from the live `plans` table, same as /pricing. A
@@ -62,6 +64,35 @@ const WHAT_YOU_GET = [
   {
     title: 'A place in The Collective',
     body: 'Once customers log 5 or more receipts with you, your business can appear by name on our map of where the community spends.',
+  },
+]
+
+// AI writing help leads the owner pitch (founder, 2026-10-29, ticket 146).
+// Every line names something that ships: the /add-business drafts (ticket 128,
+// FEATURE_AI_ONBOARDING, free) and the Write buttons and Explain my numbers on
+// Edit content and analytics (ticket 138, FEATURE_AI_BETA, Starter and up,
+// counted against aiQuota). A line only shows while its flag is on.
+const AI_SIGNUP_ITEM = {
+  title: 'A first draft when you add your business',
+  body: 'Tell us a little about what you do. We suggest a category, a tagline, your about text, and the title and summary search engines show. Use what you like and change any word.',
+}
+
+const AI_PAID_ITEMS = [
+  {
+    title: 'Your about text',
+    body: "Get a draft written from what's already on your page, in your voice.",
+  },
+  {
+    title: 'Your search title and summary',
+    body: 'The short lines Google and other search engines show for your page.',
+  },
+  {
+    title: 'Instagram captions',
+    body: 'A caption about your business, ready to copy into a post.',
+  },
+  {
+    title: 'Explain my numbers',
+    body: 'A plain read on your views, saves, and taps over the last 30 days.',
   },
 ]
 
@@ -131,6 +162,9 @@ export default async function ForBusinessPage() {
     : growthOpen
       ? 'Starter and Growth are open now. Premium opens once everything in it works.'
       : 'Starter is open now. Growth and Premium open once everything in them works.'
+  const aiSignupOn = isFeatureEnabled('aiOnboarding')
+  const aiPaidOn = isFeatureEnabled('aiBeta')
+  const aiOn = aiSignupOn || aiPaidOn
 
   return (
     <>
@@ -152,8 +186,9 @@ export default async function ForBusinessPage() {
               Your page. Your story. Your customers.
             </h1>
             <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[52ch]">
-              Claim your page for free, keep your details right, and see how people find you. Open
-              to every business.
+              {aiOn
+                ? 'Claim your page for free, and let AI help you write it. Keep your details right, and see how people find you. Open to every business.'
+                : 'Claim your page for free, keep your details right, and see how people find you. Open to every business.'}
             </p>
             <div className="pt-2">
               <OwnerChoice />
@@ -172,7 +207,46 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
 
-      {/* 2. How it works */}
+      {/* 2. AI writing help, while either AI flag is on */}
+      {aiOn && (
+        <section className="bg-white" aria-labelledby="ai-heading">
+          <Container className="py-16 md:py-24 grid gap-10 lg:grid-cols-[2fr_3fr]">
+            <div className="flex flex-col gap-3">
+              <p className={eyebrowLight}>AI writing help</p>
+              <h2 id="ai-heading" className={`${h2} text-ink`}>
+                Stuck on what to say? Start from a draft.
+              </h2>
+              <p className="font-body text-lg leading-relaxed text-charcoal max-w-[44ch]">
+                Every draft is written from your own page. Nothing goes live until you save it.
+              </p>
+            </div>
+            <ul className="list-none m-0 p-0 flex flex-col">
+              {aiSignupOn && (
+                <AiItem title={AI_SIGNUP_ITEM.title} body={AI_SIGNUP_ITEM.body} note=", free" />
+              )}
+              {aiPaidOn &&
+                AI_PAID_ITEMS.map((item) => (
+                  <AiItem
+                    key={item.title}
+                    title={item.title}
+                    body={item.body}
+                    note=", on Starter and up"
+                  />
+                ))}
+              {aiPaidOn && (
+                <li className="border-t border-hairline pt-5">
+                  <p className="font-body text-base leading-relaxed text-charcoal">
+                    Starter includes {aiQuota('starter')} drafts every 30 days. Growth includes{' '}
+                    {aiQuota('growth')}.
+                  </p>
+                </li>
+              )}
+            </ul>
+          </Container>
+        </section>
+      )}
+
+      {/* 3. How it works */}
       <section className="bg-off-white" aria-labelledby="how-heading">
         <Container className="py-16 md:py-24 flex flex-col gap-10">
           <div className="flex flex-col gap-3">
@@ -198,7 +272,7 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
 
-      {/* 3. What you get */}
+      {/* 4. What you get */}
       <section className="bg-white" aria-labelledby="get-heading">
         <Container className="py-16 md:py-24 grid gap-10 lg:grid-cols-[2fr_3fr]">
           <div className="flex flex-col gap-3">
@@ -236,7 +310,7 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
 
-      {/* 4. Trust ladder */}
+      {/* 5. Trust ladder */}
       <section className="bg-deep-bg" aria-labelledby="trust-heading">
         <Container className="py-16 md:py-24 flex flex-col gap-10">
           <div className="flex flex-col gap-3 max-w-[60ch]">
@@ -262,7 +336,7 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
 
-      {/* 5. Plans: the same component and data as /pricing */}
+      {/* 6. Plans: the same component and data as /pricing */}
       <section className="bg-off-white" aria-labelledby="plans-heading">
         <Container className="py-16 md:py-24">
           <div className="flex flex-col gap-3 text-center items-center">
@@ -293,7 +367,7 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
 
-      {/* 6. Closing band */}
+      {/* 7. Closing band */}
       <section className="bg-deep-bg" aria-labelledby="closing-heading">
         <Container className="py-16 md:py-24 grid gap-10 lg:grid-cols-2 lg:items-center">
           <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] order-2 lg:order-1">
@@ -320,6 +394,29 @@ export default async function ForBusinessPage() {
         </Container>
       </section>
     </>
+  )
+}
+
+function AiItem({ title, body, note }: { title: string; body: string; note: string }) {
+  return (
+    <li className="flex gap-4 border-t border-hairline py-5">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 14 14"
+        aria-hidden="true"
+        className="mt-1.5 shrink-0 text-amber"
+      >
+        <path d="M7 0.5 8.6 5.4 13.5 7 8.6 8.6 7 13.5 5.4 8.6 0.5 7 5.4 5.4Z" fill="currentColor" />
+      </svg>
+      <div className="flex flex-col gap-1">
+        <h3 className="font-subhead text-[17px] font-semibold text-ink">
+          {title}
+          <span className="font-subhead text-sm font-semibold text-amber">{note}</span>
+        </h3>
+        <p className="font-body text-base leading-relaxed text-charcoal">{body}</p>
+      </div>
+    </li>
   )
 }
 

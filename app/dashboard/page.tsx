@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
+import { isFeatureEnabled } from '@/lib/env'
+import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { FreeMonthNotice } from './FreeMonthNotice'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
@@ -24,6 +27,42 @@ function CompletenessItem({ done, label }: { done: boolean; label: string }) {
   )
 }
 
+// Ticket 146: owners see AI writing help first. Shown only while
+// FEATURE_AI_BETA is on and the page's plan includes drafts; the allowance
+// itself is read and enforced on Edit content, not here.
+function WriteWithAi({
+  listingId,
+  listingName,
+  quota,
+}: {
+  listingId: string
+  listingName: string
+  quota: number | null
+}) {
+  return (
+    <div className="px-5 py-4 border-b border-charcoal/8 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex items-start gap-3 min-w-0">
+        <GoldBrandMark className="size-5 shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <h3 className="font-subhead text-sm font-semibold text-brand-black">Write with AI</h3>
+          <p className="font-body text-sm text-charcoal mt-0.5">
+            Get a draft of your about text, search title and summary, or an Instagram caption,
+            written from your page.
+            {quota !== null && ` Your plan includes ${quota} drafts every 30 days.`}
+          </p>
+        </div>
+      </div>
+      <Link
+        href={`/dashboard/pages/${listingId}/edit`}
+        aria-label={`Open the writer for ${listingName}`}
+        className="sm:ml-auto shrink-0 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 rounded-full border border-charcoal/20 bg-white text-brand-black font-subhead text-sm font-semibold hover:bg-off-white transition-colors"
+      >
+        Open the writer <ChevronRight className="size-4" aria-hidden="true" />
+      </Link>
+    </div>
+  )
+}
+
 export default async function DashboardPage() {
   const owner = await getOwnerSession()
   if (!owner) redirect('/sign-in?next=/dashboard')
@@ -33,7 +72,7 @@ export default async function DashboardPage() {
     .from('listings')
     .select(
       `
-      id, name, slug, status, entity_type, trust_tier, tagline, meta_title, cover_image_path,
+      id, name, slug, status, entity_type, tier, trust_tier, tagline, meta_title, cover_image_path,
       last_edited_by_owner_at, published_at,
       cities(slug, name),
       listing_details_business(description, phone, website_url, cta_type)
@@ -42,6 +81,8 @@ export default async function DashboardPage() {
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: true })
+
+  const aiOn = isFeatureEnabled('aiBeta')
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -82,6 +123,9 @@ export default async function DashboardPage() {
               { done: !!listing.meta_title, label: 'SEO title' },
             ]
             const doneCount = completeness.filter((c) => c.done).length
+            const quota = aiQuota(listing.tier)
+            const showAi =
+              aiOn && canAccess(listing.tier, 'ai_suggestions') && (quota === null || quota > 0)
 
             return (
               <div key={listing.id} className="rounded-xl border border-charcoal/10 bg-white">
@@ -130,6 +174,8 @@ export default async function DashboardPage() {
                   )}
                 </div>
 
+                {showAi && <WriteWithAi listingId={listing.id} listingName={listing.name} quota={quota} />}
+
                 {/* Completeness checklist */}
                 <div className="px-5 py-4">
                   <p className="font-subhead text-xs font-semibold text-charcoal-soft mb-2 uppercase tracking-wide">
@@ -142,6 +188,7 @@ export default async function DashboardPage() {
                   </ul>
                   <Link
                     href={`/dashboard/pages/${listing.id}/edit`}
+                    aria-label={`Edit page for ${listing.name}`}
                     className="inline-flex items-center gap-1.5 font-subhead text-sm font-semibold text-amber hover:underline"
                   >
                     Edit page <ChevronRight className="size-4" aria-hidden="true" />

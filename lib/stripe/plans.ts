@@ -1,3 +1,5 @@
+import { aiQuota } from '@/lib/stripe/features'
+
 export type PlanSlug = 'free' | 'starter' | 'growth' | 'premium'
 
 export type BillingCycle = 'monthly' | 'annual'
@@ -35,7 +37,16 @@ export interface PlanMeta {
 // 1-day support came off until they are built and staffed. Premium is not for
 // sale; a card that cannot be bought renders no bullets (PricingPlans,
 // UpgradePlans), and Premium's list holds only what we can realistically build.
-// No AI lines until a real model is on.
+// AI writing help is live (2026-10-16), so each paid plan's AI line comes from
+// aiQuota() and names the same number the quota enforces (ticket 146, 2026-10-29).
+// The plan's AI writing help line, with the number the quota enforces.
+function aiLine(slug: PlanSlug): string {
+  const quota = aiQuota(slug)
+  return quota === null
+    ? 'AI writing help: unlimited drafts'
+    : `AI writing help: ${quota} drafts every 30 days`
+}
+
 export const PLANS: PlanMeta[] = [
   {
     slug: 'free',
@@ -64,6 +75,7 @@ export const PLANS: PlanMeta[] = [
     price_yearly: 182,
     features: [
       'Everything in Free',
+      aiLine('starter'),
       'Up to 10 photos',
       'A video on your page, your own upload or a link',
       'Your full story, with no length limit',
@@ -84,6 +96,7 @@ export const PLANS: PlanMeta[] = [
     price_yearly: 470,
     features: [
       'Everything in Starter',
+      aiLine('growth'),
       'Up to 25 photos',
       'A storefront for up to 25 products and services',
       'Up to 3 events at a time',
@@ -100,6 +113,7 @@ export const PLANS: PlanMeta[] = [
     price_yearly: 950,
     features: [
       'Everything in Growth',
+      aiLine('premium'),
       'Up to 50 photos',
       'Unlimited products, services, and events',
       '3 job postings every 30 days',
