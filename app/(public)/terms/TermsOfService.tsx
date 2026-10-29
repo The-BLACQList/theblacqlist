@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Section } from '@/components/layout/section'
 import { PageHeader } from '@/components/layout/page-header'
-import { nextVersionSubtitle, type PolicyVersion } from '@/lib/legal/policyUpdate'
+import { TERMS_PAID_PLANS, type PolicyVersion } from '@/lib/legal/policyUpdate'
 
 interface TermsOfServiceProps {
   /** `current` is the June 30 text. `next` adds the October 2026 update (ticket 139). */
@@ -21,7 +21,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
       <Section variant="pale-lavender">
         <PageHeader
           title="Terms of Service"
-          subtitle={isNext ? nextVersionSubtitle() : 'Last updated: June 30, 2026'}
+          subtitle={isNext ? `Last updated: ${TERMS_PAID_PLANS.postedOnLabel}` : 'Last updated: June 30, 2026'}
         />
         {notice}
       </Section>
@@ -43,6 +43,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               <li><a href="#disclaimers" className="text-amber hover:underline">Disclaimers</a></li>
               <li><a href="#limitation-of-liability" className="text-amber hover:underline">Limitation of Liability</a></li>
               <li><a href="#termination" className="text-amber hover:underline">Termination</a></li>
+              <li><a href="#paid-plans" className="text-amber hover:underline">Paid Plans and Billing</a></li>
               <li><a href="#governing-law" className="text-amber hover:underline">Governing Law</a></li>
               <li><a href="#changes" className="text-amber hover:underline">Changes to Terms</a></li>
               <li><a href="#contact" className="text-amber hover:underline">Contact</a></li>
@@ -432,12 +433,80 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
             </p>
             <p>
               Provisions that by their nature should survive termination will survive, including
-              Sections 5, 8, 9, 10, and 12.
+              Sections 5, 8, 9, 10, 12, and 13.
+            </p>
+          </section>
+
+          {/* [Needs professional review] Ticket 144. Section 13 is the paid-plan
+              text from docs/blacqlist/legal/subscription-terms-draft-2026-10.md, with the
+              draft's bracketed choices set to its defaults (30 days, 15 days, no refunds,
+              downgrades at the end of the term). The founder approved posting it on
+              2026-10-29, effective on posting, with counsel review to follow. 13.4 and
+              13.6 depend on the Stripe Customer Portal cancelling and downgrading at the
+              end of the period, and 13.3's yearly reminder on Stripe's renewal reminder
+              setting (ticket 145). Check both in the Stripe Dashboard. */}
+          <section id="paid-plans" className="space-y-3">
+            <h2 className="font-headline text-xl text-brand-black">13. Paid Plans and Billing</h2>
+            <p>
+              <strong>13.1 Plans.</strong> Some features need a paid plan for your page. Current
+              plans, prices and what each one includes are shown on our{' '}
+              <Link href="/pricing" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
+                Pricing page
+              </Link>
+              . Each plan covers one page.
+            </p>
+            <p>
+              <strong>13.2 Billing.</strong> You pay in advance, monthly or yearly, depending on what
+              you choose at checkout. Payments are processed by Stripe. Prices are in US dollars and
+              do not include any taxes that apply.
+            </p>
+            <p>
+              <strong>13.3 Automatic renewal.</strong> Your plan renews automatically at the end of
+              each monthly or yearly term, and we charge the payment method on file at the
+              then-current price, until you cancel. We will tell you at least 30 days before any
+              price change takes effect for you. For yearly plans, we will email you at least 15 days
+              before each renewal.
+            </p>
+            <p>
+              <strong>13.4 Cancelling.</strong> You can cancel at any time from your dashboard under
+              Upgrade, then Manage subscription. You do not need to contact us. When you cancel, your
+              plan stays active until the end of the term you already paid for, then your page moves
+              to the free plan.
+            </p>
+            <p>
+              <strong>13.5 Refunds.</strong> Payments are non-refundable, including for partial
+              months or years, except where the law requires otherwise or where we decide to give a
+              refund.
+            </p>
+            <p>
+              <strong>13.6 Changing plans.</strong> If you move to a higher plan, the change takes
+              effect right away and Stripe charges the prorated difference. If you move to a lower
+              plan, the change takes effect at the end of your current term. Content over the lower
+              plan&apos;s limits, such as extra photos, videos, products and services, is hidden from
+              your public page, not deleted, and shows again if you move back up.
+            </p>
+            <p>
+              <strong>13.7 Failed payments.</strong> If a payment fails, we and Stripe will try again
+              over a short period and let you know. Your plan stays active while we retry. If payment
+              still fails, your page moves to the free plan, with content handled as in 13.6.
+            </p>
+            <p>
+              <strong>13.8 Free trials and promotions.</strong> We may offer a free period on a plan,
+              for example to early testers. We will say at the start whether a card is needed and
+              what happens when it ends. A free period that did not ask for a card ends on its own,
+              with no charge.
+            </p>
+            <p>
+              <strong>13.9 Ending your account.</strong> If you delete your account, your paid plan
+              is cancelled at the same time and no further charges are made. Section 13.5 applies to
+              anything already paid. If we terminate your account under Section 12 for a breach of
+              these Terms, no refund is due. If we end the service or a plan for any other reason, we
+              will refund the unused part of any prepaid term.
             </p>
           </section>
 
           <section id="governing-law" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">13. Governing Law</h2>
+            <h2 className="font-headline text-xl text-brand-black">14. Governing Law</h2>
             <p>
               These Terms are governed by and construed in accordance with the laws of the United
               States and the state of Georgia, without regard to its conflict of law principles.
@@ -451,7 +520,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
           </section>
 
           <section id="changes" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">14. Changes to Terms</h2>
+            <h2 className="font-headline text-xl text-brand-black">15. Changes to Terms</h2>
             <p>
               We may update these Terms at any time. We will notify registered users of material
               changes by email at least 14 days before they take effect. The &ldquo;Last updated&rdquo;
@@ -465,7 +534,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
           </section>
 
           <section id="contact" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">15. Contact</h2>
+            <h2 className="font-headline text-xl text-brand-black">16. Contact</h2>
             <p>
               Questions about these Terms:{' '}
               <a

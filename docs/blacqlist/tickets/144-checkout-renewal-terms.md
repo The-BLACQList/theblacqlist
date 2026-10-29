@@ -2,7 +2,7 @@
 
 **Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR)
 **Depends on:** none. Applies to Starter today and to Growth once it opens (ticket 143).
-**Gates:** no migration and no new dependency. Turning on `STRIPE_CHECKOUT_TERMS_CONSENT` is an env change (GATE-DEPLOY) and needs the Terms URL set in the Stripe Dashboard first. The Terms section itself needs counsel.
+**Gates:** no migration and no new dependency. Turning on `STRIPE_CHECKOUT_TERMS_CONSENT` is an env change (GATE-DEPLOY) and needs the Terms URL set in the Stripe Dashboard first. The Terms section went up on the founder's word on 2026-10-29, with counsel to follow.
 **Source:** findings L2, L3 and L5 in `docs/blacqlist/legal/subscription-terms-draft-2026-10.md` (in #261). Those are High because Starter is already on sale with no renewal disclosure.
 
 ---
@@ -19,11 +19,11 @@ In:
 - **The same line on Stripe Checkout**, next to the pay button, via `custom_text.submit.message` (`create-checkout-session/route.ts`). `renewalLine()` in `lib/stripe/renewal.ts` writes both, so they can't drift apart.
 - **Terms consent at checkout, behind a switch.** When `STRIPE_CHECKOUT_TERMS_CONSENT` is on, the session sets `consent_collection.terms_of_service: 'required'`. It's off when unset, because Stripe refuses the session if the account has no Terms URL.
 - **Acknowledgment after purchase.** The success page says the plan renews until cancelled and how to cancel. Only paid checkouts show it: they add `renews=1` to the success URL. The tester free month shares the page, but it ends by itself, so it doesn't show the note.
+- **Terms section 13, "Paid Plans and Billing"** (anchor `paid-plans`). The founder approved posting the legal doc's text on 2026-10-29, effective on posting, with counsel review to follow. The bracketed choices use the draft's defaults: 30 days' notice of a price change, a reminder 15 days before a yearly renewal, no refunds, and downgrades at the end of the term. Governing Law, Changes and Contact move to 14, 15 and 16, and the survival list adds 13. The card's "See our Terms" link goes to `/terms#paid-plans`.
 - **Pricing FAQ.** "Can I cancel a paid plan anytime?" now says plans renew automatically and names the exact path (Upgrade, then Manage subscription).
 
 Out:
 
-- **Terms section 13, "Paid Plans and Billing".** The draft text is in the legal doc above. It goes into `TermsOfService.tsx` (anchor `paid-plans`) only after counsel signs off, using the same notice process as ticket 139. When it lands, point the card's "See our Terms" link at `/terms#paid-plans`.
 - **Yearly renewal reminder email.** That's ticket 145.
 - **A help article.** There's no help center yet. The pricing FAQ and the success page carry the cancel path for now.
 - **Storing the consent timestamp.** Stripe keeps `consent.terms_of_service` on the Checkout Session. Copying it onto `subscriptions` can wait for counsel to say it's needed.
