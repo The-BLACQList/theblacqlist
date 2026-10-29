@@ -2,10 +2,12 @@
 
 > **Disclaimer:** This output is informational and does not constitute legal advice. Requirements vary by jurisdiction, business type, and product specifics. Consult a licensed attorney for guidance applicable to your situation before relying on any of the following.
 
-**Status:** NEEDS COUNSEL. Not live. Nothing here is on the site.
+**Status:** Part 1 POSTED as Terms section 13 (#262), effective on posting, on the founder's word on 2026-10-29. Counsel review to follow. Parts 2 and 3 are tracked in tickets 144 and 145.
+
+**Founder decision, 2026-10-29:** post section 13 effective on posting for everyone, with no advance email to owners already on a paid plan. The Terms (Changes to Terms) promise registered users 14 days' email notice of material changes, so this is an open question for counsel (L11 below).
 **Audience:** the founder and BLACQList's attorney.
 **Written by:** Legal agent, 2026-10-28, as part of ticket 143 (Growth on sale).
-**Last updated:** 2026-10-28
+**Last updated:** 2026-10-29
 
 ---
 
@@ -98,6 +100,7 @@ Notes for whoever builds it:
 | L7 | No refund policy written anywhere. Without one, refund decisions are ad hoc and dispute risk rises | Medium | Decision needed (founder and counsel) |
 | L8 | Price-change notice for existing subscribers is not promised anywhere | Medium | Covered by draft 13.3, needs counsel |
 | L9 | Tester free month: no card, ends by itself. Low negative-option risk, but the Terms should mention free periods | Low | Covered by draft 13.8 |
+| L11 | Section 13 went up effective on posting with no email to owners already on a paid plan, though Changes to Terms promises 14 days' email notice of material changes | Medium | Consult attorney. Founder chose to post as is (2026-10-29) |
 | L10 | Whether B2B buyers fall outside state automatic renewal laws, and which states BLACQList buyers are in | Consult attorney | Jurisdiction unclear |
 
 ## Who builds what
