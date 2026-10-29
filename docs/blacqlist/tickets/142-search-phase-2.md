@@ -81,7 +81,7 @@ Out:
   - At 375px and desktop, check "Decatur", "30030", "atl" and "Ohio" each move the map, and nonsense words show no row.
   - Search `/search?q=zzqxv` once and confirm one anonymous `search_events` row on staging.
 - Staging: the cron job is listed in `cron.job` as `purge-search-events`.
-- Prod: apply the migration after the flip, on the founder's word, before this PR merges.
-- Privacy review: `docs/blacqlist/compliance/search-zero-result-log-review.md`. Founder sign-off is needed before merge, plus two decisions:
-  - F2: delete the old `search_performed` rows in `analytics_events` on prod after the flip.
-  - F3: add OpenStreetMap (Nominatim) to the Privacy Policy provider list.
+- Prod: migration applied and checked on 2026-10-29, on the founder's word, before this PR merged.
+- Privacy review: `docs/blacqlist/compliance/search-zero-result-log-review.md`. Signed off by the founder on 2026-10-29:
+  - F2: delete the old `search_performed` rows in `analytics_events` on prod, counted again after this merges.
+  - F3: OpenStreetMap (Nominatim) is in the Privacy Policy provider list, effective on posting.
