@@ -5,7 +5,9 @@ import { isFeatureEnabled } from '@/lib/env'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
 import { createJobPostingCheckoutSession } from '@/lib/stripe/jobPostingCheckout'
 import {
+  eventCapMessage,
   eventQuotaFor,
+  EVENTS_NEED_GROWTH_MESSAGE,
   grantIncludedJobPosting,
   hasPaidJobPosting,
   jobQuotaFor,
@@ -136,9 +138,9 @@ export async function submitListingForReviewAction(
       if (quota.atLimit) {
         return {
           error:
-            quota.limit === 0
-              ? 'Publishing events is part of a paid plan. Upgrade to post this event.'
-              : `Your plan includes ${quota.limit} active event${quota.limit === 1 ? '' : 's'}. Upgrade or unpublish one to post this event.`,
+            quota.limit === 0 || quota.limit === null
+              ? EVENTS_NEED_GROWTH_MESSAGE
+              : eventCapMessage(quota.limit),
         }
       }
     }

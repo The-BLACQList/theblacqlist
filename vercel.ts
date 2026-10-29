@@ -14,7 +14,8 @@ export const config: VercelConfig = {
   // sweeps write to whichever database the deployment is bound to.
   crons: [
     // 08:00 UTC, roughly 4am ET: expire unreviewed AI suggestions past their
-    // window, and unpublish job postings whose paid window has closed.
+    // window, unpublish job postings whose paid window has closed, and
+    // unpublish events that are over.
     // See lib/services/expiry/sweeps.ts.
     { path: '/api/cron/expiry', schedule: '0 8 * * *' },
     // 09:00 UTC Monday, roughly 5am ET: award the weekly Featured badge for
