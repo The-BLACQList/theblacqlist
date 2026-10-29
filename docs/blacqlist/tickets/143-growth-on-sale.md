@@ -1,7 +1,7 @@
 # Ticket 143: Put Growth on sale, on its own, before Premium
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR, merge after the public flip)
-**Depends on:** 105 / #256 (tier limits and downgrade hiding, extended to products and services; this PR is stacked on it), 136 / #257 (free month on a paid upgrade, must ship before Growth gets price IDs), #255 (owner Events tab)
+**Phase:** V1.5 · **Priority:** P1 · **Status:** In review (merging behind the coming-soon gate on the founder's word, 2026-10-29)
+**Depends on:** 105 / #256 (tier limits and downgrade hiding, extended to products and services; merged 2026-10-29), 136 / #257 (free month on a paid upgrade, must ship before Growth gets price IDs), #255 (owner Events tab)
 **Gates:** none in this PR. No migration, no new dependencies, no env change. Restoring Growth's Stripe price IDs on prod `plans` is GATE-DATA and happens after the flip, on the founder's word.
 **Decision record:** on 2026-10-28 the founder asked what the "standard package" (Growth, $49/mo, $470/yr) needs before it can be sold, and decided:
 
@@ -57,9 +57,9 @@ Out:
 
 ## Stacking
 
-This PR is stacked on #256 (`feat/tier-limits`), so its diff shows only this ticket's work. Merge #256 first. GitHub then retargets this PR to main.
+This PR was stacked on #256 (`feat/tier-limits`). #256 merged on 2026-10-29 (main 4469898), and this branch is rebased onto main.
 
-Migration 20261028000000 (from #256) is applied on staging as of 2026-10-28. Prod waits for the founder (GATE-DATA).
+Migration 20261028000000 (from #256) is applied on staging (2026-10-28) and prod (2026-10-29).
 
 ## Order to sell (after the flip, each step on the founder's word)
 
