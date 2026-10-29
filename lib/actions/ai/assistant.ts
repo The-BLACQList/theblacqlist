@@ -49,6 +49,7 @@ import {
   nearestLine,
   parseAssistantAnswer,
   rankTop,
+  spreadTops,
   topLimit,
   typedWords,
   uncoveredNotice,
@@ -391,13 +392,14 @@ interface NeedContext {
   scope: Scope
   cities: readonly AssistCity[]
   categories: readonly AssistantCategory[]
-  limit: number
+  /** Ranked cards kept per need, more than shown so spreadTops can skip repeats. */
+  pool: number
   /** Cards already shown as name matches, left out of a single-need answer. */
   skip: ReadonlySet<string>
 }
 
 async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<AssistantNeedResult> {
-  const { scope, cities, limit, skip } = ctx
+  const { scope, cities, pool, skip } = ctx
   const parent = need.category?.parentId
     ? (ctx.categories.find((c) => c.id === need.category?.parentId) ?? null)
     : null
@@ -412,7 +414,7 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
     status,
     line,
     total: found.total,
-    top: rankTop(found.items.filter((e) => !skip.has(e.id)), limit).map(toCard),
+    top: rankTop(found.items.filter((e) => !skip.has(e.id)), pool).map(toCard),
     seeAllHref,
   })
   const none = (): AssistantNeedResult => ({
@@ -564,7 +566,7 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       const { openNow } = nearOnlyFilters(words, near)
       const need: AssistantNeedPlan = { name: 'Places', category: null, keywords: [], openNow }
       const scope: Scope = { kind: 'near', near }
-      const answered = await answerNeed(need, { scope, cities: lists.cities, categories: lists.categories, limit: topLimit(1), skip: new Set() })
+      const answered = await answerNeed(need, { scope, cities: lists.cities, categories: lists.categories, pool: topLimit(1), skip: new Set() })
       return {
         kind: 'answer',
         heading: buildHeading([need], null, true),
@@ -704,8 +706,10 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     const limit = topLimit(plan.needs.length)
     // Name matches are left out of a single-need answer so a card never shows twice.
     const skip = new Set(plan.needs.length === 1 ? nameMatches.map((e) => e.id) : [])
-    const ctx: NeedContext = { scope, cities: lists.cities, categories: lists.categories, limit, skip }
-    const needs = await Promise.all(plan.needs.map((need) => answerNeed(need, ctx)))
+    const ctx: NeedContext = { scope, cities: lists.cities, categories: lists.categories, pool: limit * 3, skip }
+    const pools = await Promise.all(plan.needs.map((need) => answerNeed(need, ctx)))
+    const tops = spreadTops(pools.map((n) => n.top), limit)
+    const needs = pools.map((n, i) => ({ ...n, top: tops[i] ?? [] }))
 
     return {
       kind: 'answer',

@@ -362,6 +362,23 @@ export function rankTop<T extends { avg_rating: number | null; review_count: num
     .map((r) => r.item)
 }
 
+/**
+ * Spreads cards across a plan's needs so one business does not lead two of
+ * them. Each need takes its best cards not already shown above it, and only
+ * repeats one when it has nothing else to show. Pools come in rank order.
+ */
+export function spreadTops<T extends { id: string }>(pools: readonly (readonly T[])[], limit: number): T[][] {
+  const shown = new Set<string>()
+  return pools.map((pool) => {
+    const picked = pool.filter((c) => !shown.has(c.id)).slice(0, limit)
+    if (picked.length < limit) {
+      picked.push(...pool.filter((c) => shown.has(c.id)).slice(0, limit - picked.length))
+    }
+    for (const c of picked) shown.add(c.id)
+    return picked
+  })
+}
+
 /** Cards per need: up to 6 for a single need, 3 each for a list. */
 export function topLimit(needCount: number): number {
   return needCount <= 1 ? ASSISTANT_TOP_SINGLE : ASSISTANT_TOP

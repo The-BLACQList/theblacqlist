@@ -145,6 +145,7 @@ import {
   mockAssistantAnswer,
   nearestCities,
   rankTop,
+  spreadTops,
   topLimit,
   typedWords,
   visitorCallsUsed,
@@ -275,6 +276,12 @@ describe('ranking', () => {
     expect(rankTop(items, 3).map((i) => i.id)).toEqual(['many48', 'one5', 'u1'])
     expect(topLimit(1)).toBe(6)
     expect(topLimit(4)).toBe(3)
+  })
+
+  it('spreads cards so one business does not lead two needs, repeating only when nothing else is left', () => {
+    const c = (id: string) => ({ id })
+    const tops = spreadTops([[c('a'), c('b'), c('c'), c('d')], [c('a'), c('e'), c('b'), c('f')], [c('a')]], 3)
+    expect(tops.map((t) => t.map((x) => x.id))).toEqual([['a', 'b', 'c'], ['e', 'f', 'a'], ['a']])
   })
 
   it('finds the closest cities, leaving out the ones asked', () => {

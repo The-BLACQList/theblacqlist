@@ -160,6 +160,23 @@ export function setAssistantOpen(open: boolean): void {
   set({ ...prev, open }, false)
 }
 
+// Where focus goes when the panel closes, when it was opened from somewhere
+// other than the Ask button (the home answer's Keep chatting).
+let returnFocus: HTMLElement | null = null
+
+/** Opens the panel and sends focus back to `from` when it closes. */
+export function openAssistantFrom(from: HTMLElement | null): void {
+  returnFocus = from
+  setAssistantOpen(true)
+}
+
+/** The element to focus on close, once; null means the Ask button. */
+export function takeReturnFocus(): HTMLElement | null {
+  const el = returnFocus
+  returnFocus = null
+  return el
+}
+
 /** The visitor's last few asks, sent with the next one so follow-ups make sense. */
 export function historyFor(turns: readonly AssistantTurn[]): string[] {
   return turns.map((t) => t.ask).slice(-ASSISTANT_HISTORY)

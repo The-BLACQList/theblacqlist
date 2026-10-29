@@ -8,7 +8,7 @@ import { ArrowRight, LoaderCircle, MessageCircle } from 'lucide-react'
 import { askAssistant } from '@/lib/actions/ai/assistant'
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import type { AssistantResponse } from '@/lib/ai/assistant-limits'
-import { addTurn, setAssistantOpen } from '@/lib/assistant/store'
+import { addTurn, openAssistantFrom } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
   AssistantReply,
@@ -228,22 +228,26 @@ export function AiGuide({
         <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
           {pending ? (
             assistant ? (
-              <div className="rounded-2xl bg-brand-black/60 backdrop-blur-sm p-3 sm:p-4">
+              <div className="rounded-2xl border border-gold/40 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
                 <AssistantSkeleton layout="page" />
               </div>
             ) : (
               <GuideSkeleton />
             )
           ) : assistantAnswer ? (
-            <div className="rounded-2xl bg-brand-black/60 backdrop-blur-sm p-3 sm:p-4">
+            <div
+              role="region"
+              aria-label="Answer"
+              className="rounded-2xl border border-gold/40 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4"
+            >
               <AssistantReply ask={assistantAnswer.ask} reply={assistantAnswer.reply} layout="page" headingLevel={2} />
               <button
                 type="button"
-                onClick={() => {
+                onClick={(event) => {
                   // Once per answer, so a second tap only reopens the panel.
                   if (!kept) addTurn(assistantAnswer.ask, assistantAnswer.reply)
                   setKept(true)
-                  setAssistantOpen(true)
+                  openAssistantFrom(event.currentTarget)
                 }}
                 className={ASSISTANT_LINK}
               >

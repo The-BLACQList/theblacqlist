@@ -35,7 +35,7 @@ In:
 - **Places.** Our own city and state names are read from the words first (`findPlaces`), then the model's `place`, then OpenStreetMap through the existing place lookup and its shared limit.
 - **Name search.** Same as the guide: businesses whose name holds the typed words show first under "Matching names".
 - **Chat store** (`lib/assistant/store.ts`): `sessionStorage` key `blq-assistant-v1`, last 20 turns, every read and write in try/catch so it works without storage.
-- **UI** (`components/assistant/`): the mount (public pages only), the Ask button (gold, the brand mark, 44px or taller, lifts over the quick bar), the panel and sheet (Clear chat, close, three example prompts, a `role="log"` list, a `role="status"` line), need groups, Your list with Copy list, and loading, error and rate-limited states. The tour rail moves up a step when the assistant is on.
+- **UI** (`components/assistant/`): the mount (public pages only), the Ask button (gold, the brand mark, 44px or taller, lifts over the quick bar), the panel and sheet (Clear chat, close, three example prompts, a conversation list (an `<ol aria-label="Conversation">`, not `role="log"`, so each new answer is not read in full), a `role="status"` line), need groups, Your list with Copy list, and loading, error and rate-limited states. The tour rail moves up a step when the assistant is on.
 - **Home.** With the assistant on, the guide calls `askAssistant` and shows the same need groups, plus "Keep chatting".
 - **Privacy Policy.** The guide paragraph becomes "The AI assistant", covering history, the tab-only chat and Near me.
 - **Safety plan.** A "Visitor assistant" section in `docs/blacqlist/ai/ai-safety-and-approval-plan.md`.

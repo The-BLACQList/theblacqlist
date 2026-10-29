@@ -89,7 +89,7 @@ function AnswerReply({
           <Sub className="font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             Matching names
           </Sub>
-          <CardList cards={nameMatches} layout={layout} />
+          <CardList cards={nameMatches} layout={layout} keepCity />
         </section>
       )}
 
@@ -158,7 +158,18 @@ function StatusIcon({ status }: { status: AssistantNeedStatus }) {
   return <ArrowUpRight className="size-4 shrink-0 text-gold" aria-hidden="true" />
 }
 
-function CardList({ cards, layout }: { cards: AssistantCard[]; layout: AnswerLayout }) {
+function CardList({
+  cards,
+  layout,
+  keepCity = false,
+}: {
+  cards: AssistantCard[]
+  layout: AnswerLayout
+  /** Name matches have no line naming the city, so they always show it. */
+  keepCity?: boolean
+}) {
+  // When every card in a need group is in one city, the group's line says so.
+  const hideCity = !keepCity && cards.length > 1 && new Set(cards.map((c) => c.cityLabel)).size === 1
   return (
     <ul
       className={cn(
@@ -168,7 +179,7 @@ function CardList({ cards, layout }: { cards: AssistantCard[]; layout: AnswerLay
     >
       {cards.map((card) => (
         <li key={card.id} className="min-w-0">
-          <CompactCard card={card} />
+          <CompactCard card={card} hideCity={hideCity} />
         </li>
       ))}
     </ul>
@@ -186,14 +197,14 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
-function CompactCard({ card }: { card: AssistantCard }) {
-  const where = [card.categoryName, card.cityLabel].filter(Boolean).join(' · ')
+function CompactCard({ card, hideCity }: { card: AssistantCard; hideCity: boolean }) {
+  const where = [card.categoryName, hideCity ? null : card.cityLabel].filter(Boolean).join(' · ')
   return (
     <Link
       href={card.href}
       className="flex items-center gap-3 min-h-16 rounded-xl bg-white/[0.06] p-2 pr-3 hover:bg-white/[0.12] transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
     >
-      <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-white/10">
+      <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-gold/15">
         {card.imageSrc ? (
           <Image src={card.imageSrc} alt="" fill sizes="48px" className="object-cover" />
         ) : (
@@ -209,10 +220,12 @@ function CompactCard({ card }: { card: AssistantCard }) {
       {card.rating !== null && card.reviewCount > 0 && (
         <span className="shrink-0 inline-flex items-center gap-1 font-subhead text-xs font-semibold text-off-white">
           <Star className="size-3.5 fill-gold text-gold" aria-hidden="true" />
-          {card.rating.toFixed(1)}
-          <span className="font-normal text-ink-soft">({card.reviewCount})</span>
+          <span aria-hidden="true">
+            {card.rating.toFixed(1)} <span className="font-normal text-ink-soft">({card.reviewCount})</span>
+          </span>
           <span className="sr-only">
-            stars from {card.reviewCount} {card.reviewCount === 1 ? 'review' : 'reviews'}
+            Rated {card.rating.toFixed(1)} out of 5 from {card.reviewCount}{' '}
+            {card.reviewCount === 1 ? 'review' : 'reviews'}
           </span>
         </span>
       )}

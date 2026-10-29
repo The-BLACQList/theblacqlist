@@ -16,6 +16,7 @@ import {
   getAssistantState,
   historyFor,
   setAssistantOpen,
+  takeReturnFocus,
   useAssistant,
   type AssistantTurn,
 } from '@/lib/assistant/store'
@@ -149,6 +150,8 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
   // The phone sheet covers the page, so following a link closes it.
   function onClickCapture(event: MouseEvent<HTMLDivElement>) {
     if (isDesktop) return
+    // A new tab or window leaves this page, and the sheet, where it was.
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     if ((event.target as Element).closest('a[href]')) setAssistantOpen(false)
   }
 
@@ -165,6 +168,17 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
       // The computer panel stays open while the visitor uses the page.
       onInteractOutside={(event) => {
         if (isDesktop) event.preventDefault()
+      }}
+      // The computer panel is not modal: Esc on the page belongs to the page.
+      onEscapeKeyDown={(event) => {
+        if (isDesktop && !contentRef.current?.contains(document.activeElement)) event.preventDefault()
+      }}
+      onCloseAutoFocus={(event) => {
+        const back = takeReturnFocus()
+        if (back?.isConnected) {
+          event.preventDefault()
+          back.focus()
+        }
       }}
       onClickCapture={onClickCapture}
       className="fixed inset-0 z-50 flex flex-col bg-brand-black text-off-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:inset-auto md:bottom-4 md:right-4 md:w-96 md:h-[min(70vh,40rem)] md:p-0 md:rounded-2xl md:border md:border-gold/30 md:shadow-2xl md:shadow-brand-black/50 focus:outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 motion-reduce:animate-none"
@@ -194,7 +208,14 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
         {turns.length === 0 && !pending ? (
-          <EmptyState onPick={(example) => void send(example)} />
+          <EmptyState
+            onPick={(example) => {
+              // The example list goes away, so keep focus in the panel.
+              if (isDesktop) inputRef.current?.focus()
+              else contentRef.current?.focus()
+              void send(example)
+            }}
+          />
         ) : (
           <ol aria-label="Conversation" className="list-none p-0 m-0 space-y-6">
             {turns.map((turn, i) => (
@@ -234,7 +255,7 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           autoComplete="off"
           enterKeyHint="send"
           placeholder="A business, a city, or a plan"
-          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/20 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/50 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
         <button
           type="submit"
@@ -276,7 +297,7 @@ function EmptyState({ onPick }: { onPick: (example: string) => void }) {
             <button
               type="button"
               onClick={() => onPick(example)}
-              className="w-full min-h-11 px-4 py-2 rounded-xl border border-white/15 text-left font-body text-sm text-off-white hover:border-gold/60 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              className="w-full min-h-11 px-4 py-2 rounded-xl border border-white/50 text-left font-body text-sm text-off-white hover:border-gold/60 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               {example}
             </button>
