@@ -164,10 +164,13 @@ function GuideAnswer({ answer }: { answer: Results }) {
       )}
 
       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2">
-        <Link href={seeAllHref} className={LINK}>
-          See all matches
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
+        {/* A site question gets its page only; "see all" would be an empty search. */}
+        {(results.length > 0 || !page) && (
+          <Link href={seeAllHref} className={LINK}>
+            See all matches
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        )}
         {page && (
           <Link href={page.href} className={LINK}>
             {page.label}
