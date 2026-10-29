@@ -21,6 +21,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  *   • non-vendor with an active product → 200 ("Sold by" links must not break)
  *   • non-vendor with nothing to sell   → 404  (RED on main, GREEN on the fix)
  *
+ * Ticket 105 (20261028000000): products and services show to the public only on
+ * Growth and Premium pages. The seller fixture is on Growth for that reason, and
+ * a Starter seller's product is hidden, so its page is not a storefront (404).
+ *
  * Hermetic by design, matching e2e/analytics-emission.spec.ts: creates and
  * deletes its own listings (the product row cascades on listing delete), so it
  * does not assume a particular database's contents.
@@ -40,6 +44,8 @@ const SELLER_SLUG = `e2e-seller-${RUN_ID}`
 const SELLER_NAME = `E2E Selling Business ${RUN_ID}`
 const PLAIN_SLUG = `e2e-plain-${RUN_ID}`
 const PLAIN_NAME = `E2E Plain Business ${RUN_ID}`
+const STARTER_SELLER_SLUG = `e2e-starter-seller-${RUN_ID}`
+const STARTER_SELLER_NAME = `E2E Starter Seller ${RUN_ID}`
 
 let svc: SupabaseClient
 const listingIds: string[] = []
@@ -47,7 +53,7 @@ let cityName: string
 let stateCode: string
 
 async function insertListing(
-  fields: { name: string; slug: string; entity_type: string },
+  fields: { name: string; slug: string; entity_type: string; tier?: string },
   categoryId: string,
   cityId: string
 ): Promise<string> {
@@ -104,14 +110,15 @@ test.beforeAll(async () => {
     ? (cityRow.states[0]?.code ?? '')
     : (cityRow.states?.code ?? '')
 
-  const [, sellerId] = await Promise.all([
+  const [, sellerId, , starterSellerId] = await Promise.all([
     insertListing(
       { name: VENDOR_NAME, slug: VENDOR_SLUG, entity_type: 'vendor' },
       categoryId,
       cityRow.id
     ),
     insertListing(
-      { name: SELLER_NAME, slug: SELLER_SLUG, entity_type: 'business' },
+      // Storefront items show to the public on Growth and Premium only.
+      { name: SELLER_NAME, slug: SELLER_SLUG, entity_type: 'business', tier: 'growth' },
       categoryId,
       cityRow.id
     ),
@@ -120,17 +127,36 @@ test.beforeAll(async () => {
       categoryId,
       cityRow.id
     ),
+    insertListing(
+      {
+        name: STARTER_SELLER_NAME,
+        slug: STARTER_SELLER_SLUG,
+        entity_type: 'business',
+        tier: 'starter',
+      },
+      categoryId,
+      cityRow.id
+    ),
   ])
 
   // The seller's product is what makes it a storefront despite not being
   // vendor-typed. Must be status 'active' — the page only counts active rows.
-  const { error: productError } = await svc.from('marketplace_products').insert({
-    listing_id: sellerId,
-    name: `E2E Fixture Product ${RUN_ID}`,
-    slug: `e2e-product-${RUN_ID}`,
-    global_slug: `e2e-product-${RUN_ID}`,
-    status: 'active',
-  })
+  const { error: productError } = await svc.from('marketplace_products').insert([
+    {
+      listing_id: sellerId,
+      name: `E2E Fixture Product ${RUN_ID}`,
+      slug: `e2e-product-${RUN_ID}`,
+      global_slug: `e2e-product-${RUN_ID}`,
+      status: 'active',
+    },
+    {
+      listing_id: starterSellerId,
+      name: `E2E Starter Product ${RUN_ID}`,
+      slug: `e2e-starter-product-${RUN_ID}`,
+      global_slug: `e2e-starter-product-${RUN_ID}`,
+      status: 'active',
+    },
+  ])
   expect(productError, `fixture product insert failed: ${productError?.message}`).toBeNull()
 })
 
@@ -197,6 +223,20 @@ test.describe('vendor storefront', () => {
     expect(
       response!.status(),
       'a published non-vendor listing with no marketplace rows must not resolve as a storefront'
+    ).toBe(404)
+  })
+
+  test('a Starter page with an active product is not a storefront, its items are hidden (105)', async ({
+    page,
+  }) => {
+    const response = await page.goto(`/vendors/${STARTER_SELLER_SLUG}`)
+
+    // The product row still exists; RLS hides it from the public below Growth,
+    // so the page has nothing to sell and does not resolve.
+    expect(response, 'no response for /vendors/<slug>').not.toBeNull()
+    expect(
+      response!.status(),
+      'products on a page below Growth are hidden from the public, so it is not a storefront'
     ).toBe(404)
   })
 })
