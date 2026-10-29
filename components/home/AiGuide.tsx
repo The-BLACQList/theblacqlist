@@ -1,14 +1,15 @@
 'use client'
 
-import { useRef, useState, useTransition, type FormEvent } from 'react'
+import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, LoaderCircle, Sparkles } from 'lucide-react'
+import { ArrowRight, LoaderCircle } from 'lucide-react'
 
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import { fallbackHref, GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS, withChip } from '@/lib/ai/guide-limits'
 import { EntityCard } from '@/components/entities/EntityCard'
 import { HeroQuickFilters, type NearPoint, type QuickFilter } from '@/components/home/HeroQuickFilters'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type Results = Extract<GuideResponse, { kind: 'results' }>
@@ -26,7 +27,7 @@ function statusFor(answer: Results): string {
 }
 
 const LINK =
-  'inline-flex items-center gap-1.5 min-h-11 font-subhead text-sm font-semibold text-gold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm'
+  'inline-flex items-center gap-1.5 min-h-11 font-subhead text-sm font-semibold text-gold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm'
 
 /**
  * The home page visitor guide (ticket 146), and the hero's only search bar.
@@ -48,6 +49,16 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
+  const answerRef = useRef<HTMLDivElement>(null)
+  // Set by Ask or Enter, not by a chip, so chip taps can be chained.
+  const focusAnswer = useRef(false)
+
+  useEffect(() => {
+    if (answer && focusAnswer.current) {
+      focusAnswer.current = false
+      answerRef.current?.focus()
+    }
+  }, [answer])
 
   function ask(words: string, at: NearPoint | null) {
     if (pending) return
@@ -76,6 +87,7 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
     if (pending) return
     if (!words) {
       if (near) {
+        focusAnswer.current = true
         ask('near me', near)
         return
       }
@@ -83,6 +95,7 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
       inputRef.current?.focus()
       return
     }
+    focusAnswer.current = true
     ask(words, near)
   }
 
@@ -113,7 +126,7 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
     <div>
       <form
         onSubmit={onSubmit}
-        className="flex flex-col gap-3 sm:flex-row sm:items-end"
+        className="flex flex-row items-end gap-2 sm:gap-3"
         role="search"
         aria-label="Ask the guide"
       >
@@ -132,10 +145,7 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
             <span className="sr-only">(answered with AI)</span>
           </label>
           <div className="relative">
-            <Sparkles
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-charcoal-soft pointer-events-none"
-              aria-hidden="true"
-            />
+            <GoldBrandMark className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 pointer-events-none" />
             <input
               id="ai-guide-input"
               ref={inputRef}
@@ -145,18 +155,23 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
               maxLength={GUIDE_MAX_INPUT}
               autoComplete="off"
               enterKeyHint="search"
-              placeholder="Soul food in Atlanta, or a business name"
-              className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
+              placeholder="Braids in Atlanta, or a name"
+              className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
             />
           </div>
         </div>
+        {/* A round arrow on phones keeps the chips and answers above the fold. */}
         <button
           type="submit"
           aria-disabled={pending || undefined}
-          className="inline-flex items-center justify-center gap-2 h-14 min-w-11 px-6 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold hover:bg-light-gold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold aria-disabled:opacity-70 aria-disabled:cursor-wait"
+          className="shrink-0 inline-flex items-center justify-center gap-2 size-14 sm:w-auto sm:px-6 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold hover:bg-light-gold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-disabled:opacity-70 aria-disabled:cursor-wait"
         >
-          {pending && <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />}
-          Ask
+          {pending ? (
+            <LoaderCircle className="size-5 sm:size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+          ) : (
+            <ArrowRight className="size-5 sm:hidden" aria-hidden="true" />
+          )}
+          <span className="sr-only sm:not-sr-only">Ask</span>
         </button>
       </form>
 
@@ -168,7 +183,7 @@ export function AiGuide({ filters }: { filters: readonly QuickFilter[] }) {
       </p>
 
       {(pending || answer) && (
-        <div className="mt-4">
+        <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
           {pending ? <GuideSkeleton /> : answer && <GuideAnswer answer={answer} />}
         </div>
       )}

@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight, Sparkles } from 'lucide-react'
+import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
 import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { FreeMonthNotice } from './FreeMonthNotice'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
@@ -41,7 +42,7 @@ function WriteWithAi({
   return (
     <div className="px-5 py-4 border-b border-charcoal/8 flex flex-col sm:flex-row sm:items-center gap-3">
       <div className="flex items-start gap-3 min-w-0">
-        <Sparkles className="size-5 text-amber shrink-0 mt-0.5" aria-hidden="true" />
+        <GoldBrandMark className="size-5 shrink-0 mt-0.5" />
         <div className="min-w-0">
           <h3 className="font-subhead text-sm font-semibold text-brand-black">Write with AI</h3>
           <p className="font-body text-sm text-charcoal mt-0.5">

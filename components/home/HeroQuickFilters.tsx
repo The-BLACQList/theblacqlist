@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LoaderCircle, MapPin } from 'lucide-react'
+import { Check, LoaderCircle, MapPin } from 'lucide-react'
 import { nearMeHref } from '@/lib/listings/location-params'
 
 /** Where Near me lands when there is no position to use. */
 const FALLBACK_HREF = '/discover'
 
 const CHIP =
-  'inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full border border-off-white/40 bg-off-white/10 text-off-white font-subhead text-[13px] font-semibold backdrop-blur-sm hover:bg-off-white/20 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
+  'inline-flex items-center gap-1.5 min-h-11 px-4 rounded-full border border-off-white/40 bg-off-white/10 text-off-white font-subhead text-[13px] font-semibold backdrop-blur-sm hover:bg-off-white/20 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
 
 export interface QuickFilter {
   label: string
@@ -52,6 +52,7 @@ export function HeroQuickFilters({ filters, onPick, onNear, nearOn = false }: Pr
   const guideMode = Boolean(onPick && onNear)
 
   function findNearMe() {
+    if (locating) return
     if (guideMode && nearOn) {
       onNear?.(null)
       return
@@ -84,13 +85,16 @@ export function HeroQuickFilters({ filters, onPick, onNear, nearOn = false }: Pr
           <button
             type="button"
             onClick={findNearMe}
-            disabled={locating}
+            // aria-disabled, not disabled: the button keeps keyboard focus while it looks.
+            aria-disabled={locating || undefined}
             aria-busy={locating}
             aria-pressed={guideMode ? nearOn : undefined}
-            className={`${CHIP} disabled:cursor-wait aria-pressed:bg-gold aria-pressed:text-brand-black aria-pressed:border-gold`}
+            className={`${CHIP} aria-disabled:cursor-wait aria-pressed:bg-gold aria-pressed:text-brand-black aria-pressed:border-gold`}
           >
             {locating ? (
               <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            ) : guideMode && nearOn ? (
+              <Check className="size-4" aria-hidden="true" />
             ) : (
               <MapPin className="size-4" aria-hidden="true" />
             )}
