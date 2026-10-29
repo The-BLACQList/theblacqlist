@@ -161,7 +161,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
       expect(res.status).toBe(200)
       const args = h.createSession.mock.calls[0]![0]
       expect(args.success_url).toBe(
-        'https://preview-abc123.vercel.app/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}'
+        'https://preview-abc123.vercel.app/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}&renews=1'
       )
       expect(args.cancel_url).toBe('https://preview-abc123.vercel.app/dashboard/upgrade')
     } finally {
@@ -223,5 +223,37 @@ describe('POST /api/stripe/create-checkout-session', () => {
     const args = h.createSession.mock.calls[0]![0]
     expect(args.customer).toBeUndefined()
     expect(args.customer_email).toBe('owner@example.com')
+  })
+
+  // Ticket 144: the renewal terms the owner sees on the card, repeated by Stripe.
+  it('repeats the monthly renewal line next to the Stripe pay button', async () => {
+    await POST(req({ planSlug: 'starter', listingId: LISTING_ID }))
+    const args = h.createSession.mock.calls[0]![0]
+    expect(args.custom_text.submit.message).toBe(
+      'Renews automatically at $19 a month until you cancel. Cancel anytime from your dashboard.'
+    )
+  })
+
+  it('names the yearly price and cycle on an annual checkout', async () => {
+    await POST(req({ planSlug: 'growth', listingId: LISTING_ID, billingCycle: 'annual' }))
+    const args = h.createSession.mock.calls[0]![0]
+    expect(args.custom_text.submit.message).toBe(
+      'Renews automatically at $470 a year until you cancel. Cancel anytime from your dashboard.'
+    )
+  })
+
+  it('asks for Terms consent only when STRIPE_CHECKOUT_TERMS_CONSENT is on', async () => {
+    await POST(req({ planSlug: 'starter', listingId: LISTING_ID }))
+    expect(h.createSession.mock.calls[0]![0].consent_collection).toBeUndefined()
+
+    vi.stubEnv('STRIPE_CHECKOUT_TERMS_CONSENT', '1')
+    try {
+      await POST(req({ planSlug: 'starter', listingId: LISTING_ID }))
+      expect(h.createSession.mock.calls[1]![0].consent_collection).toEqual({
+        terms_of_service: 'required',
+      })
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })

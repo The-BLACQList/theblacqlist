@@ -66,7 +66,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I cancel a paid plan anytime?',
-    a: 'Yes. No long-term contracts. Manage or cancel your plan anytime from your billing portal in the dashboard.',
+    a: 'Yes. Paid plans renew automatically until you cancel, with no long-term contract. To cancel, open Upgrade in your dashboard and choose Manage subscription.',
   },
   {
     q: 'Do I need a credit card to get started?',
