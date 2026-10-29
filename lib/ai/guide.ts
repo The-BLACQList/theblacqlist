@@ -171,6 +171,12 @@ export function applyAllowList(raw: RawGuideAnswer, allow: GuideAllowList, visit
   const category = raw.category ? (allow.categories.find((c) => c.slug === raw.category) ?? null) : null
   const city = raw.city ? (allow.cities.find((c) => c.slug === raw.city) ?? null) : null
   const page = raw.page && isGuidePageKey(raw.page) ? raw.page : null
+  // A page with no category or city means the visitor asked about the site
+  // ("how do I list my business"). Searching their words then shows unrelated
+  // cards, so they get the page link only.
+  if (page && !category && !city) {
+    return { category: null, city: null, keywords: [], openNow: false, page }
+  }
   return {
     category,
     city,

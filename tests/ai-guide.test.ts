@@ -112,6 +112,7 @@ import {
   buildSummary,
   fallbackHref,
   guideCallBudget,
+  hasSearchFilters,
   mockGuideAnswer,
   parseGuideAnswer,
   withinGuideBudget,
@@ -156,6 +157,27 @@ describe('applyAllowList', () => {
     expect(out.city).toBeNull()
     expect(out.page).toBeNull()
     expect(out.keywords).toEqual(['wings'])
+  })
+
+  it('a site question gets the page link only, no listings search', () => {
+    const out = applyAllowList(
+      { category: null, city: null, keywords: ['list', 'business'], open_now: true, page: 'add-business' },
+      ALLOW,
+      'how do I list my business'
+    )
+    expect(out).toEqual({ category: null, city: null, keywords: [], openNow: false, page: 'add-business' })
+    expect(hasSearchFilters(out)).toBe(false)
+  })
+
+  it('keeps the search when a page comes with a city or category', () => {
+    const out = applyAllowList(
+      { category: null, city: 'atlanta', keywords: ['wings'], open_now: false, page: 'pricing' },
+      ALLOW,
+      'wings in atlanta and pricing'
+    )
+    expect(out.city).toEqual(atlanta)
+    expect(out.keywords).toEqual(['wings'])
+    expect(out.page).toBe('pricing')
   })
 
   it('never corrects a near miss', () => {
@@ -456,7 +478,7 @@ describe('askGuide', () => {
       {
         listing_id: null,
         agent_type: 'visitor_guide',
-        prompt_version: 'VISITOR_GUIDE@1',
+        prompt_version: 'VISITOR_GUIDE@2',
         model: 'mock-v1',
         provider: 'mock',
         status: 'pending',

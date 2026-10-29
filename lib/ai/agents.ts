@@ -165,7 +165,7 @@ export const GUIDE_AGENT: AgentDefinition = {
 }
 
 /** Written to `ai_generation_requests.prompt_version` for the visitor guide. */
-export const GUIDE_PROMPT_VERSION = 'VISITOR_GUIDE@1'
+export const GUIDE_PROMPT_VERSION = 'VISITOR_GUIDE@2'
 
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)

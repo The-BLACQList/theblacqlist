@@ -245,7 +245,7 @@ Return one JSON object and nothing else, with these keys:
 - "city": a city code only if they name that city, otherwise null
 - "keywords": up to 3 short words copied from the visitor's words that say what they want and are not the category or city, otherwise []
 - "open_now": true only if they want somewhere open right now, otherwise false
-- "page": a help page code only if they ask how the site works, otherwise null
+- "page": a help page code only if they ask how the site works, otherwise null. When you pick a page for a question about the site, leave category, city and keywords empty
 
 Never use a code that is not listed.`,
 } as const
