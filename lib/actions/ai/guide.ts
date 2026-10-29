@@ -305,7 +305,8 @@ export async function askGuide(input: unknown): Promise<GuideResponse> {
     return {
       kind: 'results',
       nameMatches,
-      summary: buildSummary(found.filters, found.results.length),
+      // Every guide card was already a name match: the line would sit over nothing.
+      summary: results.length === 0 && nameMatches.length > 0 ? null : buildSummary(found.filters, found.results.length),
       results,
       seeAllHref: buildSeeAllHref(found.filters),
       page,

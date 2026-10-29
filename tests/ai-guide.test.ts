@@ -536,6 +536,15 @@ describe('askGuide', () => {
     expect(res.summary).not.toBeNull()
   })
 
+  it('drops the summary when every guide card was already a name match', async () => {
+    h.entities = [ENTITY('a', { name: 'Soul Food Kitchen' })]
+    const res = await askGuide('soul food')
+    if (res.kind !== 'results') throw new Error('expected results')
+    expect(res.nameMatches.map((e) => e.id)).toEqual(['a'])
+    expect(res.results).toEqual([])
+    expect(res.summary).toBeNull()
+  })
+
   it('still shows name matches when the model fails', async () => {
     h.provider = 'anthropic'
     h.callAnthropic.mockRejectedValue(new ProviderCallError('provider_error'))
