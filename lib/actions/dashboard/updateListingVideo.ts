@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
-import { checkVideo } from '@/lib/stripe/planChecks'
+import { checkVideoAdd } from '@/lib/stripe/planChecks'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import {
@@ -24,11 +24,14 @@ import {
   listingVideoPublicUrl,
 } from '@/lib/video/listingVideo'
 
-// A page has one video: a YouTube/Vimeo link (video_embed_url) or a file the
-// owner uploaded (video_path, ticket 130). Saving either one clears the other,
-// and any uploaded file the page no longer uses is removed from storage.
+// A page's videos (ticket 105). Each one is a row in listing_videos: a
+// YouTube/Vimeo link or a file the owner uploaded (ticket 130), in the owner's
+// order. Adding one checks the plan's video limit (checkVideoAdd), and the
+// insert policy checks it again in the database. Removing and reordering are
+// allowed on every plan, so an owner on a lower plan can choose which videos
+// show. Uploaded files no row points at are removed from storage.
 
-export type UpdateListingVideoState = { success: true; savedAt: string } | { error: string } | null
+export type AddVideoLinkState = { success: true; savedAt: string } | { error: string } | null
 
 export type StartVideoUploadResult = { path: string; signedUrl: string } | { error: string }
 export type VideoChangeResult = { success: true } | { error: string }
@@ -48,7 +51,11 @@ type OwnedListing = {
   cities: { slug: string } | null
 }
 
-type CurrentVideo = { video_embed_url: string | null; video_path: string | null }
+type VideoRow = { id: string; kind: 'embed' | 'file'; file_path: string | null; position: number }
+
+// A signed upload URL lasts two hours. A file younger than that with no row
+// may be an upload still in flight in another tab, so cleanup leaves it.
+const UPLOAD_GRACE_MS = 2 * 60 * 60 * 1000
 
 async function loadOwnedListing(
   listingId: string
@@ -75,40 +82,53 @@ async function loadOwnedListing(
   }
 }
 
-async function readCurrentVideo(sb: SupabaseClient, listingId: string): Promise<CurrentVideo> {
-  const { data } = await sb
-    .from('listing_details_business')
-    .select('video_embed_url, video_path')
+async function readVideos(sb: SupabaseClient, listingId: string): Promise<VideoRow[] | null> {
+  const { data, error } = await sb
+    .from('listing_videos')
+    .select('id, kind, file_path, position')
     .eq('listing_id', listingId)
-    .maybeSingle()
-  const row = data as Partial<CurrentVideo> | null
-  return { video_embed_url: row?.video_embed_url ?? null, video_path: row?.video_path ?? null }
+    .order('position')
+    .order('created_at')
+  if (error) return null
+  return (data ?? []) as VideoRow[]
 }
 
-/**
- * Saves the page's video columns. Returns false when no details row was
- * updated, so a page without one reports an error instead of a silent success.
- */
-async function saveVideo(sb: SupabaseClient, listingId: string, next: CurrentVideo) {
+/** Adds a video at the end of the page's list. False when the insert failed. */
+async function insertVideo(
+  sb: SupabaseClient,
+  listingId: string,
+  existing: VideoRow[],
+  row: { kind: 'embed'; embed_url: string } | { kind: 'file'; file_path: string }
+): Promise<boolean> {
+  const position = existing.reduce((max, v) => Math.max(max, v.position + 1), 0)
   const { data, error } = await sb
-    .from('listing_details_business')
-    .update(next)
-    .eq('listing_id', listingId)
-    .select('listing_id')
+    .from('listing_videos')
+    .insert({ listing_id: listingId, position, ...row })
+    .select('id')
   return !error && Array.isArray(data) && data.length > 0
 }
 
 /**
- * Removes every uploaded video for this listing except `keep`. That covers the
- * one being replaced and any upload an owner started and never finished.
+ * Removes uploaded files for this listing that no listing_videos row points
+ * at: a removed video, or an upload an owner started and never finished.
  * Best effort: a leftover file costs storage, not correctness.
  */
-async function removeStoredVideos(listingId: string, keep: string | null): Promise<void> {
+async function removeUnusedVideoFiles(sb: SupabaseClient, listingId: string): Promise<void> {
   try {
+    const rows = await readVideos(sb, listingId)
+    if (!rows) return
+    const used = new Set(rows.flatMap((r) => (r.file_path ? [r.file_path] : [])))
     const storage = createServiceClient().storage.from(LISTING_VIDEO_BUCKET)
     const folder = listingVideoFolder(listingId)
     const { data } = await storage.list(folder, { limit: 100 })
-    const stale = (data ?? []).map((o) => `${folder}/${o.name}`).filter((p) => p !== keep)
+    const cutoff = Date.now() - UPLOAD_GRACE_MS
+    const stale = (data ?? [])
+      .filter((o) => {
+        const created = o.created_at ? Date.parse(o.created_at) : NaN
+        return Number.isNaN(created) || created < cutoff
+      })
+      .map((o) => `${folder}/${o.name}`)
+      .filter((p) => !used.has(p))
     if (stale.length > 0) await storage.remove(stale)
   } catch {
     // Storage unreachable or the bucket not created yet. Nothing to clean.
@@ -125,44 +145,37 @@ function revalidateListing(listing: OwnedListing) {
 // Link
 // -----------------------------------------------------------------------------
 
-export async function updateListingVideoAction(
-  _prev: UpdateListingVideoState,
+export async function addListingVideoLinkAction(
+  _prev: AddVideoLinkState,
   formData: FormData
-): Promise<UpdateListingVideoState> {
+): Promise<AddVideoLinkState> {
   const listingId = formData.get('listing_id')?.toString().trim() ?? ''
 
-  // Empty clears the video; otherwise require a YouTube/Vimeo URL.
   const raw = formData.get('video_embed_url')?.toString().trim() ?? ''
-  let value: string | null = null
-  if (raw) {
-    let host = ''
-    try {
-      host = new URL(raw).hostname.replace(/^www\./, '')
-    } catch {
-      return { error: 'Enter a valid URL (or leave it blank).' }
-    }
-    if (!VIDEO_HOSTS.includes(host)) {
-      return { error: 'Links work from YouTube or Vimeo. To use another video, upload the file.' }
-    }
-    value = raw
+  if (!raw) return { error: 'Paste a YouTube or Vimeo link.' }
+  let host = ''
+  try {
+    host = new URL(raw).hostname.replace(/^www\./, '')
+  } catch {
+    return { error: 'Enter a valid link.' }
   }
+  if (!VIDEO_HOSTS.includes(host)) {
+    return { error: 'Links work from YouTube or Vimeo. To use another video, upload the file.' }
+  }
+  if (raw.length > 500) return { error: 'That link is too long. Copy the short share link.' }
 
   const owned = await loadOwnedListing(listingId)
   if ('error' in owned) return owned
   const { sb, listing } = owned
 
-  // Plan gate (ticket 119): adding or changing a video is Starter. Removing
-  // one, or saving the same link again, is always allowed.
-  if (value) {
-    const current = await readCurrentVideo(sb, listingId)
-    const limitError = checkVideo(listing.tier, value, current.video_embed_url)
-    if (limitError) return { error: limitError }
-  }
+  const existing = await readVideos(sb, listingId)
+  if (!existing) return { error: 'Could not save the video. Please try again.' }
+  const limitError = checkVideoAdd(listing.tier, existing.length)
+  if (limitError) return { error: limitError }
 
-  if (!(await saveVideo(sb, listingId, { video_embed_url: value, video_path: null }))) {
+  if (!(await insertVideo(sb, listingId, existing, { kind: 'embed', embed_url: raw }))) {
     return { error: 'Could not save the video. Please try again.' }
   }
-  await removeStoredVideos(listingId, null)
 
   revalidateListing(listing)
   return { success: true, savedAt: new Date().toISOString() }
@@ -192,10 +205,12 @@ export async function startListingVideoUploadAction(
 
   const owned = await loadOwnedListing(listingId)
   if ('error' in owned) return owned
-  const { listing, userId } = owned
+  const { sb, listing, userId } = owned
 
-  // A new upload is always a change, so only Starter and up get past here.
-  const limitError = checkVideo(listing.tier, 'upload', null)
+  // An upload adds a video, so the page needs room for one more.
+  const existing = await readVideos(sb, listing.id)
+  if (!existing) return { error: 'Could not start the upload. Please try again.' }
+  const limitError = checkVideoAdd(listing.tier, existing.length)
   if (limitError) return { error: limitError }
 
   if (
@@ -249,7 +264,10 @@ export async function finishListingVideoUploadAction(
   // ours to point a page at.
   if (!isListingVideoPath(path, listing.id)) return { error: 'That upload is not for this page.' }
 
-  const limitError = checkVideo(listing.tier, path, null)
+  const existing = await readVideos(sb, listing.id)
+  if (!existing) return { error: 'Could not save the video. Please try again.' }
+  if (existing.some((v) => v.file_path === path)) return { success: true }
+  const limitError = checkVideoAdd(listing.tier, existing.length)
   if (limitError) return { error: limitError }
 
   const storage = createServiceClient().storage.from(LISTING_VIDEO_BUCKET)
@@ -276,25 +294,76 @@ export async function finishListingVideoUploadAction(
   if (!header) return fail('Could not check the upload. Please try again.')
   if (!matchesDeclaredType(header, meta.mimetype)) return fail(SIGNATURE_MISMATCH_ERROR)
 
-  if (!(await saveVideo(sb, listing.id, { video_embed_url: null, video_path: path }))) {
+  if (!(await insertVideo(sb, listing.id, existing, { kind: 'file', file_path: path }))) {
     return fail('Could not save the video. Please try again.')
   }
-  await removeStoredVideos(listing.id, path)
+  await removeUnusedVideoFiles(sb, listing.id)
 
   revalidateListing(listing)
   return { success: true }
 }
 
-/** Removing a video is always allowed, on every plan. */
-export async function removeListingVideoAction(listingId: string): Promise<VideoChangeResult> {
+// -----------------------------------------------------------------------------
+// Remove and reorder: allowed on every plan
+// -----------------------------------------------------------------------------
+
+export async function removeListingVideoAction(
+  listingId: string,
+  videoId: string
+): Promise<VideoChangeResult> {
   const owned = await loadOwnedListing(listingId)
   if ('error' in owned) return owned
   const { sb, listing } = owned
 
-  if (!(await saveVideo(sb, listing.id, { video_embed_url: null, video_path: null }))) {
+  const { data, error } = await sb
+    .from('listing_videos')
+    .delete()
+    .eq('id', videoId)
+    .eq('listing_id', listing.id)
+    .select('id')
+  if (error || !Array.isArray(data) || data.length === 0) {
     return { error: 'Could not remove the video. Please try again.' }
   }
-  await removeStoredVideos(listing.id, null)
+  await removeUnusedVideoFiles(sb, listing.id)
+
+  revalidateListing(listing)
+  return { success: true }
+}
+
+/**
+ * Moves one video up or down a place. The first videos are the ones a lower
+ * plan shows, so this is how an owner chooses what stays on the page.
+ */
+export async function moveListingVideoAction(
+  listingId: string,
+  videoId: string,
+  direction: 'up' | 'down'
+): Promise<VideoChangeResult> {
+  const owned = await loadOwnedListing(listingId)
+  if ('error' in owned) return owned
+  const { sb, listing } = owned
+
+  const rows = await readVideos(sb, listing.id)
+  if (!rows) return { error: 'Could not move the video. Please try again.' }
+  const from = rows.findIndex((r) => r.id === videoId)
+  if (from === -1) return { error: 'That video is not on this page.' }
+  const to = direction === 'up' ? from - 1 : from + 1
+  if (to < 0 || to >= rows.length) return { success: true }
+
+  const order = [...rows]
+  const moving = order[from]!
+  order[from] = order[to]!
+  order[to] = moving
+  // Renumber 0..n-1 so ties left by older rows can't hold a move back.
+  for (const [position, row] of order.entries()) {
+    if (row.position === position) continue
+    const { error } = await sb
+      .from('listing_videos')
+      .update({ position })
+      .eq('id', row.id)
+      .eq('listing_id', listing.id)
+    if (error) return { error: 'Could not move the video. Please try again.' }
+  }
 
   revalidateListing(listing)
   return { success: true }

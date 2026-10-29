@@ -89,7 +89,7 @@ export const SECURITY_HEADERS = [
     // header that breaks a feature already approved and in flight. `(self)`
     // matches the current default explicitly and denies it to embedded
     // third parties — the video iframe in
-    // `components/entity-page/EntityVideoSection.tsx:47` is the only one, and
+    // `components/entity-page/EntityVideoSection.tsx` is the only one, and
     // it asks for `encrypted-media; picture-in-picture`, neither of which is
     // touched here.
     key: 'Permissions-Policy',

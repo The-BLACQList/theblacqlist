@@ -5,6 +5,7 @@ import { Package, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 import { CTAButton } from '@/components/marketplace/CTAButton'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
 
@@ -17,9 +18,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const serviceClient = createServiceClient()
   const { data } = await serviceClient
     .from('marketplace_products')
-    .select('name, description')
+    .select('name, description, listings!inner(tier)')
     .eq('global_slug', slug)
     .eq('status', 'active')
+    // Ticket 105: hidden while the page is below Growth (lib/marketplace/visibility.ts).
+    .in('listings.tier', STOREFRONT_TIERS)
     .maybeSingle()
 
   if (!data) return { title: 'Product | BLACQList Marketplace' }
@@ -38,9 +41,10 @@ export default async function ProductDetailPage({ params }: Props) {
 
   const { data: product } = await serviceClient
     .from('marketplace_products')
-    .select('*, listings(id, name, slug, trust_tier)')
+    .select('*, listings!inner(id, name, slug, trust_tier)')
     .eq('global_slug', slug)
     .eq('status', 'active')
+    .in('listings.tier', STOREFRONT_TIERS)
     .maybeSingle()
 
   if (!product) notFound()

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
+import { capDescription, capList, shownLimits } from '@/lib/stripe/downgrade'
+import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
 import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
 import type {
@@ -10,6 +12,7 @@ import type {
   EntityAttributeGroup,
   EntityLink,
   EntityFaq,
+  EntityVideo,
   EventDetails,
   JobDetails,
   OrganizerEvent,
@@ -25,17 +28,19 @@ import type {
 import type { DiscoveryEntity } from '@/types'
 
 /**
- * The page's one video (ticket 130): an uploaded file wins over a link. The
- * database allows only one, so the guard only matters for a hand-edited row.
+ * The page's videos in the owner's order (ticket 105). Each row is a link or
+ * an uploaded file; the table's check allows only one of the two per row.
  */
-function videoFields(row: unknown): { video_embed_url: string | null; video_file_url: string | null } {
-  const v = row as { video_embed_url?: string | null; video_path?: string | null } | null
-  const path = v?.video_path ?? null
+function toVideos(rows: unknown): EntityVideo[] {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
-  return {
-    video_embed_url: path ? null : (v?.video_embed_url ?? null),
-    video_file_url: path && base ? listingVideoPublicUrl(base, path) : null,
-  }
+  type VideoRow = { id: string; kind: string; embed_url: string | null; file_path: string | null }
+  return ((rows as VideoRow[] | null) ?? []).flatMap((v): EntityVideo[] => {
+    if (v.kind === 'file' && v.file_path) {
+      return base ? [{ id: v.id, embed_url: null, file_url: listingVideoPublicUrl(base, v.file_path) }] : []
+    }
+    if (v.kind === 'embed' && v.embed_url) return [{ id: v.id, embed_url: v.embed_url, file_url: null }]
+    return []
+  })
 }
 
 // Internal type matching the Supabase nested select result
@@ -193,6 +198,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: relatedAnywhereData },
     { data: attrData },
     { data: videoData },
+    { data: peakData },
     { data: serviceGroupData },
     { data: linksData },
     { data: faqData },
@@ -231,14 +237,18 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         )`
       )
       .eq('listing_id', raw.id),
-    // Fail-soft: the video columns (video_embed_url, video_path) may not be
-    // migrated yet. Queried separately with '*' so a missing column can't break
-    // the page (returns { data: null } on error).
+    // Fail-soft: listing_videos (20261020000000) may not be migrated yet, so
+    // it is queried on its own and a missing table just means no videos.
     sb
-      .from('listing_details_business')
-      .select('*')
+      .from('listing_videos')
+      .select('id, kind, embed_url, file_path')
       .eq('listing_id', raw.id)
-      .maybeSingle(),
+      .order('position', { ascending: true })
+      .order('created_at', { ascending: true }),
+    // Fail-soft for the same reason: peak_tier comes with the same migration,
+    // and keeping it out of LISTING_SELECT means a database without it still
+    // renders the page, untrimmed.
+    sb.from('listings').select('peak_tier').eq('id', raw.id).maybeSingle(),
     // Fail-soft: services.group_label may not be migrated yet — queried separately
     // so offerings still render flat until the column exists.
     sb.from('services').select('id, group_label').eq('listing_id', raw.id),
@@ -266,6 +276,11 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       .order('display_order', { ascending: true }),
   ])
 
+  // After a move to a lower plan, content over the new plan's limits is hidden
+  // here and only here: nothing is deleted, and an upgrade shows it all again
+  // (lib/stripe/downgrade.ts). A page that never paid is never trimmed.
+  const caps = shownLimits(raw.tier, (peakData as { peak_tier: string | null } | null)?.peak_tier)
+
   // Group the listing's attributes for display (Identity & Ownership, Amenities, …).
   type AttrRow = {
     attribute_values: {
@@ -276,16 +291,23 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       attribute_groups: { name: string; slug: string; display_order: number } | null
     } | null
   }
+  // The creator groups don't count toward the plan's limit, so they are never
+  // trimmed (lib/listings/creatorAttributes.ts).
   const attrGroupMap = new Map<
     string,
-    { name: string; order: number; values: { name: string; slug: string; icon: string | null; order: number }[] }
+    {
+      name: string
+      slug: string
+      order: number
+      values: { name: string; slug: string; icon: string | null; order: number }[]
+    }
   >()
   for (const row of (attrData as AttrRow[] | null) ?? []) {
     const v = row.attribute_values
     const g = v?.attribute_groups
     if (!v || !g) continue
     if (!attrGroupMap.has(g.slug)) {
-      attrGroupMap.set(g.slug, { name: g.name, order: g.display_order, values: [] })
+      attrGroupMap.set(g.slug, { name: g.name, slug: g.slug, order: g.display_order, values: [] })
     }
     attrGroupMap.get(g.slug)!.values.push({
       name: v.name,
@@ -294,14 +316,19 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       order: v.display_order,
     })
   }
+  let attrRoom = caps.attributes
   const attributes: EntityAttributeGroup[] = Array.from(attrGroupMap.values())
     .sort((a, b) => a.order - b.order)
-    .map((g) => ({
-      group: g.name,
-      values: g.values
-        .sort((a, b) => a.order - b.order)
-        .map(({ name, slug, icon }) => ({ name, slug, icon })),
-    }))
+    .map((g) => {
+      let values = g.values.sort((a, b) => a.order - b.order)
+      if (attrRoom !== null && !isCreatorGroup(g.slug)) {
+        const { shown } = capList(values, attrRoom)
+        attrRoom -= shown.length
+        values = shown
+      }
+      return { group: g.name, values: values.map(({ name, slug, icon }) => ({ name, slug, icon })) }
+    })
+    .filter((g) => g.values.length > 0)
 
   const reviewerIds = (reviewsData ?? [])
     .map((r) => r.reviewer_user_id)
@@ -384,7 +411,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   ).map((c) => ({ id: c.id, name: c.name }))
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-  const images: GalleryImage[] = (mediaData ?? []).map((m) => ({
+  const images: GalleryImage[] = capList(mediaData ?? [], caps.photos).shown.map((m) => ({
     id: m.id,
     src: `${supabaseUrl}/storage/v1/object/public/listing-media/${m.file_path}`,
     alt: m.alt_text ?? '',
@@ -419,16 +446,17 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     .map((l) => ({ id: l.id, type: l.link_type, url: l.url, label: l.label ?? null }))
 
   type FaqRow = { id: string; question: string; answer: string }
-  const faqs: EntityFaq[] = ((faqData as FaqRow[] | null) ?? [])
-    .filter((f) => f.question && f.answer)
-    .map((f) => ({ id: f.id, question: f.question, answer: f.answer }))
+  const faqs: EntityFaq[] = capList(
+    ((faqData as FaqRow[] | null) ?? []).filter((f) => f.question && f.answer),
+    caps.faqs
+  ).shown.map((f) => ({ id: f.id, question: f.question, answer: f.answer }))
 
   const det = raw.listing_details_business
   const cityData = raw.cities
   const showSocials = socialLinksShowOnPage(raw.source, raw.tier, raw.entity_type)
 
   const details: BusinessDetails = {
-    description: det?.description ?? '',
+    description: capDescription(det?.description ?? '', caps.descriptionChars),
     address: det?.address_line_1 ?? null,
     address_line2: det?.address_line_2 ?? null,
     city_name: det?.city_text ?? cityData?.name ?? null,
@@ -458,7 +486,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     cta_url: det?.cta_url ?? null,
     cta_label_override: det?.cta_label_override ?? null,
     ships_nationwide: det?.ships_nationwide ?? raw.ships_nationwide,
-    ...videoFields(videoData),
+    videos: capList(toVideos(videoData), caps.videos).shown,
     hours: (det?.hours as WeeklyHours | null) ?? null,
     // Only a real pin counts. The map route applies the same number check.
     lat: typeof det?.lat === 'number' ? det.lat : null,
@@ -664,7 +692,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
             city_name: e.city_text,
           }
         })
-        .slice(0, 5)
+        .slice(0, caps.events === null ? 5 : Math.min(5, caps.events))
     }
   }
 

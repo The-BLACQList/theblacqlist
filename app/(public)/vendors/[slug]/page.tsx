@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Package, Briefcase, MapPin, ArrowLeft } from 'lucide-react'
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { sellsPublicly } from '@/lib/marketplace/visibility'
 import { ProductCard } from '@/components/marketplace/ProductCard'
 import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
@@ -25,7 +26,7 @@ const getStorefront = cache(async (slug: string) => {
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, slug, tagline, trust_tier, entity_type, cities(name, states(code)), categories(name)'
+      'id, name, slug, tagline, trust_tier, entity_type, tier, cities(name, states(code)), categories(name)'
     )
     .eq('slug', slug)
     .eq('status', 'published')
@@ -34,25 +35,34 @@ const getStorefront = cache(async (slug: string) => {
 
   if (!listing) return null
 
+  // Ticket 105: a page below Growth keeps its products and services, hidden
+  // here until it is on Growth or Premium again (lib/marketplace/visibility.ts).
+  const sells = sellsPublicly(listing.tier)
+  const none = Promise.resolve({ data: [] as never[] })
+
   const [{ data: productRows }, { data: serviceRows }] = await Promise.all([
-    serviceClient
-      .from('marketplace_products')
-      .select(
-        'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id'
-      )
-      .eq('listing_id', listing.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(24),
-    serviceClient
-      .from('marketplace_services')
-      .select(
-        'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id'
-      )
-      .eq('listing_id', listing.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(24),
+    !sells
+      ? none
+      : serviceClient
+          .from('marketplace_products')
+          .select(
+            'id, name, global_slug, description, price_cents, compare_at_price_cents, price_display_text, cover_image_url, shipping_options, external_purchase_url, listing_id'
+          )
+          .eq('listing_id', listing.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(24),
+    !sells
+      ? none
+      : serviceClient
+          .from('marketplace_services')
+          .select(
+            'id, name, global_slug, description, starting_price_cents, price_display_text, duration_text, delivery_mode, booking_url, cover_image_url, listing_id'
+          )
+          .eq('listing_id', listing.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(24),
   ])
 
   const products = productRows ?? []
@@ -74,8 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { listing } = storefront
   return {
     title: `${listing.name} | BLACQList Marketplace`,
-    description:
-      listing.tagline ?? `Shop products and services from ${listing.name} on BLACQList.`,
+    description: listing.tagline ?? `Shop products and services from ${listing.name} on BLACQList.`,
   }
 }
 

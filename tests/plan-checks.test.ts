@@ -6,7 +6,7 @@ import {
   checkLinkAdd,
   checkPhotoAdd,
   checkSocialLinks,
-  checkVideo,
+  checkVideoAdd,
   isSocialLinkType,
   socialLinksAllowed,
 } from '@/lib/stripe/planChecks'
@@ -186,6 +186,12 @@ describe('checkFaqAdd', () => {
     expect(checkFaqAdd('starter', 5)).toMatch(/up to 5 common questions/)
   })
 
+  it('never tells a paid page to upgrade (Growth and Premium are not for sale)', () => {
+    expect(checkFaqAdd('starter', 5)).not.toMatch(/upgrade/i)
+    expect(checkAttributeCount('starter', 11, 10)).not.toMatch(/upgrade/i)
+    expect(checkPhotoAdd('growth', 25)).not.toMatch(/upgrade/i)
+  })
+
   it('still blocks adding when a Free listing already has some (grandfathered rows stay)', () => {
     expect(checkFaqAdd('free', 2)).not.toBeNull()
   })
@@ -195,28 +201,31 @@ describe('checkFaqAdd', () => {
   })
 })
 
-describe('checkVideo', () => {
-  const url = 'https://youtube.com/watch?v=abc'
-
-  it('allows Starter to set a video', () => {
-    expect(checkVideo('starter', url, null)).toBeNull()
+describe('checkVideoAdd', () => {
+  it('blocks Free from adding any', () => {
+    expect(checkVideoAdd('free', 0)).toMatch(/part of Starter/)
   })
 
-  it('blocks Free from setting a video', () => {
-    expect(checkVideo('free', url, null)).toMatch(/part of Starter/)
+  it('allows Starter one video', () => {
+    expect(checkVideoAdd('starter', 0)).toBeNull()
+    expect(checkVideoAdd('starter', 1)).toBe(
+      'Your plan includes 1 video. Remove one to add another.'
+    )
   })
 
-  it('keeps an unchanged saved video on Free (grandfathered)', () => {
-    expect(checkVideo('free', url, url)).toBeNull()
+  it('allows Growth three videos', () => {
+    expect(checkVideoAdd('growth', 2)).toBeNull()
+    expect(checkVideoAdd('growth', 3)).toBe(
+      'Your plan includes up to 3 videos. Remove one to add another.'
+    )
   })
 
-  it('blocks Free from swapping a saved video', () => {
-    expect(checkVideo('free', 'https://vimeo.com/1', url)).not.toBeNull()
+  it('has no limit on Premium', () => {
+    expect(checkVideoAdd('premium', 40)).toBeNull()
   })
 
-  it('always allows removing a video', () => {
-    expect(checkVideo('free', null, url)).toBeNull()
-    expect(checkVideo('free', '', url)).toBeNull()
+  it('still blocks adding when a downgraded page has more than its plan shows', () => {
+    expect(checkVideoAdd('starter', 3)).not.toBeNull()
   })
 })
 
@@ -228,7 +237,9 @@ describe('checkPhotoAdd', () => {
 
   it('allows Starter up to 10', () => {
     expect(checkPhotoAdd('starter', 9)).toBeNull()
-    expect(checkPhotoAdd('starter', 10)).toBe('Your plan includes 10 photos. Upgrade to add more.')
+    expect(checkPhotoAdd('starter', 10)).toBe(
+      'Your plan includes 10 photos. Remove one to add another.'
+    )
   })
 
   it('blocks adding when a Free listing already has more (grandfathered photos stay)', () => {
