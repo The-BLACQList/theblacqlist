@@ -101,6 +101,11 @@ export const searchSchema = z.object({
     .union([z.literal('1'), z.literal('true'), z.literal('0'), z.literal('false')])
     .transform((v) => v === '1' || v === 'true')
     .optional(),
+  // "Open to partnerships" (ticket 134). Same spellings as open_now.
+  partners: z
+    .union([z.literal('1'), z.literal('true'), z.literal('0'), z.literal('false')])
+    .transform((v) => v === '1' || v === 'true')
+    .optional(),
   // "Near You" (C3.2). All three are optional and all three must travel
   // together — see the superRefine below. 500 miles is the upper bound because
   // the RPC's bounding-box prefilter divides by 69.0 mi/degree; past a few

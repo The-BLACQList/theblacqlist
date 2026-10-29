@@ -26,6 +26,8 @@ interface DiscoveryGridProps {
   clearLocationUrl?: string
   /** The page with every filter dropped. The way out of filtersUnavailable. */
   clearFiltersUrl?: string
+  /** True when any sidebar filter is on. Turns the empty state into "No results for these filters". */
+  filtersActive?: boolean
   /** The level filter as the URL carries it (`?level=`). Drives its own empty state. */
   levels?: string[]
   /**
@@ -102,8 +104,8 @@ function RadiusEmptyState({
         Nothing within {radiusMiles} {radiusMiles === 1 ? 'mile' : 'miles'} of you
       </p>
       <p className="font-subhead text-sm text-charcoal max-w-md">
-        Try a wider search, or browse the full directory. Some businesses have not
-        been mapped yet, and those never show up in a distance search.
+        Try a wider search, or browse the full directory. Some businesses have not been mapped yet,
+        and those never show up in a distance search.
       </p>
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
         {widerRadiusUrl && (
@@ -134,8 +136,8 @@ function RadiusUnavailableState({ clearLocationUrl }: { clearLocationUrl?: strin
         Distance search is unavailable right now
       </p>
       <p className="font-subhead text-sm text-charcoal max-w-md">
-        We could not search by distance just now, so we are not going to guess.
-        Try again in a moment, or browse without the location filter.
+        We could not search by distance just now, so we are not going to guess. Try again in a
+        moment, or browse without the location filter.
       </p>
       {clearLocationUrl && (
         <Link scroll={false} href={clearLocationUrl} className={`${linkClass} mt-4`}>
@@ -160,9 +162,9 @@ function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string
         These filters are unavailable right now
       </p>
       <p className="font-subhead text-sm text-charcoal max-w-md">
-        We could not apply the price, amenity, hours, or level filters just now, and we
-        are not going to show you results that ignore them. Try again in a
-        moment, or browse without those filters.
+        We could not apply the price, amenity, hours, or level filters just now, and we are not
+        going to show you results that ignore them. Try again in a moment, or browse without those
+        filters.
       </p>
       {clearFiltersUrl && (
         <Link scroll={false} href={clearFiltersUrl} className={`${linkClass} mt-4`}>
@@ -206,6 +208,25 @@ function LevelEmptyState({
   )
 }
 
+/**
+ * Zero results with a filter on (ticket 134). The plain empty state told the
+ * visitor to "try adjusting your filters" and gave them no way to do it; this
+ * one names the cause and clears every filter in one step.
+ */
+function FilteredEmptyState({ clearFiltersUrl }: { clearFiltersUrl: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <p className="font-headline text-xl text-brand-black mb-2">No results for these filters</p>
+      <p className="font-subhead text-sm text-charcoal max-w-sm">
+        Try removing a filter, or clear them all to see every business.
+      </p>
+      <Link scroll={false} href={clearFiltersUrl} className={`${linkClass} mt-4`}>
+        Clear filters
+      </Link>
+    </div>
+  )
+}
+
 function ErrorState({ message }: { message: string }) {
   return (
     <div role="alert" className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -229,6 +250,7 @@ export function DiscoveryGrid({
   widerRadiusUrl,
   clearLocationUrl,
   clearFiltersUrl,
+  filtersActive = false,
   levels,
   assist,
 }: DiscoveryGridProps) {
@@ -256,6 +278,8 @@ export function DiscoveryGrid({
     )
     if (levelNouns.length > 0)
       return <LevelEmptyState nouns={levelNouns} clearFiltersUrl={clearFiltersUrl} />
+    if (filtersActive && clearFiltersUrl && !query)
+      return <FilteredEmptyState clearFiltersUrl={clearFiltersUrl} />
     return <EmptyState query={query} />
   }
 

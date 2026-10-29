@@ -19,6 +19,7 @@ import {
   buildLocationEscapeUrls,
   canonicalOpenNowQuery,
   parseDiscoverParams,
+  hasFacetFilters,
   parsePage,
   type DiscoverSearchParams,
 } from '@/lib/listings/discover-params'
@@ -129,6 +130,7 @@ async function DiscoverContent({
           radiusUnavailable={result.radiusUnavailable ?? false}
           filtersUnavailable={result.filtersUnavailable ?? false}
           levels={params.level?.split(',')}
+          filtersActive={hasFacetFilters(params)}
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
           clearFiltersUrl="/discover"

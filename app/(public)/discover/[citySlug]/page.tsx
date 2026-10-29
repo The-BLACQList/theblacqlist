@@ -11,6 +11,7 @@ import { parseLocationParams } from '@/lib/listings/location-params'
 import {
   buildLocationEscapeUrls,
   parseDiscoverParams,
+  hasFacetFilters,
   parsePage,
   type DiscoverSearchParams,
 } from '@/lib/listings/discover-params'
@@ -179,6 +180,7 @@ async function CityContent({
           radiusUnavailable={result.radiusUnavailable ?? false}
           filtersUnavailable={result.filtersUnavailable ?? false}
           levels={params.level?.split(',')}
+          filtersActive={hasFacetFilters(params)}
           widerRadiusUrl={widerRadiusUrl}
           clearLocationUrl={clearLocationUrl}
           clearFiltersUrl={basePath}

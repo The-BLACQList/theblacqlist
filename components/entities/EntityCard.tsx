@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Calendar } from 'lucide-react'
+import { Calendar, Handshake } from 'lucide-react'
 
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import type { DiscoveryEntity, LocationType } from '@/types'
 import { buildEntityUrl, categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
 import { levelPill, LEVEL_META, isBusinessLevel } from '@/lib/listings/levels'
+import { partnershipPill } from '@/lib/listings/partnerships'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 
 interface EntityCardProps {
@@ -81,6 +82,7 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
   const levelText = levelPill(entity.primary_level)
   const levelHref = levelFilterHref(entity.primary_level)
   const typePill = TYPE_PILL_LABELS[entity.entity_type]
+  const partnersText = partnershipPill(entity.entity_type, entity.open_to_partnerships)
 
   // Set only on cards the sponsored path spliced in (lib/listings/query.ts), so
   // the client islands below mount on at most three cards per page. The rest of
@@ -142,7 +144,8 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
       <div className="flex flex-col flex-1 p-4 gap-2">
         {/* Pill order: category chip (filters) → level (Grower, Maker or
             Supplier only) → Ally (only when Ally) → trust (only when earned) →
-            type (events and jobs only). No Black-Owned, Unclaimed or Local
+            type (events and jobs only) → partnerships (only when the owner
+            switched it on). No Black-Owned, Unclaimed or Local
             pill: none of them helps a shopper narrow things down. */}
         <div className="flex items-center gap-2 flex-wrap">
           {categoryHref && (
@@ -174,6 +177,12 @@ export function EntityCard({ entity, className, isPriority = false }: EntityCard
             >
               {typePill}
             </Badge>
+          )}
+          {partnersText && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-charcoal/30 text-charcoal text-[11px] font-subhead font-semibold px-2 py-0.5">
+              <Handshake className="size-3 shrink-0" aria-hidden="true" />
+              {partnersText}
+            </span>
           )}
         </div>
 
