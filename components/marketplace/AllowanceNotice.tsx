@@ -9,6 +9,8 @@ interface AllowanceNoticeProps {
   /** Name lookup, so the notice can say which business page is full. */
   names: Record<string, string>
   kind: 'product' | 'service'
+  /** Growth can be bought right now (isTierOpen). Decides upgrade vs waitlist. */
+  growthOpen: boolean
 }
 
 /**
@@ -23,12 +25,13 @@ interface AllowanceNoticeProps {
  * The counter it reads is products + services combined, which is why the copy
  * says "marketplace listings" rather than naming one or the other.
  */
-export function AllowanceNotice({ allowances, names, kind }: AllowanceNoticeProps) {
+export function AllowanceNotice({ allowances, names, kind, growthOpen }: AllowanceNoticeProps) {
   const eligible = allowances.filter((a) => a.canAddMore)
   const noun = kind === 'product' ? 'product' : 'service'
 
   if (eligible.length === 0) {
     const needsUpgrade = allowances.some((a) => !a.tierIncludesStorefront)
+    const canUpgrade = needsUpgrade && growthOpen
     return (
       <div
         role="alert"
@@ -38,14 +41,18 @@ export function AllowanceNotice({ allowances, names, kind }: AllowanceNoticeProp
           <AlertCircle className="size-4 mt-0.5 shrink-0 text-charcoal" aria-hidden="true" />
           <div className="space-y-1">
             <h2 className="font-subhead text-sm font-semibold text-brand-black">
-              {needsUpgrade
-                ? `Marketplace selling isn't open yet`
-                : `You've used all your marketplace listings`}
+              {canUpgrade
+                ? `Your plan doesn't include a storefront`
+                : needsUpgrade
+                  ? `Marketplace selling isn't open yet`
+                  : `You've used all your marketplace listings`}
             </h2>
             <p className="font-body text-sm text-charcoal-soft">
-              {needsUpgrade
-                ? `We're not selling vendor access while ${noun} listings, checkout, and analytics are still being built. Join the waitlist and we'll email you the day it opens.`
-                : `Products and services share one allowance on each business page. Archive something you're no longer offering to free up a slot.`}
+              {canUpgrade
+                ? `Storefronts come with Growth. Move a business page to Growth to list up to 25 products and services on it.`
+                : needsUpgrade
+                  ? `We're not selling vendor access while ${noun} listings, checkout, and analytics are still being built. Join the waitlist and we'll email you the day it opens.`
+                  : `Products and services share one allowance on each business page. Archive something you're no longer offering to free up a slot.`}
             </p>
           </div>
         </div>
@@ -56,24 +63,32 @@ export function AllowanceNotice({ allowances, names, kind }: AllowanceNoticeProp
               {names[a.listingId] ?? 'Business page'} —{' '}
               {a.tierIncludesStorefront
                 ? `${a.used} of ${a.limit} marketplace listings used`
-                : 'storefront not open yet'}
+                : canUpgrade
+                  ? 'no storefront on this plan'
+                  : 'storefront not open yet'}
             </li>
           ))}
         </ul>
 
         {/*
-          Not /pricing. Storefronts need Growth+, and Growth and Premium are
-          deliberately unbuyable (decision D-M, 2026-09-01) — they render
-          "Coming Soon" and disabled there, so sending an owner to see plans
-          sends them to a page that only confirms they are stuck. The waitlist
-          is the honest next step; when the page is merely full, the next step
-          is on the owner's own list.
+          Storefronts need Growth+. Growth was withheld from sale (decision D-M,
+          2026-09-01) and opens on its own before Premium (ticket 143). Once it
+          can be bought, the next step is the dashboard upgrade page. While it
+          is closed, a plans page would only confirm the owner is stuck, so the
+          waitlist is the honest next step. When the page is merely full, the
+          next step is on the owner's own list.
         */}
         <Link
-          href={needsUpgrade ? '/for-vendors#for-vendors-waitlist' : `/dashboard/${kind}s`}
+          href={
+            canUpgrade
+              ? '/dashboard/upgrade'
+              : needsUpgrade
+                ? '/for-vendors#for-vendors-waitlist'
+                : `/dashboard/${kind}s`
+          }
           className="inline-flex items-center h-10 px-5 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors min-h-[44px]"
         >
-          {needsUpgrade ? 'Join the waitlist' : `Manage your ${noun}s`}
+          {canUpgrade ? 'See Growth' : needsUpgrade ? 'Join the waitlist' : `Manage your ${noun}s`}
         </Link>
       </div>
     )

@@ -19,9 +19,10 @@ import {
 // the new limits is hidden on the public page, never deleted, and comes back on
 // upgrade ([Decision — founder, 2026-10-20], lib/stripe/downgrade.ts).
 //
-// Upgrade copy: only a Free page is told to upgrade, because Starter is the one
-// plan on sale. Growth and Premium are not for sale yet (D-M), so a paid page
-// at its limit is told how to make room instead.
+// Upgrade copy: a Free page is told to upgrade to Starter. A Starter page is
+// offered Growth only while Growth is for sale (`growthOpen`, read from the live
+// `plans` row by the caller, ticket 143). Premium is not for sale, so a Growth
+// page at its limit is told how to make room instead.
 //
 // Each function returns a message the owner can act on, or null when the save
 // may go ahead. The callers own the reads; these stay pure so they are easy to
@@ -58,6 +59,20 @@ export function isSocialLinkType(linkType: string): boolean {
  */
 export function socialLinksAllowed(tier: string | null, entityType?: string | null): boolean {
   return entityType === 'creator' || canAccess(tier, 'social_links')
+}
+
+/** The plan an owner at a limit can move up to, or null when none is for sale. */
+export type UpgradeTarget = 'Starter' | 'Growth' | null
+
+/**
+ * Which plan the limit notes offer. Free gets Starter. Starter gets Growth only
+ * while Growth can be bought. Everyone else gets no link.
+ */
+export function upgradeTarget(tier: string | null, growthOpen: boolean): UpgradeTarget {
+  const rank = TIER_RANK[tier ?? 'free'] ?? 0
+  if (rank === 0) return 'Starter'
+  if (tier === 'starter' && growthOpen) return 'Growth'
+  return null
 }
 
 const SOCIAL_UPGRADE = 'Social links are part of Starter. Upgrade to add them to your page.'
@@ -123,44 +138,61 @@ export function checkLinkAdd(
 export function checkAttributeCount(
   tier: string | null,
   nextCount: number,
-  previousCount: number
+  previousCount: number,
+  growthOpen = false
 ): string | null {
   const limit = attributeLimit(tier)
   if (limit === null || nextCount <= limit || nextCount <= previousCount) return null
-  return `Your plan includes up to ${limit} details customers filter by. ${makeRoom(tier, 'Remove one, or upgrade for more.')}`
+  return `Your plan includes up to ${limit} details customers filter by. ${makeRoom(tier, 'Remove one, or upgrade for more.', growthOpen)}`
 }
 
 /** Adding one FAQ. `existingCount` is how many the listing has now. */
-export function checkFaqAdd(tier: string | null, existingCount: number): string | null {
+export function checkFaqAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false
+): string | null {
   const limit = faqLimit(tier)
   if (limit === null || existingCount < limit) return null
   if (limit === 0) return 'Common questions are part of Starter. Upgrade to add them to your page.'
-  return `Your plan includes up to ${limit} common questions. ${makeRoom(tier, 'Remove one, or upgrade for more.')}`
+  return `Your plan includes up to ${limit} common questions. ${makeRoom(tier, 'Remove one, or upgrade for more.', growthOpen)}`
 }
 
 /**
  * Adding one page video, a link or an upload. `existingCount` is how many the
  * page has now. Removing and reordering are always allowed.
  */
-export function checkVideoAdd(tier: string | null, existingCount: number): string | null {
+export function checkVideoAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false
+): string | null {
   const limit = videoLimit(tier)
   if (limit === null || existingCount < limit) return null
   if (limit === 0) return 'A video is part of Starter. Upgrade to add one to your page.'
-  return `Your plan includes ${limit === 1 ? '1 video' : `up to ${limit} videos`}. ${makeRoom(tier, 'Upgrade to add more.')}`
+  return `Your plan includes ${limit === 1 ? '1 video' : `up to ${limit} videos`}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen)}`
 }
 
 /** Adding one gallery photo. `existingCount` counts gallery photos only. */
-export function checkPhotoAdd(tier: string | null, existingCount: number): string | null {
+export function checkPhotoAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false
+): string | null {
   const limit = photoLimit(tier)
   if (limit === null || existingCount < limit) return null
-  return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. ${makeRoom(tier, 'Upgrade to add more.')}`
+  return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen)}`
 }
 
 /**
  * The second sentence of a limit message. Free gets `freeText`, which may
- * mention upgrading (Starter is on sale). A paid plan is told how to make room,
- * since the next plan up is not for sale yet.
+ * mention upgrading (Starter is on sale). Starter is offered Growth while Growth
+ * is for sale, and every limit Growth has is higher than Starter's. Otherwise a
+ * paid plan is told how to make room.
  */
-function makeRoom(tier: string | null, freeText: string): string {
-  return (TIER_RANK[tier ?? 'free'] ?? 0) > 0 ? 'Remove one to add another.' : freeText
+function makeRoom(tier: string | null, freeText: string, growthOpen: boolean): string {
+  const target = upgradeTarget(tier, growthOpen)
+  if (target === 'Starter') return freeText
+  if (target === 'Growth') return 'Remove one, or upgrade to Growth for more.'
+  return 'Remove one to add another.'
 }

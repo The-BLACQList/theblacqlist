@@ -154,6 +154,8 @@ vi.mock('@/lib/security/rate-limit', () => ({ checkRateLimit: h.checkRateLimit }
 vi.mock('@/lib/dashboard/revalidateEditors', () => ({ revalidateOwnerEditors: vi.fn() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/listings/url', () => ({ buildEntityUrl: () => '/l/x' }))
+// Growth is not for sale in these tests, so no limit message offers it.
+vi.mock('@/lib/marketplace/entitlements', () => ({ offerGrowthTo: async () => false }))
 
 import {
   addListingVideoLinkAction,

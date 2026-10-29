@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkPhotoAdd } from '@/lib/stripe/planChecks'
+import { offerGrowthTo } from '@/lib/marketplace/entitlements'
 import type { PreparedImage } from '@/lib/media/prepareImage'
 
 // =============================================================================
@@ -70,7 +71,11 @@ export async function storeListingImage(args: {
       .eq('entity_type', 'listing')
       .eq('entity_id', listingId)
 
-    const limitError = checkPhotoAdd(listing?.tier ?? 'free', count ?? 0)
+    const limitError = checkPhotoAdd(
+      listing?.tier ?? 'free',
+      count ?? 0,
+      await offerGrowthTo(listing?.tier ?? null)
+    )
     if (limitError) return { ok: false, error: limitError, code: 'PLAN_LIMIT', status: 400 }
   }
 

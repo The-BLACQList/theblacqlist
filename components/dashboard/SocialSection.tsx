@@ -6,6 +6,7 @@ import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
 import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import type { UpgradeTarget } from '@/lib/stripe/planChecks'
 
 interface Props {
   listingId: string
@@ -19,7 +20,8 @@ interface Props {
   locked: boolean
   /** Saved links stay off the public page until Starter (owner-made pages on Free). */
   hiddenOnPage?: boolean
-  showUpgrade: boolean
+  /** The plan the limit note offers (`upgradeTarget`), or null for no link. */
+  upgradeTo: UpgradeTarget
   /** Caption help, drawn below the links and outside their form (ticket 138). */
   caption?: ReactNode
 }
@@ -73,7 +75,7 @@ export function SocialSection({
   socialTwitter,
   locked,
   hiddenOnPage = false,
-  showUpgrade,
+  upgradeTo,
   caption,
 }: Props) {
   const {
@@ -109,7 +111,7 @@ export function SocialSection({
           <h2 className="font-headline text-base text-brand-black">Social links</h2>
         </div>
         <div className="px-5 py-4">
-          <PlanLimitNote showUpgrade={showUpgrade}>
+          <PlanLimitNote upgradeTo={upgradeTo}>
             Social links are part of Starter. Upgrade to add your Instagram, Facebook, and more to
             your page.
           </PlanLimitNote>
@@ -131,7 +133,7 @@ export function SocialSection({
         <input type="hidden" name="listing_id" value={listingId} />
 
         {locked && (
-          <PlanLimitNote showUpgrade={showUpgrade}>
+          <PlanLimitNote upgradeTo={upgradeTo}>
             {hiddenOnPage
               ? 'Social links are part of Starter. Your saved links are kept and show on your page once you upgrade. Adding or changing one needs Starter.'
               : 'Social links are part of Starter. You can keep or remove the links you have. Adding or changing one needs Starter.'}

@@ -133,7 +133,6 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     sharesCount,
     savesCount,
     dailyResult,
-    searchQueriesResult,
     writingAllowance,
   ] = await Promise.all([
     supabase
@@ -210,13 +209,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       .gte('snapshot_date', sinceDateStr)
       .order('snapshot_date', { ascending: true }),
 
-    // Queries that led to a click on this listing from search results
-    supabase
-      .from('search_events')
-      .select('query')
-      .eq('clicked_listing_id', entityId)
-      .gte('created_at', sinceIso)
-      .limit(200),
+    // No "Top search queries" panel (founder 2026-10-28, ticket 143). Nothing
+    // writes search_events.clicked_listing_id and owners have no RLS read on
+    // it, so the panel was always empty. Bring it back with the feature.
 
     // Off or locked means no "Explain my numbers" card (ticket 138).
     getWritingAllowance(listing.id, listing.tier),
@@ -234,16 +229,6 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
   const trend = bucketTrend(dailyRows, period.bucket)
   const trendCadence =
     period.bucket === 'day' ? 'daily' : period.bucket === 'week' ? 'weekly' : 'monthly'
-
-  // Aggregate top search queries client-side
-  const queryCounts: Record<string, number> = {}
-  for (const row of searchQueriesResult.data ?? []) {
-    queryCounts[row.query] = (queryCounts[row.query] ?? 0) + 1
-  }
-  const topQueries = Object.entries(queryCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([query, count]) => ({ query, count }))
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -343,49 +328,6 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           </div>
         </div>
       )}
-
-      {/* Top search queries */}
-      <div>
-        <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-          Top search queries, {period.heading.toLowerCase()}
-        </h2>
-        <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
-          {topQueries.length === 0 ? (
-            <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
-              No search click data yet for this period.
-            </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">
-                    #
-                  </th>
-                  <th className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                    Query
-                  </th>
-                  <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                    Clicks
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-charcoal/5">
-                {topQueries.map((row, i) => (
-                  <tr key={row.query} className="hover:bg-[#f9f9fb]">
-                    <td className="px-4 py-2.5 font-body text-xs text-charcoal-faint">{i + 1}</td>
-                    <td className="px-4 py-2.5 font-subhead text-sm text-brand-black truncate max-w-[200px]">
-                      {row.query}
-                    </td>
-                    <td className="px-4 py-2.5 text-right font-body text-sm text-charcoal-soft">
-                      {row.count}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

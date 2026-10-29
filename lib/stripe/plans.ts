@@ -30,9 +30,12 @@ export interface PlanMeta {
 // Every bullet below was traced to its gate or limit on 2026-10-03
 // (docs/blacqlist/design/plan-features-audit-2026-10.md). Free and Starter are
 // on sale, so each of their bullets must be something the code enforces today.
-// Growth and Premium are not for sale; their cards render no bullets until they
-// are (PricingPlans, UpgradePlans), and their lists hold only what we can
-// realistically build. No AI lines until a real model is on.
+// Growth goes on sale on its own, before Premium (founder, 2026-10-28, ticket
+// 143). Its list was cut to what works today: search terms, team members and
+// 1-day support came off until they are built and staffed. Premium is not for
+// sale; a card that cannot be bought renders no bullets (PricingPlans,
+// UpgradePlans), and Premium's list holds only what we can realistically build.
+// No AI lines until a real model is on.
 export const PLANS: PlanMeta[] = [
   {
     slug: 'free',
@@ -85,9 +88,6 @@ export const PLANS: PlanMeta[] = [
       'A storefront for up to 25 products and services',
       'Up to 3 events at a time',
       '1 job posting every 30 days',
-      'The search terms that found you, with 12 months of history',
-      'Up to 5 team members',
-      'Support replies within 1 business day',
     ],
     cta: 'Upgrade to Growth',
     highlighted: true,

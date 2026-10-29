@@ -9,6 +9,7 @@ import {
   checkVideoAdd,
   isSocialLinkType,
   socialLinksAllowed,
+  upgradeTarget,
 } from '@/lib/stripe/planChecks'
 
 // Ticket 119. Each check gets the same three cases: allowed, blocked, and the
@@ -186,7 +187,7 @@ describe('checkFaqAdd', () => {
     expect(checkFaqAdd('starter', 5)).toMatch(/up to 5 common questions/)
   })
 
-  it('never tells a paid page to upgrade (Growth and Premium are not for sale)', () => {
+  it('never tells a paid page to upgrade while Growth is not for sale', () => {
     expect(checkFaqAdd('starter', 5)).not.toMatch(/upgrade/i)
     expect(checkAttributeCount('starter', 11, 10)).not.toMatch(/upgrade/i)
     expect(checkPhotoAdd('growth', 25)).not.toMatch(/upgrade/i)
@@ -244,5 +245,47 @@ describe('checkPhotoAdd', () => {
 
   it('blocks adding when a Free listing already has more (grandfathered photos stay)', () => {
     expect(checkPhotoAdd('free', 4)).not.toBeNull()
+  })
+})
+
+// Ticket 143: Growth opens alone. A Starter page at a limit is offered Growth
+// only while Growth can be bought. Premium stays closed, so Growth never is.
+describe('the Growth offer', () => {
+  it('offers Growth to a Starter page at each count limit while Growth is open', () => {
+    expect(checkPhotoAdd('starter', 10, true)).toBe(
+      'Your plan includes 10 photos. Remove one, or upgrade to Growth for more.'
+    )
+    expect(checkVideoAdd('starter', 1, true)).toBe(
+      'Your plan includes 1 video. Remove one, or upgrade to Growth for more.'
+    )
+    expect(checkFaqAdd('starter', 5, true)).toMatch(/upgrade to Growth/)
+    expect(checkAttributeCount('starter', 11, 10, true)).toMatch(/upgrade to Growth/)
+  })
+
+  it('makes no offer while Growth is closed', () => {
+    expect(checkPhotoAdd('starter', 10, false)).toBe(
+      'Your plan includes 10 photos. Remove one to add another.'
+    )
+  })
+
+  it('never offers a plan to a Growth page, since Premium is not for sale', () => {
+    expect(checkVideoAdd('growth', 3, true)).toBe(
+      'Your plan includes up to 3 videos. Remove one to add another.'
+    )
+    expect(checkPhotoAdd('growth', 25, true)).not.toMatch(/upgrade/i)
+  })
+
+  it('leaves the Free messages alone, which already point at Starter', () => {
+    expect(checkPhotoAdd('free', 1, true)).toBe('Your plan includes 1 photo. Upgrade to add more.')
+    expect(checkFaqAdd('free', 0, true)).toMatch(/part of Starter/)
+  })
+
+  it('names the plan the limit notes link to', () => {
+    expect(upgradeTarget('free', false)).toBe('Starter')
+    expect(upgradeTarget(null, true)).toBe('Starter')
+    expect(upgradeTarget('starter', false)).toBeNull()
+    expect(upgradeTarget('starter', true)).toBe('Growth')
+    expect(upgradeTarget('growth', true)).toBeNull()
+    expect(upgradeTarget('premium', true)).toBeNull()
   })
 })

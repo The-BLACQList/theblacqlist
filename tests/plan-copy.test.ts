@@ -23,7 +23,6 @@ import {
   locationLimit,
   photoLimit,
   productLimit,
-  teamMemberLimit,
   videoLimit,
 } from '@/lib/stripe/features'
 
@@ -99,8 +98,8 @@ describe('Starter copy matches the Starter gates and limits', () => {
   })
 })
 
-// Growth and Premium are not for sale and their bullets do not render, but the
-// lists still have to be true for the day a tier opens.
+// Growth goes on sale on its own (ticket 143); Premium is not for sale and its
+// bullets do not render, but its list still has to be true for the day it opens.
 describe('Growth and Premium lists match their limits', () => {
   it('Growth', () => {
     const growth = getPlanMeta('growth').features
@@ -109,8 +108,17 @@ describe('Growth and Premium lists match their limits', () => {
     expect(productLimit('growth')).toBe(25)
     expect(eventLimit('growth')).toBe(3)
     expect(jobLimit('growth')).toBe(1)
-    expect(teamMemberLimit('growth')).toBe(5)
-    expect(growth).toContain('Up to 5 team members')
+  })
+
+  // Founder 2026-10-28 (ticket 143): these came off because nothing works
+  // behind them yet. Put a line back only with the feature that makes it true.
+  it('Growth does not promise search terms, team members or 1-day support', () => {
+    const growth = getPlanMeta('growth').features
+    expect(growth).toHaveLength(5)
+    const text = growth.join(' ').toLowerCase()
+    expect(text).not.toContain('search terms')
+    expect(text).not.toContain('team member')
+    expect(text).not.toContain('business day')
   })
 
   it('Premium', () => {

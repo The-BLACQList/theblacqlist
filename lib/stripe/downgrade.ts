@@ -110,9 +110,9 @@ const NOUNS: Record<Exclude<HiddenCount['kind'], 'description'>, [string, string
 }
 
 /**
- * One plain line per kind, for the owner. No upgrade promise here: Growth and
- * Premium are not for sale yet (D-M), so the notice says what is hidden and how
- * to choose what shows.
+ * One plain line per kind, for the owner: what is hidden and the plan's limit.
+ * The lines never promise an upgrade. The notice adds one Growth link under them
+ * when `offersGrowth` says so (ticket 143).
  */
 export function hiddenLine(h: HiddenCount): string {
   if (h.kind === 'description') {
@@ -128,6 +128,15 @@ export function hiddenLine(h: HiddenCount): string {
   }
   const cap = h.limit === 1 ? one : many
   return `${h.hidden} ${noun} ${verb} hidden on your page. Your plan shows up to ${h.limit} ${cap}.`
+}
+
+/**
+ * Whether the hidden-content notice links to Growth: only while Growth can be
+ * bought, and only for a page below it. Premium is not for sale, so a Growth
+ * page gets no link.
+ */
+export function offersGrowth(tier: string | null | undefined, growthOpen: boolean): boolean {
+  return growthOpen && rank(tier) < rank('growth')
 }
 
 export const HIDDEN_NOTICE_FOOTNOTE =

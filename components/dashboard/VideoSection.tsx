@@ -13,7 +13,7 @@ import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/P
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 import { VideoUploadField } from '@/components/dashboard/VideoUploadField'
 import { LISTING_VIDEO_BUCKET } from '@/lib/video/listingVideo'
-import { checkVideoAdd } from '@/lib/stripe/planChecks'
+import { checkVideoAdd, type UpgradeTarget } from '@/lib/stripe/planChecks'
 import { videoLimit } from '@/lib/stripe/features'
 import type { FinishVideo } from '@/lib/listings/finishData'
 
@@ -26,7 +26,8 @@ interface Props {
   hiddenIds: ReadonlySet<string>
   /** Public storage base, `${SUPABASE_URL}/storage/v1/object/public`. */
   storageUrl: string
-  showUpgrade: boolean
+  /** The plan the limit note offers (`upgradeTarget`), or null for no link. */
+  upgradeTo: UpgradeTarget
 }
 
 function intro(limit: number | null): string {
@@ -251,11 +252,11 @@ export function VideoSection({
   tier,
   hiddenIds,
   storageUrl,
-  showUpgrade,
+  upgradeTo,
 }: Props) {
   const live = useLivePage()
   const limit = videoLimit(tier)
-  const full = checkVideoAdd(tier, videos.length)
+  const full = checkVideoAdd(tier, videos.length, upgradeTo === 'Growth')
 
   return (
     <SectionShell limit={limit}>
@@ -276,7 +277,7 @@ export function VideoSection({
       )}
 
       {full ? (
-        <PlanLimitNote showUpgrade={showUpgrade}>{full}</PlanLimitNote>
+        <PlanLimitNote upgradeTo={upgradeTo}>{full}</PlanLimitNote>
       ) : (
         <>
           <VideoUploadField listingId={listingId} live={live} />

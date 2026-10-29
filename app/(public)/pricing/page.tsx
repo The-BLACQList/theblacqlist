@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
-import { getPlanAvailability, isPlanPurchasable } from '@/lib/stripe/availability'
+import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
 import { PLANS } from '@/lib/stripe/plans'
 import { PricingPlans } from './PricingPlans'
 import { LaunchWaitlist, type WaitlistOption } from '@/components/marketing/LaunchWaitlist'
@@ -20,16 +20,16 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Pricing | The BLACQList',
   description:
-    'Getting listed is free forever. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Growth and Premium are coming.',
+    'Getting listed is free forever. Paid plans add richer media, review responses, your analytics dashboard, and more. More plans are on the way.',
 }
 
-// COPY HONESTY: only Free and Starter are purchasable at launch. Growth and
-// Premium are described in the future tense everywhere on this page, and the
-// two add-ons carry no advertised price because neither has a purchase path
-// yet. The tier CARDS get their disabled/"Coming Soon" state from the live
-// `plans` table via lib/stripe/availability.ts — so withholding a tier is a
-// data change, and this file only has to make sure the prose around the cards
-// never promises what the cards won't sell.
+// COPY HONESTY: a tier is described as open only when the live `plans` table
+// can sell it. Free and Starter opened first; Growth opens on its own before
+// Premium (ticket 143). The prose below reads the same availability as the
+// cards (lib/stripe/availability.ts), so restoring Growth's price IDs flips the
+// FAQ, subtitle and waitlist text with no deploy, and a tier that is still
+// closed is always described in the future tense. The two add-ons carry no
+// advertised price because neither has a purchase path yet.
 
 // A withheld tier needs somewhere for the demand to go, or the page just says
 // no. `value` must match ALLOWED_SOURCES in
@@ -39,19 +39,33 @@ const WAITLIST_SOURCE: Record<string, string> = {
   premium: 'pricing-premium',
 }
 
-const FAQ_ITEMS = [
+function faqItems(growthOpen: boolean) {
+  return [
   {
     q: 'Is listing my business really free?',
     a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, a photo, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
   },
   {
     q: 'What does Starter add?',
-    a: 'Starter adds up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps. It is the paid plan available today.',
+    a: `Starter adds up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
   },
-  {
-    q: 'When are Growth and Premium available?',
-    a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
-  },
+  ...(growthOpen
+    ? [
+        {
+          q: 'What does Growth add?',
+          a: 'Growth adds up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days.',
+        },
+        {
+          q: 'When is Premium available?',
+          a: "Not yet. We'll share what's in Premium when it opens. We are not selling it until everything in it works. Join the waitlist and we will tell you the day it does.",
+        },
+      ]
+    : [
+        {
+          q: 'When are Growth and Premium available?',
+          a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
+        },
+      ]),
   {
     q: 'How does annual billing work?',
     a: 'Choose annual at checkout and you save about 20%, a little more than two months free. You can switch between monthly and annual anytime from your billing portal.',
@@ -72,11 +86,19 @@ const FAQ_ITEMS = [
     q: 'Do I need a credit card to get started?',
     a: 'No. The Free plan requires no payment information at all.',
   },
-]
+  ]
+}
+
+// "Growth, Premium, and the visibility add-ons" from whatever is still closed.
+function joinNames(names: string[]): string {
+  if (names.length <= 2) return names.join(' and ')
+  return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
+}
 
 export default async function PricingPage() {
   const supabase = await createClient()
   const availability = await getPlanAvailability(supabase)
+  const growthOpen = isTierOpen(availability, 'growth')
 
   // A tier earns a waitlist slot when neither cycle can be bought. Offering one
   // for a tier that is merely annual-only would send a buyer to a form instead
@@ -85,17 +107,16 @@ export default async function PricingPage() {
   const waitlistOptions: WaitlistOption[] = [
     ...PLANS.flatMap((p) => {
       const value = WAITLIST_SOURCE[p.slug]
-      if (
-        !value ||
-        isPlanPurchasable(availability, p.slug, 'monthly') ||
-        isPlanPurchasable(availability, p.slug, 'annual')
-      ) {
-        return []
-      }
+      if (!value || isTierOpen(availability, p.slug)) return []
       return [{ value, label: p.name }]
     }),
     { value: 'pricing-addons', label: 'Add-ons (Spotlight or Boost)' },
   ]
+  const closedTiers = waitlistOptions
+    .filter((o) => o.value !== 'pricing-addons')
+    .map((o) => o.label)
+  const stillBuilding = joinNames([...closedTiers, 'the visibility add-ons'])
+  const faq = faqItems(growthOpen)
 
   return (
     <>
@@ -103,7 +124,11 @@ export default async function PricingPage() {
       <Section variant="pale-lavender">
         <PageHeader
           title="BLACQList Pricing"
-          subtitle="Getting listed is always free. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way."
+          subtitle={
+            growthOpen
+              ? 'Getting listed is always free. Starter adds richer media, review responses, and your analytics dashboard. Growth adds a storefront, events, and job postings. Pay monthly or save about 20% with annual billing. Premium is on the way.'
+              : 'Getting listed is always free. Upgrade to Starter for a verified badge, richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.'
+          }
         />
       </Section>
 
@@ -118,7 +143,9 @@ export default async function PricingPage() {
 
       {/* Waitlist for anything not yet purchasable */}
       <Section variant="pale-lavender">
-        <SectionHeading subtitle="Growth, Premium, and the visibility add-ons are still being built. Tell us which one you want and we'll email you the day it opens — no charge until then.">
+        <SectionHeading
+          subtitle={`${stillBuilding} are still being built. Tell us which one you want and we'll email you the day it opens, with no charge until then.`}
+        >
           Waiting on something?
         </SectionHeading>
 
@@ -185,7 +212,7 @@ export default async function PricingPage() {
         </SectionHeading>
 
         <div className="mt-8 max-w-2xl divide-y divide-charcoal/10">
-          {FAQ_ITEMS.map((item) => (
+          {faq.map((item) => (
             <details key={item.q} className="group py-4">
               <summary className="flex cursor-pointer items-start justify-between gap-4 font-subhead font-semibold text-sm text-brand-black list-none">
                 <span>{item.q}</span>
@@ -230,7 +257,7 @@ export default async function PricingPage() {
 
       {/* Bottom CTA */}
       <Section variant="cream">
-        <SectionHeading subtitle="Every business starts with a free listing. No credit card required. Move up to Starter whenever you're ready.">
+        <SectionHeading subtitle="Every business starts with a free listing. No credit card required. Move up to a paid plan whenever you're ready.">
           Start Free. Grow at Your Pace.
         </SectionHeading>
         <div className="mt-6">

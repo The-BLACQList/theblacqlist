@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CreatedBanner } from '@/components/marketplace/CreatedBanner'
 import { HiddenContentNotice } from '@/components/dashboard/HiddenContentNotice'
 import { sellsPublicly } from '@/lib/marketplace/visibility'
+import { growthIsOpen } from '@/lib/marketplace/entitlements'
 import { STOREFRONT_HIDDEN_FOOTNOTE } from '@/lib/stripe/downgrade'
 
 export const metadata: Metadata = { title: 'Services | Dashboard' }
@@ -73,6 +74,8 @@ export default async function DashboardServicesPage({ searchParams }: Props) {
   }
 
   const hiddenCount = services.filter((x) => x.hidden).length
+  // Hidden items sit on pages below Growth, so Growth shows them again (ticket 143).
+  const offerGrowth = hiddenCount > 0 && (await growthIsOpen())
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -80,6 +83,7 @@ export default async function DashboardServicesPage({ searchParams }: Props) {
       <HiddenContentNotice
         counts={hiddenCount > 0 ? [{ kind: 'services', hidden: hiddenCount, limit: 0 }] : []}
         footnote={STOREFRONT_HIDDEN_FOOTNOTE}
+        offerGrowth={offerGrowth}
       />
 
       <div className="flex items-center justify-between">
