@@ -7,15 +7,18 @@ import {
   unpublishExpiredJobPostings,
   unpublishPastEvents,
 } from '@/lib/services/expiry/sweeps'
+import { stripe } from '@/lib/stripe/client'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendFreeMonthReminders } from '@/lib/tour/upgradeReminder'
 
 /**
  * =============================================================================
- * Daily expiry cron — the scheduled half of three time-based rules
+ * Daily expiry cron — the scheduled half of four time-based rules
  * =============================================================================
  *
- * The rules themselves live in `lib/services/expiry/sweeps.ts`, which is where
- * the tests are. This file is auth and plumbing on purpose.
+ * The rules themselves live in `lib/services/expiry/sweeps.ts` and, for the
+ * tester free-month reminder (ticket 136), `lib/tour/upgradeReminder.ts`.
+ * That is where the tests are. This file is auth and plumbing on purpose.
  *
  * ── Auth ────────────────────────────────────────────────────────────────────
  * The CRON_SECRET check is shared with the other cron routes and fails closed.
@@ -73,6 +76,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failures.push('pastEvents')
     results.pastEvents = { error: err instanceof Error ? err.message : 'unknown error' }
     console.error('[cron/expiry] past event sweep failed:', err)
+  }
+
+  // Not flag-gated: the free month outlives the tour (founder, 2026-10-10).
+  try {
+    results.freeMonthReminders = await sendFreeMonthReminders(supabase, stripe, now)
+  } catch (err) {
+    failures.push('freeMonthReminders')
+    results.freeMonthReminders = { error: err instanceof Error ? err.message : 'unknown error' }
+    console.error('[cron/expiry] free-month reminder sweep failed:', err)
   }
 
   return NextResponse.json(

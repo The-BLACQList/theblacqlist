@@ -3,9 +3,10 @@
 //
 // A tester clicked "Upgrade to Starter" right under a saved free month and
 // landed on a $19-today Stripe page (founder, 2026-10-11). The regular
-// checkout has no trial, and paying first would park the month until ticket
-// 136. So while the month is unclaimed and could land on the page the plan
-// cards act on, those cards point at the free month instead of charging.
+// checkout has no trial. So while the month is unclaimed and could land on the
+// page the plan cards act on, those cards point at the free month instead of
+// charging. That holds for a page that already pays too: the month goes on a
+// bigger plan for 30 days free (ticket 136).
 //
 // Kept apart from freeMonth.ts so the client plan cards can import the type
 // without pulling in the Stripe and Supabase server code.
@@ -26,10 +27,9 @@ export function freeMonthHold(
     case 'ready':
       return state.listingId === primaryListingId ? 'ready' : null
     case 'pick':
-      return state.pages.some((p) => p.listingId === primaryListingId && !p.paid) ? 'ready' : null
+      return state.pages.some((p) => p.listingId === primaryListingId) ? 'ready' : null
     default:
-      // 'used' and 'saved': the month is spent or already waiting on a paid
-      // plan, so the normal checkout stays.
+      // 'used': the month is spent, so the normal checkout stays.
       return null
   }
 }

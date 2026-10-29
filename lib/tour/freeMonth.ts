@@ -7,10 +7,9 @@
 //
 //   1. Only owner testers who finish the walk get it (completed_at is set and
 //      the enrollment has a listing, or is_owner is set).
-//   2. A tester already paying for Starter keeps the free month for a bigger
-//      plan later. Putting it on an existing subscription is ticket 136; until
-//      then the claim route refuses without spending the claim, and the card
-//      says it is saved.
+//   2. A tester already paying for a plan uses the free month on a bigger one:
+//      30 days of it free on their existing subscription, then back to the
+//      plan they had (ticket 136, founder 2026-10-20; lib/tour/upgrade.ts).
 //   3. The free month outlives the tour. Switching FEATURE_TESTER_TOUR off
 //      removes the rail, not the claim, so nothing here reads the flag.
 //
@@ -29,12 +28,16 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { stripe } from '@/lib/stripe/client'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import type { TourViewer } from '@/lib/tour/witness'
-import { isTesterTrialTier, TESTER_TRIAL_TIERS, type TesterTrialTier } from '@/lib/tour/trial'
+import {
+  isTesterTrialTier,
+  LIVE_STATUSES,
+  TESTER_TRIAL_TIERS,
+  type TesterTrialTier,
+} from '@/lib/tour/trial'
 import type { PlanSlug } from '@/lib/stripe/plans'
+import { isMarked, upgradeStatus, type UpgradeStatus } from '@/lib/tour/upgrade'
 
-// Statuses that still hold paid access (mirrors KEEPS_ACCESS in
-// lib/services/billing/webhookHandlers.ts).
-export const LIVE_STATUSES = ['active', 'trialing', 'past_due']
+export { LIVE_STATUSES }
 
 /**
  * The signed-in user's live enrollment, whatever FEATURE_TESTER_TOUR says.
@@ -125,7 +128,8 @@ export interface FreeMonthPage {
   listingId: string
   listingName: string | null
   currentTier: PlanSlug
-  /** Already on a live plan, so the month waits for an upgrade (ticket 136). */
+  /** Already on a live plan, so the month goes on a bigger plan for 30 days
+   *  and the page then goes back to the plan it has (ticket 136). */
   paid: boolean
 }
 
@@ -134,13 +138,15 @@ export type FreeMonthState =
       /** Ready to use. `openTier` is set when a checkout from an earlier
        *  click is still open, so that tier's button can say "Resume".
        *  `attach` is set when the enrollment has no listing yet, so the
-       *  claim must name this page. */
+       *  claim must name this page. `paying` is set when the page already
+       *  has a plan, so the month goes on top of it. */
       status: 'ready'
       listingId: string
       listingName: string | null
       currentTier: PlanSlug
       openTier: TesterTrialTier | null
       attach: boolean
+      paying: boolean
     }
   | {
       /** An owner with no published page yet. The month waits for one.
@@ -154,17 +160,11 @@ export type FreeMonthState =
       pages: FreeMonthPage[]
     }
   | {
-      /** The checkout went through; the month is in use or done. */
+      /** The checkout went through, or the month is on the existing plan;
+       *  either way it is in use or done. `upgrade` is set for the second. */
       status: 'used'
       tier: TesterTrialTier | null
-    }
-  | {
-      /** The listing already pays, so the month waits for an upgrade
-       *  (ticket 136). */
-      status: 'saved'
-      listingId: string
-      listingName: string | null
-      currentTier: PlanSlug
+      upgrade?: UpgradeStatus
     }
 
 /**
@@ -192,13 +192,31 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
     if (trialGrantedAt !== null) {
       const { data: row, error } = await service
         .from('tour_enrollments')
-        .select('stripe_checkout_session_id')
+        .select('stripe_checkout_session_id, stripe_subscription_schedule_id, upgrade_trial_ends_at')
         .eq('id', viewer.enrollment.id)
         .maybeSingle()
       if (error || !row) return null
-      const sessionId = (row as { stripe_checkout_session_id: string | null })
-        .stripe_checkout_session_id
-      if (sessionId !== null) {
+      const claim = row as {
+        stripe_checkout_session_id: string | null
+        stripe_subscription_schedule_id: string | null
+        upgrade_trial_ends_at: string | null
+      }
+      const sessionId = claim.stripe_checkout_session_id
+      if (claim.stripe_subscription_schedule_id !== null) {
+        // The month went on the existing plan. With the phases not yet set
+        // (an upgrade stopped partway) the card stays ready, and the button
+        // finishes it.
+        const schedule = await stripe.subscriptionSchedules.retrieve(
+          claim.stripe_subscription_schedule_id
+        )
+        if (isMarked(schedule)) {
+          const upgrade = upgradeStatus(schedule, Math.floor(Date.now() / 1000))
+          if (upgrade.endsAt === null && claim.upgrade_trial_ends_at !== null) {
+            upgrade.endsAt = Math.floor(new Date(claim.upgrade_trial_ends_at).getTime() / 1000)
+          }
+          return { status: 'used', tier: upgrade.tier, upgrade }
+        }
+      } else if (sessionId !== null) {
         const session = await stripe.checkout.sessions.retrieve(sessionId)
         const slug = session.metadata?.plan_slug
         const tier = isTesterTrialTier(slug) ? slug : null
@@ -222,10 +240,8 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
     const currentTier = (row?.tier ?? 'free') as PlanSlug
     const listingName = row?.name ?? null
 
-    if ((subs?.length ?? 0) > 0) {
-      return { status: 'saved', listingId, listingName, currentTier }
-    }
-    return { status: 'ready', listingId, listingName, currentTier, openTier, attach: false }
+    const paying = (subs?.length ?? 0) > 0
+    return { status: 'ready', listingId, listingName, currentTier, openTier, attach: false, paying }
   } catch {
     return null
   }
@@ -278,14 +294,6 @@ async function findOwnerPages(userId: string): Promise<FreeMonthState | null> {
     if (pages.length > 1) return { status: 'pick', pages }
     const page = pages[0]
     if (!page) return { status: 'waiting', hasPage: true }
-    if (page.paid) {
-      return {
-        status: 'saved',
-        listingId: page.listingId,
-        listingName: page.listingName,
-        currentTier: page.currentTier,
-      }
-    }
     return {
       status: 'ready',
       listingId: page.listingId,
@@ -293,6 +301,7 @@ async function findOwnerPages(userId: string): Promise<FreeMonthState | null> {
       currentTier: page.currentTier,
       openTier: null,
       attach: true,
+      paying: page.paid,
     }
   } catch {
     return null

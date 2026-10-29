@@ -3,6 +3,8 @@ import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availabil
 import { getPlanMeta } from '@/lib/stripe/plans'
 import { freeMonthTiers, type FreeMonthState } from '@/lib/tour/freeMonth'
 import type { TesterTrialTier } from '@/lib/tour/trial'
+import { formatFreeMonthEnd, type UpgradeStatus } from '@/lib/tour/upgrade'
+import { EndFreeMonthButton } from './EndFreeMonthButton'
 import { FreeMonthPagePicker, type PickablePage } from './FreeMonthPagePicker'
 
 // The tester's free month (founder, 2026-10-10): one month free on any paid
@@ -12,6 +14,10 @@ import { FreeMonthPagePicker, type PickablePage } from './FreeMonthPagePicker'
 // An owner who got their link before they had a page (2026-10-11) sees it
 // wait until a page of theirs is live, then picks the page if they own more
 // than one.
+//
+// A tester whose page already pays gets the month on a bigger plan: 30 days
+// of it free, then back to the plan they had (ticket 136). While the month
+// runs, the card says when it ends and lets them end the plan then instead.
 
 interface Props {
   state: FreeMonthState
@@ -38,6 +44,7 @@ export function FreeMonthCard({ state, availability, primaryListingId }: Props) 
 
 function Body({ state, availability, primaryListingId }: Props) {
   if (state.status === 'used') {
+    if (state.upgrade?.running) return <UpgradeRunning upgrade={state.upgrade} />
     return (
       <p className="mt-1 font-body text-sm text-charcoal-soft">
         {state.tier
@@ -66,7 +73,8 @@ function Body({ state, availability, primaryListingId }: Props) {
       <>
         <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
           Thanks for testing. You get one month free on any plan, on one of your pages. Pick the
-          page first. It doesn’t expire, and you don’t need a card to start.
+          page first. It doesn’t expire, and you don’t need a card to start. On a page that already
+          has a plan, you get 30 days of a bigger plan free, then it goes back to the plan it has.
         </p>
         <FreeMonthPagePicker pages={pages} />
       </>
@@ -76,23 +84,25 @@ function Body({ state, availability, primaryListingId }: Props) {
   const forListing =
     state.listingName && state.listingId !== primaryListingId ? ` for ${state.listingName}` : ''
 
-  if (state.status === 'saved') {
-    return (
-      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
-        {`Thanks for testing. You have one month free${forListing}. Your listing already has a paid plan, so we’re saving it for an upgrade. It will be ready when Growth and Premium open.`}
-      </p>
-    )
-  }
-
   const tiers = freeMonthTiers(state.currentTier)
   // Only set for an owner whose enrollment has no page yet: the claim names it.
   const attachTo = state.attach ? state.listingId : undefined
 
+  if (state.paying && tiers.length === 0) {
+    return (
+      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
+        {`Thanks for testing. You have one month free${forListing}, and you’re already on our top plan. If you’d like it on a different page, write to support@theblacqlist.com.`}
+      </p>
+    )
+  }
+
+  const intro = state.paying
+    ? `Thanks for testing. You get 30 days free${forListing} on a bigger plan. Your ${getPlanMeta(state.currentTier).name} billing pauses for those 30 days, then you go back to ${getPlanMeta(state.currentTier).name} at $${getPlanMeta(state.currentTier).price_monthly}/month. Use it now, or save it until the plan you want opens.`
+    : `Thanks for testing. You get one month free${forListing} on any plan. Use it now, or save it until the plan you want opens. It doesn’t expire, and you don’t need a card to start.`
+
   return (
     <>
-      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
-        {`Thanks for testing. You get one month free${forListing} on any plan. Use it now, or save it until the plan you want opens. It doesn’t expire, and you don’t need a card to start.`}
-      </p>
+      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">{intro}</p>
       <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {tiers.map((tier) => {
           const name = getPlanMeta(tier).name
@@ -107,6 +117,7 @@ function Body({ state, availability, primaryListingId }: Props) {
                 <ClaimTrialButton
                   plan={tier}
                   label={state.openTier === tier ? 'Resume checkout' : `Use it on ${name}`}
+                  pendingLabel={state.paying ? 'Starting your free month…' : undefined}
                   listingId={attachTo}
                 />
               ) : (
@@ -118,6 +129,27 @@ function Body({ state, availability, primaryListingId }: Props) {
           )
         })}
       </ul>
+    </>
+  )
+}
+
+/** The month is on the page's existing plan and still running. */
+function UpgradeRunning({ upgrade }: { upgrade: UpgradeStatus }) {
+  const name = upgrade.tier ? getPlanMeta(upgrade.tier).name : 'your free'
+  const back = upgrade.returnTier ? getPlanMeta(upgrade.returnTier) : null
+  const date = upgrade.endsAt === null ? null : formatFreeMonthEnd(upgrade.endsAt)
+  const ends = date ? ` until ${date}` : ''
+  const after = upgrade.cancelling
+    ? `Your plan ends ${date ? `on ${date}` : 'when the free month ends'}. You won’t be charged.`
+    : back
+      ? `${date ? `On ${date}` : 'After that'} you go back to ${back.name} at $${back.price_monthly}/month. Nothing to do if that’s what you want.`
+      : 'After that you go back to the plan you had.'
+  return (
+    <>
+      <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
+        {`You’re on ${name} free${ends}. ${after}`}
+      </p>
+      <EndFreeMonthButton cancelling={upgrade.cancelling} returnTierName={back?.name ?? null} />
     </>
   )
 }
