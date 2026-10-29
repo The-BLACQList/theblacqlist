@@ -1,11 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { PLANS, annualSavingsPct, type BillingCycle, type PlanSlug } from '@/lib/stripe/plans'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
+import { renewalLine } from '@/lib/stripe/renewal'
+import { TERMS_PAID_PLANS } from '@/lib/legal/policyUpdate'
 import type { FreeMonthHold } from '@/lib/tour/freeMonthHold'
 import { CheckoutButton } from './CheckoutButton'
 import { ManageSubscriptionButton } from './ManageSubscriptionButton'
@@ -143,13 +146,23 @@ export function UpgradePlans({
                   Your first month is free. It will be ready once your page is live.
                 </p>
               ) : isPurchasable ? (
-                <CheckoutButton
-                  planSlug={plan.slug}
-                  listingId={primaryListingId}
-                  label={plan.cta}
-                  highlighted={plan.highlighted}
-                  billingCycle={cycle}
-                />
+                <div className="flex flex-col gap-2">
+                  {/* Ticket 144: the renewal terms sit above the button, never
+                      behind a link, and match the cycle the toggle shows. */}
+                  <p className="font-subhead text-xs text-charcoal-soft">
+                    {renewalLine(plan.slug, cycle)}{' '}
+                    <Link href={`/terms#${TERMS_PAID_PLANS.anchor}`} className="underline underline-offset-2 hover:text-brand-black">
+                      See our Terms.
+                    </Link>
+                  </p>
+                  <CheckoutButton
+                    planSlug={plan.slug}
+                    listingId={primaryListingId}
+                    label={plan.cta}
+                    highlighted={plan.highlighted}
+                    billingCycle={cycle}
+                  />
+                </div>
               ) : isUpgrade ? (
                 <button
                   disabled

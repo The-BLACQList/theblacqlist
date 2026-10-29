@@ -50,3 +50,13 @@ export function nextVersionSubtitle(now: Date = new Date()): string {
  * it can be.
  */
 export const POLICY_PAGE_REVALIDATE_SECONDS = 3600
+
+/**
+ * Terms section 13, "Paid Plans and Billing" (ticket 144). The founder posted
+ * it effective on posting, 2026-10-29, so it doesn't use the dated switch above.
+ * Change this label if the Terms page goes live on a later day.
+ */
+export const TERMS_PAID_PLANS = {
+  postedOnLabel: 'October 29, 2026',
+  anchor: 'paid-plans',
+} as const

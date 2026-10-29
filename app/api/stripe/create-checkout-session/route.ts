@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/client'
 import type { BillingCycle } from '@/lib/stripe/plans'
 import { checkRateLimit } from '@/lib/security/rate-limit'
+import { checkoutTermsConsentOn, renewalLine } from '@/lib/stripe/renewal'
 import { z } from 'zod'
 
 const checkoutBodySchema = z
@@ -155,16 +156,26 @@ export async function POST(request: Request) {
     billing_cycle: billingCycle,
   }
 
+  // Ticket 144: repeat the renewal line next to Stripe's pay button, and ask
+  // for Terms consent when that is switched on for this Stripe account.
+  const renewal = renewalLine(planSlug, billingCycle)
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       // Do NOT set payment_method_types — let Stripe choose eligible methods dynamically.
       line_items: [{ price: priceId, quantity: 1 }],
       ...(customerId ? { customer: customerId } : { customer_email: user.email }),
-      success_url: `${baseUrl}/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
+      // renews=1 tells the success page to confirm the renewal terms. The
+      // tester free month shares that page and does not renew, so it omits it.
+      success_url: `${baseUrl}/dashboard/upgrade/success?session_id={CHECKOUT_SESSION_ID}&renews=1`,
       cancel_url: `${baseUrl}/dashboard/upgrade`,
       metadata,
       subscription_data: { metadata },
+      ...(renewal ? { custom_text: { submit: { message: renewal } } } : {}),
+      ...(checkoutTermsConsentOn()
+        ? { consent_collection: { terms_of_service: 'required' as const } }
+        : {}),
     })
 
     return NextResponse.json({ url: session.url })
