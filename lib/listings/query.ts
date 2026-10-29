@@ -41,6 +41,8 @@ export interface ListingsParams {
   page?: number
   /** When true, also load attribute groups + facet counts for the sidebar. */
   withFacets?: boolean
+  /** When true, never add paid slots (the AI assistant, which shows organic results only). */
+  noSponsored?: boolean
 }
 
 export interface ListingsResult {
@@ -310,7 +312,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // answer is not a placement, it is a wrong answer (the "photographer" search
   // that opened on a featured restaurant). So sponsored placements show when
   // browsing only. [Decision — founder, 2026-09-24] "Relevance first."
-  const injectSponsored = page === 1 && !deepFilter && !resolved.p_q
+  const injectSponsored = page === 1 && !deepFilter && !resolved.p_q && !params.noSponsored
 
   // Build the sponsored query (page 1, no deep filter, no keyword) so it runs in parallel.
   let spQueryPromise: Promise<{ data: unknown[] | null }> | null = null

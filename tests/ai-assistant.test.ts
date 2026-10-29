@@ -26,6 +26,8 @@ const h = vi.hoisted(() => ({
   insertFails: false,
   rateCalls: [] as Array<Record<string, unknown>>,
   queryCalls: [] as Array<Record<string, unknown>>,
+  /** Category rows with live slugs, added for the close-kinds tests. */
+  extraCategories: [] as Array<{ id: string; name: string; slug: string; parent_id: string | null }>,
   /** What a search returns. Defaults to nothing. */
   search: (_params: Record<string, unknown>): Array<Record<string, unknown>> => [],
   lookupPlace: vi.fn(),
@@ -96,6 +98,8 @@ const CATEGORY_ROWS = [
   { id: 'c-beauty', name: 'Beauty & Grooming', slug: 'beauty-grooming', parent_id: null },
   { id: 'c-barber', name: 'Barbershops', slug: 'barbershops', parent_id: 'c-beauty' },
 ]
+/** The fake food subcategories the live-slug rows replace (Soul Food stays). */
+const FAKE_FOOD = new Set(['c-thai', 'c-cater', 'c-bake'])
 const CITY_ROWS = [
   { id: 'ci-det', name: 'Detroit', slug: 'detroit', is_active: true, latitude: 42.3314, longitude: -83.0458, states: { code: 'MI' } },
   { id: 'ci-atl', name: 'Atlanta', slug: 'atlanta', is_active: true, latitude: 33.749, longitude: -84.388, states: { code: 'GA' } },
@@ -106,7 +110,12 @@ const CITY_ROWS = [
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     from: (table: string) => {
-      const rows = table === 'categories' ? CATEGORY_ROWS : CITY_ROWS
+      const rows =
+        table !== 'categories'
+          ? CITY_ROWS
+          : h.extraCategories.length > 0
+            ? [...CATEGORY_ROWS.filter((c) => !FAKE_FOOD.has(c.id)), ...h.extraCategories]
+            : CATEGORY_ROWS
       const done = { data: rows, error: null }
       const builder = {
         select: () => (table === 'cities' ? Promise.resolve(done) : builder),
@@ -142,6 +151,10 @@ import {
   buildAssistantSummary,
   buildHeading,
   checkNeedName,
+  CLOSE_KINDS,
+  closeKindsFor,
+  joinKinds,
+  NO_LOCATION_NOTICE,
   mockAssistantAnswer,
   nearestCities,
   rankTop,
@@ -157,6 +170,16 @@ import { ASSISTANT_AGENT } from '@/lib/ai/agents'
 import { SYSTEM_PROMPT, ProviderCallError } from '@/lib/ai/anthropic'
 import { monthlyCallBudget } from '@/lib/ai/spend'
 import { askAssistant } from '@/lib/actions/ai/assistant'
+
+/** Food subcategories with their live slugs, so CLOSE_KINDS applies. They stand in for the fake ones. */
+const LIVE_FOOD = [
+  { id: 'c-rest', name: 'Restaurants', slug: 'restaurants', parent_id: 'c-food' },
+  { id: 'c-bps', name: 'Bakeries & Pastry Shops', slug: 'bakeries-pastry-shops', parent_id: 'c-food' },
+  { id: 'c-cafe', name: 'Cafes & Coffee', slug: 'cafes-coffee', parent_id: 'c-food' },
+  { id: 'c-cef', name: 'Catering', slug: 'catering-events-food', parent_id: 'c-food' },
+  { id: 'c-groc', name: 'Grocery & Markets', slug: 'grocery-markets', parent_id: 'c-food' },
+  { id: 'c-truck', name: 'Food Trucks', slug: 'food-trucks', parent_id: 'c-food' },
+]
 
 const ALLOW: AssistantAllowList = {
   categories: CATEGORY_ROWS.map((c) => ({ id: c.id, slug: c.slug, name: c.name, parentId: c.parent_id })),
@@ -343,7 +366,61 @@ describe('wording', () => {
   })
 })
 
+describe('close kinds', () => {
+  it('lists at most two close kinds per kind, never the kind itself', () => {
+    for (const [slug, close] of Object.entries(CLOSE_KINDS)) {
+      expect(close.length, slug).toBeLessThanOrEqual(2)
+      expect(close, slug).not.toContain(slug)
+    }
+  })
+
+  it('never offers a grocery store for a bakery, or a whole group for anything', () => {
+    expect(CLOSE_KINDS['bakeries-pastry-shops']).not.toContain('grocery-markets')
+    const parents = new Set(CATEGORY_ROWS.filter((c) => !c.parent_id).map((c) => c.slug))
+    for (const close of Object.values(CLOSE_KINDS)) for (const slug of close) expect(parents.has(slug), slug).toBe(false)
+  })
+
+  it('finds close kinds only for a subcategory, and only ones we have', () => {
+    const cats = [...CATEGORY_ROWS, ...LIVE_FOOD].map((c) => ({ id: c.id, slug: c.slug, name: c.name, parentId: c.parent_id }))
+    const bakery = cats.find((c) => c.slug === 'bakeries-pastry-shops')!
+    expect(closeKindsFor(bakery, cats).map((c) => c.slug)).toEqual(['cafes-coffee', 'catering-events-food'])
+    expect(closeKindsFor(cats.find((c) => c.slug === 'food-dining')!, cats)).toEqual([])
+    expect(closeKindsFor(null, cats)).toEqual([])
+    // cafes-coffee lists juice-bars-smoothies, which this list does not have.
+    expect(closeKindsFor(cats.find((c) => c.slug === 'cafes-coffee')!, cats).map((c) => c.slug)).toEqual(['bakeries-pastry-shops'])
+    expect(joinKinds(['Cafes & Coffee', 'Catering', 'Extra'])).toBe('Cafes & Coffee and Catering')
+  })
+})
+
 describe('mock planner', () => {
+  it('maps a party to the live slugs, not their near misses', () => {
+    const live: AssistantAllowList = {
+      categories: [
+        ['c-f', 'food-dining', null],
+        ['c-cb', 'catering-bar-service', 'c-f'],
+        ['c-ce', 'catering-events-food', 'c-f'],
+        ['c-b', 'bakeries-pastry-shops', 'c-f'],
+        ['c-e', 'events-entertainment', null],
+        ['c-dj', 'djs-live-music', 'c-e'],
+        ['c-v', 'venue-rental', 'c-e'],
+        ['c-bf', 'balloon-floral-design', 'c-e'],
+        ['c-p', 'photography-videography', null],
+        ['c-cp', 'commercial-photography', 'c-p'],
+        ['c-ep', 'event-photography', 'c-p'],
+      ].map(([id, slug, parentId]) => ({ id: id!, slug: slug!, name: slug!, parentId: parentId ?? null })),
+      cities: [{ slug: 'detroit', name: 'Detroit' }],
+    }
+    const answer = JSON.parse(mockAssistantAnswer('plan a party in Detroit', [], live))
+    expect(answer.needs.map((n: Row) => n.category)).toEqual([
+      'catering-events-food',
+      'djs-live-music',
+      'venue-rental',
+      'bakeries-pastry-shops',
+      'event-photography',
+      'balloon-floral-design',
+    ])
+  })
+
   it('turns a party into the usual needs and finds the city', () => {
     const answer = JSON.parse(mockAssistantAnswer('plan a party in Detroit with all Black-owned vendors', [], ALLOW))
     expect(answer.city).toBe('detroit')
@@ -377,6 +454,7 @@ describe('askAssistant', () => {
     h.insertFails = false
     h.rateCalls.length = 0
     h.queryCalls.length = 0
+    h.extraCategories = []
     h.search = () => []
     h.lookupPlace.mockReset()
     h.lookupPlace.mockResolvedValue({ place: null, cacheable: true })
@@ -478,33 +556,37 @@ describe('askAssistant', () => {
   })
 
   it('walks the ladder: found, then a close kind here, then the nearest city, then not listed', async () => {
+    h.extraCategories = LIVE_FOOD
     modelSays({
       city: 'detroit',
       needs: [
         { name: 'Soul food', category: 'soul-food' },
-        { name: 'Thai', category: 'thai' },
+        { name: 'Thai', category: 'restaurants', keywords: ['thai'] },
         { name: 'Barber', category: 'barbershops' },
         { name: 'Balloon decor', category: null, keywords: ['balloon'] },
       ],
     })
     h.search = (p) => {
       if (p.category === 'soul-food' && p.city === 'detroit') return [ENTITY('soul')]
-      if (p.category === 'food-dining' && p.city === 'detroit') return [ENTITY('food1'), ENTITY('food2')]
+      if (p.category === 'food-trucks' && p.city === 'detroit') return [ENTITY('truck1'), ENTITY('truck2')]
       if (p.category === 'barbershops' && p.city === 'chicago') return [ENTITY('chi-barber', { city: { name: 'Chicago', slug: 'chicago', state_abbr: 'IL' } })]
       return []
     }
     const res = answerOf(await askAssistant({ message: 'soul food, thai, a barber and balloon decor in detroit' }))
     expect(res.needs.map((n) => [n.name, n.status, n.line])).toEqual([
       ['Soul food', 'found', '1 in Detroit'],
-      ['Thai', 'close', 'No Thai in Detroit yet. Close to it: Food & Dining (2)'],
+      ['Thai', 'close', 'No Thai in Detroit yet. Close to it: Food Trucks (2)'],
       ['Barber', 'nearest', 'Not in Detroit yet. Nearest we list: Chicago (1)'],
       ['Balloon decor', 'none', 'Not on The BLACQList yet.'],
     ])
+    expect(res.needs[1]!.seeAllHref).toBe('/discover?category=food-trucks&city=detroit')
     expect(res.needs[2]!.seeAllHref).toBe('/discover?category=barbershops&city=chicago')
     expect(res.needs[3]).toMatchObject({ total: 0, top: [], seeAllHref: null })
     expect(res.summary).toBe('Found 1 of 4 needs, 2 with a close option, 1 not listed.')
     // Never the city it was asked about, in the nearest step.
     expect(needCalls().filter((c) => c.category === 'barbershops').map((c) => c.city)).toEqual(['detroit', 'chicago', 'atlanta'])
+    // Never the whole food group as a close option.
+    expect(needCalls().some((c) => c.category === 'food-dining')).toBe(false)
   })
 
   it('is honest about a place we do not cover and offers the nearest city we do', async () => {
@@ -519,7 +601,8 @@ describe('askAssistant', () => {
     expect(h.lookupPlace.mock.calls[0]![0]).toBe('Alaska')
   })
 
-  it('calls the whole category a close option, not the thing, when the keywords find nothing', async () => {
+  it('narrows a top-level category to the subcategory that fits before calling it close', async () => {
+    h.extraCategories = LIVE_FOOD
     modelSays({
       city: 'detroit',
       needs: [
@@ -528,27 +611,92 @@ describe('askAssistant', () => {
       ],
     })
     h.search = (p) => {
-      if (p.category !== 'food-dining' || p.city !== 'detroit') return []
-      if (p.q === 'soul') return [ENTITY('soul')]
-      return p.q ? [] : [ENTITY('food1'), ENTITY('food2')]
+      if (p.city !== 'detroit') return []
+      if (p.category === 'food-dining' && p.q === 'soul') return [ENTITY('soul')]
+      if (p.category === 'catering-events-food' && !p.q) return [ENTITY('cater1'), ENTITY('cater2')]
+      if (p.category === 'food-dining' && !p.q) return [ENTITY('food1'), ENTITY('food2'), ENTITY('food3')]
+      return []
     }
     const res = answerOf(await askAssistant({ message: 'catering and soul food in detroit' }))
     expect(res.needs.map((n) => [n.name, n.status, n.line, n.seeAllHref])).toEqual([
-      ['Catering', 'close', 'No Catering in Detroit yet. Close to it: Food & Dining (2)', '/discover?category=food-dining&city=detroit'],
+      ['Catering', 'close', 'No Catering in Detroit yet. Close to it: Catering (2)', '/discover?category=catering-events-food&city=detroit'],
       ['Soul food', 'found', '1 in Detroit', '/search?q=soul&category=food-dining&city=detroit'],
     ])
+    expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
 
-  it('says the nearest city has the kind, not the thing, when only the category matches there', async () => {
+  it('offers a bakery or a cafe for a cake, never a grocery store', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Birthday cake', category: 'food-dining', keywords: ['cake'] }] })
+    h.search = (p) => {
+      if (p.city !== 'detroit' || p.q) return []
+      if (p.category === 'cafes-coffee') return [ENTITY('cafe1')]
+      if (p.category === 'grocery-markets') return [ENTITY('groc1'), ENTITY('groc2')]
+      if (p.category === 'food-dining') return [ENTITY('groc1'), ENTITY('cafe1')]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'a birthday cake in detroit' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'close',
+      line: 'No Birthday cake in Detroit yet. Close to it: Cafes & Coffee (1)',
+      seeAllHref: '/discover?category=cafes-coffee&city=detroit',
+    })
+    expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['cafe1'])
+    const asked = needCalls().map((c) => c.category)
+    expect(asked).toContain('bakeries-pastry-shops')
+    expect(asked).not.toContain('grocery-markets')
+    expect(asked.filter((c) => c === 'food-dining')).toHaveLength(1) // only the first, keyword search
+  })
+
+  it('names both close kinds and adds their counts when both have listings', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Cake', category: 'bakeries-pastry-shops', keywords: ['cake'] }] })
+    h.search = (p) => {
+      if (p.city !== 'detroit' || p.q) return []
+      if (p.category === 'cafes-coffee') return [ENTITY('cafe1')]
+      if (p.category === 'catering-events-food') return [ENTITY('cater1'), ENTITY('cater2')]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'cake in detroit' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'close',
+      line: 'No Cake in Detroit yet. Close to it: Cafes & Coffee and Catering (3)',
+      total: 3,
+      seeAllHref: '/discover?category=cafes-coffee&city=detroit',
+    })
+  })
+
+  it('skips the close step for a kind with no close kinds listed and goes to the nearest city', async () => {
+    modelSays({ city: 'detroit', needs: [{ name: 'Thai', category: 'thai' }] })
+    h.search = (p) => {
+      if (p.category === 'thai' && p.city === 'chicago') return [ENTITY('chi-thai')]
+      if (p.category === 'food-dining') return [ENTITY('food1')]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'thai in detroit' }))
+    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Detroit yet. Nearest we list: Chicago (1)' })
+    expect(needCalls().some((c) => c.category === 'food-dining')).toBe(false)
+  })
+
+  it('says the nearest city has the kind, not the thing, when only the kind matches there', async () => {
+    h.extraCategories = LIVE_FOOD
     modelSays({ city: null, place: null, needs: [{ name: 'Thai restaurant', category: 'food-dining', keywords: ['thai'] }] })
     h.lookupPlace.mockResolvedValue({ place: { label: 'Alaska', lat: 61.2, lng: -149.9, zoom: 4 }, cacheable: true })
-    h.search = (p) => (p.category === 'food-dining' && p.city === 'chicago' && !p.q ? [ENTITY('chi-food')] : [])
+    h.search = (p) => (p.category === 'restaurants' && p.city === 'chicago' && !p.q ? [ENTITY('chi-food')] : [])
     const res = answerOf(await askAssistant({ message: 'Black-owned Thai restaurant in Alaska' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
-      line: 'No Thai restaurant in Alaska yet. Close to it in Chicago: Food & Dining (1)',
-      seeAllHref: '/discover?category=food-dining&city=chicago',
+      line: 'No Thai restaurant in Alaska yet. Close to it in Chicago: Restaurants (1)',
+      seeAllHref: '/discover?category=restaurants&city=chicago',
     })
+    expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
+  })
+
+  it('never asks search for paid slots', async () => {
+    modelSays({ city: 'detroit', needs: [{ name: 'Soul food', category: 'soul-food' }] })
+    await askAssistant({ message: 'soul food in detroit' })
+    expect(needCalls().length).toBeGreaterThan(0)
+    expect(needCalls().every((c) => c.noSponsored === true)).toBe(true)
   })
 
   it('offers listings elsewhere when the place cannot be put on a map', async () => {
@@ -609,6 +757,16 @@ describe('askAssistant', () => {
     expect(res.heading).toBe('Barber near you')
     expect(res.needs[0]!.line).toBe('1 near you')
     expect(JSON.stringify([h.inserts, h.updates])).not.toContain('33.7')
+  })
+
+  it('says the answer covers every city when "near me" comes with no location', async () => {
+    modelSays({ city: null, needs: [{ name: 'Barber', category: 'barbershops' }] })
+    h.search = (p) => (p.category === 'barbershops' ? [ENTITY('b1')] : [])
+    const res = answerOf(await askAssistant({ message: 'barber near me', near: null }))
+    expect(res.notice).toBe(NO_LOCATION_NOTICE)
+    expect(needCalls()[0]).not.toHaveProperty('lat')
+    const plain = answerOf(await askAssistant({ message: 'barber', near: null }))
+    expect(plain.notice).toBeNull()
   })
 
   it('answers "near me" alone with no model call and no audit row', async () => {

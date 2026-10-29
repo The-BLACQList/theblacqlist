@@ -417,6 +417,153 @@ export function nearestCities<T extends PointCity>(
     .map((r) => r.c)
 }
 
+// ─── Close kinds ─────────────────────────────────────────────────────────────
+
+/**
+ * For a kind of business we have nothing of in a place, the kinds that are
+ * honestly close to it: a café for a bakery, never a grocery store for a cake.
+ * Hand-picked, by subcategory slug. A kind not listed here gets no close
+ * option, and the assistant goes on to the nearest city. A whole top-level
+ * category is never offered as close.
+ */
+export const CLOSE_KINDS: Readonly<Record<string, readonly string[]>> = {
+  // Food & Dining
+  restaurants: ['food-trucks', 'catering-events-food'],
+  'bakeries-pastry-shops': ['cafes-coffee', 'catering-events-food'],
+  'cafes-coffee': ['bakeries-pastry-shops', 'juice-bars-smoothies'],
+  'bars-lounges': ['restaurants'],
+  'catering-events-food': ['catering-bar-service', 'meal-prep-delivery'],
+  'meal-prep-delivery': ['catering-events-food'],
+  'food-trucks': ['restaurants', 'catering-events-food'],
+  'juice-bars-smoothies': ['cafes-coffee'],
+  'grocery-markets': ['farms-farm-stands', 'organic-natural-products'],
+  // Beauty & Grooming
+  'hair-salons': ['locs-natural-hair', 'braiding-extensions'],
+  'barber-shops': ['mens-grooming', 'hair-salons'],
+  'nail-salons-spas': ['estheticians-skincare'],
+  'locs-natural-hair': ['braiding-extensions', 'hair-salons'],
+  'braiding-extensions': ['locs-natural-hair', 'hair-salons'],
+  'estheticians-skincare': ['nail-salons-spas', 'makeup-artists'],
+  'makeup-artists': ['estheticians-skincare'],
+  'mens-grooming': ['barber-shops'],
+  // Wellness & Health, Healthcare
+  'fitness-studios': ['personal-trainers', 'yoga-pilates'],
+  'personal-trainers': ['fitness-studios'],
+  'yoga-pilates': ['fitness-studios'],
+  'mental-health-therapy': ['mental-behavioral-health', 'family-counseling'],
+  'mental-behavioral-health': ['mental-health-therapy'],
+  'massage-therapy': ['chiropractic-physical-therapy', 'holistic-integrative-health'],
+  'nutritionists-dietitians': ['holistic-integrative-health'],
+  'holistic-integrative-health': ['nutritionists-dietitians', 'massage-therapy'],
+  'chiropractic-physical-therapy': ['massage-therapy'],
+  'primary-care-physicians': ['urgent-care', 'telehealth-services'],
+  'urgent-care': ['primary-care-physicians'],
+  // Fashion & Apparel
+  'clothing-boutiques': ['streetwear-urban-fashion', 'secondhand-vintage'],
+  'shoe-stores': ['clothing-boutiques'],
+  'accessories-jewelry': ['clothing-boutiques', 'handmade-artisan-goods'],
+  'formal-occasion-wear': ['clothing-boutiques', 'tailoring-alterations'],
+  'streetwear-urban-fashion': ['clothing-boutiques'],
+  'swimwear-activewear': ['clothing-boutiques'],
+  'tailoring-alterations': ['formal-occasion-wear'],
+  'secondhand-vintage': ['clothing-boutiques'],
+  // Events & Entertainment
+  'event-planning': ['venue-rental', 'balloon-floral-design'],
+  'djs-live-music': ['entertainment-booking'],
+  'entertainment-booking': ['djs-live-music'],
+  'photo-video-booths': ['event-photography'],
+  'catering-bar-service': ['catering-events-food'],
+  'venue-rental': ['event-planning'],
+  'party-supplies-rentals': ['balloon-floral-design'],
+  'balloon-floral-design': ['party-supplies-rentals'],
+  // Photos, video and design
+  photography: ['portrait-photography', 'event-photography'],
+  'portrait-photography': ['photography', 'family-photography'],
+  'wedding-photography': ['event-photography', 'photography'],
+  'event-photography': ['photography', 'photo-video-booths'],
+  'family-photography': ['portrait-photography'],
+  'videography-film': ['content-creation-reels'],
+  'graphic-design': ['branding-marketing', 'web-app-design'],
+  'branding-marketing': ['brand-strategy', 'graphic-design'],
+  'web-app-design': ['graphic-design'],
+  // Home, trades
+  'interior-design': ['furniture-decor', 'organizing-staging'],
+  'furniture-decor': ['interior-design'],
+  'cleaning-services': ['organizing-staging'],
+  'organizing-staging': ['cleaning-services', 'interior-design'],
+  'moving-storage': ['organizing-staging'],
+  'home-repair-renovation': ['general-contractors', 'carpentry-woodworking'],
+  'general-contractors': ['home-repair-renovation'],
+  electricians: ['smart-home-installation'],
+  plumbing: ['home-repair-renovation'],
+  hvac: ['home-repair-renovation'],
+  'painting-finishing': ['home-repair-renovation'],
+  'flooring-tile': ['home-repair-renovation'],
+  'carpentry-woodworking': ['home-repair-renovation'],
+  // Money and law
+  'law-legal-services': ['estate-planning', 'business-formation-incorporation'],
+  'estate-planning': ['law-legal-services', 'financial-planning-wealth'],
+  'accounting-tax-preparation': ['tax-services'],
+  'tax-services': ['accounting-tax-preparation'],
+  'financial-planning-wealth': ['credit-repair-financial-coaching'],
+  'credit-repair-financial-coaching': ['financial-planning-wealth'],
+  'real-estate': ['mortgage-lending'],
+  'mortgage-lending': ['real-estate'],
+  insurance: ['financial-planning-wealth'],
+  // Cars
+  'auto-repair-mechanics': ['mobile-mechanic', 'tire-wheel-services'],
+  'mobile-mechanic': ['auto-repair-mechanics'],
+  'tire-wheel-services': ['auto-repair-mechanics'],
+  'auto-body-paint': ['auto-repair-mechanics'],
+  'car-detailing': ['auto-body-paint'],
+  'towing-roadside': ['mobile-mechanic'],
+  'car-services-black-cars': ['shuttle-airport-transport'],
+  'shuttle-airport-transport': ['car-services-black-cars'],
+  // Learning, kids, pets
+  'academic-tutoring': ['tutoring-educational-support', 'test-preparation'],
+  'tutoring-educational-support': ['academic-tutoring'],
+  'test-preparation': ['academic-tutoring', 'college-prep-counseling'],
+  'after-school-programs': ['youth-programs', 'youth-sports-activities'],
+  'youth-sports-activities': ['after-school-programs'],
+  'art-classes': ['art-instruction-workshops'],
+  'art-instruction-workshops': ['art-classes'],
+  'childcare-centers': ['nannies-au-pairs', 'early-childhood-education'],
+  'nannies-au-pairs': ['childcare-centers'],
+  'early-childhood-education': ['childcare-centers'],
+  'dog-walking-pet-sitting': ['pet-training'],
+  'pet-training': ['dog-walking-pet-sitting'],
+  // Shops
+  'gift-shops': ['handmade-artisan-goods', 'candles-home-fragrance'],
+  'handmade-artisan-goods': ['gift-shops'],
+  'candles-home-fragrance': ['gift-shops'],
+  bookstores: ['books-media-retail'],
+  'books-media-retail': ['bookstores'],
+  'farms-farm-stands': ['grocery-markets', 'urban-farming-community-gardens'],
+  'organic-natural-products': ['grocery-markets', 'health-wellness-products'],
+  // Work
+  'career-coaching': ['resume-interview-coaching'],
+  'resume-interview-coaching': ['career-coaching'],
+  'software-development': ['app-mobile-development'],
+  'app-mobile-development': ['software-development'],
+}
+
+/** The close kinds for one category, as rows we have. Only for a subcategory. */
+export function closeKindsFor(
+  category: AssistantCategory | null,
+  categories: readonly AssistantCategory[]
+): AssistantCategory[] {
+  if (!category?.parentId) return []
+  const slugs = CLOSE_KINDS[category.slug] ?? []
+  return slugs
+    .map((slug) => categories.find((c) => c.slug === slug))
+    .filter((c): c is AssistantCategory => !!c && c.id !== category.id)
+}
+
+/** "Cafés & Coffee", or "Cafés & Coffee and Catering". Two at most. */
+export function joinKinds(names: readonly string[]): string {
+  return names.slice(0, 2).join(' and ')
+}
+
 // ─── What the visitor reads ──────────────────────────────────────────────────
 // Every line below is fixed wording. The only model text in it is a need name
 // that passed checkNeedName, or a category or city name from our own tables.
@@ -424,6 +571,9 @@ export function nearestCities<T extends PointCity>(
 export function uncoveredNotice(placeLabel: string): string {
   return `We don't list businesses in ${placeLabel} yet.`
 }
+
+/** Said "near me" but the browser gave no location, so the answer covers every city. */
+export const NO_LOCATION_NOTICE = "We couldn't see your location, so these are from every city we list. Tap Near me or name a city to narrow it."
 
 export const NOT_LISTED_LINE = 'Not on The BLACQList yet.'
 
@@ -507,28 +657,37 @@ const EVENT_PATTERN =
   /\b(party|parties|wedding|weddings|baby shower|birthday|reception|cookout|celebration|graduation|anniversary|reunion)\b/
 
 /** What a party needs, and the slug pieces that find each one. */
+// The live slug comes first in each list, so a near miss alphabetically
+// (catering-bar-service, commercial-photography, furniture-decor) never wins.
+const CATERING = ['catering-events-food', 'cater', 'restaurant', 'food']
+const DJ = ['djs-live-music', 'dj', 'music', 'entertain']
+const VENUE = ['venue-rental', 'venue', 'event-space', 'event']
+const BAKERY = ['bakeries-pastry-shops', 'bake', 'dessert', 'sweet']
+const PHOTO = ['event-photography', 'photography', 'photo']
+const DECOR = ['balloon-floral-design', 'florist', 'flower', 'party', 'decor']
+
 const EVENT_NEEDS: ReadonlyArray<readonly [string, readonly string[]]> = [
-  ['Catering', ['cater', 'restaurant', 'food']],
-  ['DJ', ['dj', 'music', 'entertain']],
-  ['Venue', ['venue', 'event-space', 'event']],
-  ['Bakery', ['bake', 'dessert', 'sweet']],
-  ['Photographer', ['photo']],
-  ['Decor', ['decor', 'florist', 'flower', 'party']],
+  ['Catering', CATERING],
+  ['DJ', DJ],
+  ['Venue', VENUE],
+  ['Bakery', BAKERY],
+  ['Photographer', PHOTO],
+  ['Decor', DECOR],
 ]
 
 /** Words the guide's mock doesn't map, for the assistant's follow-ups. */
 const EXTRA_SYNONYMS: Record<string, readonly [string, readonly string[]]> = {
-  dj: ['DJ', ['dj', 'music', 'entertain']],
-  djs: ['DJ', ['dj', 'music', 'entertain']],
-  cake: ['Bakery', ['bake', 'dessert', 'sweet']],
-  cakes: ['Bakery', ['bake', 'dessert', 'sweet']],
-  caterer: ['Catering', ['cater', 'restaurant', 'food']],
-  catering: ['Catering', ['cater', 'restaurant', 'food']],
-  photographer: ['Photographer', ['photo']],
-  photos: ['Photographer', ['photo']],
-  venue: ['Venue', ['venue', 'event-space', 'event']],
-  flowers: ['Decor', ['florist', 'flower', 'decor']],
-  decor: ['Decor', ['decor', 'florist', 'flower', 'party']],
+  dj: ['DJ', DJ],
+  djs: ['DJ', DJ],
+  cake: ['Bakery', BAKERY],
+  cakes: ['Bakery', BAKERY],
+  caterer: ['Catering', CATERING],
+  catering: ['Catering', CATERING],
+  photographer: ['Photographer', PHOTO],
+  photos: ['Photographer', PHOTO],
+  venue: ['Venue', VENUE],
+  flowers: ['Decor', DECOR],
+  decor: ['Decor', DECOR],
 }
 
 const MOCK_FILLER = new Set(['what', 'about', 'also', 'too', 'how', 'any', 'black', 'owned', 'vendors', 'all', 'plan'])

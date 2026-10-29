@@ -8,6 +8,7 @@ import { ArrowRight, LoaderCircle, MessageCircle } from 'lucide-react'
 import { askAssistant } from '@/lib/actions/ai/assistant'
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import type { AssistantResponse } from '@/lib/ai/assistant-limits'
+import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
 import { addTurn, openAssistantFrom } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
@@ -74,6 +75,8 @@ export function AiGuide({
   const answerRef = useRef<HTMLDivElement>(null)
   // Set by Ask or Enter, not by a chip, so chip taps can be chained.
   const focusAnswer = useRef(false)
+  // True while a typed "near me" waits on the browser for a position.
+  const locating = useRef(false)
 
   useEffect(() => {
     if ((answer || assistantAnswer) && focusAnswer.current) {
@@ -126,7 +129,7 @@ export function AiGuide({
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const words = text.trim()
-    if (pending) return
+    if (pending || locating.current) return
     if (!words) {
       if (near) {
         focusAnswer.current = true
@@ -138,6 +141,18 @@ export function AiGuide({
       return
     }
     focusAnswer.current = true
+    if (!near && wantsNearMe(words)) {
+      // Typed "near me" without the chip: ask for a position the same way the
+      // chip does. If it's refused, the answer says it covers every city.
+      locating.current = true
+      setStatus('Getting your location…')
+      void getNearPoint().then((point) => {
+        locating.current = false
+        if (point) setNear(point)
+        ask(words, point)
+      })
+      return
+    }
     ask(words, near)
   }
 

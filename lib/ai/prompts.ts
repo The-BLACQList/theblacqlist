@@ -278,7 +278,7 @@ Help page codes:
 Return one JSON object and nothing else, with these keys:
 - "city": a city code if they name that city now or before, otherwise null
 - "place": if they name a place that is not a city code (a state, a town), copy its name from their words, otherwise null
-- "needs": up to 6 things they need. For a plan or an event, list each kind of business it needs. Each item: "name" (2 to 40 characters, plain words), "category" (a category code or null), "keywords" (up to 3 single words from their words or the name, otherwise []), "open_now" (true only if they want it open right now)
+- "needs": up to 6 things they need. For a plan or an event, list each kind of business it needs. Each item: "name" (2 to 40 characters, plain words), "category" (the most specific category code that fits, such as Bakeries for a cake rather than the whole food group, or null), "keywords" (up to 3 single words from their words or the name, otherwise []), "open_now" (true only if they want it open right now)
 - "page": a help page code only if they ask how the site works, otherwise null
 
 When the new words follow on from earlier ones ("what about DJs?"), keep the city or place from before. Never use a code that is not listed.`,
