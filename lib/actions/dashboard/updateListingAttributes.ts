@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkAttributeCount } from '@/lib/stripe/planChecks'
+import { offerGrowthTo } from '@/lib/marketplace/entitlements'
 import { splitAttributePicks, type AttributePick } from '@/lib/listings/creatorAttributes'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
@@ -95,7 +96,12 @@ export async function updateListingAttributesAction(
   // Plan limit (ticket 119). A listing already over the limit can keep its
   // set or trim it, but not grow it. Creator groups don't count (ticket 132).
   const previous = splitAttributePicks(toPicks(previousIds, false), listing.entity_type)
-  const limitError = checkAttributeCount(listing.tier, next.planCount, previous.planCount)
+  const limitError = checkAttributeCount(
+    listing.tier,
+    next.planCount,
+    previous.planCount,
+    await offerGrowthTo(listing.tier)
+  )
   if (limitError) return { error: limitError }
 
   // Replace the full set: delete existing, then insert the new selection.

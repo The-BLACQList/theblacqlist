@@ -5,6 +5,7 @@ import { Loader2, Plus, AlertCircle, Trash2, EyeOff } from 'lucide-react'
 import { addListingFaqAction } from '@/lib/actions/dashboard/addListingFaq'
 import { deleteListingFaqAction } from '@/lib/actions/dashboard/deleteListingFaq'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import type { UpgradeTarget } from '@/lib/stripe/planChecks'
 import { faqLimit } from '@/lib/stripe/features'
 
 interface FaqRow {
@@ -18,7 +19,8 @@ interface Props {
   faqs: FaqRow[]
   /** Plan FAQ limit, or null for no limit (ticket 119). */
   limit: number | null
-  showUpgrade: boolean
+  /** The plan the limit note offers (`upgradeTarget`), or null for no link. */
+  upgradeTo: UpgradeTarget
   /** Questions the public page leaves out after a move to a lower plan (ticket 105). */
   hiddenIds?: ReadonlySet<string>
 }
@@ -47,7 +49,7 @@ function DeleteFaqButton({ faqId }: { faqId: string }) {
   )
 }
 
-export function FaqSection({ listingId, faqs, limit, showUpgrade, hiddenIds }: Props) {
+export function FaqSection({ listingId, faqs, limit, upgradeTo, hiddenIds }: Props) {
   const [state, formAction, isPending] = useActionState(addListingFaqAction, null)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -97,7 +99,7 @@ export function FaqSection({ listingId, faqs, limit, showUpgrade, hiddenIds }: P
         )}
 
         {full && (
-          <PlanLimitNote showUpgrade={showUpgrade}>
+          <PlanLimitNote upgradeTo={upgradeTo}>
             {limit === 0
               ? `Common questions are part of Starter. Upgrade to add up to ${faqLimit('starter')} to your page.`
               : `Your plan includes up to ${limit} common questions. Delete one to add another.`}

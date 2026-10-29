@@ -1,7 +1,7 @@
 # Ticket 143: Put Growth on sale, on its own, before Premium
 
 **Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR, merge after the public flip)
-**Depends on:** 105 / #256 (tier limits and downgrade hiding, extended to products and services), 136 / #257 (free month on a paid upgrade, must ship before Growth gets price IDs), #255 (owner Events tab)
+**Depends on:** 105 / #256 (tier limits and downgrade hiding, extended to products and services; this PR is stacked on it), 136 / #257 (free month on a paid upgrade, must ship before Growth gets price IDs), #255 (owner Events tab)
 **Gates:** none in this PR. No migration, no new dependencies, no env change. Restoring Growth's Stripe price IDs on prod `plans` is GATE-DATA and happens after the flip, on the founder's word.
 **Decision record:** on 2026-10-28 the founder asked what the "standard package" (Growth, $49/mo, $470/yr) needs before it can be sold, and decided:
 
@@ -32,6 +32,11 @@ In:
   - `/marketplace`: the empty-state lines and the vendor CTA.
   - Add product / Add service (`AllowanceNotice`): a page with no storefront gets "Storefronts come with Growth" and a **See Growth** link to `/dashboard/upgrade` when Growth is open, and the waitlist otherwise.
   - The create actions' refusal (`assertCanAddMarketplaceItem`) says the same thing server side.
+- **The Growth offer at a limit.** These are built on the limit messages that #256 adds:
+  - `makeRoom()` in `lib/stripe/planChecks.ts`: when Growth is open, a Starter page at its photo, video, question or filter-detail limit reads "Remove one, or upgrade to Growth for more." The edit form's limit note links to **Upgrade to Growth** (`/dashboard/upgrade`). `upgradeTarget()` decides which plan to name. Free pages still get Starter, and Growth pages are offered nothing.
+  - The server actions (`updateListingVideo`, `addListingFaq`, `updateListingAttributes`, `storeListingImage`) check the same thing through `offerGrowthTo(tier)`, so a direct call gets the same words.
+  - Hidden content notice (`HiddenContentNotice`): `hiddenLine()` itself never promises an upgrade. When `offersGrowth(tier, growthOpen)` is true, the notice adds an **Upgrade to Growth to show them again** link, on the edit form and on the Products and Services pages.
+  - Every offer fails closed. If the plans can't be read, there's no offer.
 
 Out:
 
@@ -47,15 +52,14 @@ Out:
 - Given the same, when a Starter owner opens Add product, then the notice says storefronts come with Growth and links to `/dashboard/upgrade`.
 - Given the same, when a Starter owner submits the create-product action directly, then the refusal names Growth and does not say selling isn't open.
 - Given any tier, when an owner opens their analytics page, then there is no "Top search queries" panel.
+- Given Growth is open, when a Starter owner reaches their photo, video, question or filter-detail limit, then the message offers Growth and the limit note links to `/dashboard/upgrade`. When Growth is closed, the message is "Remove one to add another." with no link.
+- Given Growth is open and a downgraded Starter page has hidden content, when the owner opens the edit form or the Products page, then the hidden notice links to `/dashboard/upgrade`. A Growth page never sees an upgrade offer.
 
-## Before merge
+## Stacking
 
-This PR is built on main, and #256 is not on main yet. Once #256 merges, rebase this PR and add the Growth offer to the two places #256 creates:
+This PR is stacked on #256 (`feat/tier-limits`), so its diff shows only this ticket's work. Merge #256 first. GitHub then retargets this PR to main.
 
-- `makeRoom()` in `lib/stripe/planChecks.ts`: a Starter page at a limit gets "Upgrade to Growth" linking to `/dashboard/upgrade` when `isTierOpen(availability, 'growth')`.
-- `hiddenLine()` in `lib/stripe/downgrade.ts`: the same link under the same condition. Update the "never promises an upgrade" test in `tests/downgrade.test.ts` so it only holds while Growth is closed.
-
-Expect a small conflict in `app/dashboard/pages/[entityId]/analytics/page.tsx`, since both PRs edit it.
+Migration 20261028000000 (from #256) is applied on staging as of 2026-10-28. Prod waits for the founder (GATE-DATA).
 
 ## Order to sell (after the flip, each step on the founder's word)
 
@@ -63,7 +67,7 @@ Expect a small conflict in `app/dashboard/pages/[entityId]/analytics/page.tsx`, 
 2. #256: prod migrations, Preview downgrade and restore check, merge.
 3. #257: prod migration, founder approves the day-25 reminder copy, merge.
 4. #255 owner Events tab: Preview as Growth and as Starter, merge.
-5. This PR: rebase on main, Preview, merge.
+5. This PR: confirm it targets main after #256 merges, Preview, merge.
 6. Stripe: confirm the Growth prices are active, then restore them on prod `plans` with the M2.1 rollback UPDATE (`docs/blacqlist/ops/decision-log.md`, GATE-DATA). Growth only.
 7. Customer Portal: add Growth only, live and test.
 8. `FEATURE_MARKETPLACE_OPEN` and redeploy, so the storefront line is real.
@@ -73,3 +77,4 @@ Expect a small conflict in `app/dashboard/pages/[entityId]/analytics/page.tsx`, 
 - Run `npx tsc --noEmit`, `npx eslint app lib components` and `npx vitest run`.
 - In test mode with only Growth's test price IDs synced, check `/pricing`, `/for-business`, `/for-vendors`, `/dashboard/upgrade` and Add product at 375px and 1280px.
 - Test-card checkout to Growth (`4242…`): the webhook sets `listings.tier = 'growth'`; add a product, an event and a job.
+- As a Starter page with Growth's test prices synced: add an 11th photo and a 2nd video. Both messages offer Growth, and the note links to the upgrade page. Clear the test prices and the offer goes away.

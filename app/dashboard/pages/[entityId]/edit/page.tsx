@@ -21,6 +21,7 @@ import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
+import { growthIsOpen } from '@/lib/marketplace/entitlements'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -266,9 +267,11 @@ export default async function EditPage({ params }: Props) {
 
   // Every other page (business, creative, service provider, vendor) edits in
   // the same side-by-side finish view a new owner uses (ticket 129).
-  const [data, allowance] = await Promise.all([
+  const [data, allowance, growthOpen] = await Promise.all([
     loadFinishData(supabase, listing.id, owner.user.id),
     getWritingAllowance(listing.id, listing.tier),
+    // Limit notes offer Growth to a Starter page only while it is for sale.
+    growthIsOpen(),
   ])
   if (!data) notFound()
   // Writing help sits inside the fields (ticket 138). Off means the switch is
@@ -322,6 +325,7 @@ export default async function EditPage({ params }: Props) {
         mode="edit"
         storageUrl={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`}
         writingHelp={writingHelp}
+        growthOpen={growthOpen}
       />
     </div>
   )

@@ -8,6 +8,7 @@ import type { FacetGroupData } from '@/lib/listings/facets'
 import { updateListingAttributesAction } from '@/lib/actions/dashboard/updateListingAttributes'
 import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import type { UpgradeTarget } from '@/lib/stripe/planChecks'
 import { CREATOR_GROUP_CAPS, isCreatorGroup } from '@/lib/listings/creatorAttributes'
 
 interface Props {
@@ -18,7 +19,8 @@ interface Props {
   selectedValueIds: string[]
   /** Plan limit on selected details, or null for no limit (ticket 119). */
   limit: number | null
-  showUpgrade: boolean
+  /** The plan the limit note offers (`upgradeTarget`), or null for no link. */
+  upgradeTo: UpgradeTarget
   /** The page's type. Creator pages get the creator groups, outside the plan limit. */
   entityType?: string | null
 }
@@ -31,7 +33,7 @@ export function AttributesSection({
   groups,
   selectedValueIds,
   limit,
-  showUpgrade,
+  upgradeTo,
   entityType,
 }: Props) {
   const {
@@ -108,8 +110,8 @@ export function AttributesSection({
         ))}
 
         {full && (
-          <PlanLimitNote showUpgrade={showUpgrade}>
-            {`Your plan includes up to ${limit} details customers filter by. Uncheck one to pick another${showUpgrade ? ', or upgrade for more' : ''}.`}
+          <PlanLimitNote upgradeTo={upgradeTo}>
+            {`Your plan includes up to ${limit} details customers filter by. Uncheck one to pick another${upgradeTo ? `, or upgrade to ${upgradeTo} for more` : ''}.`}
           </PlanLimitNote>
         )}
 

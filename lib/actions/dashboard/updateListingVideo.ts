@@ -6,6 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkVideoAdd } from '@/lib/stripe/planChecks'
+import { offerGrowthTo } from '@/lib/marketplace/entitlements'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import {
@@ -170,7 +171,7 @@ export async function addListingVideoLinkAction(
 
   const existing = await readVideos(sb, listingId)
   if (!existing) return { error: 'Could not save the video. Please try again.' }
-  const limitError = checkVideoAdd(listing.tier, existing.length)
+  const limitError = checkVideoAdd(listing.tier, existing.length, await offerGrowthTo(listing.tier))
   if (limitError) return { error: limitError }
 
   if (!(await insertVideo(sb, listingId, existing, { kind: 'embed', embed_url: raw }))) {
@@ -210,7 +211,7 @@ export async function startListingVideoUploadAction(
   // An upload adds a video, so the page needs room for one more.
   const existing = await readVideos(sb, listing.id)
   if (!existing) return { error: 'Could not start the upload. Please try again.' }
-  const limitError = checkVideoAdd(listing.tier, existing.length)
+  const limitError = checkVideoAdd(listing.tier, existing.length, await offerGrowthTo(listing.tier))
   if (limitError) return { error: limitError }
 
   if (
@@ -267,7 +268,7 @@ export async function finishListingVideoUploadAction(
   const existing = await readVideos(sb, listing.id)
   if (!existing) return { error: 'Could not save the video. Please try again.' }
   if (existing.some((v) => v.file_path === path)) return { success: true }
-  const limitError = checkVideoAdd(listing.tier, existing.length)
+  const limitError = checkVideoAdd(listing.tier, existing.length, await offerGrowthTo(listing.tier))
   if (limitError) return { error: limitError }
 
   const storage = createServiceClient().storage.from(LISTING_VIDEO_BUCKET)

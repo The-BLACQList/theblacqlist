@@ -4,6 +4,7 @@ import {
   capList,
   hiddenLine,
   isDowngraded,
+  offersGrowth,
   shownLimits,
 } from '@/lib/stripe/downgrade'
 import { hiddenContent, type HiddenContentInput } from '@/lib/listings/hiddenContent'
@@ -134,10 +135,30 @@ describe('hiddenLine', () => {
     )
   })
 
-  it('never promises an upgrade (Growth and Premium are not for sale yet)', () => {
+  it('never promises an upgrade itself (the notice adds the Growth link)', () => {
     for (const kind of ['photos', 'videos', 'faqs', 'attributes', 'events'] as const) {
       expect(hiddenLine({ kind, hidden: 2, limit: 1 })).not.toMatch(/upgrade/i)
     }
+  })
+})
+
+// Ticket 143: the notice links to Growth only while Growth can be bought, and
+// only for a page below it.
+describe('offersGrowth', () => {
+  it('offers Growth to a Free or Starter page while Growth is open', () => {
+    expect(offersGrowth('starter', true)).toBe(true)
+    expect(offersGrowth('free', true)).toBe(true)
+    expect(offersGrowth(null, true)).toBe(true)
+  })
+
+  it('makes no offer while Growth is closed', () => {
+    expect(offersGrowth('starter', false)).toBe(false)
+    expect(offersGrowth('free', false)).toBe(false)
+  })
+
+  it('makes no offer on Growth or Premium', () => {
+    expect(offersGrowth('growth', true)).toBe(false)
+    expect(offersGrowth('premium', true)).toBe(false)
   })
 })
 

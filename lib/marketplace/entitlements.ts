@@ -152,3 +152,11 @@ export async function assertCanAddMarketplaceItem(
 export async function growthIsOpen(): Promise<boolean> {
   return isTierOpen(await getPlanAvailability(createServiceClient()), 'growth')
 }
+
+/**
+ * Whether a limit message may offer Growth to this page (ticket 143). Only a
+ * Starter page is offered it, so every other plan skips the `plans` read.
+ */
+export async function offerGrowthTo(tier: string | null): Promise<boolean> {
+  return tier === 'starter' && (await growthIsOpen())
+}

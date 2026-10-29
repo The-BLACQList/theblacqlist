@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkFaqAdd } from '@/lib/stripe/planChecks'
+import { offerGrowthTo } from '@/lib/marketplace/entitlements'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 
 export type AddListingFaqState = { success: true } | { error: string } | null
@@ -46,7 +47,7 @@ export async function addListingFaqAction(
     .from('listing_faqs')
     .select('id', { count: 'exact', head: true })
     .eq('listing_id', listingId)
-  const limitError = checkFaqAdd(listing.tier, faqCount ?? 0)
+  const limitError = checkFaqAdd(listing.tier, faqCount ?? 0, await offerGrowthTo(listing.tier))
   if (limitError) return { error: limitError }
 
   const { data: lastFaq } = await sb

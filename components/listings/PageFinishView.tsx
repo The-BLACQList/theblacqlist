@@ -5,7 +5,7 @@ import { Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
-import { socialLinksAllowed } from '@/lib/stripe/planChecks'
+import { socialLinksAllowed, upgradeTarget, type UpgradeTarget } from '@/lib/stripe/planChecks'
 import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit } from '@/lib/stripe/features'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
@@ -26,6 +26,7 @@ import { LinksSection } from '@/components/dashboard/LinksSection'
 import { FaqSection } from '@/components/dashboard/FaqSection'
 import { HiddenContentNotice } from '@/components/dashboard/HiddenContentNotice'
 import { hiddenContent } from '@/lib/listings/hiddenContent'
+import { offersGrowth } from '@/lib/stripe/downgrade'
 import { PublishSection } from '@/components/dashboard/PublishSection'
 import { SaveLabelProvider } from '@/components/dashboard/SaveLabel'
 import { StrengthMeter, itemLabel } from './finish/StrengthMeter'
@@ -52,6 +53,8 @@ interface Props {
   writingHelp?: { allowance: WritingAllowance; initial: InitialSuggestions }
   /** Drafts after "Save my draft" (ticket 128). Only on a new page with the flag on. */
   onboardingDrafts?: { autoStart: boolean; aboutFromSite: boolean }
+  /** Growth can be bought right now (ticket 143). Left out, it reads as closed. */
+  growthOpen?: boolean
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -103,6 +106,7 @@ export function PageFinishView({
   storageUrl,
   writingHelp,
   onboardingDrafts,
+  growthOpen = false,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -150,7 +154,11 @@ export function PageFinishView({
   const rootRef = useRef<HTMLDivElement>(null)
 
   const tier = data.tier
-  const showUpgrade = (TIER_RANK[tier ?? 'free'] ?? 0) === 0
+  // About and social links are Starter features, so only a Free page is offered
+  // an upgrade there. The count limits (details, video, questions) also offer
+  // Growth to a Starter page while Growth is for sale (ticket 143).
+  const starterOffer: UpgradeTarget = (TIER_RANK[tier ?? 'free'] ?? 0) === 0 ? 'Starter' : null
+  const moreOffer = upgradeTarget(tier, growthOpen)
   // Ticket 105: what the public page leaves out after a move to a lower plan.
   // Uses the saved description, the same text the page shows.
   const hidden = hiddenContent({
@@ -230,7 +238,10 @@ export function PageFinishView({
               </div>
             )}
 
-            <HiddenContentNotice counts={hidden.counts} />
+            <HiddenContentNotice
+              counts={hidden.counts}
+              offerGrowth={offersGrowth(tier, growthOpen)}
+            />
 
             <div className={layout.topPreview}>
               <LivePagePreview {...preview} compact />
@@ -266,7 +277,7 @@ export function PageFinishView({
                 listingId={data.id}
                 description={saved.description || null}
                 charLimit={descriptionCharLimit(tier)}
-                showUpgrade={showUpgrade}
+                upgradeTo={starterOffer}
                 onDraftChange={patchDraft}
                 initialSuggestion={initial.listing_description}
               />
@@ -346,7 +357,7 @@ export function PageFinishView({
                 groups={data.attributeGroups}
                 selectedValueIds={data.selectedValueIds}
                 limit={attributeLimit(tier)}
-                showUpgrade={showUpgrade}
+                upgradeTo={moreOffer}
                 entityType={data.entityType}
               />
             </Anchor>
@@ -370,7 +381,7 @@ export function PageFinishView({
                 socialTwitter={d?.social_twitter ?? null}
                 locked={!socialLinksAllowed(tier, data.entityType)}
                 hiddenOnPage={!data.socialsShowOnPage}
-                showUpgrade={showUpgrade}
+                upgradeTo={starterOffer}
                 caption={
                   helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined
                 }
@@ -384,7 +395,7 @@ export function PageFinishView({
                 tier={tier}
                 hiddenIds={hidden.hiddenIds}
                 storageUrl={storageUrl}
-                showUpgrade={showUpgrade}
+                upgradeTo={moreOffer}
               />
             </Anchor>
 
@@ -394,7 +405,7 @@ export function PageFinishView({
               listingId={data.id}
               faqs={data.faqs}
               limit={faqLimit(tier)}
-              showUpgrade={showUpgrade}
+              upgradeTo={moreOffer}
               hiddenIds={hidden.hiddenIds}
             />
 

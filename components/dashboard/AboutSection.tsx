@@ -7,6 +7,7 @@ import {
   type UpdateListingContentState,
 } from '@/lib/actions/dashboard/updateListingContent'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import type { UpgradeTarget } from '@/lib/stripe/planChecks'
 import { SuggestionPanel, useFieldHelp } from '@/components/listings/finish/WritingHelp'
 import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 import type { Suggestion } from '@/lib/ai/writingHelp'
@@ -16,7 +17,8 @@ interface Props {
   description: string | null
   /** Plan character limit, or null for no limit (ticket 119). */
   charLimit: number | null
-  showUpgrade: boolean
+  /** The plan the limit note offers (`upgradeTarget`), or null for no link. */
+  upgradeTo: UpgradeTarget
   /** Unsaved typing, for a live preview beside the form (ticket 129). */
   onDraftChange?: (patch: { description: string }) => void
   /** An open suggestion from earlier, shown under the box (ticket 138). */
@@ -27,7 +29,7 @@ export function AboutSection({
   listingId,
   description,
   charLimit,
-  showUpgrade,
+  upgradeTo,
   onDraftChange,
   initialSuggestion,
 }: Props) {
@@ -97,7 +99,7 @@ export function AboutSection({
         <SuggestionPanel field={field} fieldId="about-description" charLimit={charLimit} />
 
         {charLimit !== null && (savedOverLimit || overLimit) && (
-          <PlanLimitNote showUpgrade={showUpgrade}>
+          <PlanLimitNote upgradeTo={upgradeTo}>
             {savedOverLimit
               ? `Your description is longer than your plan's ${charLimit} characters. It stays on your page as it is. To change it, shorten it to ${charLimit} or fewer, or upgrade for no limit.`
               : `Your plan includes a description of up to ${charLimit} characters. Shorten it, or upgrade for no limit.`}
