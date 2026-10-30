@@ -1,7 +1,7 @@
 'use server'
 
 /**
- * The site assistant (ticket 147).
+ * Cue, the site assistant (ticket 147, made conversational in ticket 148).
  *
  * Checks, in the guide's order. Every "no" sends the visitor to plain search:
  *   1. the input: a message of 1 to 200 characters, up to 3 earlier messages,
@@ -13,9 +13,14 @@
  *   6. paid calls only: the visitor share. Guide and assistant calls together
  *      stay under 40% of the monthly call budget.
  *
- * One model call per ask, no tool loop. The model names needs and filters;
- * every business comes from our own search, and every line the visitor reads
+ * One model call per ask, no tool loop. The model names needs and filters and
+ * writes one short opener, which passes checkOpener or is dropped. Every
+ * business comes from our own search, and every other line the visitor reads
  * is fixed wording from lib/ai/assistant.ts.
+ *
+ * Cue knows the page: the client sends only its path, and the server reads that
+ * page's public facts itself (lib/assistant/page.ts). Every action href is
+ * built here; the model only picks codes from the page's list.
  *
  * When a need finds nothing: its own kind of business without the keywords,
  * then the hand-picked close kinds (CLOSE_KINDS) in the same place, then the
@@ -54,16 +59,21 @@ import {
   nearestCities,
   nearestCloseLine,
   nearestLine,
+  nearMilesLine,
   parseAssistantAnswer,
+  positivePlaceText,
   rankTop,
+  resolvePrevious,
   spreadTops,
   topLimit,
   typedWords,
   uncoveredNotice,
   visitorCallsUsed,
+  type AssistantAction,
   type AssistantAllowList,
   type AssistantCard,
   type AssistantCategory,
+  type AssistantContext,
   type AssistantNeedPlan,
   type AssistantNeedResult,
   type AssistantResponse,
@@ -90,12 +100,21 @@ import {
   withinMonthlyCeiling,
 } from '@/lib/ai/spend'
 import { wantsNearMe } from '@/lib/assistant/near'
+import {
+  NO_PAGE,
+  businessPage,
+  parsePagePath,
+  resolvePageActions,
+  staticPage,
+  type PageContext,
+  type PageRef,
+} from '@/lib/assistant/page'
 import { isFeatureEnabled } from '@/lib/env'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
 import { queryListings } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
-import type { LatLng } from '@/lib/map/distance'
+import { distanceMiles, type LatLng } from '@/lib/map/distance'
 import { findPlaces, matchCategories, type AssistCity, type PlaceHit } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
 import { lookupPlace, matchLocalCity } from '@/lib/search/placeLookup'
@@ -107,6 +126,8 @@ import type { DiscoveryEntity } from '@/types'
 const AREA_CITY_CAP = 3
 /** Shared across every caller, per minute, same as the map's place lookup. */
 const PLACE_UPSTREAM_LIMIT = 50
+/** When nothing is within the Near me radius, these wider circles come next. */
+const NEAR_WIDER_MILES = [100, 500] as const
 
 function fallback(text: string, reason: 'limited' | 'error'): AssistantResponse {
   return { kind: 'fallback', href: fallbackHref(text), reason }
@@ -276,6 +297,12 @@ async function resolveScope(args: {
   return scope
 }
 
+/** True when the visitor named this place only to turn it down. */
+function turnedDown(place: string, words: string): boolean {
+  const name = place.toLowerCase()
+  return words.toLowerCase().includes(name) && !positivePlaceText(words).toLowerCase().includes(name)
+}
+
 async function pickScope(args: {
   words: string
   history: readonly string[]
@@ -285,28 +312,46 @@ async function pickScope(args: {
   cities: readonly AssistCity[]
 }): Promise<Scope> {
   const { cities } = args
-  const now = scopeFromPlaces(findPlaces(args.words, cities).places)
+  // A place the visitor turns down ("chicago is not near me") never sets the
+  // scope, here or later in the chat.
+  const positive = positivePlaceText(args.words)
+  const now = scopeFromPlaces(findPlaces(positive, cities).places)
   if (now) return now
-  if (args.near) return { kind: 'near', near: args.near }
+  // Near me in these words wins. A point carried over from the last answer
+  // (the words name no place) gives way to a place the model read instead.
+  if (args.near && wantsNearMe(args.words)) return { kind: 'near', near: args.near }
 
+  const rejected = new Set(
+    findPlaces(args.words, cities)
+      .places.flatMap((p) => p.activeCities)
+      .map((c) => c.slug)
+  )
   const modelCity = args.modelCity
-    ? cities.find((c) => c.slug === args.modelCity && c.isActive)
+    ? cities.find((c) => c.slug === args.modelCity && c.isActive && !rejected.has(c.slug))
     : undefined
   if (modelCity) return { kind: 'city', city: modelCity }
 
+  const modelPlace =
+    args.modelPlace && args.modelPlace.length >= 2 && !turnedDown(args.modelPlace, args.words)
+      ? args.modelPlace
+      : null
+  if (args.near && !modelPlace) return { kind: 'near', near: args.near }
+
   for (let i = args.history.length - 1; i >= 0; i--) {
-    const earlier = scopeFromPlaces(findPlaces(args.history[i] ?? '', cities).places)
+    const earlier = scopeFromPlaces(
+      findPlaces(positivePlaceText(args.history[i] ?? ''), cities).places
+    )
     if (earlier) return earlier
   }
 
-  if (args.modelPlace && args.modelPlace.length >= 2) {
-    const ours = scopeFromPlaces(findPlaces(args.modelPlace, cities).places)
+  if (modelPlace) {
+    const ours = scopeFromPlaces(findPlaces(modelPlace, cities).places)
     if (ours) return ours
-    const local = matchLocalCity(args.modelPlace, cities)
+    const local = matchLocalCity(modelPlace, cities)
     if (local?.isActive) return { kind: 'city', city: local }
-    const found = await pointFor(args.modelPlace, cities)
+    const found = await pointFor(modelPlace, cities)
     if (found) return { kind: 'uncovered', label: found.label, anchor: found.anchor }
-    return { kind: 'uncovered', label: titleCase(args.modelPlace), anchor: null }
+    return { kind: 'uncovered', label: titleCase(modelPlace), anchor: null }
   }
 
   return { kind: 'national' }
@@ -317,6 +362,8 @@ async function pickScope(args: {
 interface Where {
   city: AssistCity | null
   near: GuideNear | null
+  /** Near me only: miles around the point. DEFAULT_RADIUS_MILES when unset. */
+  radius?: number
 }
 
 interface Found {
@@ -392,7 +439,12 @@ async function runQuery(
     city: where.city?.slug,
     open_now: need.openNow || undefined,
     ...(where.near
-      ? { lat: where.near.lat, lng: where.near.lng, radius: DEFAULT_RADIUS_MILES, sort: 'distance' }
+      ? {
+          lat: where.near.lat,
+          lng: where.near.lng,
+          radius: where.radius ?? DEFAULT_RADIUS_MILES,
+          sort: 'distance',
+        }
       : { sort: 'rating' }),
     page: 1,
     // No paid slots, so the assistant never counts an impression and the
@@ -576,6 +628,38 @@ function seeFound(need: AssistantNeedPlan, found: Found, where: Where): string {
 
 // ─── One need ────────────────────────────────────────────────────────────────
 
+/** The checked search behind a need, kept in the chat so a follow-up can reuse it. */
+function planOf(need: AssistantNeedPlan): AssistantNeedResult['plan'] {
+  return { category: need.category?.slug ?? null, keywords: need.keywords, openNow: need.openNow }
+}
+
+/**
+ * Near me with nothing inside the radius: wider circles, nearest first. The
+ * line gives the city and how far it is; the count and See all are that city's.
+ */
+async function searchNearWider(
+  need: AssistantNeedPlan,
+  wideKind: AssistantCategory | null,
+  near: GuideNear,
+  cities: readonly AssistCity[],
+  categories: readonly AssistantCategory[]
+): Promise<{ city: AssistCity; found: Found; miles: number | null } | null> {
+  for (const radius of NEAR_WIDER_MILES) {
+    const wide = await search(need, need.category, wideKind, { city: null, near, radius }, categories)
+    const first = wide.items[0]
+    if (!first) continue
+    const city = first.city ? cities.find((c) => c.slug === first.city?.slug) : undefined
+    if (!city) continue
+    const miles =
+      typeof first.lat === 'number' && typeof first.lng === 'number'
+        ? Math.round(distanceMiles(near, { lat: first.lat, lng: first.lng }))
+        : null
+    const inCity = await search(need, need.category, wideKind, { city, near: null }, categories)
+    return { city, found: inCity.items.length > 0 ? inCity : wide, miles }
+  }
+  return null
+}
+
 interface NeedContext {
   scope: Scope
   cities: readonly AssistCity[]
@@ -606,6 +690,7 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
       pool
     ).map(toCard),
     seeAllHref,
+    plan: planOf(need),
   })
   // A broad find is a kind close to the need, not the need itself, so it says so.
   const fromFound = (
@@ -670,6 +755,7 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
     total: 0,
     top: [],
     seeAllHref: null,
+    plan: planOf(need),
   })
 
   if (scope.kind === 'city' || scope.kind === 'near') {
@@ -685,6 +771,26 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
       runOnce(plain, kind, [], where, categories)
     )
     if (close) return fromClose(close, where, placeName ?? 'your area')
+    if (scope.kind === 'near') {
+      const wider = await searchNearWider(need, wideKind, scope.near, cities, categories)
+      if (wider) {
+        const at: Where = { city: wider.city, near: null }
+        const { found } = wider
+        return found.broad && found.kind
+          ? result(
+              'close',
+              nearestCloseLine(null, need.name, wider.city.name, found.kind.name, found.total),
+              found,
+              seeFound(need, found, at)
+            )
+          : result(
+              'nearest',
+              nearMilesLine(DEFAULT_RADIUS_MILES, wider.city.name, wider.miles, found.total),
+              found,
+              seeFound(need, found, at)
+            )
+      }
+    }
     const from = scope.kind === 'city' ? pointOf(scope.city) : scope.near
     if (from) {
       const nearest = await searchNearest(
@@ -779,13 +885,104 @@ async function findNameMatches(query: string): Promise<DiscoveryEntity[]> {
     .slice(0, GUIDE_MAX_NAME_MATCHES)
 }
 
+// ─── The page ────────────────────────────────────────────────────────────────
+
+interface BusinessRow {
+  id: string
+  name: string
+  entity_type: string
+  owner_user_id: string | null
+  avg_rating: number | null
+  review_count: number | null
+  categories: { name: string } | null
+  cities: { name: string; slug: string; states: { code: string } | null } | null
+  listing_details_business: {
+    address_line_1: string | null
+    zip: string | null
+    phone: string | null
+    website_url: string | null
+    hours: unknown
+    lat: number | null
+    lng: number | null
+  } | null
+}
+
+function hasHours(hours: unknown): boolean {
+  if (!hours || typeof hours !== 'object') return false
+  return Object.keys(hours).length > 0
+}
+
+/**
+ * What Cue knows about the page the visitor is on. A business page is read
+ * from the database (published rows only, through RLS), so the facts and every
+ * href come from us, never from the client. Any failure means no page.
+ */
+async function loadPage(ref: PageRef | null): Promise<PageContext> {
+  if (!ref) return NO_PAGE
+  if (ref.kind !== 'business') return staticPage(ref)
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('listings')
+      .select(
+        `id, name, entity_type, owner_user_id, avg_rating, review_count,
+        categories!listings_category_id_fkey(name),
+        cities!listings_city_id_fkey(name, slug, states!cities_state_id_fkey(code)),
+        listing_details_business(address_line_1, zip, phone, website_url, hours, lat, lng)`
+      )
+      .eq('slug', ref.listingSlug)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (error || !data) return NO_PAGE
+    const row = data as unknown as BusinessRow
+    if (row.entity_type !== ref.entityType) return NO_PAGE
+    if (row.cities && row.cities.slug !== ref.citySlug) return NO_PAGE
+    const det = row.listing_details_business
+    return businessPage({
+      id: row.id,
+      name: row.name,
+      entityType: row.entity_type,
+      claimed: row.owner_user_id !== null,
+      avgRating: row.avg_rating,
+      reviewCount: row.review_count ?? 0,
+      categoryName: row.categories?.name ?? null,
+      cityName: row.cities?.name ?? null,
+      stateCode: row.cities?.states?.code ?? null,
+      street: det?.address_line_1 ?? null,
+      zip: det?.zip ?? null,
+      phone: det?.phone ?? null,
+      website: det?.website_url ?? null,
+      hasHours: hasHours(det?.hours),
+      lat: det?.lat ?? null,
+      lng: det?.lng ?? null,
+    })
+  } catch {
+    return NO_PAGE
+  }
+}
+
+/** The heading for an answer that is only page actions, so it never reads as a bare "Cue". */
+function actionsHeading(actions: readonly AssistantAction[]): string {
+  const [first] = actions
+  if (first?.kind === 'scroll') return `On this page: ${first.label}`
+  return 'Your next step'
+}
+
+/** The status line for an answer that is only page actions. */
+function actionsSummary(actions: readonly AssistantAction[]): string {
+  const [first] = actions
+  if (first?.kind === 'scroll') return `Cue can take you to ${first.label}.`
+  return 'Cue has a next step for you below.'
+}
+
 // ─── The action ──────────────────────────────────────────────────────────────
 
 export async function askAssistant(input: unknown): Promise<AssistantResponse> {
   // 1. Input.
   const parsed = assistantAskSchema.safeParse(input)
   if (!parsed.success) return fallback(rawMessage(input), 'error')
-  const { message, history, near } = parsed.data
+  const { message, history, near, previous, page: pagePath } = parsed.data
 
   // 2. Flag. 3. Kill switch.
   if (!isFeatureEnabled('aiAssistant')) return fallback(message, 'error')
@@ -832,12 +1029,15 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       return {
         kind: 'answer',
         heading: buildHeading([need], null, true),
+        opener: null,
         notice: null,
         summary: buildAssistantSummary([answered]),
         needs: [answered],
         nameMatches: [],
         page: null,
         searchHref: fallbackHref(message),
+        actions: [],
+        near: true,
       }
     }
 
@@ -853,12 +1053,15 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       return {
         kind: 'answer',
         heading: 'Matching names',
+        opener: null,
         notice: null,
-        summary: `Found ${nameMatches.length} matching ${nameMatches.length === 1 ? 'name' : 'names'}.`,
+        summary: `Cue found ${nameMatches.length} matching ${nameMatches.length === 1 ? 'name' : 'names'}.`,
         needs: [],
         nameMatches: nameMatches.map(toCard),
         page: null,
         searchHref: fallbackHref(message),
+        actions: [],
+        near: false,
       }
     }
 
@@ -879,7 +1082,15 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       }
     }
 
-    const built = buildAssistantPrompt(words, earlier, lists.allow)
+    const pageCtx = await loadPage(parsePagePath(pagePath))
+    const actionCodes = Object.keys(pageCtx.actions)
+    const built = buildAssistantPrompt(
+      words,
+      earlier,
+      lists.allow,
+      { facts: pageCtx.facts, actions: actionCodes },
+      near !== null
+    )
     if (!built) return namesOrFallback('error')
 
     const supabase = createServiceClient()
@@ -914,7 +1125,7 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     let usage: TokenUsage | null = null
     try {
       if (provider === 'mock') {
-        answer = mockAssistantAnswer(words, earlier, built.offered)
+        answer = mockAssistantAnswer(words, earlier, built.offered, actionCodes)
       } else {
         const result = await callAnthropic({
           model,
@@ -933,7 +1144,15 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       return namesOrFallback('error')
     }
 
-    const checked = parseAssistantAnswer(answer, built.offered, typedWords(words, earlier))
+    const typed = typedWords(words, earlier)
+    const context: AssistantContext = {
+      previous: resolvePrevious(previous, lists.allow, typed),
+      actionCodes,
+      pageNames: pageCtx.names,
+      pageNumbers: pageCtx.numbers,
+      located: near !== null,
+    }
+    const checked = parseAssistantAnswer(answer, built.offered, typed, context)
     if (!checked.ok) {
       await close(rejectionCode(checked.reason), usage)
       return namesOrFallback('error')
@@ -941,19 +1160,25 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     await close(null, usage)
 
     const plan = checked.plan
-    if (isEmptyPlan(plan)) return namesOrFallback('error')
+    const actions = resolvePageActions(pageCtx, plan.actions)
+    // An opener with nothing behind it is still a reply ("Happy to help. What
+    // are you looking for?"); with no opener either, plain search takes over.
+    if (isEmptyPlan(plan) && !plan.opener) return namesOrFallback('error')
 
     const page = plan.page ? { ...GUIDE_PAGES[plan.page] } : null
     if (plan.needs.length === 0) {
       return {
         kind: 'answer',
-        heading: buildHeading([], null, false),
+        heading: actions.length > 0 ? actionsHeading(actions) : page ? buildHeading([], null, false) : 'Cue',
+        opener: plan.opener,
         notice: null,
-        summary: buildAssistantSummary([]),
+        summary: actions.length > 0 ? actionsSummary(actions) : page ? buildAssistantSummary([]) : 'Cue replied.',
         needs: [],
         nameMatches: (await names).map(toCard),
         page,
         searchHref: fallbackHref(message),
+        actions,
+        near: false,
       }
     }
 
@@ -987,17 +1212,21 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     return {
       kind: 'answer',
       heading: buildHeading(plan.needs, scopeLabel(scope), scope.kind === 'near'),
+      // Never upbeat over an empty answer.
+      opener: needs.every((n) => n.status === 'none') ? null : plan.opener,
       notice:
         scope.kind === 'uncovered'
           ? uncoveredNotice(scope.label)
           : scope.kind === 'national' && wantsNearMe(message)
             ? NO_LOCATION_NOTICE
             : null,
-      summary: buildAssistantSummary(needs),
+      summary: buildAssistantSummary(needs, scope.kind === 'national'),
       needs,
       nameMatches: nameMatches.map(toCard),
       page,
       searchHref: fallbackHref(message),
+      actions,
+      near: scope.kind === 'near',
     }
   } catch {
     // A database or search outage. Deliberately drops the error: it could

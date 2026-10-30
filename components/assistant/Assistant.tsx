@@ -1,28 +1,28 @@
 'use client'
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent } from 'react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { ArrowUp, LoaderCircle, X } from 'lucide-react'
 
-import { askAssistant } from '@/lib/actions/ai/assistant'
-import type { AssistantResponse } from '@/lib/ai/assistant-limits'
-import { fallbackHref, GUIDE_MAX_INPUT } from '@/lib/ai/guide-limits'
-import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
+import { GUIDE_MAX_INPUT } from '@/lib/ai/guide-limits'
+import { askCue } from '@/lib/assistant/ask'
 import { isAssistantHiddenPath } from '@/lib/assistant/routes'
 import {
   addTurn,
   clearChat,
-  getAssistantState,
-  historyFor,
   setAssistantOpen,
   takeReturnFocus,
   useAssistant,
+  useHomeBarInView,
   type AssistantTurn,
 } from '@/lib/assistant/store'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { findSection, jumpToSection } from '@/lib/assistant/scroll'
 import { cn } from '@/lib/utils'
-import { AssistantReply, AssistantSkeleton, replyStatus } from './AssistantAnswer'
+import { AssistantReply, AssistantSkeleton, replyStatus, type ReplyHandlers } from './AssistantAnswer'
+import { useExample, useExamples } from './useExample'
 
 const DESKTOP = '(min-width: 48rem)'
 
@@ -41,23 +41,21 @@ function useIsDesktop(): boolean {
   )
 }
 
-const EXAMPLES = [
-  'Plan a birthday party in Detroit',
-  'Soul food in Atlanta, open now',
-  'Barber near me',
-] as const
-
 /**
- * The site assistant (ticket 147): a gold Ask button in the corner of every
- * public page. On a computer it opens a panel that stays open while the
- * visitor browses; on a phone it opens a full-screen sheet that closes when
- * they follow a link. The chat lives in this tab (lib/assistant/store.ts).
+ * Cue, the site assistant (tickets 147 and 148): a gold Ask Cue button in the
+ * corner of every public page. On a computer it opens a panel that stays open
+ * while the visitor browses; on a phone it opens a full-screen sheet that
+ * closes when they follow a link or Cue jumps to part of the page. The chat
+ * lives in this tab (lib/assistant/store.ts).
  */
 export function Assistant() {
   const pathname = usePathname()
   const { turns, open } = useAssistant()
   const isDesktop = useIsDesktop()
   const hidden = isAssistantHiddenPath(pathname)
+  const barInView = useHomeBarInView()
+  // Said after the phone sheet closes, so it lives outside the sheet.
+  const [afterClose, setAfterClose] = useState('')
 
   useEffect(() => {
     if (hidden) setAssistantOpen(false)
@@ -67,31 +65,54 @@ export function Assistant() {
   const onMap = pathname === '/map' || pathname.startsWith('/map/')
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setAssistantOpen} modal={!isDesktop}>
-      <DialogPrimitive.Trigger
-        data-assistant="on"
-        className={cn(
-          'lift-over-quick-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible',
-          // The map's zoom and locate buttons sit bottom-right on a computer;
-          // on a phone the button rides above the card sheet (globals.css).
-          onMap && 'lift-over-map-sheet md:bottom-48'
-        )}
+    <>
+      <DialogPrimitive.Root
+        open={open}
+        onOpenChange={(next) => {
+          // A fresh open starts quiet, so the next jump is spoken even with the same words.
+          if (next) setAfterClose('')
+          setAssistantOpen(next)
+        }}
+        modal={!isDesktop}
       >
-        <span className="grid place-items-center size-9 rounded-full bg-brand-black">
-          <GoldBrandMark className="size-5" />
-        </span>
-        Ask
-        <span className="sr-only"> the AI assistant</span>
-      </DialogPrimitive.Trigger>
+        <DialogPrimitive.Trigger
+          data-assistant="on"
+          className={cn(
+            'lift-over-quick-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible',
+            // The map's zoom and locate buttons sit bottom-right on a computer;
+            // on a phone the button rides above the card sheet (globals.css).
+            onMap && 'lift-over-map-sheet md:bottom-48',
+            // The home bar is its own Ask Cue; one in view is enough.
+            barInView && !open && 'invisible'
+          )}
+        >
+          <span className="grid place-items-center size-9 rounded-full bg-brand-black">
+            <GoldBrandMark className="size-5" />
+          </span>
+          Ask Cue
+        </DialogPrimitive.Trigger>
 
-      <DialogPrimitive.Portal>
-        <AssistantPanel turns={turns} isDesktop={isDesktop} />
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        <DialogPrimitive.Portal>
+          <AssistantPanel turns={turns} isDesktop={isDesktop} announce={setAfterClose} />
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
+      <p role="status" className="sr-only">
+        {afterClose}
+      </p>
+    </>
   )
 }
 
-function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDesktop: boolean }) {
+function AssistantPanel({
+  turns,
+  isDesktop,
+  announce,
+}: {
+  turns: AssistantTurn[]
+  isDesktop: boolean
+  /** Speaks once the panel is gone (the phone sheet's jump). */
+  announce: (text: string) => void
+}) {
   const [text, setText] = useState('')
   const [pending, setPending] = useState<string | null>(null)
   const [status, setStatus] = useState('')
@@ -99,6 +120,8 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastRef = useRef<HTMLLIElement>(null)
+  const jumpOnClose = useRef<{ ids: string[]; label: string } | null>(null)
+  const placeholder = useExample()
 
   // A new answer: bring its start into view, not the bottom of a long list.
   const count = turns.length
@@ -115,21 +138,34 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
     if (!words || pending) return
     setText('')
     setPending(words)
-    setStatus('Finding matches…')
-    const near = wantsNearMe(words) ? await getNearPoint() : null
-    let reply: AssistantResponse
-    try {
-      reply = await askAssistant({
-        message: words,
-        history: historyFor(getAssistantState().turns),
-        near,
-      })
-    } catch {
-      reply = { kind: 'fallback', href: fallbackHref(words), reason: 'error' }
-    }
+    setStatus('Cue is looking…')
+    const reply = await askCue(words)
     addTurn(words, reply)
     setPending(null)
-    setStatus(replyStatus(reply))
+    // A section of this page that answers them: go there on its own.
+    const scroll = reply.kind === 'answer' ? reply.actions.find((a) => a.kind === 'scroll') : undefined
+    if (scroll && jump(scroll.ids, scroll.label)) {
+      setStatus(`${replyStatus(reply)} Cue took you to ${scroll.label}.`)
+    } else {
+      setStatus(replyStatus(reply))
+    }
+  }
+
+  /**
+   * Jumps to a section of this page. On a phone the sheet covers the page, so
+   * it closes first and the jump runs as it hands focus back (onCloseAutoFocus).
+   */
+  function jump(ids: string[], label: string): boolean {
+    if (!findSection(ids)) return false
+    if (isDesktop) return jumpToSection(ids)
+    jumpOnClose.current = { ids, label }
+    setAssistantOpen(false)
+    return true
+  }
+
+  const handlers: ReplyHandlers = {
+    onAsk: (words) => void send(words),
+    onJump: (ids, label) => void jump(ids, label),
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -176,6 +212,13 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
       }}
       onCloseAutoFocus={(event) => {
         const back = takeReturnFocus()
+        const pendingJump = jumpOnClose.current
+        if (pendingJump) {
+          jumpOnClose.current = null
+          event.preventDefault()
+          if (jumpToSection(pendingJump.ids)) announce(`Cue took you to ${pendingJump.label}.`)
+          return
+        }
         if (back?.isConnected) {
           event.preventDefault()
           back.focus()
@@ -186,9 +229,10 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
     >
       <header className="flex items-center gap-2 h-14 shrink-0 pl-4 pr-1 border-b border-white/10">
         <GoldBrandMark className="size-6" />
-        <DialogPrimitive.Title className="font-subhead text-base font-bold">AI assistant</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="font-subhead text-base font-bold">Cue</DialogPrimitive.Title>
         <DialogPrimitive.Description id="assistant-description" className="sr-only">
-          Answers come from our listings. This chat stays in this browser tab and clears when you close it.
+          Cue answers from our listings and can take you to parts of this page. This chat stays in this
+          browser tab and clears when you close it.
         </DialogPrimitive.Description>
         <div className="ml-auto flex items-center">
           {turns.length > 0 && (
@@ -202,7 +246,7 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           )}
           <DialogPrimitive.Close className="grid place-items-center size-11 rounded-md text-off-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">
             <X className="size-5" aria-hidden="true" />
-            <span className="sr-only">Close the assistant</span>
+            <span className="sr-only">Close Cue</span>
           </DialogPrimitive.Close>
         </div>
       </header>
@@ -223,8 +267,8 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
               <li key={turn.id} ref={i === turns.length - 1 ? lastRef : undefined} className="space-y-3 scroll-mt-4">
                 <AskBubble ask={turn.ask} />
                 <div>
-                  <span className="sr-only">Assistant:</span>
-                  <AssistantReply ask={turn.ask} reply={turn.reply} layout="panel" />
+                  <span className="sr-only">Cue:</span>
+                  <AssistantReply ask={turn.ask} reply={turn.reply} layout="panel" handlers={handlers} />
                 </div>
               </li>
             ))}
@@ -242,9 +286,9 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
         {status}
       </p>
 
-      <form onSubmit={onSubmit} className="flex items-center gap-2 shrink-0 p-3 border-t border-white/10">
+      <form onSubmit={onSubmit} className="flex items-center gap-2 shrink-0 px-3 pt-3 pb-1 border-t border-white/10">
         <label htmlFor="assistant-input" className="sr-only">
-          Ask the assistant
+          Ask Cue
         </label>
         <input
           id="assistant-input"
@@ -255,8 +299,8 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           maxLength={GUIDE_MAX_INPUT}
           autoComplete="off"
           enterKeyHint="send"
-          placeholder="A business, a city, or a plan"
-          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/50 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+          placeholder={placeholder}
+          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/60 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-sm placeholder:text-ink-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
         <button
           type="submit"
@@ -271,6 +315,15 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           <span className="sr-only">Send</span>
         </button>
       </form>
+      <p className="shrink-0 px-4 pt-1 pb-2 font-body text-xs text-ink-soft">
+        Cue uses AI to match your words to our listings.{' '}
+        <Link
+          href="/privacy"
+          className="inline-block py-2 underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
+        >
+          Privacy
+        </Link>
+      </p>
     </DialogPrimitive.Content>
   )
 }
@@ -285,15 +338,16 @@ function AskBubble({ ask }: { ask: string }) {
 }
 
 function EmptyState({ onPick }: { onPick: (example: string) => void }) {
+  const examples = useExamples()
   return (
     <div>
-      <p className="font-body text-sm text-off-white">
-        Ask for a kind of business, a city, or a whole plan. I&rsquo;ll show what we list, and say plainly
-        what we don&rsquo;t.
+      <p className="font-body text-base text-off-white">
+        Hi, I&rsquo;m Cue. Tell me what you&rsquo;re looking for, here or anywhere in the country. I&rsquo;ll
+        show you what we list, tell you straight when we don&rsquo;t, and help with the page you&rsquo;re on.
       </p>
       <p className="mt-4 font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">Try</p>
       <ul className="mt-2 list-none p-0 m-0 space-y-2">
-        {EXAMPLES.map((example) => (
+        {examples.map((example) => (
           <li key={example}>
             <button
               type="button"

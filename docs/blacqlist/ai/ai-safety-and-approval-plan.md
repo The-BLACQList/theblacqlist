@@ -262,18 +262,52 @@ These are caught at the approval step — owners and admins are responsible for 
 
 ---
 
-## Visitor assistant (ticket 147)
+## Visitor assistant: Cue (tickets 147 and 148)
 
-The Ask button on public pages and, with `FEATURE_AI_ASSISTANT` on, the home bar. Added 2026-10-29.
+Cue is the Ask Cue button on public pages and, with `FEATURE_AI_ASSISTANT` on, the home bar. It was added 2026-10-29. Ticket 148 renamed it Cue on 2026-10-30 and gave it an opener and page awareness.
 
-- **The model writes need names only.** Each name is at most 40 characters of letters, numbers, spaces and `& ' -`. A name that fails falls back to its category name, and a need with neither is dropped. Every other line the visitor reads is fixed text we wrote.
-- **Every business comes from our search.** The model picks a city slug, category slugs, up to 3 single-word keywords per need and an open-now flag, all checked against the allow-list. Cards come from `queryListings`; sponsored cards are dropped. The model never names a business.
-- **No match is said plainly.** When a need has nothing, the ladder runs: the same thing in the nearest city we list, then a close kind of business in the same place, then "Not on The BLACQList yet." A place we don't cover gets a fixed notice first.
-- **History is capped and never stored.** The client sends at most the last 3 asks from this tab; the server keeps the last 3 and runs each through `sanitizeForPrompt` and `stripLinks`. The chat lives in `sessionStorage` in the visitor's tab only.
-- **Location never reaches the model.** Near me coordinates are rounded and go only to the search.
-- **One model call per turn, no tool loop.** Prompt at most 4000 characters, short output cap, `ASSISTANT_AGENT` in the worst-case spend set.
-- **Spend and abuse limits.** Per IP: 8 a minute and 40 a day (`ai_assistant` bucket). The monthly ceiling and the shared visitor sub-budget (guide and assistant together) apply. The kill switch and the flag both fall back to plain search.
-- **Logging.** One `ai_generation_requests` row per call (`visitor_assistant`, `VISITOR_ASSISTANT@1`), with no visitor text stored.
+- **The model writes need names and one opener.**
+  - **Need names.** Each name is at most 40 characters of letters, numbers, spaces and `& ' -`. Words about who owns a business ("black", "owned", "vendors") are removed. A name that fails falls back to its category name, and a need with neither is dropped.
+  - **The opener** (ticket 148) is one sentence of at most 160 characters. `checkOpener` drops it if it has any of these:
+    - a link, an email or markup;
+    - a number the current page doesn't already show;
+    - a capitalized name that isn't one of our cities, our categories, the visitor's need names or the current page's business;
+    - a result claim ("found", "best", "top", "here are"), since it is written before the search runs.
+    - a question about where the visitor is, once they used Near me or named a city. The prompt only says whether a location was shared, never the location itself.
+  - The opener is also dropped when every need comes back with nothing.
+  - Every other line the visitor reads is fixed text we wrote.
+- **Every business comes from our search.**
+  - The model picks a city slug, category slugs, up to 3 single-word keywords per need and an open-now flag. All of them are checked against the allow-list.
+  - Cards come from `queryListings`, and sponsored cards are dropped.
+  - The model never names a business.
+- **No match is said plainly.** When a need has nothing, these run in order and stop at the first that finds something:
+  1. A close kind of business in the same place.
+  2. The same thing in the nearest city we list. For Near me, wider circles of 100 and then 500 miles, with the city and how far away it is.
+  3. "Not on The BLACQList yet."
+
+  A place we don't cover gets a fixed notice first. An answer drawn from every city never says "found".
+- **Places.**
+  - A place the visitor turns down ("chicago is not near me", "not in Chicago") never sets the scope. That holds in the newest words and in earlier ones.
+  - A follow-up that changes only the place, the time or open now reuses the last answer's needs. The client sends those needs back, and they are checked against the allow-list again.
+  - The model never re-adds older needs.
+- **Page awareness (ticket 148).**
+  - The client sends only the page path. The server parses it (`lib/assistant/page.ts`) and refuses `//`, backslashes and anything that isn't a site path.
+  - The server then works out the page's public facts itself. For a business page, one published-row read gives its name, kind, city and rating, and says "No hours listed." when it has none.
+  - The model sees those facts and a list of action codes, and may pick up to 3. Codes the page doesn't offer are dropped.
+  - When the page itself answers the question (a plan, their hours, how to reach them), the model returns no needs, so Cue doesn't also search.
+  - Every link (`tel:`, https only, our own paths) is built on the server from our row.
+  - Scrolling to and highlighting a section on the page happens on its own. Leaving the page or changing filters waits for a tap.
+  - Cue never fills forms, signs anyone in or touches checkout.
+- **History is capped and never stored.**
+  - The client sends at most the last 3 asks from this tab. The server keeps the last 3 and runs each through `sanitizeForPrompt` and `stripLinks`.
+  - The chat lives in `sessionStorage` in the visitor's tab only. It keeps a "this answer used Near me" flag, never a position.
+- **Location never reaches the model.** Near me coordinates are rounded and go only to the search. A follow-up to a Near me answer asks the browser again.
+- **One model call per turn, no tool loop.** The prompt is at most 4000 characters, the output cap is 1600 characters, and `ASSISTANT_AGENT` is in the worst-case spend set.
+- **Spend and abuse limits.**
+  - Per IP: 8 a minute and 40 a day (the `ai_assistant` bucket).
+  - The monthly ceiling and the shared visitor sub-budget (guide and assistant together) apply.
+  - The kill switch and the flag both fall back to plain search.
+- **Logging.** One `ai_generation_requests` row per call (`visitor_assistant`, `VISITOR_ASSISTANT@2`), with no visitor text or page path stored.
 
 ---
 

@@ -171,12 +171,13 @@ export const GUIDE_PROMPT_VERSION = 'VISITOR_GUIDE@2'
  * The site assistant (ticket 147). Like the guide, it maps a visitor's words to
  * our own filters, but for up to six needs at once ("a party in Detroit" is
  * catering, a DJ, a venue and so on), and it keeps a follow-up in context with
- * the visitor's last three messages. The only text it writes that a visitor
- * reads is a short need name, format-checked in `lib/ai/assistant.ts`. It runs
- * through `lib/actions/ai/assistant.ts` and shares the guide's budget share.
+ * the visitor's last three messages. The text it writes that a visitor reads
+ * is a short need name and, since ticket 148 (Cue), one opener of up to 160
+ * characters; both are checked in `lib/ai/assistant.ts`. It runs through
+ * `lib/actions/ai/assistant.ts` and shares the guide's budget share.
  *
- * `maxOutputChars` covers six needs. The longest legal answer is about 700
- * characters.
+ * `maxOutputChars` covers six needs, the opener and up to three action codes.
+ * The longest legal answer is about 950 characters.
  */
 export const ASSISTANT_AGENT: AgentDefinition = {
   agentType: 'visitor_assistant',
@@ -186,11 +187,11 @@ export const ASSISTANT_AGENT: AgentDefinition = {
   blurb: 'Turns what a visitor needs into a list of searches.',
   modelTier: 'fast',
   applyTarget: null,
-  maxOutputChars: 1200,
+  maxOutputChars: 1600,
 }
 
 /** Written to `ai_generation_requests.prompt_version` for the site assistant. */
-export const ASSISTANT_PROMPT_VERSION = 'VISITOR_ASSISTANT@1'
+export const ASSISTANT_PROMPT_VERSION = 'VISITOR_ASSISTANT@2'
 
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)

@@ -1,5 +1,6 @@
 /**
- * The site assistant's limits and answer shapes (ticket 147).
+ * The site assistant's limits and answer shapes (ticket 147, named Cue in
+ * ticket 148).
  *
  * Kept apart from lib/ai/assistant.ts so client components can import these
  * without pulling the prompt templates into the browser bundle.
@@ -35,6 +36,17 @@ export interface AssistantCard {
  */
 export type AssistantNeedStatus = 'found' | 'close' | 'nearest' | 'none'
 
+/**
+ * The checked search plan behind a need. The chat sends the last answer's
+ * plans back as `previous`, so "in atlanta" re-runs only the last need.
+ */
+export interface AssistantSearchPlan {
+  /** Category slug, or null when the need searches by words only. */
+  category: string | null
+  keywords: string[]
+  openNow: boolean
+}
+
 export interface AssistantNeedResult {
   name: string
   status: AssistantNeedStatus
@@ -43,12 +55,35 @@ export interface AssistantNeedResult {
   total: number
   top: AssistantCard[]
   seeAllHref: string | null
+  plan: AssistantSearchPlan
 }
+
+/**
+ * Something Cue can do on the page the visitor is on (ticket 148). The server
+ * builds every one from an allow-list; the model only picks codes.
+ *
+ * scroll: runs on its own, jumps to the first id found and highlights it.
+ * link, external, ask: shown as buttons and wait for a tap.
+ */
+export type AssistantAction =
+  | { kind: 'scroll'; ids: string[]; label: string }
+  | { kind: 'link'; href: string; label: string }
+  | { kind: 'external'; href: string; label: string }
+  | { kind: 'ask'; text: string; label: string }
+
+/** The most actions one answer offers. */
+export const ASSISTANT_MAX_ACTIONS = 3
+/** Longest opener Cue may write. */
+export const ASSISTANT_OPENER_MAX = 160
+/** Longest page path the chat sends. */
+export const ASSISTANT_PAGE_MAX = 300
 
 export type AssistantResponse =
   | {
       kind: 'answer'
       heading: string
+      /** Cue's own first sentence, checked, or null when it failed a check. */
+      opener: string | null
       /** "We don't list businesses in Alaska yet.", or null. */
       notice: string | null
       /** One line for the status region: "Found 3 of 4 needs, 1 not listed." */
@@ -59,5 +94,9 @@ export type AssistantResponse =
       page: { label: string; href: string } | null
       /** Plain search with the visitor's words, for "Search instead". */
       searchHref: string
+      /** Things Cue can do on this page. Empty off the pages it knows. */
+      actions: AssistantAction[]
+      /** The answer used the visitor's location, so a follow-up asks again. */
+      near: boolean
     }
   | { kind: 'fallback'; href: string; reason: 'limited' | 'error' }

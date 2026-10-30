@@ -4,9 +4,14 @@
  * Only an ask that says "near me" (or close to it) asks the browser for a
  * position. The server rounds it and uses it for our search only; it never
  * goes to the AI. A refusal or timeout means the ask goes without it.
+ *
+ * Cue (ticket 148) also asks again for a follow-up that names no place when
+ * the last answer used Near me, so "what about dentists?" stays near you. The
+ * chat keeps only that the last answer was near, never the position.
  */
 
-const NEAR_WORDS = /\b(near me|nearby|close to me|around me|closest)\b/i
+const NEAR_WORDS =
+  /\b(near me|near by|nearby|close to me|close by|around me|around here|near here|in my area|closest)\b/i
 
 export function wantsNearMe(text: string): boolean {
   return NEAR_WORDS.test(text)
