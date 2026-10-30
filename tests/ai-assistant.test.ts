@@ -693,6 +693,19 @@ describe('askAssistant', () => {
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
 
+  it('does not search a whole top-level group by an occasion word', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Party Cakes', category: 'food-dining', keywords: ['party'] }] })
+    h.search = (p) => {
+      if (p.category === 'food-dining' && p.q === 'party') return [ENTITY('jamaican-pot')]
+      if (p.category === 'food-dining' && String(p.q ?? '').startsWith('cake OR')) return [ENTITY('good-cakes')]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
+    expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
+    expect(needCalls().some((c) => c.q === 'party')).toBe(false)
+  })
+
   it('does not search a parent group by an occasion word', async () => {
     h.extraCategories = LIVE_FOOD
     modelSays({ city: 'detroit', needs: [{ name: 'Caterer', category: 'catering-events-food', keywords: ['party'] }] })

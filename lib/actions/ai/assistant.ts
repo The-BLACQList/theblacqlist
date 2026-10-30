@@ -429,15 +429,29 @@ async function search(
   where: Where,
   categories: readonly AssistantCategory[]
 ): Promise<Found> {
-  // A whole top-level group with no words would offer grocery stores for a cake.
-  if (category && !category.parentId && need.keywords.length === 0) {
+  // A whole top-level group with no words would offer grocery stores for a cake,
+  // and searched for "party" it offers any restaurant that mentions parties.
+  if (category && !category.parentId) {
+    const keywords = groupWords(need.keywords)
+    if (keywords.length > 0) return searchWith(need, category, keywords, wideKind, where, categories)
     if (wideKind) return runOnce(need, wideKind, [], where, categories)
     const words = groupWords(nameWords(need.name))
     if (words.length === 0) return { total: 0, items: [], keywords: [], broad: false, kind: category }
     return runOnce(need, category, [words.join(' OR ')], where, categories)
   }
-  const first = await runOnce(need, category, need.keywords, where, categories)
-  if (first.items.length > 0 || need.keywords.length === 0 || !wideKind) return first
+  return searchWith(need, category, need.keywords, wideKind, where, categories)
+}
+
+async function searchWith(
+  need: AssistantNeedPlan,
+  category: AssistantCategory | null,
+  keywords: string[],
+  wideKind: AssistantCategory | null,
+  where: Where,
+  categories: readonly AssistantCategory[]
+): Promise<Found> {
+  const first = await runOnce(need, category, keywords, where, categories)
+  if (first.items.length > 0 || keywords.length === 0 || !wideKind) return first
   const wide = await runOnce(need, wideKind, [], where, categories)
   // "Bakery" finding Bakeries is the thing itself; "Thai" finding Restaurants is close.
   return { ...wide, broad: wide.items.length > 0 && !namesTheKind(need.name, wideKind) }
