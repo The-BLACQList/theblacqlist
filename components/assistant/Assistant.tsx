@@ -15,6 +15,7 @@ import {
   setAssistantOpen,
   takeReturnFocus,
   useAssistant,
+  useHomeBarInView,
   type AssistantTurn,
 } from '@/lib/assistant/store'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
@@ -52,6 +53,9 @@ export function Assistant() {
   const { turns, open } = useAssistant()
   const isDesktop = useIsDesktop()
   const hidden = isAssistantHiddenPath(pathname)
+  const barInView = useHomeBarInView()
+  // Said after the phone sheet closes, so it lives outside the sheet.
+  const [afterClose, setAfterClose] = useState('')
 
   useEffect(() => {
     if (hidden) setAssistantOpen(false)
@@ -61,30 +65,54 @@ export function Assistant() {
   const onMap = pathname === '/map' || pathname.startsWith('/map/')
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setAssistantOpen} modal={!isDesktop}>
-      <DialogPrimitive.Trigger
-        data-assistant="on"
-        className={cn(
-          'lift-over-quick-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible',
-          // The map's zoom and locate buttons sit bottom-right on a computer;
-          // on a phone the button rides above the card sheet (globals.css).
-          onMap && 'lift-over-map-sheet md:bottom-48'
-        )}
+    <>
+      <DialogPrimitive.Root
+        open={open}
+        onOpenChange={(next) => {
+          // A fresh open starts quiet, so the next jump is spoken even with the same words.
+          if (next) setAfterClose('')
+          setAssistantOpen(next)
+        }}
+        modal={!isDesktop}
       >
-        <span className="grid place-items-center size-9 rounded-full bg-brand-black">
-          <GoldBrandMark className="size-5" />
-        </span>
-        Ask Cue
-      </DialogPrimitive.Trigger>
+        <DialogPrimitive.Trigger
+          data-assistant="on"
+          className={cn(
+            'lift-over-quick-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible',
+            // The map's zoom and locate buttons sit bottom-right on a computer;
+            // on a phone the button rides above the card sheet (globals.css).
+            onMap && 'lift-over-map-sheet md:bottom-48',
+            // The home bar is its own Ask Cue; one in view is enough.
+            barInView && !open && 'invisible'
+          )}
+        >
+          <span className="grid place-items-center size-9 rounded-full bg-brand-black">
+            <GoldBrandMark className="size-5" />
+          </span>
+          Ask Cue
+        </DialogPrimitive.Trigger>
 
-      <DialogPrimitive.Portal>
-        <AssistantPanel turns={turns} isDesktop={isDesktop} />
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+        <DialogPrimitive.Portal>
+          <AssistantPanel turns={turns} isDesktop={isDesktop} announce={setAfterClose} />
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
+      <p role="status" className="sr-only">
+        {afterClose}
+      </p>
+    </>
   )
 }
 
-function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDesktop: boolean }) {
+function AssistantPanel({
+  turns,
+  isDesktop,
+  announce,
+}: {
+  turns: AssistantTurn[]
+  isDesktop: boolean
+  /** Speaks once the panel is gone (the phone sheet's jump). */
+  announce: (text: string) => void
+}) {
   const [text, setText] = useState('')
   const [pending, setPending] = useState<string | null>(null)
   const [status, setStatus] = useState('')
@@ -92,7 +120,7 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastRef = useRef<HTMLLIElement>(null)
-  const jumpOnClose = useRef<string[] | null>(null)
+  const jumpOnClose = useRef<{ ids: string[]; label: string } | null>(null)
   const placeholder = useExample()
 
   // A new answer: bring its start into view, not the bottom of a long list.
@@ -116,7 +144,7 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
     setPending(null)
     // A section of this page that answers them: go there on its own.
     const scroll = reply.kind === 'answer' ? reply.actions.find((a) => a.kind === 'scroll') : undefined
-    if (scroll && jump(scroll.ids)) {
+    if (scroll && jump(scroll.ids, scroll.label)) {
       setStatus(`${replyStatus(reply)} Cue took you to ${scroll.label}.`)
     } else {
       setStatus(replyStatus(reply))
@@ -127,17 +155,17 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
    * Jumps to a section of this page. On a phone the sheet covers the page, so
    * it closes first and the jump runs as it hands focus back (onCloseAutoFocus).
    */
-  function jump(ids: string[]): boolean {
+  function jump(ids: string[], label: string): boolean {
     if (!findSection(ids)) return false
     if (isDesktop) return jumpToSection(ids)
-    jumpOnClose.current = ids
+    jumpOnClose.current = { ids, label }
     setAssistantOpen(false)
     return true
   }
 
   const handlers: ReplyHandlers = {
     onAsk: (words) => void send(words),
-    onJump: (ids) => void jump(ids),
+    onJump: (ids, label) => void jump(ids, label),
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -184,11 +212,11 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
       }}
       onCloseAutoFocus={(event) => {
         const back = takeReturnFocus()
-        const ids = jumpOnClose.current
-        if (ids) {
+        const pendingJump = jumpOnClose.current
+        if (pendingJump) {
           jumpOnClose.current = null
           event.preventDefault()
-          jumpToSection(ids)
+          if (jumpToSection(pendingJump.ids)) announce(`Cue took you to ${pendingJump.label}.`)
           return
         }
         if (back?.isConnected) {
@@ -272,7 +300,7 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           autoComplete="off"
           enterKeyHint="send"
           placeholder={placeholder}
-          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/50 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/60 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-sm placeholder:text-ink-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
         <button
           type="submit"
@@ -287,11 +315,11 @@ function AssistantPanel({ turns, isDesktop }: { turns: AssistantTurn[]; isDeskto
           <span className="sr-only">Send</span>
         </button>
       </form>
-      <p className="shrink-0 px-4 pb-2 font-body text-xs text-ink-soft">
+      <p className="shrink-0 px-4 pt-1 pb-2 font-body text-xs text-ink-soft">
         Cue uses AI to match your words to our listings.{' '}
         <Link
           href="/privacy"
-          className="underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
+          className="inline-block py-2 underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
         >
           Privacy
         </Link>

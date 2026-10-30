@@ -39,7 +39,7 @@ export interface ReplyHandlers {
   /** Sends `text` as the visitor's next ask. */
   onAsk?: (text: string) => void
   /** Jumps to a section. Defaults to a plain jump. */
-  onJump?: (ids: string[]) => void
+  onJump?: (ids: string[], label: string) => void
 }
 
 /** One reply: an answer with its need groups, or a plain-search fallback. */
@@ -140,8 +140,11 @@ function AnswerReply({
   )
 }
 
-const ACTION_BUTTON =
-  'inline-flex items-center gap-1.5 min-h-11 rounded-full border border-gold/60 px-4 font-subhead text-sm font-semibold text-off-white hover:bg-gold/15 hover:border-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+const ACTION_BASE =
+  'inline-flex items-center gap-1.5 min-h-11 rounded-full px-4 font-subhead text-sm font-semibold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+const ACTION_BUTTON = `${ACTION_BASE} border border-gold/60 text-off-white hover:bg-gold/15 hover:border-gold`
+// The jump answers them on this page, so it leads.
+const JUMP_BUTTON = `${ACTION_BASE} bg-gold text-brand-black hover:bg-light-gold`
 
 /**
  * Cue's buttons for this page. Each waits for a tap; only the scroll that came
@@ -156,8 +159,8 @@ function ActionRow({ actions, handlers }: { actions: AssistantAction[]; handlers
         if (action.kind === 'scroll') {
           return (
             <li key={key}>
-              <button type="button" onClick={() => jump(action.ids)} className={ACTION_BUTTON}>
-                <CornerDownRight className="size-4 text-gold" aria-hidden="true" />
+              <button type="button" onClick={() => jump(action.ids, action.label)} className={JUMP_BUTTON}>
+                <CornerDownRight className="size-4" aria-hidden="true" />
                 Take me to {action.label}
               </button>
             </li>

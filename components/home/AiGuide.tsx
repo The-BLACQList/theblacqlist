@@ -9,7 +9,7 @@ import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import type { AssistantResponse } from '@/lib/ai/assistant-limits'
 import { askCue } from '@/lib/assistant/ask'
 import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
-import { addTurn, openAssistantFrom, type AssistantTurn } from '@/lib/assistant/store'
+import { addTurn, openAssistantFrom, setHomeBarInView, type AssistantTurn } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
   AssistantReply,
@@ -79,10 +79,23 @@ export function AiGuide({
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
   const answerRef = useRef<HTMLDivElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   // Set by Ask or Enter, not by a chip, so chip taps can be chained.
   const focusAnswer = useRef(false)
   // True while a typed "near me" waits on the browser for a position.
   const locating = useRef(false)
+
+  // One Ask Cue in view: the corner button steps aside while this bar shows.
+  useEffect(() => {
+    const form = formRef.current
+    if (!assistant || !form || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(([entry]) => setHomeBarInView(entry?.isIntersecting ?? false))
+    observer.observe(form)
+    return () => {
+      observer.disconnect()
+      setHomeBarInView(false)
+    }
+  }, [assistant])
 
   useEffect(() => {
     if ((answer || assistantAnswer) && focusAnswer.current) {
@@ -185,6 +198,7 @@ export function AiGuide({
   return (
     <div>
       <form
+        ref={formRef}
         onSubmit={onSubmit}
         className="flex flex-row items-end gap-2 sm:gap-3"
         role="search"
@@ -219,7 +233,7 @@ export function AiGuide({
               autoComplete="off"
               enterKeyHint="search"
               placeholder={assistant ? example : 'Braids in Atlanta, or a name'}
-              className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
+              className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
             />
           </div>
         </div>

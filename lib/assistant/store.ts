@@ -236,3 +236,29 @@ export function resetAssistantStoreForTests(): void {
   state = null
   listeners.clear()
 }
+
+// ─── The home bar ────────────────────────────────────────────────────────────
+// While the home page's Ask Cue bar is on screen, the corner button steps
+// aside so there is one Ask Cue in view. Memory only.
+
+let homeBarInView = false
+const barListeners = new Set<() => void>()
+
+export function setHomeBarInView(inView: boolean): void {
+  if (homeBarInView === inView) return
+  homeBarInView = inView
+  for (const listener of barListeners) listener()
+}
+
+function subscribeBar(listener: () => void): () => void {
+  barListeners.add(listener)
+  return () => barListeners.delete(listener)
+}
+
+export function useHomeBarInView(): boolean {
+  return useSyncExternalStore(
+    subscribeBar,
+    () => homeBarInView,
+    () => false
+  )
+}

@@ -8,7 +8,7 @@
  */
 
 // Amber reads on both the dark and the light page grounds (3:1 or better).
-const RING = ['outline-3', 'outline-offset-4', 'outline-amber'] as const
+const RING = ['outline-2', 'outline-offset-2', 'outline-amber'] as const
 const RING_MS = 2000
 
 function reducedMotion(): boolean {
