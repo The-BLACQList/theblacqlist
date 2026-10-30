@@ -3,9 +3,15 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 
 import { Container } from '@/components/layout/container'
-import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
-import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
-import { buildPageUrl } from '@/lib/listings/pagination'
+import { CardGrid } from '@/components/ui/card-grid'
+import { JobCard, JobCardSkeleton } from '@/components/jobs/JobCard'
+import { JobFilters, JobFiltersFallback } from '@/components/jobs/JobFilters'
+import { JobsEmpty, JobsError, JobsNoMatch } from '@/components/jobs/JobsBoardStates'
+import { toJobCardData } from '@/lib/listings/jobCard'
+import { getJobFilterOptions, queryJobs, type JobFilterOptions } from '@/lib/listings/jobs'
+import { LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
+import { buildJobsUrl, hasJobFilters, parseJobFilters } from '@/lib/validations/jobs'
+import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 
 export const metadata: Metadata = {
@@ -17,89 +23,112 @@ export const metadata: Metadata = {
 // No `export const revalidate` on purpose — see the note in the events page.
 
 interface JobsPageProps {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 const ctaClass =
-  'inline-block rounded-full bg-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-brand-black hover:bg-light-gold transition-colors'
-const secondaryCtaClass =
-  'inline-block rounded-full border border-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-amber hover:bg-amber-gold hover:text-brand-black transition-colors'
+  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-amber-gold px-5 font-subhead text-sm font-semibold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
+const noOptions: JobFilterOptions = { hasRemote: false, cities: [] }
 
-async function JobResults({ searchParams }: { searchParams: JobsPageProps['searchParams'] }) {
-  const params = await searchParams
-  const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1)
-
-  // queryListings fails soft — a broken read comes back as zero rows, which
-  // would render as "nothing posted yet" and be untrue. Only a thrown error
-  // reaches here, and it gets the grid's error state rather than the page's.
-  let result
-  try {
-    result = await queryListings({ type: 'job', page })
-  } catch {
-    return (
-      <DiscoveryGrid
-        entities={[]}
-        total={0}
-        error="We couldn't load jobs just now. Refresh the page to try again."
-      />
-    )
-  }
-
-  const canPost = isFeatureEnabled('postingSubmissions')
-
-  if (result.entities.length === 0) {
-    // Past the last page of a non-empty list is a different emptiness from an
-    // empty board, and it needs a way back rather than a way to post.
-    if (page > 1) {
-      return (
-        <div className="rounded-xl bg-pale-lavender px-8 py-10 text-center space-y-4">
-          <p className="font-headline text-xl text-brand-black">Nothing on this page</p>
-          <p className="font-body text-sm text-charcoal leading-relaxed">
-            There are no jobs this far into the list.
-          </p>
-          <div className="pt-2">
-            <Link href="/jobs" className={ctaClass}>
-              Back to the first page
-            </Link>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="rounded-xl bg-pale-lavender px-8 py-10 text-center space-y-4">
-        <p className="font-headline text-xl text-brand-black">No open roles right now</p>
-        <p className="font-body text-sm text-charcoal leading-relaxed">
-          Jobs appear here once businesses post them and our team approves them. Check back soon.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          {canPost && (
-            <Link href="/add-job" className={ctaClass}>
-              Post a job
-            </Link>
-          )}
-          <Link href="/discover" className={secondaryCtaClass}>
-            Browse businesses
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  const nextPageUrl =
-    result.total > page * LISTINGS_PAGE_SIZE ? buildPageUrl(params, page + 1) : undefined
-
+function GridSkeleton() {
   return (
-    <DiscoveryGrid
-      entities={result.entities}
-      total={result.total}
-      nextPageUrl={nextPageUrl}
-      currentPage={page}
-    />
+    <CardGrid cols={{ base: 1, sm: 2, lg: 3 }} gap="md">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <JobCardSkeleton key={i} />
+      ))}
+    </CardGrid>
   )
 }
 
-export default async function JobsPage({ searchParams }: JobsPageProps) {
+/** Signed in with a business of their own. Fails soft: a miss means "not an owner". */
+async function isBusinessOwner(): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return false
+    const { count } = await supabase
+      .from('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_user_id', user.id)
+      .is('deleted_at', null)
+    return (count ?? 0) > 0
+  } catch {
+    return false
+  }
+}
+
+async function JobResults({ searchParams }: { searchParams: JobsPageProps['searchParams'] }) {
+  const filters = parseJobFilters(await searchParams)
+  const filtered = hasJobFilters(filters)
+
+  // The options read is separate so a failure there never hides the grid, and the
+  // chips stay on screen when the grid read fails.
+  const optionsP = getJobFilterOptions().catch(() => noOptions)
+  let result
+  try {
+    result = await queryJobs(filters)
+  } catch {
+    return (
+      <div className="space-y-6">
+        <JobFilters options={await optionsP} />
+        <JobsError />
+      </div>
+    )
+  }
+  const options = await optionsP
+
+  let body
+  if (result.entities.length === 0 && filters.page > 1) {
+    body = (
+      <div className="space-y-4 rounded-xl bg-pale-lavender px-8 py-10 text-center">
+        <p className="font-headline text-xl text-brand-black">Nothing on this page</p>
+        <Link href={buildJobsUrl(filters)} className={ctaClass}>
+          Back to the first page
+        </Link>
+      </div>
+    )
+  } else if (result.entities.length === 0 && filtered) {
+    body = <JobsNoMatch />
+  } else if (result.entities.length === 0) {
+    body = (
+      <JobsEmpty
+        isOwner={await isBusinessOwner()}
+        postHref={isFeatureEnabled('postingSubmissions') ? '/add-job' : undefined}
+      />
+    )
+  } else {
+    body = (
+      <>
+        <CardGrid cols={{ base: 1, sm: 2, lg: 3 }} gap="md">
+          {result.entities.map((e) => (
+            <JobCard key={e.id} job={toJobCardData(e)} />
+          ))}
+        </CardGrid>
+        {result.total > filters.page * LISTINGS_PAGE_SIZE && (
+          <div className="mt-10 flex justify-center">
+            <Link
+              href={buildJobsUrl(filters, filters.page + 1)}
+              className="inline-flex min-h-[44px] items-center rounded-full border border-charcoal/30 px-8 font-body text-sm font-bold text-brand-black transition-colors hover:bg-pale-lavender"
+            >
+              Load more
+            </Link>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <JobFilters options={options} total={result.total} />
+      {body}
+    </div>
+  )
+}
+
+export default function JobsPage({ searchParams }: JobsPageProps) {
   const canPost = isFeatureEnabled('postingSubmissions')
 
   return (
@@ -108,16 +137,13 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         <Container className="py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-headline text-2xl md:text-3xl text-brand-black">
-                Black-Owned Business Jobs
-              </h1>
+              <h1 className="font-headline text-2xl md:text-3xl text-brand-black">Jobs</h1>
               <p className="font-subhead text-sm text-charcoal mt-1.5 max-w-xl">
-                Open roles at Black-owned businesses. Supporting Black businesses extends to where
-                you work, not just where you spend.
+                Open roles at Black-owned businesses
               </p>
             </div>
             {canPost && (
-              <Link href="/add-job" className={`${ctaClass} shrink-0 self-start sm:self-auto`}>
+              <Link href="/add-job" className={`${ctaClass} w-full shrink-0 sm:w-auto`}>
                 Post a job
               </Link>
             )}
@@ -126,7 +152,14 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
       </div>
 
       <Container className="py-8">
-        <Suspense fallback={<DiscoveryGrid entities={[]} total={0} isLoading />}>
+        <Suspense
+          fallback={
+            <div className="space-y-6">
+              <JobFiltersFallback />
+              <GridSkeleton />
+            </div>
+          }
+        >
           <JobResults searchParams={searchParams} />
         </Suspense>
       </Container>

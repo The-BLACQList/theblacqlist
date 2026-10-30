@@ -84,7 +84,7 @@ describe('/events index page', () => {
 
 describe('/jobs index page', () => {
   it('queries published job listings', () => {
-    expect(jobsSrc).toContain("queryListings({ type: 'job'")
+    expect(jobsSrc).toContain('queryJobs(filters)')
   })
 
   it('declares no revalidate it could not honour', () => {
@@ -92,12 +92,12 @@ describe('/jobs index page', () => {
   })
 
   it('renders its own empty state rather than the grid default', () => {
-    expect(jobsSrc).toContain('No open roles right now')
+    expect(read('components/jobs/JobsBoardStates.tsx')).toContain('No open roles right now')
   })
 
   it('separates a load failure from an empty board', () => {
     expect(jobsSrc).toMatch(/catch\b/)
-    expect(jobsSrc).toContain("error=\"We couldn't load jobs just now.")
+    expect(jobsSrc).toContain('<JobsError />')
   })
 
   it('gives a page past the last result a way back instead of a way to post', () => {
