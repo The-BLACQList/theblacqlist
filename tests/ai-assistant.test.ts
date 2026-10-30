@@ -344,6 +344,7 @@ describe('input and prompt', () => {
   it('tells the model a question this page answers needs no business search', () => {
     const built = buildAssistantPrompt('which plan fits a food truck?', [], ALLOW)!
     expect(built.prompt).toContain('"needs" is [] unless they also ask to find businesses')
+    expect(built.prompt).toContain('Pick only a code that holds what they asked about')
   })
 
   it('keeps its system prompt shorter than the owner one, so the spend bound holds', () => {

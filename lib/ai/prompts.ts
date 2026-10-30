@@ -287,7 +287,7 @@ Return one JSON object and nothing else, with these keys:
 - When this page's action codes or a help page answer them (a plan, their hours, how to reach them), "needs" is [] unless they also ask to find businesses
 - "open_now": true if the new words ask for open now
 - "page": a help page code only if they ask how the site works, otherwise null
-- "actions": up to 3 page action codes that answer them on this page, otherwise []
+- "actions": up to 3 page action codes that answer them on this page, otherwise []. Pick only a code that holds what they asked about. If this page does not have it (such as no hours listed), say so in the opener and use how to reach them
 - "opener": one short friendly sentence that replies to them, up to 160 characters. Never say what you found
 
 Never use a code that is not listed.`,
