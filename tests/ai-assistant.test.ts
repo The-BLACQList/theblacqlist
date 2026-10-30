@@ -322,7 +322,7 @@ describe('input and prompt', () => {
       history: ['one', ' ', 'two', 'three', 'four'],
       near: { lat: 42.331427, lng: -83.045753 },
     })
-    expect(parsed).toEqual({ message: 'what about djs', history: ['two', 'three', 'four'], near: { lat: 42.331, lng: -83.046 } })
+    expect(parsed).toEqual({ message: 'what about djs', history: ['two', 'three', 'four'], near: { lat: 42.331, lng: -83.046 }, previous: [], page: null })
     expect(assistantAskSchema.safeParse({ message: 'x', extra: 1 }).success).toBe(false)
     expect(assistantAskSchema.safeParse({ message: '   ' }).success).toBe(false)
   })
@@ -356,8 +356,8 @@ describe('wording', () => {
         { status: 'nearest', total: 2 },
         { status: 'none', total: 0 },
       ])
-    ).toBe('Found 1 of 3 needs, 1 with a close option, 1 not listed.')
-    expect(buildAssistantSummary([{ status: 'found', total: 1 }])).toBe('Found 1 match.')
+    ).toBe('Cue found 1 of your 3 needs, 1 with a close option, 1 not listed.')
+    expect(buildAssistantSummary([{ status: 'found', total: 1 }])).toBe('Cue found 1 place.')
   })
 
   it('counts guide and assistant calls together', () => {
@@ -539,7 +539,7 @@ describe('askAssistant', () => {
     expect(res.notice).toBeNull()
     expect(res.needs.map((n) => n.name)).toEqual(['Catering', 'DJ', 'Venue', 'Bakery', 'Photographer', 'Decor'])
     const catering = res.needs[0]!
-    expect(catering).toMatchObject({ status: 'found', line: '4 in Detroit', total: 4, seeAllHref: '/discover?category=catering&city=detroit' })
+    expect(catering).toMatchObject({ status: 'found', line: '4 places in Detroit', total: 4, seeAllHref: '/discover?category=catering&city=detroit' })
     expect(catering.top.map((c) => c.id)).toEqual(['catering-best', 'catering-one5', 'catering-ok'])
     expect(catering.top[0]).toEqual({
       id: 'catering-best',
@@ -551,7 +551,7 @@ describe('askAssistant', () => {
       reviewCount: 200,
       imageSrc: 'https://media.test/covers/best.jpg',
     })
-    expect(res.summary).toBe('Found 6 of 6 needs.')
+    expect(res.summary).toBe('Cue found all 6 of your needs.')
     expect(needCalls().every((c) => c.sort === 'rating' && c.city === 'detroit')).toBe(true)
   })
 
@@ -574,15 +574,15 @@ describe('askAssistant', () => {
     }
     const res = answerOf(await askAssistant({ message: 'soul food, thai, a barber and balloon decor in detroit' }))
     expect(res.needs.map((n) => [n.name, n.status, n.line])).toEqual([
-      ['Soul food', 'found', '1 in Detroit'],
-      ['Thai', 'close', 'No Thai in Detroit yet. Close to it: Food Trucks (2)'],
-      ['Barber', 'nearest', 'Not in Detroit yet. Nearest we list: Chicago (1)'],
-      ['Balloon decor', 'none', 'Not on The BLACQList yet.'],
+      ['Soul food', 'found', '1 place in Detroit'],
+      ['Thai', 'close', 'No Thai in Detroit yet, but these are close: Food Trucks (2).'],
+      ['Barber', 'nearest', 'Nothing in Detroit yet. The closest is Chicago, with 1.'],
+      ['Balloon decor', 'none', "We don't have this on The BLACQList yet."],
     ])
     expect(res.needs[1]!.seeAllHref).toBe('/discover?category=food-trucks&city=detroit')
     expect(res.needs[2]!.seeAllHref).toBe('/discover?category=barbershops&city=chicago')
     expect(res.needs[3]).toMatchObject({ total: 0, top: [], seeAllHref: null })
-    expect(res.summary).toBe('Found 1 of 4 needs, 2 with a close option, 1 not listed.')
+    expect(res.summary).toBe('Cue found 1 of your 4 needs, 2 with a close option, 1 not listed.')
     // Never the city it was asked about, in the nearest step.
     expect(needCalls().filter((c) => c.category === 'barbershops').map((c) => c.city)).toEqual(['detroit', 'chicago', 'atlanta'])
     // Never the whole food group as a close option: it is only searched by words.
@@ -594,9 +594,9 @@ describe('askAssistant', () => {
     h.lookupPlace.mockResolvedValue({ place: { label: 'Alaska', lat: 61.2, lng: -149.9, zoom: 4 }, cacheable: true })
     h.search = (p) => (p.category === 'thai' && p.city === 'chicago' ? [ENTITY('chi-thai')] : [])
     const res = answerOf(await askAssistant({ message: 'Black-owned Thai restaurant in Alaska' }))
-    expect(res.notice).toBe("We don't list businesses in Alaska yet.")
+    expect(res.notice).toBe("We don't list businesses in Alaska yet, so I looked in the closest cities we cover.")
     expect(res.heading).toBe('Thai restaurant')
-    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Alaska yet. Nearest we list: Chicago (1)' })
+    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Nothing in Alaska yet. The closest is Chicago, with 1.' })
     expect(h.lookupPlace).toHaveBeenCalledTimes(1)
     expect(h.lookupPlace.mock.calls[0]![0]).toBe('Alaska')
   })
@@ -619,8 +619,8 @@ describe('askAssistant', () => {
     }
     const res = answerOf(await askAssistant({ message: 'catering and soul food in detroit' }))
     expect(res.needs.map((n) => [n.name, n.status, n.line, n.seeAllHref])).toEqual([
-      ['Catering', 'found', '2 in Detroit', '/discover?category=catering-events-food&city=detroit'],
-      ['Soul food', 'found', '1 in Detroit', '/search?q=soul&category=food-dining&city=detroit'],
+      ['Catering', 'found', '2 places in Detroit', '/discover?category=catering-events-food&city=detroit'],
+      ['Soul food', 'found', '1 place in Detroit', '/search?q=soul&category=food-dining&city=detroit'],
     ])
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
@@ -638,7 +638,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'a birthday cake in detroit' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
-      line: 'No Birthday cake in Detroit yet. Close to it: Cafes & Coffee (1)',
+      line: 'No birthday cake in Detroit yet, but these are close: Cafes & Coffee (1).',
       seeAllHref: '/discover?category=cafes-coffee&city=detroit',
     })
     expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['cafe1'])
@@ -672,7 +672,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
     expect(res.needs[0]).toMatchObject({
       status: 'found',
-      line: '1 in Detroit',
+      line: '1 place in Detroit',
       seeAllHref:
         '/search?q=cake+OR+cupcake+OR+pie+OR+cookie+OR+bread+OR+dessert+OR+pastry+OR+sweets+OR+bakeries&category=food-dining&city=detroit',
     })
@@ -688,7 +688,7 @@ describe('askAssistant', () => {
       return []
     }
     const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
-    expect(res.needs[0]).toMatchObject({ status: 'found', line: '1 in Detroit' })
+    expect(res.needs[0]).toMatchObject({ status: 'found', line: '1 place in Detroit' })
     expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
@@ -719,7 +719,7 @@ describe('askAssistant', () => {
     h.search = (p) =>
       p.city === 'detroit' && p.category === 'food-dining' && String(p.q ?? '').startsWith('cake OR') ? [ENTITY('good-cakes')] : []
     const res = answerOf(await askAssistant({ message: 'birthday cake in detroit' }))
-    expect(res.needs[0]).toMatchObject({ name: 'Birthday cake', status: 'found', line: '1 in Detroit' })
+    expect(res.needs[0]).toMatchObject({ name: 'Birthday cake', status: 'found', line: '1 place in Detroit' })
   })
 
   it('looks in the parent group by the need\'s own words before widening', async () => {
@@ -743,7 +743,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'birthday cake in detroit' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
-      line: 'No Cake in Detroit yet. Close to it: Cafes & Coffee (1)',
+      line: 'No cake in Detroit yet, but these are close: Cafes & Coffee (1).',
       seeAllHref: '/search?q=coffee+OR+latte+OR+espresso+OR+tea+OR+cafe+OR+cafes&category=food-dining&city=detroit',
     })
   })
@@ -760,7 +760,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'cake in detroit' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
-      line: 'No Cake in Detroit yet. Close to it: Cafes & Coffee and Catering (3)',
+      line: 'No cake in Detroit yet, but these are close: Cafes & Coffee and Catering (3).',
       total: 3,
       seeAllHref: '/discover?category=cafes-coffee&city=detroit',
     })
@@ -774,7 +774,7 @@ describe('askAssistant', () => {
       return []
     }
     const res = answerOf(await askAssistant({ message: 'thai in detroit' }))
-    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Detroit yet. Nearest we list: Chicago (1)' })
+    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Nothing in Detroit yet. The closest is Chicago, with 1.' })
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
 
@@ -786,7 +786,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'Black-owned Thai restaurant in Alaska' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
-      line: 'No Thai restaurant in Alaska yet. Close to it in Chicago: Restaurants (1)',
+      line: 'No Thai restaurant in Alaska yet, but Chicago has something close: Restaurants (1).',
       seeAllHref: '/discover?category=restaurants&city=chicago',
     })
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
@@ -803,16 +803,16 @@ describe('askAssistant', () => {
     modelSays({ city: null, place: null, needs: [{ name: 'Thai restaurant', category: 'thai' }] })
     h.search = (p) => (p.category === 'thai' && !p.city ? [ENTITY('t1'), ENTITY('t2')] : [])
     const res = answerOf(await askAssistant({ message: 'thai in alaska' }))
-    expect(res.notice).toBe("We don't list businesses in Alaska yet.")
-    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Alaska yet. Elsewhere on The BLACQList (2)' })
+    expect(res.notice).toBe("We don't list businesses in Alaska yet, so I looked in the closest cities we cover.")
+    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: "Nothing in Alaska yet. Here's what we list elsewhere (2)." })
   })
 
   it('treats a city we have a row for but have not opened as not covered', async () => {
     modelSays({ city: null, needs: [{ name: 'Soul food', category: 'soul-food' }] })
     h.search = (p) => (p.category === 'soul-food' && p.city === 'detroit' ? [ENTITY('det')] : [])
     const res = answerOf(await askAssistant({ message: 'soul food in grand rapids' }))
-    expect(res.notice).toBe("We don't list businesses in Grand Rapids yet.")
-    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Grand Rapids yet. Nearest we list: Detroit (1)' })
+    expect(res.notice).toBe("We don't list businesses in Grand Rapids yet, so I looked in the closest cities we cover.")
+    expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Nothing in Grand Rapids yet. The closest is Detroit, with 1.' })
     expect(h.lookupPlace).not.toHaveBeenCalled()
   })
 
@@ -855,7 +855,7 @@ describe('askAssistant', () => {
     for (const piece of ['33.7', '84.3']) expect(call.prompt + call.system).not.toContain(piece)
     expect(needCalls()[0]).toMatchObject({ category: 'barbershops', lat: 33.749, lng: -84.388, radius: 10, sort: 'distance' })
     expect(res.heading).toBe('Barber near you')
-    expect(res.needs[0]!.line).toBe('1 near you')
+    expect(res.needs[0]!.line).toBe('1 place near you')
     expect(JSON.stringify([h.inserts, h.updates])).not.toContain('33.7')
   })
 
@@ -885,7 +885,7 @@ describe('askAssistant', () => {
       {
         listing_id: null,
         agent_type: 'visitor_assistant',
-        prompt_version: 'VISITOR_ASSISTANT@1',
+        prompt_version: 'VISITOR_ASSISTANT@2',
         model: 'mock-v1',
         provider: 'mock',
         status: 'pending',
@@ -902,7 +902,7 @@ describe('askAssistant', () => {
     h.callAnthropic.mockRejectedValue(new ProviderCallError('provider_error'))
     h.search = () => [ENTITY('pc', { name: 'Peach Cobbler Factory' })]
     const res = answerOf(await askAssistant({ message: 'peach cobbler' }))
-    expect(res).toMatchObject({ heading: 'Matching names', needs: [], summary: 'Found 1 matching name.' })
+    expect(res).toMatchObject({ heading: 'Matching names', needs: [], summary: 'Cue found 1 matching name.' })
     expect(h.updates).toEqual([{ status: 'failed', error_message: 'provider_error' }])
 
     h.search = () => []
@@ -927,5 +927,143 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'how do I add my business' }))
     expect(res).toMatchObject({ heading: 'This page may help', needs: [], page: { label: 'Add your business', href: '/add-business' } })
     expect(needCalls()).toHaveLength(0)
+  })
+
+  // ─── Cue (ticket 148): the 2026-10-30 chat logs, replayed ──────────────────
+
+  const MACON = { lat: 32.84, lng: -83.63 }
+  const ATL_DENTIST = () =>
+    ENTITY('dent-atl', {
+      name: 'Peach Smiles',
+      category: { name: 'Dentists', slug: 'dentists' },
+      city: { name: 'Atlanta', slug: 'atlanta', state_abbr: 'GA' },
+      lat: 33.75,
+      lng: -84.39,
+    })
+  const DENTIST_PREVIOUS = [{ name: 'Dentist', plan: { category: null, keywords: ['dentist'], openNow: false } }]
+
+  it('hears "near by", and with nothing close gives the closest city and the miles', async () => {
+    modelSays({ city: null, needs: [{ name: 'Dentist', keywords: ['dentist'] }] })
+    h.search = (p) => {
+      if (!('sort' in p)) return []
+      if (p.radius === 10) return []
+      if (p.radius === 100 || p.city === 'atlanta') return [ATL_DENTIST()]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'a dentist near by?', near: MACON }))
+    expect(res.near).toBe(true)
+    expect(res.needs[0]).toMatchObject({ name: 'Dentist', status: 'nearest' })
+    expect(res.needs[0]!.line).toMatch(/^Nothing within 10 miles of you yet\. The closest is in Atlanta, about \d+ miles away\. Atlanta has 1\.$/)
+    expect(res.summary).toBe("Cue found nothing exact, but there's a close option below.")
+    expect(needCalls()[0]).toMatchObject({ radius: 10, sort: 'distance' })
+    expect(needCalls().some((c) => c.city === 'chicago')).toBe(false)
+  })
+
+  it('keeps the dentist near you when the visitor turns Chicago down', async () => {
+    modelSays({ city: 'chicago', needs: [] })
+    h.search = (p) => ('sort' in p && p.radius === 10 ? [ENTITY('dent-near', { name: 'Macon Dental' })] : [])
+    const res = answerOf(
+      await askAssistant({
+        message: 'chicago is not nearby me',
+        history: ['a dentist near by?'],
+        near: MACON,
+        previous: DENTIST_PREVIOUS,
+      })
+    )
+    expect(res.needs.map((n) => n.name)).toEqual(['Dentist'])
+    expect(res.near).toBe(true)
+    expect(needCalls().length).toBeGreaterThan(0)
+    expect(needCalls().some((c) => c.city === 'chicago')).toBe(false)
+    expect(needCalls()[0]).toMatchObject({ q: 'dentist', lat: 32.84, lng: -83.63 })
+  })
+
+  it('never reuses a turned-down city from earlier, and keeps who-owns-it words out', async () => {
+    modelSays({ city: null, needs: [{ name: 'black owned produce', keywords: ['produce', 'black', 'owned'] }] })
+    h.search = (p) => ('sort' in p ? [ENTITY('p1', { name: 'Green Market' })] : [])
+    const res = answerOf(
+      await askAssistant({
+        message: 'How do I find black owned produce?',
+        history: ['a dentist near by?', 'chicago is not nearby me'],
+        near: null,
+      })
+    )
+    expect(res.needs.map((n) => n.name)).toEqual(['Produce'])
+    expect(res.needs[0]!.plan.keywords).toEqual(['produce'])
+    expect(needCalls().some((c) => c.city === 'chicago')).toBe(false)
+    for (const call of needCalls()) expect(String(call.q ?? '')).not.toMatch(/black|owned/)
+    expect(res.summary).not.toMatch(/found/i)
+  })
+
+  it('moves only the last need when a follow-up names just a place', async () => {
+    modelSays({ city: 'atlanta', needs: [] })
+    h.search = (p) => ('sort' in p ? [ENTITY('p-atl', { city: { name: 'Atlanta', slug: 'atlanta', state_abbr: 'GA' } })] : [])
+    const res = answerOf(
+      await askAssistant({
+        message: 'in atlanta',
+        history: ['a dentist near by?', 'chicago is not nearby me', 'How do I find black owned produce?'],
+        previous: [{ name: 'Produce', plan: { category: null, keywords: ['produce'], openNow: false } }],
+      })
+    )
+    expect(res.needs.map((n) => n.name)).toEqual(['Produce'])
+    expect(res.heading).toBe('Produce in Atlanta')
+    expect(needCalls().every((c) => c.city === 'atlanta')).toBe(true)
+    expect(needCalls().some((c) => String(c.q ?? '').includes('dentist'))).toBe(false)
+  })
+
+  it('does not carry the last needs over a new topic', async () => {
+    modelSays({ needs: [], follow_up: false, opener: 'Happy to help. What are you looking for?' })
+    const res = answerOf(
+      await askAssistant({
+        message: 'hi there',
+        history: ['How do I find black owned produce?'],
+        previous: [{ name: 'Produce', plan: { category: null, keywords: ['produce'], openNow: false } }],
+      })
+    )
+    expect(res).toMatchObject({ heading: 'Cue', summary: 'Cue replied.', needs: [], opener: 'Happy to help. What are you looking for?' })
+    expect(needCalls()).toHaveLength(0)
+  })
+
+  it('drops an opener that claims results, and an upbeat one over an empty answer', async () => {
+    modelSays({ city: 'detroit', needs: [{ name: 'DJ', category: 'djs' }], opener: 'I found the best DJs in Detroit.' })
+    h.search = (p) => ('sort' in p ? [ENTITY('dj1')] : [])
+    expect(answerOf(await askAssistant({ message: 'a dj in detroit' })).opener).toBeNull()
+
+    vi.clearAllMocks()
+    h.queryCalls = []
+    modelSays({ city: 'detroit', needs: [{ name: 'DJ', category: 'djs' }], opener: 'Happy to help with your party in Detroit.' })
+    h.search = (p) => ('sort' in p ? [ENTITY('dj1')] : [])
+    expect(answerOf(await askAssistant({ message: 'a dj for my party in detroit' })).opener).toBe(
+      'Happy to help with your party in Detroit.'
+    )
+
+    h.search = () => []
+    expect(answerOf(await askAssistant({ message: 'a dj for my party in detroit' })).opener).toBeNull()
+  })
+
+  it('offers only the actions this page has, built by us', async () => {
+    modelSays({ needs: [], actions: ['open_now', 'plans', 'checkout'], opener: 'Sure, I can narrow this page to places open now.' })
+    const res = answerOf(
+      await askAssistant({ message: 'only the ones open now', page: '/discover?category=soul-food&city=detroit' })
+    )
+    expect(res.actions).toEqual([
+      { kind: 'link', href: '/discover?category=soul-food&city=detroit&open_now=1', label: 'Show only open now' },
+    ])
+    expect(res).toMatchObject({ heading: 'Cue', summary: 'Cue has a next step for you below.' })
+    const call = h.callAnthropic.mock.calls[0]![0] as { prompt: string }
+    expect(call.prompt).toContain('open_now')
+    expect(call.prompt).not.toContain('plans')
+  })
+
+  it('scrolls to the plans on the plans page', async () => {
+    modelSays({ needs: [], actions: ['plans'] })
+    const res = answerOf(await askAssistant({ message: 'which plan fits a food truck?', page: '/pricing' }))
+    expect(res.actions).toEqual([{ kind: 'scroll', ids: ['plans'], label: 'the plans' }])
+    expect(res.summary).toBe('Cue can take you to the plans.')
+  })
+
+  it('treats a page path from off the site as no page', async () => {
+    modelSays({ needs: [], actions: ['plans'], opener: 'Happy to help.' })
+    const res = answerOf(await askAssistant({ message: 'which plan fits me?', page: '//evil.example/pricing' }))
+    expect(res.actions).toEqual([])
   })
 })

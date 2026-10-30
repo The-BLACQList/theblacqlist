@@ -219,20 +219,25 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   <strong>It&apos;s optional.</strong> You can set up and run your page without it.
                 </p>
                 <p>
-                  <strong>The home page guide and the AI assistant.</strong> If you type what you need
-                  into the guide on our home page, or ask the AI assistant (the Ask button on our
+                  <strong>The home page guide and Cue, our AI assistant.</strong> If you type what
+                  you need into the guide on our home page, or ask Cue (the Ask Cue button on our
                   pages), we send those words to Anthropic so it can match them to our categories and
-                  cities. With the assistant, we also send your last few messages, so a follow-up like
-                  &ldquo;what about DJs?&rdquo; makes sense. Before we send anything, we take out
-                  anything that looks like an email address, a phone number, a street address, or a
-                  link. Every business the assistant shows comes from our own listings. Your
-                  conversation stays in your browser tab and clears when you close the tab or tap
-                  Clear chat. We don&apos;t save what you type, and we don&apos;t link it to you or
-                  your account. We only keep a record that the guide or assistant was used (when, and
-                  whether it worked). If you tap Near me or ask for something near you, we round your
-                  location to about a city block and use it only to sort that search by distance. We
-                  don&apos;t send it to Anthropic and we don&apos;t save it. If you&apos;d rather not
-                  use AI, our{' '}
+                  cities and write Cue&apos;s one-line reply. We check that reply before you see it,
+                  and every business Cue shows comes from our own listings. With Cue, we also send
+                  your last few messages, so a follow-up like &ldquo;what about DJs?&rdquo; makes
+                  sense. Before we send anything, we take out anything that looks like an email
+                  address, a phone number, a street address, or a link. Cue also knows which public
+                  page you&apos;re on. We send the page&apos;s address, and we look up only what that
+                  page already shows anyone (for a business page: its name, kind of business, city
+                  and rating), so Cue can help on that page. Your conversation stays in your browser
+                  tab and clears when you close the tab or tap Clear chat. We don&apos;t save what you
+                  type, and we don&apos;t link it to you or your account. We only keep a record that
+                  the guide or Cue was used (when, and whether it worked). If you tap Near me or ask
+                  for something near you, we round your location to about a city block and use it
+                  only to sort that search by distance. If your next message is a follow-up to a
+                  Near me answer, we ask your browser for your location again for that search. We
+                  don&apos;t send your location to Anthropic and we don&apos;t save it. If you&apos;d
+                  rather not use AI, our{' '}
                   <Link href="/search" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
                     Search page
                   </Link>{' '}
@@ -419,7 +424,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and AI assistant that match what a visitor types to our categories and cities (not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that match what a visitor types to our categories and cities and write a short reply (not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"

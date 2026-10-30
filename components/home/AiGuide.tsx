@@ -5,17 +5,18 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, LoaderCircle, MessageCircle } from 'lucide-react'
 
-import { askAssistant } from '@/lib/actions/ai/assistant'
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import type { AssistantResponse } from '@/lib/ai/assistant-limits'
+import { askCue } from '@/lib/assistant/ask'
 import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
-import { addTurn, openAssistantFrom } from '@/lib/assistant/store'
+import { addTurn, openAssistantFrom, type AssistantTurn } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
   AssistantReply,
   AssistantSkeleton,
   replyStatus,
 } from '@/components/assistant/AssistantAnswer'
+import { useExample } from '@/components/assistant/useExample'
 import { fallbackHref, GUIDE_MAX_INPUT, GUIDE_MAX_RESULTS, withChip } from '@/lib/ai/guide-limits'
 import { EntityCard } from '@/components/entities/EntityCard'
 import { HeroQuickFilters, type NearPoint, type QuickFilter } from '@/components/home/HeroQuickFilters'
@@ -25,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 type Results = Extract<GuideResponse, { kind: 'results' }>
 type AssistantAnswer = { ask: string; reply: Extract<AssistantResponse, { kind: 'answer' }> }
 
-const FALLBACK_STATUS = "Couldn't match that. Showing search results for what you typed."
+const FALLBACK_STATUS = "I couldn't match that, so here are search results for what you typed."
 const NO_LOCATION_STATUS = "Couldn't get your location. Type a city instead, or try Near me again."
 
 /** One short line for screen readers; the cards themselves are not announced. */
@@ -52,9 +53,11 @@ const LINK =
  * The words stay in this component's state and the one server call. Nothing
  * here stores or logs them.
  *
- * With `assistant` on (ticket 147) the bar asks the site assistant instead and
- * shows its need groups here. "Keep chatting" copies the turn into this tab's
- * chat and opens the corner panel.
+ * With `assistant` on (tickets 147 and 148) the bar asks Cue instead and shows
+ * its need groups here. The bar's own last few asks go along, so "in atlanta"
+ * follows on from the answer above it. "Keep chatting with Cue" copies the
+ * turn into this tab's chat and opens the corner panel. Cue's panel carries
+ * the AI notice; the bar keeps it for screen readers.
  */
 export function AiGuide({
   filters,
@@ -69,6 +72,9 @@ export function AiGuide({
   const [answer, setAnswer] = useState<Results | null>(null)
   const [assistantAnswer, setAssistantAnswer] = useState<AssistantAnswer | null>(null)
   const [kept, setKept] = useState(false)
+  // The bar's own asks with Cue, for follow-ups. Memory only.
+  const barTurns = useRef<AssistantTurn[]>([])
+  const example = useExample()
   const [status, setStatus] = useState('')
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -89,26 +95,23 @@ export function AiGuide({
     if (pending) return
     setAnswer(null)
     setAssistantAnswer(null)
-    setStatus('Finding matches…')
     if (assistant) {
+      setStatus('Cue is looking…')
       startTransition(async () => {
-        let reply: AssistantResponse
-        try {
-          reply = await askAssistant({ message: words, near: at })
-        } catch {
-          reply = { kind: 'fallback', href: fallbackHref(words), reason: 'error' }
-        }
+        const reply: AssistantResponse = await askCue(words, { turns: barTurns.current, near: at })
         if (reply.kind === 'fallback') {
           setStatus(FALLBACK_STATUS)
           router.push(reply.href)
           return
         }
+        barTurns.current = [...barTurns.current, { id: String(barTurns.current.length), ask: words, reply }].slice(-4)
         setKept(false)
         setAssistantAnswer({ ask: words, reply })
         setStatus(replyStatus(reply))
       })
       return
     }
+    setStatus('Finding matches…')
     startTransition(async () => {
       let res: GuideResponse
       try {
@@ -185,20 +188,23 @@ export function AiGuide({
         onSubmit={onSubmit}
         className="flex flex-row items-end gap-2 sm:gap-3"
         role="search"
-        aria-label="Ask the guide"
+        aria-label={assistant ? 'Ask Cue' : 'Ask the guide'}
       >
         <div className="flex-1 min-w-0">
           <label
             htmlFor="ai-guide-input"
             className="flex items-center gap-2 font-subhead text-sm font-semibold text-off-white mb-2"
           >
-            Tell me what you need
-            <span
-              aria-hidden="true"
-              className="rounded-full border border-gold/70 px-1.5 py-px font-subhead text-[11px] font-bold uppercase tracking-[0.08em] text-gold"
-            >
-              AI
-            </span>
+            Tell us what you&rsquo;re looking for
+            {/* Cue's panel says it uses AI; the older guide keeps its tag. */}
+            {!assistant && (
+              <span
+                aria-hidden="true"
+                className="rounded-full border border-gold/70 px-1.5 py-px font-subhead text-[11px] font-bold uppercase tracking-[0.08em] text-gold"
+              >
+                AI
+              </span>
+            )}
             <span className="sr-only">(answered with AI)</span>
           </label>
           <div className="relative">
@@ -212,7 +218,7 @@ export function AiGuide({
               maxLength={GUIDE_MAX_INPUT}
               autoComplete="off"
               enterKeyHint="search"
-              placeholder="Braids in Atlanta, or a name"
+              placeholder={assistant ? example : 'Braids in Atlanta, or a name'}
               className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
             />
           </div>
@@ -228,7 +234,7 @@ export function AiGuide({
           ) : (
             <ArrowRight className="size-5 sm:hidden" aria-hidden="true" />
           )}
-          <span className="sr-only sm:not-sr-only">Ask</span>
+          <span className="sr-only sm:not-sr-only">{assistant ? 'Ask Cue' : 'Ask'}</span>
         </button>
       </form>
 
@@ -252,10 +258,22 @@ export function AiGuide({
           ) : assistantAnswer ? (
             <div
               role="region"
-              aria-label="Answer"
+              aria-label="Cue's answer"
               className="rounded-2xl border border-gold/40 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4"
             >
-              <AssistantReply ask={assistantAnswer.ask} reply={assistantAnswer.reply} layout="page" headingLevel={2} />
+              <AssistantReply
+                ask={assistantAnswer.ask}
+                reply={assistantAnswer.reply}
+                layout="page"
+                headingLevel={2}
+                handlers={{
+                  onAsk: (words) => {
+                    focusAnswer.current = true
+                    setText(words)
+                    ask(words, near)
+                  },
+                }}
+              />
               <button
                 type="button"
                 onClick={(event) => {
@@ -267,7 +285,7 @@ export function AiGuide({
                 className={ASSISTANT_LINK}
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                Keep chatting
+                Keep chatting with Cue
               </button>
             </div>
           ) : (

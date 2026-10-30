@@ -43,7 +43,8 @@ export function PricingPlans({
   const savingsPct = annualSavingsPct(starter)
 
   return (
-    <div className="mt-8">
+    // Cue jumps here when asked about plans (ticket 148).
+    <div id="plans" className="mt-8 scroll-mt-32">
       <div className="flex justify-center mb-8">
         <BillingCycleToggle
           value={cycle}

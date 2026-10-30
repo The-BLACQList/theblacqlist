@@ -1,7 +1,12 @@
 import { useSyncExternalStore } from 'react'
 import { z } from 'zod'
 
-import { ASSISTANT_HISTORY, type AssistantResponse } from '@/lib/ai/assistant-limits'
+import {
+  ASSISTANT_HISTORY,
+  ASSISTANT_MAX_NEEDS,
+  type AssistantSearchPlan,
+  type AssistantResponse,
+} from '@/lib/ai/assistant-limits'
 
 /**
  * The site assistant's chat, kept in this browser tab only (ticket 147).
@@ -46,10 +51,23 @@ const cardSchema = z.object({
   imageSrc: imageSrc.nullable(),
 })
 
+// tel: links hold only digits and an optional leading +.
+const externalHref = z
+  .string()
+  .refine((h) => h.startsWith('https://') || /^tel:\+?\d{3,15}$/.test(h))
+
+const actionSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('scroll'), ids: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)), label: z.string() }),
+  z.object({ kind: z.literal('link'), href: internalHref, label: z.string() }),
+  z.object({ kind: z.literal('external'), href: externalHref, label: z.string() }),
+  z.object({ kind: z.literal('ask'), text: z.string(), label: z.string() }),
+])
+
 const replySchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('answer'),
     heading: z.string(),
+    opener: z.string().nullable(),
     notice: z.string().nullable(),
     summary: z.string(),
     needs: z.array(
@@ -60,11 +78,18 @@ const replySchema = z.discriminatedUnion('kind', [
         total: z.number(),
         top: z.array(cardSchema),
         seeAllHref: internalHref.nullable(),
+        plan: z.object({
+          category: z.string().nullable(),
+          keywords: z.array(z.string()),
+          openNow: z.boolean(),
+        }),
       })
     ),
     nameMatches: z.array(cardSchema),
     page: z.object({ label: z.string(), href: internalHref }).nullable(),
     searchHref: internalHref,
+    actions: z.array(actionSchema),
+    near: z.boolean(),
   }),
   z.object({ kind: z.literal('fallback'), href: internalHref, reason: z.enum(['limited', 'error']) }),
 ])
@@ -180,6 +205,30 @@ export function takeReturnFocus(): HTMLElement | null {
 /** The visitor's last few asks, sent with the next one so follow-ups make sense. */
 export function historyFor(turns: readonly AssistantTurn[]): string[] {
   return turns.map((t) => t.ask).slice(-ASSISTANT_HISTORY)
+}
+
+/** The last answer, or null when the chat is empty or ended on a fallback. */
+function lastAnswer(turns: readonly AssistantTurn[]) {
+  const reply = turns.at(-1)?.reply
+  return reply && reply.kind === 'answer' ? reply : null
+}
+
+/**
+ * The last answer's search plans, sent as `previous` so a follow-up like
+ * "in atlanta" re-runs those needs only. Needs that had no plan are skipped.
+ */
+export function previousFor(turns: readonly AssistantTurn[]): { name: string; plan: AssistantSearchPlan }[] {
+  const last = lastAnswer(turns)
+  if (!last) return []
+  return last.needs
+    .filter((n) => n.plan.category !== null || n.plan.keywords.length > 0)
+    .slice(0, ASSISTANT_MAX_NEEDS)
+    .map((n) => ({ name: n.name, plan: n.plan }))
+}
+
+/** True when the last answer used the visitor's location. Never a position. */
+export function lastWasNear(turns: readonly AssistantTurn[]): boolean {
+  return lastAnswer(turns)?.near === true
 }
 
 /** Tests only: forget the in-memory copy so the next read loads from storage. */

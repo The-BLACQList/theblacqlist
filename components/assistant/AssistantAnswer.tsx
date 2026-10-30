@@ -3,15 +3,17 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, ArrowUpRight, Check, Copy, Minus, Star } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Check, Copy, CornerDownRight, MessageCircle, Minus, Phone, Star } from 'lucide-react'
 
 import type {
+  AssistantAction,
   AssistantCard,
   AssistantNeedResult,
   AssistantNeedStatus,
   AssistantResponse,
 } from '@/lib/ai/assistant-limits'
 import { Skeleton } from '@/components/ui/skeleton'
+import { jumpToSection } from '@/lib/assistant/scroll'
 import { cn } from '@/lib/utils'
 
 type Answer = Extract<AssistantResponse, { kind: 'answer' }>
@@ -23,13 +25,21 @@ export type AnswerLayout = 'panel' | 'page'
 export const ASSISTANT_LINK =
   'inline-flex items-center gap-1.5 min-h-11 font-subhead text-sm font-semibold text-gold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm'
 
-const LIMITED_LINE = "You've asked a lot this minute. Try again shortly."
-const ERROR_LINE = "Couldn't answer that one. A plain search may help."
+const LIMITED_LINE = "You've asked me a lot this minute. Give me a moment and try again."
+const ERROR_LINE = "I couldn't answer that one. A plain search may help."
 
 /** The short line a status region reads out after each reply. */
 export function replyStatus(reply: AssistantResponse): string {
   if (reply.kind === 'fallback') return reply.reason === 'limited' ? LIMITED_LINE : ERROR_LINE
   return reply.notice ? `${reply.notice} ${reply.summary}` : reply.summary
+}
+
+/** What the action buttons do. Without `onAsk`, ask actions are hidden. */
+export interface ReplyHandlers {
+  /** Sends `text` as the visitor's next ask. */
+  onAsk?: (text: string) => void
+  /** Jumps to a section. Defaults to a plain jump. */
+  onJump?: (ids: string[]) => void
 }
 
 /** One reply: an answer with its need groups, or a plain-search fallback. */
@@ -38,14 +48,16 @@ export function AssistantReply({
   reply,
   layout,
   headingLevel = 3,
+  handlers = {},
 }: {
   ask: string
   reply: AssistantResponse
   layout: AnswerLayout
   headingLevel?: 2 | 3
+  handlers?: ReplyHandlers
 }) {
   if (reply.kind === 'fallback') return <FallbackReply ask={ask} reply={reply} />
-  return <AnswerReply answer={reply} layout={layout} headingLevel={headingLevel} />
+  return <AnswerReply answer={reply} layout={layout} headingLevel={headingLevel} handlers={handlers} />
 }
 
 function FallbackReply({ ask, reply }: { ask: string; reply: Fallback }) {
@@ -66,12 +78,14 @@ function AnswerReply({
   answer,
   layout,
   headingLevel,
+  handlers,
 }: {
   answer: Answer
   layout: AnswerLayout
   headingLevel: 2 | 3
+  handlers: ReplyHandlers
 }) {
-  const { heading, notice, needs, nameMatches, page, searchHref } = answer
+  const { heading, opener, notice, needs, nameMatches, page, searchHref, actions } = answer
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
   const Sub = headingLevel === 2 ? 'h3' : 'h4'
   const plan = needs.length > 1
@@ -79,10 +93,19 @@ function AnswerReply({
 
   return (
     <div className="space-y-4">
+      {opener && (
+        <p className="font-body text-base text-off-white">
+          <span className="sr-only">Cue says: </span>
+          {opener}
+        </p>
+      )}
+
       <div>
         <Heading className="font-subhead text-base font-bold text-off-white">{heading}</Heading>
         {notice && <p className="mt-1 font-body text-sm text-off-white">{notice}</p>}
       </div>
+
+      {actions.length > 0 && <ActionRow actions={actions} handlers={handlers} />}
 
       {nameMatches.length > 0 && (
         <section>
@@ -114,6 +137,75 @@ function AnswerReply({
         )}
       </div>
     </div>
+  )
+}
+
+const ACTION_BUTTON =
+  'inline-flex items-center gap-1.5 min-h-11 rounded-full border border-gold/60 px-4 font-subhead text-sm font-semibold text-off-white hover:bg-gold/15 hover:border-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+
+/**
+ * Cue's buttons for this page. Each waits for a tap; only the scroll that came
+ * with the answer ran on its own, and its button jumps back there.
+ */
+function ActionRow({ actions, handlers }: { actions: AssistantAction[]; handlers: ReplyHandlers }) {
+  const jump = handlers.onJump ?? ((ids: string[]) => void jumpToSection(ids))
+  return (
+    <ul className="flex flex-wrap gap-2 list-none p-0 m-0">
+      {actions.map((action) => {
+        const key = `${action.kind}-${action.label}`
+        if (action.kind === 'scroll') {
+          return (
+            <li key={key}>
+              <button type="button" onClick={() => jump(action.ids)} className={ACTION_BUTTON}>
+                <CornerDownRight className="size-4 text-gold" aria-hidden="true" />
+                Take me to {action.label}
+              </button>
+            </li>
+          )
+        }
+        if (action.kind === 'ask') {
+          if (!handlers.onAsk) return null
+          const onAsk = handlers.onAsk
+          return (
+            <li key={key}>
+              <button type="button" onClick={() => onAsk(action.text)} className={ACTION_BUTTON}>
+                <MessageCircle className="size-4 text-gold" aria-hidden="true" />
+                {action.label}
+              </button>
+            </li>
+          )
+        }
+        if (action.kind === 'link') {
+          return (
+            <li key={key}>
+              <Link href={action.href} className={ACTION_BUTTON}>
+                {action.label}
+                <ArrowRight className="size-4 text-gold" aria-hidden="true" />
+              </Link>
+            </li>
+          )
+        }
+        const tel = action.href.startsWith('tel:')
+        return (
+          <li key={key}>
+            <a
+              href={action.href}
+              {...(tel ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+              className={ACTION_BUTTON}
+            >
+              {tel && <Phone className="size-4 text-gold" aria-hidden="true" />}
+              {action.label}
+              {!tel && (
+                <>
+                  <ArrowUpRight className="size-4 text-gold" aria-hidden="true" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </>
+              )}
+            </a>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

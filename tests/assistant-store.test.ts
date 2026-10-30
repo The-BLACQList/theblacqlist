@@ -37,15 +37,18 @@ function answer(over: Partial<Extract<AssistantResponse, { kind: 'answer' }>> = 
   return {
     kind: 'answer',
     heading: 'Your list in Detroit',
+    opener: null,
     notice: null,
     summary: '2 needs, 1 not listed.',
     needs: [
-      { name: 'Catering', status: 'found', line: '4 in Detroit', total: 4, top: [card()], seeAllHref: '/discover?category=catering' },
-      { name: 'Balloon decor', status: 'none', line: 'Not on The BLACQList yet.', total: 0, top: [], seeAllHref: null },
+      { name: 'Catering', status: 'found', line: '4 places in Detroit', total: 4, top: [card()], seeAllHref: '/discover?category=catering', plan: { category: 'catering', keywords: [], openNow: false } },
+      { name: 'Balloon decor', status: 'none', line: "We don't have this on The BLACQList yet.", total: 0, top: [], seeAllHref: null, plan: { category: null, keywords: [], openNow: false } },
     ],
     nameMatches: [],
     page: null,
     searchHref: '/search?q=party',
+    actions: [],
+    near: false,
     ...over,
   }
 }
@@ -203,7 +206,7 @@ describe('listText and replyStatus', () => {
 
   it('marks a nearest-city pick', () => {
     const needs = [
-      { name: 'Thai food', status: 'nearest' as const, line: '', total: 2, top: [card({ name: 'Bangkok House', cityLabel: 'Seattle, WA' })], seeAllHref: null },
+      { name: 'Thai food', status: 'nearest' as const, line: '', total: 2, top: [card({ name: 'Bangkok House', cityLabel: 'Seattle, WA' })], seeAllHref: null, plan: { category: 'restaurants', keywords: ['thai'], openNow: false } },
     ]
     expect(listText(needs)).toBe('Your list\n- Thai food: Bangkok House (Seattle, WA) [nearest city]')
   })
@@ -212,7 +215,7 @@ describe('listText and replyStatus', () => {
     expect(replyStatus(answer({ notice: "We don't list businesses in Alaska yet." }))).toBe(
       "We don't list businesses in Alaska yet. 2 needs, 1 not listed."
     )
-    expect(replyStatus({ kind: 'fallback', href: '/search?q=x', reason: 'limited' })).toMatch(/asked a lot/)
+    expect(replyStatus({ kind: 'fallback', href: '/search?q=x', reason: 'limited' })).toMatch(/asked me a lot/)
     expect(replyStatus({ kind: 'fallback', href: '/search?q=x', reason: 'error' })).toMatch(/plain search/)
   })
 })

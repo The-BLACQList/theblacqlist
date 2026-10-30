@@ -275,13 +275,20 @@ City codes:
 Help page codes:
 {{page_list}}
 
-Return one JSON object and nothing else, with these keys:
-- "city": a city code if they name that city now or before, otherwise null
-- "place": if they name a place that is not a city code (a state, a town), copy its name from their words, otherwise null
-- "needs": up to 6 things they need. For a plan or an event, list each kind of business it needs. Each item: "name" (2 to 40 characters, plain words), "category" (the most specific category code that fits, such as Bakeries for a cake rather than the whole food group, or null), "keywords" (up to 3 single words from their words or the name, otherwise []), "open_now" (true only if they want it open right now)
-- "page": a help page code only if they ask how the site works, otherwise null
+This page: {{page_facts}}
+Page action codes: {{action_list}}
 
-When the new words follow on from earlier ones ("what about DJs?"), keep the city or place from before. Never use a code that is not listed.`,
+Return one JSON object and nothing else, with these keys:
+- "city": a city code if they name that city now or before, otherwise null. A place they turn down ("not in Chicago") is never the city
+- "place": if they name a place that is not a city code (a state, a town), copy its name from their words, otherwise null
+- "needs": up to 6 things they need, only from the new words. For a plan or an event, list each kind of business it needs. For "how do I find or switch to X", the need is X. Each item: "name" (2 to 40 characters, plain words), "category" (the most specific category code that fits, such as Bakeries for a cake rather than the whole food group, or null), "keywords" (up to 3 single words from their words or the name, otherwise []), "open_now" (true only if they want it open right now)
+- "follow_up": true when the new words only change the place, the time or open now, or correct you. Then "needs" is []
+- "open_now": true if the new words ask for open now
+- "page": a help page code only if they ask how the site works, otherwise null
+- "actions": up to 3 page action codes that answer them on this page, otherwise []
+- "opener": one short friendly sentence that replies to them, up to 160 characters. Never say what you found
+
+Never use a code that is not listed.`,
 } as const
 
 export type PromptTemplateKey = keyof typeof PROMPT_TEMPLATES

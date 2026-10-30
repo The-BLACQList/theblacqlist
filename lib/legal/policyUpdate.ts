@@ -68,5 +68,6 @@ export const TERMS_PAID_PLANS = {
  * Change this label if the page goes live on a later day.
  */
 export const PRIVACY_PROVIDERS_UPDATE = {
-  postedOnLabel: 'October 29, 2026',
+  // Moved to the Cue update (ticket 148). Change it if that merges on a later day.
+  postedOnLabel: 'October 30, 2026',
 } as const
