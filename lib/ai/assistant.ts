@@ -163,22 +163,32 @@ export function checkNeedName(raw: string | null | undefined): string | null {
 
 /** Every word the visitor typed, now or in the history sent with this ask. */
 export function typedWords(message: string, history: readonly string[]): Set<string> {
-  return new Set(
-    [message, ...history]
-      .map(normalizeWords)
-      .join(' ')
-      .split(' ')
-      .filter(Boolean)
-  )
+  return new Set([message, ...history].map(normalizeWords).join(' ').split(' ').filter(Boolean))
 }
 
 const NAME_WORD_SKIP = new Set(['and', 'for', 'the', 'of', 'a', 'an', 'or', 'with', 'in'])
 
-function nameWords(name: string): string[] {
+export function nameWords(name: string): string[] {
   return normalizeWords(name)
     .split(' ')
     .filter((w) => w.length >= 2 && !NAME_WORD_SKIP.has(w))
 }
+
+/**
+ * Words that say who the business is or how it was asked for, not what it
+ * sells. Every listing is meant to be Black-owned, so "black" as a search word
+ * only matches descriptions that happen to say it.
+ */
+const NOT_SEARCH_WORDS = new Set([
+  'black',
+  'owned',
+  'blackowned',
+  'vendor',
+  'vendors',
+  'business',
+  'businesses',
+  'local',
+])
 
 function allowedNeedKeywords(
   raw: readonly string[],
@@ -193,6 +203,7 @@ function allowedNeedKeywords(
     if (!word || word.includes(' ')) continue
     if (word.length < 2 || word.length > 20) continue
     if (!typed.has(word) && !fromName.has(word)) continue
+    if (NOT_SEARCH_WORDS.has(word)) continue
     if (repeats.has(word) || out.includes(word)) continue
     out.push(word)
     if (out.length === ASSISTANT_MAX_KEYWORDS) break
@@ -208,11 +219,16 @@ export function applyAssistantAllowList(
 ): AssistantPlan {
   const city = raw.city ? (allow.cities.find((c) => c.slug === raw.city) ?? null) : null
   const page =
-    raw.page && Object.prototype.hasOwnProperty.call(GUIDE_PAGES, raw.page) ? (raw.page as GuidePageKey) : null
+    raw.page && Object.prototype.hasOwnProperty.call(GUIDE_PAGES, raw.page)
+      ? (raw.page as GuidePageKey)
+      : null
 
   const placeWords = raw.place ? normalizeWords(raw.place).split(' ').filter(Boolean) : []
   const place =
-    !city && placeWords.length > 0 && placeWords.length <= 5 && placeWords.every((w) => typed.has(w))
+    !city &&
+    placeWords.length > 0 &&
+    placeWords.length <= 5 &&
+    placeWords.every((w) => typed.has(w))
       ? placeWords.join(' ')
       : null
 
@@ -228,7 +244,9 @@ export function applyAssistantAllowList(
     let keywords = allowedNeedKeywords(rawNeed.keywords ?? [], typed, name, repeats)
     // Nothing to search on but the name: its words become the search terms.
     if (!category && keywords.length === 0) {
-      keywords = nameWords(name).filter((w) => !repeats.has(w)).slice(0, ASSISTANT_MAX_KEYWORDS)
+      keywords = nameWords(name)
+        .filter((w) => !repeats.has(w) && !NOT_SEARCH_WORDS.has(w))
+        .slice(0, ASSISTANT_MAX_KEYWORDS)
     }
     if (!category && keywords.length === 0) continue
     const key = normalizeWords(name)
@@ -261,7 +279,9 @@ function stripFences(text: string): string {
     .trim()
 }
 
-export type AssistantParse = { ok: true; plan: AssistantPlan } | { ok: false; reason: OutputRejection }
+export type AssistantParse =
+  | { ok: true; plan: AssistantPlan }
+  | { ok: false; reason: OutputRejection }
 
 /** Checks the raw answer, then runs it through the allow-list. */
 export function parseAssistantAnswer(
@@ -286,7 +306,10 @@ export function parseAssistantAnswer(
 
 /** Brackets and braces out, so the visitor's words cannot close their block. */
 function neutralize(text: string): string {
-  return text.replace(/[[\]{}`]/g, ' ').replace(/\s{2,}/g, ' ').trim()
+  return text
+    .replace(/[[\]{}`]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 }
 
 function fill(template: string, vars: Record<string, string>): string {
@@ -342,7 +365,9 @@ const PRIOR_WEIGHT = 3
  */
 export function weightedRating(avg: number | null, count: number): number | null {
   if (avg == null || !Number.isFinite(avg) || count <= 0) return null
-  return (count / (count + PRIOR_WEIGHT)) * avg + (PRIOR_WEIGHT / (count + PRIOR_WEIGHT)) * PRIOR_RATING
+  return (
+    (count / (count + PRIOR_WEIGHT)) * avg + (PRIOR_WEIGHT / (count + PRIOR_WEIGHT)) * PRIOR_RATING
+  )
 }
 
 /** Rated first, best weighted rating first; unrated after, in search order. */
@@ -351,7 +376,11 @@ export function rankTop<T extends { avg_rating: number | null; review_count: num
   limit: number
 ): T[] {
   return items
-    .map((item, index) => ({ item, index, score: weightedRating(item.avg_rating, item.review_count) }))
+    .map((item, index) => ({
+      item,
+      index,
+      score: weightedRating(item.avg_rating, item.review_count),
+    }))
     .sort((a, b) => {
       if (a.score !== null && b.score !== null) return b.score - a.score || a.index - b.index
       if (a.score !== null) return -1
@@ -367,7 +396,10 @@ export function rankTop<T extends { avg_rating: number | null; review_count: num
  * them. Each need takes its best cards not already shown above it, and only
  * repeats one when it has nothing else to show. Pools come in rank order.
  */
-export function spreadTops<T extends { id: string }>(pools: readonly (readonly T[])[], limit: number): T[][] {
+export function spreadTops<T extends { id: string }>(
+  pools: readonly (readonly T[])[],
+  limit: number
+): T[][] {
   const shown = new Set<string>()
   return pools.map((pool) => {
     const picked = pool.filter((c) => !shown.has(c.id)).slice(0, limit)
@@ -411,7 +443,10 @@ export function nearestCities<T extends PointCity>(
         Number.isFinite(c.lat) &&
         Number.isFinite(c.lng)
     )
-    .map((c) => ({ c, miles: distanceMiles(point, { lat: c.lat as number, lng: c.lng as number }) }))
+    .map((c) => ({
+      c,
+      miles: distanceMiles(point, { lat: c.lat as number, lng: c.lng as number }),
+    }))
     .sort((a, b) => a.miles - b.miles || a.c.name.localeCompare(b.c.name))
     .slice(0, limit)
     .map((r) => r.c)
@@ -573,7 +608,8 @@ export function uncoveredNotice(placeLabel: string): string {
 }
 
 /** Said "near me" but the browser gave no location, so the answer covers every city. */
-export const NO_LOCATION_NOTICE = "We couldn't see your location, so these are from every city we list. Tap Near me or name a city to narrow it."
+export const NO_LOCATION_NOTICE =
+  "We couldn't see your location, so these are from every city we list. Tap Near me or name a city to narrow it."
 
 export const NOT_LISTED_LINE = 'Not on The BLACQList yet.'
 
@@ -589,7 +625,12 @@ export function nearestLine(placeLabel: string | null, cityName: string, total: 
     : `Nearest we list: ${cityName} (${total})`
 }
 
-export function closeLine(needName: string, where: string | null, parentName: string, total: number): string {
+export function closeLine(
+  needName: string,
+  where: string | null,
+  parentName: string,
+  total: number
+): string {
   return where
     ? `No ${needName} in ${where} yet. Close to it: ${parentName} (${total})`
     : `No ${needName} yet. Close to it: ${parentName} (${total})`
@@ -614,7 +655,11 @@ export function elsewhereLine(placeLabel: string, total: number): string {
 }
 
 /** The heading over the answer. */
-export function buildHeading(needs: readonly { name: string }[], where: string | null, near: boolean): string {
+export function buildHeading(
+  needs: readonly { name: string }[],
+  where: string | null,
+  near: boolean
+): string {
   const place = where ? ` in ${where}` : near ? ' near you' : ''
   const [first] = needs
   if (needs.length === 1 && first) return `${first.name}${place}`
@@ -623,11 +668,14 @@ export function buildHeading(needs: readonly { name: string }[], where: string |
 }
 
 /** One line for the status region, read out after each answer. */
-export function buildAssistantSummary(needs: readonly Pick<AssistantNeedResult, 'status' | 'total'>[]): string {
+export function buildAssistantSummary(
+  needs: readonly Pick<AssistantNeedResult, 'status' | 'total'>[]
+): string {
   if (needs.length === 0) return 'Here is a page that may help.'
   const [only] = needs
   if (needs.length === 1 && only) {
-    if (only.status === 'found') return `Found ${only.total} ${only.total === 1 ? 'match' : 'matches'}.`
+    if (only.status === 'found')
+      return `Found ${only.total} ${only.total === 1 ? 'match' : 'matches'}.`
     if (only.status === 'none') return NOT_LISTED_LINE
     return 'No exact match. A close option is below.'
   }
@@ -690,9 +738,24 @@ const EXTRA_SYNONYMS: Record<string, readonly [string, readonly string[]]> = {
   decor: ['Decor', DECOR],
 }
 
-const MOCK_FILLER = new Set(['what', 'about', 'also', 'too', 'how', 'any', 'black', 'owned', 'vendors', 'all', 'plan'])
+const MOCK_FILLER = new Set([
+  'what',
+  'about',
+  'also',
+  'too',
+  'how',
+  'any',
+  'black',
+  'owned',
+  'vendors',
+  'all',
+  'plan',
+])
 
-function bySlugPieces(pieces: readonly string[], categories: readonly AssistantCategory[]): AssistantCategory | null {
+function bySlugPieces(
+  pieces: readonly string[],
+  categories: readonly AssistantCategory[]
+): AssistantCategory | null {
   const sorted = [...categories].sort((a, b) => a.slug.localeCompare(b.slug))
   for (const piece of pieces) {
     const hit = sorted.find((c) => c.slug.includes(piece))
@@ -726,10 +789,16 @@ export function mockAssistantAnswer(
   const norm = normalizeWords(message)
   const whole = guideMock(message, allow)
   let city = whole.city
-  for (let i = history.length - 1; !city && i >= 0; i--) city = guideMock(history[i] ?? '', allow).city
+  for (let i = history.length - 1; !city && i >= 0; i--)
+    city = guideMock(history[i] ?? '', allow).city
   const openNow = whole.open_now
 
-  const needs: Array<{ name: string; category: string | null; keywords: string[]; open_now: boolean }> = []
+  const needs: Array<{
+    name: string
+    category: string | null
+    keywords: string[]
+    open_now: boolean
+  }> = []
 
   if (EVENT_PATTERN.test(norm)) {
     for (const [name, pieces] of EVENT_NEEDS) {
@@ -746,15 +815,28 @@ export function mockAssistantAnswer(
       const extra = words.map((w) => EXTRA_SYNONYMS[w]).find(Boolean)
       if (extra) {
         const category = bySlugPieces(extra[1], allow.categories)
-        needs.push({ name: extra[0], category: category?.slug ?? null, keywords: [], open_now: openNow })
+        needs.push({
+          name: extra[0],
+          category: category?.slug ?? null,
+          keywords: [],
+          open_now: openNow,
+        })
         continue
       }
       const one = guideMock(part, allow)
-      const category = one.category ? allow.categories.find((c) => c.slug === one.category) : undefined
+      const category = one.category
+        ? allow.categories.find((c) => c.slug === one.category)
+        : undefined
       const keywords = one.keywords.filter((k) => !MOCK_FILLER.has(k))
       if (!category && keywords.length === 0) continue
-      const name = category?.name ?? keywords.map((k) => k.charAt(0).toUpperCase() + k.slice(1)).join(' ')
-      needs.push({ name, category: category?.slug ?? null, keywords, open_now: openNow || one.open_now })
+      const name =
+        category?.name ?? keywords.map((k) => k.charAt(0).toUpperCase() + k.slice(1)).join(' ')
+      needs.push({
+        name,
+        category: category?.slug ?? null,
+        keywords,
+        open_now: openNow || one.open_now,
+      })
     }
   }
 

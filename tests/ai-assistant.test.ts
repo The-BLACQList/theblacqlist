@@ -601,7 +601,7 @@ describe('askAssistant', () => {
     expect(h.lookupPlace.mock.calls[0]![0]).toBe('Alaska')
   })
 
-  it('narrows a top-level category to the subcategory that fits before calling it close', async () => {
+  it('narrows a top-level category to the subcategory that fits, and a need named for it is found', async () => {
     h.extraCategories = LIVE_FOOD
     modelSays({
       city: 'detroit',
@@ -619,7 +619,7 @@ describe('askAssistant', () => {
     }
     const res = answerOf(await askAssistant({ message: 'catering and soul food in detroit' }))
     expect(res.needs.map((n) => [n.name, n.status, n.line, n.seeAllHref])).toEqual([
-      ['Catering', 'close', 'No Catering in Detroit yet. Close to it: Catering (2)', '/discover?category=catering-events-food&city=detroit'],
+      ['Catering', 'found', '2 in Detroit', '/discover?category=catering-events-food&city=detroit'],
       ['Soul food', 'found', '1 in Detroit', '/search?q=soul&category=food-dining&city=detroit'],
     ])
     expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
@@ -647,6 +647,19 @@ describe('askAssistant', () => {
     expect(asked).not.toContain('grocery-markets')
     // The food group only ever by words, never as a whole.
     expect(needCalls().filter((c) => c.category === 'food-dining').every((c) => !!c.q)).toBe(true)
+  })
+
+  it('never searches on who the business is ("black", "owned", "vendors")', async () => {
+    modelSays({
+      city: 'detroit',
+      needs: [
+        { name: 'DJ', category: 'djs-live-music', keywords: ['dj', 'black'] },
+        { name: 'Black owned vendors', category: null, keywords: ['black', 'owned', 'vendors'] },
+      ],
+    })
+    await askAssistant({ message: 'a DJ from black owned vendors in detroit' })
+    expect(needCalls().every((c) => !/black|owned|vendors/.test(String(c.q ?? '')))).toBe(true)
+    expect(needCalls().some((c) => c.q === 'dj')).toBe(true)
   })
 
   it('finds a listing filed on the parent group by the kind\'s words', async () => {

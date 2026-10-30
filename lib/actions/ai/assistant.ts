@@ -38,6 +38,7 @@ import {
   ASSISTANT_PER_MINUTE,
   ASSISTANT_SYSTEM_PROMPT,
   NO_LOCATION_NOTICE,
+  nameWords,
   NOT_LISTED_LINE,
   assistantAskSchema,
   buildAssistantPrompt,
@@ -418,7 +419,14 @@ async function search(
   const first = await runOnce(need, category, need.keywords, where, categories)
   if (first.items.length > 0 || need.keywords.length === 0 || !wideKind) return first
   const wide = await runOnce(need, wideKind, [], where, categories)
-  return { ...wide, broad: wide.items.length > 0 }
+  // "Bakery" finding Bakeries is the thing itself; "Thai" finding Restaurants is close.
+  return { ...wide, broad: wide.items.length > 0 && !namesTheKind(need.name, wideKind) }
+}
+
+/** True when every word of the need's name points at this kind ("Bakery", "Cakes"). */
+function namesTheKind(name: string, kind: AssistantCategory): boolean {
+  const words = nameWords(name)
+  return words.length > 0 && words.every((w) => matchCategories(w, [kind]).length > 0)
 }
 
 /** The same search in several cities at once, merged. */
