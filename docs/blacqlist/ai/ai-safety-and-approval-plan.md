@@ -273,6 +273,7 @@ Cue is the Ask Cue button on public pages and, with `FEATURE_AI_ASSISTANT` on, t
     - a number the current page doesn't already show;
     - a capitalized name that isn't one of our cities, our categories, the visitor's need names or the current page's business;
     - a result claim ("found", "best", "top", "here are"), since it is written before the search runs.
+    - a question about where the visitor is, once they used Near me or named a city. The prompt only says whether a location was shared, never the location itself.
   - The opener is also dropped when every need comes back with nothing.
   - Every other line the visitor reads is fixed text we wrote.
 - **Every business comes from our search.**
@@ -291,8 +292,9 @@ Cue is the Ask Cue button on public pages and, with `FEATURE_AI_ASSISTANT` on, t
   - The model never re-adds older needs.
 - **Page awareness (ticket 148).**
   - The client sends only the page path. The server parses it (`lib/assistant/page.ts`) and refuses `//`, backslashes and anything that isn't a site path.
-  - The server then works out the page's public facts itself. For a business page, one published-row read gives its name, kind, city and rating.
+  - The server then works out the page's public facts itself. For a business page, one published-row read gives its name, kind, city and rating, and says "No hours listed." when it has none.
   - The model sees those facts and a list of action codes, and may pick up to 3. Codes the page doesn't offer are dropped.
+  - When the page itself answers the question (a plan, their hours, how to reach them), the model returns no needs, so Cue doesn't also search.
   - Every link (`tel:`, https only, our own paths) is built on the server from our row.
   - Scrolling to and highlighting a section on the page happens on its own. Leaving the page or changing filters waits for a tap.
   - Cue never fills forms, signs anyone in or touches checkout.
