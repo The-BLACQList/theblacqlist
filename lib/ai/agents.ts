@@ -186,7 +186,7 @@ export const ASSISTANT_AGENT: AgentDefinition = {
   blurb: 'Turns what a visitor needs into a list of searches.',
   modelTier: 'fast',
   applyTarget: null,
-  maxOutputChars: 800,
+  maxOutputChars: 1200,
 }
 
 /** Written to `ai_generation_requests.prompt_version` for the site assistant. */
