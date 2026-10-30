@@ -42,6 +42,10 @@
   --color-cat-events: #2563b0;
   --color-cat-jobs: #1f7e94;
 
+  /* Jobs teal (ticket 149). Kind-of-work chip and Jobs eyebrows only. */
+  --color-jobs: #1f7e94;
+  --color-jobs-ink: #176679; /* text on a light surface (6.3:1 on white) */
+
   /* Font families — CSS vars injected by next/font */
   --font-headline: var(--font-jost), 'Century Gothic', 'Futura', system-ui, sans-serif;
   --font-subhead: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

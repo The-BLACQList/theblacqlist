@@ -29,6 +29,35 @@ export type Tier = 'free' | 'standard' | 'premium'
 /** Authoritative ownership label. See lib/constants/listing.ts. */
 export type OwnershipLabel = 'black_owned' | 'ally'
 
+/** The listing_details_job and hiring-business facts a job card needs. Attached fail-soft. */
+export interface JobCardDetails {
+  businessName: string | null
+  businessLogoUrl: string | null
+  employmentType: string | null
+  workplaceType: string | null
+  salaryMin: number | null
+  salaryMax: number | null
+  salaryPeriod: string | null
+  closesAt: string | null
+}
+
+/** Everything components/jobs/JobCard.tsx renders. */
+export interface JobCardData {
+  id: string
+  href: string
+  title: string
+  businessName: string | null
+  businessLogoUrl: string | null
+  /** "Austin, TX", "Remote", or null when the job has neither. */
+  place: string | null
+  employmentType: string | null
+  workplaceType: string | null
+  salaryMin: number | null
+  salaryMax: number | null
+  salaryPeriod: string | null
+  closesAt: string | null
+}
+
 export interface DiscoveryEntity {
   id: string
   name: string
@@ -59,6 +88,8 @@ export interface DiscoveryEntity {
   identity_chips?: string[]
   /** Event start (ISO) — attached fail-soft for entity_type='event' so cards can show a date. */
   event_starts_at?: string | null
+  /** Job facts for the job card — attached fail-soft for entity_type='job' (ticket 149). */
+  job_details?: JobCardDetails | null
   /** Per-user save state — attached fail-soft in queryListings (anon → false). */
   isSaved?: boolean
   /**

@@ -196,12 +196,16 @@ export type JobSalaryPeriod = (typeof JOB_SALARY_PERIODS)[number]
 // Suffix used when rendering a pay range ("$25/hr", "$65,000/yr"). Kept separate
 // from the schema.org unitText mapping in the entity page, which needs HOUR/DAY/
 // WEEK/MONTH/YEAR instead.
-export const JOB_SALARY_PERIOD_META: Record<JobSalaryPeriod, { label: string; suffix: string }> = {
-  hour: { label: 'Per hour', suffix: '/hr' },
-  day: { label: 'Per day', suffix: '/day' },
-  week: { label: 'Per week', suffix: '/wk' },
-  month: { label: 'Per month', suffix: '/mo' },
-  year: { label: 'Per year', suffix: '/yr' },
+// `phrase` is the spoken form used on job cards ("$18–$22 an hour").
+export const JOB_SALARY_PERIOD_META: Record<
+  JobSalaryPeriod,
+  { label: string; suffix: string; phrase: string }
+> = {
+  hour: { label: 'Per hour', suffix: '/hr', phrase: 'an hour' },
+  day: { label: 'Per day', suffix: '/day', phrase: 'a day' },
+  week: { label: 'Per week', suffix: '/wk', phrase: 'a week' },
+  month: { label: 'Per month', suffix: '/mo', phrase: 'a month' },
+  year: { label: 'Per year', suffix: '/yr', phrase: 'a year' },
 }
 
 // The four CTA types a job listing may use — a subset of VALID_CTA_TYPES, and
