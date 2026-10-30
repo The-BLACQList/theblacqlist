@@ -619,6 +619,37 @@
   }
 }
 
+/* The site assistant's Ask button (ticket 147) takes the bottom-right corner,
+   so the Tester Tour rail, which shares it, steps up above it. With the
+   listing page's quick bar showing on a phone, it steps up above both. The
+   doubled :has() outranks the quick-bar rule above. */
+body:has([data-assistant='on']) .stack-over-assistant {
+  bottom: 5rem;
+}
+@media (width < 48rem) {
+  body:has([data-assistant='on']):has([data-quick-bar='shown']) .stack-over-assistant {
+    bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* On /map, a phone's card sheet (MapBottomSheet) fills the bottom edge, so the
+   Ask button rides just above it and moves with it when the list opens. The
+   sheet writes its height to --map-sheet-h; 16rem is the closed strip. */
+@media (width < 48rem) {
+  body:has([data-map-sheet]) .lift-over-map-sheet {
+    bottom: calc(var(--map-sheet-h, 16rem) + 0.75rem);
+    transition: bottom 200ms ease-out;
+  }
+  body:has([data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
+    bottom: calc(var(--map-sheet-h, 16rem) + 4.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift-over-map-sheet {
+    transition: none;
+  }
+}
+
 /* ─── iOS focus-zoom guard ───────────────────────────────────────────────────
    iOS Safari zooms the page when a focused field is under 16px, and the form
    controls here are text-sm (14px). One rule instead of editing every input.

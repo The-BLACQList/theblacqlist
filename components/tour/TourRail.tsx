@@ -251,7 +251,7 @@ export function TourRail() {
 
   const pill = (
     <div
-      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2${undecided ? ' md:hidden' : ''}`}
+      className={`lift-over-quick-bar stack-over-assistant fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2${undecided ? ' md:hidden' : ''}`}
     >
       {/* Always mounted, for the same reason as the panel's live region: a
           region that appears with its text is not announced. The panel's own
@@ -293,7 +293,7 @@ export function TourRail() {
   const panel = (
     <aside
       aria-label="Tester Tour progress"
-      className={`lift-over-quick-bar fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl${undecided ? ' max-md:hidden' : ''}`}
+      className={`lift-over-quick-bar stack-over-assistant fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl${undecided ? ' max-md:hidden' : ''}`}
     >
       {/* ⚠ ALWAYS RENDERED, never conditionally mounted. A live region that
           appears at the same moment as its text is not announced — the browser

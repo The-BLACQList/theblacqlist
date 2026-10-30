@@ -17,6 +17,23 @@ export function MapBottomSheet(props: Props) {
   const { reduceMotion, selectedId, inViewCount, loadError, near } = props
   const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef<HTMLElement>(null)
+
+  // Floating buttons (the site assistant's Ask) ride just above the sheet, so
+  // they never cover a card. The sheet's height goes in a CSS variable.
+  useEffect(() => {
+    const sheet = sheetRef.current
+    if (!sheet || typeof ResizeObserver === 'undefined') return
+    const root = document.documentElement
+    const set = () => root.style.setProperty('--map-sheet-h', `${Math.round(sheet.getBoundingClientRect().height)}px`)
+    set()
+    const observer = new ResizeObserver(set)
+    observer.observe(sheet)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--map-sheet-h')
+    }
+  }, [])
 
   // A pin tap selects a card that may be off-screen in the strip: bring it in.
   useEffect(() => {
@@ -31,6 +48,8 @@ export function MapBottomSheet(props: Props) {
 
   return (
     <section
+      ref={sheetRef}
+      data-map-sheet
       aria-label="Businesses on the map"
       className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[24px] bg-off-white shadow-[0_-8px_28px_rgba(29,28,29,0.18)]"
     >

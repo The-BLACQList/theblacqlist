@@ -219,15 +219,20 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   <strong>It&apos;s optional.</strong> You can set up and run your page without it.
                 </p>
                 <p>
-                  <strong>The home page guide.</strong> If you type what you need into the guide on our
-                  home page, we send those words to Anthropic so it can match them to our categories
-                  and cities. Before we send them, we take out anything that looks like an email
-                  address, a phone number, a street address, or a link. We don&apos;t save what you
-                  type, and we don&apos;t link it to you or your account. We only keep a record that
-                  the guide was used (when, and whether it worked). If you tap Near me under the
-                  guide, we round your location to about a city block and use it only to sort that
-                  search by distance. We don&apos;t send it to Anthropic and we don&apos;t save it. If
-                  you&apos;d rather not use AI, our{' '}
+                  <strong>The home page guide and the AI assistant.</strong> If you type what you need
+                  into the guide on our home page, or ask the AI assistant (the Ask button on our
+                  pages), we send those words to Anthropic so it can match them to our categories and
+                  cities. With the assistant, we also send your last few messages, so a follow-up like
+                  &ldquo;what about DJs?&rdquo; makes sense. Before we send anything, we take out
+                  anything that looks like an email address, a phone number, a street address, or a
+                  link. Every business the assistant shows comes from our own listings. Your
+                  conversation stays in your browser tab and clears when you close the tab or tap
+                  Clear chat. We don&apos;t save what you type, and we don&apos;t link it to you or
+                  your account. We only keep a record that the guide or assistant was used (when, and
+                  whether it worked). If you tap Near me or ask for something near you, we round your
+                  location to about a city block and use it only to sort that search by distance. We
+                  don&apos;t send it to Anthropic and we don&apos;t save it. If you&apos;d rather not
+                  use AI, our{' '}
                   <Link href="/search" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
                     Search page
                   </Link>{' '}
@@ -414,7 +419,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide that matches what a visitor types to our categories and cities (not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and AI assistant that match what a visitor types to our categories and cities (not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"

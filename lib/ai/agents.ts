@@ -167,6 +167,31 @@ export const GUIDE_AGENT: AgentDefinition = {
 /** Written to `ai_generation_requests.prompt_version` for the visitor guide. */
 export const GUIDE_PROMPT_VERSION = 'VISITOR_GUIDE@2'
 
+/**
+ * The site assistant (ticket 147). Like the guide, it maps a visitor's words to
+ * our own filters, but for up to six needs at once ("a party in Detroit" is
+ * catering, a DJ, a venue and so on), and it keeps a follow-up in context with
+ * the visitor's last three messages. The only text it writes that a visitor
+ * reads is a short need name, format-checked in `lib/ai/assistant.ts`. It runs
+ * through `lib/actions/ai/assistant.ts` and shares the guide's budget share.
+ *
+ * `maxOutputChars` covers six needs. The longest legal answer is about 700
+ * characters.
+ */
+export const ASSISTANT_AGENT: AgentDefinition = {
+  agentType: 'visitor_assistant',
+  templateKey: 'VISITOR_ASSISTANT',
+  suggestionType: 'none',
+  label: 'Visitor assistant',
+  blurb: 'Turns what a visitor needs into a list of searches.',
+  modelTier: 'fast',
+  applyTarget: null,
+  maxOutputChars: 1200,
+}
+
+/** Written to `ai_generation_requests.prompt_version` for the site assistant. */
+export const ASSISTANT_PROMPT_VERSION = 'VISITOR_ASSISTANT@1'
+
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)
 }
@@ -201,7 +226,7 @@ export function promptVersionOf(agent: AgentDefinition): string {
 // Fails the build (via the test suite) if an agent names a template that the
 // prompt map does not route. The map is the contract prompts.ts documents.
 export function agentsWithUnroutedTemplates(): string[] {
-  return [...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
+  return [...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT, ASSISTANT_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
     (a) => a.agentType
   )
 }

@@ -29,7 +29,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { AI_AGENTS, GUIDE_AGENT, ONBOARDING_AGENT } from './agents'
+import { AI_AGENTS, ASSISTANT_AGENT, GUIDE_AGENT, ONBOARDING_AGENT } from './agents'
 import { maxTokensFor, SYSTEM_PROMPT } from './anthropic'
 
 /** Longest filled template `generate()` will send. Longer prompts are refused. */
@@ -59,7 +59,7 @@ export function worstCaseUsdPerCall(maxOutputChars: number): number {
  */
 export function worstCaseUsdAnyAgent(): number {
   return Math.max(
-    ...[...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars))
+    ...[...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT, ASSISTANT_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars))
   )
 }
 
