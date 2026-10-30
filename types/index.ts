@@ -29,6 +29,15 @@ export type Tier = 'free' | 'standard' | 'premium'
 /** Authoritative ownership label. See lib/constants/listing.ts. */
 export type OwnershipLabel = 'black_owned' | 'ally'
 
+/** The published business behind a job, as the job page shows it. */
+export interface JobHiring {
+  name: string
+  url: string
+  logoUrl: string | null
+  tagline: string | null
+  cityName: string | null
+}
+
 /** The listing_details_job and hiring-business facts a job card needs. Attached fail-soft. */
 export interface JobCardDetails {
   businessName: string | null
@@ -325,7 +334,7 @@ export interface JobDetails {
   cta_type: string
   cta_url: string | null
   /** The company doing the hiring, when the owner linked one of their listings. */
-  hiring: { name: string; url: string } | null
+  hiring: JobHiring | null
 }
 
 export interface EntityPageData {

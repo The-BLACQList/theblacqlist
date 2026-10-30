@@ -80,6 +80,29 @@ export function formatJobPay(
   return `Up to ${money(max as number)}${tail}`
 }
 
+/**
+ * A deadline is a calendar day in the audience's time zone, not a UTC instant, so
+ * the card and the job page both format it in Eastern time. Returns null for an
+ * unparseable value. "short" is "Nov 3" (cards), "long" is "November 3, 2026".
+ */
+export function formatCloseDate(iso: string, style: 'short' | 'long' = 'short'): string | null {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return null
+  return d.toLocaleDateString('en-US', {
+    month: style === 'long' ? 'long' : 'short',
+    day: 'numeric',
+    ...(style === 'long' && { year: 'numeric' }),
+    timeZone: 'America/New_York',
+  })
+}
+
+/** True once the closing date has passed. No date, or an unparseable one, is never closed. */
+export function isRoleClosed(closesAt: string | null | undefined, now: Date = new Date()): boolean {
+  if (!closesAt) return false
+  const t = new Date(closesAt).getTime()
+  return !isNaN(t) && t < now.getTime()
+}
+
 // schema.org employmentType vocabulary. Our column values are the human-facing
 // slugs; these are the values Google expects.
 const EMPLOYMENT_TYPE_SCHEMA: Record<string, string> = {

@@ -188,7 +188,7 @@ describe('buildJobPostingJsonLd', () => {
   it('uses the linked business as hiringOrganization when one is set', () => {
     const jsonLd = buildJobPostingJsonLd(
       makeEntity(
-        makeJob({ hiring: { name: "Marcy's Kitchen", url: '/atlanta-ga/restaurant/marcys' } })
+        makeJob({ hiring: { name: "Marcy's Kitchen", url: '/atlanta-ga/restaurant/marcys', logoUrl: null, tagline: null, cityName: null } })
       ),
       'job'
     )!
