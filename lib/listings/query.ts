@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { attachLevels } from '@/lib/listings/levelRows'
+import { attachJobCardData } from '@/lib/listings/jobCardQuery'
 import type { DiscoveryEntity } from '@/types'
 import {
   resolveFacetParams,
@@ -443,6 +444,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   await attachLevels(supabase, finalEntities)
   await attachIdentityChips(supabase, finalEntities)
   await attachEventStartDates(supabase, finalEntities)
+  // Job cards show pay, kind of work, business and closing date (ticket 149).
+  await attachJobCardData(supabase, finalEntities)
 
   // Per-user save state for the card bookmark icon (fail-soft; anon → all false).
   const {

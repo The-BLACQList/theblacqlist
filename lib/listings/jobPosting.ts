@@ -48,6 +48,38 @@ export function formatSalary(
   return `Up to ${money(max as number)}${suffix}`
 }
 
+/**
+ * Pay line for a job card: "$18–$22 an hour", "$65,000–$80,000 a year",
+ * "$20 an hour", "Unpaid" for volunteer roles. Returns null when a paid role
+ * has no pay, so the card omits the chip. En dash in ranges, no spaces around it.
+ * Separate from formatSalary on purpose: JSON-LD and the job page still use that.
+ */
+export function formatJobPay(
+  employmentType: string | null,
+  min: number | null,
+  max: number | null,
+  period: string | null
+): string | null {
+  if (employmentType === 'volunteer') return 'Unpaid'
+  if (min === null && max === null) return null
+
+  const phrase = JOB_SALARY_PERIOD_META[period as JobSalaryPeriod]?.phrase
+  const tail = phrase ? ` ${phrase}` : ''
+  const money = (value: number): string => {
+    const digits = Number.isInteger(value) ? 0 : 2
+    return `$${value.toLocaleString('en-US', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    })}`
+  }
+
+  if (min !== null && max !== null) {
+    return min === max ? `${money(min)}${tail}` : `${money(min)}\u2013${money(max)}${tail}`
+  }
+  if (min !== null) return `From ${money(min)}${tail}`
+  return `Up to ${money(max as number)}${tail}`
+}
+
 // schema.org employmentType vocabulary. Our column values are the human-facing
 // slugs; these are the values Google expects.
 const EMPLOYMENT_TYPE_SCHEMA: Record<string, string> = {

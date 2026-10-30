@@ -10,6 +10,8 @@ import {
 } from '@/lib/listings/facets'
 import { typeOrFilter } from '@/lib/listings/type-shortcuts'
 import { logZeroResultSearch } from '@/lib/search/zeroResultLog'
+import { attachJobCardData } from '@/lib/listings/jobCardQuery'
+import type { JobCardDetails } from '@/types'
 import type { SearchQueryParams } from '@/lib/validations/search'
 
 /**
@@ -56,6 +58,8 @@ export interface SearchResult {
   save_count: number
   status: 'published'
   published_at: string
+  /** Job facts for the job card — attached fail-soft for entity_type='job' (ticket 149). */
+  job_details?: JobCardDetails | null
 }
 
 type RawSearchRow = {
@@ -217,6 +221,7 @@ export async function searchListings(
     // only thing entitled to see them, and search_events is retained. City and
     // category are the coarse location signal this log is allowed to carry.
     // See data-privacy.md ("minimize what you pull").
+    await attachJobCardData(supabase, results)
     logZeroResultSearch({ ...zeroResultLog, resultCount: faceted.total })
     return { results, total: faceted.total }
   }
@@ -279,6 +284,7 @@ export async function searchListings(
   const results: SearchResult[] = data ? (data as unknown as RawSearchRow[]).map(mapRow) : []
   const total = count ?? 0
 
+  await attachJobCardData(supabase, results)
   logZeroResultSearch({ ...zeroResultLog, resultCount: total })
   return { results, total }
 }

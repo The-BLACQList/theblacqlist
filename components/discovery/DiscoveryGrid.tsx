@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { CardGrid } from '@/components/ui/card-grid'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntityCard } from '@/components/entities/EntityCard'
+import { JobCard } from '@/components/jobs/JobCard'
+import { toJobCardData } from '@/lib/listings/jobCard'
 import { CardDistanceProvider } from '@/components/entities/CardDistance'
 import type { LatLng } from '@/lib/map/distance'
 import type { DiscoveryEntity } from '@/types'
@@ -298,14 +300,18 @@ export function DiscoveryGrid({
 
   const grid = (
     <CardGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
-      {entities.map((entity, i) => (
-        <EntityCard
-          key={entity.id}
-          entity={entity}
-          isPriority={i === 0}
-          showDistance={showDistance}
-        />
-      ))}
+      {entities.map((entity, i) =>
+        entity.entity_type === 'job' ? (
+          <JobCard key={entity.id} job={toJobCardData(entity)} />
+        ) : (
+          <EntityCard
+            key={entity.id}
+            entity={entity}
+            isPriority={i === 0}
+            showDistance={showDistance}
+          />
+        )
+      )}
     </CardGrid>
   )
 
