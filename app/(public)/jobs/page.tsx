@@ -122,6 +122,14 @@ async function JobResults({ searchParams }: { searchParams: JobsPageProps['searc
 
   return (
     <div className="space-y-6">
+      {filters.business && (
+        <p className="font-body text-sm text-charcoal">
+          Showing roles at one business.{' '}
+          <Link href="/jobs" className="font-semibold text-amber hover:underline">
+            Show all roles
+          </Link>
+        </p>
+      )}
       <JobFilters options={options} total={result.total} />
       {body}
     </div>

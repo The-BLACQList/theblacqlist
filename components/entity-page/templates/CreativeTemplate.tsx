@@ -16,6 +16,7 @@ import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
+import { EntityNowHiring } from '@/components/entity-page/EntityNowHiring'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
@@ -117,6 +118,7 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
       </div>
       </Reveal>
 
+      <EntityNowHiring listingId={entity.id} />
       <EntityUpcomingEvents entity={entity} />
 
 

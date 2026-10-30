@@ -13,7 +13,7 @@ import type { DiscoveryEntity } from '@/types'
 
 /** The slice of the Supabase client these reads use; a loose chain keeps tests simple. */
 interface Chain extends PromiseLike<{ data: unknown; error: unknown; count?: number | null }> {
-  select: (columns: string, opts?: { count: 'exact' }) => Chain
+  select: (columns: string, opts?: { count: 'exact'; head?: boolean }) => Chain
   or: (filter: string) => Chain
   in: (column: string, values: string[]) => Chain
   eq: (column: string, value: unknown) => Chain
@@ -56,7 +56,7 @@ async function run(q: Chain, what: string): Promise<{ data: unknown; count: numb
 /** Rows of open roles, optionally narrowed by kind of work and Remote. */
 async function openJobRows(
   db: LooseClient,
-  opts: { types?: string[]; remoteOnly?: boolean }
+  opts: { types?: string[]; remoteOnly?: boolean; business?: string }
 ): Promise<OpenJobRow[]> {
   let q = db
     .from('listing_details_job')
@@ -64,6 +64,7 @@ async function openJobRows(
     .or(`closes_at.is.null,closes_at.gt.${new Date().toISOString()}`)
   if (opts.types?.length) q = q.in('employment_type', opts.types)
   if (opts.remoteOnly) q = q.eq('workplace_type', 'remote')
+  if (opts.business) q = q.eq('hiring_listing_id', opts.business)
   const { data } = await run(q, 'open roles')
   return (data as OpenJobRow[] | null) ?? []
 }
@@ -120,7 +121,7 @@ export async function queryJobs(filters: JobFilters): Promise<JobsResult> {
   const db = supabase as unknown as LooseClient
   const remoteOnly = filters.where === 'remote'
 
-  const rows = await openJobRows(db, { types: filters.types, remoteOnly })
+  const rows = await openJobRows(db, { types: filters.types, remoteOnly, business: filters.business })
   if (rows.length === 0) return { entities: [], total: 0 }
 
   let cityId: string | null = null
@@ -153,6 +154,69 @@ export async function queryJobs(filters: JobFilters): Promise<JobsResult> {
     .range(offset, offset + LISTINGS_PAGE_SIZE - 1)
 
   const { data, count } = await run(q, 'jobs page')
+  const entities = ((data as RawRow[] | null) ?? []).map(mapRow)
+  await attachJobCardData(supabase, entities)
+  return { entities, total: count ?? entities.length }
+}
+
+/** The id filter the two reads below share: a published, unflagged job listing. */
+function openJobListings(db: LooseClient, ids: string[], columns: string, head: boolean): Chain {
+  return db
+    .from('listings')
+    .select(columns, { count: 'exact', head })
+    .in('id', ids)
+    .eq('entity_type', 'job')
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .eq('flag_status', 'none')
+}
+
+/**
+ * How many roles are open right now across the site (ticket 154, home tile).
+ * Open = published and (no deadline or a deadline in the future). Throws on a
+ * failed read so the caller can show "Find your next role" instead of a false 0.
+ */
+export async function countOpenRoles(client?: unknown): Promise<number> {
+  const db = (client ?? (await createClient())) as LooseClient
+  const rows = await openJobRows(db, {})
+  if (rows.length === 0) return 0
+  const { count } = await run(
+    openJobListings(
+      db,
+      rows.map((r) => r.listing_id),
+      'id',
+      true
+    ),
+    'open role count'
+  )
+  return count ?? 0
+}
+
+/**
+ * A business's open roles for its page (ticket 154): newest first, at most
+ * `limit` cards, plus the full open count for "See all {n} roles". Throws on a
+ * failed read; the page treats that as "no block".
+ */
+export async function getOpenRolesForBusiness(
+  listingId: string,
+  limit = 3,
+  client?: unknown
+): Promise<JobsResult> {
+  const supabase = client ?? (await createClient())
+  const db = supabase as LooseClient
+  const rows = await openJobRows(db, { business: listingId })
+  if (rows.length === 0) return { entities: [], total: 0 }
+  const { data, count } = await run(
+    openJobListings(
+      db,
+      rows.map((r) => r.listing_id),
+      NESTED_SELECT,
+      false
+    )
+      .order('created_at', { ascending: false })
+      .limit(limit),
+    'business roles'
+  )
   const entities = ((data as RawRow[] | null) ?? []).map(mapRow)
   await attachJobCardData(supabase, entities)
   return { entities, total: count ?? entities.length }

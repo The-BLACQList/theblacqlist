@@ -20,6 +20,8 @@ import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
 import { isCovered } from '@/lib/features/covered'
 import { isFeatureEnabled } from '@/lib/env'
+import { countOpenRoles } from '@/lib/listings/jobs'
+import { withJobsCount } from '@/lib/listings/jobEntryPoints'
 import { BlacqlightFeature, type FeaturedArticle } from '@/components/home/BlacqlightFeature'
 import { EditorialRail, type RailArticle, type RailGuide } from '@/components/home/EditorialRail'
 import { OwnerCta } from '@/components/home/OwnerCta'
@@ -145,7 +147,11 @@ export default async function HomePage() {
     const ids = new Set(expandTypeCategoryIds(type, categoryNodes))
     return (listingFacetRes.data ?? []).filter((row) => listingMatchesType(type, row, ids)).length
   }
-  const avenueCounts: AvenueCounts = {
+  // Jobs tile (ticket 154): the count is read only when Jobs is open, and a failed
+  // read becomes null ("Find your next role") rather than a false zero.
+  const jobsOpen = isFeatureEnabled('jobsOpen')
+  const openRoles = jobsOpen ? await countOpenRoles(supabase).catch(() => null) : null
+  const avenueCounts: AvenueCounts = withJobsCount({
     // Brick & Mortar is still entity_type, matching its own unchanged href. The
     // two bins can therefore overlap — an online-only `business` is counted in
     // both — but each tile's number matches the page it links to, which is the
@@ -155,7 +161,7 @@ export default async function HomePage() {
     professionals: countMappedType('professional'),
     creatives: countMappedType('creative'),
     events: typeCounts.get('event') ?? 0,
-  }
+  }, jobsOpen, openRoles)
   // A parent tile counts itself plus its subcategories, the same set the
   // ?category= filter it links to returns.
   const childrenOf = new Map<string, string[]>()

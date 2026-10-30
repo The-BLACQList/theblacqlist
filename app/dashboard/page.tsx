@@ -8,6 +8,9 @@ import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { PostJobCard } from '@/components/dashboard/PostJobCard'
+import { jobQuotaFor } from '@/lib/stripe/jobPostings'
+import { postJobQuotaLine } from '@/lib/listings/jobEntryPoints'
 import { FreeMonthNotice } from './FreeMonthNotice'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
@@ -84,6 +87,16 @@ export default async function DashboardPage() {
 
   const aiOn = isFeatureEnabled('aiBeta')
 
+  // Ticket 154: "Post a job" for owners with a published business. The quota is
+  // read only when the card can show; a failed read drops the count, not the card.
+  const hasPublishedBusiness = (listings ?? []).some(
+    (l) => l.status === 'published' && l.entity_type !== 'event' && l.entity_type !== 'job'
+  )
+  const showPostJob =
+    hasPublishedBusiness && isFeatureEnabled('jobsOpen') && isFeatureEnabled('postingSubmissions')
+  const quotaRead = showPostJob ? await jobQuotaFor(supabase, owner.user.id) : null
+  const postJobLine = postJobQuotaLine(quotaRead?.ok ? quotaRead.value : null)
+
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -94,6 +107,8 @@ export default async function DashboardPage() {
       </div>
 
       <FreeMonthNotice />
+
+      <PostJobCard hasPublishedBusiness={hasPublishedBusiness} quotaLine={postJobLine} />
 
       {!listings || listings.length === 0 ? (
         <GetListedEmptyState />
