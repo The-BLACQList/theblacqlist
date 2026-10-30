@@ -164,6 +164,17 @@ describe('JobCard', () => {
     expect(html).toContain('Closes Nov 15')
   })
 
+  it('says Remote once on a remote role', () => {
+    expect(render(base).match(/Remote/g)).toHaveLength(1)
+    expect(render({ ...base, businessName: null, businessLogoUrl: null }).match(/Remote/g)).toHaveLength(1)
+  })
+
+  it('keeps the city in the top line for on-site roles', () => {
+    const html = render({ ...base, workplaceType: 'on-site', place: 'Austin, TX' })
+    expect(html).toContain('Sable Coffee · Austin, TX')
+    expect(html).not.toContain('Remote')
+  })
+
   it('uses teal on the kind-of-work chip only', () => {
     const html = render(base)
     expect(html.match(/text-jobs-ink/g)).toHaveLength(1)
@@ -185,7 +196,13 @@ describe('JobCard', () => {
   })
 
   it('renders without a hiring business and without an empty logo box', () => {
-    const html = render({ ...base, businessName: null, businessLogoUrl: null, place: 'Austin, TX' })
+    const html = render({
+      ...base,
+      businessName: null,
+      businessLogoUrl: null,
+      workplaceType: 'on-site',
+      place: 'Austin, TX',
+    })
     expect(html).toContain('Austin, TX')
     expect(html).not.toContain('<img')
   })

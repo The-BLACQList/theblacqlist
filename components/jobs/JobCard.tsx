@@ -40,8 +40,10 @@ export function JobCard({ job, className, now }: Props) {
   const closeDate = job.closesAt ? formatCloseDate(job.closesAt) : null
   const isClosed = !!job.closesAt && closeDate !== null && new Date(job.closesAt) < (now ?? new Date())
   const hasChips = !!pay || !!kind || isRemote
+  // Remote roles say "Remote" once, on the chip, so the top line drops it.
+  const place = isRemote ? null : job.place
   // With no hiring business the top line is the place alone.
-  const topLine = job.businessName && job.place ? `${job.businessName} · ${job.place}` : null
+  const topLine = job.businessName && place ? `${job.businessName} · ${place}` : null
 
   return (
     <article
@@ -51,7 +53,7 @@ export function JobCard({ job, className, now }: Props) {
         className
       )}
     >
-      {(job.businessName || job.place) && (
+      {(job.businessName || place) && (
         <div className="flex items-center gap-2 min-w-0">
           {job.businessName && job.businessLogoUrl && (
             <Image
@@ -63,7 +65,7 @@ export function JobCard({ job, className, now }: Props) {
             />
           )}
           <p className="font-subhead text-xs text-charcoal truncate">
-            {topLine ?? job.businessName ?? job.place}
+            {topLine ?? job.businessName ?? place}
           </p>
         </div>
       )}
