@@ -962,6 +962,13 @@ async function loadPage(ref: PageRef | null): Promise<PageContext> {
   }
 }
 
+/** The heading for an answer that is only page actions, so it never reads as a bare "Cue". */
+function actionsHeading(actions: readonly AssistantAction[]): string {
+  const [first] = actions
+  if (first?.kind === 'scroll') return `On this page: ${first.label}`
+  return 'Your next step'
+}
+
 /** The status line for an answer that is only page actions. */
 function actionsSummary(actions: readonly AssistantAction[]): string {
   const [first] = actions
@@ -1158,7 +1165,7 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     if (plan.needs.length === 0) {
       return {
         kind: 'answer',
-        heading: actions.length > 0 || !page ? 'Cue' : buildHeading([], null, false),
+        heading: actions.length > 0 ? actionsHeading(actions) : page ? buildHeading([], null, false) : 'Cue',
         opener: plan.opener,
         notice: null,
         summary: actions.length > 0 ? actionsSummary(actions) : page ? buildAssistantSummary([]) : 'Cue replied.',

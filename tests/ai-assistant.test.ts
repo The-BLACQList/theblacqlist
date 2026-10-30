@@ -1048,7 +1048,7 @@ describe('askAssistant', () => {
     expect(res.actions).toEqual([
       { kind: 'link', href: '/discover?category=soul-food&city=detroit&open_now=1', label: 'Show only open now' },
     ])
-    expect(res).toMatchObject({ heading: 'Cue', summary: 'Cue has a next step for you below.' })
+    expect(res).toMatchObject({ heading: 'Your next step', summary: 'Cue has a next step for you below.' })
     const call = h.callAnthropic.mock.calls[0]![0] as { prompt: string }
     expect(call.prompt).toContain('open_now')
     expect(call.prompt).not.toContain('plans')
@@ -1059,6 +1059,7 @@ describe('askAssistant', () => {
     const res = answerOf(await askAssistant({ message: 'which plan fits a food truck?', page: '/pricing' }))
     expect(res.actions).toEqual([{ kind: 'scroll', ids: ['plans'], label: 'the plans' }])
     expect(res.summary).toBe('Cue can take you to the plans.')
+    expect(res.heading).toBe('On this page: the plans')
   })
 
   it('treats a page path from off the site as no page', async () => {
