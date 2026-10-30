@@ -585,8 +585,8 @@ describe('askAssistant', () => {
     expect(res.summary).toBe('Found 1 of 4 needs, 2 with a close option, 1 not listed.')
     // Never the city it was asked about, in the nearest step.
     expect(needCalls().filter((c) => c.category === 'barbershops').map((c) => c.city)).toEqual(['detroit', 'chicago', 'atlanta'])
-    // Never the whole food group as a close option.
-    expect(needCalls().some((c) => c.category === 'food-dining')).toBe(false)
+    // Never the whole food group as a close option: it is only searched by words.
+    expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
 
   it('is honest about a place we do not cover and offers the nearest city we do', async () => {
@@ -645,7 +645,51 @@ describe('askAssistant', () => {
     const asked = needCalls().map((c) => c.category)
     expect(asked).toContain('bakeries-pastry-shops')
     expect(asked).not.toContain('grocery-markets')
-    expect(asked.filter((c) => c === 'food-dining')).toHaveLength(1) // only the first, keyword search
+    // The food group only ever by words, never as a whole.
+    expect(needCalls().filter((c) => c.category === 'food-dining').every((c) => !!c.q)).toBe(true)
+  })
+
+  it('finds a listing filed on the parent group by the kind\'s words', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Party cakes', category: 'bakeries-pastry-shops' }] })
+    h.search = (p) =>
+      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'cake OR cupcake OR pie OR cookie OR bread OR dessert OR pastry OR sweets'
+        ? [ENTITY('good-cakes')]
+        : []
+    const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'found',
+      line: '1 in Detroit',
+      seeAllHref:
+        '/search?q=cake+OR+cupcake+OR+pie+OR+cookie+OR+bread+OR+dessert+OR+pastry+OR+sweets&category=food-dining&city=detroit',
+    })
+    expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
+  })
+
+  it('looks in the parent group by the need\'s own words before widening', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Thai', category: 'restaurants', keywords: ['thai'] }] })
+    h.search = (p) => (p.city === 'detroit' && p.category === 'food-dining' && p.q === 'thai' ? [ENTITY('thai1')] : [])
+    const res = answerOf(await askAssistant({ message: 'thai in detroit' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'found',
+      seeAllHref: '/search?q=thai&category=food-dining&city=detroit',
+    })
+  })
+
+  it('finds a close kind filed on the parent group and still names the kind', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Cake', category: 'bakeries-pastry-shops', keywords: ['birthday'] }] })
+    h.search = (p) =>
+      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'coffee OR latte OR espresso OR tea OR cafe'
+        ? [ENTITY('cafe1')]
+        : []
+    const res = answerOf(await askAssistant({ message: 'birthday cake in detroit' }))
+    expect(res.needs[0]).toMatchObject({
+      status: 'close',
+      line: 'No Cake in Detroit yet. Close to it: Cafes & Coffee (1)',
+      seeAllHref: '/search?q=coffee+OR+latte+OR+espresso+OR+tea+OR+cafe&category=food-dining&city=detroit',
+    })
   })
 
   it('names both close kinds and adds their counts when both have listings', async () => {

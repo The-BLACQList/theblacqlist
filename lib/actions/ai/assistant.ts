@@ -96,6 +96,7 @@ import { queryListings } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
 import type { LatLng } from '@/lib/map/distance'
 import { findPlaces, matchCategories, type AssistCity, type PlaceHit } from '@/lib/search/assist'
+import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
 import { lookupPlace, matchLocalCity } from '@/lib/search/placeLookup'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -111,13 +112,21 @@ function fallback(text: string, reason: 'limited' | 'error'): AssistantResponse 
 }
 
 function rawMessage(input: unknown): string {
-  if (input && typeof input === 'object' && 'message' in input && typeof input.message === 'string') {
+  if (
+    input &&
+    typeof input === 'object' &&
+    'message' in input &&
+    typeof input.message === 'string'
+  ) {
     return input.message.slice(0, 200)
   }
   return ''
 }
 
-function tokenColumns(usage: TokenUsage | null): { request_tokens?: number; response_tokens?: number } {
+function tokenColumns(usage: TokenUsage | null): {
+  request_tokens?: number
+  response_tokens?: number
+} {
   return usage ? { request_tokens: usage.inputTokens, response_tokens: usage.outputTokens } : {}
 }
 
@@ -204,7 +213,12 @@ function scopeFromPlaces(places: readonly PlaceHit[]): Scope | null {
   if (live.length === 1 && live[0]) return { kind: 'city', city: live[0] }
   const label = places.map((p) => p.label).join(' and ')
   if (live.length > 1) {
-    return { kind: 'area', label, cities: live.slice(0, AREA_CITY_CAP), anchor: places.find((p) => p.anchor)?.anchor ?? null }
+    return {
+      kind: 'area',
+      label,
+      cities: live.slice(0, AREA_CITY_CAP),
+      anchor: places.find((p) => p.anchor)?.anchor ?? null,
+    }
   }
   return { kind: 'uncovered', label, anchor: places.find((p) => p.anchor)?.anchor ?? null }
 }
@@ -218,11 +232,18 @@ function titleCase(words: string): string {
 }
 
 /** A point for a place by name: our cities, a state, then OpenStreetMap. */
-async function pointFor(label: string, cities: readonly AssistCity[]): Promise<{ label: string; anchor: LatLng } | null> {
+async function pointFor(
+  label: string,
+  cities: readonly AssistCity[]
+): Promise<{ label: string; anchor: LatLng } | null> {
   try {
     const { place } = await lookupPlace(label, cities, {
       allowUpstream: () =>
-        checkRateLimit({ bucket: 'place_lookup_upstream', identifier: 'nominatim', limit: PLACE_UPSTREAM_LIMIT }),
+        checkRateLimit({
+          bucket: 'place_lookup_upstream',
+          identifier: 'nominatim',
+          limit: PLACE_UPSTREAM_LIMIT,
+        }),
     })
     return place ? { label: place.label, anchor: { lat: place.lat, lng: place.lng } } : null
   } catch {
@@ -267,7 +288,9 @@ async function pickScope(args: {
   if (now) return now
   if (args.near) return { kind: 'near', near: args.near }
 
-  const modelCity = args.modelCity ? cities.find((c) => c.slug === args.modelCity && c.isActive) : undefined
+  const modelCity = args.modelCity
+    ? cities.find((c) => c.slug === args.modelCity && c.isActive)
+    : undefined
   if (modelCity) return { kind: 'city', city: modelCity }
 
   for (let i = args.history.length - 1; i >= 0; i--) {
@@ -304,16 +327,53 @@ interface Found {
   broad: boolean
   /** The category these came from, for the line and See all. */
   kind: AssistantCategory | null
+  /**
+   * Set when the cards came from the kind's parent group (see runOnce): See all
+   * opens the group with the same words, since the kind itself has none.
+   */
+  see?: { category: AssistantCategory; keywords: string[] }
 }
 
+/**
+ * The words that pick a kind out of its parent group: the kind's own single
+ * search words ("cake OR cupcake OR pie"). Empty when it has none.
+ */
+function kindWords(kind: AssistantCategory): string[] {
+  return (CATEGORY_KEYWORDS[kind.slug] ?? []).filter((w) => /^[a-z]+$/.test(w))
+}
+
+/**
+ * One search. Most listings are filed on a top-level group only (Food & Dining,
+ * not Bakeries), so when a subcategory finds nothing it looks once more in its
+ * parent group: by the need's own words when it has some, else by the kind's
+ * words joined with OR. The line still names the kind; See all opens the group.
+ */
 async function runOnce(
   need: AssistantNeedPlan,
   category: AssistantCategory | null,
   keywords: string[],
-  where: Where
+  where: Where,
+  categories: readonly AssistantCategory[]
 ): Promise<Found> {
+  const own = await runQuery(need, category, keywords.join(' '), where)
+  const found: Found = { ...own, keywords, broad: false, kind: category }
+  if (own.items.length > 0 || !category?.parentId) return found
+  const parent = categories.find((c) => c.id === category.parentId)
+  const q = keywords.length > 0 ? keywords.join(' ') : kindWords(category).join(' OR ')
+  if (!parent || !q) return found
+  const inParent = await runQuery(need, parent, q, where)
+  if (inParent.items.length === 0) return found
+  return { ...found, ...inParent, see: { category: parent, keywords: [q] } }
+}
+
+async function runQuery(
+  need: AssistantNeedPlan,
+  category: AssistantCategory | null,
+  q: string,
+  where: Where
+): Promise<{ total: number; items: DiscoveryEntity[] }> {
   const { entities, total } = await queryListings({
-    q: keywords.join(' ') || undefined,
+    q: q || undefined,
     category: category?.slug,
     city: where.city?.slug,
     open_now: need.openNow || undefined,
@@ -326,7 +386,7 @@ async function runOnce(
     noSponsored: true,
   })
   const items = entities.filter((e) => !e.sponsored_placement_id)
-  return { total: items.length === 0 ? 0 : Math.max(total, items.length), items, keywords, broad: false, kind: category }
+  return { total: items.length === 0 ? 0 : Math.max(total, items.length), items }
 }
 
 /**
@@ -335,7 +395,10 @@ async function runOnce(
  * the need's words (cake: Bakeries, Thai: Restaurants). Never a whole
  * top-level category, which would offer grocery stores for a cake.
  */
-function wideKindOf(need: AssistantNeedPlan, categories: readonly AssistantCategory[]): AssistantCategory | null {
+function wideKindOf(
+  need: AssistantNeedPlan,
+  categories: readonly AssistantCategory[]
+): AssistantCategory | null {
   const category = need.category
   if (!category) return null
   if (category.parentId) return category
@@ -349,11 +412,12 @@ async function search(
   need: AssistantNeedPlan,
   category: AssistantCategory | null,
   wideKind: AssistantCategory | null,
-  where: Where
+  where: Where,
+  categories: readonly AssistantCategory[]
 ): Promise<Found> {
-  const first = await runOnce(need, category, need.keywords, where)
+  const first = await runOnce(need, category, need.keywords, where, categories)
   if (first.items.length > 0 || need.keywords.length === 0 || !wideKind) return first
-  const wide = await runOnce(need, wideKind, [], where)
+  const wide = await runOnce(need, wideKind, [], where, categories)
   return { ...wide, broad: wide.items.length > 0 }
 }
 
@@ -362,9 +426,12 @@ async function searchCities(
   need: AssistantNeedPlan,
   category: AssistantCategory | null,
   wideKind: AssistantCategory | null,
-  cities: readonly AssistCity[]
+  cities: readonly AssistCity[],
+  categories: readonly AssistantCategory[]
 ): Promise<Found> {
-  const all = await Promise.all(cities.map((city) => search(need, category, wideKind, { city, near: null })))
+  const all = await Promise.all(
+    cities.map((city) => search(need, category, wideKind, { city, near: null }, categories))
+  )
   // Exact matches win; the wider kind only counts when no city had the exact thing.
   const exact = all.filter((f) => f.items.length > 0 && !f.broad)
   const use = exact.length > 0 ? exact : all
@@ -376,6 +443,7 @@ async function searchCities(
     keywords: first?.keywords ?? need.keywords,
     broad: exact.length === 0 && items.length > 0,
     kind: first?.kind ?? category,
+    see: first?.see,
   }
 }
 
@@ -400,6 +468,7 @@ async function searchClose(
     keywords: [],
     broad: true,
     kind: first.kind,
+    see: first.see,
     names: hits.map((f) => f.kind?.name ?? '').filter(Boolean),
   }
 }
@@ -410,10 +479,13 @@ async function searchNearest(
   wideKind: AssistantCategory | null,
   from: LatLng,
   cities: readonly AssistCity[],
-  exclude: readonly string[]
+  exclude: readonly string[],
+  categories: readonly AssistantCategory[]
 ): Promise<{ city: AssistCity; found: Found } | null> {
   const tries = nearestCities(from, cities, ASSISTANT_NEAREST_TRIES, exclude)
-  const results = await Promise.all(tries.map((city) => search(need, need.category, wideKind, { city, near: null })))
+  const results = await Promise.all(
+    tries.map((city) => search(need, need.category, wideKind, { city, near: null }, categories))
+  )
   for (let i = 0; i < tries.length; i++) {
     const city = tries[i]
     const found = results[i]
@@ -453,6 +525,13 @@ function seeAll(
   })
 }
 
+/** See all for a find: the kind with its words, or the parent group when the cards came from there. */
+function seeFound(need: AssistantNeedPlan, found: Found, where: Where): string {
+  return found.see
+    ? seeAll(need, found.see.category, found.see.keywords, where)
+    : seeAll(need, found.kind, found.keywords, where)
+}
+
 // ─── One need ────────────────────────────────────────────────────────────────
 
 interface NeedContext {
@@ -480,22 +559,52 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
     status,
     line,
     total: found.total,
-    top: rankTop(found.items.filter((e) => !skip.has(e.id)), pool).map(toCard),
+    top: rankTop(
+      found.items.filter((e) => !skip.has(e.id)),
+      pool
+    ).map(toCard),
     seeAllHref,
   })
   // A broad find is a kind close to the need, not the need itself, so it says so.
-  const fromFound = (found: Found, where: Where, placeName: string | null, near: boolean): AssistantNeedResult =>
+  const fromFound = (
+    found: Found,
+    where: Where,
+    placeName: string | null,
+    near: boolean
+  ): AssistantNeedResult =>
     found.broad && found.kind
       ? result(
           'close',
-          closeLine(need.name, placeName ?? (near ? 'your area' : null), found.kind.name, found.total),
+          closeLine(
+            need.name,
+            placeName ?? (near ? 'your area' : null),
+            found.kind.name,
+            found.total
+          ),
           found,
-          seeAll(need, found.kind, [], where)
+          seeFound(need, found, where)
         )
-      : result('found', foundLine(found.total, placeName, near), found, seeAll(need, found.kind, found.keywords, where))
-  const fromClose = (close: Found & { names: string[] }, where: Where, placeName: string | null): AssistantNeedResult =>
-    result('close', closeLine(need.name, placeName, joinKinds(close.names), close.total), close, seeAll(need, close.kind, [], where))
-  const fromNearest = (nearest: { city: AssistCity; found: Found }, placeLabel: string | null): AssistantNeedResult => {
+      : result(
+          'found',
+          foundLine(found.total, placeName, near),
+          found,
+          seeFound(need, found, where)
+        )
+  const fromClose = (
+    close: Found & { names: string[] },
+    where: Where,
+    placeName: string | null
+  ): AssistantNeedResult =>
+    result(
+      'close',
+      closeLine(need.name, placeName, joinKinds(close.names), close.total),
+      close,
+      seeFound(need, close, where)
+    )
+  const fromNearest = (
+    nearest: { city: AssistCity; found: Found },
+    placeLabel: string | null
+  ): AssistantNeedResult => {
     const where: Where = { city: nearest.city, near: null }
     const { found } = nearest
     return found.broad && found.kind
@@ -503,13 +612,13 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
           'close',
           nearestCloseLine(placeLabel, need.name, nearest.city.name, found.kind.name, found.total),
           found,
-          seeAll(need, found.kind, [], where)
+          seeFound(need, found, where)
         )
       : result(
           'nearest',
           nearestLine(placeLabel, nearest.city.name, found.total),
           found,
-          seeAll(need, found.kind, found.keywords, where)
+          seeFound(need, found, where)
         )
   }
   const none = (): AssistantNeedResult => ({
@@ -522,35 +631,54 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
   })
 
   if (scope.kind === 'city' || scope.kind === 'near') {
-    const where: Where = scope.kind === 'city' ? { city: scope.city, near: null } : { city: null, near: scope.near }
+    const where: Where =
+      scope.kind === 'city' ? { city: scope.city, near: null } : { city: null, near: scope.near }
     const placeName = scope.kind === 'city' ? scope.city.name : null
 
-    const found = await search(need, need.category, wideKind, where)
+    const found = await search(need, need.category, wideKind, where, categories)
     if (found.items.length > 0) {
       return fromFound(found, where, placeName, scope.kind === 'near')
     }
-    const close = await searchClose(wideKind, categories, (kind) => runOnce(plain, kind, [], where))
+    const close = await searchClose(wideKind, categories, (kind) =>
+      runOnce(plain, kind, [], where, categories)
+    )
     if (close) return fromClose(close, where, placeName ?? 'your area')
     const from = scope.kind === 'city' ? pointOf(scope.city) : scope.near
     if (from) {
-      const nearest = await searchNearest(need, wideKind, from, cities, scope.kind === 'city' ? [scope.city.slug] : [])
+      const nearest = await searchNearest(
+        need,
+        wideKind,
+        from,
+        cities,
+        scope.kind === 'city' ? [scope.city.slug] : [],
+        categories
+      )
       if (nearest) return fromNearest(nearest, placeName)
     }
     return none()
   }
 
   if (scope.kind === 'area') {
-    const found = await searchCities(need, need.category, wideKind, scope.cities)
+    const found = await searchCities(need, need.category, wideKind, scope.cities, categories)
     // See all can hold one city only, so it opens on the first.
     const firstCity = scope.cities[0] ?? null
     const where: Where = { city: firstCity, near: null }
     if (found.items.length > 0) {
       return fromFound(found, where, scope.label, false)
     }
-    const close = await searchClose(wideKind, categories, (kind) => searchCities(plain, kind, null, scope.cities))
+    const close = await searchClose(wideKind, categories, (kind) =>
+      searchCities(plain, kind, null, scope.cities, categories)
+    )
     if (close) return fromClose(close, where, scope.label)
     if (scope.anchor) {
-      const nearest = await searchNearest(need, wideKind, scope.anchor, cities, scope.cities.map((c) => c.slug))
+      const nearest = await searchNearest(
+        need,
+        wideKind,
+        scope.anchor,
+        cities,
+        scope.cities.map((c) => c.slug),
+        categories
+      )
       if (nearest) return fromNearest(nearest, scope.label)
     }
     return none()
@@ -558,32 +686,39 @@ async function answerNeed(need: AssistantNeedPlan, ctx: NeedContext): Promise<As
 
   if (scope.kind === 'uncovered') {
     if (scope.anchor) {
-      const nearest = await searchNearest(need, wideKind, scope.anchor, cities, [])
+      const nearest = await searchNearest(need, wideKind, scope.anchor, cities, [], categories)
       if (nearest) return fromNearest(nearest, scope.label)
       return none()
     }
     const anywhere: Where = { city: null, near: null }
-    const found = await search(need, need.category, wideKind, anywhere)
+    const found = await search(need, need.category, wideKind, anywhere, categories)
     if (found.items.length > 0) {
       return found.broad && found.kind
         ? result(
             'close',
             closeLine(need.name, scope.label, found.kind.name, found.total),
             found,
-            seeAll(need, found.kind, [], anywhere)
+            seeFound(need, found, anywhere)
           )
-        : result('nearest', elsewhereLine(scope.label, found.total), found, seeAll(need, found.kind, found.keywords, anywhere))
+        : result(
+            'nearest',
+            elsewhereLine(scope.label, found.total),
+            found,
+            seeFound(need, found, anywhere)
+          )
     }
     return none()
   }
 
   // Everywhere.
   const anywhere: Where = { city: null, near: null }
-  const found = await search(need, need.category, wideKind, anywhere)
+  const found = await search(need, need.category, wideKind, anywhere, categories)
   if (found.items.length > 0) {
     return fromFound(found, anywhere, null, false)
   }
-  const close = await searchClose(wideKind, categories, (kind) => runOnce(plain, kind, [], anywhere))
+  const close = await searchClose(wideKind, categories, (kind) =>
+    runOnce(plain, kind, [], anywhere, categories)
+  )
   if (close) return fromClose(close, anywhere, null)
   return none()
 }
@@ -617,8 +752,18 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
   // 4. Rate limit per IP. Both windows are charged on every ask.
   const ip = getClientIp(await headers())
   const [minuteOk, dayOk] = await Promise.all([
-    checkRateLimit({ bucket: 'ai_assistant', identifier: `min:${ip}`, limit: ASSISTANT_PER_MINUTE, windowSeconds: 60 }),
-    checkRateLimit({ bucket: 'ai_assistant', identifier: `day:${ip}`, limit: ASSISTANT_PER_DAY, windowSeconds: 86_400 }),
+    checkRateLimit({
+      bucket: 'ai_assistant',
+      identifier: `min:${ip}`,
+      limit: ASSISTANT_PER_MINUTE,
+      windowSeconds: 60,
+    }),
+    checkRateLimit({
+      bucket: 'ai_assistant',
+      identifier: `day:${ip}`,
+      limit: ASSISTANT_PER_DAY,
+      windowSeconds: 86_400,
+    }),
   ])
   if (!minuteOk || !dayOk) return fallback(message, 'limited')
 
@@ -635,7 +780,13 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       const { openNow } = nearOnlyFilters(words, near)
       const need: AssistantNeedPlan = { name: 'Places', category: null, keywords: [], openNow }
       const scope: Scope = { kind: 'near', near }
-      const answered = await answerNeed(need, { scope, cities: lists.cities, categories: lists.categories, pool: topLimit(1), skip: new Set() })
+      const answered = await answerNeed(need, {
+        scope,
+        cities: lists.cities,
+        categories: lists.categories,
+        pool: topLimit(1),
+        skip: new Set(),
+      })
       return {
         kind: 'answer',
         heading: buildHeading([need], null, true),
@@ -679,7 +830,9 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
         countAgentAttemptsThisMonth(GUIDE_AGENT.agentType),
         countAgentAttemptsThisMonth(ASSISTANT_AGENT.agentType),
       ])
-      if (!withinGuideBudget(visitorCallsUsed(guideUsed, assistantUsed), monthlyCallBudget(ceiling))) {
+      if (
+        !withinGuideBudget(visitorCallsUsed(guideUsed, assistantUsed), monthlyCallBudget(ceiling))
+      ) {
         return namesOrFallback('limited')
       }
     }
@@ -775,9 +928,18 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
     const limit = topLimit(plan.needs.length)
     // Name matches are left out of a single-need answer so a card never shows twice.
     const skip = new Set(plan.needs.length === 1 ? nameMatches.map((e) => e.id) : [])
-    const ctx: NeedContext = { scope, cities: lists.cities, categories: lists.categories, pool: limit * 3, skip }
+    const ctx: NeedContext = {
+      scope,
+      cities: lists.cities,
+      categories: lists.categories,
+      pool: limit * 3,
+      skip,
+    }
     const pools = await Promise.all(plan.needs.map((need) => answerNeed(need, ctx)))
-    const tops = spreadTops(pools.map((n) => n.top), limit)
+    const tops = spreadTops(
+      pools.map((n) => n.top),
+      limit
+    )
     const needs = pools.map((n, i) => ({ ...n, top: tops[i] ?? [] }))
 
     return {
