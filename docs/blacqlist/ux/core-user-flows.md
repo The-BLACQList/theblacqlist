@@ -1006,7 +1006,7 @@ Any authenticated user can create a listing. Business Owner role is assigned upo
 **Step 5: User submits the claim**
 
 - User action: Reviews the form and taps "Submit claim".
-- System response: The claim record is created in the `claims` table with `status: pending`, `listing_id`, `user_id`, `submitted_email`, `submitted_phone`, `role_at_business`, `document_path` (if uploaded), `notes`. A confirmation email is sent to the user's account email via Resend: "Your claim for [Business Name] has been submitted. We'll review it within 2–3 business days."
+- System response: The claim record is created in the `claims` table with `status: pending`, `listing_id`, `user_id`, `submitted_email`, `submitted_phone`, `role_at_business`, `document_path` (if uploaded), `notes`. A confirmation email is sent to the user's account email via Resend: "Your claim for [Business Name] has been submitted. We'll review it within 3–5 business days."
 - The page transitions to a confirmation state: heading: "Claim submitted!" Sub-text: "We're reviewing your claim for [Business Name]. We'll email you at [account email] once it's approved." Two links: "Return to [Business Name]'s page" and "Go to my dashboard" (which shows the claim status).
 - Next: End state — claim is pending. User waits for admin approval (Flow 15).
 
@@ -1209,7 +1209,7 @@ Only the owner of the specific listing can edit it. Admin can also edit any list
 **Step 2: Owner reads the status banner**
 
 - System response:
-  - Claim status = `pending`: Banner (amber/warning style): "Your claim for [Business Name] is under review. We'll notify you by email when it's approved. Estimated: 2–3 business days." No editing buttons are enabled.
+  - Claim status = `pending`: Banner (amber/warning style): "Your claim for [Business Name] is under review. We'll notify you by email when it's approved. Estimated: 3–5 business days." No editing buttons are enabled.
   - Claim status = `approved` / listing `status = published`: Banner (green/success style): "Your BLACQList Page is live!" with a "View live page" link. If the page has low completeness (no cover image, no description), the banner adds: "Add a photo to get noticed."
   - Claim status = `rejected`: Banner (red/error style): "Your claim was not approved. Reason: [admin-provided reason]. Questions? Contact us." Link to support email.
   - No claim (user created a listing directly): No claim banner. Status banner shows the listing's publish status.
