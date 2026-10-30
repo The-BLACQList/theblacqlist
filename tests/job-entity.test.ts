@@ -276,8 +276,8 @@ describe('listing_details_job migration', () => {
 
 const APPLY_FORMS = [
   {
-    label: 'SubmitJobForm (public /add-job)',
-    file: 'components/listings/SubmitJobForm.tsx',
+    label: 'StepApply (public /add-job wizard)',
+    file: 'components/jobs/post/StepApply.tsx',
   },
   {
     label: 'JobDetailsSection (owner dashboard edit)',

@@ -16,6 +16,7 @@ import { levelsForCategory, validateLevels } from '@/lib/listings/levels'
 import { loadCategoryLevels } from '@/lib/listings/levelRows'
 import { canAccess } from '@/lib/stripe/features'
 import { eventQuotaFor, EVENTS_NEED_GROWTH_MESSAGE } from '@/lib/stripe/jobPostings'
+import { createJobDraft, generateSlug } from '@/lib/services/listings/createJobDraft'
 import {
   VALID_ENTITY_TYPES,
   VALID_LOCATION_TYPES,
@@ -44,18 +45,6 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const ZIP_RE = /^\d{5}(-\d{4})?$/
 // A bare host name, as step 0 sends it: "example.com", "shop.example.co.uk".
 const HOST_RE = /^(?=.{1,253}$)[a-z0-9-]+(\.[a-z0-9-]+)+$/i
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 80)
-}
 
 function isValidUrl(url: string): boolean {
   return url.startsWith('https://') || url.startsWith('http://')
@@ -440,6 +429,8 @@ export async function createListingAction(
     return { error: 'Please fix the errors below.', fieldErrors }
   }
 
+  const useId = tempEntityId && /^[0-9a-f-]{36}$/.test(tempEntityId) ? tempEntityId : undefined
+
   // Events, ticket 106. Two checks before anything is written.
   //
   // The plan gate. Below Growth an event can never be published, so a draft
@@ -545,6 +536,36 @@ export async function createListingAction(
     }
   }
 
+  // Jobs share their write path with the four step flow (ticket 152). Everything
+  // above has validated; the service does the slug, the insert and the details.
+  if (isJob) {
+    const created = await createJobDraft(supabase as unknown as SupabaseClient, {
+      userId: user.id,
+      reuseId: useId,
+      fields: {
+        name,
+        tagline,
+        categoryId,
+        cityId: null,
+        primaryLevel,
+        ownershipLabel,
+        ownershipAttested,
+        hiringListingId: null,
+        description,
+        employmentType,
+        workplaceType,
+        salaryMin: salaryMinRaw ? Number(salaryMinRaw) : null,
+        salaryMax: salaryMaxRaw ? Number(salaryMaxRaw) : null,
+        salaryPeriod: salaryPeriod || null,
+        applyUrl,
+        applyEmail,
+        closesAt: closesAtRaw ? new Date(closesAtRaw).toISOString() : null,
+      },
+    })
+    if (!created.ok) return { error: created.error }
+    return { success: true, listingId: created.listingId, listingName: name, slug: created.slug }
+  }
+
   // City (ticket 126). Until now no listing got a city_id, so every page URL
   // fell back to /online/. Prefer the picked id; otherwise match the typed city
   // name to an active city. An unknown city stays as text only.
@@ -591,7 +612,6 @@ export async function createListingAction(
     slug = `${slug}-${Date.now().toString(36)}`
   }
 
-  const useId = tempEntityId && /^[0-9a-f-]{36}$/.test(tempEntityId) ? tempEntityId : undefined
 
   const { data: listing, error: listingError } = await supabase
     .from('listings')
@@ -627,26 +647,8 @@ export async function createListingAction(
     return { error: 'Something went wrong creating your listing. Please try again.' }
   }
 
-  const detailsError = isJob
-    ? (
-        await (supabase as unknown as SupabaseClient).from('listing_details_job').insert({
-          listing_id: listing.id,
-          description,
-          employment_type: employmentType,
-          workplace_type: workplaceType,
-          salary_min: salaryMinRaw ? Number(salaryMinRaw) : null,
-          salary_max: salaryMaxRaw ? Number(salaryMaxRaw) : null,
-          // Nulled when no bound was given — the DB CHECK only requires a period
-          // alongside an amount, and a lone period would render as nothing.
-          salary_period: salaryMinRaw || salaryMaxRaw ? salaryPeriod : null,
-          apply_url: applyUrl,
-          apply_email: applyEmail,
-          closes_at: closesAtRaw ? new Date(closesAtRaw).toISOString() : null,
-          cta_type: 'apply',
-          cta_url: applyUrl,
-        })
-      ).error
-    : isEvent
+  // Jobs return earlier through createJobDraft (ticket 152).
+  const detailsError = isEvent
     ? (
         await (supabase as unknown as SupabaseClient).from('listing_details_event').insert({
           listing_id: listing.id,
@@ -695,13 +697,11 @@ export async function createListingAction(
   if (detailsError) {
     await supabase.from('listings').delete().eq('id', listing.id)
     return {
-      error: isJob
-        ? 'Failed to save your job details. Please try again.'
-        : isEvent
-          ? 'Failed to save your event details. Please try again.'
-          : isCreator
-            ? 'Failed to save your page details. Please try again.'
-            : 'Failed to save your business details. Please try again.',
+      error: isEvent
+        ? 'Failed to save your event details. Please try again.'
+        : isCreator
+          ? 'Failed to save your page details. Please try again.'
+          : 'Failed to save your business details. Please try again.',
     }
   }
 
