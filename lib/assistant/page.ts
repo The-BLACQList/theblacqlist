@@ -213,6 +213,7 @@ export function businessPage(b: BusinessPageFacts): PageContext {
     `Business page: ${b.name}${b.categoryName ? `, ${b.categoryName}` : ''}${place ? ` in ${place}` : ''}.`,
     rating ? `Rated ${rating} from ${b.reviewCount} reviews.` : 'No reviews yet.',
     shows.length ? `Shows ${shows.join(', ')}.` : null,
+    !b.hasHours && b.entityType !== 'event' && b.entityType !== 'job' ? 'No hours listed.' : null,
   ]
     .filter(Boolean)
     .join(' ')

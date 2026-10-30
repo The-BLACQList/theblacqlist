@@ -277,12 +277,14 @@ Help page codes:
 
 This page: {{page_facts}}
 Page action codes: {{action_list}}
+Their location: {{location}}
 
 Return one JSON object and nothing else, with these keys:
 - "city": a city code if they name that city now or before, otherwise null. A place they turn down ("not in Chicago") is never the city
 - "place": if they name a place that is not a city code (a state, a town), copy its name from their words, otherwise null
 - "needs": up to 6 things they need, only from the new words. For a plan or an event, list each kind of business it needs. For "how do I find or switch to X", the need is X. Each item: "name" (2 to 40 characters, plain words), "category" (the most specific category code that fits, such as Bakeries for a cake rather than the whole food group, or null), "keywords" (up to 3 single words from their words or the name, otherwise []), "open_now" (true only if they want it open right now)
 - "follow_up": true when the new words only change the place, the time or open now, or correct you. Then "needs" is []
+- When this page's action codes or a help page answer them (a plan, their hours, how to reach them), "needs" is [] unless they also ask to find businesses
 - "open_now": true if the new words ask for open now
 - "page": a help page code only if they ask how the site works, otherwise null
 - "actions": up to 3 page action codes that answer them on this page, otherwise []

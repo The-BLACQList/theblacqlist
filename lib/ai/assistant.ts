@@ -178,6 +178,8 @@ export interface AssistantContext {
   actionCodes: readonly string[]
   pageNames: readonly string[]
   pageNumbers: readonly string[]
+  /** The visitor's location was sent with this ask. Never the position itself. */
+  located?: boolean
 }
 
 export const EMPTY_ASSISTANT_CONTEXT: AssistantContext = {
@@ -289,7 +291,8 @@ export function cleanNeedName(
     .replace(/^(?:and|&|-|for|the|a|an)\s+/i, '')
     .replace(/\s+(?:and|&|-|for)$/i, '')
     .trim()
-  const shaped = stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : ''
+  const sentence = inSentence(stripped)
+  const shaped = sentence ? sentence.charAt(0).toUpperCase() + sentence.slice(1) : ''
   return checkNeedName(shaped) ?? (categoryName ? checkNeedName(categoryName) : null)
 }
 
@@ -372,11 +375,17 @@ const OPENER_NAMES = new Set([
 /** Words that claim something about results. The opener is written before any search runs. */
 const OPENER_CLAIMS = /\b(found|best|top|top-rated|highest|here are)\b/i
 
+/** An opener asking where the visitor is. Wrong once they used Near me or named a city. */
+const ASKS_FOR_PLACE =
+  /\b(which|what) (city|town|area)\b|\b(tell|let) me\b[^.!?]*\b(city|town|location|area|zip)\b|\bwhere you are\b/i
+
 export interface OpenerAllow {
   /** Names Cue may capitalize: our cities and categories, need names, the page's business. */
   names: readonly string[]
   /** Numbers the page itself shows (a rating, a review count). */
   numbers: readonly string[]
+  /** The answer already knows where: Near me was used or a city is set. */
+  located?: boolean
 }
 
 /**
@@ -393,6 +402,7 @@ export function checkOpener(raw: string | null | undefined, allow: OpenerAllow):
   if (text.length < 2 || text.length > ASSISTANT_OPENER_MAX) return null
   if (/https?:|www|@|[a-z]\.[a-z]|[<>{}[\]`]/i.test(text)) return null
   if (OPENER_CLAIMS.test(text)) return null
+  if (allow.located && ASKS_FOR_PLACE.test(text)) return null
 
   const numbers = new Set(allow.numbers)
   for (const run of text.match(/\d+(?:\.\d+)?/g) ?? []) {
@@ -502,6 +512,7 @@ export function applyAssistantAllowList(
       ...context.pageNames,
     ],
     numbers: context.pageNumbers,
+    located: context.located === true || city !== null,
   })
 
   return { city, place, needs, page, opener, actions, reused }
@@ -574,9 +585,11 @@ function promptFor(
   message: string,
   history: readonly string[],
   allow: AssistantAllowList,
-  page: AssistantPagePrompt
+  page: AssistantPagePrompt,
+  located: boolean
 ): string {
   return fill(PROMPT_TEMPLATES.VISITOR_ASSISTANT, {
+    location: located ? 'shared, so never ask where they are' : 'not shared',
     earlier_words: history.map(neutralize).filter(Boolean).join('\n') || 'none',
     visitor_words: neutralize(message),
     category_list: allow.categories.map((c) => c.slug).join(', ') || 'none',
@@ -600,16 +613,17 @@ export function buildAssistantPrompt(
   message: string,
   history: readonly string[],
   allow: AssistantAllowList,
-  page: AssistantPagePrompt = NO_PAGE_PROMPT
+  page: AssistantPagePrompt = NO_PAGE_PROMPT,
+  located = false
 ): { prompt: string; offered: AssistantAllowList } | null {
-  const full = promptFor(message, history, allow, page)
+  const full = promptFor(message, history, allow, page, located)
   if (full.length <= GUIDE_MAX_PROMPT_CHARS) return { prompt: full, offered: allow }
   const topOnly: AssistantAllowList = {
     categories: allow.categories.filter((c) => c.parentId === null),
     cities: allow.cities,
   }
   for (let keep = history.length; keep >= 0; keep--) {
-    const prompt = promptFor(message, history.slice(history.length - keep), topOnly, page)
+    const prompt = promptFor(message, history.slice(history.length - keep), topOnly, page, located)
     if (prompt.length <= GUIDE_MAX_PROMPT_CHARS) return { prompt, offered: topOnly }
   }
   return null
@@ -874,13 +888,20 @@ const PROPER_FIRST = new Set([
   'trinidadian', 'vietnamese', 'west',
 ])
 
-/** A need name inside a sentence: "Produce" reads "produce", "DJ" and "Thai" stay. */
+/**
+ * A need name inside a sentence. Names are title-cased, so each plain
+ * capitalized word drops its capital: "Party Decorations" reads "party
+ * decorations". "DJ" and "Thai" stay.
+ */
 export function inSentence(name: string): string {
-  const second = name.charAt(1)
-  const first = name.split(/\s/)[0]?.toLowerCase() ?? ''
-  return second && second === second.toLowerCase() && !PROPER_FIRST.has(first)
-    ? name.charAt(0).toLowerCase() + name.slice(1)
-    : name
+  return name
+    .split(' ')
+    .map((word) => {
+      const rest = word.slice(1)
+      const plain = word.charAt(0) !== word.charAt(0).toLowerCase() && rest === rest.toLowerCase()
+      return plain && !PROPER_FIRST.has(word.toLowerCase()) ? word.toLowerCase() : word
+    })
+    .join(' ')
 }
 
 function places(total: number): string {

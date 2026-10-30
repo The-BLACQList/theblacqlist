@@ -109,6 +109,13 @@ describe('cleanNeedName', () => {
     expect(cleanNeedName('soul food vendors')).toBe('Soul food')
   })
 
+  it('sentence-cases a title-cased name, keeping cuisines and short forms', () => {
+    expect(cleanNeedName('Food Truck')).toBe('Food truck')
+    expect(cleanNeedName('food truck')).toBe('Food truck')
+    expect(cleanNeedName('Thai Restaurant')).toBe('Thai restaurant')
+    expect(cleanNeedName('DJ and Music')).toBe('DJ and music')
+  })
+
   it('falls back to the category name when nothing is left', () => {
     expect(cleanNeedName('black owned', 'Grocery & Markets')).toBe('Grocery & Markets')
     expect(cleanNeedName('black owned')).toBeNull()
@@ -119,6 +126,13 @@ describe('cleanNeedName', () => {
     expect(inSentence('Thai restaurant')).toBe('Thai restaurant')
     expect(inSentence('Produce')).toBe('produce')
     expect(inSentence('DJ')).toBe('DJ')
+  })
+
+  it('drops the capitals of a title-cased name, keeping DJ and cuisines', () => {
+    expect(inSentence('Party Decorations')).toBe('party decorations')
+    expect(inSentence('DJ and Music')).toBe('DJ and music')
+    expect(inSentence('Soul Food Restaurants')).toBe('soul food restaurants')
+    expect(inSentence('Thai Restaurant')).toBe('Thai restaurant')
   })
 })
 
@@ -171,6 +185,19 @@ describe('checkOpener', () => {
     ]) {
       expect(checkOpener(text, allow), text).toBeNull()
     }
+  })
+
+  it('drops an opener that asks where they are once Cue knows', () => {
+    const located = { ...allow, located: true }
+    for (const text of [
+      "Happy to help you find a dentist nearby, just let me know which city you're in.",
+      'Tell me your city and I can narrow it down.',
+      "I'd love to help, where you are matters here.",
+    ]) {
+      expect(checkOpener(text, located), text).toBeNull()
+      expect(checkOpener(text, allow), text).not.toBeNull()
+    }
+    expect(checkOpener("Thanks, I'll keep your search local to Atlanta.", located)).not.toBeNull()
   })
 
   it('drops numbers the page does not show, so never a phone number', () => {
@@ -278,6 +305,12 @@ describe('page actions', () => {
     expect(page.actions).not.toHaveProperty('website')
     expect(page.actions).not.toHaveProperty('claim')
     expect(page.actions).not.toHaveProperty('hours')
+  })
+
+  it('says so when a business lists no hours', () => {
+    expect(businessPage(MAMAS).facts).not.toContain('No hours listed.')
+    expect(businessPage({ ...MAMAS, hasHours: false }).facts).toContain('No hours listed.')
+    expect(businessPage({ ...MAMAS, hasHours: false, entityType: 'event' }).facts).not.toContain('No hours listed.')
   })
 
   it('offers open now on a search page only when it is not already on', () => {

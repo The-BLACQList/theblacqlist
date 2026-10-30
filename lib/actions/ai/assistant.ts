@@ -1084,10 +1084,13 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
 
     const pageCtx = await loadPage(parsePagePath(pagePath))
     const actionCodes = Object.keys(pageCtx.actions)
-    const built = buildAssistantPrompt(words, earlier, lists.allow, {
-      facts: pageCtx.facts,
-      actions: actionCodes,
-    })
+    const built = buildAssistantPrompt(
+      words,
+      earlier,
+      lists.allow,
+      { facts: pageCtx.facts, actions: actionCodes },
+      near !== null
+    )
     if (!built) return namesOrFallback('error')
 
     const supabase = createServiceClient()
@@ -1147,6 +1150,7 @@ export async function askAssistant(input: unknown): Promise<AssistantResponse> {
       actionCodes,
       pageNames: pageCtx.names,
       pageNumbers: pageCtx.numbers,
+      located: near !== null,
     }
     const checked = parseAssistantAnswer(answer, built.offered, typed, context)
     if (!checked.ok) {

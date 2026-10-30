@@ -341,6 +341,11 @@ describe('input and prompt', () => {
     expect(built.prompt).toContain('earlier two')
   })
 
+  it('tells the model a question this page answers needs no business search', () => {
+    const built = buildAssistantPrompt('which plan fits a food truck?', [], ALLOW)!
+    expect(built.prompt).toContain('"needs" is [] unless they also ask to find businesses')
+  })
+
   it('keeps its system prompt shorter than the owner one, so the spend bound holds', () => {
     expect(ASSISTANT_SYSTEM_PROMPT.length).toBeLessThan(SYSTEM_PROMPT.length)
   })
@@ -822,7 +827,7 @@ describe('askAssistant', () => {
         ? 'abcdefgh'.split('').map((id) => ENTITY(id, id === 'a' ? { name: 'Soul Food Kitchen' } : {}))
         : [ENTITY('a', { name: 'Soul Food Kitchen' })]
     const res = answerOf(await askAssistant({ message: 'soul food kitchen' }))
-    expect(res.heading).toBe('Soul Food')
+    expect(res.heading).toBe('Soul food')
     expect(res.nameMatches.map((c) => c.id)).toEqual(['a'])
     expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['b', 'c', 'd', 'e', 'f', 'g'])
   })
