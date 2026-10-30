@@ -4,6 +4,7 @@ import {
   endOfDayEastern,
   easternToday,
   firstStepWithError,
+  latestCloseDay,
   validatePostJob,
   validatePostJobStep,
   type PostJobValues,
@@ -79,7 +80,7 @@ describe('postJobSchema', () => {
 
   it('accepts today and a future closing date', () => {
     expect(validatePostJob({ ...good, closesAt: easternToday() })).toEqual({})
-    expect(validatePostJob({ ...good, closesAt: '2999-01-01' })).toEqual({})
+    expect(validatePostJob({ ...good, closesAt: latestCloseDay() })).toEqual({})
   })
 
   it('enforces the summary and description lengths', () => {
@@ -105,6 +106,11 @@ describe('step validation', () => {
     expect(firstStepWithError({ description: 'x' })).toBe(2)
     expect(firstStepWithError({ salaryMin: 'x', name: 'y' })).toBe(0)
     expect(firstStepWithError({})).toBeNull()
+  })
+
+  it('caps the closing date at 90 days from today', () => {
+    expect(validatePostJob({ ...good, closesAt: '2999-01-01' }).closesAt).toMatch(/90 days/)
+    expect(latestCloseDay(new Date('2026-10-30T16:00:00Z'))).toBe('2027-01-28')
   })
 
   it('stores the closing day as the end of that day in Eastern time', () => {

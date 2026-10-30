@@ -68,6 +68,16 @@ export function easternToday(now: Date = new Date()): string {
   return now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' })
 }
 
+/** The furthest a closing date can be set, in days from today (founder, 2026-10-30). */
+export const MAX_CLOSE_DAYS = 90
+
+/** The latest allowed closing day, "YYYY-MM-DD": today in Eastern time plus MAX_CLOSE_DAYS. */
+export function latestCloseDay(now: Date = new Date()): string {
+  const d = new Date(`${easternToday(now)}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + MAX_CLOSE_DAYS)
+  return d.toISOString().slice(0, 10)
+}
+
 /**
  * The instant a role closes: the last minute of the chosen calendar day in
  * Eastern time. Stored this way so formatCloseDate shows the day the poster
@@ -141,6 +151,8 @@ export const postJobSchema = postJobBaseSchema.superRefine((raw, ctx) => {
       fail('closesAt', 'Enter a valid closing date.')
     } else if (closes < easternToday()) {
       fail('closesAt', 'The closing date must be today or later.')
+    } else if (closes > latestCloseDay()) {
+      fail('closesAt', `The closing date can be at most ${MAX_CLOSE_DAYS} days from today.`)
     }
   }
 

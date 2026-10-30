@@ -1,5 +1,5 @@
 import { JOB_SALARY_PERIODS, JOB_SALARY_PERIOD_META } from '@/lib/constants/listing'
-import { isVolunteer } from '@/lib/validations/postJob'
+import { easternToday, isVolunteer, latestCloseDay, MAX_CLOSE_DAYS } from '@/lib/validations/postJob'
 import { Field, inputCls } from './Field'
 import type { HiringBusiness, StepProps } from './types'
 
@@ -99,13 +99,15 @@ export function StepPayPlace({ values, errors, set, business }: Props) {
         id="closesAt"
         label="Applications close"
         optionalNote="(optional)"
-        hint="If you leave this blank we close it 30 days after it goes live."
+        hint={`Up to ${MAX_CLOSE_DAYS} days from today. If you leave this blank we close it 30 days after it goes live.`}
         error={errors.closesAt}
       >
         {({ describedBy, invalid }) => (
           <input
             id="closesAt"
             type="date"
+            min={easternToday()}
+            max={latestCloseDay()}
             value={values.closesAt}
             onChange={(e) => set('closesAt', e.target.value)}
             aria-describedby={describedBy}
