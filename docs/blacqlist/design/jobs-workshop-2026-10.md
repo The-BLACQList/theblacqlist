@@ -39,6 +39,13 @@ Not picked: Board B (dense list) and C (by place), Card A (pay first) and C (wit
 - **Filters match nothing:** "No roles match these filters", with Clear filters.
 - **A closed role:** the job page shows "Applications closed on {date}". The role leaves the board and search.
 
+## Follow-up calls (founder, 2026-10-30, after ticket 149 review)
+
+- **Temporary chip:** the board gets a sixth Kind of work chip, Temporary, so no live role is unfilterable. `[Decision — founder, 2026-10-30]`
+- **Board H1:** "Jobs" (was "Black-Owned Business Jobs"). `[Decision — founder, 2026-10-30]`
+- **Remote once:** a remote role shows "Remote" only on its chip, not again in the top line (fixed in #269). `[Decision — founder, 2026-10-30]`
+- **Closing dates:** shown as the calendar day in Eastern time (America/New_York) everywhere. `[Decision — founder, 2026-10-30]`
+
 ## Copy facts to keep right when building
 
 - Pay format: "$18–$22 an hour" (en dash in ranges). Volunteer roles say "Unpaid".

@@ -9,6 +9,8 @@
 2. **Filters live in the URL** and survive a refresh.
 3. **Four states**, copy fixed below.
 4. **Subhead** "Open roles at Black-owned businesses" stays (23 Oct site-copy rule).
+5. **Temporary chip** added as a sixth Kind of work chip. `[Decision — founder, 2026-10-30]`
+6. **H1 is "Jobs".** The old "Black-Owned Business Jobs" goes; the eyebrow above it is dropped so the page does not say "Jobs" twice. `[Decision — founder, 2026-10-30]`
 
 ---
 
@@ -20,22 +22,21 @@
 
 In:
 
-- **URL params** `where` (`remote` or a city slug) and `type` (`full-time|part-time|contract|internship|volunteer`, comma list allowed). Validate with zod in `lib/validations/jobs.ts`; unknown values are dropped, not errors. Reset `page` when a filter changes.
+- **URL params** `where` (`remote` or a city slug) and `type` (`full-time|part-time|contract|internship|volunteer|temporary`, comma list allowed). Validate with zod in `lib/validations/jobs.ts`; unknown values are dropped, not errors. Reset `page` when a filter changes.
 - **`components/jobs/JobFilters.tsx`** (client). Two chip groups using `useSearchParams` + `router.replace` (pattern from the dashboard filters in `frontend.md`). A chip is a toggle button with `aria-pressed`. Active chips show a count line "Showing {n} roles" in an `aria-live="polite"` region. "Clear filters" appears when any filter is active.
 - **Where options** come from a server query: distinct cities of open published jobs plus Remote when any open job is remote. Add `getJobFilterOptions()` in `lib/listings/jobs.ts` (new). Only cities with at least one open role are shown.
 - **Query.** Extend `queryListings` call for `type: 'job'` with the two filters. Remote means `workplace_type = 'remote'`; a city means the listing `city_id`. Because the faceted RPC knows neither, filter by id set: fetch matching `listing_id`s from `listing_details_job`, then pass them in. If that proves clumsy with pagination totals, fall back to a dedicated `queryJobs()` in `lib/listings/jobs.ts` using the same `NESTED_SELECT` and `LISTINGS_PAGE_SIZE`. Builder decides, and notes it in the PR. Open roles only: `closes_at IS NULL OR closes_at > now()`.
-- **Kind of work set.** The DB also allows `temporary`. The founder list has five kinds. Assumption: show a sixth chip "Temporary" so no live role is unfilterable. Flag for review; drop the chip if the founder says no.
+- **Kind of work set.** Six chips: Full-time, Part-time, Contract, Internship, Volunteer, Temporary (founder, 2026-10-30). Labels come from `JOB_EMPLOYMENT_TYPE_META`.
 - **States** (copy exact):
   - Empty, no filters: "No open roles right now" / "Roles appear once businesses post them and our team approves them." Owners (signed in with a business) see a "Post the first one" link to `/add-job`; others see "Browse businesses". The existing `postingSubmissions` gate on the link stays.
   - Loading: 6 `JobCardSkeleton`s in the same grid, chips shown disabled-looking but not hidden. Suspense fallback replaces `<DiscoveryGrid isLoading />`.
   - Error: "We couldn't load jobs just now" with a **Try again** button (`router.refresh()`), filters kept in the URL and visible.
   - No match: "No roles match these filters" with **Clear filters**.
-- Header: eyebrow "Jobs" in teal ink `#176679`, H1, subhead, "Post a job" button (top right on 1280px, full-width under the subhead on 375px).
+- Header: H1 "Jobs" (founder, 2026-10-30; replaces "Black-Owned Business Jobs", no separate eyebrow), subhead, "Post a job" button (top right on 1280px, full-width under the subhead on 375px).
 
 Out:
 
 - Search box on the board, sorting options, saved searches, job alerts.
-- Page title change. Assumption: the H1 "Black-Owned Business Jobs" is reviewed against the 23 Oct rule in a copy pass, not here. Flag.
 - Cron/closing logic (155).
 
 ## Acceptance criteria
@@ -49,6 +50,7 @@ Out:
 - Given a role whose `closes_at` is in the past, then it does not appear.
 - Given `?type=nonsense`, then it is ignored and the page shows all roles (no 400).
 - Mobile 375px: chips scroll in a single horizontal row per group inside their own `overflow-x-auto` container, page body does not scroll sideways, chip hit area at least 44px high. 1280px: groups sit inline above the grid, 3 columns.
+- The H1 reads "Jobs" and the page never shows "Black-Owned Business Jobs". The document `<title>` and metadata description follow the same wording.
 - A11y: groups are `role="group"` with a visible label ("Where", "Kind of work"); chips reachable by Tab and toggled with Space/Enter; focus stays on the chip after tap; count change announced politely.
 
 ## Data note
