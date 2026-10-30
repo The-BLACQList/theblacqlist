@@ -16,6 +16,7 @@ import { levelPill, extraLevelLabels } from '@/lib/listings/levels'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 import { ContactLink } from '@/components/entity-page/ContactLink'
+import { isRoleClosed } from '@/lib/listings/jobPosting'
 import { bucketLabel } from '@/lib/featured/buckets'
 
 /**
@@ -71,7 +72,9 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   const showOpenStatus = variant !== 'event' && variant !== 'job'
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
-  const ctaHref = getCtaHref(entity)
+  // A job past its closing date offers no apply button; the page says so instead.
+  const jobClosed = entity.entity_type === 'job' && isRoleClosed(entity.job?.closes_at)
+  const ctaHref = jobClosed ? null : getCtaHref(entity)
   const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
   // Creatives already carry the category as the gold eyebrow, so they get no chip.
   const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
@@ -192,6 +195,18 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         <h1 className={cn('font-headline text-white leading-tight text-balance', HEADING_SIZES[variant])}>
           {entity.name}
         </h1>
+
+        {entity.job?.hiring && (
+          <p className="font-body text-base md:text-lg text-off-white/90 mt-2">
+            at{' '}
+            <Link
+              href={entity.job.hiring.url as Route}
+              className="font-semibold text-white underline underline-offset-2 hover:text-light-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            >
+              {entity.job.hiring.name}
+            </Link>
+          </p>
+        )}
 
         {!isCreative && locationLine && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
 import { capDescription, capList, shownLimits } from '@/lib/stripe/downgrade'
 import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
@@ -15,6 +16,7 @@ import type {
   EntityVideo,
   EventDetails,
   JobDetails,
+  JobHiring,
   OrganizerEvent,
   BusinessDetails,
   WeeklyHours,
@@ -596,23 +598,23 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         cta_url: string | null
         hiring_listing_id: string | null
       }
-      let hiring: { name: string; url: string } | null = null
+      let hiring: JobHiring | null = null
       if (j.hiring_listing_id) {
         const { data: co } = await supabase
           .from('listings')
-          .select('name, slug, entity_type, cities(slug)')
+          .select('name, slug, entity_type, tagline, logo_path, cities(slug, name)')
           .eq('id', j.hiring_listing_id)
           .eq('status', 'published')
           .is('deleted_at', null)
           .maybeSingle()
         if (co) {
+          const coCity = co.cities as { slug: string; name: string } | null
           hiring = {
             name: co.name,
-            url: buildEntityUrl(
-              co.entity_type,
-              (co.cities as { slug: string } | null)?.slug,
-              co.slug
-            ),
+            url: buildEntityUrl(co.entity_type, coCity?.slug, co.slug),
+            logoUrl: resolveMediaPath(co.logo_path),
+            tagline: co.tagline || null,
+            cityName: coCity?.name ?? null,
           }
         }
       }

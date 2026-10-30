@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { formatJobPay } from '@/lib/listings/jobPosting'
+import { formatCloseDate, formatJobPay, isRoleClosed } from '@/lib/listings/jobPosting'
 import { JOB_EMPLOYMENT_TYPE_META, type JobEmploymentType } from '@/lib/constants/listing'
 import type { JobCardData } from '@/types'
 
@@ -13,14 +13,6 @@ interface Props {
   className?: string
   /** Injected so the closed look can be tested. Defaults to now. */
   now?: Date
-}
-
-// The deadline is a timestamptz, and a deadline means a day on the calendar in
-// the audience's time zone, not a UTC instant. Fixed zone so server and browser agree.
-function formatCloseDate(iso: string): string | null {
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return null
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/New_York' })
 }
 
 const chipClass =
@@ -38,7 +30,7 @@ export function JobCard({ job, className, now }: Props) {
     : null
   const isRemote = job.workplaceType === 'remote'
   const closeDate = job.closesAt ? formatCloseDate(job.closesAt) : null
-  const isClosed = !!job.closesAt && closeDate !== null && new Date(job.closesAt) < (now ?? new Date())
+  const isClosed = closeDate !== null && isRoleClosed(job.closesAt, now)
   const hasChips = !!pay || !!kind || isRemote
   // Remote roles say "Remote" once, on the chip, so the top line drops it.
   const place = isRemote ? null : job.place
