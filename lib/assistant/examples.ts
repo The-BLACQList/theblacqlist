@@ -14,7 +14,7 @@ export const EXAMPLE_ASKS = [
   'Help me plan a party in Detroit',
   'Who sells Black-owned produce in Chicago?',
   'How do I switch to Black-owned bath products?',
-  "Somewhere for soul food that's open now",
+  'Where can I get good soul food in Atlanta?',
   'Find me a barber close by',
   'Any good coffee shops in Houston?',
   'I want a gift from a local maker',
