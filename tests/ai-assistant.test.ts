@@ -679,6 +679,27 @@ describe('askAssistant', () => {
     expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
   })
 
+  it('never searches a whole top-level group without words', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Party Cakes', category: 'food-dining' }] })
+    h.search = (p) => {
+      if (p.category === 'food-dining' && !p.q) return [ENTITY('grocer')]
+      if (p.category === 'food-dining' && String(p.q ?? '').startsWith('cake OR')) return [ENTITY('good-cakes')]
+      return []
+    }
+    const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
+    expect(res.needs[0]).toMatchObject({ status: 'found', line: '1 in Detroit' })
+    expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
+    expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
+  })
+
+  it('does not search a parent group by an occasion word', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Caterer', category: 'catering-events-food', keywords: ['party'] }] })
+    await askAssistant({ message: 'party caterer in detroit' })
+    expect(needCalls().some((c) => c.q === 'party' && c.category !== 'catering-events-food')).toBe(false)
+  })
+
   it('counts a need named for an occasion plus the kind as found', async () => {
     h.extraCategories = LIVE_FOOD
     modelSays({ city: 'detroit', needs: [{ name: 'Birthday cake', category: 'bakeries-pastry-shops', keywords: ['birthday', 'cake'] }] })

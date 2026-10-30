@@ -335,8 +335,8 @@ interface Found {
   see?: { category: AssistantCategory; keywords: string[] }
 }
 
-/** Name words too general to pick a kind out of its group ("Bakeries & Pastry Shops"). */
-const GENERIC_NAME_WORDS = new Set(['and', 'shops', 'shop', 'stores', 'store', 'services', 'service', 'other'])
+/** Words too general to pick a kind out of its group ("Bakeries & Pastry Shops", "live"). */
+const GENERIC_NAME_WORDS = new Set(['and', 'shops', 'shop', 'stores', 'store', 'services', 'service', 'other', 'live'])
 
 /**
  * The words that pick a kind out of its parent group: its single search words,
@@ -349,6 +349,11 @@ function kindWords(kind: AssistantCategory): string[] {
 
 /** Words that say what the need is for, not what it is ("Birthday cake" is a cake). */
 const OCCASION_WORDS = new Set(['birthday', 'party', 'wedding', 'baby', 'shower', 'graduation', 'anniversary', 'holiday'])
+
+/** Words fit to search a whole group by: "party" would match any listing that mentions parties. */
+function groupWords(words: readonly string[]): string[] {
+  return words.filter((w) => !OCCASION_WORDS.has(w))
+}
 
 /**
  * One search. Most listings are filed on a top-level group only (Food & Dining,
@@ -367,7 +372,8 @@ async function runOnce(
   const found: Found = { ...own, keywords, broad: false, kind: category }
   if (own.items.length > 0 || !category?.parentId) return found
   const parent = categories.find((c) => c.id === category.parentId)
-  const q = keywords.length > 0 ? keywords.join(' ') : kindWords(category).join(' OR ')
+  const words = groupWords(keywords)
+  const q = words.length > 0 ? words.join(' ') : kindWords(category).join(' OR ')
   if (!parent || !q) return found
   const inParent = await runQuery(need, parent, q, where)
   if (inParent.items.length === 0) return found
@@ -423,6 +429,13 @@ async function search(
   where: Where,
   categories: readonly AssistantCategory[]
 ): Promise<Found> {
+  // A whole top-level group with no words would offer grocery stores for a cake.
+  if (category && !category.parentId && need.keywords.length === 0) {
+    if (wideKind) return runOnce(need, wideKind, [], where, categories)
+    const words = groupWords(nameWords(need.name))
+    if (words.length === 0) return { total: 0, items: [], keywords: [], broad: false, kind: category }
+    return runOnce(need, category, [words.join(' OR ')], where, categories)
+  }
   const first = await runOnce(need, category, need.keywords, where, categories)
   if (first.items.length > 0 || need.keywords.length === 0 || !wideKind) return first
   const wide = await runOnce(need, wideKind, [], where, categories)
