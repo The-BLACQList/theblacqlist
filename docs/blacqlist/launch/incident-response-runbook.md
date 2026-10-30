@@ -1,7 +1,7 @@
 # Incident Response Runbook — The BLACQList
 
-**Last updated:** 2026-05-18  
-**Owner:** Engineering lead  
+**Last updated:** 2026-10-30  
+**Owner:** Founder  
 **Use this when:** Something is broken in production and you need to know what to do next.
 
 ---
@@ -10,9 +10,9 @@
 
 | Level    | Condition                                                                                                                       | Response SLA | Who responds                               |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------ |
-| **SEV1** | Platform completely down OR data loss actively occurring OR auth broken for all users                                           | < 15 minutes | Engineering lead + all available engineers |
-| **SEV2** | Major feature broken for all users — search returns nothing, listing pages 500, claims submission fails, Stripe checkout broken | < 1 hour     | Engineering lead                           |
-| **SEV3** | Single feature degraded or broken for a subset of users — images not loading, analytics not recording, one page errors          | < 24 hours   | On-call engineer                           |
+| **SEV1** | Platform completely down OR data loss actively occurring OR auth broken for all users                                           | < 15 minutes | Founder: email + Sentry alert              |
+| **SEV2** | Major feature broken for all users — search returns nothing, listing pages 500, claims submission fails, Stripe checkout broken | < 1 hour     | Founder: email                             |
+| **SEV3** | Single feature degraded or broken for a subset of users — images not loading, analytics not recording, one page errors          | < 24 hours   | Founder: create a ticket                   |
 
 When in doubt, treat it as the higher severity. It is always better to escalate a SEV3 to SEV2 than to under-respond to a real SEV1.
 
@@ -20,12 +20,14 @@ When in doubt, treat it as the higher severity. It is always better to escalate 
 
 ## Escalation Order
 
-1. **On-call engineer** — first responder for all alerts
-2. **Engineering lead** — escalate immediately for SEV1 or any SEV2 that isn't resolved within 30 minutes
-3. **Product lead** — notify for SEV1 and any SEV2 that may require user communication
-4. **All-hands** — SEV1 only, if engineering lead cannot resolve within 30 minutes
+There is one person on call: the founder. There is no backup to escalate to, so the escalation is to a safer state of the system, not to a person. The full ladder lives in [on-call.md](./on-call.md#escalation-path):
 
-Contact information: stored in the team's primary communication channel (not in this document — keep credentials out of version control).
+1. **Founder** assesses and starts mitigation. Notify by email + Sentry alert.
+2. **Not fixed in 30 minutes:** roll back to the last known-good Vercel deployment (see Step 4 below) instead of debugging forward.
+3. **Not fixed in 60 minutes:** re-gate the site (`COMING_SOON_MODE=true` + redeploy) and keep working with the public site closed.
+4. **Data loss or a security incident:** stop mitigating and preserve state first (PITR window, Supabase logs, Sentry trace).
+
+`[Decision — founder, 2026-09-03]` recorded in on-call.md. If on-call.md and this section ever disagree, on-call.md wins.
 
 ---
 
