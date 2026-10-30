@@ -666,7 +666,7 @@ describe('askAssistant', () => {
     h.extraCategories = LIVE_FOOD
     modelSays({ city: 'detroit', needs: [{ name: 'Party cakes', category: 'bakeries-pastry-shops' }] })
     h.search = (p) =>
-      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'cake OR cupcake OR pie OR cookie OR bread OR dessert OR pastry OR sweets'
+      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'cake OR cupcake OR pie OR cookie OR bread OR dessert OR pastry OR sweets OR bakeries'
         ? [ENTITY('good-cakes')]
         : []
     const res = answerOf(await askAssistant({ message: 'party cakes in detroit' }))
@@ -674,9 +674,18 @@ describe('askAssistant', () => {
       status: 'found',
       line: '1 in Detroit',
       seeAllHref:
-        '/search?q=cake+OR+cupcake+OR+pie+OR+cookie+OR+bread+OR+dessert+OR+pastry+OR+sweets&category=food-dining&city=detroit',
+        '/search?q=cake+OR+cupcake+OR+pie+OR+cookie+OR+bread+OR+dessert+OR+pastry+OR+sweets+OR+bakeries&category=food-dining&city=detroit',
     })
     expect(res.needs[0]!.top.map((c) => c.id)).toEqual(['good-cakes'])
+  })
+
+  it('counts a need named for an occasion plus the kind as found', async () => {
+    h.extraCategories = LIVE_FOOD
+    modelSays({ city: 'detroit', needs: [{ name: 'Birthday cake', category: 'bakeries-pastry-shops', keywords: ['birthday', 'cake'] }] })
+    h.search = (p) =>
+      p.city === 'detroit' && p.category === 'food-dining' && String(p.q ?? '').startsWith('cake OR') ? [ENTITY('good-cakes')] : []
+    const res = answerOf(await askAssistant({ message: 'birthday cake in detroit' }))
+    expect(res.needs[0]).toMatchObject({ name: 'Birthday cake', status: 'found', line: '1 in Detroit' })
   })
 
   it('looks in the parent group by the need\'s own words before widening', async () => {
@@ -694,14 +703,14 @@ describe('askAssistant', () => {
     h.extraCategories = LIVE_FOOD
     modelSays({ city: 'detroit', needs: [{ name: 'Cake', category: 'bakeries-pastry-shops', keywords: ['birthday'] }] })
     h.search = (p) =>
-      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'coffee OR latte OR espresso OR tea OR cafe'
+      p.city === 'detroit' && p.category === 'food-dining' && p.q === 'coffee OR latte OR espresso OR tea OR cafe OR cafes'
         ? [ENTITY('cafe1')]
         : []
     const res = answerOf(await askAssistant({ message: 'birthday cake in detroit' }))
     expect(res.needs[0]).toMatchObject({
       status: 'close',
       line: 'No Cake in Detroit yet. Close to it: Cafes & Coffee (1)',
-      seeAllHref: '/search?q=coffee+OR+latte+OR+espresso+OR+tea+OR+cafe&category=food-dining&city=detroit',
+      seeAllHref: '/search?q=coffee+OR+latte+OR+espresso+OR+tea+OR+cafe+OR+cafes&category=food-dining&city=detroit',
     })
   })
 
@@ -727,12 +736,12 @@ describe('askAssistant', () => {
     modelSays({ city: 'detroit', needs: [{ name: 'Thai', category: 'thai' }] })
     h.search = (p) => {
       if (p.category === 'thai' && p.city === 'chicago') return [ENTITY('chi-thai')]
-      if (p.category === 'food-dining') return [ENTITY('food1')]
+      if (p.category === 'food-dining' && !p.q) return [ENTITY('food1')]
       return []
     }
     const res = answerOf(await askAssistant({ message: 'thai in detroit' }))
     expect(res.needs[0]).toMatchObject({ status: 'nearest', line: 'Not in Detroit yet. Nearest we list: Chicago (1)' })
-    expect(needCalls().some((c) => c.category === 'food-dining')).toBe(false)
+    expect(needCalls().some((c) => c.category === 'food-dining' && !c.q)).toBe(false)
   })
 
   it('says the nearest city has the kind, not the thing, when only the kind matches there', async () => {

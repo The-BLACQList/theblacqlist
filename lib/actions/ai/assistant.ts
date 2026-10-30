@@ -335,13 +335,20 @@ interface Found {
   see?: { category: AssistantCategory; keywords: string[] }
 }
 
+/** Name words too general to pick a kind out of its group ("Bakeries & Pastry Shops"). */
+const GENERIC_NAME_WORDS = new Set(['and', 'shops', 'shop', 'stores', 'store', 'services', 'service', 'other'])
+
 /**
- * The words that pick a kind out of its parent group: the kind's own single
- * search words ("cake OR cupcake OR pie"). Empty when it has none.
+ * The words that pick a kind out of its parent group: its single search words,
+ * then its own name words ("cake OR cupcake ... OR bakeries"). Empty when it has none.
  */
 function kindWords(kind: AssistantCategory): string[] {
-  return (CATEGORY_KEYWORDS[kind.slug] ?? []).filter((w) => /^[a-z]+$/.test(w))
+  const words = [...(CATEGORY_KEYWORDS[kind.slug] ?? []), ...nameWords(kind.name)]
+  return [...new Set(words.filter((w) => /^[a-z]+$/.test(w) && !GENERIC_NAME_WORDS.has(w)))]
 }
+
+/** Words that say what the need is for, not what it is ("Birthday cake" is a cake). */
+const OCCASION_WORDS = new Set(['birthday', 'party', 'wedding', 'baby', 'shower', 'graduation', 'anniversary', 'holiday'])
 
 /**
  * One search. Most listings are filed on a top-level group only (Food & Dining,
@@ -423,9 +430,9 @@ async function search(
   return { ...wide, broad: wide.items.length > 0 && !namesTheKind(need.name, wideKind) }
 }
 
-/** True when every word of the need's name points at this kind ("Bakery", "Cakes"). */
+/** True when every word of the need's name points at this kind ("Bakery", "Birthday cake"). */
 function namesTheKind(name: string, kind: AssistantCategory): boolean {
-  const words = nameWords(name)
+  const words = nameWords(name).filter((w) => !OCCASION_WORDS.has(w))
   return words.length > 0 && words.every((w) => matchCategories(w, [kind]).length > 0)
 }
 
