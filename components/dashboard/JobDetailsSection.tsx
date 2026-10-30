@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { updateJobDetailsAction } from '@/lib/actions/dashboard/updateJobDetails'
+import { easternToday } from '@/lib/validations/postJob'
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_META,
@@ -32,13 +33,16 @@ interface Props {
   businesses: { id: string; name: string }[]
 }
 
-/** `closes_at` is a timestamptz; the date input wants YYYY-MM-DD in local time. */
+/**
+ * `closes_at` is a timestamptz stored as the end of the chosen day in Eastern
+ * time (ticket 152), so the date input shows that Eastern day, the same day the
+ * public page prints.
+ */
 function toDateInput(iso: string | null): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  return easternToday(d)
 }
 
 const inputCls =

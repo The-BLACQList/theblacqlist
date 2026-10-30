@@ -32,8 +32,9 @@ import { isEventOver } from '@/lib/events/eventOver'
  * forever because nobody opened them. Worst case for a bug here is a cosmetic
  * status; there is no access consequence in either direction.
  *
- * The job sweep unpublishes a live listing. Getting its predicate wrong takes a
- * business's job posting off the site. So it is written the cautious way round:
+ * The job sweep closes a live listing (ticket 155: `closed`, not `unpublished`,
+ * so the page stays up). Getting its predicate wrong takes a business's job
+ * posting off the board. So it is written the cautious way round:
  * it computes *who has definitively lapsed* and touches only those, rather than
  * computing who is still paid and unpublishing the rest. Three cases that the
  * inverted version would get wrong, and that are pinned by tests:
@@ -76,8 +77,13 @@ export interface SuggestionSweepResult {
 export interface JobSweepResult {
   /** Listings with at least one paid purchase whose every window has closed. */
   lapsed: number
-  /** Of those, the ones actually moved `published` → `unpublished`. */
-  unpublished: number
+  /**
+   * Of those, the ones spared because their own `closes_at` is still ahead
+   * (ticket 155). The role closes on that date instead, via {@link closeExpiredJobs}.
+   */
+  spared: number
+  /** Of the rest, the ones actually moved `published` → `closed`. */
+  closed: number
   /** Listings with an expired purchase that were spared by a live renewal. */
   renewed: number
 }
@@ -121,17 +127,32 @@ interface PurchaseRow {
   expires_at: string | null
 }
 
+interface CloseDateRow {
+  listing_id: string
+  closes_at: string | null
+}
+
 /**
- * Unpublishes job listings whose paid posting window has closed.
+ * Closes job listings whose paid posting window has closed (ticket 155).
+ *
+ * Until ticket 155 this set `unpublished`, which 404'd the page and broke every
+ * link someone had saved or shared. It now sets `closed`: the role leaves the
+ * board, search and counts (all of which read `published` only), and the page
+ * stays up with the "Applications closed" banner.
  *
  * Reads the purchase ledger first and the listings second. The ledger is the
  * only place that knows a listing was ever paid for, and "was never paid for"
  * and "was paid for and lapsed" must not be confused — see the header.
  *
+ * A lapsed listing whose own `closes_at` is still in the future is left alone.
+ * Its page and its closing date agree with each other, and the closing-date
+ * sweep ({@link closeExpiredJobs}) closes it on that date. Net effect: the page
+ * never disappears at the end of a window.
+ *
  * The UPDATE re-states `entity_type`, `status` and `deleted_at` even though the
  * candidate set was built from the ledger. That is a belt on top of braces: if
  * the grouping above were ever wrong about a listing, the predicate still makes
- * it impossible to unpublish something that is not a currently-published job.
+ * it impossible to close something that is not a currently-published job.
  */
 export async function unpublishExpiredJobPostings(
   supabase: AnyClient,
@@ -168,39 +189,204 @@ export async function unpublishExpiredJobPostings(
   // "the ledger says this one is still paid".
 
   if (lapsedIds.length === 0) {
-    return { lapsed: 0, unpublished: 0, renewed }
+    return { lapsed: 0, spared: 0, closed: 0, renewed }
+  }
+
+  // A role the poster set to close later keeps its page live until that date.
+  const { data: dates, error: datesError } = await supabase
+    .from('listing_details_job')
+    .select('listing_id, closes_at')
+    .in('listing_id', lapsedIds)
+
+  if (datesError) {
+    throw new Error(`job closing date read failed: ${datesError.message}`)
+  }
+
+  const closesLater = new Set(
+    ((dates ?? []) as CloseDateRow[])
+      .filter((row) => row.closes_at && new Date(row.closes_at).getTime() > nowMs)
+      .map((row) => row.listing_id)
+  )
+  const toClose = lapsedIds.filter((id) => !closesLater.has(id))
+  const spared = lapsedIds.length - toClose.length
+
+  if (toClose.length === 0) {
+    return { lapsed: lapsedIds.length, spared, closed: 0, renewed }
   }
 
   const { data: updated, error: updateError } = await supabase
     .from('listings')
-    .update({ status: 'unpublished' })
-    .in('id', lapsedIds)
+    .update({ status: 'closed' })
+    .in('id', toClose)
     .eq('entity_type', 'job')
     .eq('status', 'published')
     .is('deleted_at', null)
     .select('id')
 
   if (updateError) {
-    throw new Error(`job posting unpublish failed: ${updateError.message}`)
+    throw new Error(`job posting close failed: ${updateError.message}`)
   }
 
-  const unpublishedIds = ((updated ?? []) as { id: string }[]).map((row) => row.id)
+  const closedIds = ((updated ?? []) as { id: string }[]).map((row) => row.id)
+
+  // A role with no closing date gets today's, so the page can say "Applications
+  // closed on {date}" and hide the apply button. Without it the closed page
+  // would look open. Only null dates are written; a past date is kept as is.
+  // Fail-soft: the status change above already happened and is what matters
+  // for the board; a failed stamp is logged and retried by nothing, so it is
+  // loud on purpose.
+  if (closedIds.length > 0) {
+    const { error: stampError } = await supabase
+      .from('listing_details_job')
+      .update({ closes_at: now.toISOString() })
+      .in('listing_id', closedIds)
+      .is('closes_at', null)
+    if (stampError) {
+      console.error('[expiry] closed job closes_at stamp failed:', stampError.message)
+    }
+  }
 
   // One audit row per listing, not one for the batch. An owner asking "why did
-  // my job disappear" is asking about one listing, and the answer has to be
+  // my job close" is asking about one listing, and the answer has to be
   // findable by that listing's id.
-  for (const listingId of unpublishedIds) {
+  for (const listingId of closedIds) {
     await writeSystemAuditLog({
       actorUserId: null,
       action: 'job_posting_expired',
       targetTable: 'listings',
       targetId: listingId,
       beforeState: { status: 'published' },
-      afterState: { status: 'unpublished', reason: 'posting_window_elapsed' },
+      afterState: { status: 'closed', reason: 'posting_window_elapsed' },
     })
   }
 
-  return { lapsed: lapsedIds.length, unpublished: unpublishedIds.length, renewed }
+  return { lapsed: lapsedIds.length, spared, closed: closedIds.length, renewed }
+}
+
+export interface JobCloseSweepResult {
+  /** Published jobs whose `closes_at` has passed, before the batch limit. */
+  due: number
+  /** Of those, the ones actually moved `published` → `closed` this run. */
+  closed: number
+  /** Listings whose update errored. The next run retries them. */
+  failed: number
+}
+
+/**
+ * Most roles {@link closeExpiredJobs} will close in one run. A normal night
+ * closes a handful; this only matters for a backlog (say, the first run after
+ * the migration). Anything over the limit is closed on the next run, oldest
+ * first, and the page already looks closed in the meantime.
+ */
+export const JOB_CLOSE_BATCH_LIMIT = 500
+
+/** Ids per `.in()` read, so the request URL stays well under PostgREST limits. */
+const ID_CHUNK = 200
+
+/**
+ * Closes published jobs whose closing date has passed (ticket 155).
+ *
+ * Same shape as {@link unpublishPastEvents}: read the live jobs, read their
+ * closing dates, then write. A job with no `closes_at` is never touched,
+ * because no date is not a past date.
+ *
+ * Each listing is updated and audited on its own, so one failing row does not
+ * stop the rest; failures are counted and the next run picks them up. Read
+ * errors throw, so the cron run shows red rather than reporting "0 closed".
+ *
+ * Idempotent: the UPDATE requires `status = 'published'`, so a second run finds
+ * nothing to change, writes no audit rows and logs 0.
+ *
+ * Not gated on paidPostings. Closing on the poster's date is not a payment
+ * concern.
+ */
+export async function closeExpiredJobs(
+  supabase: AnyClient,
+  now: Date = new Date()
+): Promise<JobCloseSweepResult> {
+  const { data: live, error } = await supabase
+    .from('listings')
+    .select('id')
+    .eq('entity_type', 'job')
+    .eq('status', 'published')
+    .is('deleted_at', null)
+
+  if (error) {
+    throw new Error(`published job read failed: ${error.message}`)
+  }
+
+  const liveIds = ((live ?? []) as { id: string }[]).map((row) => row.id)
+  if (liveIds.length === 0) {
+    console.info('[expiry] closeExpiredJobs closed 0 of 0')
+    return { due: 0, closed: 0, failed: 0 }
+  }
+
+  const nowIso = now.toISOString()
+  const nowMs = now.getTime()
+  const past: CloseDateRow[] = []
+
+  for (let i = 0; i < liveIds.length; i += ID_CHUNK) {
+    const { data: dates, error: datesError } = await supabase
+      .from('listing_details_job')
+      .select('listing_id, closes_at')
+      .in('listing_id', liveIds.slice(i, i + ID_CHUNK))
+      .lt('closes_at', nowIso)
+
+    if (datesError) {
+      throw new Error(`job closing date read failed: ${datesError.message}`)
+    }
+
+    for (const row of (dates ?? []) as CloseDateRow[]) {
+      // Re-checked here so a null or unparseable date can never read as past.
+      if (!row.listing_id || !row.closes_at) continue
+      const t = new Date(row.closes_at).getTime()
+      if (!isNaN(t) && t < nowMs) past.push(row)
+    }
+  }
+
+  // Oldest first, so a backlog over the limit drains in order.
+  past.sort((a, b) => new Date(a.closes_at!).getTime() - new Date(b.closes_at!).getTime())
+  const batch = past.slice(0, JOB_CLOSE_BATCH_LIMIT)
+
+  let closed = 0
+  let failed = 0
+
+  for (const row of batch) {
+    const { data: updated, error: updateError } = await supabase
+      .from('listings')
+      .update({ status: 'closed' })
+      .eq('id', row.listing_id)
+      .eq('entity_type', 'job')
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .select('id')
+
+    if (updateError) {
+      failed += 1
+      console.error('[expiry] job close failed:', row.listing_id, updateError.message)
+      continue
+    }
+    // Someone else moved it first (owner unpublished, admin flagged). Nothing to log.
+    if (!updated || updated.length === 0) continue
+
+    closed += 1
+    await writeSystemAuditLog({
+      actorUserId: null,
+      action: 'job_closed',
+      targetTable: 'listings',
+      targetId: row.listing_id,
+      beforeState: { status: 'published' },
+      afterState: { status: 'closed', reason: 'closes_at passed', closes_at: row.closes_at },
+    })
+  }
+
+  console.info(
+    `[expiry] closeExpiredJobs closed ${closed} of ${past.length}` +
+      (failed > 0 ? ` (${failed} failed)` : '') +
+      (past.length > batch.length ? ` (${past.length - batch.length} left for the next run)` : '')
+  )
+
+  return { due: past.length, closed, failed }
 }
 
 export interface EventSweepResult {

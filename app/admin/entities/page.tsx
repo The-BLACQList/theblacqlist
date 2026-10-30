@@ -34,6 +34,8 @@ const STATUS_TABS = [
   { value: 'pending', label: 'Pending' },
   { value: 'published', label: 'Published' },
   { value: 'rejected', label: 'Rejected' },
+  // Ticket 155: jobs past their closing date. Off the board, page still up.
+  { value: 'closed', label: 'Closed' },
 ]
 
 const PAGE_SIZE = 25

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { refuseUnauthorizedCron } from '@/lib/cron/auth'
 import { isFeatureEnabled } from '@/lib/env'
 import {
+  closeExpiredJobs,
   expireStaleSuggestions,
   unpublishExpiredJobPostings,
   unpublishPastEvents,
@@ -13,7 +14,7 @@ import { sendFreeMonthReminders } from '@/lib/tour/upgradeReminder'
 
 /**
  * =============================================================================
- * Daily expiry cron — the scheduled half of four time-based rules
+ * Daily expiry cron — the scheduled half of five time-based rules
  * =============================================================================
  *
  * The rules themselves live in `lib/services/expiry/sweeps.ts` and, for the
@@ -66,6 +67,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   } else {
     results.jobPostings = { skipped: 'paidPostings feature flag is off' }
+  }
+
+  // Not gated: closing a role on its own closing date is not a payment concern
+  // (ticket 155). Runs after the ledger sweep, so a role closed by either one
+  // is closed once. A row that failed to update is a failure for the run; the
+  // rest are still closed and the next run retries it.
+  try {
+    const closed = await closeExpiredJobs(supabase, now)
+    results.closedJobs = closed
+    if (closed.failed > 0) failures.push('closedJobs')
+  } catch (err) {
+    failures.push('closedJobs')
+    results.closedJobs = { error: err instanceof Error ? err.message : 'unknown error' }
+    console.error('[cron/expiry] closed job sweep failed:', err)
   }
 
   // Not gated: an event that is over should leave the public lists whether or

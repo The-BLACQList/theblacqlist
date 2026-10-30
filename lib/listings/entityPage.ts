@@ -158,7 +158,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     .from('listings')
     .select(LISTING_SELECT)
     .eq('slug', slug)
-    .eq('status', 'published')
+    // Ticket 155: a job past its closing date is 'closed', and its page stays up
+    // with the closed banner so shared links keep working. Jobs only: a closed
+    // status on any other entity type is never public (the RLS policy agrees).
+    .or('status.eq.published,and(status.eq.closed,entity_type.eq.job)')
     .is('deleted_at', null)
     .maybeSingle()
 
