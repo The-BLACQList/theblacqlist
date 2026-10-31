@@ -19,6 +19,13 @@
  * taken as 2, well above what English text costs on the current tokenizer, so a
  * prompt full of unusual characters still fits under it.
  *
+ * ── Cue is charged per message, in units ─────────────────────────────────────
+ * One Cue message (ticket 169) is one audit row but up to CUE_MAX_CALLS model
+ * calls, each with a far larger input than a page agent. So each Cue row is
+ * charged as `cueMessageUnits()` attempts: its own worst case divided by the
+ * page agents' worst case, rounded up. Its input is priced as a cache write
+ * (1.25 times the input price), the dearest way those tokens can be billed.
+ *
  * ── It fails closed ──────────────────────────────────────────────────────────
  * No ceiling set, a ceiling that does not parse, or a counter that cannot be
  * read all mean "no paid call". The first two route to the mock provider (see
@@ -31,6 +38,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { AI_AGENTS, ASSISTANT_AGENT, GUIDE_AGENT, ONBOARDING_AGENT } from './agents'
 import { maxTokensFor, SYSTEM_PROMPT } from './anthropic'
+import { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS } from './cue/limits'
 
 /** Longest filled template `generate()` will send. Longer prompts are refused. */
 export const MAX_PROMPT_CHARS = 4000
@@ -45,6 +53,9 @@ export const PRICE_PER_MTOK = { input: 0.1, output: 0.5 } as const
 /** Deliberately generous; see the header. */
 const TOKENS_PER_CHAR_BOUND = 2
 
+/** A 5-minute cache write costs 1.25 times the input price. */
+const CACHE_WRITE_MULTIPLIER = 1.25
+
 /** The most one call by this agent can cost, in USD. */
 export function worstCaseUsdPerCall(maxOutputChars: number): number {
   const inputTokens = (MAX_PROMPT_CHARS + SYSTEM_PROMPT.length) * TOKENS_PER_CHAR_BOUND
@@ -53,14 +64,30 @@ export function worstCaseUsdPerCall(maxOutputChars: number): number {
 }
 
 /**
- * One bound for every agent: the costliest agent's worst case. Cheaper agents
- * are charged as if they were the dearest, which wastes some headroom and keeps
- * the arithmetic one line long.
+ * One bound for every one-call agent: the costliest one's worst case. Cheaper
+ * agents are charged as if they were the dearest, which wastes some headroom
+ * and keeps the arithmetic one line long. Cue is priced on its own below.
  */
 export function worstCaseUsdAnyAgent(): number {
-  return Math.max(
-    ...[...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT, ASSISTANT_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars))
-  )
+  return Math.max(...[...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT].map((a) => worstCaseUsdPerCall(a.maxOutputChars)))
+}
+
+/** The most one Cue message can cost, in USD: every call at the input cap. */
+export function worstCaseUsdPerCueMessage(): number {
+  const inputTokens = CUE_INPUT_CHAR_CAP * TOKENS_PER_CHAR_BOUND
+  const perCall =
+    inputTokens * PRICE_PER_MTOK.input * CACHE_WRITE_MULTIPLIER + CUE_MAX_TOKENS * PRICE_PER_MTOK.output
+  return (CUE_MAX_CALLS * perCall) / 1_000_000
+}
+
+/** How many attempts one Cue message is charged as. */
+export function cueMessageUnits(): number {
+  return Math.ceil(worstCaseUsdPerCueMessage() / worstCaseUsdAnyAgent())
+}
+
+/** This month's attempts as the ceiling counts them, with Cue rows in units. */
+export function chargedAttempts(allRows: number, cueRows: number): number {
+  return allRows + Math.max(0, cueRows) * (cueMessageUnits() - 1)
 }
 
 /** `AI_MONTHLY_CEILING_USD` as a positive number, or null when unset or invalid. */
@@ -84,23 +111,33 @@ export function startOfMonthUtc(now: Date): string {
  * True when one more paid call fits under this month's ceiling.
  *
  * Counts every `provider = 'anthropic'` attempt since the first of the month,
- * whatever its status. Two requests racing past the check together can go one
- * call over; at a fraction of a cent per call that is accepted rather than
- * locked against.
+ * whatever its status, with Cue rows charged in units (see the header). The
+ * last Cue message can pass with fewer units left than it may use, and two
+ * requests racing past the check together can go over; at cents per message
+ * that is accepted rather than locked against.
  */
 export async function withinMonthlyCeiling(now: Date = new Date()): Promise<boolean> {
   const ceiling = monthlyCeilingUsd()
   if (ceiling === null) return false
 
   const supabase = createServiceClient()
-  const { count, error } = await supabase
-    .from('ai_generation_requests')
-    .select('id', { count: 'exact', head: true })
-    .eq('provider', 'anthropic')
-    .gte('created_at', startOfMonthUtc(now))
+  const since = startOfMonthUtc(now)
+  const [all, cue] = await Promise.all([
+    supabase
+      .from('ai_generation_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('provider', 'anthropic')
+      .gte('created_at', since),
+    supabase
+      .from('ai_generation_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('provider', 'anthropic')
+      .eq('agent_type', ASSISTANT_AGENT.agentType)
+      .gte('created_at', since),
+  ])
 
-  if (error || count === null) return false
-  return count < monthlyCallBudget(ceiling)
+  if (all.error || all.count === null || cue.error || cue.count === null) return false
+  return chargedAttempts(all.count, cue.count) < monthlyCallBudget(ceiling)
 }
 
 /**

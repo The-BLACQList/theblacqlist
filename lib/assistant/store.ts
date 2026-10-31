@@ -1,31 +1,29 @@
 import { useSyncExternalStore } from 'react'
 import { z } from 'zod'
 
-import {
-  ASSISTANT_HISTORY,
-  ASSISTANT_MAX_NEEDS,
-  type AssistantSearchPlan,
-  type AssistantResponse,
-} from '@/lib/ai/assistant-limits'
+import type { CueReply } from '@/lib/ai/assistant-limits'
+import { CUE_HISTORY_TURNS, CUE_PRIOR_CARDS_MAX, CUE_TURN_MAX_CHARS } from '@/lib/ai/cue/ask'
 
 /**
- * The site assistant's chat, kept in this browser tab only (ticket 147).
+ * Cue's chat, kept in this browser tab only (tickets 147 and 169).
  *
- * sessionStorage clears when the tab closes, and nothing here is sent to our
- * servers except the last few asks that go with the next question. Storage can
- * be missing or throw (private windows, blocked site data), so every read and
- * write is wrapped and the chat still works in memory.
+ * sessionStorage clears when the tab closes. Nothing here reaches our servers
+ * except what goes with the next message: the last few turns of text and the
+ * names of the businesses Cue last showed. Storage can be missing or throw
+ * (private windows, blocked site data), so every read and write is wrapped
+ * and the chat still works in memory.
  *
  * `open` is memory only: a reload should not pop the panel over the page.
+ * The v1 chat (fixed-wording answers) is a different shape and is ignored.
  */
 
-export const ASSISTANT_STORAGE_KEY = 'blq-assistant-v1'
+export const ASSISTANT_STORAGE_KEY = 'blq-assistant-v2'
 export const ASSISTANT_MAX_TURNS = 20
 
 export interface AssistantTurn {
   id: string
   ask: string
-  reply: AssistantResponse
+  reply: CueReply
 }
 
 export interface AssistantState {
@@ -40,7 +38,7 @@ export interface AssistantState {
 const internalHref = z.string().refine((h) => h.startsWith('/') && !h.startsWith('//'))
 const imageSrc = z.string().refine((s) => s.startsWith('https://'))
 
-const cardSchema = z.object({
+export const cardSchema = z.object({
   id: z.string(),
   name: z.string(),
   href: internalHref,
@@ -56,42 +54,29 @@ const externalHref = z
   .string()
   .refine((h) => h.startsWith('https://') || /^tel:\+?\d{3,15}$/.test(h))
 
-const actionSchema = z.discriminatedUnion('kind', [
+export const actionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('scroll'), ids: z.array(z.string().regex(/^[a-z][a-z0-9-]*$/)), label: z.string() }),
   z.object({ kind: z.literal('link'), href: internalHref, label: z.string() }),
   z.object({ kind: z.literal('external'), href: externalHref, label: z.string() }),
   z.object({ kind: z.literal('ask'), text: z.string(), label: z.string() }),
 ])
 
+export const fallbackSchema = z.object({
+  kind: z.literal('fallback'),
+  href: internalHref,
+  reason: z.enum(['limited', 'error']),
+})
+
 const replySchema = z.discriminatedUnion('kind', [
   z.object({
-    kind: z.literal('answer'),
-    heading: z.string(),
-    opener: z.string().nullable(),
-    notice: z.string().nullable(),
-    summary: z.string(),
-    needs: z.array(
-      z.object({
-        name: z.string(),
-        status: z.enum(['found', 'close', 'nearest', 'none']),
-        line: z.string(),
-        total: z.number(),
-        top: z.array(cardSchema),
-        seeAllHref: internalHref.nullable(),
-        plan: z.object({
-          category: z.string().nullable(),
-          keywords: z.array(z.string()),
-          openNow: z.boolean(),
-        }),
-      })
-    ),
-    nameMatches: z.array(cardSchema),
-    page: z.object({ label: z.string(), href: internalHref }).nullable(),
-    searchHref: internalHref,
+    kind: z.literal('reply'),
+    text: z.string(),
+    cards: z.array(cardSchema),
     actions: z.array(actionSchema),
     near: z.boolean(),
+    stopped: z.boolean().optional(),
   }),
-  z.object({ kind: z.literal('fallback'), href: internalHref, reason: z.enum(['limited', 'error']) }),
+  fallbackSchema,
 ])
 
 const turnSchema = z.object({ id: z.string(), ask: z.string(), reply: replySchema })
@@ -102,7 +87,7 @@ export function cleanTurns(raw: unknown): AssistantTurn[] {
   const turns: AssistantTurn[] = []
   for (const item of raw) {
     const parsed = turnSchema.safeParse(item)
-    if (parsed.success) turns.push(parsed.data as AssistantTurn)
+    if (parsed.success) turns.push(parsed.data)
   }
   return turns.slice(-ASSISTANT_MAX_TURNS)
 }
@@ -164,14 +149,15 @@ export function useAssistant(): AssistantState {
 }
 
 let nextId = 0
-function turnId(): string {
+/** A new turn id. The panel takes one up front, so the streaming reply and the kept one share it. */
+export function turnId(): string {
   nextId += 1
   return `${Date.now().toString(36)}-${nextId}`
 }
 
-export function addTurn(ask: string, reply: AssistantResponse): void {
+export function addTurn(ask: string, reply: CueReply, id: string = turnId()): void {
   const prev = current()
-  const turns = [...prev.turns, { id: turnId(), ask, reply }].slice(-ASSISTANT_MAX_TURNS)
+  const turns = [...prev.turns, { id, ask, reply }].slice(-ASSISTANT_MAX_TURNS)
   set({ ...prev, turns }, true)
 }
 
@@ -202,33 +188,38 @@ export function takeReturnFocus(): HTMLElement | null {
   return el
 }
 
-/** The visitor's last few asks, sent with the next one so follow-ups make sense. */
-export function historyFor(turns: readonly AssistantTurn[]): string[] {
-  return turns.map((t) => t.ask).slice(-ASSISTANT_HISTORY)
+/**
+ * The conversation so far, as the route takes it: the visitor's words and
+ * Cue's replies, oldest first. Fallback turns are skipped so the pairs stay
+ * whole; the server keeps the last six turns within its own limit.
+ */
+export function historyFor(turns: readonly AssistantTurn[]): { role: 'user' | 'assistant'; text: string }[] {
+  const out: { role: 'user' | 'assistant'; text: string }[] = []
+  for (const turn of turns) {
+    if (turn.reply.kind !== 'reply' || !turn.reply.text.trim()) continue
+    out.push({ role: 'user', text: turn.ask.slice(0, CUE_TURN_MAX_CHARS) })
+    out.push({ role: 'assistant', text: turn.reply.text.slice(0, CUE_TURN_MAX_CHARS) })
+  }
+  return out.slice(-CUE_HISTORY_TURNS * 2)
 }
 
-/** The last answer, or null when the chat is empty or ended on a fallback. */
-function lastAnswer(turns: readonly AssistantTurn[]) {
+/** The last reply, or null when the chat is empty or ended on a fallback. */
+function lastReply(turns: readonly AssistantTurn[]) {
   const reply = turns.at(-1)?.reply
-  return reply && reply.kind === 'answer' ? reply : null
+  return reply && reply.kind === 'reply' ? reply : null
 }
 
 /**
- * The last answer's search plans, sent as `previous` so a follow-up like
- * "in atlanta" re-runs those needs only. Needs that had no plan are skipped.
+ * The businesses Cue showed last, by id and name, so "is the first one open
+ * Sunday?" knows which one the visitor means.
  */
-export function previousFor(turns: readonly AssistantTurn[]): { name: string; plan: AssistantSearchPlan }[] {
-  const last = lastAnswer(turns)
-  if (!last) return []
-  return last.needs
-    .filter((n) => n.plan.category !== null || n.plan.keywords.length > 0)
-    .slice(0, ASSISTANT_MAX_NEEDS)
-    .map((n) => ({ name: n.name, plan: n.plan }))
+export function cardsFor(turns: readonly AssistantTurn[]): { id: string; name: string }[] {
+  return (lastReply(turns)?.cards ?? []).slice(0, CUE_PRIOR_CARDS_MAX).map((c) => ({ id: c.id, name: c.name }))
 }
 
-/** True when the last answer used the visitor's location. Never a position. */
+/** True when the last ask sent the visitor's location. Never a position. */
 export function lastWasNear(turns: readonly AssistantTurn[]): boolean {
-  return lastAnswer(turns)?.near === true
+  return lastReply(turns)?.near === true
 }
 
 /** Tests only: forget the in-memory copy so the next read loads from storage. */

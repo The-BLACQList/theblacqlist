@@ -21,11 +21,14 @@ import { callAnthropic, maxTokensFor, ProviderCallError, SYSTEM_PROMPT } from '@
 import { PROMPT_TEMPLATES } from '@/lib/ai/prompts'
 import { buildPromptVars, fillTemplate } from '@/lib/ai/provider'
 import {
+  chargedAttempts,
+  cueMessageUnits,
   MAX_PROMPT_CHARS,
   monthlyCallBudget,
   monthlyCeilingUsd,
   worstCaseUsdAnyAgent,
   worstCaseUsdPerCall,
+  worstCaseUsdPerCueMessage,
 } from '@/lib/ai/spend'
 
 describe('spending ceiling arithmetic', () => {
@@ -57,6 +60,22 @@ describe('spending ceiling arithmetic', () => {
     const calls = monthlyCallBudget(30)
     expect(calls).toBeGreaterThan(5000)
     expect(calls * worstCaseUsdAnyAgent()).toBeLessThanOrEqual(30)
+  })
+
+  it('charges one Cue message as enough units to cover its worst case', () => {
+    const units = cueMessageUnits()
+    expect(Number.isInteger(units)).toBe(true)
+    expect(units).toBeGreaterThan(1)
+    expect(units * worstCaseUsdAnyAgent()).toBeGreaterThanOrEqual(worstCaseUsdPerCueMessage())
+    // Still a few cents at most, even at the bound.
+    expect(worstCaseUsdPerCueMessage()).toBeLessThan(0.05)
+  })
+
+  it('counts Cue rows in units and every other row as one', () => {
+    const units = cueMessageUnits()
+    expect(chargedAttempts(10, 0)).toBe(10)
+    expect(chargedAttempts(10, 2)).toBe(10 + 2 * (units - 1))
+    expect(chargedAttempts(5, -3)).toBe(5)
   })
 
   it('caps output tokens just above each agent’s character limit', () => {

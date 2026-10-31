@@ -1,23 +1,19 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, ArrowUpRight, Check, Copy, CornerDownRight, MessageCircle, Minus, Phone, Star } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, CornerDownRight, MessageCircle, Phone, RotateCcw, Square, Star } from 'lucide-react'
 
-import type {
-  AssistantAction,
-  AssistantCard,
-  AssistantNeedResult,
-  AssistantNeedStatus,
-  AssistantResponse,
-} from '@/lib/ai/assistant-limits'
+import type { AssistantAction, AssistantCard, CueReply } from '@/lib/ai/assistant-limits'
+import { fallbackHref } from '@/lib/ai/guide-limits'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { Skeleton } from '@/components/ui/skeleton'
 import { jumpToSection } from '@/lib/assistant/scroll'
 import { cn } from '@/lib/utils'
+import { CueText, plainCueText, settledCueText } from './CueText'
 
-type Answer = Extract<AssistantResponse, { kind: 'answer' }>
-type Fallback = Extract<AssistantResponse, { kind: 'fallback' }>
+type Reply = Extract<CueReply, { kind: 'reply' }>
+type Fallback = Extract<CueReply, { kind: 'fallback' }>
 
 /** Where the answer sits: the corner panel, or the home hero. */
 export type AnswerLayout = 'panel' | 'page'
@@ -28,10 +24,20 @@ export const ASSISTANT_LINK =
 const LIMITED_LINE = "You've asked me a lot this minute. Give me a moment and try again."
 const ERROR_LINE = "I couldn't answer that one. A plain search may help."
 
-/** The short line a status region reads out after each reply. */
-export function replyStatus(reply: AssistantResponse): string {
+/** What a status region says while Cue works, before any words arrive. */
+export const CUE_LOOKING = 'Cue is looking…'
+
+/**
+ * The line a status region reads once a reply is finished. Never read on each
+ * streamed delta, so a screen reader hears the reply once, whole.
+ */
+export function replyStatus(reply: CueReply): string {
   if (reply.kind === 'fallback') return reply.reason === 'limited' ? LIMITED_LINE : ERROR_LINE
-  return reply.notice ? `${reply.notice} ${reply.summary}` : reply.summary
+  const parts = [plainCueText(reply.text)]
+  const n = reply.cards.length
+  if (n > 0) parts.push(`Showing ${n} ${n === 1 ? 'business' : 'businesses'}.`)
+  if (reply.stopped) parts.push('Stopped.')
+  return parts.filter(Boolean).join(' ')
 }
 
 /** What the action buttons do. Without `onAsk`, ask actions are hidden. */
@@ -42,101 +48,161 @@ export interface ReplyHandlers {
   onJump?: (ids: string[], label: string) => void
 }
 
-/** One reply: an answer with its need groups, or a plain-search fallback. */
+/** One finished reply: Cue's words, its buttons and cards, or a plain-search fallback. */
 export function AssistantReply({
   ask,
   reply,
   layout,
-  headingLevel = 3,
   handlers = {},
 }: {
   ask: string
-  reply: AssistantResponse
+  reply: CueReply
   layout: AnswerLayout
-  headingLevel?: 2 | 3
   handlers?: ReplyHandlers
 }) {
-  if (reply.kind === 'fallback') return <FallbackReply ask={ask} reply={reply} />
-  return <AnswerReply answer={reply} layout={layout} headingLevel={headingLevel} handlers={handlers} />
+  if (reply.kind === 'fallback') return <FallbackReply ask={ask} reply={reply} onAsk={handlers.onAsk} />
+  return <TextReply ask={ask} reply={reply} layout={layout} handlers={handlers} />
 }
 
-function FallbackReply({ ask, reply }: { ask: string; reply: Fallback }) {
+/** Cue couldn't answer: say so plainly, offer the same ask again, and plain search. */
+function FallbackReply({ ask, reply, onAsk }: { ask: string; reply: Fallback; onAsk?: (text: string) => void }) {
   return (
-    <div>
-      <p className="font-body text-sm text-off-white">
+    <div className="border-l-2 border-gold/60 pl-3">
+      <p className="font-body text-[15px] leading-relaxed text-off-white">
         {reply.reason === 'limited' ? LIMITED_LINE : ERROR_LINE}
       </p>
-      <Link href={reply.href} className={ASSISTANT_LINK}>
-        Search for &lsquo;{ask}&rsquo;
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </Link>
+      <div className="flex flex-wrap items-center gap-x-4">
+        {onAsk && (
+          <button type="button" onClick={() => onAsk(ask)} className={ASSISTANT_LINK}>
+            <RotateCcw className="size-4" aria-hidden="true" />
+            Try again
+          </button>
+        )}
+        <Link href={reply.href} className={ASSISTANT_LINK}>
+          Search for &lsquo;{ask}&rsquo;
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
+      </div>
     </div>
   )
 }
 
-function AnswerReply({
-  answer,
+/**
+ * In the corner panel Cue's words sit beside its mark, so a reply reads as
+ * Cue's at a glance next to the visitor's gold bubbles. The home bar's answer
+ * box is Cue's already.
+ */
+function CueVoice({ layout, children }: { layout: AnswerLayout; children: React.ReactNode }) {
+  if (layout !== 'panel') return <div className="space-y-3">{children}</div>
+  return (
+    <div className="flex gap-2.5">
+      <GoldBrandMark className="size-5 mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1 space-y-3">{children}</div>
+    </div>
+  )
+}
+
+function TextReply({
+  ask,
+  reply,
   layout,
-  headingLevel,
   handlers,
 }: {
-  answer: Answer
+  ask: string
+  reply: Reply
   layout: AnswerLayout
-  headingLevel: 2 | 3
   handlers: ReplyHandlers
 }) {
-  const { heading, opener, notice, needs, nameMatches, page, searchHref, actions } = answer
-  const Heading = headingLevel === 2 ? 'h2' : 'h3'
-  const Sub = headingLevel === 2 ? 'h3' : 'h4'
-  const plan = needs.length > 1
-  const nothing = needs.every((n) => n.top.length === 0) && nameMatches.length === 0
-
   return (
-    <div className="space-y-4">
-      {opener && (
-        <p className="font-body text-base text-off-white">
-          <span className="sr-only">Cue says: </span>
-          {opener}
-        </p>
-      )}
-
+    <CueVoice layout={layout}>
       <div>
-        <Heading className="font-subhead text-base font-bold text-off-white">{heading}</Heading>
-        {notice && <p className="mt-1 font-body text-sm text-off-white">{notice}</p>}
+        <span className="sr-only">Cue says: </span>
+        <CueText text={reply.text} />
+        {reply.stopped && <p className="mt-1 font-body text-xs text-ink-soft">Stopped</p>}
       </div>
 
-      {actions.length > 0 && <ActionRow actions={actions} handlers={handlers} />}
+      {reply.actions.length > 0 && <ActionRow actions={reply.actions} handlers={handlers} />}
 
-      {nameMatches.length > 0 && (
-        <section>
-          <Sub className="font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
-            Matching names
-          </Sub>
-          <CardList cards={nameMatches} layout={layout} keepCity />
-        </section>
+      {reply.cards.length > 0 ? (
+        <div className="blacq-cue-in">
+          <CardList cards={reply.cards} layout={layout} />
+        </div>
+      ) : (
+        !reply.stopped && (
+          <Link href={fallbackHref(ask)} className={ASSISTANT_LINK}>
+            Search for &lsquo;{ask}&rsquo;
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        )
       )}
+    </CueVoice>
+  )
+}
 
-      {needs.map((need) => (
-        <NeedGroup key={need.name} need={need} layout={layout} headingAs={Sub} showName={plan} />
+/** Three dots that pulse in turn while Cue works; still under reduced motion. */
+function CueDots() {
+  return (
+    <span className="inline-flex shrink-0 gap-1" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className="blacq-cue-dot size-1.5 rounded-full bg-gold" />
       ))}
+    </span>
+  )
+}
 
-      {plan && <YourList needs={needs} headingAs={Sub} />}
-
-      <div className="flex flex-wrap gap-x-5">
-        {page && (
-          <Link href={page.href} className={ASSISTANT_LINK}>
-            {page.label}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        )}
-        {(nothing || plan) && (
-          <Link href={searchHref} className={ASSISTANT_LINK}>
-            Search instead
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
+/**
+ * Cue at work, laid out like the finished reply so nothing jumps when it
+ * lands. Before any words: the status line with the dots, over a skeleton.
+ * Once words arrive: a small status line, then the words. The words are hidden
+ * from screen readers here; the finished reply is read once through the status
+ * region instead.
+ *
+ * `onStop` shows a Stop button in the row. The corner panel leaves it out,
+ * since its send button turns into Stop.
+ */
+export function CueStreaming({
+  status,
+  text,
+  layout,
+  onStop,
+}: {
+  status: string
+  text: string
+  layout: AnswerLayout
+  onStop?: () => void
+}) {
+  const words = settledCueText(text)
+  return (
+    <CueVoice layout={layout}>
+      <div className="flex items-center justify-between gap-2">
+        <p
+          className={cn(
+            'flex items-center gap-2 font-body text-ink-soft',
+            words ? 'text-xs' : 'text-sm'
+          )}
+        >
+          {!words && <CueDots />}
+          {status}
+        </p>
+        {onStop && (
+          <button
+            type="button"
+            onClick={onStop}
+            className="inline-flex items-center gap-1.5 min-h-11 px-3 -mr-3 rounded-full font-subhead text-sm font-semibold text-off-white hover:text-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <Square className="size-3.5 fill-current" aria-hidden="true" />
+            Stop<span className="sr-only"> Cue&rsquo;s answer</span>
+          </button>
         )}
       </div>
-    </div>
+      {words ? (
+        <div aria-hidden="true">
+          <CueText text={words} />
+        </div>
+      ) : (
+        <AssistantSkeleton layout={layout} />
+      )}
+    </CueVoice>
   )
 }
 
@@ -212,69 +278,17 @@ function ActionRow({ actions, handlers }: { actions: AssistantAction[]; handlers
   )
 }
 
-function NeedGroup({
-  need,
-  layout,
-  headingAs: Sub,
-  showName,
-}: {
-  need: AssistantNeedResult
-  layout: AnswerLayout
-  headingAs: 'h3' | 'h4'
-  showName: boolean
-}) {
-  return (
-    <section>
-      {showName && <Sub className="font-subhead text-sm font-bold text-off-white">{need.name}</Sub>}
-      <p
-        className={cn(
-          'flex items-center gap-1.5 font-body text-sm',
-          need.status === 'found' ? 'text-ink-soft' : 'text-off-white'
-        )}
-      >
-        <StatusIcon status={need.status} />
-        {need.line}
-      </p>
-      {need.top.length > 0 && <CardList cards={need.top} layout={layout} />}
-      {need.seeAllHref && need.top.length > 0 && (
-        <Link href={need.seeAllHref} className={ASSISTANT_LINK}>
-          See all {need.total}
-          <span className="sr-only">for {need.name}</span>
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
-      )}
-    </section>
-  )
-}
-
-function StatusIcon({ status }: { status: AssistantNeedStatus }) {
-  if (status === 'found') return null
-  if (status === 'none') return <Minus className="size-4 shrink-0 text-ink-soft" aria-hidden="true" />
-  return <ArrowUpRight className="size-4 shrink-0 text-gold" aria-hidden="true" />
-}
-
-function CardList({
-  cards,
-  layout,
-  keepCity = false,
-}: {
-  cards: AssistantCard[]
-  layout: AnswerLayout
-  /** Name matches have no line naming the city, so they always show it. */
-  keepCity?: boolean
-}) {
-  // When every card in a need group is in one city, the group's line says so.
-  const hideCity = !keepCity && cards.length > 1 && new Set(cards.map((c) => c.cityLabel)).size === 1
+function CardList({ cards, layout }: { cards: AssistantCard[]; layout: AnswerLayout }) {
   return (
     <ul
       className={cn(
-        'mt-2 grid gap-2 list-none p-0 m-0',
+        'grid gap-2 list-none p-0 m-0',
         layout === 'page' && 'sm:grid-cols-2 lg:grid-cols-3'
       )}
     >
       {cards.map((card) => (
         <li key={card.id} className="min-w-0">
-          <CompactCard card={card} hideCity={hideCity} />
+          <CompactCard card={card} />
         </li>
       ))}
     </ul>
@@ -292,8 +306,8 @@ function initials(name: string): string {
     .toUpperCase()
 }
 
-function CompactCard({ card, hideCity }: { card: AssistantCard; hideCity: boolean }) {
-  const where = [card.categoryName, hideCity ? null : card.cityLabel].filter(Boolean).join(' · ')
+function CompactCard({ card }: { card: AssistantCard }) {
+  const where = [card.categoryName, card.cityLabel].filter(Boolean).join(' · ')
   return (
     <Link
       href={card.href}
@@ -328,105 +342,19 @@ function CompactCard({ card, hideCity }: { card: AssistantCard; hideCity: boolea
   )
 }
 
-// ─── Your list ───────────────────────────────────────────────────────────────
-
-const LIST_MARK: Record<AssistantNeedStatus, string> = {
-  found: 'Found',
-  close: 'Close option',
-  nearest: 'Nearest city',
-  none: 'Not listed',
-}
-
-/** Plain text for Copy list: each need and its top pick. */
-export function listText(needs: readonly AssistantNeedResult[]): string {
-  const lines = needs.map((need) => {
-    const top = need.top[0]
-    if (need.status === 'none' || !top) return `- ${need.name}: not listed`
-    const where = top.cityLabel ? ` (${top.cityLabel})` : ''
-    const note = need.status === 'found' ? '' : ` [${LIST_MARK[need.status].toLowerCase()}]`
-    return `- ${need.name}: ${top.name}${where}${note}`
-  })
-  return ['Your list', ...lines].join('\n')
-}
-
-function YourList({ needs, headingAs: Sub }: { needs: AssistantNeedResult[]; headingAs: 'h3' | 'h4' }) {
-  const [copied, setCopied] = useState<'yes' | 'no' | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(listText(needs))
-      setCopied('yes')
-    } catch {
-      setCopied('no')
-    }
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => setCopied(null), 2500)
-  }
-
-  return (
-    <section className="rounded-xl border border-gold/40 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <Sub className="font-subhead text-sm font-bold text-off-white">Your list</Sub>
-        <button
-          type="button"
-          onClick={copy}
-          className="inline-flex items-center gap-1.5 min-h-11 px-2 -mr-2 rounded-md font-subhead text-sm font-semibold text-gold hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        >
-          <Copy className="size-4" aria-hidden="true" />
-          {copied === 'yes' ? 'Copied' : copied === 'no' ? "Couldn't copy" : 'Copy list'}
-        </button>
-      </div>
-      <ul className="mt-1 list-none p-0 m-0 space-y-1.5">
-        {needs.map((need) => (
-          <li key={need.name} className="flex items-start gap-2 font-body text-sm text-off-white">
-            <ListMark status={need.status} />
-            <span className="min-w-0">
-              {need.name}
-              <span className="text-ink-soft">
-                {need.status === 'none' ? ': not listed' : need.top[0] ? `: ${need.top[0].name}` : ''}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p role="status" className="sr-only">
-        {copied === 'yes' ? 'List copied.' : copied === 'no' ? "Couldn't copy the list." : ''}
-      </p>
-    </section>
-  )
-}
-
-function ListMark({ status }: { status: AssistantNeedStatus }) {
-  const label = <span className="sr-only">{LIST_MARK[status]}: </span>
-  if (status === 'found')
-    return (
-      <span className="mt-0.5 shrink-0">
-        <Check className="size-4 text-success-on-dark" aria-hidden="true" />
-        {label}
-      </span>
-    )
-  if (status === 'none')
-    return (
-      <span className="mt-0.5 shrink-0">
-        <Minus className="size-4 text-ink-soft" aria-hidden="true" />
-        {label}
-      </span>
-    )
-  return (
-    <span className="mt-0.5 shrink-0">
-      <ArrowUpRight className="size-4 text-gold" aria-hidden="true" />
-      {label}
-    </span>
-  )
-}
-
 // ─── Loading ─────────────────────────────────────────────────────────────────
 
 export function AssistantSkeleton({ layout }: { layout: AnswerLayout }) {
+  // The panel holds a few lines of words; most answers there carry no cards,
+  // so it shows lines only and nothing jumps when the words land.
+  if (layout === 'panel') {
+    return (
+      <div className="space-y-2" aria-hidden="true">
+        <Skeleton className="h-3.5 w-11/12 bg-white/15" />
+        <Skeleton className="h-3.5 w-3/5 bg-white/15" />
+      </div>
+    )
+  }
   return (
     <div className="space-y-3" aria-hidden="true">
       <Skeleton className="h-4 w-1/2 bg-white/15" />

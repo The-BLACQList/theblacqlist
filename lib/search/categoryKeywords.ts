@@ -86,7 +86,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'furniture-decor': ['furniture', 'decor', 'sofa', 'couch'],
 
   // Legal, money and business
-  'law-legal-services': ['lawyer', 'attorney', 'legal', 'divorce', 'immigration', 'injury', 'criminal defense'],
+  'law-legal-services': ['lawyer', 'attorney', 'legal', 'law firm', 'law office', 'legal services', 'divorce', 'immigration', 'injury', 'criminal defense'],
   'estate-planning': ['will', 'trust', 'probate', 'estate'],
   'tax-services': ['taxes', 'tax return', 'irs'],
   'accounting-tax-preparation': ['accountant', 'cpa', 'bookkeeping', 'bookkeeper', 'payroll'],
@@ -126,7 +126,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'formal-occasion-wear': ['suit', 'tux', 'tuxedo', 'gown', 'prom', 'wedding dress'],
 
   // Events and media
-  'event-planning': ['party', 'wedding', 'planner', 'baby shower', 'quinceanera', 'event'],
+  'event-planning': ['party', 'wedding', 'planner', 'party planner', 'event planner', 'party planning', 'event planning', 'baby shower', 'quinceanera', 'event'],
   'venue-rental': ['venue', 'event space', 'hall', 'banquet'],
   'djs-live-music': ['dj', 'band', 'live music', 'musician', 'singer'],
   'balloon-floral-design': ['balloons', 'flowers', 'florist', 'bouquet'],
