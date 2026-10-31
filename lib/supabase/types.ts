@@ -339,6 +339,48 @@ export type Database = {
           },
         ]
       }
+      business_invite_sends: {
+        Row: {
+          business_name: string
+          city: string | null
+          created_at: string
+          email_count: number
+          emailed_at: string | null
+          id: string
+          normalized_name: string
+          opted_out: boolean
+          opted_out_at: string | null
+          sent_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_name: string
+          city?: string | null
+          created_at?: string
+          email_count?: number
+          emailed_at?: string | null
+          id?: string
+          normalized_name: string
+          opted_out?: boolean
+          opted_out_at?: string | null
+          sent_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string
+          city?: string | null
+          created_at?: string
+          email_count?: number
+          emailed_at?: string | null
+          id?: string
+          normalized_name?: string
+          opted_out?: boolean
+          opted_out_at?: string | null
+          sent_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           allowed_levels: string[]
@@ -2141,6 +2183,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          receipt_counted_emails: boolean
           updated_at: string
           website_url: string | null
         }
@@ -2151,6 +2194,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          receipt_counted_emails?: boolean
           updated_at?: string
           website_url?: string | null
         }
@@ -2161,6 +2205,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          receipt_counted_emails?: boolean
           updated_at?: string
           website_url?: string | null
         }

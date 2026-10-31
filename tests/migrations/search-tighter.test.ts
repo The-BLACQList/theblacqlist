@@ -32,6 +32,7 @@
 import { describe, it, expect } from 'vitest'
 import path from 'node:path'
 import { DB_REACHABLE, MIGRATIONS_DIR, applyFile, exec, query, withScratchDb } from './helpers'
+import { expandSearchQuery } from '@/lib/search/wordFamilies'
 
 const VECTOR_BASE = path.join(MIGRATIONS_DIR, '20260601000000_extend_search_vector.sql')
 const RPC_BASE = path.join(MIGRATIONS_DIR, '20260622000001_search_listings_faceted_rpc.sql')
@@ -316,6 +317,13 @@ const BBQ = '30000000-0000-0000-0000-000000000003' // "barber"
 const DENISE = '30000000-0000-0000-0000-000000000004' // "dentist"
 const PLATES = '30000000-0000-0000-0000-000000000005' // "soul food", via "Food & Dining"
 
+// Ticket 172 rows, added in test 6 only.
+const HEALTH = 'aaaaaaaa-0000-0000-0000-000000000017'
+const PRO = 'aaaaaaaa-0000-0000-0000-000000000018'
+const OFFICE = '40000000-0000-0000-0000-000000000001'
+const CLINIC = '40000000-0000-0000-0000-000000000002'
+const LAWN = '40000000-0000-0000-0000-000000000003'
+
 const SEED = `
 INSERT INTO states (name, code) VALUES ('Louisiana', 'LA');
 INSERT INTO cities (id, name, slug, state_id, latitude, longitude) VALUES
@@ -446,6 +454,43 @@ describe.skipIf(!DB_REACHABLE)('20261018000000_search_tighter', () => {
       const before = REPORTED.map(({ q }) => search(url, q))
       applyFile(url, MIGRATION)
       expect(REPORTED.map(({ q }) => search(url, q))).toEqual(before)
+    })
+  })
+
+  it('6. word families find law offices and dental clinics, never lawns (ticket 172)', () => {
+    return withScratchDb('tighter_families', (url) => {
+      current(url)
+      // Named the way the reported Atlanta rows are: "Law" or "Dental", never
+      // "lawyer" or "dentist", and filed under a category that says neither.
+      exec(
+        url,
+        `INSERT INTO categories (id, name, slug, parent_id) VALUES
+           ('${HEALTH}', 'Health & Wellness', 'health-wellness', NULL),
+           ('${PRO}',    'Professional Services', 'professional-services', NULL);
+         INSERT INTO listings (id, name, tagline, category_id, city_id) VALUES
+           ('${OFFICE}', 'Peachtree Law Office', 'Wills and estates',   '${PRO}',    '${CITY}'),
+           ('${CLINIC}', 'Peach Dental Studio',  'Cleanings and crowns', '${HEALTH}', '${CITY}'),
+           ('${LAWN}',   'Green Lawn Care',      'Mowing and edging',    '${PRO}',    '${CITY}');`
+      )
+      const find = (q: string) => search(url, expandSearchQuery(q))
+
+      // Before: the plain word missed them.
+      expect(search(url, 'lawyers')).not.toContain(OFFICE)
+      expect(search(url, 'dentists')).not.toContain(CLINIC)
+
+      expect(find('lawyers')).toEqual([LAW_FIRM, OFFICE].sort())
+      expect(find('Lawyer')).toEqual([LAW_FIRM, OFFICE].sort())
+      expect(find('attorney')).toEqual([LAW_FIRM, OFFICE].sort())
+      expect(find('dentists')).toEqual([SMILE, CLINIC].sort())
+      expect(find('estates lawyer')).toEqual([OFFICE])
+      // No lawns, Lawndale, Slaughter Road's "Lawn-raised" hens or Denise.
+      expect(find('law')).toEqual([LAW_FIRM, OFFICE].sort())
+      expect(find('lawn')).toContain(LAWN)
+      expect(find('lawn')).not.toContain(OFFICE)
+      expect(find('lawn')).not.toContain(LAW_FIRM)
+      for (const q of ['lawyers', 'dentists', 'estates lawyer', 'law']) {
+        expect(cellTotal(url, expandSearchQuery(q)), q).toBe(find(q).length)
+      }
     })
   })
 })

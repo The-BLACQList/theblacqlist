@@ -57,7 +57,8 @@ export const POLICY_PAGE_REVALIDATE_SECONDS = 3600
  * Change this label if the Terms page goes live on a later day.
  */
 export const TERMS_PAID_PLANS = {
-  postedOnLabel: 'October 29, 2026',
+  // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169).
+  postedOnLabel: 'October 31, 2026',
   anchor: 'paid-plans',
 } as const
 
@@ -68,6 +69,6 @@ export const TERMS_PAID_PLANS = {
  * Change this label if the page goes live on a later day.
  */
 export const PRIVACY_PROVIDERS_UPDATE = {
-  // Moved to the Cue update (ticket 148). Change it if that merges on a later day.
-  postedOnLabel: 'October 30, 2026',
+  // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169).
+  postedOnLabel: 'October 31, 2026',
 } as const

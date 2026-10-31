@@ -81,7 +81,7 @@ export function ReceiptImageButton({ receiptId, filePath, businessLabel }: Props
       <button
         type="button"
         onClick={handleOpen}
-        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-charcoal/20 text-charcoal-soft hover:border-amber-gold/40 hover:text-amber font-subhead text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
+        className="inline-flex items-center gap-1.5 h-11 px-4 rounded-full border border-charcoal/20 text-charcoal-soft hover:border-amber-gold/40 hover:text-amber font-subhead text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
       >
         <ImageIcon className="size-3.5" aria-hidden="true" />
         {isPdf ? 'View PDF' : 'View receipt'}

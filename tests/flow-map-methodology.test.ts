@@ -31,7 +31,7 @@
 // Parsed from source because vitest runs environment: 'node' with no jsdom and
 // the page is a Server Component that cannot be rendered here — the technique
 // tests/aggregate-privacy.test.ts, tests/spend-vocabulary.test.ts and
-// tests/flow-map-filters.test.ts already use.
+// tests/flow-map-page.test.ts already use.
 //
 // Non-vacuity: this file and the page it guards are both new, so stashing
 // proves nothing. Each assertion below was instead run against a deliberately
@@ -51,6 +51,10 @@ function read(file: string): string {
 
 const METHODOLOGY = 'app/(public)/flow-map/methodology/page.tsx'
 const FLOW_MAP = 'app/(public)/flow-map/page.tsx'
+// Ticket 171 moved the flow map's notes: the method link sits in the hero and
+// beside the map, and the privacy notes live on the methodology page itself.
+const FIRST_LOOK = 'components/flow-map/CollectiveFirstLook.tsx'
+const SILO = 'components/flow-map/silo/SiloExperience.tsx'
 const EDIT_ACTION = 'lib/actions/spend/updateReceiptSubmission.ts'
 
 /**
@@ -80,7 +84,8 @@ describe('the disclosure is published, indexable, and reachable', () => {
   it('is linked from the figures it explains', () => {
     // A methodology nobody can reach from the numbers is a document, not a
     // disclosure. This is the assertion that keeps it a disclosure.
-    expect(read(FLOW_MAP)).toContain('href="/flow-map/methodology"')
+    expect(read(FIRST_LOOK)).toContain('href="/flow-map/methodology"')
+    expect(read(SILO)).toContain('href="/flow-map/methodology"')
   })
 
   it('points back at the figures, so the two are navigable in both directions', () => {
@@ -116,11 +121,13 @@ describe('the false opt-out claim is gone from the flow map', () => {
   it('no longer promises an opt-out "at any time"', () => {
     // The window closes at approval. The old sentence here was the same defect
     // class this page exists to prevent: a confident claim not backed by code.
-    expect(read(FLOW_MAP)).not.toContain('opt out of community aggregates at any time')
+    for (const file of [FLOW_MAP, FIRST_LOOK, SILO, METHODOLOGY]) {
+      expect(read(file)).not.toContain('opt out of community aggregates at any time')
+    }
   })
 
   it('describes the choice that does exist, at the moment it exists', () => {
-    expect(read(FLOW_MAP)).toContain('When you submit a receipt you can choose to keep it')
+    expect(renderedCopy(METHODOLOGY)).toContain('When you add a receipt you can choose to keep it')
   })
 
   // Still deliberately NOT asserted here: that app/(public)/privacy/page.tsx
@@ -165,7 +172,7 @@ describe('section 8 — the limitations a tidy-up would quietly delete', () => {
   it('still discloses that the opt-out closes at approval', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain('The opt-out can be changed while a receipt is waiting for review')
-    expect(copy).toContain('for as long as that receipt is still pending')
+    expect(copy).toContain('for as long as that receipt is still waiting or needs a fix')
     expect(copy).toContain('spend that has already been counted')
   })
 
@@ -185,7 +192,7 @@ describe('the stated opt-out window is coupled to the guard that enforces it', (
     expect(action).toContain('aggregate_opt_out')
     // Read-time guard and write-time re-assertion. Either one alone is a race.
     expect(action).toContain("existing.status !== 'pending_review'")
-    expect(action).toContain(".eq('status', 'pending_review')")
+    expect(action).toContain(".eq('status', existing.status)")
   })
 
   it('locks at approval with a message that matches what the page promises', () => {

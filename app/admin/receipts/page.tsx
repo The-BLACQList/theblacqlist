@@ -7,6 +7,11 @@ import { approveReceiptAction } from '@/lib/actions/spend/approveReceipt'
 import { rejectReceiptAction } from '@/lib/actions/spend/rejectReceipt'
 import { ReceiptStatusBadge } from '@/components/spend/ReceiptStatusBadge'
 import { ReceiptImageButton } from '@/components/spend/ReceiptImageButton'
+import {
+  FIX_REASON_MAX_LENGTH,
+  OTHER_FIX_REASON,
+  RECEIPT_FIX_REASONS,
+} from '@/lib/spend/receipt-emails'
 
 export const metadata: Metadata = { title: 'Receipts — Admin' }
 
@@ -85,11 +90,20 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
-        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Review community receipt submissions
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
+            Review community receipt submissions
+          </p>
+        </div>
+        {/* Ticket 168: businesses on receipts that aren't listings yet. */}
+        <Link
+          href="/admin/receipts/unlisted"
+          className="inline-flex items-center min-h-11 font-subhead text-sm font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
+        >
+          Not on the list
+        </Link>
       </div>
 
       {/* Status filter tabs */}
@@ -179,7 +193,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                   </div>
 
                   {receipt.status === 'pending_review' && (
-                    <div className="flex items-center gap-3 pt-1">
+                    <div className="flex flex-wrap items-center gap-3 pt-1">
                       <form
                         action={
                           approveReceiptAction.bind(null, null) as unknown as (
@@ -201,14 +215,40 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                             formData: FormData
                           ) => Promise<void>
                         }
-                        className="flex items-center gap-2"
+                        className="flex flex-wrap items-center gap-2"
                       >
                         <input type="hidden" name="receipt_id" value={receipt.id} />
-                        <input
+                        {/* Preset reasons (ticket 165). The chosen words go in the
+                            shopper's needs-a-fix email and are saved as today. */}
+                        <label htmlFor={`reason-${receipt.id}`} className="sr-only">
+                          Reason it needs a fix
+                        </label>
+                        <select
+                          id={`reason-${receipt.id}`}
                           name="rejection_reason"
+                          required
+                          defaultValue=""
+                          className="h-8 px-2 rounded-lg border border-charcoal/20 bg-white font-body text-xs text-brand-black focus:outline-none focus:ring-1 focus:ring-amber-gold/60 w-56"
+                        >
+                          <option value="" disabled>
+                            Pick a reason
+                          </option>
+                          {RECEIPT_FIX_REASONS.map((reason) => (
+                            <option key={reason} value={reason}>
+                              {reason}
+                            </option>
+                          ))}
+                          <option value={OTHER_FIX_REASON}>Other</option>
+                        </select>
+                        <label htmlFor={`reason-other-${receipt.id}`} className="sr-only">
+                          Other reason, used when Other is picked
+                        </label>
+                        <input
+                          id={`reason-other-${receipt.id}`}
+                          name="rejection_reason_other"
                           type="text"
-                          placeholder="Reason (optional)"
-                          maxLength={200}
+                          placeholder="If Other, say why"
+                          maxLength={FIX_REASON_MAX_LENGTH}
                           className="h-8 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-xs text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-1 focus:ring-amber-gold/60 w-48"
                         />
                         <button

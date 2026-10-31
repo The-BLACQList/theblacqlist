@@ -42,6 +42,13 @@ interface Props {
   describedBy?: string
   invalid?: boolean
   className: string
+  /**
+   * Told the trimmed name when a finished search found no listing, and null
+   * whenever that stops being true (typing again, a match, a pick). The
+   * receipt form uses it to offer the invite line (ticket 168). A failed
+   * search is not "no match", so it never fires for one.
+   */
+  onNoMatch?: (name: string | null) => void
 }
 
 const MIN_QUERY_LENGTH = 2
@@ -54,6 +61,7 @@ export function ListingCombobox({
   describedBy,
   invalid,
   className,
+  onNoMatch,
 }: Props) {
   const [query, setQuery] = useState(defaultSelected?.name ?? defaultName)
   const [selected, setSelected] = useState<SelectedListing | null>(defaultSelected)
@@ -88,7 +96,9 @@ export function ListingCombobox({
           return
         }
         const json: { data?: { listings?: ListingSearchResult[] } } = await res.json()
-        setResults(json.data?.listings ?? [])
+        const listings = json.data?.listings ?? []
+        setResults(listings)
+        onNoMatch?.(listings.length === 0 ? trimmed : null)
         setHighlight(-1)
         setOpen(true)
       } catch {
@@ -102,10 +112,11 @@ export function ListingCombobox({
       controller.abort()
       clearTimeout(timer)
     }
-  }, [query, selected])
+  }, [query, selected, onNoMatch])
 
   function onQueryChange(value: string) {
     setQuery(value)
+    onNoMatch?.(null)
     if (value.trim().length < MIN_QUERY_LENGTH) {
       setResults([])
       setOpen(false)
@@ -116,6 +127,7 @@ export function ListingCombobox({
 
   function select(listing: ListingSearchResult) {
     setSelected(listing)
+    onNoMatch?.(null)
     setQuery(listing.name)
     setResults([])
     setOpen(false)

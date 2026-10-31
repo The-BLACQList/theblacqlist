@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { listingMetaText } from '@/lib/listings/seo'
@@ -12,6 +13,7 @@ import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { recordTourWitness } from '@/lib/tour/witness'
+import { showShoppedHere } from '@/lib/spend/receipt-prefill'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
 // layout, so every route is already dynamic and a revalidate here is dead —
@@ -223,7 +225,17 @@ export default async function EntityPage({ params }: PageProps) {
         />
       )}
       {/* QuickActionBar — Client, appears on scroll */}
-      <EntityQuickActionBar entity={entity} initialSaved={initialSaved} />
+      {/* getEntityPageFromDB only returns published listings (and closed
+          jobs, which showShoppedHere refuses), so "published" holds here. */}
+      <EntityQuickActionBar
+        entity={entity}
+        initialSaved={initialSaved}
+        showShoppedHere={showShoppedHere({
+          signedIn: Boolean(user),
+          entityType: entity.entity_type,
+          collectiveOpen: isFeatureEnabled('collectiveOpen'),
+        })}
+      />
 
       {/* Every listing type renders through its own template — the outlet
           picks it, and each template owns its full page including the
