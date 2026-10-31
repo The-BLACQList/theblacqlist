@@ -10,6 +10,7 @@ import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferings
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
+import { EntityNowHiring } from '@/components/entity-page/EntityNowHiring'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
@@ -84,6 +85,7 @@ export function StorefrontTemplate({
       <Reveal>
         <EntityFaqSection faqs={entity.faqs} />
       </Reveal>
+      <EntityNowHiring listingId={entity.id} />
       <EntityUpcomingEvents entity={entity} />
 
       <div id="gallery" className="scroll-mt-32">

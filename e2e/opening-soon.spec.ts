@@ -61,6 +61,14 @@ test.describe('Opening-soon covers', () => {
     })
   }
 
+  test('the home page has no Jobs tile while Jobs is covered', async ({ page, request }) => {
+    test.skip(!(await pageCovered(request, '/jobs')), 'Jobs is open on this server')
+
+    await page.goto('/')
+    await expect(page.getByText('One index, five avenues')).toBeVisible()
+    await expect(page.locator('a[href="/jobs"]')).toHaveCount(0)
+  })
+
   test('the cover is not indexed', async ({ request }) => {
     test.skip(!(await collectiveCovered(request)), 'The Collective is open on this server')
 

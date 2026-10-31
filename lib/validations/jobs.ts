@@ -28,6 +28,8 @@ export interface JobFilters {
   where: string | null
   types: JobEmploymentType[]
   page: number
+  /** Only roles posted by this business (listing id). Omitted when not filtering by one. */
+  business?: string
 }
 
 export type RawJobParams = Record<string, string | string[] | undefined>
@@ -52,21 +54,30 @@ export function parseJobFilters(raw: RawJobParams): JobFilters {
   const types = JOB_TYPE_CHIP_ORDER.filter((t) => wanted.has(t))
 
   const page = Math.max(1, parseInt(first(raw.page) ?? '1', 10) || 1)
-  return { where: where?.success ? where.data : null, types, page }
+  const business = z.string().uuid().safeParse(first(raw.business))
+  return {
+    where: where?.success ? where.data : null,
+    types,
+    page,
+    ...(business.success ? { business: business.data.toLowerCase() } : {}),
+  }
 }
 
-export function hasJobFilters(f: Pick<JobFilters, 'where' | 'types'>): boolean {
-  return f.where !== null || f.types.length > 0
+type FilterShape = Pick<JobFilters, 'where' | 'types' | 'business'>
+
+export function hasJobFilters(f: FilterShape): boolean {
+  return f.where !== null || f.types.length > 0 || !!f.business
 }
 
 /**
  * The board URL for a set of filters. `page` is only written when asked for, so
  * changing a filter (which passes no page) always lands back on page 1.
  */
-export function buildJobsUrl(f: Pick<JobFilters, 'where' | 'types'>, page = 1): string {
+export function buildJobsUrl(f: FilterShape, page = 1): string {
   const parts: string[] = []
   if (f.where) parts.push(`where=${encodeURIComponent(f.where)}`)
   if (f.types.length > 0) parts.push(`type=${f.types.join(',')}`)
+  if (f.business) parts.push(`business=${f.business}`)
   if (page > 1) parts.push(`page=${page}`)
   return parts.length > 0 ? `/jobs?${parts.join('&')}` : '/jobs'
 }
