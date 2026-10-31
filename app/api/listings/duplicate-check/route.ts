@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { matchOwnership, type MatchOwnership } from '@/lib/listings/matchOwnership'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const bodySchema = z.object({
@@ -15,6 +16,7 @@ interface DuplicateResult {
   slug: string
   entity_type: string
   trust_tier: string
+  ownership: MatchOwnership
   match_score: number
   cover_image_url: string | null
   city: { name: string; slug: string } | null
@@ -56,14 +58,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const { name, city_id } = parsed.data
-  const duplicates = await findDuplicates(name, city_id)
+  const duplicates = await findDuplicates(name, city_id, user.id)
 
   return NextResponse.json({ data: { duplicates } })
 }
 
 // Ilike matching only: check_listing_similarity (pg_trgm) never shipped as a
 // migration, so the old RPC branch always threw and fell through to this.
-async function findDuplicates(name: string, cityId: string | undefined): Promise<DuplicateResult[]> {
+async function findDuplicates(
+  name: string,
+  cityId: string | undefined,
+  callerId: string
+): Promise<DuplicateResult[]> {
   const supabase = await createClient()
   const serviceClient = createServiceClient()
 
@@ -81,7 +87,7 @@ async function findDuplicates(name: string, cityId: string | undefined): Promise
   const pattern = `%${name.replace(/[\\%_]/g, (c) => `\\${c}`)}%`
   let query = supabase
     .from('listings')
-    .select('id, name, slug, entity_type, trust_tier, cover_image_path, cities!listings_city_id_fkey(name, slug)')
+    .select('id, name, slug, entity_type, trust_tier, owner_user_id, cover_image_path, cities!listings_city_id_fkey(name, slug)')
     .ilike('name', pattern)
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -99,6 +105,8 @@ async function findDuplicates(name: string, cityId: string | undefined): Promise
       slug: row.slug,
       entity_type: row.entity_type,
       trust_tier: row.trust_tier,
+      // Computed here so the owner id itself never leaves the server.
+      ownership: matchOwnership(row, callerId),
       match_score: 0,
       cover_image_url: row.cover_image_path
         ? serviceClient.storage.from('listing-media').getPublicUrl(row.cover_image_path).data

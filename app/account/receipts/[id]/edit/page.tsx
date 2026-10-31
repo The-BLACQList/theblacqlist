@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 
-export const metadata: Metadata = { title: 'Edit a Receipt' }
+export const metadata: Metadata = { title: 'Edit your receipt' }
 
 interface ListingJoin {
   id: string
@@ -39,6 +39,7 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
       aggregate_opt_out,
       status,
       file_path,
+      rejection_reason,
       listings ( id, name, cities ( name ) )
     `
     )
@@ -50,12 +51,14 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
   // than forbidden — a 403 would confirm the row exists.
   if (!receipt) notFound()
 
-  // Editing stops at pending for the same reason the action refuses it: an
-  // approved receipt's amount is already folded into the community totals, and
-  // a rejected one is terminal. Send the user back to the list, where the
-  // status and any rejection reason are visible, instead of rendering a form
-  // whose save can only fail.
-  if (receipt.status !== 'pending_review') redirect('/account/receipts')
+  // An approved receipt is locked for the same reason the action refuses it:
+  // its amount is already folded into the community totals. Send the user back
+  // to the list instead of rendering a form whose save can only fail. A
+  // rejected one can be fixed and resent (ticket 164).
+  if (receipt.status !== 'pending_review' && receipt.status !== 'rejected') {
+    redirect('/account/receipts')
+  }
+  const needsFix = receipt.status === 'rejected'
 
   const listing = receipt.listings as unknown as ListingJoin | null
 
@@ -70,11 +73,24 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             My receipts
           </Link>
-          <h1 className="font-headline text-2xl text-brand-black">Edit your receipt</h1>
+          <h1 className="font-headline text-2xl text-brand-black">
+            {needsFix ? 'Fix and resend' : 'Edit your receipt'}
+          </h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-            Fix anything you entered wrong. You can edit while it is still pending review.
+            {needsFix
+              ? "Fix what's below and send it back. We'll check it within 3 business days."
+              : 'Fix anything you entered wrong. You can edit while it is still waiting.'}
           </p>
         </div>
+
+        {needsFix && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+            <p className="font-subhead text-sm font-semibold text-red-800">What to fix</p>
+            <p className="font-body text-sm text-red-800 mt-0.5">
+              {receipt.rejection_reason ?? 'Check the amount, date and photo.'}
+            </p>
+          </div>
+        )}
 
         <div className="rounded-xl bg-white border border-charcoal/10 p-6">
           <ReceiptSubmissionForm
@@ -89,6 +105,7 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
               notes: receipt.notes,
               aggregateOptOut: receipt.aggregate_opt_out,
               hasFile: receipt.file_path !== null,
+              needsFix,
             }}
           />
         </div>

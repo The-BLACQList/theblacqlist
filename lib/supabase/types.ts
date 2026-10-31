@@ -2141,6 +2141,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          receipt_counted_emails: boolean
           updated_at: string
           website_url: string | null
         }
@@ -2151,6 +2152,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          receipt_counted_emails?: boolean
           updated_at?: string
           website_url?: string | null
         }
@@ -2161,6 +2163,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          receipt_counted_emails?: boolean
           updated_at?: string
           website_url?: string | null
         }

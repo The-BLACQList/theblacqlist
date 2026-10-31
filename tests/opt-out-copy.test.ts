@@ -29,7 +29,7 @@
 //
 // Parsed from source: vitest runs environment: 'node' with no jsdom and both
 // pages are Server Components — the technique tests/aggregate-privacy.test.ts,
-// tests/spend-vocabulary.test.ts and tests/flow-map-filters.test.ts use.
+// tests/spend-vocabulary.test.ts and tests/flow-map-page.test.ts use.
 //
 // Non-vacuity: unlike a suite written alongside brand-new code, both pages
 // predate this change, so the honest check is available and was run.
@@ -161,6 +161,6 @@ describe('the described window is coupled to the guard that enforces it', () => 
     // Read-time guard and write-time re-assertion. Either one alone is a race,
     // and either one alone would make the policy pages optimistic.
     expect(action).toContain("existing.status !== 'pending_review'")
-    expect(action).toContain(".eq('status', 'pending_review')")
+    expect(action).toContain(".eq('status', existing.status)")
   })
 })

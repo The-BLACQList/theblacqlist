@@ -31,7 +31,7 @@
 // Parsed from source because vitest runs environment: 'node' with no jsdom and
 // the page is a Server Component that cannot be rendered here — the technique
 // tests/aggregate-privacy.test.ts, tests/spend-vocabulary.test.ts and
-// tests/flow-map-filters.test.ts already use.
+// tests/flow-map-page.test.ts already use.
 //
 // Non-vacuity: this file and the page it guards are both new, so stashing
 // proves nothing. Each assertion below was instead run against a deliberately
@@ -120,7 +120,7 @@ describe('the false opt-out claim is gone from the flow map', () => {
   })
 
   it('describes the choice that does exist, at the moment it exists', () => {
-    expect(read(FLOW_MAP)).toContain('When you submit a receipt you can choose to keep it')
+    expect(read(FLOW_MAP)).toContain('When you add a receipt you can choose to keep it')
   })
 
   // Still deliberately NOT asserted here: that app/(public)/privacy/page.tsx
@@ -165,7 +165,7 @@ describe('section 8 — the limitations a tidy-up would quietly delete', () => {
   it('still discloses that the opt-out closes at approval', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain('The opt-out can be changed while a receipt is waiting for review')
-    expect(copy).toContain('for as long as that receipt is still pending')
+    expect(copy).toContain('for as long as that receipt is still waiting or needs a fix')
     expect(copy).toContain('spend that has already been counted')
   })
 
@@ -185,7 +185,7 @@ describe('the stated opt-out window is coupled to the guard that enforces it', (
     expect(action).toContain('aggregate_opt_out')
     // Read-time guard and write-time re-assertion. Either one alone is a race.
     expect(action).toContain("existing.status !== 'pending_review'")
-    expect(action).toContain(".eq('status', 'pending_review')")
+    expect(action).toContain(".eq('status', existing.status)")
   })
 
   it('locks at approval with a message that matches what the page promises', () => {
