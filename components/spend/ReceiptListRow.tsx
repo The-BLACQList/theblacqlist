@@ -4,6 +4,7 @@ import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import { RECEIPT_STATUS_LABEL, type ReceiptStatus } from '@/lib/spend/my-receipts'
 import { countedReceiptHref } from '@/lib/spend/counted-receipt'
 import { ReceiptImageButton } from './ReceiptImageButton'
+import { UnlistedInvite } from './UnlistedInvite'
 
 interface Props {
   id: string
@@ -23,6 +24,8 @@ interface Props {
   filePath: string | null
   /** Only set on a receipt that needs a fix. */
   rejectionReason: string | null
+  /** Site origin for the invite link on an unmatched receipt (ticket 168). */
+  origin?: string
 }
 
 const PILL_CLS: Record<ReceiptStatus, string> = {
@@ -57,6 +60,7 @@ export function ReceiptListRow({
   status,
   filePath,
   rejectionReason,
+  origin,
 }: Props) {
   const known = status in RECEIPT_STATUS_LABEL ? (status as ReceiptStatus) : null
   const needsFix = status === 'rejected'
@@ -90,6 +94,8 @@ export function ReceiptListRow({
           {known ? RECEIPT_STATUS_LABEL[known] : status}
         </span>
       </div>
+
+      {!isMatched && <UnlistedInvite origin={origin} businessName={businessName} />}
 
       {status === 'pending_review' && (
         <p className="font-body text-xs text-charcoal-soft">

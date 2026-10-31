@@ -2,6 +2,7 @@
 
 import {
   useActionState,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -26,6 +27,7 @@ import { FROM_PHOTO_LABEL, isReadablePhoto, type MatchedListing } from '@/lib/sp
 import { ListingCombobox } from './ListingCombobox'
 import { ReceiptPhotoField, receiptFileProblem } from './ReceiptPhotoField'
 import { ReceiptReadOptIn } from './ReceiptReadOptIn'
+import { UnlistedInvite } from './UnlistedInvite'
 
 const inputCls =
   'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
@@ -154,6 +156,13 @@ export function ReceiptSubmissionForm({
   const [amountFill, setAmountFill] = useState<string | null>(null)
   const [dateFill, setDateFill] = useState<string | null>(null)
   const [fillKeys, setFillKeys] = useState({ business: 0, amount: 0, date: 0 })
+  // The name the business search found nothing for (ticket 168), tied to the
+  // combobox instance it came from so a photo fill that remounts it drops it.
+  const [noMatch, setNoMatch] = useState<{ name: string; key: number } | null>(null)
+  const onNoMatch = useCallback(
+    (name: string | null) => setNoMatch(name ? { name, key: fillKeys.business } : null),
+    [fillKeys.business]
+  )
   const touched = useRef({ ...NO_FIELDS })
   const readSeq = useRef(0)
   const lastRead = useRef<File | null>(null)
@@ -327,8 +336,13 @@ export function ReceiptSubmissionForm({
             }
             invalid={Boolean(fieldErrors.raw_business_name)}
             className={inputCls}
+            onNoMatch={onNoMatch}
           />
         </div>
+        {/* Outside the wrapper above, so tapping it doesn't count as editing the name. */}
+        {noMatch && noMatch.key === fillKeys.business && (
+          <UnlistedInvite businessName={noMatch.name} />
+        )}
       </Field>
 
       <Field

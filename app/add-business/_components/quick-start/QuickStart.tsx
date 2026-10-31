@@ -75,6 +75,8 @@ interface Props {
   aiOnboarding?: boolean
   /** 'creator' for `/add-business?as=creator`; `categories` is then the Creators subcategories. */
   mode?: QuickStartMode
+  /** Admin-only name from "Add as a listing" (ticket 168). A draft's own name wins. */
+  prefillName?: string
 }
 
 type Stage = 'site' | 'steps'
@@ -132,12 +134,17 @@ function QuickStartFlow({
   siteImport = false,
   aiOnboarding = false,
   mode = 'business',
+  prefillName,
 }: Props) {
   const router = useRouter()
   const creator = mode === 'creator'
   const DRAFT_KEY = draftKey(mode)
   const [initial] = useState(() => readDraft(DRAFT_KEY))
-  const [answers, setAnswers] = useState<QuickStartAnswers>(initial.answers)
+  const [answers, setAnswers] = useState<QuickStartAnswers>(() =>
+    prefillName && !initial.answers.name.trim()
+      ? { ...initial.answers, name: prefillName }
+      : initial.answers
+  )
   const [stepIndex, setStepIndex] = useState(initial.stepIndex)
   const [stage, setStage] = useState<Stage>(siteImport ? (initial.stage ?? 'site') : 'steps')
   const [site, setSite] = useState<SiteDraft | null>(siteImport ? initial.site : null)

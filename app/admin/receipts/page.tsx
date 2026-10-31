@@ -90,11 +90,20 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
-        <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Review community receipt submissions
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
+            Review community receipt submissions
+          </p>
+        </div>
+        {/* Ticket 168: businesses on receipts that aren't listings yet. */}
+        <Link
+          href="/admin/receipts/unlisted"
+          className="inline-flex items-center min-h-11 font-subhead text-sm font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
+        >
+          Not on the list
+        </Link>
       </div>
 
       {/* Status filter tabs */}
