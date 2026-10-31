@@ -293,7 +293,10 @@ export function buildSiloBusinesses({
 }
 
 /** "A food shop" or "An x": the article follows the first letter of the words. */
-export function anonymousBusinessLabel(b: Pick<SiloBusiness, 'familyIndex' | 'floorIndex'>, capital = true): string {
+export function anonymousBusinessLabel(
+  b: Pick<SiloBusiness, 'familyIndex' | 'floorIndex'>,
+  capital = true
+): string {
   const fam = CATEGORY_FAMILIES[b.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
   const floor = SILO_FLOORS[b.floorIndex] ?? SILO_FLOORS[1]!
   const words = `${fam.noun} ${floor.one}`
@@ -356,6 +359,171 @@ export function gapLabel(g: SiloGap): string {
   const fam = CATEGORY_FAMILIES[g.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
   const floor = SILO_FLOORS[g.floorIndex] ?? SILO_FLOORS[1]!
   return `No ${fam.noun} ${floor.short.toLowerCase()} on the list yet`
+}
+
+/**
+ * Kinds of business that would fill each gap, by family key then floor
+ * (ticket 173). Written by hand: a category's allowed levels come from its
+ * parent, so a raw list would put barbershops on the Suppliers floor. An empty
+ * list means the family rarely sits on that floor.
+ */
+export const GAP_KINDS: Record<string, Record<BusinessLevel, readonly string[]>> = {
+  food: {
+    local: [
+      'Restaurants',
+      'Cafes and coffee shops',
+      'Bakeries',
+      'Food trucks',
+      'Caterers',
+      'Grocery and corner stores',
+    ],
+    supplier: [
+      'Food distributors',
+      'Produce wholesalers',
+      'Restaurant supply stores',
+      'Meat and seafood wholesalers',
+      'Beverage distributors',
+    ],
+    maker: [
+      'Sauce and seasoning makers',
+      'Coffee roasters',
+      'Packaged snack brands',
+      'Breweries, wineries and distilleries',
+      'Jam and preserve makers',
+    ],
+    grower: [
+      'Farms and farm stands',
+      'Urban farms and community gardens',
+      'Orchards',
+      'Livestock and poultry farms',
+      'Beekeepers and honey farms',
+    ],
+  },
+  style: {
+    local: [
+      'Hair salons',
+      'Barbershops',
+      'Nail studios',
+      'Clothing boutiques',
+      'Gift shops',
+      'Jewelry stores',
+    ],
+    supplier: [
+      'Beauty supply stores',
+      'Wig and hair distributors',
+      'Fabric and textile wholesalers',
+      'Wholesale apparel',
+      'Packaging and display suppliers',
+    ],
+    maker: [
+      'Clothing designers',
+      'Skin and hair care brands',
+      'Jewelry makers',
+      'Handbag and leather makers',
+      'Screen printers',
+    ],
+    grower: ['Cotton and fiber farms', 'Shea and botanical growers', 'Flower farms'],
+  },
+  health: {
+    local: [
+      'Clinics and doctors',
+      'Dentists',
+      'Therapists and counselors',
+      'Pharmacies',
+      'Gyms and fitness studios',
+      'Pet groomers',
+      'Childcare centers',
+    ],
+    supplier: [
+      'Medical supply companies',
+      'Fitness equipment dealers',
+      'Pet food distributors',
+      'Wellness product wholesalers',
+    ],
+    maker: [
+      'Herbal and wellness brands',
+      'Natural soap and body care',
+      'Supplement makers',
+      'Pet treat makers',
+    ],
+    grower: ['Herb and tea growers', 'Medicinal plant farms', 'Mushroom farms'],
+  },
+  home: {
+    local: [
+      'Contractors',
+      'Electricians and plumbers',
+      'Furniture and decor stores',
+      'Auto repair shops',
+      'Movers',
+      'Cleaning services',
+      'Travel agencies',
+    ],
+    supplier: [
+      'Building supply stores',
+      'Lumber yards',
+      'Auto parts dealers',
+      'Hardware wholesalers',
+      'Flooring and tile suppliers',
+    ],
+    maker: [
+      'Furniture makers',
+      'Carpentry and woodworking shops',
+      'Cabinet makers',
+      'Candle and home fragrance makers',
+      'Metal fabricators',
+    ],
+    grower: ['Plant nurseries', 'Tree and timber farms', 'Sod and landscape growers'],
+  },
+  culture: {
+    local: [
+      'Galleries',
+      'Bookstores',
+      'Event venues',
+      'Photographers',
+      'DJs and performers',
+      'Dance and music studios',
+    ],
+    supplier: [
+      'Art supply stores',
+      'Event rental companies',
+      'Sound and lighting rentals',
+      'Book distributors',
+    ],
+    maker: [
+      'Artists and illustrators',
+      'Authors and publishers',
+      'Filmmakers and studios',
+      'Musicians and record labels',
+      'Podcast studios',
+    ],
+    grower: ['Flower farms that grow for events'],
+  },
+  services: {
+    local: [
+      'Accountants and bookkeepers',
+      'Law offices',
+      'Tutors and test prep',
+      'Marketing agencies',
+      'IT support',
+      'Staffing agencies',
+    ],
+    supplier: [
+      'Office supply dealers',
+      'Commercial printers',
+      'Payroll and HR providers',
+      'Business software resellers',
+    ],
+    maker: ['Software and app studios', 'Design studios', 'Course and curriculum makers'],
+    grower: [],
+  },
+}
+
+/** The kinds of business that would fill a gap, or none if the family rarely sits there. */
+export function gapKinds(g: SiloGap): readonly string[] {
+  const fam = CATEGORY_FAMILIES[g.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
+  const key = SILO_FLOORS[g.floorIndex]?.key
+  if (!key || key === 'shoppers') return []
+  return GAP_KINDS[fam.key]?.[key] ?? []
 }
 
 // ─── Positions ───────────────────────────────────────────────────────────────
@@ -478,7 +646,13 @@ export function placeBusinesses(businesses: readonly SiloBusiness[]): PlacedBusi
       const depth = mulberry32(hashString(b.id))() * deep - 0.45
       // Narrow the slab as it goes in, so it keeps to its own wedge.
       const narrow = (SILO.rA - depth) / SILO.rA
-      const p = wedgePoint(b.familyIndex, b.floorIndex, rad * Math.cos(ang) * narrow, rad * Math.sin(ang), depth)
+      const p = wedgePoint(
+        b.familyIndex,
+        b.floorIndex,
+        rad * Math.cos(ang) * narrow,
+        rad * Math.sin(ang),
+        depth
+      )
       placed.push({ id: b.id, ...p })
     })
   }

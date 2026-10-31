@@ -13,6 +13,7 @@ import {
   businessDisplayName,
   floorSpokenLabel,
   floorValueText,
+  gapKinds,
   formatDollars,
   type ColorBy,
   type SiloBusiness,
@@ -31,13 +32,27 @@ import { FloorIcon } from './floor-icons'
 // ─── Icons (round 17) ────────────────────────────────────────────────────────
 
 const IC_X = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
     <path d="M5 5l14 14M19 5L5 19" />
   </svg>
 )
 
 const IC_GAP = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeDasharray="3 2.5" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeDasharray="3 2.5"
+    aria-hidden="true"
+  >
     <rect x="4" y="4" width="16" height="16" rx="2" />
   </svg>
 )
@@ -52,12 +67,26 @@ const COLOR_ICONS: Record<ColorBy, React.ReactNode> = {
     </svg>
   ),
   level: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <path d="M4 5.5h16M6 10h12M8 14.5h8M10 19h4" />
     </svg>
   ),
   gold: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 6.8v10.4M14.6 9.4c-.5-.9-1.5-1.3-2.6-1.3-1.4 0-2.4.8-2.4 1.8 0 2.6 5.2 1.5 5.2 4.1 0 1-1 1.8-2.6 1.8-1.2 0-2.2-.5-2.7-1.4" />
     </svg>
@@ -312,6 +341,7 @@ export function SiloCard({
     const fam =
       CATEGORY_FAMILIES[selectedGap.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
     const floor = SILO_FLOORS[selectedGap.floorIndex]
+    const kinds = gapKinds(selectedGap)
     return (
       <aside className="ctx" aria-labelledby="silo-ctx-title">
         <div className="sel-head">
@@ -329,6 +359,20 @@ export function SiloCard({
           {close}
         </div>
         <p>None on the list yet. A gap to fill.</p>
+        {kinds.length > 0 ? (
+          <>
+            <p className="gap-kinds-h" id="silo-gap-kinds">
+              Kinds of business that belong here
+            </p>
+            <ul className="gap-kinds" aria-labelledby="silo-gap-kinds">
+              {kinds.map((k) => (
+                <li key={k}>{k}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p>{fam.name} businesses rarely sit on this floor.</p>
+        )}
       </aside>
     )
   }
