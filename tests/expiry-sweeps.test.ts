@@ -40,8 +40,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 //       → 'treats a null expiry as an open window'                       (1 red)
 //
 // 2026-10-30 (ticket 155): the job sweep now writes `closed`, not `unpublished`,
-// and spares a role whose own `closes_at` is still ahead. M4's "unpublished"
-// count is now `closed`; the mutation matrix was not re-run for that rename.
+// M4's "unpublished" count is now `closed`; the mutation matrix was not re-run
+// for that rename. 2026-10-31 (founder, option b): a lapsed role closes even
+// when its own `closes_at` is later, so a paid role stays up for whichever is
+// shorter.
 //
 // 2026-08-21: three cases added for the E-2 Model C included ($0) posting. The
 // "16/16" above is the count as measured on 2026-08-17 and is left as the
@@ -191,50 +193,39 @@ describe('unpublishExpiredJobPostings', () => {
     // Ticket 155: `closed` keeps the page up with the closed banner.
     expect(fake.argsOf('listings', 'update')).toEqual([{ status: 'closed' }])
     expect(fake.argsOf('listings', 'in')).toEqual(['id', ['l1']])
-    expect(result).toEqual({ lapsed: 1, spared: 0, closed: 1, renewed: 0 })
+    expect(result).toEqual({ lapsed: 1, closed: 1, renewed: 0 })
   })
 
-  it('spares a lapsed job whose own closing date is still ahead', async () => {
+  it('closes a lapsed job even when its own closing date is later', async () => {
     const fake = makeFakeClient({
       job_posting_purchases: ok([{ listing_id: 'l1', expires_at: expired }]),
-      listing_details_job: ok([{ listing_id: 'l1', closes_at: live }]),
+      listing_details_job: ok([]),
       listings: ok([{ id: 'l1' }]),
     })
 
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
-    expect(fake.tablesTouched()).not.toContain('listings')
-    expect(result).toEqual({ lapsed: 1, spared: 1, closed: 0, renewed: 0 })
-    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
-  })
-
-  it('closes a lapsed job whose closing date has already passed', async () => {
-    const fake = makeFakeClient({
-      job_posting_purchases: ok([{ listing_id: 'l1', expires_at: expired }]),
-      listing_details_job: ok([{ listing_id: 'l1', closes_at: expired }]),
-      listings: ok([{ id: 'l1' }]),
-    })
-
-    const result = await unpublishExpiredJobPostings(fake.client, NOW)
-
-    expect(result).toEqual({ lapsed: 1, spared: 0, closed: 1, renewed: 0 })
+    // Option b: whichever comes first. The only listing_details_job call is the
+    // null-date stamp, so a role with a later date keeps that date.
+    expect(fake.argsOf('listings', 'update')).toEqual([{ status: 'closed' }])
+    expect(fake.argsOf('listing_details_job', 'is')).toEqual(['closes_at', null])
+    expect(result).toEqual({ lapsed: 1, closed: 1, renewed: 0 })
   })
 
   it('stamps a closing date only where none was set, so the closed page shows its banner', async () => {
     const fake = makeFakeClient({
       job_posting_purchases: ok([{ listing_id: 'l1', expires_at: expired }]),
-      listing_details_job: [ok([{ listing_id: 'l1', closes_at: null }]), ok([])],
+      listing_details_job: ok([]),
       listings: ok([{ id: 'l1' }]),
     })
 
     await unpublishExpiredJobPostings(fake.client, NOW)
 
-    // Call 0 reads the dates, call 1 is the stamp.
-    expect(fake.argsOf('listing_details_job', 'update', 1)).toEqual([
+    expect(fake.argsOf('listing_details_job', 'update')).toEqual([
       { closes_at: NOW.toISOString() },
     ])
-    expect(fake.argsOf('listing_details_job', 'in', 1)).toEqual(['listing_id', ['l1']])
-    expect(fake.argsOf('listing_details_job', 'is', 1)).toEqual(['closes_at', null])
+    expect(fake.argsOf('listing_details_job', 'in')).toEqual(['listing_id', ['l1']])
+    expect(fake.argsOf('listing_details_job', 'is')).toEqual(['closes_at', null])
   })
 
   // THE expensive mistake. Jobs posted before E-2 existed were free, and have no
@@ -246,7 +237,7 @@ describe('unpublishExpiredJobPostings', () => {
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
     expect(fake.tablesTouched()).not.toContain('listings')
-    expect(result).toEqual({ lapsed: 0, spared: 0, closed: 0, renewed: 0 })
+    expect(result).toEqual({ lapsed: 0, closed: 0, renewed: 0 })
   })
 
   // A renewal is a second purchase row, not an edit of the first — the schema
@@ -263,7 +254,7 @@ describe('unpublishExpiredJobPostings', () => {
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
     expect(fake.tablesTouched()).not.toContain('listings')
-    expect(result).toEqual({ lapsed: 0, spared: 0, closed: 0, renewed: 1 })
+    expect(result).toEqual({ lapsed: 0, closed: 0, renewed: 1 })
   })
 
   it('treats a null expiry as an open window, not an expired one', async () => {
@@ -315,7 +306,7 @@ describe('unpublishExpiredJobPostings', () => {
 
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
-    expect(result).toEqual({ lapsed: 2, spared: 0, closed: 1, renewed: 0 })
+    expect(result).toEqual({ lapsed: 2, closed: 1, renewed: 0 })
     expect(h.writeSystemAuditLog).toHaveBeenCalledTimes(1)
   })
 
@@ -341,16 +332,6 @@ describe('unpublishExpiredJobPostings', () => {
         afterState: { status: 'closed', reason: 'posting_window_elapsed' },
       })
     )
-  })
-
-  it('throws when the closing dates cannot be read', async () => {
-    const fake = makeFakeClient({
-      job_posting_purchases: ok([{ listing_id: 'l1', expires_at: expired }]),
-      listing_details_job: fail('statement timeout'),
-    })
-
-    await expect(unpublishExpiredJobPostings(fake.client, NOW)).rejects.toThrow(/statement timeout/)
-    expect(fake.tablesTouched()).not.toContain('listings')
   })
 
   it('throws when the purchase ledger cannot be read', async () => {
@@ -404,7 +385,7 @@ describe('unpublishExpiredJobPostings', () => {
 
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
-    expect(result).toEqual({ lapsed: 1, spared: 0, closed: 1, renewed: 0 })
+    expect(result).toEqual({ lapsed: 1, closed: 1, renewed: 0 })
   })
 
   it('does not narrow the ledger read to cash purchases', async () => {
@@ -433,7 +414,7 @@ describe('unpublishExpiredJobPostings', () => {
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
     expect(fake.tablesTouched()).not.toContain('listings')
-    expect(result).toEqual({ lapsed: 0, spared: 0, closed: 0, renewed: 1 })
+    expect(result).toEqual({ lapsed: 0, closed: 0, renewed: 1 })
   })
 })
 

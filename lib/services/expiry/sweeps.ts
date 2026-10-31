@@ -77,12 +77,7 @@ export interface SuggestionSweepResult {
 export interface JobSweepResult {
   /** Listings with at least one paid purchase whose every window has closed. */
   lapsed: number
-  /**
-   * Of those, the ones spared because their own `closes_at` is still ahead
-   * (ticket 155). The role closes on that date instead, via {@link closeExpiredJobs}.
-   */
-  spared: number
-  /** Of the rest, the ones actually moved `published` → `closed`. */
+  /** Of those, the ones actually moved `published` → `closed`. */
   closed: number
   /** Listings with an expired purchase that were spared by a live renewal. */
   renewed: number
@@ -144,10 +139,10 @@ interface CloseDateRow {
  * only place that knows a listing was ever paid for, and "was never paid for"
  * and "was paid for and lapsed" must not be confused — see the header.
  *
- * A lapsed listing whose own `closes_at` is still in the future is left alone.
- * Its page and its closing date agree with each other, and the closing-date
- * sweep ({@link closeExpiredJobs}) closes it on that date. Net effect: the page
- * never disappears at the end of a window.
+ * A lapsed listing closes even when its own `closes_at` is later. A paid role
+ * stays up for whichever is shorter: the paid window, or its own closing date
+ * (founder decision 2026-10-31, option b). The closing-date sweep
+ * ({@link closeExpiredJobs}) handles the other half.
  *
  * The UPDATE re-states `entity_type`, `status` and `deleted_at` even though the
  * candidate set was built from the ledger. That is a belt on top of braces: if
@@ -189,35 +184,13 @@ export async function unpublishExpiredJobPostings(
   // "the ledger says this one is still paid".
 
   if (lapsedIds.length === 0) {
-    return { lapsed: 0, spared: 0, closed: 0, renewed }
-  }
-
-  // A role the poster set to close later keeps its page live until that date.
-  const { data: dates, error: datesError } = await supabase
-    .from('listing_details_job')
-    .select('listing_id, closes_at')
-    .in('listing_id', lapsedIds)
-
-  if (datesError) {
-    throw new Error(`job closing date read failed: ${datesError.message}`)
-  }
-
-  const closesLater = new Set(
-    ((dates ?? []) as CloseDateRow[])
-      .filter((row) => row.closes_at && new Date(row.closes_at).getTime() > nowMs)
-      .map((row) => row.listing_id)
-  )
-  const toClose = lapsedIds.filter((id) => !closesLater.has(id))
-  const spared = lapsedIds.length - toClose.length
-
-  if (toClose.length === 0) {
-    return { lapsed: lapsedIds.length, spared, closed: 0, renewed }
+    return { lapsed: 0, closed: 0, renewed }
   }
 
   const { data: updated, error: updateError } = await supabase
     .from('listings')
     .update({ status: 'closed' })
-    .in('id', toClose)
+    .in('id', lapsedIds)
     .eq('entity_type', 'job')
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -260,7 +233,7 @@ export async function unpublishExpiredJobPostings(
     })
   }
 
-  return { lapsed: lapsedIds.length, spared, closed: closedIds.length, renewed }
+  return { lapsed: lapsedIds.length, closed: closedIds.length, renewed }
 }
 
 export interface JobCloseSweepResult {

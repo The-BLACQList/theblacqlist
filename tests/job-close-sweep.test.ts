@@ -12,7 +12,8 @@ import path from 'node:path'
 //
 // The ledger sweep (unpublishExpiredJobPostings) is covered in
 // tests/expiry-sweeps.test.ts, including the ticket 155 cases: it writes
-// 'closed' and spares a role whose closes_at is still ahead.
+// 'closed', and (option b, 2026-10-31) closes a lapsed role even when its own
+// closes_at is later.
 // =============================================================================
 
 const h = vi.hoisted(() => ({ writeSystemAuditLog: vi.fn(async () => {}) }))
@@ -263,16 +264,18 @@ describe('ledger sweep (ticket 155 changes)', () => {
     expect(result.closed).toBe(1)
   })
 
-  it('leaves the role published when its closing date is still ahead', async () => {
+  it('closes the role when its paid window ends before its closing date', async () => {
     const fake = makeFakeClient({
       job_posting_purchases: ok([{ listing_id: 'j1', expires_at: expired }]),
-      listing_details_job: ok([{ listing_id: 'j1', closes_at: tomorrow }]),
+      listing_details_job: ok([]),
+      listings: ok([{ id: 'j1' }]),
     })
 
     const result = await unpublishExpiredJobPostings(fake.client, NOW)
 
-    expect(fake.updates('listings')).toHaveLength(0)
-    expect(result).toMatchObject({ lapsed: 1, spared: 1, closed: 0 })
+    // Whichever comes first (founder, 2026-10-31).
+    expect(fake.argsOf('listings', 'update')).toEqual([{ status: 'closed' }])
+    expect(result).toMatchObject({ lapsed: 1, closed: 1 })
   })
 })
 
