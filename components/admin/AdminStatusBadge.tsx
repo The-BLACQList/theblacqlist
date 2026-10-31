@@ -10,6 +10,7 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   published: { label: 'Published', className: 'bg-green-50 text-green-700 border-green-200' },
   rejected: { label: 'Rejected', className: 'bg-red-50 text-red-700 border-red-200' },
+  closed: { label: 'Closed', className: 'bg-charcoal/5 text-charcoal-soft border-charcoal/15' },
   // Claim statuses
   under_review: { label: 'Under review', className: 'bg-blue-50 text-blue-700 border-blue-200' },
   approved: { label: 'Approved', className: 'bg-green-50 text-green-700 border-green-200' },

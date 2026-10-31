@@ -34,6 +34,7 @@ export const ADMIN_ENTITY_STATUSES = [
   'flagged',
   'archived',
   'rejected',
+  'closed',
 ] as const
 
 export type AdminEntityStatus = (typeof ADMIN_ENTITY_STATUSES)[number]

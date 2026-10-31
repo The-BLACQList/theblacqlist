@@ -6,6 +6,8 @@ import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
 import { EntityApprovedEmail } from '@/lib/email/templates/entity-approved'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { isFeatureEnabled } from '@/lib/env'
+import { applyJobGoLiveDefaults } from '@/lib/services/listings/jobGoLive'
 
 export type ApproveEntityState =
   | { success: true; listingId: string; listingName: string }
@@ -29,7 +31,7 @@ export async function approveEntityAction(
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, status, trust_tier, slug, entity_type, submitted_by, cities!listings_city_id_fkey(slug)'
+      'id, name, status, trust_tier, slug, entity_type, submitted_by, published_at, cities!listings_city_id_fkey(slug)'
     )
     .eq('id', listingId)
     .maybeSingle()
@@ -39,7 +41,8 @@ export async function approveEntityAction(
   if (listing.status === 'rejected')
     return { error: 'This listing has been rejected. Restore it before approving.' }
 
-  const now = new Date().toISOString()
+  const approvedAt = new Date()
+  const now = approvedAt.toISOString()
   const { error: updateError } = await serviceClient
     .from('listings')
     .update({
@@ -51,6 +54,18 @@ export async function approveEntityAction(
     .eq('id', listingId)
 
   if (updateError) return { error: 'Failed to approve listing. Please try again.' }
+
+  // Ticket 155: a job's 30 days start when it goes live, not at submit. Sets a
+  // default closing date when the poster left it blank and lines the paid
+  // window up with it. Fail-soft: the publish above already stands.
+  if (listing.entity_type === 'job') {
+    await applyJobGoLiveDefaults(serviceClient, {
+      listingId,
+      publishedAt: approvedAt,
+      firstPublish: !listing.published_at,
+      paidPostingsOn: isFeatureEnabled('paidPostings'),
+    })
+  }
 
   // Resolve the moderation queue entry
   await serviceClient

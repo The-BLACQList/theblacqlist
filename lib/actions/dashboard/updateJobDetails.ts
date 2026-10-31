@@ -2,7 +2,14 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
+import { endOfDayEastern } from '@/lib/validations/postJob'
+import {
+  REOPEN_NEEDS_NEW_POSTING,
+  reopenClosedJob,
+  reopenCoverage,
+} from '@/lib/services/listings/reopenClosedJob'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import {
@@ -78,9 +85,14 @@ export async function updateJobDetailsAction(
     return { error: 'Enter a valid email address.', field: 'apply_email' }
   }
 
+  // The date input sends YYYY-MM-DD. Store the end of that day in Eastern time,
+  // the same instant the Post a job flow stores (ticket 152), so the role closes
+  // after the day the poster picked, not at the start of it.
   let closesAtIso: string | null = null
   if (closesAtRaw) {
-    const closes = new Date(closesAtRaw)
+    const closes = /^\d{4}-\d{2}-\d{2}$/.test(closesAtRaw)
+      ? new Date(endOfDayEastern(closesAtRaw))
+      : new Date(closesAtRaw)
     if (isNaN(closes.getTime())) {
       return { error: 'Enter a valid closing date.', field: 'closes_at' }
     }
@@ -90,7 +102,7 @@ export async function updateJobDetailsAction(
   const supabase = await createClient()
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, slug, status, entity_type, cities(slug)')
+    .select('id, slug, status, entity_type, created_at, cities(slug)')
     .eq('id', listingId)
     .eq('owner_user_id', owner.user.id)
     .is('deleted_at', null)
@@ -98,6 +110,26 @@ export async function updateJobDetailsAction(
 
   if (!listing || listing.entity_type !== 'job') {
     return { error: 'Job not found or you do not have permission to edit it.' }
+  }
+
+  // Ticket 155: a closed role whose closing date moves into the future goes back
+  // on the board, but only if a posting window covers the new date. If none
+  // does, nothing is saved and the editor says a new posting is needed.
+  const wantsReopen =
+    listing.status === 'closed' && closesAtIso !== null && new Date(closesAtIso).getTime() > Date.now()
+  if (wantsReopen) {
+    const coverage = await reopenCoverage(supabase, {
+      listingId,
+      createdAt: listing.created_at,
+      closesAt: new Date(closesAtIso!),
+      paidPostingsOn: isFeatureEnabled('paidPostings'),
+    })
+    if (!coverage.ok) {
+      return { error: 'Could not check this job posting right now. Please try again.' }
+    }
+    if (!coverage.covered) {
+      return { error: REOPEN_NEEDS_NEW_POSTING, field: 'closes_at' }
+    }
   }
 
   // The hiring company must be a listing this owner controls.
@@ -143,7 +175,25 @@ export async function updateJobDetailsAction(
     })
     .eq('id', listingId)
 
-  if (listing.status === 'published') {
+  if (wantsReopen) {
+    // Service role: the listings owner guard refuses job status changes from a
+    // user session. Ownership, job type and coverage are checked above, and the
+    // write itself only moves this owner's closed job.
+    // try/catch: createServiceClient() throws synchronously when the key is unset.
+    let reopened = false
+    try {
+      const moved = await reopenClosedJob(createServiceClient(), listingId, owner.user.id)
+      reopened = moved.ok && moved.reopened
+    } catch {
+      reopened = false
+    }
+    if (!reopened) {
+      return { error: 'Your changes were saved, but the role could not be reopened. Please try again.' }
+    }
+    revalidatePath('/jobs')
+  }
+
+  if (listing.status === 'published' || listing.status === 'closed') {
     const citySlug = (listing.cities as { slug: string } | null)?.slug
     if (citySlug && listing.slug) {
       revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
