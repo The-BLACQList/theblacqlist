@@ -1,6 +1,6 @@
 # Ticket 163: Read the receipt photo, fill the form and match the business
 
-**Phase:** V1.5 · **Priority:** P2 · **Status:** Blocked on open question O1
+**Phase:** V1.5 · **Priority:** P2 · **Status:** Ready to build, flag off (O1 answered A, 2026-10-31). Switch-on waits on the policy update, notice and counsel
 **Depends on:** 162.
 **Gates:**
 - GATE-DEPLOY.

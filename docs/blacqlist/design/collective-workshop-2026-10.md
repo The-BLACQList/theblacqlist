@@ -99,6 +99,13 @@ Every pick matches the lean except screen 5, where the founder added C.
 | O3 | Shape of the share card (ticket 166) | **A.** Text and a link to the business page through the phone's share sheet or Copy, with the amount off unless they switch it on. No public page is stored. **B.** An image card with the business name and an optional amount | **A.** Nothing about the shopper is stored or public, and it needs the smallest privacy review |
 | O4 | Silo needs Three.js and React Three Fiber (ticket 167) | **A.** Add them, loaded only on `/flow-map` after the page shows, with the table as the fallback. **B.** Build Silo flat (Canvas 2D) and keep the 3D look as far as it goes | **A.** Silo was picked as a 3D shaft |
 
+**Answers `[Decision — founder, 2026-10-31]`:** O1 **A**, O2 **A + B**, O3 **A**, O4 **A (yes)**.
+
+- **O1 A:** Claude reads the photo on our server, only when the shopper ticks the box. `FEATURE_RECEIPT_READ` stays off in prod until the privacy policy update is posted, notice is sent and counsel has looked at it. The policy text goes in its own draft PR so it never goes live ahead of the switch.
+- **O2 A + B:** the shopper invite and the private admin list, plus an "Email this business" action on the admin list. The founder types the business address and presses send, one business at a time. Nothing sends in bulk or on its own, and every send is the founder's own GATE-COMMS act. `[Needs professional review]` CAN-SPAM for one-to-one business outreach: the email carries our physical address and an opt-out line.
+- **O3 A:** text and the business link through the share sheet or Copy. Amount off by default, nothing stored.
+- **O4 A:** add `three`, `@react-three/fiber` and `@react-three/drei` (only what is used), loaded only on `/flow-map` after the page shows, with the table as the fallback.
+
 ## Tickets
 
 | Ticket | What |

@@ -1,8 +1,8 @@
 # Ticket 166: After a receipt is counted, "Your spend joined the map" and a share card
 
 **Phase:** V1.5 · **Priority:** P1 · **Status:**
-- Part A: Ready.
-- Part C: blocked on open question O3 and a Privacy agent review.
+- Part A: built, draft PR #287.
+- Part C: Ready (O3 answered A, 2026-10-31). Privacy agent review in the PR.
 
 **Depends on:** 164, and 167 for the "See it on the map" ring. Before 167, the button goes to `/flow-map` with no ring.
 **Gates:** GATE-DEPLOY. No migration for Part A, or for Part C if O3 is A.

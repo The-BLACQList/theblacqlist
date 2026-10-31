@@ -1,6 +1,6 @@
 # Ticket 167: Silo, layout B Instrument, on /flow-map
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** Blocked on open question O4 (adding Three.js and React Three Fiber)
+**Phase:** V1.5 · **Priority:** P1 · **Status:** Ready (O4 answered yes, 2026-10-31: add Three.js and React Three Fiber, lazy-loaded on `/flow-map` only)
 **Depends on:** none to start. 166 links into it.
 **Gates:**
 - GATE-DEPLOY.
