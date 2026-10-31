@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Lock, Building2 } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -60,12 +59,17 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   const totalAmountCents = spendData.reduce((sum, r) => sum + r.amount_cents, 0)
   const totalTransactions = spendData.length
 
-  // ── Silo businesses (ticket 167) ─────────────────────────────────────────────
+  // ── Collective businesses (tickets 167 and 171) ──────────────────────────────
   //
-  // Gated at the threshold the privacy panel below promises. Below the bar a
-  // business total approaches publishing one person's receipt. The city and
-  // category filters are gone with the old network (the Silo's legend narrows
-  // by kind or level on the client, over rows that already cleared the bar).
+  // Every published business is a dot, so the spread of the list shows before
+  // any receipt is counted (ticket 171). Spend totals are a separate read, gated
+  // at the threshold the methodology page promises: below the bar a business
+  // total approaches publishing one person's receipt, so it never leaves the
+  // server. Events and jobs are listings but not places money is spent.
+
+  const LISTING_SELECT =
+    'id, name, slug, entity_type, primary_level, category_id, cities!listings_city_id_fkey(slug)'
+  const MAP_LIMIT = 2000
 
   const { data: businessNodes, error: businessError } = await serviceClient
     .from('flow_nodes')
@@ -78,17 +82,29 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   const businessIds = (businessNodes ?? []).map((n) => n.entity_id)
   const listingMeta: Record<string, BusinessListingMeta> = {}
   let listingsError = false
-  if (businessIds.length > 0) {
-    const [{ data: listings, error }, { data: categoryRows }] = await Promise.all([
+  {
+    const [allRes, linkedRes, { data: categoryRows }] = await Promise.all([
       serviceClient
         .from('listings')
-        .select(
-          'id, name, slug, entity_type, primary_level, category_id, cities!listings_city_id_fkey(slug)'
-        )
-        .in('id', businessIds),
+        .select(LISTING_SELECT)
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .not('entity_type', 'in', '(event,job)')
+        .order('created_at', { ascending: true })
+        .limit(MAP_LIMIT),
+      // A business with counted receipts is always on the map, even past the cap.
+      businessIds.length > 0
+        ? serviceClient
+            .from('listings')
+            .select(LISTING_SELECT)
+            .eq('status', 'published')
+            .is('deleted_at', null)
+            .in('id', businessIds)
+        : Promise.resolve({ data: [], error: null }),
       serviceClient.from('categories').select('id, slug, parent_id'),
     ])
-    listingsError = !!error
+    listingsError = !!allRes.error || !!linkedRes.error
+    const listings = [...(linkedRes.data ?? []), ...(allRes.data ?? [])]
 
     // A category's family comes from its top-level parent. If the categories
     // read fails, every dot falls back to the default family rather than failing
@@ -100,7 +116,8 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
       return c?.slug ?? null
     }
 
-    for (const l of listings ?? []) {
+    for (const l of listings) {
+      if (listingMeta[l.id]) continue
       listingMeta[l.id] = {
         name: l.name,
         href: buildEntityUrl(l.entity_type, (l.cities as { slug: string } | null)?.slug, l.slug),
@@ -134,36 +151,22 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     transaction_count: n.transaction_count,
   }))
 
-  // ── Auth — personal impact ────────────────────────────────────────────────────
+  // ── Auth: the reader's own receipts ──────────────────────────────────────────
 
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  let personalImpact: {
-    totalAmountCents: number
-    uniqueBusinesses: number
-    approvedCount: number
-    pendingCount: number
-    topBusinesses: {
-      listing_id: string
-      name: string
-      slug: string
-      amount_cents: number
-      receipt_count: number
-    }[]
-  } | null = null
-
   // The first look (ticket 161) needs every receipt the reader has sent in,
-  // whatever its status, to tell a first-timer from a returning member. The
-  // personal impact block below still reads approved and waiting only.
+  // whatever its status, to tell a first-timer from a returning member.
   let receiptCount = 0
   let receiptCountFailed = false
+  let countedCents = 0
 
-  // The Silo's "You": businesses where the reader has an approved receipt that
-  // counts toward community figures. A receipt kept out of the figures never
-  // marks a dot, because that dot's total doesn't include it.
+  // The Collective's "You": businesses where the reader has an approved receipt
+  // that counts toward community figures. A receipt kept out of the figures
+  // never marks a dot, because that dot's total doesn't include it.
   const youIds = new Set<string>()
 
   if (user) {
@@ -176,58 +179,8 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     receiptCountFailed = Boolean(receiptsError)
 
     for (const r of receipts ?? []) {
+      if (r.status === 'approved') countedCents += r.amount_cents
       if (r.status === 'approved' && !r.aggregate_opt_out && r.listing_id) youIds.add(r.listing_id)
-    }
-
-    const userReceipts = (receipts ?? []).filter(
-      (r) => r.status === 'approved' || r.status === 'pending_review'
-    )
-    const approved = userReceipts.filter((r) => r.status === 'approved')
-    const pending = userReceipts.filter((r) => r.status === 'pending_review')
-
-    const piTotal = approved.reduce((sum, r) => sum + r.amount_cents, 0)
-    const piUniqueBusinessIds = new Set(approved.map((r) => r.listing_id).filter(Boolean))
-
-    const topListingAmounts = approved.reduce<Record<string, number>>((acc, r) => {
-      if (r.listing_id) acc[r.listing_id] = (acc[r.listing_id] ?? 0) + r.amount_cents
-      return acc
-    }, {})
-
-    const topListingIds = Object.entries(topListingAmounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([id]) => id)
-
-    let piBusinesses: {
-      listing_id: string
-      name: string
-      slug: string
-      amount_cents: number
-      receipt_count: number
-    }[] = []
-    if (topListingIds.length > 0) {
-      const { data: listingRows } = await serviceClient
-        .from('listings')
-        .select('id, name, slug')
-        .in('id', topListingIds)
-      const piListingMap = Object.fromEntries(
-        (listingRows ?? []).map((l) => [l.id, { name: l.name, slug: l.slug }])
-      )
-      piBusinesses = topListingIds.map((id) => ({
-        listing_id: id,
-        name: piListingMap[id]?.name ?? 'Unknown Business',
-        slug: piListingMap[id]?.slug ?? '',
-        amount_cents: topListingAmounts[id] ?? 0,
-        receipt_count: approved.filter((r) => r.listing_id === id).length,
-      }))
-    }
-
-    personalImpact = {
-      totalAmountCents: piTotal,
-      uniqueBusinesses: piUniqueBusinessIds.size,
-      approvedCount: approved.length,
-      pendingCount: pending.length,
-      topBusinesses: piBusinesses,
     }
   }
 
@@ -246,7 +199,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // their kind and the day only.
   const siloById = new Map(siloBusinesses.map((b) => [b.id, b]))
   const ticker: SiloTickerItem[] = spendData
-    .filter((r) => r.listing_id && siloById.has(r.listing_id))
+    .filter((r) => r.listing_id && siloById.get(r.listing_id)?.linked)
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 3)
     .map((r, i) => ({
@@ -269,12 +222,12 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
 
   return (
     <main className="min-h-screen bg-pale-lavender pt-16 pb-16">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      {/* ── Hero (compact, ticket 171) ──────────────────────────────────────── */}
       <div className="px-4">
-        <div className="max-w-[800px] mx-auto pt-6 pb-10">
-          <div className="inline-flex items-center gap-1.5 bg-amber-gold/10 text-amber-700 rounded-full px-3 py-1 font-subhead text-xs font-semibold mb-4">
+        <div className="max-w-[1100px] mx-auto pt-4 pb-5">
+          <p className="inline-flex items-center gap-1.5 bg-amber-gold/10 text-amber-700 rounded-full px-3 py-1 font-subhead text-xs font-semibold mb-2">
             The Collective · Beta
-          </div>
+          </p>
           {/*
             The figure is labeled for what it measures. One approved receipt is
             one unit of spend, counted once — consumer to business. It is not
@@ -283,24 +236,21 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
             'business' | 'city'). See docs/blacqlist/flow-map/
             data-sourcing-and-methodology.md §2.
           */}
-          <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight">
+          <h1 className="font-headline text-2xl md:text-3xl text-brand-black leading-tight text-balance">
             {hasAnyData
               ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
               : 'Where does our money go?'}
           </h1>
-          {/* [Decision — founder, 2026-10-15 (simplicity P4): tester was "still a
-              bit confused on what/how the collective works."] Ticket 161 answers
-              that with three steps and one button picked for the reader. */}
-          <CollectiveFirstLook
-            state={firstLookState}
-            countedTotal={formatDollars(personalImpact?.totalAmountCents ?? 0)}
-          />
+          {/* [Decision — founder, 2026-10-15 (simplicity P4)] Ticket 161's three
+              steps stay, folded away (ticket 171: the hero was too tall). */}
+          <CollectiveFirstLook state={firstLookState} countedTotal={formatDollars(countedCents)} />
         </div>
       </div>
 
-      {/* ── The Silo (ticket 167) ─────────────────────────────────────────── */}
+      {/* ── The Collective (tickets 167 and 171) ──────────────────────────── */}
       {/* Full bleed. The HUD is server-rendered HTML; the 3D scene loads on its
-          own chunk after mount and only on this route. */}
+          own chunk after mount and only on this route. The CSV downloads and the
+          privacy notes moved to /flow-map/methodology (ticket 171). */}
       {siloLoadFailed ? (
         <div className="px-4">
           <div className="max-w-[800px] mx-auto rounded-xl bg-white border border-charcoal/10 px-5 py-8 text-center">
@@ -330,203 +280,6 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           focusYou={params.you === '1'}
         />
       )}
-
-      <div className="px-4 pt-10">
-        <div className="max-w-[800px] mx-auto space-y-10">
-          {/* ── Personal impact ───────────────────────────────────────────────── */}
-          <div className="rounded-xl border border-charcoal/10 overflow-hidden">
-            <div className="bg-brand-black px-5 py-4">
-              <h2 className="font-headline text-base text-white">Your personal impact</h2>
-            </div>
-
-            {!user ? (
-              <div className="bg-white px-5 py-8 text-center">
-                <Lock className="size-6 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
-                <p className="font-subhead text-sm font-semibold text-brand-black">
-                  Sign in to see your impact
-                </p>
-                <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                  Your personal spend data is private and only visible to you.
-                </p>
-                <Link
-                  href="/sign-in?next=/flow-map"
-                  className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
-                >
-                  Sign in
-                </Link>
-              </div>
-            ) : personalImpact &&
-              personalImpact.approvedCount === 0 &&
-              personalImpact.pendingCount === 0 ? (
-              <div className="bg-white px-5 py-8 text-center">
-                <p className="font-subhead text-sm font-semibold text-brand-black">
-                  No receipts yet
-                </p>
-                <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                  Add a receipt to start tracking your personal impact.
-                </p>
-                <Link
-                  href="/account/receipts/new"
-                  className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
-                >
-                  Add a receipt
-                </Link>
-              </div>
-            ) : personalImpact ? (
-              <div className="bg-white px-5 py-5 space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                      Total spent
-                    </p>
-                    <p className="font-headline text-2xl text-brand-black mt-0.5">
-                      {formatDollars(personalImpact.totalAmountCents)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                      Businesses
-                    </p>
-                    <p className="font-headline text-2xl text-brand-black mt-0.5">
-                      {personalImpact.uniqueBusinesses}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                      Approved
-                    </p>
-                    <p className="font-headline text-2xl text-brand-black mt-0.5">
-                      {personalImpact.approvedCount}
-                    </p>
-                  </div>
-                  {personalImpact.pendingCount > 0 && (
-                    <div>
-                      <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                        Pending
-                      </p>
-                      <p className="font-headline text-2xl text-amber-700 mt-0.5">
-                        {personalImpact.pendingCount}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {personalImpact.topBusinesses.length > 0 && (
-                  <div className="pt-3 border-t border-charcoal/5 space-y-2">
-                    <p className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide">
-                      Your top businesses
-                    </p>
-                    {personalImpact.topBusinesses.map((b) => (
-                      <div key={b.listing_id} className="flex items-center justify-between gap-3">
-                        <p className="font-subhead text-sm font-semibold text-brand-black truncate">
-                          {b.name}
-                        </p>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-subhead text-sm text-brand-black tabular-nums">
-                            {formatDollars(b.amount_cents)}
-                          </span>
-                          <span className="font-body text-xs text-charcoal-faint">
-                            {b.receipt_count} {b.receipt_count === 1 ? 'receipt' : 'receipts'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <Link
-                    href="/account/receipts"
-                    className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
-                  >
-                    View all my receipts →
-                  </Link>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {/* ── Entity impact placeholder ─────────────────────────────────────── */}
-          <div className="rounded-xl bg-white border border-charcoal/10 p-5 flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-pale-lavender flex items-center justify-center">
-              <Building2 className="size-5 text-amber" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="font-subhead text-sm font-semibold text-brand-black">
-                Own a business on The BLACQList?
-              </p>
-              <p className="font-body text-xs text-charcoal-soft mt-0.5 mb-3">
-                See how much the community has spent at your business through the owner dashboard.
-                Detailed entity impact stats are available to verified business owners.
-              </p>
-              <Link
-                href="/for-business"
-                className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
-              >
-                Learn about the owner dashboard →
-              </Link>
-            </div>
-          </div>
-
-          {/* ── Downloadable reports ──────────────────────────────────────────── */}
-          {/*
-          These files are the whole set at or above the same
-          {AGGREGATE_MIN_TRANSACTIONS}-transaction threshold as the Silo, nothing
-          looser. Unlike the Silo, they name each business (deviation noted on
-          ticket 167: the export predates the opt-in rule). Plain <a> rather than
-          next/link: these are file downloads, not client-side navigations.
-        */}
-          <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-4">
-            <p className="font-subhead text-xs font-semibold text-brand-black mb-1">
-              Download the data
-            </p>
-            <p className="font-body text-xs text-charcoal-soft leading-relaxed mb-3">
-              Check our numbers yourself. Each file is a spreadsheet (CSV) listing every business or
-              city that meets the {AGGREGATE_MIN_TRANSACTIONS}-transaction threshold described
-              below, with its total in both dollars and cents. Because entities below that threshold
-              are left out, these files will total less than the community-wide figures at the top
-              of this page. That gap is the privacy floor doing its job.
-            </p>
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <a
-                href="/api/flow-map/export?dataset=businesses"
-                download
-                className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
-              >
-                Businesses (CSV) ↓
-              </a>
-              <a
-                href="/api/flow-map/export?dataset=cities"
-                download
-                className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors"
-              >
-                Cities (CSV) ↓
-              </a>
-            </div>
-          </div>
-
-          {/* ── Privacy notice ────────────────────────────────────────────────── */}
-          <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-4">
-            <p className="font-subhead text-xs font-semibold text-brand-black mb-1">
-              Privacy by design
-            </p>
-            <p className="font-body text-xs text-charcoal-soft leading-relaxed">
-              All dollar-flow data is anonymized. Individual receipt details and buyer identities
-              are never included in public views. A named business or city only appears here once{' '}
-              {AGGREGATE_MIN_TRANSACTIONS} or more distinct transactions are behind its total. The
-              community-wide figures at the top of this page are a single sum across everything
-              reported, so they identify no one. When you add a receipt you can choose to keep it
-              out of community figures.
-            </p>
-            <Link
-              href="/flow-map/methodology"
-              className="font-subhead text-xs font-semibold text-amber hover:text-light-gold transition-colors mt-2 inline-block"
-            >
-              How we count community spend →
-            </Link>
-          </div>
-        </div>
-      </div>
     </main>
   )
 }

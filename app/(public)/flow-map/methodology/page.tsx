@@ -206,6 +206,16 @@ export default function FlowMapMethodologyPage() {
               part of any public view. The anonymous record described in section 2 carries no
               account, so there is no path from a published figure back to a person.
             </p>
+            <p>
+              On The Collective map, every published business on the list shows as a dot from day
+              one, so you can see how the list is spread out. A dot carries no dollar figure and
+              no line until it clears the same rule. Business names stay hidden unless the
+              business chooses to show its name.
+            </p>
+            <p>
+              When you add a receipt you can choose to keep it out of community figures. Section 8
+              explains how long that choice stays open.
+            </p>
           </section>
 
           <section id="your-own" className="space-y-3">
@@ -302,6 +312,33 @@ export default function FlowMapMethodologyPage() {
                 Privacy Policy
               </Link>{' '}
               says.
+            </p>
+          </section>
+
+          <section id="download" className="space-y-3">
+            <h2 className="font-headline text-xl text-brand-black">10. Download the data</h2>
+            <p>
+              Check our numbers yourself. Each file is a spreadsheet (CSV) listing every business or
+              city with {AGGREGATE_MIN_TRANSACTIONS} or more counted purchases behind its total,
+              with that total in dollars and in cents. Anything below that line is left out, so
+              these files add up to less than the community-wide figures. That gap is the privacy
+              rule in section 5 doing its job.
+            </p>
+            <p className="flex flex-wrap gap-x-6 gap-y-2">
+              <a
+                href="/api/flow-map/export?dataset=businesses"
+                download
+                className="font-semibold text-amber hover:underline"
+              >
+                Businesses (CSV)
+              </a>
+              <a
+                href="/api/flow-map/export?dataset=cities"
+                download
+                className="font-semibold text-amber hover:underline"
+              >
+                Cities (CSV)
+              </a>
             </p>
           </section>
 

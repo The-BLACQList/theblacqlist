@@ -1,7 +1,6 @@
 'use client'
 
-import { forwardRef, type ComponentType } from 'react'
-import { Hammer, Sprout, Store, Truck, Users } from 'lucide-react'
+import { forwardRef } from 'react'
 
 import {
   CATEGORY_FAMILIES,
@@ -13,24 +12,17 @@ import {
   floorSpokenLabel,
   floorValueText,
   formatDollars,
-  type FloorKey,
   type SiloBusiness,
   type SiloFloor,
 } from '@/lib/spend/silo-layout'
 import { LEVEL_META } from '@/lib/listings/levels'
+import { FloorIcon } from './floor-icons'
 
 /**
- * The HUD panels around the Silo (ticket 167): gauge, legend, ticker,
- * context card and key map. Presentational only; SiloExperience owns state.
+ * The HUD panels around the Collective (tickets 167 and 171): gauge,
+ * legend, ticker, context card and key map. Presentational only;
+ * SiloExperience owns state.
  */
-
-const FLOOR_ICONS: Record<FloorKey, ComponentType<{ size?: number; 'aria-hidden'?: boolean }>> = {
-  shoppers: Users,
-  local: Store,
-  supplier: Truck,
-  maker: Hammer,
-  grower: Sprout,
-}
 
 // ─── Gauge ───────────────────────────────────────────────────────────────────
 
@@ -47,7 +39,6 @@ export function SiloGauge({ floors, counts, currentFloor, youFloors, onPick }: G
     <nav className="gauge" aria-label="Floors">
       <ol>
         {floors.map((f) => {
-          const Icon = FLOOR_ICONS[f.key]
           return (
             <li key={f.key}>
               <button
@@ -58,7 +49,7 @@ export function SiloGauge({ floors, counts, currentFloor, youFloors, onPick }: G
                 onClick={() => onPick(f.index)}
               >
                 <span className="ic" aria-hidden="true">
-                  <Icon size={15} aria-hidden />
+                  <FloorIcon floor={f.index} />
                 </span>
                 <span className="nm" aria-hidden="true">
                   {f.short}
@@ -161,6 +152,10 @@ interface CardProps {
   floorCount: number
   total: number
   position: number
+  /** Businesses with enough receipts behind them to show a total. */
+  linkedCount: number
+  /** A group in the key is switched on, so `total` is a filtered count. */
+  filtered: boolean
   totalSpentCents: number
   onPrev: () => void
   onNext: () => void
@@ -172,6 +167,8 @@ export function SiloCard({
   floorCount,
   total,
   position,
+  linkedCount,
+  filtered,
   totalSpentCents,
   onPrev,
   onNext,
@@ -180,8 +177,12 @@ export function SiloCard({
   let title = 'Where the money goes first'
   let body: React.ReactNode =
     total === 0
-      ? 'No businesses have cleared the privacy floor yet. A business shows here once enough receipts are counted.'
-      : `${total} ${total === 1 ? 'business has' : 'businesses have'} cleared the privacy floor. Pick a floor or a dot to look closer.`
+      ? filtered
+        ? 'No businesses in these groups yet. Clear a group in the key to see more.'
+        : 'No businesses on the map yet.'
+      : linkedCount === 0
+        ? `${total.toLocaleString('en-US')} ${total === 1 ? 'business' : 'businesses'} on the map. Lines appear once enough receipts are counted at a business.`
+        : `${total.toLocaleString('en-US')} ${total === 1 ? 'business' : 'businesses'} on the map, ${linkedCount.toLocaleString('en-US')} with enough receipts to show what was spent. Pick a floor or a dot to look closer.`
 
   if (selected) {
     const fam = CATEGORY_FAMILIES[selected.familyIndex]
@@ -190,8 +191,14 @@ export function SiloCard({
     title = businessDisplayName(selected)
     body = (
       <>
-        {formatDollars(selected.amountCents)} spent here, from {selected.transactionCount}{' '}
-        {selected.transactionCount === 1 ? 'receipt' : 'receipts'}.
+        {selected.linked ? (
+          <>
+            {formatDollars(selected.amountCents)} spent here, from {selected.transactionCount}{' '}
+            {selected.transactionCount === 1 ? 'receipt' : 'receipts'}.
+          </>
+        ) : (
+          'Not enough receipts counted here yet to show a total.'
+        )}
         {selected.isYou && ' You have a counted receipt here.'}
         {!selected.name && ' Its name stays hidden until the business chooses to show it.'}
         {selected.href && (

@@ -37,13 +37,14 @@ import {
 // ── The threshold itself ────────────────────────────────────────────────────
 
 describe('AGGREGATE_MIN_TRANSACTIONS', () => {
-  it('is 5, matching the sentence published on /flow-map', () => {
+  it('is 5, matching the sentence published on /flow-map/methodology', () => {
     expect(AGGREGATE_MIN_TRANSACTIONS).toBe(5)
   })
 
   it('is the number the privacy notice interpolates, so copy cannot drift', () => {
     const page = readFileSync(
-      path.resolve(process.cwd(), 'app/(public)/flow-map/page.tsx'),
+      // Ticket 171 moved the privacy notice off the map and onto the method page.
+      path.resolve(process.cwd(), 'app/(public)/flow-map/methodology/page.tsx'),
       'utf8'
     )
     // The notice must render the constant, not a hardcoded digit. If someone

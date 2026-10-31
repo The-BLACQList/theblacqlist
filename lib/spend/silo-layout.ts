@@ -1,9 +1,9 @@
 /**
- * Silo layout data (ticket 167).
+ * The Collective map's layout data (tickets 167 and 171).
  *
- * Pure functions that turn the community spend rows into what the Silo map
- * draws: the five floors, the business dots, their colors and positions, and
- * the pulse schedule. No React and no Three.js here, so every rule the page
+ * Pure functions that turn the community spend rows into what the map draws:
+ * the five floors, the business nodes, their colors and positions, and the
+ * pulse schedule. No React and no Three.js here, so every rule the page
  * promises is unit-tested in one place (tests/silo-layout.test.ts).
  *
  * Honest to the data (Collective workshop rules, spec §20 round 17):
@@ -11,9 +11,11 @@
  *   shows the total spent. Every floor past it says "Not tracked yet" and
  *   never shows an invented amount.
  * - Shoppers are one group. No shopper is ever a dot.
- * - A business only appears once AGGREGATE_MIN_TRANSACTIONS receipts are
- *   behind its total, and its name only shows when it has opted in. There is
- *   no opt-in column yet, so every caller passes `() => false` today.
+ * - Every published business is a node, so the spread of businesses shows
+ *   before any receipt does (ticket 171). A business is only `linked`, with a
+ *   connection and a total, once AGGREGATE_MIN_TRANSACTIONS receipts are
+ *   behind it. Its name only shows when it has opted in. There is no opt-in
+ *   column yet, so every caller passes `() => false` today.
  */
 
 import { meetsAggregateThreshold } from './aggregate-privacy'
@@ -224,8 +226,14 @@ export interface SiloBusiness {
   level: BusinessLevel
   floorIndex: number
   familyIndex: number
+  /**
+   * True once enough receipts are behind this business to show a connection
+   * and a total. False businesses are still drawn, with no link and no amount.
+   */
+  linked: boolean
+  /** Zero unless linked. */
   transactionCount: number
-  /** Kept for the ordering and the list view, which shows it under the anonymous label. */
+  /** Zero unless linked. Kept for the ordering and the list view. */
   amountCents: number
   optedIn: boolean
   isYou: boolean
@@ -233,6 +241,7 @@ export interface SiloBusiness {
 
 export interface BuildBusinessesInput {
   nodes: readonly BusinessNodeRow[]
+  /** Every published business, keyed by listing id. Each one becomes a node. */
   listings: Readonly<Record<string, BusinessListingMeta>>
   isNameOptedIn: (listingId: string) => boolean
   /** Listing ids the signed-in reader has a counted (approved) receipt at. */
@@ -245,31 +254,39 @@ export function buildSiloBusinesses({
   isNameOptedIn,
   youIds,
 }: BuildBusinessesInput): SiloBusiness[] {
-  return nodes
-    .filter((n) => meetsAggregateThreshold(n))
-    .filter((n) => listings[n.entity_id] !== undefined)
-    .map((n) => {
-      const meta = listings[n.entity_id]!
-      const optedIn = isNameOptedIn(n.entity_id)
-      const isYou = youIds?.has(n.entity_id) ?? false
+  const counted = new Map<string, BusinessNodeRow>()
+  for (const n of nodes) if (meetsAggregateThreshold(n)) counted.set(n.entity_id, n)
+
+  return Object.entries(listings)
+    .map(([id, meta]) => {
+      const node = counted.get(id)
+      const optedIn = isNameOptedIn(id)
+      const isYou = youIds?.has(id) ?? false
       const level: BusinessLevel = isBusinessLevel(meta.level) ? meta.level : 'local'
       // The reader already knows where they shopped, so their own business is
       // named for them. Nobody else sees that name unless the business opts in.
       const showName = optedIn || isYou
       return {
-        id: n.entity_id,
+        id,
         name: showName ? meta.name : null,
         href: showName ? meta.href : null,
         level,
         floorIndex: floorIndexForLevel(level),
         familyIndex: familyIndexForCategorySlug(meta.categorySlug),
-        transactionCount: n.transaction_count,
-        amountCents: n.total_amount_cents,
+        linked: node !== undefined,
+        // Under the floor, a total could point back at one shopper, so none is kept.
+        transactionCount: node?.transaction_count ?? 0,
+        amountCents: node?.total_amount_cents ?? 0,
         optedIn,
         isYou,
       }
     })
-    .sort((a, b) => b.amountCents - a.amountCents || a.id.localeCompare(b.id))
+    .sort(
+      (a, b) =>
+        Number(b.linked) - Number(a.linked) ||
+        b.amountCents - a.amountCents ||
+        a.id.localeCompare(b.id)
+    )
 }
 
 /** "A food shop" or "An x": the article follows the first letter of the words. */
@@ -323,108 +340,123 @@ export function hashString(s: string): number {
   return h >>> 0
 }
 
-export const FLOOR_SPACING = 2.2
-export const SILO_RADIUS = 4.2
-
-/** Height of a floor in scene units. Shoppers at the top. */
-export function floorY(floorIndex: number): number {
-  return (2 - floorIndex) * FLOOR_SPACING
-}
-
-export interface Point2 {
-  x: number
-  z: number
-}
-
 /**
- * Pushes dots that sit closer than `minDist` apart, a little at a time, so a
- * crowded neighborhood opens up without leaving it. Deterministic: same input,
- * same output. Points never move further than `maxShift` from where they began.
+ * Round 17 concept D: a tall gold silo. Floors stack top to bottom (Shoppers
+ * up top), and each category family owns one wedge of the wall, turning a
+ * little floor by floor so the clusters spiral down. The hub sits under the
+ * last floor. All in scene units.
  */
-export function spreadPoints(
-  points: readonly Point2[],
-  minDist: number,
-  { iterations = 24, maxShift = minDist * 1.5 }: { iterations?: number; maxShift?: number } = {}
-): Point2[] {
-  const out = points.map((p) => ({ x: p.x, z: p.z }))
-  for (let it = 0; it < iterations; it++) {
-    let moved = false
-    for (let i = 0; i < out.length; i++) {
-      for (let j = i + 1; j < out.length; j++) {
-        const a = out[i]!
-        const b = out[j]!
-        const dx = b.x - a.x
-        const dz = b.z - a.z
-        const d = Math.hypot(dx, dz)
-        if (d >= minDist) continue
-        let ux: number
-        let uz: number
-        if (d < 1e-6) {
-          // Same spot: split them along a fixed angle picked from their order.
-          const ang = ((i * 7 + j * 13) % 360) * (Math.PI / 180)
-          ux = Math.cos(ang)
-          uz = Math.sin(ang)
-        } else {
-          ux = dx / d
-          uz = dz / d
-        }
-        const push = (minDist - d) / 2
-        a.x -= ux * push
-        a.z -= uz * push
-        b.x += ux * push
-        b.z += uz * push
-        moved = true
-      }
-    }
-    // Keep each point near home.
-    for (let i = 0; i < out.length; i++) {
-      const o = points[i]!
-      const p = out[i]!
-      const sx = p.x - o.x
-      const sz = p.z - o.z
-      const s = Math.hypot(sx, sz)
-      if (s > maxShift) {
-        p.x = o.x + (sx / s) * maxShift
-        p.z = o.z + (sz / s) * maxShift
-      }
-    }
-    if (!moved) break
-  }
-  return out
-}
+export const SILO = {
+  /** Cage radius. */
+  R: 17,
+  /** Where cluster centers sit, just inside the cage. */
+  rA: 15.2,
+  /** Smallest business cluster radius. */
+  cr: 3.0,
+  /** Shopper crowd radius on the top floor. */
+  crowdR: 3.5,
+  /** How far each floor turns, in radians. */
+  twist: 0.32,
+  /** Floor heights, Shoppers first. */
+  y: [34, 17, 0, -17, -34] as const,
+  hub: { x: 0, y: -47, z: 0 },
+  hubR: 4.5,
+} as const
 
-export interface PlacedBusiness {
-  id: string
+export interface Point3 {
   x: number
   y: number
   z: number
 }
 
-export const DOT_MIN_DISTANCE = 0.42
+/** Angle of a family's wedge on a floor. */
+export function wedgeAngle(familyIndex: number, floorIndex: number): number {
+  return (familyIndex / CATEGORY_FAMILIES.length) * Math.PI * 2 + floorIndex * SILO.twist
+}
 
 /**
- * Places each business on its floor. Each category family owns a slice of the
- * ring, so neighbors share a color, then crowded dots are spread apart.
+ * A point near a wedge's center: `u` along the wall, `v` up, `w` in toward the
+ * middle of the silo.
+ */
+export function wedgePoint(familyIndex: number, floorIndex: number, u = 0, v = 0, w = 0): Point3 {
+  const r = SILO.rA - w
+  const a = wedgeAngle(familyIndex, floorIndex)
+  const c = Math.cos(a)
+  const s = Math.sin(a)
+  return { x: r * c - u * s, y: (SILO.y[floorIndex] ?? 0) + v, z: r * s + u * c }
+}
+
+/** Cluster radius grows with the crowd so busy wedges don't pile up. */
+export function clusterRadius(count: number): number {
+  return Math.max(SILO.cr, Math.min(8, 0.42 * Math.sqrt(count)))
+}
+
+export interface PlacedBusiness extends Point3 {
+  id: string
+}
+
+const GOLDEN_ANGLE = 2.39996
+
+/**
+ * Places each business in its family's wedge on its floor, as a sunflower so
+ * the cluster fills evenly at any size. Same input, same picture.
  */
 export function placeBusinesses(businesses: readonly SiloBusiness[]): PlacedBusiness[] {
+  const groups = new Map<string, SiloBusiness[]>()
+  for (const b of businesses) {
+    const key = `${b.familyIndex}:${b.floorIndex}`
+    const g = groups.get(key)
+    if (g) g.push(b)
+    else groups.set(key, [b])
+  }
   const placed: PlacedBusiness[] = []
-  const familyCount = CATEGORY_FAMILIES.length
-  const slice = (Math.PI * 2) / familyCount
-  for (let f = 1; f < SILO_FLOORS.length; f++) {
-    const onFloor = businesses.filter((b) => b.floorIndex === f)
-    if (onFloor.length === 0) continue
-    const home = onFloor.map((b) => {
-      const rnd = mulberry32(hashString(b.id))
-      const ang = b.familyIndex * slice + slice * (0.12 + rnd() * 0.76)
-      const r = SILO_RADIUS * (0.35 + rnd() * 0.55)
-      return { x: Math.cos(ang) * r, z: Math.sin(ang) * r }
-    })
-    const spread = spreadPoints(home, DOT_MIN_DISTANCE)
-    onFloor.forEach((b, i) => {
-      placed.push({ id: b.id, x: spread[i]!.x, y: floorY(f), z: spread[i]!.z })
+  for (const group of groups.values()) {
+    // A stable order inside the cluster, so a new receipt never reshuffles it.
+    const ordered = [...group].sort((a, b) => a.id.localeCompare(b.id))
+    const n = ordered.length
+    const radius = clusterRadius(n)
+    ordered.forEach((b, j) => {
+      const rad = radius * Math.sqrt((j + 0.5) / n)
+      const ang = j * GOLDEN_ANGLE + b.familyIndex
+      const depth = (mulberry32(hashString(b.id))() - 0.5) * 0.9
+      const p = wedgePoint(b.familyIndex, b.floorIndex, rad * Math.cos(ang), rad * Math.sin(ang) * 0.85, depth)
+      placed.push({ id: b.id, ...p })
     })
   }
   return placed
+}
+
+/** Where a family's shoppers gather on the top floor; links start here. */
+export function crowdAnchor(familyIndex: number): Point3 {
+  return wedgePoint(familyIndex, 0)
+}
+
+/**
+ * A gentle curve from the crowd to a business, pulled toward the silo's axis
+ * so links bow inward instead of cutting straight across. Returns the four
+ * cubic bezier points.
+ */
+export function linkControlPoints(a: Point3, b: Point3): [Point3, Point3, Point3, Point3] {
+  const d = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z)
+  const f = 0.12 + 0.25 * Math.min(1, d / 30)
+  const at = (t: number): Point3 => ({
+    x: (a.x + (b.x - a.x) * t) * (1 - f),
+    y: a.y + (b.y - a.y) * t,
+    z: (a.z + (b.z - a.z) * t) * (1 - f),
+  })
+  return [a, at(1 / 3), at(2 / 3), b]
+}
+
+/** Camera height along the silo for a 0 (top) to 1 (bottom) scroll position. */
+export function viewForScroll(t: number): { pos: Point3; look: Point3 } {
+  const y = 46 - t * 82
+  return { pos: { x: 0, y, z: 6 }, look: { x: 0, y: y - 26, z: -6 } }
+}
+
+/** The scroll position that frames a floor. */
+export function scrollForFloor(floorIndex: number): number {
+  const y = SILO.y[floorIndex] ?? 0
+  return Math.min(1, Math.max(0, (33 - y) / 82))
 }
 
 // ─── Pulses ──────────────────────────────────────────────────────────────────
