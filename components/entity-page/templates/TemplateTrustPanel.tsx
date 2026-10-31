@@ -6,7 +6,7 @@ import type { EntityPageData } from '@/types'
 const TIER_DESCRIPTIONS: Record<EntityPageData['trust_tier'], string> = {
   unclaimed:
     'This listing has not yet been claimed by its owner. Information may be incomplete or outdated.',
-  claimed: 'The owner of this listing has verified their identity and claimed this page.',
+  claimed: 'The owner manages this page.',
   verified: 'This business has been reviewed and verified by The BLACQList team.',
   certified:
     'This business has met all certification standards set by The BLACQList, including documentation review and community standing.',

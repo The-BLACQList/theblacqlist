@@ -9,15 +9,19 @@ import {
   Section,
   Text,
 } from '@react-email/components'
+import { OWNER_CAN_POST_JOB_LINE, OWNER_MANAGES_LINE } from '@/lib/listings/ownerLine'
 
 interface ClaimApprovedEmailProps {
   listingName: string
   siteUrl?: string
+  /** Jobs is open at send time; adds the post-a-job line and button (ticket 158). */
+  postJobOpen?: boolean
 }
 
 export function ClaimApprovedEmail({
   listingName,
   siteUrl = 'https://theblacqlist.com',
+  postJobOpen = false,
 }: ClaimApprovedEmailProps) {
   return (
     <Html lang="en">
@@ -35,6 +39,10 @@ export function ClaimApprovedEmail({
             <Text style={eyebrow}>Claim Approved</Text>
             <Text style={heading}>Your claim for {listingName} is approved.</Text>
             <Text style={paragraph}>
+              <strong>{OWNER_MANAGES_LINE}</strong>
+              {postJobOpen && ` ${OWNER_CAN_POST_JOB_LINE}`}
+            </Text>
+            <Text style={paragraph}>
               Congratulations. You now have owner access to your BLACQList page. You can update
               your business details, add photos, manage your services, and respond to community
               reviews.
@@ -48,6 +56,14 @@ export function ClaimApprovedEmail({
             <Button href={`${siteUrl}/dashboard`} style={button}>
               Go to Your Dashboard
             </Button>
+            {postJobOpen && (
+              <>
+                {' '}
+                <Button href={`${siteUrl}/add-job`} style={secondaryButton}>
+                  Post a job
+                </Button>
+              </>
+            )}
 
             <Hr style={divider} />
 
@@ -141,6 +157,19 @@ const button: React.CSSProperties = {
   fontWeight: '700',
   margin: '8px 0 24px',
   padding: '12px 28px',
+  textDecoration: 'none',
+}
+
+const secondaryButton: React.CSSProperties = {
+  backgroundColor: '#FFFFFF',
+  border: '2px solid #8F6600',
+  borderRadius: '100px',
+  color: '#8F6600',
+  display: 'inline-block',
+  fontSize: '14px',
+  fontWeight: '700',
+  margin: '0 0 24px',
+  padding: '10px 26px',
   textDecoration: 'none',
 }
 

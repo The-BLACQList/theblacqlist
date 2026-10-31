@@ -71,3 +71,35 @@ describe('house style', () => {
     expect(html).not.toContain('theblacqlist.com/dashboard')
   })
 })
+
+describe('owner-submitted pages (ticket 158)', () => {
+  it('says the owner manages the page', async () => {
+    const html = await render(
+      EntityApprovedEmail({ listingName: LISTING, listingUrl: LISTING_URL, ownerManages: true })
+    )
+    expect(html).toContain('You manage this page.')
+    expect(html).not.toContain('/add-job')
+  })
+
+  it('adds the post-a-job line and button when Jobs is open', async () => {
+    const html = await render(
+      EntityApprovedEmail({
+        listingName: LISTING,
+        listingUrl: LISTING_URL,
+        ownerManages: true,
+        postJobOpen: true,
+      })
+    )
+    expect(html).toContain('You can now post a job for it.')
+    expect(html).toContain('href="https://theblacqlist.com/add-job"')
+    expect(html).toContain('Post a job')
+  })
+
+  it('stays silent about ownership for a staff-seeded approval', async () => {
+    const html = await render(
+      EntityApprovedEmail({ listingName: LISTING, listingUrl: LISTING_URL, postJobOpen: true })
+    )
+    expect(html).not.toContain('You manage this page.')
+    expect(html).not.toContain('/add-job')
+  })
+})

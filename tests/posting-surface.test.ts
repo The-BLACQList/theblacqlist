@@ -36,6 +36,9 @@ const footerSrc = read('components/nav/public-footer.tsx')
 // Anchored to line start so a comment explaining the absence cannot match.
 const REVALIDATE_DECLARATION = /^\s*export\s+const\s+revalidate/m
 const FLAG_READ = "isFeatureEnabled('postingSubmissions')"
+// Ticket 158: the owner job invite goes through one shared helper. It counts as
+// a flag read only because the helper itself reads the flag (pinned below).
+const GATE_READS = [FLAG_READ, 'postJobInviteOpen()']
 
 /** Every .ts/.tsx under app/ and components/, excluding the two form pages. */
 function sourceFiles(): string[] {
@@ -119,9 +122,13 @@ describe('links into the submission forms', () => {
     // file rendering the href with no flag read anywhere is not.
     const ungated = sourceFiles().filter((f) => {
       const src = read(f)
-      return /href="\/add-(event|job)"/.test(src) && !src.includes(FLAG_READ)
+      return /href="\/add-(event|job)"/.test(src) && !GATE_READS.some((g) => src.includes(g))
     })
     expect(ungated).toEqual([])
+  })
+
+  it('keeps the shared post-job invite helper gated on the flag', () => {
+    expect(read('lib/listings/ownerLine.ts')).toContain(FLAG_READ)
   })
 
   it('offers both links from the footer when posting is on', () => {

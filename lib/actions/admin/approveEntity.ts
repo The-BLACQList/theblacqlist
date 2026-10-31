@@ -8,6 +8,11 @@ import { EntityApprovedEmail } from '@/lib/email/templates/entity-approved'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { isFeatureEnabled } from '@/lib/env'
 import { applyJobGoLiveDefaults } from '@/lib/services/listings/jobGoLive'
+import {
+  isOwnerSubmittedUnclaimed,
+  OWNER_SUBMITTED_CLAIM_NOTE,
+  postJobInviteOpen,
+} from '@/lib/listings/ownerLine'
 
 export type ApproveEntityState =
   | { success: true; listingId: string; listingName: string }
@@ -31,7 +36,7 @@ export async function approveEntityAction(
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, status, trust_tier, slug, entity_type, submitted_by, published_at, cities!listings_city_id_fkey(slug)'
+      'id, name, status, trust_tier, slug, entity_type, submitted_by, published_at, source, ownership_attested, owner_user_id, cities!listings_city_id_fkey(slug)'
     )
     .eq('id', listingId)
     .maybeSingle()
@@ -40,6 +45,11 @@ export async function approveEntityAction(
   if (listing.status === 'published') return { error: 'This listing is already published.' }
   if (listing.status === 'rejected')
     return { error: 'This listing has been rejected. Restore it before approving.' }
+
+  // Ticket 158: the owner added this page and attested they own it, and this
+  // review is the same check a claim gets, so it goes live as Claimed.
+  const ownerPath = isOwnerSubmittedUnclaimed(listing)
+  const trustTierAfter = ownerPath ? 'claimed' : listing.trust_tier
 
   const approvedAt = new Date()
   const now = approvedAt.toISOString()
@@ -50,10 +60,53 @@ export async function approveEntityAction(
       published_at: now,
       moderation_notes: notes,
       last_admin_updated_at: now,
+      ...(ownerPath ? { trust_tier: 'claimed' } : {}),
     })
     .eq('id', listingId)
 
   if (updateError) return { error: 'Failed to approve listing. Please try again.' }
+
+  // The approved claim row starts the 90-day Certified clock (it reads
+  // claims.reviewed_at), and the role row matches what approveClaim grants.
+  // Neither undoes the publish if it fails: the error goes in the audit row so
+  // the founder can add it by hand.
+  let ownerClaimId: string | null = null
+  const ownerPathErrors: string[] = []
+  const ownerId = listing.owner_user_id
+  if (ownerPath && ownerId) {
+    const { data: claimRow, error: claimError } = await serviceClient
+      .from('claims')
+      .insert({
+        listing_id: listingId,
+        claimant_user_id: ownerId,
+        status: 'approved',
+        role_at_business: 'owner',
+        reviewed_at: now,
+        reviewed_by: admin.user.id,
+        notes: OWNER_SUBMITTED_CLAIM_NOTE,
+      })
+      .select('id')
+      .single()
+    if (claimError || !claimRow) {
+      ownerPathErrors.push(`claim insert: ${claimError?.message ?? 'no row returned'}`)
+    } else {
+      ownerClaimId = claimRow.id
+    }
+
+    const { error: roleError } = await serviceClient.from('user_roles').insert({
+      user_id: ownerId,
+      role: 'owner',
+      listing_id: listingId,
+      granted_by: admin.user.id,
+    })
+    // 23505: the owner already has this role (unique user_id, role, listing_id).
+    if (roleError && roleError.code !== '23505') {
+      ownerPathErrors.push(`owner role insert: ${roleError.message}`)
+    }
+    if (ownerPathErrors.length > 0) {
+      console.error('[approveEntity] owner path incomplete', { listingId, errors: ownerPathErrors })
+    }
+  }
 
   // Ticket 155: a job's 30 days start when it goes live, not at submit. Sets a
   // default closing date when the poster left it blank and lines the paid
@@ -81,7 +134,12 @@ export async function approveEntityAction(
     targetTable: 'listings',
     targetId: listingId,
     beforeState: { status: listing.status, trust_tier: listing.trust_tier },
-    afterState: { status: 'published' },
+    afterState: {
+      status: 'published',
+      trust_tier: trustTierAfter,
+      ...(ownerPath ? { claim_id: ownerClaimId } : {}),
+      ...(ownerPathErrors.length > 0 ? { owner_path_errors: ownerPathErrors } : {}),
+    },
   })
 
   // The pending count lives in the admin layout (sidebar pills) and the
@@ -112,7 +170,13 @@ export async function approveEntityAction(
       await sendEmail({
         to: submitterEmail,
         subject: `${listing.name} is live on The BLACQList`,
-        react: EntityApprovedEmail({ listingName: listing.name, listingUrl, siteUrl }),
+        react: EntityApprovedEmail({
+          listingName: listing.name,
+          listingUrl,
+          siteUrl,
+          ownerManages: ownerPath,
+          postJobOpen: ownerPath && postJobInviteOpen(),
+        }),
       })
     })()
   }
