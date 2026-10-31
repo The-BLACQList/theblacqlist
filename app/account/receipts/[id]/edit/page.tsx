@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 
-export const metadata: Metadata = { title: 'Edit a Receipt' }
+export const metadata: Metadata = { title: 'Edit your receipt' }
 
 interface ListingJoin {
   id: string

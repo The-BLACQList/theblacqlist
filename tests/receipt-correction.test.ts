@@ -128,18 +128,26 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { updateReceiptSubmissionAction } from '@/lib/actions/spend/updateReceiptSubmission'
+import { PHOTO_REQUIRED_MESSAGE, isoDay } from '@/lib/spend/receipt-input'
 
 const USER_ID = '11111111-1111-4111-8111-111111111111'
 const RECEIPT_ID = '33333333-3333-4333-8333-333333333333'
 const LISTING_ID = '22222222-2222-4222-8222-222222222222'
 const EXISTING_PATH = `${USER_ID}/1786000000000-abc.jpg`
 
+/** Three days ago, UTC, so the 90-day window never ages the fixture out. */
+const PURCHASE_DATE = (() => {
+  const d = new Date()
+  d.setUTCDate(d.getUTCDate() - 3)
+  return isoDay(d)
+})()
+
 function form(overrides: Record<string, string | File> = {}): FormData {
   const fd = new FormData()
   fd.set('receipt_id', RECEIPT_ID)
   fd.set('raw_business_name', "Sylvia's Kitchen")
   fd.set('amount_dollars', '42.50')
-  fd.set('purchase_date', '2026-08-01')
+  fd.set('purchase_date', PURCHASE_DATE)
   for (const [k, v] of Object.entries(overrides)) {
     if (v === '') fd.delete(k)
     else fd.set(k, v)
@@ -220,7 +228,7 @@ describe('the pending-only restriction', () => {
   it('refuses a rejected receipt and points at a new submission', async () => {
     h.state.existing = { id: RECEIPT_ID, status: 'rejected', file_path: null }
     const res = await updateReceiptSubmissionAction(null, form())
-    expect(res).toMatchObject({ error: expect.stringContaining('Submit a new one') })
+    expect(res).toMatchObject({ error: expect.stringContaining('Add a new one') })
     expect(h.calls.updated).toBeNull()
   })
 
@@ -254,7 +262,7 @@ describe('field parity with the create path', () => {
     await updateReceiptSubmissionAction(null, form({ amount_dollars: '19.99' }))
     expect(h.calls.updated).toMatchObject({
       amount_cents: 1999,
-      purchase_date: '2026-08-01',
+      purchase_date: PURCHASE_DATE,
       raw_business_name: "Sylvia's Kitchen",
     })
   })
@@ -270,6 +278,21 @@ describe('the photo', () => {
     await updateReceiptSubmissionAction(null, form())
     expect(h.calls.uploadBucket).toBeNull()
     expect(h.calls.updated).toMatchObject({ file_path: EXISTING_PATH })
+  })
+
+  it('refuses an edit that would leave a receipt with no photo', async () => {
+    // A receipt from before photos were required has no stored path.
+    h.state.existing = { id: RECEIPT_ID, status: 'pending_review', file_path: null }
+    const res = await updateReceiptSubmissionAction(null, form())
+    expect(res).toMatchObject({ fieldErrors: { receipt_file: PHOTO_REQUIRED_MESSAGE } })
+    expect(h.calls.updated).toBeNull()
+  })
+
+  it('accepts that edit once a photo is attached', async () => {
+    h.state.existing = { id: RECEIPT_ID, status: 'pending_review', file_path: null }
+    const res = await updateReceiptSubmissionAction(null, form({ receipt_file: photo() }))
+    expect(res).toMatchObject({ success: true })
+    expect(h.calls.updated?.file_path).toBe(h.calls.uploadPath)
   })
 
   it('replaces the photo when a new one is attached', async () => {

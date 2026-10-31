@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { isFeatureEnabled } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
+  hasReceiptPhoto,
+  PHOTO_REQUIRED_MESSAGE,
   parseReceiptFields,
   removeReceiptFile,
   uploadReceiptFile,
@@ -26,12 +28,14 @@ export async function createReceiptSubmissionAction(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { error: 'You must be signed in to submit a receipt.' }
+  if (!user) return { error: 'You must be signed in to add a receipt.' }
 
   const idempotencyKey = formData.get('client_idempotency_key')?.toString().trim() ?? ''
   const fileField = formData.get('receipt_file')
 
-  const parsed = parseReceiptFields(formData)
+  // A new receipt needs its photo (ticket 162): without one the review has
+  // nothing to check the amount and date against.
+  const parsed = parseReceiptFields(formData, { requirePhoto: true })
 
   if (!idempotencyKey) {
     return { error: 'Invalid submission. Please refresh and try again.' }
@@ -44,15 +48,19 @@ export async function createReceiptSubmissionAction(
   const fields = parsed.fields
   const serviceClient = createServiceClient()
 
-  // Handle optional file upload
-  let filePath: string | null = null
-  if (fileField instanceof File && fileField.size > 0) {
-    const uploaded = await uploadReceiptFile(serviceClient.storage, user.id, fileField)
-    if (!uploaded.ok) {
-      return { error: uploaded.error, fieldErrors: uploaded.fieldErrors }
+  // parseReceiptFields has already refused a missing photo; the guard narrows
+  // the type and keeps a direct call from inserting a photo-less row.
+  if (!hasReceiptPhoto(fileField)) {
+    return {
+      error: 'Please correct the errors below.',
+      fieldErrors: { receipt_file: PHOTO_REQUIRED_MESSAGE },
     }
-    filePath = uploaded.path
   }
+  const uploaded = await uploadReceiptFile(serviceClient.storage, user.id, fileField)
+  if (!uploaded.ok) {
+    return { error: uploaded.error, fieldErrors: uploaded.fieldErrors }
+  }
+  const filePath = uploaded.path
 
   const { data, error } = await serviceClient
     .from('receipt_uploads')
@@ -80,9 +88,7 @@ export async function createReceiptSubmissionAction(
     // The duplicate branch below needs this as much as the unexpected ones: the
     // first submission stored its own distinct path (every path carries a fresh
     // UUID), so removing this one cannot detach the receipt that did save.
-    if (filePath !== null) {
-      await removeReceiptFile(serviceClient.storage, filePath)
-    }
+    await removeReceiptFile(serviceClient.storage, filePath)
 
     if (error.code === '23505') {
       return { error: 'This receipt has already been submitted.' }
@@ -93,13 +99,12 @@ export async function createReceiptSubmissionAction(
     console.error('[createReceiptSubmission] insert failed:', {
       userId: user.id,
       hasListingId: fields.listingId !== null,
-      hasFilePath: filePath !== null,
       code: error.code,
       message: error.message,
       details: error.details,
       hint: error.hint,
     })
-    return { error: 'Failed to submit receipt. Please try again.' }
+    return { error: "We couldn't add your receipt. Please try again." }
   }
 
   revalidatePath('/account/receipts')

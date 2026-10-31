@@ -91,16 +91,35 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
+import {
+  MAX_RECEIPT_AGE_DAYS,
+  MAX_RECEIPT_AMOUNT_CENTS,
+  PHOTO_REQUIRED_MESSAGE,
+  isoDay,
+} from '@/lib/spend/receipt-input'
 
 const USER_ID = '11111111-1111-4111-8111-111111111111'
 const LISTING_ID = '22222222-2222-4222-8222-222222222222'
+
+function photo(type = 'image/jpeg', name = 'receipt.jpg'): File {
+  return new File([new Uint8Array([1, 2, 3])], name, { type })
+}
+
+/** A UTC day relative to today, so the 90-day window never ages a fixture out. */
+function daysFromToday(days: number): string {
+  const d = new Date()
+  d.setUTCDate(d.getUTCDate() + days)
+  return isoDay(d)
+}
 
 function form(overrides: Record<string, string | File> = {}): FormData {
   const fd = new FormData()
   fd.set('raw_business_name', "Sylvia's Kitchen")
   fd.set('amount_dollars', '42.50')
-  fd.set('purchase_date', '2026-08-01')
+  fd.set('purchase_date', daysFromToday(-3))
   fd.set('client_idempotency_key', 'idem-1')
+  // A new receipt needs a photo (ticket 162), so every fixture carries one.
+  fd.set('receipt_file', photo())
   for (const [k, v] of Object.entries(overrides)) {
     if (v === '') fd.delete(k)
     else fd.set(k, v)
@@ -108,9 +127,6 @@ function form(overrides: Record<string, string | File> = {}): FormData {
   return fd
 }
 
-function photo(type = 'image/jpeg', name = 'receipt.jpg'): File {
-  return new File([new Uint8Array([1, 2, 3])], name, { type })
-}
 
 let errorSpy: ReturnType<typeof vi.spyOn>
 
@@ -185,6 +201,76 @@ describe('auth and validation', () => {
   })
 })
 
+describe('amount and date limits', () => {
+  it('keeps the limits as named constants', () => {
+    expect(MAX_RECEIPT_AMOUNT_CENTS).toBe(1_000_000)
+    expect(MAX_RECEIPT_AGE_DAYS).toBe(90)
+  })
+
+  it('accepts exactly $10,000', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ amount_dollars: '10000' }))
+    expect(res).toMatchObject({ success: true })
+    expect(h.calls.inserted).toMatchObject({ amount_cents: 1_000_000 })
+  })
+
+  it.each(['10000.01', '25000'])('refuses %s, over $10,000', async (amount) => {
+    const res = await createReceiptSubmissionAction(null, form({ amount_dollars: amount }))
+    expect(res).toMatchObject({
+      fieldErrors: { amount_dollars: 'Enter an amount of $10,000 or less.' },
+    })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it('refuses an amount that rounds to $0', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ amount_dollars: '0.004' }))
+    expect(res).toMatchObject({ fieldErrors: { amount_dollars: expect.any(String) } })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it('accepts today', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ purchase_date: daysFromToday(0) }))
+    expect(res).toMatchObject({ success: true })
+  })
+
+  it('allows one day ahead, for a shopper whose local day is ahead of UTC', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ purchase_date: daysFromToday(1) }))
+    expect(res).toMatchObject({ success: true })
+  })
+
+  it('refuses a date further in the future', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ purchase_date: daysFromToday(2) }))
+    expect(res).toMatchObject({
+      fieldErrors: { purchase_date: "The date can't be in the future." },
+    })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it('allows one day of slack past 90 days, for a shopper behind UTC', async () => {
+    const res = await createReceiptSubmissionAction(
+      null,
+      form({ purchase_date: daysFromToday(-(MAX_RECEIPT_AGE_DAYS + 1)) })
+    )
+    expect(res).toMatchObject({ success: true })
+  })
+
+  it('refuses a receipt older than that', async () => {
+    const res = await createReceiptSubmissionAction(
+      null,
+      form({ purchase_date: daysFromToday(-(MAX_RECEIPT_AGE_DAYS + 2)) })
+    )
+    expect(res).toMatchObject({
+      fieldErrors: { purchase_date: 'Add receipts from the last 90 days.' },
+    })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it.each(['2026-02-30', 'not-a-date'])('refuses %s as a date', async (date) => {
+    const res = await createReceiptSubmissionAction(null, form({ purchase_date: date }))
+    expect(res).toMatchObject({ fieldErrors: { purchase_date: expect.any(String) } })
+    expect(h.calls.inserted).toBeNull()
+  })
+})
+
 describe('file upload', () => {
   it('uploads to receipt-uploads — the only receipt bucket that exists', async () => {
     await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
@@ -233,11 +319,26 @@ describe('file upload', () => {
     expect(errorSpy).toHaveBeenCalled()
   })
 
-  it('submits without a file when none is attached', async () => {
-    const res = await createReceiptSubmissionAction(null, form())
-    expect(res).toMatchObject({ success: true })
+  it('refuses a new receipt with no photo, before storage or the insert', async () => {
+    const res = await createReceiptSubmissionAction(null, form({ receipt_file: '' }))
+    expect(res).toMatchObject({ fieldErrors: { receipt_file: PHOTO_REQUIRED_MESSAGE } })
     expect(h.calls.uploadBucket).toBeNull()
-    expect(h.calls.inserted).toMatchObject({ file_path: null })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it('treats an empty file part as no photo', async () => {
+    // A browser sends a zero-byte part for an untouched file input.
+    const empty = new File([], '', { type: 'application/octet-stream' })
+    const res = await createReceiptSubmissionAction(null, form({ receipt_file: empty }))
+    expect(res).toMatchObject({ fieldErrors: { receipt_file: PHOTO_REQUIRED_MESSAGE } })
+    expect(h.calls.inserted).toBeNull()
+  })
+
+  it('names the size limit for a file over 10 MB', async () => {
+    const big = new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'big.jpg', { type: 'image/jpeg' })
+    const res = await createReceiptSubmissionAction(null, form({ receipt_file: big }))
+    expect(res).toMatchObject({ fieldErrors: { receipt_file: 'File must be under 10 MB.' } })
+    expect(h.calls.uploadBucket).toBeNull()
   })
 })
 
@@ -245,7 +346,7 @@ describe('insert failures', () => {
   it('logs the Postgres error so a handled return is not the only evidence', async () => {
     h.state.insertError = { code: '42P01', message: 'relation "receipt_uploads" does not exist' }
     const res = await createReceiptSubmissionAction(null, form())
-    expect(res).toMatchObject({ error: 'Failed to submit receipt. Please try again.' })
+    expect(res).toMatchObject({ error: "We couldn't add your receipt. Please try again." })
     expect(errorSpy).toHaveBeenCalledWith(
       '[createReceiptSubmission] insert failed:',
       expect.objectContaining({ code: '42P01' })
@@ -298,19 +399,13 @@ describe('storage cleanup', () => {
     expect(h.calls.removed).toEqual([])
   })
 
-  it('removes nothing when no photo was attached', async () => {
-    h.state.insertError = { code: '42P01', message: 'relation does not exist' }
-    await createReceiptSubmissionAction(null, form())
-    expect(h.calls.removed).toEqual([])
-  })
-
   it('still reports the insert failure when the removal also fails', async () => {
     // Cleanup is compensation, not the user's business. A failed removal must
     // not change the message or replace it with a storage error.
     h.state.insertError = { code: '42P01', message: 'relation does not exist' }
     h.state.removeError = { message: 'Object not found' }
     const res = await createReceiptSubmissionAction(null, form({ receipt_file: photo() }))
-    expect(res).toMatchObject({ error: 'Failed to submit receipt. Please try again.' })
+    expect(res).toMatchObject({ error: "We couldn't add your receipt. Please try again." })
   })
 })
 

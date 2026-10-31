@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { isFeatureEnabled } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
+  hasReceiptPhoto,
+  PHOTO_REQUIRED_MESSAGE,
   parseReceiptFields,
   removeReceiptFile,
   uploadReceiptFile,
@@ -74,7 +76,16 @@ export async function updateReceiptSubmissionAction(
       error:
         existing.status === 'approved'
           ? 'This receipt has been approved and can no longer be edited.'
-          : 'This receipt has been reviewed and can no longer be edited. Submit a new one instead.',
+          : 'This receipt has been reviewed and can no longer be edited. Add a new one instead.',
+    }
+  }
+
+  // Every receipt needs a photo (ticket 162). A receipt saved before that rule
+  // may have none; its correction is where the photo gets added.
+  if (!existing.file_path && !hasReceiptPhoto(fileField)) {
+    return {
+      error: 'Please correct the errors below.',
+      fieldErrors: { receipt_file: PHOTO_REQUIRED_MESSAGE },
     }
   }
 
@@ -89,7 +100,7 @@ export async function updateReceiptSubmissionAction(
   // receipt image rather than an orphan.
   let filePath = existing.file_path
   let uploadedPath: string | null = null
-  if (fileField instanceof File && fileField.size > 0) {
+  if (hasReceiptPhoto(fileField)) {
     const uploaded = await uploadReceiptFile(serviceClient.storage, user.id, fileField)
     if (!uploaded.ok) {
       return { error: uploaded.error, fieldErrors: uploaded.fieldErrors }

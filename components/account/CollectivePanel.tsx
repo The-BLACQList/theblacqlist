@@ -58,7 +58,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
               You&apos;re not in The Collective yet.
             </h2>
             <p className="font-body text-base leading-relaxed text-charcoal max-w-[52ch]">
-              Track a receipt from a business on the list. Once it&apos;s approved, your spend
+              Add a receipt from a business on the list. Once it&apos;s approved, your spend
               shows up here and joins everyone else&apos;s on the map.
             </p>
           </>
@@ -96,7 +96,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
               href="/account/receipts/new"
               className={`${buttonBase} bg-ink text-off-white hover:bg-brand-black`}
             >
-              Track a receipt
+              Add a receipt
             </Link>
           ) : (
             <>
@@ -110,7 +110,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
                 href="/account/receipts/new"
                 className={`${buttonBase} border border-ink text-ink hover:bg-ink/5`}
               >
-                Track a receipt
+                Add a receipt
               </Link>
             </>
           )}
