@@ -29,7 +29,7 @@
 //
 // Parsed from source: vitest runs environment: 'node' with no jsdom and both
 // pages are Server Components — the technique tests/aggregate-privacy.test.ts,
-// tests/spend-vocabulary.test.ts and tests/flow-map-filters.test.ts use.
+// tests/spend-vocabulary.test.ts and tests/flow-map-page.test.ts use.
 //
 // Non-vacuity: unlike a suite written alongside brand-new code, both pages
 // predate this change, so the honest check is available and was run.
