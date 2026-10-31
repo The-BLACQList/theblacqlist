@@ -23,6 +23,7 @@ import {
   Section,
   Text,
 } from '@react-email/components'
+import { OWNER_CAN_POST_JOB_LINE, OWNER_MANAGES_LINE } from '@/lib/listings/ownerLine'
 
 interface EntityApprovedEmailProps {
   listingName: string
@@ -34,13 +35,20 @@ interface EntityApprovedEmailProps {
    */
   listingUrl?: string | null
   siteUrl?: string
+  /** The owner added this page themselves and it went live as Claimed (ticket 158). */
+  ownerManages?: boolean
+  /** Jobs is open at send time; adds the post-a-job line and button. */
+  postJobOpen?: boolean
 }
 
 export function EntityApprovedEmail({
   listingName,
   listingUrl = null,
   siteUrl = 'https://theblacqlist.com',
+  ownerManages = false,
+  postJobOpen = false,
 }: EntityApprovedEmailProps) {
+  const showPostJob = ownerManages && postJobOpen
   return (
     <Html lang="en">
       <Head />
@@ -60,6 +68,12 @@ export function EntityApprovedEmail({
               Your submission has been reviewed and published. People can now find {listingName}{' '}
               through search and browsing on The BLACQList.
             </Text>
+            {ownerManages && (
+              <Text style={paragraph}>
+                <strong>{OWNER_MANAGES_LINE}</strong>
+                {showPostJob && ` ${OWNER_CAN_POST_JOB_LINE}`}
+              </Text>
+            )}
             <Text style={paragraph}>
               The site is still in private preview, so you may need to be signed in to see your
               page. Once we open to the public, anyone with the link will be able to view it.
@@ -68,6 +82,14 @@ export function EntityApprovedEmail({
             <Button href={listingUrl ?? `${siteUrl}/dashboard`} style={button}>
               {listingUrl ? 'View your listing' : 'Go to your dashboard'}
             </Button>
+            {showPostJob && (
+              <>
+                {' '}
+                <Button href={`${siteUrl}/add-job`} style={secondaryButton}>
+                  Post a job
+                </Button>
+              </>
+            )}
 
             <Hr style={divider} />
 
@@ -165,6 +187,19 @@ const button: React.CSSProperties = {
   fontWeight: '700',
   margin: '8px 0 24px',
   padding: '12px 28px',
+  textDecoration: 'none',
+}
+
+const secondaryButton: React.CSSProperties = {
+  backgroundColor: '#FFFFFF',
+  border: '2px solid #8F6600',
+  borderRadius: '100px',
+  color: '#8F6600',
+  display: 'inline-block',
+  fontSize: '14px',
+  fontWeight: '700',
+  margin: '0 0 24px',
+  padding: '10px 26px',
   textDecoration: 'none',
 }
 

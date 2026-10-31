@@ -22,6 +22,7 @@ import { PageFinishView } from '@/components/listings/PageFinishView'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
 import { growthIsOpen } from '@/lib/marketplace/entitlements'
+import { OWNER_MANAGES_LINE, postJobInviteOpen } from '@/lib/listings/ownerLine'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -287,6 +288,10 @@ export default async function EditPage({ params }: Props) {
               : {},
         }
   const cityB = listing.cities as { slug: string; name: string } | null
+  // Ticket 158: a claimed (or higher) page says so in the same words the
+  // approval emails use. Jobs are posted from a live page only.
+  const ownerManages = listing.trust_tier !== 'unclaimed'
+  const showPostJob = ownerManages && listing.status === 'published' && postJobInviteOpen()
   return (
     <div className="max-w-[1100px] space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
@@ -306,6 +311,22 @@ export default async function EditPage({ params }: Props) {
             </span>
             {cityB && <p className="font-body text-xs text-charcoal-soft">{cityB.name}</p>}
           </div>
+          {ownerManages && (
+            <p className="mt-2 font-body text-sm text-charcoal">
+              {OWNER_MANAGES_LINE}
+              {showPostJob && (
+                <>
+                  {' '}
+                  <Link
+                    href="/add-job"
+                    className="font-subhead font-semibold text-brand-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+                  >
+                    Post a job
+                  </Link>
+                </>
+              )}
+            </p>
+          )}
         </div>
         {data.publicUrl && (
           <Link

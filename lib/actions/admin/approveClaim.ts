@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
 import { ClaimApprovedEmail } from '@/lib/email/templates/claim-approved'
+import { postJobInviteOpen } from '@/lib/listings/ownerLine'
 
 export type ApproveClaimState =
   | { success: true; claimId: string; listingId: string }
@@ -149,7 +150,7 @@ export async function approveClaimAction(
       await sendEmail({
         to: claimantEmail,
         subject: `Your claim for ${listing.name} has been approved`,
-        react: ClaimApprovedEmail({ listingName: listing.name }),
+        react: ClaimApprovedEmail({ listingName: listing.name, postJobOpen: postJobInviteOpen() }),
       })
     }
   })()
