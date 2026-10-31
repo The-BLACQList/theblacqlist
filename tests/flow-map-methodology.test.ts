@@ -165,7 +165,7 @@ describe('section 8 — the limitations a tidy-up would quietly delete', () => {
   it('still discloses that the opt-out closes at approval', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain('The opt-out can be changed while a receipt is waiting for review')
-    expect(copy).toContain('for as long as that receipt is still pending')
+    expect(copy).toContain('for as long as that receipt is still waiting or needs a fix')
     expect(copy).toContain('spend that has already been counted')
   })
 
@@ -185,7 +185,7 @@ describe('the stated opt-out window is coupled to the guard that enforces it', (
     expect(action).toContain('aggregate_opt_out')
     // Read-time guard and write-time re-assertion. Either one alone is a race.
     expect(action).toContain("existing.status !== 'pending_review'")
-    expect(action).toContain(".eq('status', 'pending_review')")
+    expect(action).toContain(".eq('status', existing.status)")
   })
 
   it('locks at approval with a message that matches what the page promises', () => {

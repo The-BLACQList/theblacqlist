@@ -265,7 +265,7 @@ export default async function AccountOverviewPage() {
       label: 'Spent, approved receipts only',
       href: spend && spend.totalCents === 0 ? '/account/receipts/new' : '/account/spending',
       gold: true,
-      cta: spend && spend.totalCents === 0 ? 'Track a receipt' : undefined,
+      cta: spend && spend.totalCents === 0 ? 'Add a receipt' : undefined,
     },
   ]
   const stats = collectiveSoon ? allStats.slice(0, 2) : allStats

@@ -132,7 +132,7 @@ export default async function MySpendingPage() {
             className="inline-flex items-center gap-2 min-h-11 h-11 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
           >
             <Plus className="size-4" aria-hidden="true" />
-            Add receipt
+            Add a receipt
           </Link>
         </div>
 
@@ -167,15 +167,15 @@ export default async function MySpendingPage() {
                   No spending tracked yet
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
-                  Submit a receipt from a Black-owned business and it shows up here — by month and
-                  by category — once it&rsquo;s verified.
+                  Add a receipt from a Black-owned business and it shows up here, by month and
+                  by category, once it&rsquo;s verified.
                 </p>
                 <Link
                   href="/account/receipts/new"
                   className="inline-flex items-center gap-2 min-h-11 h-11 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
                 >
                   <Plus className="size-4" aria-hidden="true" />
-                  Submit your first receipt
+                  Add your first receipt
                 </Link>
               </>
             )}

@@ -77,7 +77,8 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">A reviewer approves or rejects it.</span> A rejected
-                receipt contributes nothing, permanently. A receipt still waiting for review
+                receipt contributes nothing unless you fix it and send it back for review, where
+                it starts over. A receipt still waiting for review
                 contributes nothing either.{' '}
                 <span className="font-semibold">
                   Every public figure here is a figure about approved receipts only.
@@ -273,7 +274,7 @@ export default function FlowMapMethodologyPage() {
                 is approved.
               </span>{' '}
               It is a checkbox on the receipt form, and you can go back and change your mind from
-              Account → Receipts for as long as that receipt is still pending. Once a reviewer
+              Account → Receipts for as long as that receipt is still waiting or needs a fix. Once a reviewer
               approves it, the receipt is locked, because its amount has already been folded into
               the totals and pulling it back out is a deliberate recalculation rather than something
               a form should trigger. There is no single account-wide switch, and no way to withdraw
