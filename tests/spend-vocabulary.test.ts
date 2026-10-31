@@ -35,6 +35,10 @@ function read(file: string): string {
 const FIGURE_SURFACES = [
   'app/(public)/flow-map/page.tsx',
   'components/flow-map/FlowSummaryCards.tsx',
+  'components/flow-map/silo/SiloExperience.tsx',
+  'components/flow-map/silo/SiloPanels.tsx',
+  'components/flow-map/silo/SiloList.tsx',
+  'lib/spend/silo-layout.ts',
   'components/home/ImpactBand.tsx',
 ] as const
 
@@ -46,9 +50,7 @@ describe('community-spend vocabulary', () => {
       // Strip comments before asserting. The explanatory comments in these
       // files necessarily contain the word — that is the point of them, and a
       // guard that forbade the explanation would delete its own rationale.
-      const withoutComments = source
-        .replace(/\/\*[\s\S]*?\*\//g, '')
-        .replace(/^\s*\/\/.*$/gm, '')
+      const withoutComments = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
 
       expect(withoutComments, `${file} must not label a figure "circulated"`).not.toMatch(
         /circulat/i
