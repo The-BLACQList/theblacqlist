@@ -1,12 +1,20 @@
 'use client'
 
-import { useActionState, useEffect, useState, useSyncExternalStore, useTransition } from 'react'
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle, Info, ChevronDown } from 'lucide-react'
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
 import { updateReceiptSubmissionAction } from '@/lib/actions/spend/updateReceiptSubmission'
+import { readReceiptPhoto, type ReceiptReadResult } from '@/lib/actions/spend/readReceiptPhoto'
 import {
   MAX_RECEIPT_AGE_DAYS,
   MAX_RECEIPT_AMOUNT_CENTS,
@@ -14,8 +22,10 @@ import {
   localIsoDay,
   receiptDateBounds,
 } from '@/lib/spend/receipt-input'
+import { FROM_PHOTO_LABEL, isReadablePhoto, type MatchedListing } from '@/lib/spend/receipt-read'
 import { ListingCombobox } from './ListingCombobox'
 import { ReceiptPhotoField, receiptFileProblem } from './ReceiptPhotoField'
+import { ReceiptReadOptIn } from './ReceiptReadOptIn'
 
 const inputCls =
   'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
@@ -26,12 +36,15 @@ function Field({
   id,
   label,
   hint,
+  fromPhoto,
   error,
   children,
 }: {
   id: string
   label: string
   hint?: string
+  /** Filled by the receipt read and not changed since (ticket 163). */
+  fromPhoto?: boolean
   error?: string
   children: React.ReactNode
 }) {
@@ -40,6 +53,9 @@ function Field({
       <label htmlFor={id} className="block font-subhead text-sm font-semibold text-brand-black">
         {label}
       </label>
+      {fromPhoto && (
+        <p className="font-body text-xs font-semibold text-amber">{FROM_PHOTO_LABEL}</p>
+      )}
       {hint && <p className="font-body text-xs text-charcoal-soft">{hint}</p>}
       {children}
       {error && (
@@ -72,13 +88,19 @@ export interface ReceiptFormDefaults {
   needsFix?: boolean
 }
 
+type ReadField = 'business' | 'amount' | 'date'
+const NO_FIELDS: Record<ReadField, boolean> = { business: false, amount: false, date: false }
+
 export function ReceiptSubmissionForm({
   receipt,
   prefillListing = null,
+  canReadReceipt = false,
 }: {
   receipt?: ReceiptFormDefaults
   /** From `?listing=` on the new page ("I shopped here"). Ignored in edit mode. */
   prefillListing?: ReceiptFormDefaults['listing']
+  /** FEATURE_RECEIPT_READ is on and the AI kill switch is off (ticket 163). New receipts only. */
+  canReadReceipt?: boolean
 }) {
   const isEdit = receipt !== undefined
   const [state, formAction, isPending] = useActionState<ReceiptSubmissionState, FormData>(
@@ -115,10 +137,111 @@ export function ReceiptSubmissionForm({
   const serverPhotoError = photoErrorSeenFor === state ? undefined : fieldErrors.receipt_file
   const needsPhoto = !isEdit || !receipt.hasFile
 
+  // ─── Read my receipt for me (ticket 163) ──────────────────────────────────
+  // A read only fills fields the shopper hasn't touched, and each filled field
+  // is remounted (by key) with the read value as its default, so it stays an
+  // ordinary editable input. A read that fails, or finishes after the photo
+  // changed, leaves the form exactly as it was, without a message.
+  const readEnabled = canReadReceipt && !isEdit
+  const [readOptIn, setReadOptIn] = useState(false)
+  const [reading, setReading] = useState(false)
+  const [readStatus, setReadStatus] = useState('')
+  const [matches, setMatches] = useState<MatchedListing[]>([])
+  const [fromPhoto, setFromPhoto] = useState(NO_FIELDS)
+  const [business, setBusiness] = useState<{ name: string; selected: MatchedListing | null } | null>(
+    null
+  )
+  const [amountFill, setAmountFill] = useState<string | null>(null)
+  const [dateFill, setDateFill] = useState<string | null>(null)
+  const [fillKeys, setFillKeys] = useState({ business: 0, amount: 0, date: 0 })
+  const touched = useRef({ ...NO_FIELDS })
+  const readSeq = useRef(0)
+  const lastRead = useRef<File | null>(null)
+
+  function markTouched(field: ReadField) {
+    touched.current[field] = true
+    setFromPhoto((f) => (f[field] ? { ...f, [field]: false } : f))
+    if (field === 'business') setMatches([])
+  }
+
+  function applyRead(result: Extract<ReceiptReadResult, { ok: true }>) {
+    const filled: ReadField[] = []
+    if (!touched.current.business && (result.strong || result.businessName)) {
+      setBusiness({ name: result.strong?.name ?? result.businessName ?? '', selected: result.strong })
+      setMatches(result.strong ? [] : result.matches)
+      filled.push('business')
+    }
+    if (!touched.current.amount && result.amountCents !== null) {
+      setAmountFill((result.amountCents / 100).toFixed(2))
+      filled.push('amount')
+    }
+    // The server allows a day either side of UTC; hold it to this calendar.
+    const d = result.purchaseDate
+    if (!touched.current.date && d && d >= dateBounds.min && d <= dateBounds.max) {
+      setDateFill(d)
+      filled.push('date')
+    }
+    if (filled.length === 0) {
+      setReadStatus('')
+      return
+    }
+    setFillKeys((k) => {
+      const next = { ...k }
+      for (const f of filled) next[f] += 1
+      return next
+    })
+    setFromPhoto((f) => {
+      const next = { ...f }
+      for (const field of filled) next[field] = true
+      return next
+    })
+    setReadStatus('Filled from your photo. Check each field before you add the receipt.')
+  }
+
+  async function readPhoto(next: File | null) {
+    const seq = ++readSeq.current
+    setReading(false)
+    if (!next || !isReadablePhoto(next) || receiptFileProblem(next) || lastRead.current === next) return
+    lastRead.current = next
+    setReading(true)
+    setReadStatus('Reading your receipt…')
+    const payload = new FormData()
+    payload.set('receipt_file', next)
+    let result: ReceiptReadResult = { ok: false }
+    try {
+      result = await readReceiptPhoto(payload)
+    } catch {
+      // Network or server trouble: the shopper fills the form in by hand.
+    }
+    if (seq !== readSeq.current) return
+    setReading(false)
+    if (result.ok) applyRead(result)
+    else setReadStatus('')
+  }
+
+  function changeReadOptIn(checked: boolean) {
+    setReadOptIn(checked)
+    if (checked) void readPhoto(file)
+    else {
+      readSeq.current += 1
+      setReading(false)
+      setReadStatus('')
+    }
+  }
+
+  function pickMatch(listing: MatchedListing) {
+    setBusiness({ name: listing.name, selected: listing })
+    setFillKeys((k) => ({ ...k, business: k.business + 1 }))
+    setMatches([])
+    setFromPhoto((f) => ({ ...f, business: false }))
+    touched.current.business = true
+  }
+
   function choosePhoto(next: File | null) {
     setFile(next)
     setPhotoError(next ? receiptFileProblem(next) : null)
     setPhotoErrorSeenFor(state)
+    if (readEnabled && readOptIn) void readPhoto(next)
   }
 
   // Submitted by hand rather than through `<form action>`: React resets a
@@ -170,32 +293,57 @@ export function ReceiptSubmissionForm({
         focusKey={photoFocusKey}
       />
 
+      {readEnabled && (
+        <ReceiptReadOptIn
+          checked={readOptIn}
+          onCheckedChange={changeReadOptIn}
+          reading={reading}
+          status={readStatus}
+          matches={matches}
+          onPickMatch={pickMatch}
+        />
+      )}
+
       <Field
         id="raw_business_name"
         label="Business *"
         hint="Start typing and we'll match it to a business on The BLACQList. Not there yet? Type the name anyway."
+        fromPhoto={fromPhoto.business}
         error={fieldErrors.raw_business_name}
       >
-        <ListingCombobox
-          id="raw_business_name"
-          defaultName={receipt?.rawBusinessName ?? ''}
-          defaultSelected={isEdit ? receipt.listing : prefillListing}
-          invalid={Boolean(fieldErrors.raw_business_name)}
-          className={inputCls}
-        />
+        {/* Typing, or clearing a chosen business, counts as editing it. */}
+        <div
+          onInput={() => markTouched('business')}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest('button')) markTouched('business')
+          }}
+        >
+          <ListingCombobox
+            key={`business-${fillKeys.business}`}
+            id="raw_business_name"
+            defaultName={business?.name ?? receipt?.rawBusinessName ?? ''}
+            defaultSelected={
+              business ? business.selected : isEdit ? receipt.listing : prefillListing
+            }
+            invalid={Boolean(fieldErrors.raw_business_name)}
+            className={inputCls}
+          />
+        </div>
       </Field>
 
       <Field
         id="amount_dollars"
         label="Amount *"
         hint="The total on the receipt, in dollars. Up to $10,000."
+        fromPhoto={fromPhoto.amount}
         error={fieldErrors.amount_dollars}
       >
-        <div className="relative">
+        <div className="relative" onInput={() => markTouched('amount')}>
           <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm text-charcoal-soft pointer-events-none">
             $
           </span>
           <input
+            key={`amount-${fillKeys.amount}`}
             id="amount_dollars"
             name="amount_dollars"
             type="number"
@@ -205,7 +353,9 @@ export function ReceiptSubmissionForm({
             step="0.01"
             required
             placeholder="0.00"
-            defaultValue={receipt ? (receipt.amountCents / 100).toFixed(2) : undefined}
+            defaultValue={
+              amountFill ?? (receipt ? (receipt.amountCents / 100).toFixed(2) : undefined)
+            }
             className={`${inputCls} pl-7`}
           />
         </div>
@@ -215,17 +365,19 @@ export function ReceiptSubmissionForm({
         id="purchase_date"
         label="Date *"
         hint={`From the last ${MAX_RECEIPT_AGE_DAYS} days.`}
+        fromPhoto={fromPhoto.date}
         error={fieldErrors.purchase_date}
       >
         <input
-          key={onDevice ? 'device' : 'server'}
+          key={`${onDevice ? 'device' : 'server'}-${fillKeys.date}`}
+          onInput={() => markTouched('date')}
           id="purchase_date"
           name="purchase_date"
           type="date"
           required
           min={dateBounds.min}
           max={dateBounds.max}
-          defaultValue={receipt?.purchaseDate ?? dateBounds.max}
+          defaultValue={dateFill ?? receipt?.purchaseDate ?? dateBounds.max}
           className={inputCls}
         />
       </Field>

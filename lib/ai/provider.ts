@@ -212,7 +212,7 @@ function mockContextOf(ctx: GenerateContext, redaction: PromptRedaction): MockCo
  * Resolves which provider would run. Exported so a test can assert that no
  * single setting on its own can start paid calls.
  */
-export function resolveProvider(agent: AgentDefinition): {
+export function resolveProvider(agent: Pick<AgentDefinition, 'modelTier'>): {
   provider: 'mock' | 'anthropic'
   model: string
 } {
