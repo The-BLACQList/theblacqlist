@@ -478,6 +478,23 @@
   }
 }
 
+/* ─── Counted ring (ticket 166) ─────────────────────────────────────────────
+   The base state is the finished ring, which is what reduced motion sees.
+   With motion allowed it draws in once around the check. */
+@media (prefers-reduced-motion: no-preference) {
+  .blacq-counted-ring {
+    animation: blacq-counted-ring 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  }
+  @keyframes blacq-counted-ring {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
 /* ─── Node constellation + page loader (components/brand) ──────────────────
    The base rules ARE the reduced-motion design: a finished, fully lit network.
    Every animation lives inside `prefers-reduced-motion: no-preference`, the

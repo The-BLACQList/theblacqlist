@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendReceiptCountedEmail } from '@/lib/email/receiptNotices'
 import { receiptBusinessName } from '@/lib/spend/receipt-emails'
+import { joinedMap } from '@/lib/spend/counted-receipt'
 
 export type ApproveReceiptState = { success: true } | { error: string } | null
 
@@ -202,6 +203,7 @@ export async function approveReceiptAction(
       userId: receipt.user_id,
       amountCents: receipt.amount_cents,
       businessName: receiptBusinessName(listingName, receipt.raw_business_name),
+      joinedMap: joinedMap(receipt),
     })
   })()
 
