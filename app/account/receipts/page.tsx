@@ -1,12 +1,43 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { Camera, Map as MapIcon, Plus, Store } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { ReceiptListRow } from '@/components/spend/ReceiptSubmissionForm'
+import { ReceiptListRow } from '@/components/spend/ReceiptListRow'
+import { formatDollarsExact } from '@/lib/spend/personal-spend'
+import {
+  countedTotalCents,
+  receiptTally,
+  sortReceipts,
+  tallyLine,
+} from '@/lib/spend/my-receipts'
+import { ReceiptsLoadError } from './ReceiptsLoadError'
 
 export const metadata: Metadata = { title: 'My receipts' }
+
+interface ReceiptRow {
+  id: string
+  raw_business_name: string | null
+  amount_cents: number
+  purchase_date: string
+  created_at: string
+  status: string
+  file_path: string | null
+  rejection_reason: string | null
+  listing_id: string | null
+  listings: { name: string } | null
+}
+
+const addBtnCls =
+  'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60'
+
+/** The three steps from The Collective's first look (ticket 161), in short form. */
+const STEPS = [
+  { icon: Store, text: 'Shop at a business on the list.' },
+  { icon: Camera, text: 'Add a receipt.' },
+  { icon: MapIcon, text: 'Your spend joins the map.' },
+] as const
 
 export default async function MyReceiptsPage({
   searchParams,
@@ -21,9 +52,10 @@ export default async function MyReceiptsPage({
 
   const { submitted, updated } = await searchParams
 
+  // receipt_uploads has no UPDATE policy, so every receipt read and write goes
+  // through the service client, scoped to the caller here.
   const serviceClient = createServiceClient()
-
-  const { data: receipts } = await serviceClient
+  const { data, error } = await serviceClient
     .from('receipt_uploads')
     .select(
       `
@@ -31,6 +63,7 @@ export default async function MyReceiptsPage({
       raw_business_name,
       amount_cents,
       purchase_date,
+      created_at,
       status,
       file_path,
       rejection_reason,
@@ -41,43 +74,44 @@ export default async function MyReceiptsPage({
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const receiptList = receipts ?? []
+  const receipts = error ? [] : sortReceipts((data ?? []) as unknown as ReceiptRow[])
 
-  const totalApproved = receiptList
-    .filter((r) => r.status === 'approved')
-    .reduce((sum, r) => sum + r.amount_cents, 0)
-
-  function formatDollars(cents: number) {
-    return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+  // Categories come from the same place CollectivePanel's do: the listing's
+  // category, read as the shopper. If this read fails the rows just show
+  // without a chip.
+  const listingIds = [
+    ...new Set(receipts.map((r) => r.listing_id).filter((v): v is string => v !== null)),
+  ]
+  const categoryById = new Map<string, string>()
+  if (listingIds.length > 0) {
+    const { data: listings } = await supabase
+      .from('listings')
+      .select('id, categories(name)')
+      .in('id', listingIds)
+    for (const l of (listings ?? []) as unknown as Array<{
+      id: string
+      categories: { name: string } | null
+    }>) {
+      if (l.categories?.name) categoryById.set(l.id, l.categories.name)
+    }
   }
+
+  const tally = receiptTally(receipts)
+  const total = countedTotalCents(receipts)
 
   return (
     <main>
       <div className="max-w-[640px] mx-auto space-y-6">
         <div>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="font-headline text-2xl text-brand-black">My receipts</h1>
-              <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-                Track your support for Black-owned businesses
-              </p>
-            </div>
-            <Link
-              href="/account/receipts/new"
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              Add a receipt
-            </Link>
-          </div>
+          <h1 className="font-headline text-2xl text-brand-black">My receipts</h1>
+          <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
+            Track your support for Black-owned businesses
+          </p>
         </div>
 
-        {/* Success banner */}
         {submitted === 'true' && (
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
-            <p className="font-subhead text-sm font-semibold text-green-800">
-              Receipt added.
-            </p>
+            <p className="font-subhead text-sm font-semibold text-green-800">Receipt added.</p>
             <p className="font-body text-xs text-green-700 mt-0.5">
               We&apos;ll check it within 3 business days.
             </p>
@@ -88,66 +122,88 @@ export default async function MyReceiptsPage({
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">Changes saved.</p>
             <p className="font-body text-xs text-green-700 mt-0.5">
-              Your receipt is still pending review.
+              We&apos;ll check it within 3 business days.
             </p>
           </div>
         )}
 
-        {/* Impact summary */}
-        {totalApproved > 0 && (
-          <div className="rounded-xl bg-white border border-charcoal/10 p-5">
-            <p className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide">
-              Verified community spend
-            </p>
-            <p className="font-headline text-3xl text-brand-black mt-1">
-              {formatDollars(totalApproved)}
-            </p>
-            <p className="font-body text-xs text-charcoal-soft mt-0.5">
-              Across {receiptList.filter((r) => r.status === 'approved').length} approved{' '}
-              {receiptList.filter((r) => r.status === 'approved').length === 1
-                ? 'receipt'
-                : 'receipts'}
-            </p>
+        {error ? (
+          <div className="rounded-xl bg-white border border-charcoal/10">
+            <ReceiptsLoadError />
           </div>
-        )}
-
-        {/* Receipt list */}
-        <div className="rounded-xl bg-white border border-charcoal/10 overflow-hidden">
-          {receiptList.length === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
-              <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                Add a receipt and your spend joins The Collective.
-              </p>
-              <Link
-                href="/account/receipts/new"
-                className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
-              >
+        ) : receipts.length === 0 ? (
+          <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-8 sm:px-8">
+            <h2 className="font-subhead text-base font-semibold text-brand-black">
+              No receipts yet
+            </h2>
+            <ol className="mt-4 space-y-3">
+              {STEPS.map(({ icon: Icon, text }, i) => (
+                <li key={text} className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center size-9 shrink-0 rounded-full bg-amber-gold/15 text-amber">
+                    <Icon className="size-4" aria-hidden="true" />
+                  </span>
+                  <span className="font-body text-sm text-brand-black">
+                    <span className="sr-only">Step {i + 1}: </span>
+                    {text}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <Link href="/account/receipts/new" className={`${addBtnCls} mt-6 w-full sm:w-auto`}>
+              <Plus className="size-4" aria-hidden="true" />
+              Add your first receipt
+            </Link>
+          </div>
+        ) : (
+          <>
+            <section
+              aria-labelledby="counted-heading"
+              className="rounded-xl bg-white border border-charcoal/10 p-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+            >
+              <div>
+                <h2
+                  id="counted-heading"
+                  className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide"
+                >
+                  Counted so far
+                </h2>
+                <p className="font-headline text-3xl text-brand-black mt-1 tabular-nums">
+                  {formatDollarsExact(total)}
+                </p>
+                <p className="font-body text-sm text-charcoal-soft mt-0.5">{tallyLine(tally)}</p>
+              </div>
+              <Link href="/account/receipts/new" className={`${addBtnCls} w-full sm:w-auto`}>
                 <Plus className="size-4" aria-hidden="true" />
-                Add your first receipt
+                Add a receipt
               </Link>
-            </div>
-          ) : (
-            <div className="divide-y divide-charcoal/5 px-5">
-              {receiptList.map((receipt) => {
-                const listing = receipt.listings as { name: string } | null
-                return (
+            </section>
+
+            <section
+              aria-labelledby="receipts-heading"
+              className="rounded-xl bg-white border border-charcoal/10"
+            >
+              <h2 id="receipts-heading" className="sr-only">
+                Your receipts
+              </h2>
+              <ul className="divide-y divide-charcoal/5 px-5">
+                {receipts.map((r) => (
                   <ReceiptListRow
-                    key={receipt.id}
-                    id={receipt.id}
-                    rawBusinessName={receipt.raw_business_name}
-                    listingName={listing?.name ?? null}
-                    amountCents={receipt.amount_cents}
-                    purchaseDate={receipt.purchase_date}
-                    status={receipt.status}
-                    filePath={receipt.file_path}
-                    rejectionReason={receipt.rejection_reason}
+                    key={r.id}
+                    id={r.id}
+                    businessName={r.listings?.name ?? r.raw_business_name ?? 'A business'}
+                    isMatched={r.listing_id !== null}
+                    category={r.listing_id ? (categoryById.get(r.listing_id) ?? null) : null}
+                    amountCents={r.amount_cents}
+                    purchaseDate={r.purchase_date}
+                    status={r.status}
+                    filePath={r.file_path}
+                    rejectionReason={r.rejection_reason}
                   />
-                )
-              })}
-            </div>
-          )}
-        </div>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
 
         <p className="font-body text-xs text-charcoal-faint text-center">
           Receipt details are private. Only you and BLACQList admins can view your submissions.

@@ -1,7 +1,6 @@
 'use client'
 
 import { useActionState, useEffect, useState, useSyncExternalStore, useTransition } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Loader2, AlertCircle, Info, ChevronDown } from 'lucide-react'
 
@@ -16,7 +15,6 @@ import {
   receiptDateBounds,
 } from '@/lib/spend/receipt-input'
 import { ListingCombobox } from './ListingCombobox'
-import { ReceiptImageButton } from './ReceiptImageButton'
 import { ReceiptPhotoField, receiptFileProblem } from './ReceiptPhotoField'
 
 const inputCls =
@@ -55,10 +53,6 @@ function Field({
 
 const noopSubscribe = () => () => {}
 
-function formatDollars(cents: number): string {
-  return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-}
-
 /**
  * The values an existing receipt is loaded with. Its presence is what puts the
  * form in edit mode — there is no separate edit component, because two copies
@@ -74,6 +68,8 @@ export interface ReceiptFormDefaults {
   notes: string | null
   aggregateOptOut: boolean
   hasFile: boolean
+  /** A rejected receipt: saving it sends it back for review (ticket 164). */
+  needsFix?: boolean
 }
 
 export function ReceiptSubmissionForm({
@@ -295,117 +291,14 @@ export function ReceiptSubmissionForm({
           {isEdit
             ? isPending
               ? 'Saving…'
-              : 'Save changes'
+              : receipt.needsFix
+                ? 'Resend for review'
+                : 'Save changes'
             : isPending
               ? 'Adding…'
               : 'Add a receipt'}
         </button>
       </div>
     </form>
-  )
-}
-
-// ─── Receipt list row ─────────────────────────────────────────────────────────
-
-interface ReceiptRowProps {
-  id: string
-  rawBusinessName: string | null
-  listingName: string | null
-  amountCents: number
-  purchaseDate: string
-  status: string
-  /**
-   * Storage path, not a URL — ReceiptImageButton mints its own signed URL and
-   * needs the extension to tell a photo from a PDF. This replaces the old
-   * `hasFile: boolean`, which the row declared and then never used.
-   */
-  filePath: string | null
-  /**
-   * Only set on rejected receipts. Shown because a rejection the user cannot
-   * read is a dead end — the correction path for a rejected receipt is a new
-   * submission, and they need to know what to change before making one.
-   */
-  rejectionReason?: string | null
-}
-
-export function ReceiptListRow({
-  id,
-  rawBusinessName,
-  listingName,
-  amountCents,
-  purchaseDate,
-  status,
-  filePath,
-  rejectionReason,
-}: ReceiptRowProps) {
-  const businessLabel = listingName ?? rawBusinessName ?? 'Unknown business'
-
-  // A null listingName means the receipt was never bound to a listing, so
-  // approveReceipt writes no flow node for it and it can never reach the
-  // community-spend breakdowns. Say so here rather than letting the user work
-  // it out from an empty panel on another page.
-  const isUnmatched = listingName === null
-
-  return (
-    <div className="py-4 flex items-start justify-between gap-4">
-      <div className="flex-1 min-w-0">
-        <p className="font-subhead text-sm font-semibold text-brand-black truncate">
-          {businessLabel}
-        </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <p className="font-body text-xs text-charcoal-soft">{purchaseDate}</p>
-          {isUnmatched && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-charcoal/5 text-charcoal-soft shrink-0">
-              Not matched to a listing
-            </span>
-          )}
-        </div>
-        {status === 'rejected' && rejectionReason && (
-          <p className="mt-1.5 font-body text-xs text-red-700">
-            <span className="font-semibold">Why it was rejected:</span> {rejectionReason}
-          </p>
-        )}
-        <div className="mt-2 flex items-center gap-3">
-          {filePath && (
-            <ReceiptImageButton receiptId={id} filePath={filePath} businessLabel={businessLabel} />
-          )}
-          {/* Editing stops at pending. Once a receipt is approved its amount is
-              already folded into the community totals, and once rejected it is
-              terminal — the action refuses both, and offering a link that only
-              leads to a refusal would be worse than not offering one. */}
-          {status === 'pending_review' && (
-            <Link
-              href={`/account/receipts/${id}/edit`}
-              className="font-subhead text-xs font-semibold text-charcoal-soft underline underline-offset-2 hover:text-brand-black"
-            >
-              Edit
-              <span className="sr-only"> {businessLabel} receipt</span>
-            </Link>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <span className="font-subhead text-sm font-semibold text-brand-black tabular-nums">
-          {formatDollars(amountCents)}
-        </span>
-        <StatusPill status={status} />
-      </div>
-    </div>
-  )
-}
-
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    pending_review: { label: 'Pending', cls: 'bg-amber-50 text-amber-700' },
-    approved: { label: 'Approved', cls: 'bg-green-50 text-green-700' },
-    rejected: { label: 'Rejected', cls: 'bg-red-50 text-red-700' },
-  }
-  const cfg = map[status] ?? { label: status, cls: 'bg-charcoal/5 text-charcoal-soft' }
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${cfg.cls}`}
-    >
-      {cfg.label}
-    </span>
   )
 }

@@ -161,6 +161,6 @@ describe('the described window is coupled to the guard that enforces it', () => 
     // Read-time guard and write-time re-assertion. Either one alone is a race,
     // and either one alone would make the policy pages optimistic.
     expect(action).toContain("existing.status !== 'pending_review'")
-    expect(action).toContain(".eq('status', 'pending_review')")
+    expect(action).toContain(".eq('status', existing.status)")
   })
 })
