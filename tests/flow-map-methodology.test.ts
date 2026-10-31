@@ -31,7 +31,7 @@
 // Parsed from source because vitest runs environment: 'node' with no jsdom and
 // the page is a Server Component that cannot be rendered here — the technique
 // tests/aggregate-privacy.test.ts, tests/spend-vocabulary.test.ts and
-// tests/flow-map-filters.test.ts already use.
+// tests/flow-map-page.test.ts already use.
 //
 // Non-vacuity: this file and the page it guards are both new, so stashing
 // proves nothing. Each assertion below was instead run against a deliberately

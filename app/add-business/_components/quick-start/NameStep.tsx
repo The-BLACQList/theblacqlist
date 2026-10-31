@@ -17,6 +17,7 @@ import {
 interface Match {
   id: string
   name: string
+  ownership: 'open' | 'yours' | 'managed'
   city: { name: string } | null
 }
 
@@ -52,6 +53,45 @@ function useNameMatches(name: string): Match[] {
   }, [query])
 
   return query.length >= 3 && matches.query === query ? matches.list : []
+}
+
+const ACTION_CLASS =
+  'inline-flex min-h-[44px] items-center rounded-full border border-brand-black px-4 font-subhead text-sm font-bold text-brand-black hover:bg-brand-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2'
+
+// Only an open page offers a claim: claims on pages with a different owner are
+// refused at submit, so offering one would be a dead end.
+function MatchAction({ match: m }: { match: Match }) {
+  if (m.ownership === 'open') {
+    return (
+      <Link href={`/claim/${m.id}`} className={ACTION_CLASS}>
+        This is mine, claim it
+        <span className="sr-only">: {m.name}</span>
+      </Link>
+    )
+  }
+  if (m.ownership === 'yours') {
+    return (
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className={HINT_CLASS}>You manage this page</span>
+        <Link href={`/dashboard/pages/${m.id}/edit`} className={ACTION_CLASS}>
+          Go to your page
+          <span className="sr-only">: {m.name}</span>
+        </Link>
+      </span>
+    )
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span className={HINT_CLASS}>Managed by its owner</span>
+      <Link
+        href="/contact"
+        className="inline-flex min-h-[44px] items-center font-subhead text-xs font-semibold text-charcoal-soft underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
+      >
+        Not right? Contact us
+        <span className="sr-only"> about {m.name}</span>
+      </Link>
+    </span>
+  )
 }
 
 export function NameStep({ answers, onChange, problem, mode }: StepProps) {
@@ -90,10 +130,10 @@ export function NameStep({ answers, onChange, problem, mode }: StepProps) {
         >
           <div>
             <h3 id="qs-claim-title" className="font-subhead text-base font-bold text-brand-black">
-              Is this you? Claim it
+              Already on BLACQList?
             </h3>
             <p className={HINT_CLASS}>
-              If your business is already listed, claim that page instead of adding a new one.
+              If your business is already listed, use that page instead of adding a new one.
             </p>
           </div>
           <ul className="flex flex-col gap-2">
@@ -106,13 +146,7 @@ export function NameStep({ answers, onChange, problem, mode }: StepProps) {
                   <span className="font-semibold">{m.name}</span>
                   {m.city && <span className="text-charcoal-soft"> · {m.city.name}</span>}
                 </span>
-                <Link
-                  href={`/claim/${m.id}`}
-                  className="inline-flex min-h-[44px] items-center rounded-full border border-brand-black px-4 font-subhead text-sm font-bold text-brand-black hover:bg-brand-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
-                >
-                  Claim this page
-                  <span className="sr-only">: {m.name}</span>
-                </Link>
+                <MatchAction match={m} />
               </li>
             ))}
           </ul>
