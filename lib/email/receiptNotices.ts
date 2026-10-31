@@ -37,7 +37,7 @@ async function emailFor(serviceClient: ServiceClient, userId: string): Promise<s
 /** "Your receipt is counted", unless the shopper turned it off. */
 export async function sendReceiptCountedEmail(
   serviceClient: ServiceClient,
-  notice: ReceiptNotice
+  notice: ReceiptNotice & { joinedMap: boolean }
 ): Promise<void> {
   try {
     const { data: profile, error } = await serviceClient
@@ -55,8 +55,10 @@ export async function sendReceiptCountedEmail(
       to,
       subject: RECEIPT_COUNTED_SUBJECT,
       react: ReceiptCountedEmail({
+        receiptId: notice.receiptId,
         amountCents: notice.amountCents,
         businessName: notice.businessName,
+        joinedMap: notice.joinedMap,
         siteUrl: siteUrl(),
       }),
     })

@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import { RECEIPT_STATUS_LABEL, type ReceiptStatus } from '@/lib/spend/my-receipts'
+import { countedReceiptHref } from '@/lib/spend/counted-receipt'
 import { ReceiptImageButton } from './ReceiptImageButton'
 
 interface Props {
@@ -59,6 +60,7 @@ export function ReceiptListRow({
 }: Props) {
   const known = status in RECEIPT_STATUS_LABEL ? (status as ReceiptStatus) : null
   const needsFix = status === 'rejected'
+  const counted = status === 'approved'
 
   return (
     <li className="py-4 space-y-2">
@@ -102,7 +104,7 @@ export function ReceiptListRow({
         </p>
       )}
 
-      {(filePath || needsFix || status === 'pending_review') && (
+      {(filePath || needsFix || counted || status === 'pending_review') && (
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {needsFix && (
             <Link
@@ -116,7 +118,17 @@ export function ReceiptListRow({
           {filePath && (
             <ReceiptImageButton receiptId={id} filePath={filePath} businessLabel={businessName} />
           )}
-          {/* Counted receipts are locked: their amount is already in the totals. */}
+          {/* Counted receipts are locked: their amount is already in the totals.
+              They open the counted screen instead (ticket 166). */}
+          {counted && (
+            <Link
+              href={countedReceiptHref(id)}
+              className="inline-flex items-center min-h-11 px-2 font-subhead text-xs font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
+            >
+              See it counted
+              <span className="sr-only"> for your {businessName} receipt</span>
+            </Link>
+          )}
           {status === 'pending_review' && (
             <Link
               href={`/account/receipts/${id}/edit`}

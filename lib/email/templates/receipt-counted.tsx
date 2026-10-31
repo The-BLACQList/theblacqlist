@@ -10,27 +10,37 @@ import {
   Text,
 } from '@react-email/components'
 import { countedLine } from '@/lib/spend/receipt-emails'
+import { JOINED_MAP_LINE, OFF_MAP_LINE, countedReceiptHref } from '@/lib/spend/counted-receipt'
 
 interface ReceiptCountedEmailProps {
+  receiptId: string
   amountCents: number
   businessName: string
+  /** False for an unlisted business or a receipt kept out of the totals. */
+  joinedMap?: boolean
   siteUrl?: string
 }
 
 /**
  * Sent when the founder approves a receipt (ticket 165). The shopper can turn
- * it off on /account/settings, and the footer says where.
+ * it off on /account/settings, and the footer says where. The button opens
+ * the counted screen (ticket 166).
  */
 export function ReceiptCountedEmail({
+  receiptId,
   amountCents,
   businessName,
+  joinedMap = true,
   siteUrl = 'https://theblacqlist.com',
 }: ReceiptCountedEmailProps) {
   const line = countedLine(amountCents, businessName)
+  const mapLine = joinedMap ? JOINED_MAP_LINE : OFF_MAP_LINE
   return (
     <Html lang="en">
       <Head />
-      <Preview>{line} Your spend joined the map.</Preview>
+      <Preview>
+        {line} {mapLine}
+      </Preview>
       <Body style={body}>
         <Container style={container}>
           {/* Header */}
@@ -42,10 +52,10 @@ export function ReceiptCountedEmail({
           <Section style={content}>
             <Text style={eyebrow}>Receipt counted</Text>
             <Text style={heading}>{line}</Text>
-            <Text style={paragraph}>Your spend joined the map.</Text>
+            <Text style={paragraph}>{mapLine}</Text>
 
-            <Button href={`${siteUrl}/flow-map`} style={button}>
-              See it on the map
+            <Button href={`${siteUrl}${countedReceiptHref(receiptId)}`} style={button}>
+              {joinedMap ? 'See it on the map' : 'See your receipt'}
             </Button>
 
             <Hr style={divider} />

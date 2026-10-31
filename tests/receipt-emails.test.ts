@@ -89,25 +89,55 @@ describe('business name', () => {
 describe('ReceiptCountedEmail', () => {
   it('says the amount, the business and the map line, with one button', async () => {
     const html = await render(
-      ReceiptCountedEmail({ amountCents: 4250, businessName: BUSINESS, siteUrl: 'https://x.test' })
+      ReceiptCountedEmail({
+        receiptId: RECEIPT_ID,
+        amountCents: 4250,
+        businessName: BUSINESS,
+        siteUrl: 'https://x.test',
+      })
     )
     expect(countedLine(4250, BUSINESS)).toBe(`Your $42.50 at ${BUSINESS} is counted.`)
     expect(html).toContain('Your $42.50 at Sweet Auburn Bread Company is counted.')
     expect(html).toContain('Your spend joined the map.')
     expect(html).toContain('See it on the map')
-    expect(html).toContain('href="https://x.test/flow-map"')
+    // The button opens the counted screen (ticket 166), not the map itself.
+    expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/counted"`)
+  })
+
+  it('does not claim the map for a receipt that is off it', async () => {
+    const html = await render(
+      ReceiptCountedEmail({
+        receiptId: RECEIPT_ID,
+        amountCents: 4250,
+        businessName: BUSINESS,
+        joinedMap: false,
+        siteUrl: 'https://x.test',
+      })
+    )
+    expect(html).not.toContain('Your spend joined the map.')
+    expect(html).not.toContain('See it on the map')
+    expect(html).toContain('This one isn&#x27;t on the map.')
+    expect(html).toContain('See your receipt')
+    expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/counted"`)
   })
 
   it('links to the settings switch in every counted email', async () => {
     const html = await render(
-      ReceiptCountedEmail({ amountCents: 100, businessName: BUSINESS, siteUrl: 'https://x.test' })
+      ReceiptCountedEmail({
+        receiptId: RECEIPT_ID,
+        amountCents: 100,
+        businessName: BUSINESS,
+        siteUrl: 'https://x.test',
+      })
     )
     expect(html).toContain('href="https://x.test/account/settings"')
     expect(html).toContain('Turn these off in your settings.')
   })
 
   it('has no em dash and the subject is the ticket wording', async () => {
-    const html = await render(ReceiptCountedEmail({ amountCents: 100, businessName: BUSINESS }))
+    const html = await render(
+      ReceiptCountedEmail({ receiptId: RECEIPT_ID, amountCents: 100, businessName: BUSINESS })
+    )
     expect(html).not.toContain(EM_DASH)
     expect(RECEIPT_COUNTED_SUBJECT).toBe('Your receipt is counted')
   })
@@ -133,7 +163,12 @@ describe('ReceiptNeedsFixEmail', () => {
 
   it('falls back to a general line when no reason was saved', async () => {
     const html = await render(
-      ReceiptNeedsFixEmail({ receiptId: RECEIPT_ID, reason: null, amountCents: 100, businessName: BUSINESS })
+      ReceiptNeedsFixEmail({
+        receiptId: RECEIPT_ID,
+        reason: null,
+        amountCents: 100,
+        businessName: BUSINESS,
+      })
     )
     expect(html).toContain(FALLBACK_FIX_REASON)
   })
@@ -162,14 +197,22 @@ function fakeClient(opts: {
       admin: {
         getUserById: async () => {
           if (opts.authThrows) throw new Error('auth down')
-          return { data: { user: opts.email === null ? null : { email: opts.email ?? 'a@example.test' } } }
+          return {
+            data: { user: opts.email === null ? null : { email: opts.email ?? 'a@example.test' } },
+          }
         },
       },
     },
   } as never
 }
 
-const NOTICE = { receiptId: RECEIPT_ID, userId: 'u-1', amountCents: 4250, businessName: BUSINESS }
+const NOTICE = {
+  receiptId: RECEIPT_ID,
+  userId: 'u-1',
+  amountCents: 4250,
+  businessName: BUSINESS,
+  joinedMap: true,
+}
 
 describe('sending', () => {
   let errorSpy: ReturnType<typeof vi.spyOn>
