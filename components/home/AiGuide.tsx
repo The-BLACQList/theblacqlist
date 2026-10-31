@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, LoaderCircle, MessageCircle } from 'lucide-react'
 
 import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
-import type { AssistantResponse } from '@/lib/ai/assistant-limits'
-import { askCue } from '@/lib/assistant/ask'
+import type { CueReply } from '@/lib/ai/assistant-limits'
+import { streamCue } from '@/lib/assistant/ask'
 import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
 import { addTurn, openAssistantFrom, setHomeBarInView, type AssistantTurn } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
   AssistantReply,
-  AssistantSkeleton,
+  CUE_LOOKING,
+  CueStreaming,
   replyStatus,
 } from '@/components/assistant/AssistantAnswer'
 import { useExample } from '@/components/assistant/useExample'
@@ -24,9 +25,10 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type Results = Extract<GuideResponse, { kind: 'results' }>
-type AssistantAnswer = { ask: string; reply: Extract<AssistantResponse, { kind: 'answer' }> }
+type AssistantAnswer = { ask: string; reply: Extract<CueReply, { kind: 'reply' }> }
 
 const FALLBACK_STATUS = "I couldn't match that, so here are search results for what you typed."
+const STILL_ANSWERING = 'Cue is still answering. Press Esc to stop it, or wait.'
 const NO_LOCATION_STATUS = "Couldn't get your location. Type a city instead, or try Near me again."
 
 /** One short line for screen readers; the cards themselves are not announced. */
@@ -53,11 +55,11 @@ const LINK =
  * The words stay in this component's state and the one server call. Nothing
  * here stores or logs them.
  *
- * With `assistant` on (tickets 147 and 148) the bar asks Cue instead and shows
- * its need groups here. The bar's own last few asks go along, so "in atlanta"
- * follows on from the answer above it. "Keep chatting with Cue" copies the
- * turn into this tab's chat and opens the corner panel. Cue's panel carries
- * the AI notice; the bar keeps it for screen readers.
+ * With `assistant` on (tickets 147, 148 and 169) the bar asks Cue instead and
+ * streams its reply here, with Stop. The bar's own last few asks go along, so
+ * "in atlanta" follows on from the answer above it. "Keep chatting with Cue"
+ * copies the turn into this tab's chat and opens the corner panel. Cue's panel
+ * carries the AI notice; the bar keeps it for screen readers.
  */
 export function AiGuide({
   filters,
@@ -76,7 +78,11 @@ export function AiGuide({
   const barTurns = useRef<AssistantTurn[]>([])
   const example = useExample()
   const [status, setStatus] = useState('')
-  const [pending, startTransition] = useTransition()
+  const [guidePending, startTransition] = useTransition()
+  // Cue's reply as it streams in, and the way to stop it.
+  const [cuePending, setCuePending] = useState<{ status: string; text: string } | null>(null)
+  const stopRef = useRef<AbortController | null>(null)
+  const pending = guidePending || cuePending !== null
   const inputRef = useRef<HTMLInputElement>(null)
   const answerRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -97,31 +103,29 @@ export function AiGuide({
     }
   }, [assistant])
 
+  // Leaving the page ends Cue's request, so it stops spending.
+  useEffect(() => () => stopRef.current?.abort(), [])
+
   useEffect(() => {
-    if ((answer || assistantAnswer) && focusAnswer.current) {
+    if (!answer && !assistantAnswer) return
+    if (focusAnswer.current) {
       focusAnswer.current = false
       answerRef.current?.focus()
+      return
     }
+    // The Stop or Try again button went away with the old answer: keep
+    // keyboard users in the bar rather than at the top of the page.
+    if (document.activeElement === document.body) inputRef.current?.focus()
   }, [answer, assistantAnswer])
 
   function ask(words: string, at: NearPoint | null) {
     if (pending) return
+    // A Try again or Cue button goes away with the old answer.
+    if (answerRef.current?.contains(document.activeElement)) inputRef.current?.focus()
     setAnswer(null)
     setAssistantAnswer(null)
     if (assistant) {
-      setStatus('Cue is looking…')
-      startTransition(async () => {
-        const reply: AssistantResponse = await askCue(words, { turns: barTurns.current, near: at })
-        if (reply.kind === 'fallback') {
-          setStatus(FALLBACK_STATUS)
-          router.push(reply.href)
-          return
-        }
-        barTurns.current = [...barTurns.current, { id: String(barTurns.current.length), ask: words, reply }].slice(-4)
-        setKept(false)
-        setAssistantAnswer({ ask: words, reply })
-        setStatus(replyStatus(reply))
-      })
+      void askCue(words, at)
       return
     }
     setStatus('Finding matches…')
@@ -142,9 +146,54 @@ export function AiGuide({
     })
   }
 
+  async function askCue(words: string, at: NearPoint | null) {
+    // Cue's answer is read out from the status line; focus stays in the bar so
+    // a follow-up can be typed straight away.
+    focusAnswer.current = false
+    setStatus(CUE_LOOKING)
+    setCuePending({ status: CUE_LOOKING, text: '' })
+    const stop = new AbortController()
+    stopRef.current = stop
+    const reply = await streamCue(words, {
+      turns: barTurns.current,
+      near: at,
+      signal: stop.signal,
+      onProgress: (progress) =>
+        setCuePending((now) =>
+          now ? { ...now, [progress.type === 'status' ? 'status' : 'text']: progress.text } : now
+        ),
+    })
+    stopRef.current = null
+    setCuePending(null)
+    // Stopped before Cue wrote anything: their words are still in the bar.
+    if (!reply) {
+      setStatus('Stopped.')
+      inputRef.current?.focus()
+      return
+    }
+    if (reply.kind === 'fallback') {
+      setStatus(FALLBACK_STATUS)
+      router.push(reply.href)
+      return
+    }
+    barTurns.current = [...barTurns.current, { id: String(barTurns.current.length), ask: words, reply }].slice(-4)
+    setKept(false)
+    setAssistantAnswer({ ask: words, reply })
+    setStatus(replyStatus(reply))
+  }
+
+  function onStop() {
+    stopRef.current?.abort()
+    inputRef.current?.focus()
+  }
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const words = text.trim()
+    if (cuePending) {
+      setStatus((now) => (now === STILL_ANSWERING ? `${STILL_ANSWERING}\u00a0` : STILL_ANSWERING))
+      return
+    }
     if (pending || locating.current) return
     if (!words) {
       if (near) {
@@ -232,6 +281,13 @@ export function AiGuide({
               maxLength={GUIDE_MAX_INPUT}
               autoComplete="off"
               enterKeyHint="search"
+              onKeyDown={(e) => {
+                // Esc stops Cue's answer, as it does in the panel.
+                if (e.key === 'Escape' && cuePending) {
+                  e.preventDefault()
+                  onStop()
+                }
+              }}
               placeholder={assistant ? example : 'Braids in Atlanta, or a name'}
               className="w-full h-14 pl-10 pr-4 rounded-full border border-charcoal/30 bg-white font-subhead text-base text-brand-black placeholder:text-charcoal-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold focus:border-brand-black"
             />
@@ -263,8 +319,13 @@ export function AiGuide({
         <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
           {pending ? (
             assistant ? (
-              <div className="rounded-2xl border border-gold/40 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
-                <AssistantSkeleton layout="page" />
+              <div className="min-h-32 rounded-2xl border border-gold/30 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
+                <CueStreaming
+                  status={cuePending?.status ?? CUE_LOOKING}
+                  text={cuePending?.text ?? ''}
+                  layout="page"
+                  onStop={cuePending ? onStop : undefined}
+                />
               </div>
             ) : (
               <GuideSkeleton />
@@ -273,16 +334,14 @@ export function AiGuide({
             <div
               role="region"
               aria-label="Cue's answer"
-              className="rounded-2xl border border-gold/40 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4"
+              className="rounded-2xl border border-gold/30 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4"
             >
               <AssistantReply
                 ask={assistantAnswer.ask}
                 reply={assistantAnswer.reply}
                 layout="page"
-                headingLevel={2}
                 handlers={{
                   onAsk: (words) => {
-                    focusAnswer.current = true
                     setText(words)
                     ask(words, near)
                   },

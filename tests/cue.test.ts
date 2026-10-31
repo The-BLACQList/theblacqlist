@@ -1,28 +1,13 @@
 // =============================================================================
-// Cue, the site assistant (ticket 148): the pure pieces
+// Cue, the site assistant (tickets 148 and 169): the pure pieces
 // =============================================================================
-// Near words, negated places, need names, the opener checks, the page parser
-// and its action allow-list, the wording, the examples and the chat store's
-// follow-up helpers. The action half lives in tests/ai-assistant.test.ts.
+// Near words, the page parser and its action allow-list, the examples and the
+// chat store's follow-up helpers. The chat loop lives in tests/cue-agent.test.ts.
 // =============================================================================
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AssistantResponse } from '@/lib/ai/assistant-limits'
-import {
-  ASSISTANT_OPENER_MAX,
-  ASSISTANT_SYSTEM_PROMPT,
-  buildAssistantSummary,
-  checkOpener,
-  cleanNeedName,
-  inSentence,
-  nearMilesLine,
-  positivePlaceText,
-  resolvePrevious,
-  typedWords,
-  type AssistantAllowList,
-} from '@/lib/ai/assistant'
-import { GUIDE_MAX_PROMPT_CHARS } from '@/lib/ai/guide'
+import type { CueReply } from '@/lib/ai/assistant-limits'
 import { EXAMPLE_ASKS, pickExample, pickExamples } from '@/lib/assistant/examples'
 import { wantsNearMe } from '@/lib/assistant/near'
 import {
@@ -40,23 +25,11 @@ import {
 import {
   addTurn,
   ASSISTANT_STORAGE_KEY,
+  cardsFor,
   getAssistantState,
   lastWasNear,
-  previousFor,
   resetAssistantStoreForTests,
 } from '@/lib/assistant/store'
-
-const ALLOW: AssistantAllowList = {
-  categories: [
-    { id: 'c-food', slug: 'food-dining', name: 'Food & Dining', parentId: null },
-    { id: 'c-groc', slug: 'grocery-markets', name: 'Grocery & Markets', parentId: 'c-food' },
-    { id: 'c-barber', slug: 'barbershops', name: 'Barbershops', parentId: null },
-  ],
-  cities: [
-    { slug: 'detroit', name: 'Detroit' },
-    { slug: 'atlanta', name: 'Atlanta' },
-  ],
-}
 
 // ─── Near words ──────────────────────────────────────────────────────────────
 
@@ -83,146 +56,6 @@ describe('near words', () => {
   })
 })
 
-// ─── Negated places ──────────────────────────────────────────────────────────
-
-describe('positivePlaceText', () => {
-  it('drops a place the visitor turns down', () => {
-    expect(positivePlaceText('chicago is not near me')).toBe('')
-    expect(positivePlaceText("chicago isn't nearby me")).toBe('')
-    expect(positivePlaceText('a dentist, not in Chicago')).toBe('a dentist')
-    expect(positivePlaceText("I don't want Chicago")).toBe('I')
-  })
-
-  it('keeps everything else', () => {
-    expect(positivePlaceText('soul food in Atlanta')).toBe('soul food in Atlanta')
-    expect(positivePlaceText('no rush, braids in Atlanta')).toBe('no rush, braids in Atlanta')
-    expect(positivePlaceText('not Chicago but Atlanta')).toContain('Atlanta')
-  })
-})
-
-// ─── Need names ──────────────────────────────────────────────────────────────
-
-describe('cleanNeedName', () => {
-  it('takes who-owns-it words out and capitalizes the first letter', () => {
-    expect(cleanNeedName('black owned produce')).toBe('Produce')
-    expect(cleanNeedName('Black-owned bath products')).toBe('Bath products')
-    expect(cleanNeedName('soul food vendors')).toBe('Soul food')
-  })
-
-  it('sentence-cases a title-cased name, keeping cuisines and short forms', () => {
-    expect(cleanNeedName('Food Truck')).toBe('Food truck')
-    expect(cleanNeedName('food truck')).toBe('Food truck')
-    expect(cleanNeedName('Thai Restaurant')).toBe('Thai restaurant')
-    expect(cleanNeedName('DJ and Music')).toBe('DJ and music')
-  })
-
-  it('falls back to the category name when nothing is left', () => {
-    expect(cleanNeedName('black owned', 'Grocery & Markets')).toBe('Grocery & Markets')
-    expect(cleanNeedName('black owned')).toBeNull()
-    expect(cleanNeedName('<b>bad</b>', 'Barbershops')).toBe('Barbershops')
-  })
-
-  it('keeps a cuisine capitalized inside a sentence', () => {
-    expect(inSentence('Thai restaurant')).toBe('Thai restaurant')
-    expect(inSentence('Produce')).toBe('produce')
-    expect(inSentence('DJ')).toBe('DJ')
-  })
-
-  it('drops the capitals of a title-cased name, keeping DJ and cuisines', () => {
-    expect(inSentence('Party Decorations')).toBe('party decorations')
-    expect(inSentence('DJ and Music')).toBe('DJ and music')
-    expect(inSentence('Soul Food Restaurants')).toBe('soul food restaurants')
-    expect(inSentence('Thai Restaurant')).toBe('Thai restaurant')
-  })
-})
-
-// ─── Follow-ups ──────────────────────────────────────────────────────────────
-
-describe('resolvePrevious', () => {
-  const typed = typedWords('in atlanta', ['How do I find black owned produce?'])
-
-  it('checks the last answer like a new one', () => {
-    const out = resolvePrevious(
-      [
-        { name: 'black owned produce', plan: { category: 'grocery-markets', keywords: ['produce', 'owned'], openNow: false } },
-        { name: 'Produce', plan: { category: 'grocery-markets', keywords: [], openNow: false } },
-        { name: 'Dentist', plan: { category: 'made-up', keywords: ['dentist'], openNow: true } },
-        { name: 'Ghost', plan: { category: 'made-up', keywords: ['spooky'], openNow: false } },
-      ],
-      ALLOW,
-      typed
-    )
-    expect(out).toEqual([
-      { name: 'Produce', category: ALLOW.categories[1], keywords: ['produce'], openNow: false },
-      { name: 'Dentist', category: null, keywords: ['dentist'], openNow: true },
-    ])
-  })
-})
-
-// ─── Opener ──────────────────────────────────────────────────────────────────
-
-describe('checkOpener', () => {
-  const allow = { names: ['Detroit', 'Atlanta', 'Produce', "Mama's Kitchen"], numbers: ['4.8', '12'] }
-
-  it('keeps a short plain sentence', () => {
-    expect(checkOpener("  Happy to help you plan a party   in Detroit. ", allow)).toBe(
-      'Happy to help you plan a party in Detroit.'
-    )
-    expect(checkOpener("Mama's Kitchen is rated 4.8 from 12 reviews.", allow)).toBe(
-      "Mama's Kitchen is rated 4.8 from 12 reviews."
-    )
-    expect(checkOpener("Sure. I'll look for Black-owned produce in Atlanta.", allow)).not.toBeNull()
-  })
-
-  it('drops links, emails and markup', () => {
-    for (const text of [
-      'Try https://spam.example for more.',
-      'Visit www.example.com today.',
-      'Email me at a@b.co please.',
-      'Check example.com for this.',
-      'Here is <b>bold</b>.',
-      'Use `code` here.',
-    ]) {
-      expect(checkOpener(text, allow), text).toBeNull()
-    }
-  })
-
-  it('drops an opener that asks where they are once Cue knows', () => {
-    const located = { ...allow, located: true }
-    for (const text of [
-      "Happy to help you find a dentist nearby, just let me know which city you're in.",
-      'Tell me your city and I can narrow it down.',
-      "I'd love to help, where you are matters here.",
-    ]) {
-      expect(checkOpener(text, located), text).toBeNull()
-      expect(checkOpener(text, allow), text).not.toBeNull()
-    }
-    expect(checkOpener("Thanks, I'll keep your search local to Atlanta.", located)).not.toBeNull()
-  })
-
-  it('drops numbers the page does not show, so never a phone number', () => {
-    expect(checkOpener('Call 313 555 0101 now.', allow)).toBeNull()
-    expect(checkOpener('They are rated 5.0 here.', allow)).toBeNull()
-  })
-
-  it('drops names we do not list', () => {
-    expect(checkOpener('I love Houston for this.', allow)).toBeNull()
-    expect(checkOpener('Try Starbucks instead.', allow)).toBeNull()
-  })
-
-  it('drops claims about results, since it is written before any search', () => {
-    for (const text of ['I found three for you.', 'Here are the best ones.', 'These are the top spots.']) {
-      expect(checkOpener(text, allow), text).toBeNull()
-    }
-  })
-
-  it('keeps to the length cap', () => {
-    expect(checkOpener('a'.repeat(ASSISTANT_OPENER_MAX), allow)).not.toBeNull()
-    expect(checkOpener('a'.repeat(ASSISTANT_OPENER_MAX + 1), allow)).toBeNull()
-    expect(checkOpener('', allow)).toBeNull()
-    expect(checkOpener(null, allow)).toBeNull()
-  })
-})
 
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
@@ -346,34 +179,6 @@ describe('page actions', () => {
   })
 })
 
-// ─── Wording ─────────────────────────────────────────────────────────────────
-
-describe('Cue wording', () => {
-  it('gives the miles when Near me had to go wider', () => {
-    expect(nearMilesLine(10, 'Atlanta', 75, 3)).toBe(
-      'Nothing within 10 miles of you yet. The closest is in Atlanta, about 75 miles away. Atlanta has 3.'
-    )
-    expect(nearMilesLine(10, 'Atlanta', 1, 1)).toContain('about 1 mile away')
-    expect(nearMilesLine(10, 'Atlanta', null, 2)).toBe(
-      'Nothing within 10 miles of you yet. The closest is in Atlanta. Atlanta has 2.'
-    )
-  })
-
-  it('never says found for an answer from every city', () => {
-    const national = buildAssistantSummary([{ status: 'found', total: 2 }], true)
-    expect(national).toBe('Cue looked in every city we list: 2 places.')
-    expect(buildAssistantSummary([{ status: 'found', total: 2 }, { status: 'none', total: 0 }], true)).not.toMatch(/found/)
-  })
-
-  it('uses no em dashes in the fixed lines or the prompt', () => {
-    expect(ASSISTANT_SYSTEM_PROMPT).not.toContain('—')
-    expect(nearMilesLine(10, 'Atlanta', 75, 3)).not.toContain('—')
-  })
-
-  it('keeps the system prompt within the prompt limit', () => {
-    expect(ASSISTANT_SYSTEM_PROMPT.length).toBeLessThanOrEqual(GUIDE_MAX_PROMPT_CHARS)
-  })
-})
 
 // ─── Examples ────────────────────────────────────────────────────────────────
 
@@ -416,20 +221,22 @@ class MemoryStorage {
   }
 }
 
-function nearAnswer(near: boolean): AssistantResponse {
+function nearAnswer(near: boolean): CueReply {
   return {
-    kind: 'answer',
-    heading: 'Dentist near you',
-    opener: "Let's find you a dentist.",
-    notice: null,
-    summary: 'Cue found 1 place.',
-    needs: [
-      { name: 'Dentist', status: 'found', line: '1 place near you', total: 1, top: [], seeAllHref: null, plan: { category: null, keywords: ['dentist'], openNow: false } },
-      { name: 'Nothing', status: 'none', line: "We don't have this on The BLACQList yet.", total: 0, top: [], seeAllHref: null, plan: { category: null, keywords: [], openNow: false } },
+    kind: 'reply',
+    text: 'Here is a dentist near you.',
+    cards: [
+      {
+        id: 'd1',
+        name: 'Bright Smiles',
+        href: '/atlanta/business/bright-smiles',
+        categoryName: 'Dentists',
+        cityLabel: 'Atlanta, GA',
+        rating: null,
+        reviewCount: 0,
+        imageSrc: null,
+      },
     ],
-    nameMatches: [],
-    page: null,
-    searchHref: '/search?q=dentist',
     actions: [],
     near,
   }
@@ -449,10 +256,10 @@ describe('chat store follow-ups', () => {
     resetAssistantStoreForTests()
   })
 
-  it('sends back the last answer plans only, skipping needs with nothing to search', () => {
+  it('sends back the last cards by id and name, and that it was near', () => {
     addTurn('a dentist near by?', nearAnswer(true))
     const { turns } = getAssistantState()
-    expect(previousFor(turns)).toEqual([{ name: 'Dentist', plan: { category: null, keywords: ['dentist'], openNow: false } }])
+    expect(cardsFor(turns)).toEqual([{ id: 'd1', name: 'Bright Smiles' }])
     expect(lastWasNear(turns)).toBe(true)
   })
 
@@ -463,7 +270,7 @@ describe('chat store follow-ups', () => {
     addTurn('a dentist near by?', nearAnswer(true))
     addTurn('???', { kind: 'fallback', href: '/search?q=%3F%3F%3F', reason: 'error' })
     expect(lastWasNear(getAssistantState().turns)).toBe(false)
-    expect(previousFor(getAssistantState().turns)).toEqual([])
+    expect(cardsFor(getAssistantState().turns)).toEqual([])
   })
 
   it('keeps the near flag but never a position', () => {

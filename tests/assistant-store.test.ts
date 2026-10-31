@@ -1,22 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AssistantCard, AssistantResponse } from '@/lib/ai/assistant-limits'
+import type { AssistantCard, CueReply } from '@/lib/ai/assistant-limits'
 import {
   ASSISTANT_MAX_TURNS,
   ASSISTANT_STORAGE_KEY,
   addTurn,
+  cardsFor,
   cleanTurns,
   clearChat,
   getAssistantState,
   historyFor,
+  lastWasNear,
   resetAssistantStoreForTests,
   setAssistantOpen,
 } from '@/lib/assistant/store'
 import { isAssistantHiddenPath } from '@/lib/assistant/routes'
 import { wantsNearMe } from '@/lib/assistant/near'
-import { listText, replyStatus } from '@/components/assistant/AssistantAnswer'
+import { replyStatus } from '@/components/assistant/AssistantAnswer'
 
-// Ticket 147: the chat kept in this tab, the pages it shows on, and the small
+// Tickets 147 and 169: the chat kept in this tab, the pages it shows on, and the small
 // helpers the panel uses. Vitest runs in node, so sessionStorage is a stub.
 
 function card(over: Partial<AssistantCard> = {}): AssistantCard {
@@ -33,20 +35,11 @@ function card(over: Partial<AssistantCard> = {}): AssistantCard {
   }
 }
 
-function answer(over: Partial<Extract<AssistantResponse, { kind: 'answer' }>> = {}): AssistantResponse {
+function answer(over: Partial<Extract<CueReply, { kind: 'reply' }>> = {}): CueReply {
   return {
-    kind: 'answer',
-    heading: 'Your list in Detroit',
-    opener: null,
-    notice: null,
-    summary: '2 needs, 1 not listed.',
-    needs: [
-      { name: 'Catering', status: 'found', line: '4 places in Detroit', total: 4, top: [card()], seeAllHref: '/discover?category=catering', plan: { category: 'catering', keywords: [], openNow: false } },
-      { name: 'Balloon decor', status: 'none', line: "We don't have this on The BLACQList yet.", total: 0, top: [], seeAllHref: null, plan: { category: null, keywords: [], openNow: false } },
-    ],
-    nameMatches: [],
-    page: null,
-    searchHref: '/search?q=party',
+    kind: 'reply',
+    text: 'Here are **2 caterers** in Detroit.',
+    cards: [card(), card({ id: 'c2', name: 'Eastside Eats' })],
     actions: [],
     near: false,
     ...over,
@@ -87,7 +80,7 @@ describe('cleanTurns', () => {
     const httpImage = {
       id: '4',
       ask: 'x',
-      reply: answer({ nameMatches: [card({ imageSrc: 'http://example.com/a.jpg' })] }),
+      reply: answer({ cards: [card({ imageSrc: 'http://example.com/a.jpg' })] }),
     }
     expect(cleanTurns([good, outsideLink, protocolRelative, httpImage, 'junk']).map((t) => t.id)).toEqual(['1'])
   })
@@ -154,9 +147,45 @@ describe('the chat store', () => {
     expect(getAssistantState().turns).toEqual([])
   })
 
-  it('sends only the last 3 asks as history', () => {
-    for (const ask of ['a', 'b', 'c', 'd']) addTurn(ask, answer())
-    expect(historyFor(getAssistantState().turns)).toEqual(['b', 'c', 'd'])
+  it('ignores a saved copy from the old chat shape', () => {
+    const old = { kind: 'answer', heading: 'Your list', needs: [], nameMatches: [], actions: [], near: false }
+    expect(cleanTurns([{ id: '1', ask: 'party', reply: old }])).toEqual([])
+  })
+})
+
+describe('what a follow-up sends', () => {
+  it('sends the last 6 turns as user and assistant text', () => {
+    for (const ask of ['a', 'b', 'c', 'd', 'e', 'f', 'g']) addTurn(ask, answer({ text: `reply ${ask}` }))
+    const history = historyFor(getAssistantState().turns)
+    expect(history).toHaveLength(12)
+    expect(history[0]).toEqual({ role: 'user', text: 'b' })
+    expect(history.at(-1)).toEqual({ role: 'assistant', text: 'reply g' })
+  })
+
+  it('skips fallbacks and empty replies', () => {
+    addTurn('a', { kind: 'fallback', href: '/search?q=a', reason: 'error' })
+    addTurn('b', answer({ text: '   ' }))
+    addTurn('c', answer({ text: 'ok' }))
+    expect(historyFor(getAssistantState().turns)).toEqual([
+      { role: 'user', text: 'c' },
+      { role: 'assistant', text: 'ok' },
+    ])
+  })
+
+  it('sends the cards from the last reply by id and name only', () => {
+    addTurn('caterers', answer())
+    expect(cardsFor(getAssistantState().turns)).toEqual([
+      { id: 'c1', name: 'Motor City Catering' },
+      { id: 'c2', name: 'Eastside Eats' },
+    ])
+  })
+
+  it('sends no cards or location after a fallback', () => {
+    addTurn('near me', answer({ near: true }))
+    expect(lastWasNear(getAssistantState().turns)).toBe(true)
+    addTurn('more', { kind: 'fallback', href: '/search?q=more', reason: 'limited' })
+    expect(cardsFor(getAssistantState().turns)).toEqual([])
+    expect(lastWasNear(getAssistantState().turns)).toBe(false)
   })
 })
 
@@ -195,26 +224,18 @@ describe('wantsNearMe', () => {
   })
 })
 
-describe('listText and replyStatus', () => {
-  it('copies each need with its top pick, and marks what is not listed', () => {
-    const reply = answer()
-    if (reply.kind !== 'answer') throw new Error('expected an answer')
-    expect(listText(reply.needs)).toBe(
-      ['Your list', '- Catering: Motor City Catering (Detroit, MI)', '- Balloon decor: not listed'].join('\n')
-    )
+describe('replyStatus', () => {
+  it('reads the reply as plain text with the card count', () => {
+    expect(replyStatus(answer())).toBe('Here are 2 caterers in Detroit. Showing 2 businesses.')
+    expect(replyStatus(answer({ cards: [card()] }))).toMatch(/Showing 1 business\.$/)
+    expect(replyStatus(answer({ cards: [] }))).toBe('Here are 2 caterers in Detroit.')
   })
 
-  it('marks a nearest-city pick', () => {
-    const needs = [
-      { name: 'Thai food', status: 'nearest' as const, line: '', total: 2, top: [card({ name: 'Bangkok House', cityLabel: 'Seattle, WA' })], seeAllHref: null, plan: { category: 'restaurants', keywords: ['thai'], openNow: false } },
-    ]
-    expect(listText(needs)).toBe('Your list\n- Thai food: Bangkok House (Seattle, WA) [nearest city]')
+  it('says when the visitor stopped it', () => {
+    expect(replyStatus(answer({ text: 'Here are', cards: [], stopped: true }))).toBe('Here are Stopped.')
   })
 
-  it('reads the notice before the summary, and fixed lines for fallbacks', () => {
-    expect(replyStatus(answer({ notice: "We don't list businesses in Alaska yet." }))).toBe(
-      "We don't list businesses in Alaska yet. 2 needs, 1 not listed."
-    )
+  it('reads fixed lines for fallbacks', () => {
     expect(replyStatus({ kind: 'fallback', href: '/search?q=x', reason: 'limited' })).toMatch(/asked me a lot/)
     expect(replyStatus({ kind: 'fallback', href: '/search?q=x', reason: 'error' })).toMatch(/plain search/)
   })
