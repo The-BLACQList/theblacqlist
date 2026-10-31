@@ -19,6 +19,8 @@ import {
   floorIndexForLevel,
   floorSpokenLabel,
   floorValueText,
+  GAP_KINDS,
+  gapKinds,
   gapLabel,
   gapsPerFloor,
   siloGaps,
@@ -79,7 +81,9 @@ describe('buildFloors', () => {
     const floors = buildFloors(250_000)
     const spoken = floors.map((f) => floorSpokenLabel(f, 3))
     expect(spoken[0]).toBe('Shoppers: $2,500 spent with businesses on the list')
-    expect(spoken[1]).toBe('Shops: money passed on here is not tracked yet, 3 businesses on this floor')
+    expect(spoken[1]).toBe(
+      'Shops: money passed on here is not tracked yet, 3 businesses on this floor'
+    )
     expect(floorSpokenLabel(floors[2]!, 1)).toMatch(/1 business on this floor$/)
     for (const s of spoken) expect(s).not.toMatch(/circulat/i)
   })
@@ -185,7 +189,9 @@ describe('labels and colors', () => {
     expect(anonymousBusinessLabel({ familyIndex: 0, floorIndex: 1 })).toBe('A food shop')
     expect(anonymousBusinessLabel({ familyIndex: 0, floorIndex: 1 }, false)).toBe('a food shop')
     // "home and trades" starts with h, so it stays "A".
-    expect(anonymousBusinessLabel({ familyIndex: 3, floorIndex: 2 })).toBe('A home and trades supplier')
+    expect(anonymousBusinessLabel({ familyIndex: 3, floorIndex: 2 })).toBe(
+      'A home and trades supplier'
+    )
   })
 
   it('colors by category by default, keeps gold for you, and switches to level', () => {
@@ -220,7 +226,10 @@ describe('placement', () => {
   })
 
   it('keeps each business near its own floor and inside the cage', () => {
-    const many = [...makeMany(400), ...makeMany(12, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}`, floorIndex: 4 }))]
+    const many = [
+      ...makeMany(400),
+      ...makeMany(12, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}`, floorIndex: 4 })),
+    ]
     const placed = placeBusinesses(many)
     const byId = new Map(many.map((b) => [b.id, b]))
     for (const p of placed) {
@@ -234,7 +243,10 @@ describe('placement', () => {
   it('does not move a cluster when one more business joins another family', () => {
     const food = makeMany(10)
     const before = placeBusinesses(food)
-    const after = placeBusinesses([...food, ...makeMany(3, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}` }))])
+    const after = placeBusinesses([
+      ...food,
+      ...makeMany(3, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}` })),
+    ])
     for (const p of before) expect(after.find((q) => q.id === p.id)).toEqual(p)
   })
 
@@ -319,5 +331,25 @@ describe('gaps', () => {
     const label = gapLabel({ familyIndex: 0, floorIndex: 4 })
     expect(label).toBe('No food growers on the list yet')
     expect(label).not.toMatch(/leave|dollar|\$/i)
+  })
+
+  it('lists kinds of business for every gap (ticket 173)', () => {
+    for (const fam of CATEGORY_FAMILIES) {
+      expect(GAP_KINDS[fam.key], fam.key).toBeDefined()
+    }
+    expect(gapKinds({ familyIndex: 0, floorIndex: 4 })).toContain('Farms and farm stands')
+    expect(gapKinds({ familyIndex: 1, floorIndex: 2 })).toContain('Beauty supply stores')
+    // Shoppers is never a gap, and Services rarely has growers.
+    expect(gapKinds({ familyIndex: 0, floorIndex: 0 })).toEqual([])
+    expect(gapKinds({ familyIndex: FALLBACK_FAMILY_INDEX, floorIndex: 4 })).toEqual([])
+  })
+
+  it('keeps the kinds lists short, plain and free of ownership labels', () => {
+    for (const byFloor of Object.values(GAP_KINDS)) {
+      for (const kinds of Object.values(byFloor)) {
+        expect(kinds.length).toBeLessThanOrEqual(7)
+        for (const k of kinds) expect(k).not.toMatch(/—|black|ally|owned/i)
+      }
+    }
   })
 })
