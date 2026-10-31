@@ -41,7 +41,7 @@ export const FILLER_WORDS: ReadonlySet<string> = new Set([
 
 // Category-name words that say nothing about the category on their own:
 // "services" would otherwise tie every "X Services" category to every search.
-const GENERIC_NAME_TOKENS: ReadonlySet<string> = new Set([
+export const GENERIC_NAME_TOKENS: ReadonlySet<string> = new Set([
   'service', 'and', 'other', 'shop', 'store', 'product', 'solution', 'general', 'the',
   'of', 'amp', 'more',
 ])

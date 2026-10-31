@@ -4,16 +4,17 @@ import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { ArrowUp, LoaderCircle, X } from 'lucide-react'
+import { ArrowUp, Square, X } from 'lucide-react'
 
 import { GUIDE_MAX_INPUT } from '@/lib/ai/guide-limits'
-import { askCue } from '@/lib/assistant/ask'
+import { streamCue } from '@/lib/assistant/ask'
 import { isAssistantHiddenPath } from '@/lib/assistant/routes'
 import {
   addTurn,
   clearChat,
   setAssistantOpen,
   takeReturnFocus,
+  turnId,
   useAssistant,
   useHomeBarInView,
   type AssistantTurn,
@@ -21,7 +22,7 @@ import {
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { findSection, jumpToSection } from '@/lib/assistant/scroll'
 import { cn } from '@/lib/utils'
-import { AssistantReply, AssistantSkeleton, replyStatus, type ReplyHandlers } from './AssistantAnswer'
+import { AssistantReply, CueStreaming, CUE_LOOKING, replyStatus, type ReplyHandlers } from './AssistantAnswer'
 import { useExample, useExamples } from './useExample'
 
 const DESKTOP = '(min-width: 48rem)'
@@ -42,11 +43,12 @@ function useIsDesktop(): boolean {
 }
 
 /**
- * Cue, the site assistant (tickets 147 and 148): a gold Ask Cue button in the
- * corner of every public page. On a computer it opens a panel that stays open
- * while the visitor browses; on a phone it opens a full-screen sheet that
- * closes when they follow a link or Cue jumps to part of the page. The chat
- * lives in this tab (lib/assistant/store.ts).
+ * Cue, the site assistant (tickets 147, 148 and 169): a gold Ask Cue button in
+ * the corner of every public page. Replies stream in as Cue writes them. On a
+ * computer it opens a panel that stays open while the visitor browses; on a
+ * phone it opens a full-screen sheet that closes when they follow a link or
+ * Cue jumps to part of the page. The chat lives in this tab
+ * (lib/assistant/store.ts).
  */
 export function Assistant() {
   const pathname = usePathname()
@@ -68,11 +70,7 @@ export function Assistant() {
     <>
       <DialogPrimitive.Root
         open={open}
-        onOpenChange={(next) => {
-          // A fresh open starts quiet, so the next jump is spoken even with the same words.
-          if (next) setAfterClose('')
-          setAssistantOpen(next)
-        }}
+        onOpenChange={setAssistantOpen}
         modal={!isDesktop}
       >
         <DialogPrimitive.Trigger
@@ -93,7 +91,13 @@ export function Assistant() {
         </DialogPrimitive.Trigger>
 
         <DialogPrimitive.Portal>
-          <AssistantPanel turns={turns} isDesktop={isDesktop} announce={setAfterClose} />
+          <AssistantPanel
+            turns={turns}
+            isDesktop={isDesktop}
+            // A changed line is spoken even when the words match the last jump's,
+            // however the panel was opened (the button, or Keep chatting).
+            announce={(say) => setAfterClose((now) => (now === say ? `${say}\u00a0` : say))}
+          />
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
       <p role="status" className="sr-only">
@@ -114,13 +118,20 @@ function AssistantPanel({
   announce: (text: string) => void
 }) {
   const [text, setText] = useState('')
-  const [pending, setPending] = useState<string | null>(null)
+  // The ask Cue is working on, with its status line and the words so far. Its
+  // id carries over to the kept turn, so the list item doesn't remount.
+  const [pending, setPending] = useState<{ id: string; ask: string; status: string; text: string } | null>(null)
   const [status, setStatus] = useState('')
+  const stopRef = useRef<AbortController | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastRef = useRef<HTMLLIElement>(null)
-  const jumpOnClose = useRef<{ ids: string[]; label: string } | null>(null)
+  const listRef = useRef<HTMLOListElement>(null)
+  // The phone sheet's jump, run once the sheet has closed, and what to say then.
+  const jumpOnClose = useRef<{ ids: string[]; say: string; focus: boolean } | null>(null)
+  // Alternates the empty-send line, so saying it twice is still heard.
+  const nudged = useRef(false)
   const placeholder = useExample()
 
   // A new answer: bring its start into view, not the bottom of a long list.
@@ -129,59 +140,141 @@ function AssistantPanel({
     lastRef.current?.scrollIntoView({ block: 'start' })
   }, [count])
 
+  const asking = pending?.ask ?? null
   useEffect(() => {
-    if (pending) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-  }, [pending])
+    if (asking) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
+  }, [asking])
+
+  // Follow the words as they arrive, unless the visitor has scrolled up to read.
+  const written = pending?.text.length ?? 0
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el && written > 0 && el.scrollHeight - el.scrollTop - el.clientHeight < 96) {
+      el.scrollTo({ top: el.scrollHeight })
+    }
+  }, [written])
+
+  /**
+   * Puts focus back in the panel when the control that had it went away (the
+   * Stop button, a Try again), so keyboard and screen reader users aren't
+   * dropped at the top of the page. On a phone the keyboard would cover the
+   * reply, so the sheet takes it.
+   */
+  function keepFocus() {
+    const active = document.activeElement
+    if (active && active !== document.body && contentRef.current?.contains(active)) return
+    focusPanel()
+  }
+
+  /**
+   * Focus for after the panel changed under the visitor. On a computer, the
+   * box, ready for the next ask. On a phone, the conversation list rather than
+   * the sheet, so the dialog's name and description aren't read again.
+   */
+  function focusPanel() {
+    if (isDesktop) inputRef.current?.focus()
+    else (listRef.current ?? contentRef.current)?.focus()
+  }
+
+  /** Says `line`, even when it is what was said last. */
+  function sayAgain(line: string) {
+    setStatus((now) => (now === line ? `${line}\u00a0` : line))
+  }
 
   async function send(raw: string) {
     const words = raw.trim().slice(0, GUIDE_MAX_INPUT)
-    if (!words || pending) return
+    if (!words) return
+    if (pending) {
+      sayAgain('Cue is still answering. Stop it first, or wait.')
+      return
+    }
+    const id = turnId()
     setText('')
-    setPending(words)
-    setStatus('Cue is looking…')
-    const reply = await askCue(words)
-    addTurn(words, reply)
+    setPending({ id, ask: words, status: CUE_LOOKING, text: '' })
+    setStatus(CUE_LOOKING)
+    const stop = new AbortController()
+    stopRef.current = stop
+    const reply = await streamCue(words, {
+      signal: stop.signal,
+      onProgress: (progress) =>
+        setPending((now) =>
+          now ? { ...now, [progress.type === 'status' ? 'status' : 'text']: progress.text } : now
+        ),
+    })
+    // Clear chat let go of this ask; its reply goes nowhere.
+    const cleared = stopRef.current !== stop
+    stopRef.current = null
     setPending(null)
-    // A section of this page that answers them: go there on its own.
-    const scroll = reply.kind === 'answer' ? reply.actions.find((a) => a.kind === 'scroll') : undefined
-    if (scroll && jump(scroll.ids, scroll.label)) {
-      setStatus(`${replyStatus(reply)} Cue took you to ${scroll.label}.`)
+    if (cleared) return
+    // Stopped before Cue wrote anything: give them their words back.
+    if (!reply) {
+      setText(words)
+      setStatus('Stopped.')
+      keepFocus()
+      return
+    }
+    addTurn(words, reply, id)
+    keepFocus()
+    // A section of this page that answers them: go there on its own, without
+    // taking focus from where they were typing.
+    const said = replyStatus(reply)
+    const scroll =
+      reply.kind === 'reply' && !reply.stopped ? reply.actions.find((a) => a.kind === 'scroll') : undefined
+    if (scroll && jump(scroll.ids, `${said} Cue took you to ${scroll.label}.`, false)) {
+      // On a phone the sheet closes first; the line is said after it's gone.
+      if (isDesktop) setStatus(`${said} Cue took you to ${scroll.label}.`)
     } else {
-      setStatus(replyStatus(reply))
+      setStatus(said)
     }
   }
 
   /**
-   * Jumps to a section of this page. On a phone the sheet covers the page, so
-   * it closes first and the jump runs as it hands focus back (onCloseAutoFocus).
+   * Jumps to a section of this page. `focus` is for a jump they asked for (a
+   * button); Cue's own jump leaves focus alone. On a phone the sheet covers
+   * the page, so it closes first and the jump runs as it hands focus back
+   * (onCloseAutoFocus), which also says `say`.
    */
-  function jump(ids: string[], label: string): boolean {
+  function jump(ids: string[], say: string, focus: boolean): boolean {
     if (!findSection(ids)) return false
-    if (isDesktop) return jumpToSection(ids)
-    jumpOnClose.current = { ids, label }
+    if (isDesktop) return jumpToSection(ids, { focus })
+    jumpOnClose.current = { ids, say, focus }
     setAssistantOpen(false)
     return true
   }
 
   const handlers: ReplyHandlers = {
-    onAsk: (words) => void send(words),
-    onJump: (ids, label) => void jump(ids, label),
+    // The new turn opens at the bottom; don't leave focus on an old button.
+    onAsk: (words) => {
+      focusPanel()
+      void send(words)
+    },
+    onJump: (ids, label) => void jump(ids, `Cue took you to ${label}.`, true),
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!text.trim()) {
-      setStatus("Type what you're looking for, then send.")
+      nudged.current = !nudged.current
+      setStatus(nudged.current ? "Type what you're looking for, then send." : 'Type a few words first, then send.')
       inputRef.current?.focus()
       return
     }
     void send(text)
   }
 
+  function onStop() {
+    stopRef.current?.abort()
+    keepFocus()
+  }
+
   function onClear() {
+    const running = stopRef.current
+    stopRef.current = null
+    running?.abort()
     clearChat()
     setStatus('Chat cleared.')
-    inputRef.current?.focus()
+    // The Clear chat button is gone now.
+    focusPanel()
   }
 
   // The phone sheet covers the page, so following a link closes it.
@@ -207,8 +300,14 @@ function AssistantPanel({
         if (isDesktop) event.preventDefault()
       }}
       // The computer panel is not modal: Esc on the page belongs to the page.
+      // While Cue writes, Esc in the panel stops it rather than closing.
       onEscapeKeyDown={(event) => {
-        if (isDesktop && !contentRef.current?.contains(document.activeElement)) event.preventDefault()
+        if (isDesktop && !contentRef.current?.contains(document.activeElement)) {
+          event.preventDefault()
+        } else if (pending) {
+          event.preventDefault()
+          onStop()
+        }
       }}
       onCloseAutoFocus={(event) => {
         const back = takeReturnFocus()
@@ -216,7 +315,14 @@ function AssistantPanel({
         if (pendingJump) {
           jumpOnClose.current = null
           event.preventDefault()
-          if (jumpToSection(pendingJump.ids)) announce(`Cue took you to ${pendingJump.label}.`)
+          // The sheet's hold on the page lifts a beat after this, so wait
+          // before speaking or the line is lost.
+          if (jumpToSection(pendingJump.ids, { focus: pendingJump.focus })) {
+            const say = pendingJump.say
+            window.setTimeout(() => announce(say), 100)
+          }
+          // Cue's own jump leaves focus where it was before the sheet opened.
+          if (!pendingJump.focus && back?.isConnected) back.focus({ preventScroll: true })
           return
         }
         if (back?.isConnected) {
@@ -225,11 +331,11 @@ function AssistantPanel({
         }
       }}
       onClickCapture={onClickCapture}
-      className="fixed inset-0 z-50 flex flex-col bg-brand-black text-off-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:inset-auto md:bottom-4 md:right-4 md:w-96 md:h-[min(70vh,40rem)] md:p-0 md:rounded-2xl md:border md:border-gold/30 md:shadow-2xl md:shadow-brand-black/50 focus:outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 motion-reduce:animate-none"
+      className="fixed inset-0 z-50 flex flex-col bg-brand-black text-off-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:inset-auto md:bottom-4 md:right-4 md:w-96 h-dvh md:h-[min(70dvh,40rem)] md:p-0 md:rounded-2xl md:border md:border-gold/30 md:shadow-2xl md:shadow-brand-black/50 focus:outline-none blacq-cue-panel"
     >
       <header className="flex items-center gap-2 h-14 shrink-0 pl-4 pr-1 border-b border-white/10">
         <GoldBrandMark className="size-6" />
-        <DialogPrimitive.Title className="font-subhead text-base font-bold">Cue</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="font-headline text-lg font-medium tracking-wide">Cue</DialogPrimitive.Title>
         <DialogPrimitive.Description id="assistant-description" className="sr-only">
           Cue answers from our listings and can take you to parts of this page. This chat stays in this
           browser tab and clears when you close it.
@@ -239,7 +345,7 @@ function AssistantPanel({
             <button
               type="button"
               onClick={onClear}
-              className="min-h-11 px-3 rounded-md font-subhead text-sm font-semibold text-ink-soft hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              className="min-h-11 px-3 mr-1 rounded-md font-subhead text-sm font-semibold text-ink-soft hover:text-off-white hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               Clear chat
             </button>
@@ -256,26 +362,22 @@ function AssistantPanel({
           <EmptyState
             onPick={(example) => {
               // The example list goes away, so keep focus in the panel.
-              if (isDesktop) inputRef.current?.focus()
-              else contentRef.current?.focus()
+              focusPanel()
               void send(example)
             }}
           />
         ) : (
-          <ol aria-label="Conversation" className="list-none p-0 m-0 space-y-6">
+          <ol ref={listRef} tabIndex={-1} aria-label="Conversation" className="list-none p-0 m-0 space-y-6 focus:outline-none">
             {turns.map((turn, i) => (
               <li key={turn.id} ref={i === turns.length - 1 ? lastRef : undefined} className="space-y-3 scroll-mt-4">
                 <AskBubble ask={turn.ask} />
-                <div>
-                  <span className="sr-only">Cue:</span>
-                  <AssistantReply ask={turn.ask} reply={turn.reply} layout="panel" handlers={handlers} />
-                </div>
+                <AssistantReply ask={turn.ask} reply={turn.reply} layout="panel" handlers={handlers} />
               </li>
             ))}
             {pending && (
-              <li className="space-y-3">
-                <AskBubble ask={pending} />
-                <AssistantSkeleton layout="panel" />
+              <li key={pending.id} className="space-y-3 scroll-mt-4">
+                <AskBubble ask={pending.ask} />
+                <CueStreaming status={pending.status} text={pending.text} layout="panel" />
               </li>
             )}
           </ol>
@@ -300,26 +402,33 @@ function AssistantPanel({
           autoComplete="off"
           enterKeyHint="send"
           placeholder={placeholder}
-          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/60 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-sm placeholder:text-ink-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+          className="flex-1 min-w-0 h-11 px-4 rounded-full border border-white/40 bg-white/[0.06] font-subhead text-base text-off-white placeholder:text-sm placeholder:text-ink-soft text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
+        {/* While Cue writes, send turns into Stop, in the same spot. Enter in
+            the box still sends, so it can't stop the answer by accident. */}
         <button
-          type="submit"
-          aria-disabled={pending !== null || undefined}
-          className="grid place-items-center size-11 shrink-0 rounded-full bg-gold text-brand-black hover:bg-light-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-disabled:opacity-70 aria-disabled:cursor-wait"
+          type={pending ? 'button' : 'submit'}
+          onClick={pending ? onStop : undefined}
+          className={cn(
+            'grid place-items-center size-11 shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+            pending
+              ? 'border border-gold/70 text-off-white hover:bg-gold/15'
+              : 'bg-gold text-brand-black hover:bg-light-gold'
+          )}
         >
           {pending ? (
-            <LoaderCircle className="size-5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            <Square className="size-3.5 fill-current" aria-hidden="true" />
           ) : (
             <ArrowUp className="size-5" aria-hidden="true" />
           )}
-          <span className="sr-only">Send</span>
+          <span className="sr-only">{pending ? 'Stop Cue’s answer' : 'Send'}</span>
         </button>
       </form>
-      <p className="shrink-0 px-4 pt-1 pb-2 font-body text-xs text-ink-soft">
-        Cue uses AI to match your words to our listings.{' '}
+      <p className="shrink-0 px-4 pt-0.5 pb-2 font-body text-xs leading-snug text-ink-soft">
+        Cue uses AI to answer from our listings and can get things wrong.{' '}
         <Link
-          href="/privacy"
-          className="inline-block py-2 underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
+          href="/privacy#cue"
+          className="inline-flex items-center min-h-11 underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
         >
           Privacy
         </Link>
@@ -330,7 +439,7 @@ function AssistantPanel({
 
 function AskBubble({ ask }: { ask: string }) {
   return (
-    <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-gold/15 px-3 py-2 font-body text-sm text-off-white break-words">
+    <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-gold/15 px-3 py-2 font-body text-[15px] text-off-white break-words">
       <span className="sr-only">You asked: </span>
       {ask}
     </p>
@@ -352,7 +461,7 @@ function EmptyState({ onPick }: { onPick: (example: string) => void }) {
             <button
               type="button"
               onClick={() => onPick(example)}
-              className="w-full min-h-11 px-4 py-2 rounded-xl border border-white/50 text-left font-body text-sm text-off-white hover:border-gold/60 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              className="w-full min-h-11 px-4 py-2 rounded-xl border border-white/25 text-left font-body text-sm text-off-white hover:border-gold/60 hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               {example}
             </button>

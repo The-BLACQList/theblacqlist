@@ -15,6 +15,8 @@
  */
 
 import type { AssistantAction } from '@/lib/ai/assistant-limits'
+import { stripLinks } from '@/lib/ai/guide'
+import { sanitizeForPrompt } from '@/lib/ai/sanitize'
 import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
 import { directionsUrl } from '@/lib/listings/directions'
 
@@ -263,9 +265,23 @@ export function businessPage(b: BusinessPageFacts): PageContext {
   }
 }
 
+/**
+ * The search words from the page's address, cleaned like anything else the
+ * visitor typed: contact details and links out. Dropped when cleaning fails.
+ */
+function cleanSearchWords(q: string | null): string | null {
+  if (!q) return null
+  try {
+    return stripLinks(sanitizeForPrompt(q, 60)).trim() || null
+  } catch {
+    return null
+  }
+}
+
 export function discoverPage(ref: Extract<PageRef, { kind: 'discover' }>): PageContext {
+  const q = cleanSearchWords(ref.q)
   const parts = [
-    ref.q ? `search "${ref.q}"` : null,
+    q ? `search "${q}"` : null,
     ref.category ? `category ${words(ref.category)}` : null,
     ref.city ? `city ${words(ref.city)}` : null,
     ref.openNow ? 'open now only' : null,

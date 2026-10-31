@@ -218,24 +218,34 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 <p>
                   <strong>It&apos;s optional.</strong> You can set up and run your page without it.
                 </p>
-                <p>
+                <p id="cue" className="scroll-mt-24">
                   <strong>The home page guide and Cue, our AI assistant.</strong> If you type what
                   you need into the guide on our home page, or ask Cue (the Ask Cue button on our
-                  pages), we send those words to Anthropic so it can match them to our categories and
-                  cities and write Cue&apos;s one-line reply. We check that reply before you see it,
-                  and every business Cue shows comes from our own listings. With Cue, we also send
-                  your last few messages, so a follow-up like &ldquo;what about DJs?&rdquo; makes
-                  sense. Before we send anything, we take out anything that looks like an email
-                  address, a phone number, a street address, or a link. Cue also knows which public
-                  page you&apos;re on. We send the page&apos;s address, and we look up only what that
-                  page already shows anyone (for a business page: its name, kind of business, city
-                  and rating), so Cue can help on that page. Your conversation stays in your browser
-                  tab and clears when you close the tab or tap Clear chat. We don&apos;t save what you
-                  type, and we don&apos;t link it to you or your account. We only keep a record that
-                  the guide or Cue was used (when, and whether it worked). If you tap Near me or ask
-                  for something near you, we round your location to about a city block and use it
-                  only to sort that search by distance. If your next message is a follow-up to a
-                  Near me answer, we ask your browser for your location again for that search. We
+                  pages), we send those words to Anthropic so its AI can search our listings and write
+                  Cue&apos;s reply in its own words. Cue only looks up what anyone can already see on
+                  our site (such as businesses, cities, categories, ratings and hours). Every business
+                  card Cue shows comes from those results, and we check that its reply doesn&apos;t name
+                  a business on our site that it didn&apos;t find. As the reply is written, we take out any
+                  links, email addresses and phone numbers, and we check it again before it&apos;s
+                  done. AI can still get things wrong, so check the details on the business&apos;s
+                  page. With Cue, we also send your last few messages and Cue&apos;s replies, so a
+                  follow-up like &ldquo;what about DJs?&rdquo; makes sense. Before we send anything,
+                  we take out anything that looks like an email address, a phone number, a street
+                  address, or a link. Cue also knows which public page you&apos;re on. We send the
+                  page&apos;s address, and we look up only what that page already shows anyone (for a
+                  business page: its name, kind of business, city, rating, and which details it lists),
+                  so Cue can help on that page. On a search results page, that includes the words you
+                  searched for. If you name a place we don&apos;t cover yet, we may look up just that
+                  place name on OpenStreetMap to find our nearest city. We keep that lookup for up to
+                  a week so we don&apos;t ask twice. It holds only the place name, not who asked. Your conversation stays in
+                  your browser tab and clears when you close the tab or tap Clear chat. We don&apos;t
+                  save what you type or what Cue writes back, and we don&apos;t link it to you or your
+                  account. We only keep a record that the guide or Cue was used (when, whether it
+                  worked, and how much AI it used). If you tap Near me or ask for something near you,
+                  your browser rounds your location to about a city block before sending it, and we
+                  use it only to find and sort results near you. If you send another message right
+                  after a Near me answer, we ask your browser for your location again for that
+                  message. We
                   don&apos;t send your location to Anthropic and we don&apos;t save it. If you&apos;d
                   rather not use AI, our{' '}
                   <Link href="/search" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
@@ -424,7 +434,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that match what a visitor types to our categories and cities and write a short reply (not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that search our listings for what a visitor types and write a reply from what they find (not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"
@@ -439,7 +449,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                       </tr>
                       <tr>
                         <td className="border-b border-gray-200 p-3">OpenStreetMap (Nominatim)</td>
-                        <td className="border-b border-gray-200 p-3">Puts business addresses on the map, and finds the place name or ZIP code you type into the map search. It gets only the address or the words you typed, sent from our server</td>
+                        <td className="border-b border-gray-200 p-3">Puts business addresses on the map, finds the place name or ZIP code you type into the map search, and helps Cue find our nearest city to a place you name. It gets only the address, the words you typed, or the place name, sent from our server</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://osmfoundation.org/wiki/Privacy_Policy"
