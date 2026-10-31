@@ -19,11 +19,16 @@ import {
   floorIndexForLevel,
   floorSpokenLabel,
   floorValueText,
+  gapLabel,
+  gapsPerFloor,
+  siloGaps,
   placeBusinesses,
   pulseProgress,
   pulseSchedule,
   SILO,
   clusterRadius,
+  clusterDepth,
+  CLUSTER_MAX_R,
   crowdAnchor,
   linkControlPoints,
   scrollForFloor,
@@ -142,35 +147,30 @@ describe('buildSiloBusinesses', () => {
     expect(out[0]!.floorIndex).toBe(4)
   })
 
-  it('never shows a name for a business that has not opted in', () => {
-    const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
-    for (const b of out) {
-      expect(b.name).toBeNull()
-      expect(b.href).toBeNull()
-      expect(businessDisplayName(b)).not.toMatch(/Alpha|Beta/)
-    }
-    expect(businessDisplayName(out[0]!)).toBe('A food maker')
-  })
-
-  it('shows the name for an opted-in business', () => {
-    const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: (id) => id === 'b' })
+  // Founder, 2026-10-31 (ticket 171b): names show on the Collective, just not
+  // the lines or the numbers.
+  it('shows every business by name, with its link, even below the floor', () => {
+    const out = buildSiloBusinesses({ nodes, listings })
+    expect(out.find((b) => b.id === 'a')!.name).toBe('Alpha')
     expect(out.find((b) => b.id === 'b')!.name).toBe('Beta')
-    expect(out.find((b) => b.id === 'a')!.name).toBeNull()
+    const below = out.find((b) => b.id === 'below')!
+    expect(below.name).not.toBeNull()
+    expect(below.href).not.toBeNull()
+    expect(below.amountCents).toBe(0)
+    expect(businessDisplayName(out[0]!)).toBe('Alpha')
   })
 
-  it('names the reader\'s own business for that reader only', () => {
-    const mine = buildSiloBusinesses({
-      nodes,
-      listings,
-      isNameOptedIn: () => false,
-      youIds: new Set(['a']),
-    })
-    const you = mine.find((b) => b.id === 'a')!
-    expect(you.isYou).toBe(true)
-    expect(you.name).toBe('Alpha')
-    const someoneElse = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
+  it('falls back to the kind of business when a listing has no name', () => {
+    const [b] = buildSiloBusinesses({ nodes: [], listings: { x: listing({ name: '' }) } })
+    expect(b!.name).toBeNull()
+    expect(businessDisplayName(b!)).toBe(anonymousBusinessLabel(b!))
+  })
+
+  it("marks the reader's own business as You", () => {
+    const mine = buildSiloBusinesses({ nodes, listings, youIds: new Set(['a']) })
+    expect(mine.find((b) => b.id === 'a')!.isYou).toBe(true)
+    const someoneElse = buildSiloBusinesses({ nodes, listings })
     expect(someoneElse.find((b) => b.id === 'a')!.isYou).toBe(false)
-    expect(someoneElse.find((b) => b.id === 'a')!.name).toBeNull()
   })
 
   it('places levels on their floor and families by category', () => {
@@ -238,9 +238,18 @@ describe('placement', () => {
     for (const p of before) expect(after.find((q) => q.id === p.id)).toEqual(p)
   })
 
+  it('spreads a busy cluster wider and deeper than a small one', () => {
+    expect(clusterRadius(300)).toBeGreaterThan(clusterRadius(40))
+    expect(clusterDepth(300)).toBeGreaterThan(clusterDepth(5))
+    // Two full clusters on neighbouring floors never touch.
+    expect(2 * CLUSTER_MAX_R).toBeLessThan(SILO.y[0] - SILO.y[1])
+    // The deepest slab still stays outside the hub column.
+    expect(SILO.rA - clusterDepth(10_000)).toBeGreaterThan(SILO.hubR)
+  })
+
   it('grows the cluster with the crowd, within limits', () => {
     expect(clusterRadius(1)).toBe(SILO.cr)
-    expect(clusterRadius(10_000)).toBe(8)
+    expect(clusterRadius(10_000)).toBe(CLUSTER_MAX_R)
     expect(clusterRadius(200)).toBeGreaterThan(SILO.cr)
   })
 
@@ -285,5 +294,30 @@ describe('pulses', () => {
     expect(pulseProgress(slot, 1800)).toBeCloseTo(0.5)
     expect(pulseProgress(slot, 3000)).toBeNull()
     expect(pulseProgress(slot, 61_000)).toBe(0)
+  })
+})
+
+describe('gaps', () => {
+  it('marks every family on every business floor as a gap when the list is empty', () => {
+    const gaps = siloGaps([])
+    expect(gaps).toHaveLength(CATEGORY_FAMILIES.length * (SILO_FLOORS.length - 1))
+    expect(gaps.every((g) => g.floorIndex >= 1)).toBe(true)
+    expect(gapsPerFloor(gaps)).toEqual([0, 6, 6, 6, 6])
+  })
+
+  it('fills a wedge once one business is in it, linked or not', () => {
+    const out = buildSiloBusinesses({
+      nodes: [],
+      listings: { f: listing({ level: 'grower', categorySlug: 'food-dining' }) },
+    })
+    const gaps = siloGaps(out)
+    expect(gaps.some((g) => g.familyIndex === 0 && g.floorIndex === 4)).toBe(false)
+    expect(gapsPerFloor(gaps)[4]).toBe(CATEGORY_FAMILIES.length - 1)
+  })
+
+  it('names a gap honestly, without saying money leaves', () => {
+    const label = gapLabel({ familyIndex: 0, floorIndex: 4 })
+    expect(label).toBe('No food growers on the list yet')
+    expect(label).not.toMatch(/leave|dollar|\$/i)
   })
 })

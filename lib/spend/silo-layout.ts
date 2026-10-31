@@ -14,8 +14,12 @@
  * - Every published business is a node, so the spread of businesses shows
  *   before any receipt does (ticket 171). A business is only `linked`, with a
  *   connection and a total, once AGGREGATE_MIN_TRANSACTIONS receipts are
- *   behind it. Its name only shows when it has opted in. There is no opt-in
- *   column yet, so every caller passes `() => false` today.
+ *   behind it.
+ * - Names show for every business (founder, 2026-10-31, ticket 171b): a
+ *   published listing is already public. Lines and figures stay hidden below
+ *   the threshold, because those are what could point back at one shopper.
+ * - A gap is a category family with no business yet on a business floor. It
+ *   is drawn as a pink dashed square and never claims dollars leave.
  */
 
 import { meetsAggregateThreshold } from './aggregate-privacy'
@@ -220,7 +224,7 @@ export interface BusinessListingMeta {
 
 export interface SiloBusiness {
   id: string
-  /** Null unless the business opted in, or it is the reader's own "You". */
+  /** The listing's public name. Null only if the listing has none. */
   name: string | null
   href: string | null
   level: BusinessLevel
@@ -243,7 +247,8 @@ export interface BuildBusinessesInput {
   nodes: readonly BusinessNodeRow[]
   /** Every published business, keyed by listing id. Each one becomes a node. */
   listings: Readonly<Record<string, BusinessListingMeta>>
-  isNameOptedIn: (listingId: string) => boolean
+  /** Kept for the opt-in column if one ever lands. Names show either way. */
+  isNameOptedIn?: (listingId: string) => boolean
   /** Listing ids the signed-in reader has a counted (approved) receipt at. */
   youIds?: ReadonlySet<string>
 }
@@ -260,16 +265,14 @@ export function buildSiloBusinesses({
   return Object.entries(listings)
     .map(([id, meta]) => {
       const node = counted.get(id)
-      const optedIn = isNameOptedIn(id)
+      const optedIn = isNameOptedIn?.(id) ?? false
       const isYou = youIds?.has(id) ?? false
       const level: BusinessLevel = isBusinessLevel(meta.level) ? meta.level : 'local'
-      // The reader already knows where they shopped, so their own business is
-      // named for them. Nobody else sees that name unless the business opts in.
-      const showName = optedIn || isYou
       return {
         id,
-        name: showName ? meta.name : null,
-        href: showName ? meta.href : null,
+        // A published listing's name is already public (founder, 2026-10-31).
+        name: meta.name || null,
+        href: meta.href,
         level,
         floorIndex: floorIndexForLevel(level),
         familyIndex: familyIndexForCategorySlug(meta.categorySlug),
@@ -299,7 +302,7 @@ export function anonymousBusinessLabel(b: Pick<SiloBusiness, 'familyIndex' | 'fl
   return `${article} ${words}`
 }
 
-/** The label a reader sees for a business: its name if allowed, otherwise its kind. */
+/** The label a reader sees for a business: its name, or its kind if it has none. */
 export function businessDisplayName(b: SiloBusiness): string {
   return b.name ?? anonymousBusinessLabel(b)
 }
@@ -316,6 +319,43 @@ export function businessesPerFloor(businesses: readonly SiloBusiness[]): number[
   const counts = SILO_FLOORS.map(() => 0)
   for (const b of businesses) counts[b.floorIndex] = (counts[b.floorIndex] ?? 0) + 1
   return counts
+}
+
+// ─── Gaps (round 17's pink squares) ──────────────────────────────────────────
+
+export interface SiloGap {
+  familyIndex: number
+  /** 1 to 4: a business floor. Shoppers never have a gap. */
+  floorIndex: number
+}
+
+/**
+ * Every (family, business floor) wedge with no business in it yet. Shown as a
+ * pink dashed square: a kind of business the list doesn't have on that floor.
+ */
+export function siloGaps(businesses: readonly SiloBusiness[]): SiloGap[] {
+  const filled = new Set(businesses.map((b) => `${b.familyIndex}:${b.floorIndex}`))
+  const gaps: SiloGap[] = []
+  for (let k = 1; k < SILO_FLOORS.length; k++) {
+    for (let f = 0; f < CATEGORY_FAMILIES.length; f++) {
+      if (!filled.has(`${f}:${k}`)) gaps.push({ familyIndex: f, floorIndex: k })
+    }
+  }
+  return gaps
+}
+
+/** Gaps per floor, Shoppers first (always zero), for the gauge badges. */
+export function gapsPerFloor(gaps: readonly SiloGap[]): number[] {
+  const counts = SILO_FLOORS.map(() => 0)
+  for (const g of gaps) counts[g.floorIndex] = (counts[g.floorIndex] ?? 0) + 1
+  return counts
+}
+
+/** "No food growers on the list yet": honest, and never says money leaves. */
+export function gapLabel(g: SiloGap): string {
+  const fam = CATEGORY_FAMILIES[g.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
+  const floor = SILO_FLOORS[g.floorIndex] ?? SILO_FLOORS[1]!
+  return `No ${fam.noun} ${floor.short.toLowerCase()} on the list yet`
 }
 
 // ─── Positions ───────────────────────────────────────────────────────────────
@@ -386,9 +426,24 @@ export function wedgePoint(familyIndex: number, floorIndex: number, u = 0, v = 0
   return { x: r * c - u * s, y: (SILO.y[floorIndex] ?? 0) + v, z: r * s + u * c }
 }
 
-/** Cluster radius grows with the crowd so busy wedges don't pile up. */
+/**
+ * Cluster radius grows with the crowd so busy wedges don't pile up. The cap
+ * keeps a full cluster inside its wedge and clear of the floors above and
+ * below (17 apart).
+ */
+export const CLUSTER_MAX_R = 7.5
+
 export function clusterRadius(count: number): number {
-  return Math.max(SILO.cr, Math.min(8, 0.42 * Math.sqrt(count)))
+  return Math.max(SILO.cr, Math.min(CLUSTER_MAX_R, 0.55 * Math.sqrt(count)))
+}
+
+/**
+ * How deep a cluster may reach in toward the middle of the silo. A small
+ * cluster stays flat against the wall; a busy one becomes a thick slab so its
+ * dots stop sitting on top of each other (ticket 171b).
+ */
+export function clusterDepth(count: number): number {
+  return 0.9 + Math.min(5.5, Math.max(0, clusterRadius(count) - SILO.cr) * 1.2)
 }
 
 export interface PlacedBusiness extends Point3 {
@@ -415,11 +470,15 @@ export function placeBusinesses(businesses: readonly SiloBusiness[]): PlacedBusi
     const ordered = [...group].sort((a, b) => a.id.localeCompare(b.id))
     const n = ordered.length
     const radius = clusterRadius(n)
+    const deep = clusterDepth(n)
     ordered.forEach((b, j) => {
       const rad = radius * Math.sqrt((j + 0.5) / n)
       const ang = j * GOLDEN_ANGLE + b.familyIndex
-      const depth = (mulberry32(hashString(b.id))() - 0.5) * 0.9
-      const p = wedgePoint(b.familyIndex, b.floorIndex, rad * Math.cos(ang), rad * Math.sin(ang) * 0.85, depth)
+      // Mostly inward, a little outward, so the slab stays inside the cage.
+      const depth = mulberry32(hashString(b.id))() * deep - 0.45
+      // Narrow the slab as it goes in, so it keeps to its own wedge.
+      const narrow = (SILO.rA - depth) / SILO.rA
+      const p = wedgePoint(b.familyIndex, b.floorIndex, rad * Math.cos(ang) * narrow, rad * Math.sin(ang), depth)
       placed.push({ id: b.id, ...p })
     })
   }

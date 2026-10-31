@@ -8,8 +8,8 @@
 //   1. Every named per-business or per-city read stays gated at
 //      AGGREGATE_MIN_TRANSACTIONS, and the community total still leaves out
 //      receipts kept out of community figures.
-//   2. Names never reach the browser for a business that hasn't opted in:
-//      the Silo's rows are built on the server.
+//   2. The Silo's rows are built on the server. Every business shows by name
+//      (ticket 171b), but amounts and counts stay server-side below the bar.
 //   3. A failed read says so, with a way to try again, instead of drawing an
 //      empty map.
 //   4. The 3D scene is its own lazy chunk, with the list as the fallback.
@@ -61,9 +61,9 @@ describe('/flow-map data reads', () => {
     expect(page).toMatch(/r\.status === 'approved' && !r\.aggregate_opt_out && r\.listing_id/)
   })
 
-  it('builds the Silo rows on the server with no name opt-in source yet', () => {
+  it('builds the Silo rows on the server, every business by name (ticket 171b)', () => {
     expect(page).toContain('buildSiloBusinesses(')
-    expect(page).toContain('isNameOptedIn: () => false')
+    expect(page).not.toContain('isNameOptedIn')
     // The client gets SiloBusiness rows, never the raw listing names.
     expect(read(EXPERIENCE)).not.toMatch(/from\('listings'\)/)
   })
@@ -144,7 +144,7 @@ describe('Silo a11y fixes', () => {
   })
 
   it('reads each floor amount aloud (fix 4)', () => {
-    expect(read(PANELS)).toContain('aria-label={floorSpokenLabel(')
+    expect(read(PANELS)).toMatch(/aria-label=\{`\$\{floorSpokenLabel\(/)
   })
 
   it('has one screen reader status line (fix 5)', () => {
@@ -152,10 +152,11 @@ describe('Silo a11y fixes', () => {
     expect(experience.match(/role="status"/g)?.length).toBe(1)
   })
 
-  it('keeps Prev and Next as the same buttons when the card redraws (fix 6)', () => {
+  it('drops the n of N click-through from the card (ticket 171b)', () => {
     const panels = read(PANELS)
-    expect(panels).toContain('aria-label="Previous business"')
-    expect(panels).toContain('aria-label="Next business"')
+    expect(panels).not.toContain('Previous business')
+    expect(panels).not.toContain('Next business')
+    expect(panels).not.toContain('ctx-nav')
   })
 
   it('hides the canvas from screen readers', () => {

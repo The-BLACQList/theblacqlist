@@ -27,6 +27,7 @@ import {
   LEVEL_COLORS,
   SILO,
   SILO_FLOORS,
+  businessDisplayName,
   clusterRadius,
   colorForBusiness,
   crowdAnchor,
@@ -41,6 +42,7 @@ import {
   type PlacedBusiness,
   type Point3,
   type SiloBusiness,
+  type SiloGap,
 } from '@/lib/spend/silo-layout'
 import { FLOOR_ICON_PATHS } from './floor-icons'
 
@@ -51,6 +53,9 @@ const DRAG_THRESHOLD_PX = 5
 const LINK_SEGMENTS = 20
 const ATLAS_CELLS = 8
 const CELL = 128
+const GAP_HEX = '#ff8ccf'
+/** A gap square's size in scene units. */
+const GAP_SIZE = 2.6
 
 export interface SiloSceneProps {
   businesses: readonly SiloBusiness[]
@@ -77,6 +82,14 @@ export interface SiloSceneProps {
   youTagRef: RefObject<HTMLDivElement | null>
   /** One child per floor, in SILO_FLOORS order, placed over that floor. */
   signsRef?: RefObject<HTMLDivElement | null>
+  /** Wedges with no business on the list yet: a pink square each. */
+  gaps: readonly SiloGap[]
+  selectedGap: SiloGap | null
+  onSelectGap?: (gap: SiloGap | null) => void
+  /** A pool of name labels, filled each frame with the nearest businesses. */
+  labelsRef?: RefObject<HTMLDivElement | null>
+  /** One label per gap, in `gaps` order. */
+  gapLabelsRef?: RefObject<HTMLDivElement | null>
 }
 
 /** A small fixed-seed generator, so the sky is the same on every visit. */
@@ -91,6 +104,32 @@ function seededRandom(start: number): () => number {
 /** Uniforms are written each frame, outside React's view of the memo. */
 function setUniform(u: { value: number }, value: number) {
   u.value = value
+}
+
+/** DOM writes for the canvas and the HUD labels, kept out of hook bodies. */
+function setTouchAction(el: HTMLElement, value: string) {
+  el.style.touchAction = value
+}
+
+function showLabel(el: HTMLElement, x: number, y: number) {
+  el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, 0)`
+  el.hidden = false
+  el.classList.add('on')
+}
+
+function hideLabel(el: HTMLElement) {
+  if (el.hidden) return
+  el.classList.remove('on')
+  el.hidden = true
+}
+
+function fillLabel(el: HTMLElement, name: string, family: string, color: string) {
+  const b = el.querySelector('b')
+  const small = el.querySelector('small')
+  const dot = el.querySelector<HTMLElement>('.dot')
+  if (b) b.textContent = name
+  if (small) small.textContent = family
+  if (dot) dot.style.background = color
 }
 
 function isPhone(): boolean {
@@ -197,6 +236,7 @@ function SceneContents(props: Inner) {
       <Links shown={shown} colorBy={props.colorBy} selectedId={props.selectedId} />
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} />
+      <Gaps gaps={props.gaps} selected={props.selectedGap} tex={textures.gap} ring={textures.ring} phone={phone} />
       <Marks shown={shown} selectedId={props.selectedId} ring={textures.ring} />
       <Tags {...props} shown={shown} />
     </>
@@ -210,6 +250,7 @@ interface Textures {
   dot: THREE.Texture
   ring: THREE.Texture
   atlas: THREE.Texture
+  gap: THREE.Texture
 }
 
 function canvasTexture(w: number, h: number, draw: (ctx: CanvasRenderingContext2D) => void) {
@@ -299,6 +340,15 @@ function useTextures(): Textures {
       atlas: canvasTexture(CELL * ATLAS_CELLS, CELL, (ctx) => {
         FLOOR_ICON_PATHS.forEach((paths, i) => drawNode(ctx, i * CELL, paths))
       }),
+      // Round 17's gap: a dashed pink square, a place with no business yet.
+      gap: canvasTexture(128, 128, (ctx) => {
+        ctx.fillStyle = 'rgba(255,140,207,.18)'
+        ctx.fillRect(14, 14, 100, 100)
+        ctx.setLineDash([13, 9])
+        ctx.lineWidth = 6
+        ctx.strokeStyle = GAP_HEX
+        ctx.strokeRect(14, 14, 100, 100)
+      }),
     }),
     []
   )
@@ -335,7 +385,7 @@ function crowdColor(fi: number, colorBy: ColorBy): string {
 // ─── Camera and input ────────────────────────────────────────────────────────
 
 interface Focus {
-  kind: 'business' | 'floor'
+  kind: 'business' | 'floor' | 'gap'
   pos: THREE.Vector3
   look: THREE.Vector3
   yaw0: number
@@ -368,7 +418,11 @@ const v3 = (p: Point3) => new THREE.Vector3(p.x, p.y, p.z)
 const projected = new THREE.Vector3()
 const worldTmp = new THREE.Vector3()
 
-type Pick = { kind: 'business'; id: string } | { kind: 'halo'; halo: Halo } | null
+type Pick =
+  | { kind: 'business'; id: string }
+  | { kind: 'gap'; gap: SiloGap }
+  | { kind: 'halo'; halo: Halo }
+  | null
 
 function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo[] }) {
   const { camera, gl, invalidate } = useThree()
@@ -428,8 +482,30 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     invalidate()
   }, [selectedId, placed, invalidate])
 
+  // A gap: frame its square from above, like a floor ring.
+  const { selectedGap } = props
+  useEffect(() => {
+    const r = rig.current
+    if (!selectedGap) {
+      if (r.focus?.kind === 'gap') r.focus = null
+      invalidate()
+      return
+    }
+    const c = wedgePoint(selectedGap.familyIndex, selectedGap.floorIndex)
+    r.t = scrollForFloor(selectedGap.floorIndex)
+    r.focus = {
+      kind: 'gap',
+      pos: new THREE.Vector3(c.x * 0.35, c.y + 6, c.z * 0.35),
+      look: v3(c),
+      yaw0: r.yaw,
+      pitch0: r.pitch,
+    }
+    invalidate()
+  }, [selectedGap, invalidate])
+
   useEffect(() => {
     const el = gl.domElement
+    const section = el.closest<HTMLElement>('.silo')
     let down: {
       id: number
       x: number
@@ -438,6 +514,9 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       lastY: number
       mouse: boolean
       drag: boolean
+      /** Touch only: the stage was docked, so a vertical swipe travels. */
+      travel: boolean
+      axis: 'x' | 'y' | null
     } | null = null
     let hovered: string | null = null
 
@@ -465,6 +544,14 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         if (sp && sp.d < Math.max(sp.r + 6, 12) && sp.d < bestD) {
           bestD = sp.d
           best = { kind: 'business', id: s.b.id }
+        }
+      }
+      if (best) return best
+      for (const g of live.current.gaps) {
+        const sp = toScreen(wedgePoint(g.familyIndex, g.floorIndex), GAP_SIZE / 2)
+        if (sp && sp.d < Math.max(sp.r, 14) && sp.d < bestD) {
+          bestD = sp.d
+          best = { kind: 'gap', gap: g }
         }
       }
       if (best) return best
@@ -514,6 +601,8 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         lastY: e.clientY,
         mouse: e.pointerType !== 'touch',
         drag: false,
+        travel: e.pointerType === 'touch' && el.style.touchAction === 'none',
+        axis: null,
       }
       el.setPointerCapture?.(e.pointerId)
     }
@@ -526,9 +615,17 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         }
         if (down.drag) {
           const r = rig.current
-          r.yaw -= (e.clientX - down.lastX) * 0.0042
-          // On touch, up and down scroll the page, so only a mouse tilts.
-          if (down.mouse) r.pitch = THREE.MathUtils.clamp(r.pitch - (e.clientY - down.lastY) * 0.0032, -1.1, 1.1)
+          const dx = e.clientX - down.lastX
+          const dy = e.clientY - down.lastY
+          if (down.mouse) {
+            r.yaw -= dx * 0.0042
+            r.pitch = THREE.MathUtils.clamp(r.pitch - dy * 0.0032, -1.1, 1.1)
+          } else {
+            // A swipe keeps one direction: sideways turns, up and down travels.
+            down.axis ??= Math.abs(e.clientX - down.x) >= Math.abs(e.clientY - down.y) ? 'x' : 'y'
+            if (down.axis === 'x') r.yaw -= dx * 0.0042
+            else if (down.travel) travel(-dy * 0.0022, -dy)
+          }
           invalidate()
         }
         down.lastX = e.clientX
@@ -549,9 +646,14 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       el.style.cursor = ''
       if (wasDrag) return
       const hit = pickAt(e.clientX, e.clientY)
-      if (hit?.kind === 'business') live.current.onSelect(hit.id)
+      const l = live.current
+      if (hit?.kind === 'business') l.onSelect(hit.id)
+      else if (hit?.kind === 'gap') l.onSelectGap?.(hit.gap)
       else if (hit?.kind === 'halo') focusRing(hit.halo)
-      else live.current.onSelect(null)
+      else {
+        l.onSelect(null)
+        l.onSelectGap?.(null)
+      }
     }
 
     const onCancel = () => {
@@ -566,31 +668,112 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       }
     }
 
-    // The wheel travels down the silo. At either end it hands the scroll
-    // back to the page, so the section never traps the reader.
-    const onWheel = (e: WheelEvent) => {
+    /** Moves down (+) or up (-) the silo. Past either end, the page scrolls. */
+    function travel(dt: number, pagePx = 0) {
       const r = rig.current
-      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY
-      if (!r.focus && ((r.t <= 0 && dy < 0) || (r.t >= 1 && dy > 0))) return
-      e.preventDefault()
+      if (!r.focus && ((r.t <= 0 && dt < 0) || (r.t >= 1 && dt > 0))) {
+        if (pagePx) window.scrollBy(0, pagePx)
+        return
+      }
       r.focus = null
-      r.t = THREE.MathUtils.clamp(r.t + dy * 0.0007, 0, 1)
+      r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
       invalidate()
     }
+
+    // ── Page scroll versus silo travel ──
+    //
+    // The section is "docked" when it fills the window below the site header.
+    // Until then the wheel scrolls the page, and a wheel toward the dock
+    // snaps it into place. Once docked the wheel travels the silo, and only a
+    // fresh wheel past either end goes back to the page. One gesture never
+    // does both, so the page doesn't jump mid-scroll.
+
+    const PANELS = '.ctx, .more-panel, .silo-stage-list-inner, .keymap'
+    const GESTURE_GAP_MS = 220
+
+    function dockOffset(rect: DOMRect): number {
+      return Math.max(0, window.innerHeight - rect.height)
+    }
+
+    function isDocked(rect: DOMRect): boolean {
+      const target = dockOffset(rect)
+      return (
+        Math.abs(rect.top - target) <= 12 ||
+        (rect.top <= target && rect.bottom >= window.innerHeight - 1)
+      )
+    }
+
+    function panelCanScroll(target: EventTarget | null, dy: number): boolean {
+      const box = target instanceof Element ? target.closest<HTMLElement>(PANELS) : null
+      if (!box) return false
+      return dy < 0 ? box.scrollTop > 0 : box.scrollTop + box.clientHeight < box.scrollHeight - 1
+    }
+
+    let gesture: { mode: 'snap' | 'scene' | 'page'; last: number } | null = null
+
+    function decide(dy: number): 'snap' | 'scene' | 'page' {
+      if (!section) return 'scene'
+      const rect = section.getBoundingClientRect()
+      if (!isDocked(rect)) {
+        const target = dockOffset(rect)
+        const toward = (dy > 0 && rect.top > target) || (dy < 0 && rect.top < target)
+        if (!toward) return 'page'
+        window.scrollTo({
+          top: window.scrollY + rect.top - target,
+          behavior: live.current.reducedMotion ? 'auto' : 'smooth',
+        })
+        return 'snap'
+      }
+      const r = rig.current
+      if (!r.focus && ((r.t <= 0 && dy < 0) || (r.t >= 1 && dy > 0))) return 'page'
+      return 'scene'
+    }
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return
+      const dy =
+        e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY
+      if (Math.abs(dy) <= Math.abs(e.deltaX) || panelCanScroll(e.target, dy)) return
+      const now = performance.now()
+      if (!gesture || now - gesture.last > GESTURE_GAP_MS) gesture = { mode: decide(dy), last: now }
+      gesture.last = now
+      if (gesture.mode === 'page') return
+      e.preventDefault()
+      if (gesture.mode === 'scene') travel(dy * 0.0007)
+    }
+
+    // On touch, a vertical swipe on the canvas scrolls the page until the
+    // stage is fully on screen, then travels the silo.
+    const coarse = window.matchMedia('(pointer: coarse)')
+    function updateTouchMode() {
+      if (!coarse.matches) {
+        setTouchAction(el, '')
+        return
+      }
+      const rect = el.getBoundingClientRect()
+      const docked = rect.top >= 0 && rect.bottom <= window.innerHeight + 8 && rect.height > 0
+      setTouchAction(el, docked ? 'none' : 'pan-y')
+    }
+    updateTouchMode()
 
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointermove', onMove)
     el.addEventListener('pointerup', onUp)
     el.addEventListener('pointercancel', onCancel)
     el.addEventListener('pointerleave', onLeave)
-    el.addEventListener('wheel', onWheel, { passive: false })
+    const wheelTarget = section ?? el
+    wheelTarget.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('scroll', updateTouchMode, { passive: true })
+    window.addEventListener('resize', updateTouchMode)
     return () => {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)
       el.removeEventListener('pointercancel', onCancel)
       el.removeEventListener('pointerleave', onLeave)
-      el.removeEventListener('wheel', onWheel)
+      wheelTarget.removeEventListener('wheel', onWheel)
+      window.removeEventListener('scroll', updateTouchMode)
+      window.removeEventListener('resize', updateTouchMode)
     }
   }, [gl, camera, invalidate])
 
@@ -1143,9 +1326,76 @@ function Marks({
   )
 }
 
+/**
+ * A pink dashed square in every wedge with no business on the list yet. The
+ * texture carries the colour, so it reads the same on any floor.
+ */
+function Gaps({
+  gaps,
+  selected,
+  tex,
+  ring,
+  phone,
+}: {
+  gaps: readonly SiloGap[]
+  selected: SiloGap | null
+  tex: THREE.Texture
+  ring: THREE.Texture
+  phone: boolean
+}) {
+  const base = phone ? GAP_SIZE * 0.7 : GAP_SIZE
+  const isSel = (g: SiloGap) =>
+    !!selected && selected.familyIndex === g.familyIndex && selected.floorIndex === g.floorIndex
+  return (
+    <>
+      {gaps.map((g) => {
+        const c = wedgePoint(g.familyIndex, g.floorIndex)
+        const on = isSel(g)
+        return (
+          <sprite
+            key={`${g.familyIndex}:${g.floorIndex}`}
+            position={[c.x, c.y, c.z]}
+            scale={on ? base * 1.35 : base}
+            renderOrder={2}
+          >
+            <spriteMaterial map={tex} transparent opacity={0.95} depthWrite={false} />
+          </sprite>
+        )
+      })}
+      {selected && (
+        <sprite
+          position={(() => {
+            const c = wedgePoint(selected.familyIndex, selected.floorIndex)
+            return [c.x, c.y, c.z] as [number, number, number]
+          })()}
+          scale={base * 2}
+          renderOrder={3}
+        >
+          <spriteMaterial map={ring} color="#fcfaf4" transparent depthTest={false} depthWrite={false} />
+        </sprite>
+      )}
+    </>
+  )
+}
+
 // ─── DOM tags and floor signs ────────────────────────────────────────────────
 
 const SIGN_AT: readonly Point3[] = SILO.y.map((y) => ({ x: 0, y: y + 2.6, z: -9 }))
+
+const LABEL_MAX = { desk: 10, phone: 5 }
+/** A dot this many pixels across or bigger can carry its name. */
+const LABEL_MIN_PX = { desk: 9, phone: 12 }
+/** Gap labels show once the camera is this close to the square. */
+const GAP_LABEL_DIST = 70
+const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag'
+
+interface Box {
+  l: number
+  t: number
+  r: number
+  b: number
+}
+const overlaps = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
 
 function Tags({
   shown,
@@ -1154,13 +1404,121 @@ function Tags({
   hoverTagRef,
   youTagRef,
   signsRef,
+  labelsRef,
+  gapLabelsRef,
+  gaps,
+  selectedGap,
+  phone,
 }: Inner & { shown: readonly Shown[] }) {
-  const { camera, size } = useThree()
+  const { camera, size, gl } = useThree()
   const tagged = hoveredId ?? selectedId
   const hover = tagged ? shown.find((s) => s.b.id === tagged) : undefined
   const you = shown.find((s) => s.b.isYou)
 
+  // The HUD panels, in canvas pixels. Labels never sit under them.
+  const hud = useRef<{ boxes: Box[]; frame: number }>({ boxes: [], frame: 0 })
+  // What each pool label shows now, so text only changes when it has to.
+  const poolIds = useRef<(string | null)[]>([])
+
   useFrame(() => {
+    const h = hud.current
+    if (h.frame++ % 20 === 0) {
+      const root = gl.domElement.closest('.silo')
+      const c = gl.domElement.getBoundingClientRect()
+      h.boxes = root
+        ? Array.from(root.querySelectorAll<HTMLElement>(HUD_SELECTORS))
+            .filter((el) => !el.hidden && el.offsetParent !== null)
+            .map((el) => {
+              const r = el.getBoundingClientRect()
+              return { l: r.left - c.left, t: r.top - c.top, r: r.right - c.left, b: r.bottom - c.top }
+            })
+            .filter((b) => b.r > b.l && b.b > b.t)
+        : []
+    }
+    const taken: Box[] = [...h.boxes]
+    const fov = (camera as THREE.PerspectiveCamera).fov ?? 60
+    const kpx = size.height / 2 / Math.tan(THREE.MathUtils.degToRad(fov) / 2)
+    const toScreen = (p: Point3) => {
+      projected.set(p.x, p.y, p.z).project(camera)
+      if (projected.z > 1 || projected.z < -1) return null
+      return { x: ((projected.x + 1) / 2) * size.width, y: ((1 - projected.y) / 2) * size.height }
+    }
+    const inView = (x: number, y: number) => x > 0 && x < size.width && y > 0 && y < size.height
+
+    // Business names: the biggest dots on screen, never on top of each other.
+    const pool = labelsRef?.current?.children
+    if (pool) {
+      const max = phone ? LABEL_MAX.phone : LABEL_MAX.desk
+      const minPx = phone ? LABEL_MIN_PX.phone : LABEL_MIN_PX.desk
+      const skip = new Set([hoveredId, selectedId].filter(Boolean))
+      const cands: { s: Shown; x: number; y: number; pr: number }[] = []
+      for (const s of shown) {
+        if (!s.on || s.b.isYou || skip.has(s.b.id)) continue
+        worldTmp.set(s.p.x, s.p.y, s.p.z)
+        const dist = camera.position.distanceTo(worldTmp)
+        const pr = (s.size * kpx) / Math.max(dist, 0.1)
+        if (pr < minPx) continue
+        const at = toScreen(s.p)
+        if (!at || !inView(at.x, at.y)) continue
+        cands.push({ s, ...at, pr })
+      }
+      cands.sort((a, b) => b.pr - a.pr)
+      let used = 0
+      for (const c of cands) {
+        if (used >= max || used >= pool.length) break
+        const el = pool[used]
+        if (!(el instanceof HTMLElement)) break
+        const top = c.y + Math.max(c.pr, 4) + 6
+        const w = el.offsetWidth || 120
+        const box = { l: c.x - w / 2, t: top, r: c.x + w / 2, b: top + (el.offsetHeight || 34) }
+        if (taken.some((t) => overlaps(t, box))) continue
+        taken.push(box)
+        if (poolIds.current[used] !== c.s.b.id) {
+          poolIds.current[used] = c.s.b.id
+          fillLabel(
+            el,
+            businessDisplayName(c.s.b),
+            CATEGORY_FAMILIES[c.s.b.familyIndex]?.name ?? '',
+            familyColor(c.s.b.familyIndex),
+          )
+        }
+        showLabel(el, c.x, top)
+        used++
+      }
+      for (let i = used; i < pool.length; i++) {
+        const el = pool[i]
+        if (el instanceof HTMLElement) hideLabel(el)
+      }
+    }
+
+    // Gap labels: only up close, so the top view stays calm.
+    const gapEls = gapLabelsRef?.current?.children
+    if (gapEls) {
+      gaps.forEach((g, i) => {
+        const el = gapEls[i]
+        if (!(el instanceof HTMLElement)) return
+        const c = wedgePoint(g.familyIndex, g.floorIndex)
+        worldTmp.set(c.x, c.y, c.z)
+        const near = camera.position.distanceTo(worldTmp) < GAP_LABEL_DIST
+        const picked =
+          !!selectedGap && selectedGap.familyIndex === g.familyIndex && selectedGap.floorIndex === g.floorIndex
+        const at = near || picked ? toScreen(c) : null
+        if (!at || !inView(at.x, at.y)) {
+          hideLabel(el)
+          return
+        }
+        const top = at.y + 16
+        const w = el.offsetWidth || 150
+        const box = { l: at.x - w / 2, t: top, r: at.x + w / 2, b: top + (el.offsetHeight || 34) }
+        if (!picked && taken.some((t) => overlaps(t, box))) {
+          hideLabel(el)
+          return
+        }
+        taken.push(box)
+        showLabel(el, at.x, top)
+      })
+    }
+
     const place = (el: Element | null | undefined, p: Point3 | undefined, lift: number, anchor: string) => {
       if (!(el instanceof HTMLElement)) return
       if (!p) {
