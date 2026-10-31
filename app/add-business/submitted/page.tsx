@@ -85,7 +85,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
 
         <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-sm mx-auto mb-8">
           Our team will verify your listing before it goes live. Free listings are typically
-          published within 1–3 business days. We&apos;ll be in touch if we need anything.
+          published within 3 to 5 business days. We&apos;ll be in touch if we need anything.
         </p>
 
         <div className="bg-white rounded-2xl border border-charcoal/10 p-5 text-left mb-8">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Phone, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getCtaLabel } from '@/types'
@@ -14,9 +15,18 @@ import type { EntityPageData } from '@/types'
 interface Props {
   entity: EntityPageData
   initialSaved?: boolean
+  /**
+   * "I shopped here" (ticket 162). The page decides, because it alone knows
+   * the reader is signed in and The Collective is open; see showShoppedHere.
+   */
+  showShoppedHere?: boolean
 }
 
-export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
+export function EntityQuickActionBar({
+  entity,
+  initialSaved = false,
+  showShoppedHere = false,
+}: Props) {
   const [visible, setVisible] = useState(false)
 
   const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
@@ -51,6 +61,7 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
   // Website, call and directions taps count toward the weekly Featured score.
   const tap = (href: string) => () => trackContactTap(entity.id, href, 'action_bar')
   const phoneHref = entity.details.phone ? `tel:${entity.details.phone.replace(/\D/g, '')}` : null
+  const receiptHref = `/account/receipts/new?listing=${entity.id}`
 
   return (
     <>
@@ -67,9 +78,13 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
         )}
       >
         <div className="flex items-center gap-3 px-4 py-3 safe-area-inset-bottom">
-          <span className="font-subhead text-sm font-semibold text-white truncate min-w-0 flex-shrink">
-            {shortName}
-          </span>
+          {/* At 375px the name, the CTA, "I shopped here" and two icon buttons
+              don't all fit, and the name is already the page's heading. */}
+          {!showShoppedHere && (
+            <span className="font-subhead text-sm font-semibold text-white truncate min-w-0 flex-shrink">
+              {shortName}
+            </span>
+          )}
           {ctaHref && (
             <a
               href={ctaHref}
@@ -79,6 +94,18 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
             >
               {ctaLabel}
             </a>
+          )}
+          {showShoppedHere && (
+            <Link
+              href={receiptHref}
+              tabIndex={visible ? 0 : -1}
+              className={cn(
+                'inline-flex items-center justify-center h-11 px-3 rounded-full border border-white/30 hover:bg-white/10 text-white font-subhead font-semibold text-sm whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold',
+                ctaHref ? 'flex-shrink-0' : 'flex-1'
+              )}
+            >
+              I shopped here
+            </Link>
           )}
           <SaveButton
             listingId={entity.id}
@@ -136,6 +163,16 @@ export function EntityQuickActionBar({ entity, initialSaved = false }: Props) {
               <MapPin className="size-4" aria-hidden="true" />
               <span>Directions</span>
             </a>
+          )}
+
+          {showShoppedHere && (
+            <Link
+              href={receiptHref}
+              tabIndex={visible ? 0 : -1}
+              className="inline-flex items-center justify-center h-9 px-4 rounded-full border border-white/30 hover:bg-white/10 text-white font-subhead font-semibold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
+            >
+              I shopped here
+            </Link>
           )}
 
           {ctaHref && (

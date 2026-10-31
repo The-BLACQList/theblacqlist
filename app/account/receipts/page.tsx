@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptListRow } from '@/components/spend/ReceiptSubmissionForm'
 
-export const metadata: Metadata = { title: 'My Receipts' }
+export const metadata: Metadata = { title: 'My receipts' }
 
 export default async function MyReceiptsPage({
   searchParams,
@@ -67,7 +67,7 @@ export default async function MyReceiptsPage({
               className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
             >
               <Plus className="size-4" aria-hidden="true" />
-              Add receipt
+              Add a receipt
             </Link>
           </div>
         </div>
@@ -76,10 +76,10 @@ export default async function MyReceiptsPage({
         {submitted === 'true' && (
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">
-              Receipt submitted. Thank you!
+              Receipt added.
             </p>
             <p className="font-body text-xs text-green-700 mt-0.5">
-              Our team will review it within 1–3 business days.
+              We&apos;ll check it within 3 business days.
             </p>
           </div>
         )}
@@ -117,14 +117,14 @@ export default async function MyReceiptsPage({
             <div className="px-6 py-12 text-center">
               <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                Submit a receipt to add your spend to The Collective.
+                Add a receipt and your spend joins The Collective.
               </p>
               <Link
                 href="/account/receipts/new"
                 className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
               >
                 <Plus className="size-4" aria-hidden="true" />
-                Submit your first receipt
+                Add your first receipt
               </Link>
             </div>
           ) : (
