@@ -293,6 +293,23 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               <li>You consent to your spend data being reviewed by our team for verification purposes</li>
               <li>You consent to your anonymized spend data being included in community aggregate totals, unless you opt that receipt out when you submit it, or from Account &rarr; Receipts before it is approved</li>
             </ul>
+            {/* [Needs professional review] Receipt reading (ticket 163). Merge only after
+                counsel review, together with switching FEATURE_RECEIPT_READ on.
+                docs/blacqlist/legal/receipt-reading-policy-update-2026-11.md */}
+            {isNext && (
+              <p>
+                <strong>Reading your receipt.</strong> If you tick &ldquo;Read my receipt for
+                me,&rdquo; an AI provider reads the photo and fills in the business, total and date
+                for you (see our{' '}
+                <Link href="/privacy#receipt-reading" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
+                  Privacy Policy
+                </Link>
+                ). It&apos;s optional, and it can get things wrong. Check each field before you add
+                the receipt. The promises above apply to what you add, whether you typed it or it
+                was filled in from your photo. This help may have limits, may change, and we may
+                pause it or turn it off without notice.
+              </p>
+            )}
             <p>
               Submitting fraudulent receipts, receipts for transactions you did not make, or
               doctored receipts is a material breach of these Terms and may result in immediate
