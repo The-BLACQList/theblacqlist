@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
+import { sendReceiptCountedEmail } from '@/lib/email/receiptNotices'
+import { receiptBusinessName } from '@/lib/spend/receipt-emails'
 
 export type ApproveReceiptState = { success: true } | { error: string } | null
 
@@ -103,7 +105,9 @@ export async function approveReceiptAction(
 
   const { data: receipt } = await serviceClient
     .from('receipt_uploads')
-    .select('id, listing_id, amount_cents, purchase_date, aggregate_opt_out, status')
+    .select(
+      'id, user_id, listing_id, raw_business_name, amount_cents, purchase_date, aggregate_opt_out, status'
+    )
     .eq('id', receiptId)
     .single()
 
@@ -125,14 +129,17 @@ export async function approveReceiptAction(
 
   // 2. Resolve the listing's city so the spend can be aggregated geographically.
   //    Only on the approval path, and only when a listing is actually linked.
+  //    The name rides along for the counted email (ticket 165).
   let cityId: string | null = null
+  let listingName: string | null = null
   if (receipt.listing_id) {
     const { data: listing } = await serviceClient
       .from('listings')
-      .select('city_id')
+      .select('city_id, name')
       .eq('id', receipt.listing_id)
       .maybeSingle()
     cityId = listing?.city_id ?? null
+    listingName = listing?.name ?? null
   }
 
   // 3. Insert spend_event
@@ -186,6 +193,17 @@ export async function approveReceiptAction(
     beforeState: { status: 'pending_review' },
     afterState: { status: 'approved' },
   })
+
+  // 6. Tell the shopper, fire-and-forget (ticket 165). The receipt is already
+  //    approved; a failed or skipped send never changes that.
+  void (async () => {
+    await sendReceiptCountedEmail(serviceClient, {
+      receiptId,
+      userId: receipt.user_id,
+      amountCents: receipt.amount_cents,
+      businessName: receiptBusinessName(listingName, receipt.raw_business_name),
+    })
+  })()
 
   revalidatePath('/admin/receipts')
   revalidatePath('/account/receipts')
