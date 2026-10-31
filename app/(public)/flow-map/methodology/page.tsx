@@ -208,9 +208,9 @@ export default function FlowMapMethodologyPage() {
             </p>
             <p>
               On The Collective map, every published business on the list shows as a dot from day
-              one, so you can see how the list is spread out. A dot carries no dollar figure and
-              no line until it clears the same rule. Business names stay hidden unless the
-              business chooses to show its name.
+              one, so you can see how the list is spread out. Each dot shows the business by name,
+              because its page on the list is already public. A dot carries no dollar figure, no
+              receipt count and no line until it clears the same rule.
             </p>
             <p>
               When you add a receipt you can choose to keep it out of community figures. Section 8

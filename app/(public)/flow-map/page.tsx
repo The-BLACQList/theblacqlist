@@ -5,7 +5,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
-  anonymousBusinessLabel,
+  businessDisplayName,
   buildSiloBusinesses,
   type BusinessListingMeta,
 } from '@/lib/spend/silo-layout'
@@ -184,19 +184,17 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     }
   }
 
-  // Names stay hidden for every business until there is an opt-in to read.
-  // The reader's own businesses are the one exception (buildSiloBusinesses):
-  // they already know where they shopped. Built here, on the server, so a
-  // hidden name never reaches the browser.
+  // Every business shows by name: a published listing is already public
+  // (founder, 2026-10-31, ticket 171b). Totals and lines stay server-side
+  // until a business clears the threshold (buildSiloBusinesses).
   const siloBusinesses = buildSiloBusinesses({
     nodes: businessNodes ?? [],
     listings: listingMeta,
-    isNameOptedIn: () => false,
     youIds,
   })
 
-  // The latest three receipts at businesses that cleared the bar, named by
-  // their kind and the day only.
+  // The latest three receipts at businesses that cleared the bar, by name and
+  // the day only.
   const siloById = new Map(siloBusinesses.map((b) => [b.id, b]))
   const ticker: SiloTickerItem[] = spendData
     .filter((r) => r.listing_id && siloById.get(r.listing_id)?.linked)
@@ -204,7 +202,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     .slice(0, 3)
     .map((r, i) => ({
       id: `${i}-${r.created_at}`,
-      label: anonymousBusinessLabel(siloById.get(r.listing_id!)!, false),
+      label: businessDisplayName(siloById.get(r.listing_id!)!),
       when: dayLabel(r.created_at),
     }))
 

@@ -27,7 +27,7 @@ The live page showed an empty silo until receipts were counted. Four cards under
 - `buildSiloBusinesses` returns every listing. `linked` is true only when the node clears `AGGREGATE_MIN_TRANSACTIONS`.
 - An unlinked business carries no amount and no count to the browser. It has no line and no total. Its card says "Not enough receipts counted here yet to show a total."
 - The list view, the ticker and the link count only use linked businesses.
-- Names stay hidden unless the business opted in, or it is the reader's own business.
+- Names stay hidden unless the business opted in, or it is the reader's own business. *Reversed by ticket 171b: every business shows by name.*
 
 **Round 17 look.**
 - Floor signs (icon plus name) float over each floor in the scene, placed each frame and hidden when off screen.

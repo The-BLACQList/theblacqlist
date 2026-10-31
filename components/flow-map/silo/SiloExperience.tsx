@@ -35,8 +35,13 @@ import {
   businessDisplayName,
   businessesPerFloor,
   formatDollars,
+  gapLabel,
+  gapsPerFloor,
   placeBusinesses,
+  siloGaps,
+  type ColorBy,
   type SiloBusiness,
+  type SiloGap,
 } from '@/lib/spend/silo-layout'
 import { FloorIcon } from './floor-icons'
 import type { SiloSceneProps } from './SiloScene'
@@ -61,7 +66,9 @@ import {
 import './silo.css'
 
 type Scene = ComponentType<SiloSceneProps>
-type ColorChoice = 'category' | 'level'
+
+/** Name labels the scene can place at once (round 17 shows about ten). */
+const LABEL_POOL = 12
 
 interface Props {
   totalSpentCents: number
@@ -92,9 +99,10 @@ export function SiloExperience({
   const [mapAnyway, setMapAnyway] = useState(false)
   const [listChosen, setListChosen] = useState(false)
 
-  const [colorBy, setColorBy] = useState<ColorChoice>('category')
+  const [colorBy, setColorBy] = useState<ColorBy>('category')
   const [filter, setFilter] = useState<Set<string>>(() => new Set())
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedGap, setSelectedGap] = useState<SiloGap | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [focusFloor, setFocusFloor] = useState<number | null>(null)
   const [paused, setPaused] = useState(false)
@@ -112,6 +120,8 @@ export function SiloExperience({
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
   const signsRef = useRef<HTMLDivElement>(null)
+  const labelsRef = useRef<HTMLDivElement>(null)
+  const gapLabelsRef = useRef<HTMLDivElement>(null)
 
   // ── Derived data ──
   const floors = useMemo(() => buildFloors(totalSpentCents), [totalSpentCents])
@@ -129,7 +139,8 @@ export function SiloExperience({
       }),
     [businesses, filter, colorBy]
   )
-  const stepList = useMemo(() => businesses.filter((_, i) => visible[i]), [businesses, visible])
+  const gaps = useMemo(() => siloGaps(businesses), [businesses])
+  const gapCounts = useMemo(() => gapsPerFloor(gaps), [gaps])
   const linkedCount = useMemo(() => businesses.filter((b) => b.linked).length, [businesses])
   const youList = useMemo(() => businesses.filter((b) => b.isYou), [businesses])
   const youFloors = useMemo(() => new Set(youList.map((b) => b.floorIndex)), [youList])
@@ -171,6 +182,7 @@ export function SiloExperience({
     setSelectedId(b?.id ?? null)
     if (b) {
       setFocusFloor(null)
+      setSelectedGap(null)
       setStatus(`Showing ${businessDisplayName(b)}${b.isYou ? ', you shopped here' : ''}.`)
     }
   }, [])
@@ -188,20 +200,25 @@ export function SiloExperience({
     selectBusiness(you)
   }, [focusYou, you, selectBusiness])
 
-  function step(dir: 1 | -1) {
-    if (stepList.length === 0) return
-    const i = stepList.findIndex((b) => b.id === selectedId)
-    const next =
-      i === -1
-        ? dir === 1
-          ? 0
-          : stepList.length - 1
-        : (i + dir + stepList.length) % stepList.length
-    selectBusiness(stepList[next]!)
+  const selectGap = useCallback((g: SiloGap | null) => {
+    setSelectedGap(g)
+    if (g) {
+      setSelectedId(null)
+      setFocusFloor(null)
+      setStatus(`${gapLabel(g)}.`)
+    }
+  }, [])
+
+  function clearCard() {
+    setSelectedId(null)
+    setSelectedGap(null)
+    setFocusFloor(null)
+    setStatus('Showing every floor.')
   }
 
   function pickFloor(i: number) {
     setSelectedId(null)
+    setSelectedGap(null)
     const next = focusFloor === i ? null : i
     setFocusFloor(next)
     setStatus(
@@ -220,11 +237,20 @@ export function SiloExperience({
     })
   }
 
-  function toggleColor(next?: ColorChoice) {
-    const value = next ?? (colorBy === 'category' ? 'level' : 'category')
+  function toggleColor(next?: ColorBy) {
+    const value =
+      next ?? (colorBy === 'category' ? 'level' : colorBy === 'level' ? 'gold' : 'category')
+    // Gold keeps the kind filter: its key still lists kinds of business.
+    const sameKeys = (value === 'level') === (colorBy === 'level')
     setColorBy(value)
-    setFilter(new Set())
-    setStatus(value === 'level' ? 'Dots colored by level.' : 'Dots colored by kind of business.')
+    if (!sameKeys) setFilter(new Set())
+    setStatus(
+      value === 'level'
+        ? 'Dots colored by level.'
+        : value === 'gold'
+          ? 'Dots colored gold.'
+          : 'Dots colored by kind of business.'
+    )
   }
 
   function toggleFilter(key: string) {
@@ -267,6 +293,7 @@ export function SiloExperience({
     if (e.key === 'Escape') {
       if (keysOpen) closeKeys()
       else if (selectedId) selectBusiness(null)
+      else if (selectedGap) setSelectedGap(null)
       else if (focusFloor !== null) pickFloor(focusFloor)
       return
     }
@@ -313,7 +340,6 @@ export function SiloExperience({
   const showList = !showScene && support !== 'pending' && !(wantMap && !Scene)
 
   const currentFloor = focusFloor ?? selected?.floorIndex ?? null
-  const position = selected ? stepList.findIndex((b) => b.id === selected.id) + 1 : 0
 
   return (
     <section ref={sectionRef} className="silo" aria-labelledby="silo-title" onKeyDown={onKeyDown}>
@@ -334,13 +360,18 @@ export function SiloExperience({
                 motion={motion}
                 reducedMotion={reducedMotion}
                 active={active}
+                gaps={gaps}
+                selectedGap={selectedGap}
                 onSelect={(id) => selectBusiness(businesses.find((b) => b.id === id) ?? null)}
+                onSelectGap={selectGap}
                 onPickFloor={pickFloor}
                 onHover={setHoveredId}
                 onContextLost={() => setContextLost(true)}
                 hoverTagRef={hoverTagRef}
                 youTagRef={youTagRef}
                 signsRef={signsRef}
+                labelsRef={labelsRef}
+                gapLabelsRef={gapLabelsRef}
               />
             </SceneBoundary>
           )}
@@ -354,6 +385,34 @@ export function SiloExperience({
                   <b>{f.short}</b>
                 </div>
               ))}
+            </div>
+          )}
+          {showScene && (
+            <div className="silo-labels" aria-hidden="true">
+              <div ref={labelsRef}>
+                {Array.from({ length: LABEL_POOL }, (_, i) => (
+                  <div key={i} className="silo-lbl" hidden>
+                    <span className="dot" />
+                    <span>
+                      <b />
+                      <small />
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div ref={gapLabelsRef}>
+                {gaps.map((g) => (
+                  <div key={`${g.familyIndex}:${g.floorIndex}`} className="silo-lbl gap" hidden>
+                    <span className="ic">
+                      <FloorIcon floor={g.floorIndex} />
+                    </span>
+                    <span>
+                      <b>No {SILO_FLOORS[g.floorIndex]!.short.toLowerCase()} yet</b>
+                      <small>{CATEGORY_FAMILIES[g.familyIndex]?.name}</small>
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <div ref={hoverTagRef} className="silo-tag" hidden aria-hidden="true">
@@ -397,27 +456,31 @@ export function SiloExperience({
         <SiloGauge
           floors={floors}
           counts={counts}
+          gaps={gapCounts}
           currentFloor={currentFloor}
           youFloors={youFloors}
           onPick={pickFloor}
         />
 
-        <SiloLegend colorBy={colorBy} active={filter} onToggle={toggleFilter} />
+        <SiloLegend
+          colorBy={colorBy}
+          active={filter}
+          onToggle={toggleFilter}
+          onColorBy={toggleColor}
+          hasGaps={gaps.length > 0}
+        />
 
         <SiloTicker items={ticker} />
       </div>
 
       <SiloCard
         selected={selected}
+        selectedGap={selectedGap}
         focusFloor={focusFloor === null ? null : (floors[focusFloor] ?? null)}
         floorCount={focusFloor === null ? 0 : (counts[focusFloor] ?? 0)}
-        total={stepList.length}
-        position={position}
-        linkedCount={stepList.filter((b) => b.linked).length}
-        filtered={filter.size > 0}
+        you={you}
         totalSpentCents={totalSpentCents}
-        onPrev={() => step(-1)}
-        onNext={() => step(1)}
+        onClear={clearCard}
       />
 
       <div className="dock" role="toolbar" aria-label="Map controls">
@@ -426,12 +489,6 @@ export function SiloExperience({
             Find me
           </button>
         )}
-        <button type="button" aria-pressed={reducedMotion || paused} onClick={togglePause}>
-          {reducedMotion ? 'Motion is off' : paused ? 'Resume motion' : 'Pause motion'}
-        </button>
-        <button type="button" onClick={() => toggleColor()}>
-          Color: {colorBy === 'level' ? 'Level' : 'Kind'}
-        </button>
         <button
           ref={moreBtnRef}
           type="button"
@@ -464,25 +521,19 @@ export function SiloExperience({
           colorBy={colorBy}
           active={filter}
           onToggle={toggleFilter}
+          onColorBy={toggleColor}
+          hasGaps={gaps.length > 0}
         />
         <div className="more-group">
-          <h4>Color by</h4>
+          <h4>Motion</h4>
           <div className="more-row">
             <button
               type="button"
               className="more-option"
-              aria-pressed={colorBy === 'category'}
-              onClick={() => toggleColor('category')}
+              aria-pressed={reducedMotion || paused}
+              onClick={togglePause}
             >
-              Kind of business
-            </button>
-            <button
-              type="button"
-              className="more-option"
-              aria-pressed={colorBy === 'level'}
-              onClick={() => toggleColor('level')}
-            >
-              Level
+              {reducedMotion ? 'Motion is off' : paused ? 'Resume motion' : 'Pause motion'}
             </button>
           </div>
         </div>
