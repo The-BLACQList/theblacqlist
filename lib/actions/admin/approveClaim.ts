@@ -57,6 +57,14 @@ export async function approveClaimAction(
   } | null
   if (!listing) return { error: 'Associated listing not found.' }
 
+  // Never hand a page from one owner to another (ticket 159). Checked before
+  // any write so a refused approval leaves the claim pending and nothing changed.
+  const ownerConflict =
+    'This page already has a different owner. Reject the claim, or ask the founder before changing who owns it.'
+  if (listing.owner_user_id && listing.owner_user_id !== claim.claimant_user_id) {
+    return { error: ownerConflict }
+  }
+
   const now = new Date().toISOString()
 
   // 1. Update claim status
@@ -71,8 +79,10 @@ export async function approveClaimAction(
 
   if (claimError) return { error: 'Failed to approve claim. Please try again.' }
 
-  // 2. Update listing trust_tier and owner
-  const { error: listingError } = await serviceClient
+  // 2. Update listing trust_tier and owner. The owner filter repeats the check
+  // above inside the write, so an owner set between the read and this update
+  // matches no row instead of being overwritten.
+  const { data: updated, error: listingError } = await serviceClient
     .from('listings')
     .update({
       trust_tier: 'claimed',
@@ -80,14 +90,20 @@ export async function approveClaimAction(
       last_admin_updated_at: now,
     })
     .eq('id', claim.listing_id)
+    .or(`owner_user_id.is.null,owner_user_id.eq.${claim.claimant_user_id}`)
+    .select('id')
 
-  if (listingError) {
+  if (listingError || !updated?.length) {
     // Attempt rollback on claim (best-effort)
     await serviceClient
       .from('claims')
       .update({ status: 'pending', reviewed_by: null, reviewed_at: null })
       .eq('id', claimId)
-    return { error: 'Failed to update listing ownership. Claim rolled back to pending.' }
+    return {
+      error: listingError
+        ? 'Failed to update listing ownership. Claim rolled back to pending.'
+        : ownerConflict,
+    }
   }
 
   // 3. Grant owner role — insert, ignore if already exists

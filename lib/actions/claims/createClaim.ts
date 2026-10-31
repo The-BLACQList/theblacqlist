@@ -84,7 +84,7 @@ export async function createClaimAction(
   // ── Confirm listing exists and is unclaimed ─────────────────────────────────
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name, trust_tier, status')
+    .select('id, name, trust_tier, status, owner_user_id')
     .eq('id', listingId)
     .maybeSingle()
 
@@ -96,6 +96,18 @@ export async function createClaimAction(
     return {
       error:
         'This listing has already been claimed. If you believe this is an error, please contact support.',
+    }
+  }
+
+  // A self-listed page is still `unclaimed` but already has an owner. Without
+  // this check a stranger's claim, once approved, would take the page away
+  // from the person who listed it (ticket 159).
+  if (listing.owner_user_id === user.id) {
+    return { error: 'You already manage this page. Find it in your dashboard.' }
+  }
+  if (listing.owner_user_id) {
+    return {
+      error: "This page already has an owner. If you think that's wrong, please contact support.",
     }
   }
 
