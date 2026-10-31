@@ -19,20 +19,20 @@ export type ReceiptCorrectionState =
 /**
  * Correct a receipt the user already submitted.
  *
- * Editing is deliberately confined to `pending_review`. An approved receipt has
- * already written a `spend_events` row and folded its amount into the
+ * Editing is confined to `pending_review` and `rejected`. An approved receipt
+ * has already written a `spend_events` row and folded its amount into the
  * `flow_nodes` / `flow_edges` totals; changing it would require recomputing
  * those aggregates, which is a separate data decision and not something a user
- * form should trigger. A rejected receipt is terminal — the correction path
- * there is a new submission, which is why the rejection reason is surfaced on
- * the list.
+ * form should trigger. A rejected receipt counts toward nothing, so fixing it is
+ * safe: the save sends it back for review (ticket 164, "Fix and resend") by
+ * resetting the status and clearing the old review.
  *
  * `receipt_uploads` carries owner SELECT and INSERT policies but no UPDATE
  * policy, so this writes through the service client — the same route the
  * insert and the account list already take. Ownership is enforced here instead:
  * the row is fetched scoped to the caller, and the write re-asserts both the
- * owner and the pending status so an approval landing between the read and the
- * write cannot be overwritten.
+ * owner and the status it read, so an approval landing between the read and
+ * the write cannot be overwritten.
  */
 export async function updateReceiptSubmissionAction(
   _prev: ReceiptCorrectionState,
@@ -71,14 +71,10 @@ export async function updateReceiptSubmissionAction(
     .maybeSingle()
 
   if (!existing) return { error: 'Receipt not found.' }
-  if (existing.status !== 'pending_review') {
-    return {
-      error:
-        existing.status === 'approved'
-          ? 'This receipt has been approved and can no longer be edited.'
-          : 'This receipt has been reviewed and can no longer be edited. Add a new one instead.',
-    }
+  if (existing.status !== 'pending_review' && existing.status !== 'rejected') {
+    return { error: 'This receipt has been approved and can no longer be edited.' }
   }
+  const isResend = existing.status === 'rejected'
 
   // Every receipt needs a photo (ticket 162). A receipt saved before that rule
   // may have none; its correction is where the photo gets added.
@@ -124,10 +120,20 @@ export async function updateReceiptSubmissionAction(
       purchase_date: fields.purchaseDate,
       notes: fields.notes,
       aggregate_opt_out: fields.aggregateOptOut,
+      // A fixed receipt goes back in the review queue with a clean slate, so
+      // the old reason stops showing and the admin sees it as unreviewed.
+      ...(isResend
+        ? {
+            status: 'pending_review',
+            rejection_reason: null,
+            reviewed_by: null,
+            reviewed_at: null,
+          }
+        : {}),
     })
     .eq('id', receiptId)
     .eq('user_id', user.id)
-    .eq('status', 'pending_review')
+    .eq('status', existing.status)
     .select('id')
 
   if (error) {

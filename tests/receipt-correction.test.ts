@@ -9,9 +9,10 @@
 //     UPDATE policy, so this action writes through the service client and RLS
 //     cannot be what stops one user editing another's receipt. The scoping in
 //     the action IS the authorization; if it regresses, nothing else catches it.
-//   * the pending-only restriction — an approved receipt's amount is already
-//     folded into the community totals, so editing one would silently desync
-//     them. The status is re-asserted on the write, not only read beforehand.
+//   * the status restriction — an approved receipt's amount is already folded
+//     into the community totals, so editing one would silently desync them. A
+//     rejected one can be fixed and resent (ticket 164). The status is
+//     re-asserted on the write, not only read beforehand.
 //   * the photo — an edit that only fixes the amount must not detach the image
 //     the user already uploaded.
 //   * the storage lifecycle — a replaced photo leaves the previous object
@@ -225,13 +226,6 @@ describe('the pending-only restriction', () => {
     expect(h.calls.updated).toBeNull()
   })
 
-  it('refuses a rejected receipt and points at a new submission', async () => {
-    h.state.existing = { id: RECEIPT_ID, status: 'rejected', file_path: null }
-    const res = await updateReceiptSubmissionAction(null, form())
-    expect(res).toMatchObject({ error: expect.stringContaining('Add a new one') })
-    expect(h.calls.updated).toBeNull()
-  })
-
   it('re-asserts pending_review on the write, closing the read-to-write window', async () => {
     // An approval landing between the lookup and the update would otherwise be
     // overwritten by the user's edit.
@@ -239,9 +233,40 @@ describe('the pending-only restriction', () => {
     expect(h.calls.updateFilters).toContainEqual(['status', 'pending_review'])
   })
 
-  it('never writes a status of its own', async () => {
+  it('never writes a status of its own on a pending edit', async () => {
     await updateReceiptSubmissionAction(null, form())
     expect(h.calls.updated).not.toHaveProperty('status')
+    expect(h.calls.updated).not.toHaveProperty('rejection_reason')
+  })
+})
+
+describe('fix and resend (ticket 164)', () => {
+  beforeEach(() => {
+    h.state.existing = { id: RECEIPT_ID, status: 'rejected', file_path: EXISTING_PATH }
+  })
+
+  it('saves a rejected receipt and sends it back for review', async () => {
+    const res = await updateReceiptSubmissionAction(null, form())
+    expect(res).toEqual({ success: true, id: RECEIPT_ID })
+    expect(h.calls.updated).toMatchObject({
+      status: 'pending_review',
+      rejection_reason: null,
+      reviewed_by: null,
+      reviewed_at: null,
+    })
+  })
+
+  it('guards the write on the rejected status it read', async () => {
+    await updateReceiptSubmissionAction(null, form())
+    expect(h.calls.updateFilters).toContainEqual(['status', 'rejected'])
+    expect(h.calls.updateFilters).toContainEqual(['user_id', USER_ID])
+  })
+
+  it('still needs a photo when the rejected receipt has none', async () => {
+    h.state.existing = { id: RECEIPT_ID, status: 'rejected', file_path: null }
+    const res = await updateReceiptSubmissionAction(null, form())
+    expect(res).toMatchObject({ fieldErrors: { receipt_file: expect.any(String) } })
+    expect(h.calls.updated).toBeNull()
   })
 })
 
