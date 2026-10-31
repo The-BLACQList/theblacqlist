@@ -30,11 +30,14 @@ export async function sendEmail({
   to,
   subject,
   react,
+  replyTo,
 }: {
   /** One address, or several for the admin notifications. */
   to: string | string[]
   subject: string
   react: ReactElement
+  /** Where replies go. Unset means the From address (noreply). */
+  replyTo?: string
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     console.log(`[email:dev] To: ${to} | Subject: ${subject}`)
@@ -56,7 +59,13 @@ export async function sendEmail({
     // it does not throw. A try/catch alone therefore catches only transport
     // errors and would have let every rejected recipient, bad `from` domain, and
     // rate-limit response pass as a success.
-    const { error } = await client.emails.send({ from: FROM, to, subject, react })
+    const { error } = await client.emails.send({
+      from: FROM,
+      to,
+      subject,
+      react,
+      ...(replyTo ? { replyTo } : {}),
+    })
     if (error) {
       console.error('[email] Send rejected:', subject, '→', to, error)
       Sentry.captureException(new Error(`Resend rejected "${subject}": ${error.message}`), {

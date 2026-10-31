@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Camera, Map as MapIcon, Plus, Store } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/env'
 import { ReceiptListRow } from '@/components/spend/ReceiptListRow'
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import {
@@ -198,6 +199,7 @@ export default async function MyReceiptsPage({
                     status={r.status}
                     filePath={r.file_path}
                     rejectionReason={r.rejection_reason}
+                    origin={getAppUrl()}
                   />
                 ))}
               </ul>

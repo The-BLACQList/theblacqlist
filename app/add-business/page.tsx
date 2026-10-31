@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAdminRole } from '@/lib/admin/guard'
 import { isFeatureEnabled } from '@/lib/env'
 import {
   creatorSubcategories,
@@ -11,7 +12,8 @@ import { QuickStart } from './_components/quick-start/QuickStart'
 import { loadCategoryLevels } from '@/lib/listings/levelRows'
 
 interface PageProps {
-  searchParams: Promise<{ as?: string | string[] }>
+  /** `name` is the admin prefill from /admin/receipts/unlisted (ticket 168). */
+  searchParams: Promise<{ as?: string | string[]; name?: string | string[] }>
 }
 
 // `?as=creator` (ticket 132) runs the same quick start worded for a person.
@@ -39,7 +41,7 @@ export interface CategoryOption {
 }
 
 export default async function AddBusinessPage({ searchParams }: PageProps) {
-  const { as } = await searchParams
+  const { as, name } = await searchParams
   const mode = quickStartMode(as)
   const creator = mode === 'creator'
   const supabase = await createClient()
@@ -79,6 +81,11 @@ export default async function AddBusinessPage({ searchParams }: PageProps) {
     return levels ? { ...c, ...levels } : c
   })
 
+  // "Add as a listing" on /admin/receipts/unlisted (ticket 168) fills the name.
+  // Admins only, so a shared link can't put words in an owner's form.
+  const nameParam = typeof name === 'string' ? name.trim().replace(/\s+/g, ' ').slice(0, 200) : ''
+  const prefillName = nameParam && (await getAdminRole(user.id)) ? nameParam : undefined
+
   const cities = (cityRows ?? []).map((c) => ({
     id: c.id,
     name: c.name,
@@ -111,6 +118,7 @@ export default async function AddBusinessPage({ searchParams }: PageProps) {
           siteImport={!creator && isFeatureEnabled('siteImport')}
           aiOnboarding={isFeatureEnabled('aiOnboarding')}
           mode={mode}
+          prefillName={prefillName}
         />
       </div>
     </main>
