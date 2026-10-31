@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   CATEGORY_FAMILIES,
-  DOT_MIN_DISTANCE,
   FALLBACK_FAMILY_INDEX,
   GOLD,
   GOLD_BRIGHT,
@@ -23,7 +22,12 @@ import {
   placeBusinesses,
   pulseProgress,
   pulseSchedule,
-  spreadPoints,
+  SILO,
+  clusterRadius,
+  crowdAnchor,
+  linkControlPoints,
+  scrollForFloor,
+  viewForScroll,
   type BusinessListingMeta,
   type BusinessNodeRow,
 } from '@/lib/spend/silo-layout'
@@ -113,9 +117,29 @@ describe('buildSiloBusinesses', () => {
     below: listing({ name: 'Below' }),
   }
 
-  it('drops businesses under the min-transactions floor and rows with no listing', () => {
+  it('shows every published business, linked ones first', () => {
     const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
-    expect(out.map((b) => b.id)).toEqual(['a', 'b'])
+    // 'gone' has receipts but no published listing, so it is not on the map.
+    expect(out.map((b) => b.id)).toEqual(['a', 'b', 'below'])
+    expect(out.map((b) => b.linked)).toEqual([true, true, false])
+  })
+
+  it('keeps no total for a business under the min-transactions floor', () => {
+    const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
+    const below = out.find((b) => b.id === 'below')!
+    expect(below.amountCents).toBe(0)
+    expect(below.transactionCount).toBe(0)
+  })
+
+  it('shows a business with no receipts at all as an unlinked node', () => {
+    const out = buildSiloBusinesses({
+      nodes: [],
+      listings: { fresh: listing({ level: 'grower' }) },
+      isNameOptedIn: () => false,
+    })
+    expect(out).toHaveLength(1)
+    expect(out[0]!.linked).toBe(false)
+    expect(out[0]!.floorIndex).toBe(4)
   })
 
   it('never shows a name for a business that has not opted in', () => {
@@ -177,77 +201,69 @@ describe('labels and colors', () => {
   })
 })
 
-describe('spreadPoints', () => {
-  function minPairDistance(pts: { x: number; z: number }[]): number {
-    let m = Infinity
-    for (let i = 0; i < pts.length; i++)
-      for (let j = i + 1; j < pts.length; j++)
-        m = Math.min(m, Math.hypot(pts[i]!.x - pts[j]!.x, pts[i]!.z - pts[j]!.z))
-    return m
-  }
-
-  it('pushes crowded points apart to the minimum distance', () => {
-    const pts = [
-      { x: 0, z: 0 },
-      { x: 0.1, z: 0 },
-      { x: 0, z: 0.1 },
-    ]
-    const out = spreadPoints(pts, 0.4, { iterations: 80 })
-    expect(minPairDistance(out)).toBeGreaterThan(0.39)
-  })
-
-  it('splits points that sit on the same spot', () => {
-    const out = spreadPoints(
-      [
-        { x: 1, z: 1 },
-        { x: 1, z: 1 },
-      ],
-      0.4
-    )
-    expect(minPairDistance(out)).toBeGreaterThan(0.39)
-  })
-
-  it('leaves points that are already far apart alone', () => {
-    const pts = [
-      { x: 0, z: 0 },
-      { x: 3, z: 0 },
-    ]
-    expect(spreadPoints(pts, 0.4)).toEqual(pts)
-  })
-
-  it('never moves a point further than maxShift from home', () => {
-    const pts = Array.from({ length: 12 }, () => ({ x: 0, z: 0 }))
-    const out = spreadPoints(pts, 1, { maxShift: 0.3, iterations: 60 })
-    for (const p of out) expect(Math.hypot(p.x, p.z)).toBeLessThanOrEqual(0.3 + 1e-9)
-  })
-
-  it('is deterministic', () => {
-    const pts = [
-      { x: 0, z: 0 },
-      { x: 0.05, z: 0.02 },
-      { x: 0.02, z: 0.05 },
-    ]
-    expect(spreadPoints(pts, 0.4)).toEqual(spreadPoints(pts, 0.4))
-  })
-
-  it('places businesses the same way every time and keeps neighbors apart', () => {
-    const many = buildSiloBusinesses({
-      nodes: Array.from({ length: 30 }, (_, i) => ({
-        entity_id: `biz-${i}`,
-        total_amount_cents: 1000 + i,
-        transaction_count: MIN,
-      })),
+describe('placement', () => {
+  function makeMany(n: number, categorySlug = 'food-dining') {
+    return buildSiloBusinesses({
+      nodes: [],
       listings: Object.fromEntries(
-        Array.from({ length: 30 }, (_, i) => [`biz-${i}`, listing({ categorySlug: 'food-dining' })])
+        Array.from({ length: n }, (_, i) => [`biz-${i}`, listing({ categorySlug })])
       ),
       isNameOptedIn: () => false,
     })
+  }
+
+  it('places businesses the same way every time', () => {
+    const many = makeMany(30)
     const a = placeBusinesses(many)
-    const b = placeBusinesses(many)
-    expect(a).toEqual(b)
+    expect(a).toEqual(placeBusinesses(many))
     expect(a).toHaveLength(30)
-    // Same family on one floor is the most crowded case; it should still open up.
-    expect(minPairDistance(a)).toBeGreaterThan(DOT_MIN_DISTANCE * 0.5)
+  })
+
+  it('keeps each business near its own floor and inside the cage', () => {
+    const many = [...makeMany(400), ...makeMany(12, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}`, floorIndex: 4 }))]
+    const placed = placeBusinesses(many)
+    const byId = new Map(many.map((b) => [b.id, b]))
+    for (const p of placed) {
+      const b = byId.get(p.id)!
+      const spread = clusterRadius(400)
+      expect(Math.abs(p.y - SILO.y[b.floorIndex]!)).toBeLessThanOrEqual(spread)
+      expect(Math.hypot(p.x, p.z)).toBeLessThan(SILO.R + SILO.cr)
+    }
+  })
+
+  it('does not move a cluster when one more business joins another family', () => {
+    const food = makeMany(10)
+    const before = placeBusinesses(food)
+    const after = placeBusinesses([...food, ...makeMany(3, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}` }))])
+    for (const p of before) expect(after.find((q) => q.id === p.id)).toEqual(p)
+  })
+
+  it('grows the cluster with the crowd, within limits', () => {
+    expect(clusterRadius(1)).toBe(SILO.cr)
+    expect(clusterRadius(10_000)).toBe(8)
+    expect(clusterRadius(200)).toBeGreaterThan(SILO.cr)
+  })
+
+  it('starts links on the top floor and bows them toward the middle', () => {
+    const a = crowdAnchor(0)
+    expect(a.y).toBe(SILO.y[0])
+    const b = { x: 10, y: -34, z: 5 }
+    const [p0, p1, p2, p3] = linkControlPoints(a, b)
+    expect(p0).toEqual(a)
+    expect(p3).toEqual(b)
+    const straight = (t: number) => Math.hypot(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)
+    expect(Math.hypot(p1.x, p1.z)).toBeLessThan(straight(1 / 3))
+    expect(Math.hypot(p2.x, p2.z)).toBeLessThan(straight(2 / 3))
+  })
+
+  it('frames each floor with the scroll position', () => {
+    for (let k = 0; k < SILO.y.length; k++) {
+      const t = scrollForFloor(k)
+      expect(t).toBeGreaterThanOrEqual(0)
+      expect(t).toBeLessThanOrEqual(1)
+      const { pos } = viewForScroll(t)
+      expect(pos.y).toBeGreaterThan(SILO.y[k]!)
+    }
   })
 })
 

@@ -70,7 +70,8 @@
 
 .silo-stage canvas {
   display: block;
-  touch-action: none;
+  /* Sideways drags turn the map; up and down still scroll the page. */
+  touch-action: pan-y;
 }
 
 .silo-stage-list {
@@ -133,6 +134,56 @@
   display: none;
 }
 
+/* Floor signs, round 17 style: icon disc plus label, placed by the scene. */
+.silo-signs {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.silo-sign {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.silo-sign[hidden] {
+  display: none;
+}
+
+.silo-sign .ic {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: rgba(10, 9, 7, 0.82);
+  color: var(--gold-2);
+  box-shadow: 0 0 16px rgba(226, 164, 40, 0.4);
+}
+
+.silo-sign .ic svg {
+  width: 18px;
+  height: 18px;
+}
+
+.silo-sign b {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow: 0 0 12px rgba(10, 9, 7, 0.9), 0 0 18px rgba(240, 192, 80, 0.35);
+}
+
 .silo-tag.is-you {
   background: var(--gold);
   color: #1a1405;
@@ -179,12 +230,21 @@
 }
 
 .brand h2 {
-  font-family: var(--font-headline), system-ui, sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   margin: 0;
-  text-wrap: balance;
+}
+
+.brand .brand-mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
 }
 
 .brand p {
@@ -295,6 +355,11 @@
   transition:
     background-color var(--t-mid) var(--ease),
     box-shadow var(--t-mid) var(--ease);
+}
+
+.fl .ic svg {
+  width: 15px;
+  height: 15px;
 }
 
 .fl[aria-current='location'] {
@@ -915,6 +980,17 @@
   .fl .ic {
     width: 36px;
     height: 36px;
+  }
+  .silo-sign b {
+    font-size: 13px;
+  }
+  .silo-sign .ic {
+    width: 28px;
+    height: 28px;
+  }
+  .silo-sign .ic svg {
+    width: 15px;
+    height: 15px;
   }
   .fl .nm,
   .fl .bars {

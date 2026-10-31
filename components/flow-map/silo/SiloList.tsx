@@ -6,10 +6,12 @@ import { FlowNodeTable } from '@/components/flow-map/FlowNodeTable'
 import { businessDisplayName, type SiloBusiness } from '@/lib/spend/silo-layout'
 
 /**
- * The Silo as a list (ticket 167). The fallback when the map can't draw
- * (no WebGL, low power, lost context, chunk failed) and the "Explore as a
- * list" view. Same numbers as the map, and the same naming rule: a business
- * that hasn't opted in shows as its kind, never its name.
+ * The Collective as a list (tickets 167 and 171). The fallback when the map
+ * can't draw (no WebGL, low power, lost context, chunk failed) and the
+ * "Explore as a list" view. Same numbers as the map, and the same naming
+ * rule: a business that hasn't opted in shows as its kind, never its name.
+ * The list ranks by money spent, so it only holds businesses with enough
+ * receipts to show a total; the map also shows the ones still waiting.
  */
 
 export interface SiloCityRow {
@@ -29,7 +31,7 @@ interface Props {
 }
 
 export function SiloList({ businesses, cities, note, action }: Props) {
-  const businessRows = businesses.map((b) => ({
+  const businessRows = businesses.filter((b) => b.linked).map((b) => ({
     entity_id: b.id,
     name: b.isYou ? `${businessDisplayName(b)} (you shopped here)` : businessDisplayName(b),
     href: b.href,
@@ -50,7 +52,7 @@ export function SiloList({ businesses, cities, note, action }: Props) {
           nodes={businessRows}
           title="Businesses, by money spent"
           linkToEntity
-          emptyText="No businesses have cleared the privacy floor yet."
+          emptyText="No business has enough receipts counted yet to show a total."
         />
         {cities.length > 0 && (
           <FlowNodeTable nodes={[...cities]} title="Top cities" emptyText="No cities yet." />

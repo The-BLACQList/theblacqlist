@@ -1,7 +1,9 @@
 'use client'
 
 /**
- * The Silo (ticket 167): layout B from the round 17 workshop.
+ * The Collective (tickets 167 and 171): concept D, layout B from the round
+ * 17 workshop. Every published business is on the map; lines only appear
+ * once enough receipts are counted at a business.
  *
  * The HUD is plain HTML and renders first. The Three.js scene loads on its
  * own chunk after mount, and only when the device can draw it. If it can't
@@ -22,6 +24,9 @@ import {
 } from 'react'
 import Link from 'next/link'
 
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+
 import {
   CATEGORY_FAMILIES,
   FALLBACK_FAMILY_INDEX,
@@ -33,6 +38,7 @@ import {
   placeBusinesses,
   type SiloBusiness,
 } from '@/lib/spend/silo-layout'
+import { FloorIcon } from './floor-icons'
 import type { SiloSceneProps } from './SiloScene'
 import { SceneBoundary, SiloList, type SiloCityRow } from './SiloList'
 import { SiloMore } from './SiloMore'
@@ -105,6 +111,7 @@ export function SiloExperience({
   const keysBtnRef = useRef<HTMLButtonElement>(null)
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
+  const signsRef = useRef<HTMLDivElement>(null)
 
   // ── Derived data ──
   const floors = useMemo(() => buildFloors(totalSpentCents), [totalSpentCents])
@@ -123,6 +130,7 @@ export function SiloExperience({
     [businesses, filter, colorBy]
   )
   const stepList = useMemo(() => businesses.filter((_, i) => visible[i]), [businesses, visible])
+  const linkedCount = useMemo(() => businesses.filter((b) => b.linked).length, [businesses])
   const youList = useMemo(() => businesses.filter((b) => b.isYou), [businesses])
   const youFloors = useMemo(() => new Set(youList.map((b) => b.floorIndex)), [youList])
   const selected = businesses.find((b) => b.id === selectedId) ?? null
@@ -324,14 +332,29 @@ export function SiloExperience({
                 hoveredId={hoveredId}
                 focusFloor={focusFloor}
                 motion={motion}
+                reducedMotion={reducedMotion}
                 active={active}
                 onSelect={(id) => selectBusiness(businesses.find((b) => b.id === id) ?? null)}
+                onPickFloor={pickFloor}
                 onHover={setHoveredId}
                 onContextLost={() => setContextLost(true)}
                 hoverTagRef={hoverTagRef}
                 youTagRef={youTagRef}
+                signsRef={signsRef}
               />
             </SceneBoundary>
+          )}
+          {showScene && (
+            <div ref={signsRef} className="silo-signs" aria-hidden="true">
+              {SILO_FLOORS.map((f, i) => (
+                <div key={f.key} className="silo-sign" hidden>
+                  <span className="ic">
+                    <FloorIcon floor={i} />
+                  </span>
+                  <b>{f.short}</b>
+                </div>
+              ))}
+            </div>
           )}
           <div ref={hoverTagRef} className="silo-tag" hidden aria-hidden="true">
             {hovered ? businessDisplayName(hovered) : ''}
@@ -346,9 +369,13 @@ export function SiloExperience({
 
       <div className="hud">
         <div className="brand">
-          <h2 id="silo-title">The Silo</h2>
+          <h2 id="silo-title">
+            <GoldBrandMark className="brand-mark" />
+            The Collective
+          </h2>
           <p>
-            Money spent with businesses on the list, floor by floor. We track the first stop today.
+            Every business on the list, floor by floor. Lines show money spent once enough receipts
+            are counted.
           </p>
         </div>
 
@@ -362,8 +389,8 @@ export function SiloExperience({
             <dd>{receiptCount.toLocaleString('en-US')}</dd>
           </div>
           <div className="kpi">
-            <dt>Businesses</dt>
-            <dd>{businesses.length.toLocaleString('en-US')}</dd>
+            <dt>Links</dt>
+            <dd>{linkedCount.toLocaleString('en-US')}</dd>
           </div>
         </dl>
 
@@ -386,6 +413,8 @@ export function SiloExperience({
         floorCount={focusFloor === null ? 0 : (counts[focusFloor] ?? 0)}
         total={stepList.length}
         position={position}
+        linkedCount={stepList.filter((b) => b.linked).length}
+        filtered={filter.size > 0}
         totalSpentCents={totalSpentCents}
         onPrev={() => step(-1)}
         onNext={() => step(1)}
@@ -477,8 +506,10 @@ export function SiloExperience({
         <div className="more-group">
           <h4>How we count</h4>
           <p>
-            We only count the first stop: a shopper&apos;s receipt at a business on the list. The
-            floors below say &quot;Not tracked yet&quot; until we can count them honestly.{' '}
+            Every published business is on the map. A line appears once a business has at least{' '}
+            {AGGREGATE_MIN_TRANSACTIONS} counted receipts, so no total can point back at one shopper. We only count the
+            first stop: a shopper&apos;s receipt at a business on the list. The floors below say
+            &quot;Not tracked yet&quot; until we can count them honestly.{' '}
             <Link href="/flow-map/methodology">Read the method</Link>
           </p>
         </div>
