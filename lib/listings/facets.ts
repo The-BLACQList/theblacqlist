@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
 import { BUSINESS_LEVELS, isBusinessLevel } from '@/lib/listings/levels'
+import { expandSearchQuery } from '@/lib/search/wordFamilies'
 import {
   expandTypeCategoryIds,
   isMappedType,
@@ -247,6 +248,9 @@ type RpcFn = (
  */
 export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<string, unknown> {
   const out: Record<string, unknown> = { ...args }
+  // "lawyer" also searches "law", "dentists" also searches "dental". Done here
+  // so both RPCs and every caller see the same words (ticket 172).
+  if (typeof out.p_q === 'string') out.p_q = expandSearchQuery(out.p_q)
   for (const k of TYPE_KEYS) if (out[k] == null) delete out[k]
   // Same rule for the level key. There is deliberately no retry without it: a
   // level pick the database cannot honor must fail (the caller shows "filters
@@ -512,7 +516,10 @@ export async function legacyFacetedIds(
   }
   if (resolved.p_ownership_label) q = q.eq('ownership_label', resolved.p_ownership_label)
   if (resolved.p_q) {
-    q = q.textSearch('search_vector', resolved.p_q, { type: 'websearch', config: 'english' })
+    q = q.textSearch('search_vector', expandSearchQuery(resolved.p_q), {
+      type: 'websearch',
+      config: 'english',
+    })
   }
 
   // Featured leads only when browsing. With a keyword this path cannot rank by
