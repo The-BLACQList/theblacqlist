@@ -20,6 +20,7 @@ import { StepApply } from './StepApply'
 import { StepReview } from './StepReview'
 import { usePostJobDraft, type SavedDraft } from './usePostJobDraft'
 import type { HiringBusiness } from './types'
+import type { PostingReadiness } from '@/lib/jobs/postingReadiness'
 
 interface Props {
   businesses: HiringBusiness[]
@@ -27,12 +28,20 @@ interface Props {
   priceLine: JobPriceLine
   saved: SavedDraft | null
   canceled?: boolean
+  readiness?: PostingReadiness | null
 }
 
 const LAST = POST_JOB_STEPS.length - 1
 const btn = 'inline-flex h-11 min-w-11 items-center justify-center rounded-full px-6 font-subhead text-sm font-bold disabled:opacity-60'
 
-export function PostJobWizardInner({ businesses, categories, priceLine, saved, canceled = false }: Props) {
+export function PostJobWizardInner({
+  businesses,
+  categories,
+  priceLine,
+  saved,
+  canceled = false,
+  readiness = null,
+}: Props) {
   const router = useRouter()
   const { values, setValues, step, setStep, attemptId, clearDraft } = usePostJobDraft(
     businesses.map((b) => b.id),
@@ -142,7 +151,7 @@ export function PostJobWizardInner({ businesses, categories, priceLine, saved, c
           <h2 ref={headingRef} tabIndex={-1} className="font-headline text-2xl text-brand-black mb-5 focus:outline-none">
             {POST_JOB_STEPS[step]}
           </h2>
-          {step === 0 && <StepRole values={values} errors={errors} set={set} businesses={businesses} categories={categories} />}
+          {step === 0 && <StepRole values={values} errors={errors} set={set} businesses={businesses} categories={categories} readiness={readiness} />}
           {step === 1 && <StepPayPlace values={values} errors={errors} set={set} business={business} />}
           {step === 2 && <StepApply values={values} errors={errors} set={set} />}
           {step === 3 && (

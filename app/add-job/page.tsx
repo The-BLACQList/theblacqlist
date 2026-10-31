@@ -6,6 +6,7 @@ import { JOB_POSTING_PRICE_DISPLAY, jobQuotaFor } from '@/lib/stripe/jobPostings
 import { buildJobPriceLine } from '@/lib/listings/jobPriceLine'
 import { PostJobWizard } from '@/components/jobs/post/PostJobWizard'
 import type { HiringBusiness } from '@/components/jobs/post/types'
+import { loadOpenClaims, resolvePostingReadiness, type PostingReadiness } from '@/lib/jobs/postingReadiness'
 
 export const metadata = {
   title: 'Post a Job | The BLACQList',
@@ -20,6 +21,8 @@ export const dynamic = 'force-dynamic'
 interface BusinessRow {
   id: string
   name: string
+  status: string
+  entity_type: string
   logo_path: string | null
   cities: { name: string; state_abbr: string | null } | { name: string; state_abbr: string | null }[] | null
 }
@@ -39,7 +42,10 @@ export default async function AddJobPage({ searchParams }: Props) {
 
   if (!user) redirect('/sign-in?next=/add-job')
 
-  const [{ data: categories }, { data: owned }, quotaRead] = await Promise.all([
+  // Ticket 156: drafts and pending pages are read too, so the form can say which
+  // step the user is on. Only published pages go in the business picker.
+  const jobsOpen = isFeatureEnabled('jobsOpen')
+  const [{ data: categories }, { data: owned, error: ownedError }, quotaRead, openClaims] = await Promise.all([
     supabase
       .from('categories')
       .select('id, name, slug, parent_id')
@@ -47,16 +53,22 @@ export default async function AddJobPage({ searchParams }: Props) {
       .order('display_order'),
     supabase
       .from('listings')
-      .select('id, name, logo_path, cities(name, state_abbr)')
+      .select('id, name, status, entity_type, logo_path, cities(name, state_abbr)')
       .eq('owner_user_id', user.id)
-      .eq('status', 'published')
+      .in('status', ['draft', 'pending', 'published'])
       .is('deleted_at', null)
       .not('entity_type', 'in', '(event,job)')
       .order('name'),
     jobQuotaFor(supabase, user.id),
+    jobsOpen ? loadOpenClaims(supabase, user.id) : Promise.resolve([]),
   ])
 
-  const businesses: HiringBusiness[] = ((owned ?? []) as unknown as BusinessRow[]).map((b) => {
+  const ownedRows = (owned ?? []) as unknown as BusinessRow[]
+  // A failed owned read keeps today's plain empty state rather than a wrong step.
+  const readiness: PostingReadiness | null =
+    jobsOpen && !ownedError ? resolvePostingReadiness(ownedRows, openClaims) : null
+
+  const businesses: HiringBusiness[] = ownedRows.filter((b) => b.status === 'published').map((b) => {
     const city = Array.isArray(b.cities) ? b.cities[0] : b.cities
     return {
       id: b.id,
@@ -82,7 +94,13 @@ export default async function AddJobPage({ searchParams }: Props) {
           </p>
         </div>
 
-        <PostJobWizard businesses={businesses} categories={categories ?? []} priceLine={priceLine} canceled={canceled} />
+        <PostJobWizard
+          businesses={businesses}
+          categories={categories ?? []}
+          priceLine={priceLine}
+          canceled={canceled}
+          readiness={readiness}
+        />
       </div>
     </main>
   )
