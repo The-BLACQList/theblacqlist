@@ -125,6 +125,12 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <a href="#ai-writing-help" className="text-amber hover:underline">&ldquo;AI writing help&rdquo;</a>{' '}
                     below)
                   </li>
+                  <li>
+                    Read a receipt photo for you, only when you tick &ldquo;Read my receipt for
+                    me&rdquo; (see{' '}
+                    <a href="#receipt-reading" className="text-amber hover:underline">&ldquo;Reading your receipt&rdquo;</a>{' '}
+                    below)
+                  </li>
                 </>
               )}
               <li>Process and verify business claim submissions</li>
@@ -243,6 +249,45 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   </Link>{' '}
                   works without it.
                 </p>
+
+                {/* [Needs professional review] Receipt reading (ticket 163). Merge only
+                    after counsel review, together with switching FEATURE_RECEIPT_READ on.
+                    docs/blacqlist/legal/receipt-reading-policy-update-2026-11.md */}
+                <h3 id="receipt-reading" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
+                  Reading your receipt (only if you ask)
+                </h3>
+                <p>
+                  When you add a receipt, you can tick &ldquo;Read my receipt for me.&rdquo; The box
+                  starts unticked. Only if you tick it, we send that receipt photo to Anthropic so it
+                  can read the business name, the total and the date, and fill them in for you. If
+                  you don&apos;t tick it, the photo isn&apos;t sent to Anthropic.
+                </p>
+                <p>
+                  <strong>What we send:</strong> the receipt photo, made smaller, with its location
+                  data (like GPS) and other hidden details in the file taken out. A receipt can show
+                  other things, like a card&apos;s last four digits or a cashier&apos;s name, and
+                  those are part of the photo we send. We don&apos;t attach your name, your email
+                  address or your account details.
+                </p>
+                <p>
+                  <strong>What comes back:</strong> the business name, total and date fill in your
+                  form, marked &ldquo;From your photo&rdquo;, and you can change any of them before
+                  you add the receipt. We may also use a phone number or ZIP code printed on the
+                  receipt to find the business in our listings. We don&apos;t show those to you or
+                  save them. A read can be wrong, so check each field.
+                </p>
+                <p>
+                  <strong>What we keep:</strong> a record that a read was asked for (when, by which
+                  account, and whether it worked), so we can limit how many reads each person gets.
+                  We don&apos;t keep what Anthropic read. The receipt itself is kept the same way
+                  as any receipt you add (see{' '}
+                  <a href="#receipt-data" className="text-amber hover:underline">Section 4</a>).
+                </p>
+                <p>
+                  <strong>It&apos;s optional.</strong> You can always type the details in yourself.
+                  Anthropic handles the photo for us as a service provider, under the same contract
+                  described above under &ldquo;AI writing help.&rdquo;
+                </p>
               </>
             )}
           </section>
@@ -265,6 +310,12 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Verify the transaction and match it to a listed business</li>
+              {isNext && (
+                <li>
+                  Read the business, total and date off your photo, only when you ask (see{' '}
+                  <a href="#receipt-reading" className="text-amber hover:underline">&ldquo;Reading your receipt&rdquo;</a>)
+                </li>
+              )}
               <li>Generate anonymized, aggregated community spend totals (e.g., &ldquo;$X tracked through the community this month&rdquo;)</li>
               <li>Display personal spend summaries to you in your account</li>
             </ul>
@@ -424,7 +475,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that match what a visitor types to our categories and cities and write a short reply (not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that match what a visitor types to our categories and cities and write a short reply (not saved). Also reads a receipt photo when a shopper asks it to (what it reads is not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"
@@ -506,6 +557,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 <>
                   <li>When you bring in your website, we don&apos;t keep a copy of the page. We keep only what you save to your page, plus a note of which website it came from.</li>
                   <li>For AI writing help, we keep a record that a draft was requested, without the text. If you delete your account, your name is removed from those records.</li>
+                  <li>For receipt reading, we keep a record that a read was asked for, without what was read. If you delete your account, your name is removed from those records.</li>
                 </>
               )}
               <li>We may retain certain records longer when required by law, for fraud prevention, or for legitimate business purposes such as resolving disputes</li>
