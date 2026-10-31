@@ -117,3 +117,70 @@ export async function callAnthropic(input: {
     .join('')
   return { text, ...usage }
 }
+
+export type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/webp'
+
+/**
+ * One image and a short instruction in, JSON text out: the receipt read
+ * (ticket 163). Same rules as `callAnthropic`, with three differences:
+ * - The answer is held to `jsonSchema` through structured output, so it can
+ *   only come back in the shape the caller checks.
+ * - The caller sets the timeout, and there is no retry. The shopper is
+ *   waiting, and a failed read just leaves the form as it was.
+ * - Effort is low. Copying printed text needs no deliberation.
+ * The image is never logged or kept; nothing here logs.
+ */
+export async function callAnthropicImage(input: {
+  model: string
+  system: string
+  prompt: string
+  image: { mediaType: ImageMediaType; base64: string }
+  jsonSchema: Record<string, unknown>
+  maxTokens: number
+  timeoutMs: number
+}): Promise<ProviderResult> {
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: input.timeoutMs,
+    maxRetries: 0,
+  })
+
+  let response: Anthropic.Message
+  try {
+    response = await client.messages.create({
+      model: input.model,
+      max_tokens: input.maxTokens,
+      system: input.system,
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: input.jsonSchema } },
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: input.image.mediaType, data: input.image.base64 } },
+            { type: 'text', text: input.prompt },
+          ],
+        },
+      ],
+    })
+  } catch {
+    // Deliberately drops the error: its message can carry request content.
+    throw new ProviderCallError('provider_error')
+  }
+
+  const usage: TokenUsage = {
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+  }
+
+  if (response.stop_reason === 'refusal') throw new ProviderCallError('provider_refusal', usage)
+  if (response.stop_reason === 'max_tokens') throw new ProviderCallError('provider_truncated', usage)
+  if (response.stop_reason !== 'end_turn' && response.stop_reason !== 'stop_sequence') {
+    throw new ProviderCallError('provider_error', usage)
+  }
+
+  const text = response.content
+    .map((block) => (block.type === 'text' ? block.text : ''))
+    .join('')
+  return { text, ...usage }
+}

@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 
+import { aiKillSwitchOn } from '@/lib/ai/provider'
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 import type { ReceiptFormDefaults } from '@/components/spend/ReceiptSubmissionForm'
@@ -75,7 +77,10 @@ export default async function NewReceiptPage({
         </div>
 
         <div className="rounded-xl bg-white border border-charcoal/10 p-6">
-          <ReceiptSubmissionForm prefillListing={prefillListing} />
+          <ReceiptSubmissionForm
+            prefillListing={prefillListing}
+            canReadReceipt={isFeatureEnabled('receiptRead') && !aiKillSwitchOn()}
+          />
         </div>
       </div>
     </main>

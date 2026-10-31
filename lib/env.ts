@@ -75,6 +75,7 @@ export type FeatureFlag =
   | 'ocrExtraction'
   | 'paidPostings'
   | 'postingSubmissions'
+  | 'receiptRead'
   | 'siteImport'
   | 'testerTour'
 
@@ -134,6 +135,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // published listings of their type and are correct either way — with the flag
   // off they are a real, empty board rather than a page promising a feature.
   postingSubmissions: 'FEATURE_POSTING_SUBMISSIONS',
+  // Gates "Read my receipt for me" on the receipt form (ticket 163): an opt-in
+  // box that sends the shopper's photo to our AI provider to fill the business,
+  // total and date. Off, the box is not shown and the read action refuses.
+  // Closed by default on EVERY deployment (see CLOSED_BY_DEFAULT), because it
+  // sends a shopper's photo to a model, and production waits for the privacy
+  // policy update that names it.
+  receiptRead: 'FEATURE_RECEIPT_READ',
   // Gates "Start from your website" on /add-business (ticket 127): step 0, the
   // read-site and import-photo actions. Off, there is no step 0 and nothing is
   // ever fetched. The default (on in preview, off in production) lets it be
@@ -155,8 +163,9 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
 // Flags that default to off on EVERY deployment, not just production. The
 // opening-soon covers are the thing under review here: if they defaulted open on
 // Previews, the cover would be invisible exactly where the founder checks it
-// (2026-10-05). The /add-business drafts and the home page visitor guide are
-// here for a different reason: they send owner or visitor text to a model, so no
+// (2026-10-05). The /add-business drafts, the home page visitor guide and the
+// receipt reader are here for a different reason: they send owner or visitor
+// text, or a shopper's receipt photo, to a model, so no
 // deployment should start doing that without someone deciding to. Each still
 // opens with an explicit `=true`.
 const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
@@ -166,6 +175,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'collectiveOpen',
   'jobsOpen',
   'marketplaceOpen',
+  'receiptRead',
 ])
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a

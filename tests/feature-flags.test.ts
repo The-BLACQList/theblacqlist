@@ -44,6 +44,7 @@ beforeEach(() => {
   delete process.env.FEATURE_COLLECTIVE_OPEN
   delete process.env.FEATURE_JOBS_OPEN
   delete process.env.FEATURE_MARKETPLACE_OPEN
+  delete process.env.FEATURE_RECEIPT_READ
 })
 
 afterEach(() => {
@@ -187,6 +188,23 @@ describe('opening-soon covers', () => {
     expect(isFeatureEnabled('jobsOpen')).toBe(true)
     expect(isFeatureEnabled('collectiveOpen')).toBe(false)
     expect(isFeatureEnabled('marketplaceOpen')).toBe(false)
+  })
+})
+
+describe('receipt reading (ticket 163)', () => {
+  it.each(['production', 'preview', 'development'])('stays off in a bare %s deployment', async (env) => {
+    // It sends a shopper's photo to a model, so no deployment starts doing that
+    // without someone setting FEATURE_RECEIPT_READ=true.
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: env })
+    expect(isFeatureEnabled('receiptRead')).toBe(false)
+  })
+
+  it('opens only when set to true', async () => {
+    const { isFeatureEnabled } = await loadEnv({
+      VERCEL_ENV: 'preview',
+      FEATURE_RECEIPT_READ: 'true',
+    })
+    expect(isFeatureEnabled('receiptRead')).toBe(true)
   })
 })
 
