@@ -6,12 +6,14 @@ import type { CategoryOption } from '@/app/add-business/page'
 import { PostJobWizardInner } from './PostJobWizardInner'
 import { DRAFT_KEY, parseSavedDraft } from './usePostJobDraft'
 import type { HiringBusiness } from './types'
+import type { PostingReadiness } from '@/lib/jobs/postingReadiness'
 
 interface Props {
   businesses: HiringBusiness[]
   categories: CategoryOption[]
   priceLine: JobPriceLine
   canceled?: boolean
+  readiness?: PostingReadiness | null
 }
 
 const noopSubscribe = () => () => {}

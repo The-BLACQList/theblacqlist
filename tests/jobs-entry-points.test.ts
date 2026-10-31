@@ -90,7 +90,10 @@ describe('postJobQuotaLine', () => {
 describe('PostJobCard', () => {
   const render = (owner: boolean) =>
     renderToStaticMarkup(
-      createElement(PostJobCard, { hasPublishedBusiness: owner, quotaLine: '1 of 1 included postings left' })
+      createElement(PostJobCard, {
+        readiness: owner ? { state: 'live' } : null,
+        quotaLine: '1 of 1 included postings left',
+      })
     )
   it('is invisible with Jobs off or posting off', () => {
     vi.stubEnv('FEATURE_JOBS_OPEN', 'false')
@@ -100,7 +103,7 @@ describe('PostJobCard', () => {
     vi.stubEnv('FEATURE_POSTING_SUBMISSIONS', 'false')
     expect(render(true)).toBe('')
   })
-  it('shows the button and count to an owner when on, nothing without a business', () => {
+  it('shows the button and count to an owner when on, nothing without a readiness', () => {
     vi.stubEnv('FEATURE_JOBS_OPEN', 'true')
     vi.stubEnv('FEATURE_POSTING_SUBMISSIONS', 'true')
     const html = render(true)

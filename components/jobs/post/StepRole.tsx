@@ -7,17 +7,35 @@ import {
 } from '@/lib/constants/listing'
 import { groupCategoriesByParent } from '@/lib/categories/sort'
 import type { CategoryOption } from '@/app/add-business/page'
+import type { PostingReadiness } from '@/lib/jobs/postingReadiness'
+import { PostingChecklist } from '@/components/jobs/PostingChecklist'
 import { Field, inputCls } from './Field'
 import type { HiringBusiness, StepProps } from './types'
 
 interface Props extends StepProps {
   businesses: HiringBusiness[]
   categories: CategoryOption[]
+  /** Ticket 156. Null when Jobs is off or the owned-page read failed. */
+  readiness?: PostingReadiness | null
 }
 
 const selectCls = 'appearance-none cursor-pointer'
 
-export function StepRole({ values, errors, set, businesses, categories }: Props) {
+export function StepRole({ values, errors, set, businesses, categories, readiness = null }: Props) {
+  if (businesses.length === 0 && readiness && readiness.state !== 'live') {
+    return (
+      <section aria-labelledby="who-can-post-heading" className="rounded-lg border border-charcoal/20 bg-pale-lavender p-4">
+        <h2 id="who-can-post-heading" className="font-subhead text-sm font-semibold text-brand-black">
+          Who can post a job
+        </h2>
+        <p className="font-subhead text-sm text-charcoal mt-1 mb-4">
+          Jobs are posted by businesses on BLACQList. You need a page you own, and it needs to be live.
+        </p>
+        <PostingChecklist readiness={readiness} />
+      </section>
+    )
+  }
+
   if (businesses.length === 0) {
     return (
       <div className="rounded-lg border border-charcoal/20 bg-pale-lavender p-4">

@@ -11,6 +11,7 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { PostJobCard } from '@/components/dashboard/PostJobCard'
 import { jobQuotaFor } from '@/lib/stripe/jobPostings'
 import { postJobQuotaLine } from '@/lib/listings/jobEntryPoints'
+import { loadOpenClaims, resolvePostingReadiness } from '@/lib/jobs/postingReadiness'
 import { FreeMonthNotice } from './FreeMonthNotice'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
@@ -87,14 +88,15 @@ export default async function DashboardPage() {
 
   const aiOn = isFeatureEnabled('aiBeta')
 
-  // Ticket 154: "Post a job" for owners with a published business. The quota is
-  // read only when the card can show; a failed read drops the count, not the card.
-  const hasPublishedBusiness = (listings ?? []).some(
-    (l) => l.status === 'published' && l.entity_type !== 'event' && l.entity_type !== 'job'
-  )
-  const showPostJob =
-    hasPublishedBusiness && isFeatureEnabled('jobsOpen') && isFeatureEnabled('postingSubmissions')
-  const quotaRead = showPostJob ? await jobQuotaFor(supabase, owner.user.id) : null
+  // Tickets 154 and 156: the Post a job card shows the owner's step until a
+  // business page is live. Claims and the quota are read only when the card can
+  // show; a failed quota read drops the count, not the card.
+  const postingOn = isFeatureEnabled('jobsOpen') && isFeatureEnabled('postingSubmissions')
+  const postingReadiness = postingOn
+    ? resolvePostingReadiness(listings ?? [], await loadOpenClaims(supabase, owner.user.id))
+    : null
+  const quotaRead =
+    postingReadiness?.state === 'live' ? await jobQuotaFor(supabase, owner.user.id) : null
   const postJobLine = postJobQuotaLine(quotaRead?.ok ? quotaRead.value : null)
 
   return (
@@ -108,7 +110,7 @@ export default async function DashboardPage() {
 
       <FreeMonthNotice />
 
-      <PostJobCard hasPublishedBusiness={hasPublishedBusiness} quotaLine={postJobLine} />
+      <PostJobCard readiness={postingReadiness} quotaLine={postJobLine} />
 
       {!listings || listings.length === 0 ? (
         <GetListedEmptyState />
