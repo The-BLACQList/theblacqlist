@@ -26,12 +26,13 @@ interface Props {
   categories: CategoryOption[]
   priceLine: JobPriceLine
   saved: SavedDraft | null
+  canceled?: boolean
 }
 
 const LAST = POST_JOB_STEPS.length - 1
 const btn = 'inline-flex h-11 min-w-11 items-center justify-center rounded-full px-6 font-subhead text-sm font-bold disabled:opacity-60'
 
-export function PostJobWizardInner({ businesses, categories, priceLine, saved }: Props) {
+export function PostJobWizardInner({ businesses, categories, priceLine, saved, canceled = false }: Props) {
   const router = useRouter()
   const { values, setValues, step, setStep, attemptId, clearDraft } = usePostJobDraft(
     businesses.map((b) => b.id),
@@ -81,13 +82,14 @@ export function PostJobWizardInner({ businesses, categories, priceLine, saved }:
         if (bad !== null) setStep(bad)
         return
       }
-      clearDraft()
       if (res.outcome === 'checkout' && res.checkoutUrl) {
+        // Keep the draft: if the poster cancels in Stripe they come back to
+        // /add-job?canceled=1 and it restores. The /posted page clears it.
         window.location.assign(res.checkoutUrl)
         return
       }
-      // TODO(153): send to /dashboard/pages/[entityId]/posted once that page ships.
-      router.push(`/dashboard/pages/${res.listingId}`)
+      clearDraft()
+      router.push(`/dashboard/pages/${res.listingId}/posted`)
     } catch {
       setBanner('We could not reach the server. Your answers are saved here. Try again.')
     } finally {
@@ -112,6 +114,11 @@ export function PostJobWizardInner({ businesses, categories, priceLine, saved }:
         <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft mb-1">
           Step {step + 1} of {POST_JOB_STEPS.length}
         </p>
+        {canceled && (
+          <p role="status" className="mb-4 rounded-lg border border-amber-gold bg-white p-3 font-subhead text-sm text-brand-black">
+            Checkout was canceled. Your draft is saved.
+          </p>
+        )}
         {errorList.length > 0 && (
           <div role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 font-subhead text-sm text-red-800">
             <p className="font-semibold">Fix these to continue:</p>

@@ -24,7 +24,12 @@ interface BusinessRow {
   cities: { name: string; state_abbr: string | null } | { name: string; state_abbr: string | null }[] | null
 }
 
-export default async function AddJobPage() {
+interface Props {
+  searchParams: Promise<{ canceled?: string }>
+}
+
+export default async function AddJobPage({ searchParams }: Props) {
+  const canceled = (await searchParams).canceled === '1'
   if (!isFeatureEnabled('postingSubmissions')) notFound()
 
   const supabase = await createClient()
@@ -77,7 +82,7 @@ export default async function AddJobPage() {
           </p>
         </div>
 
-        <PostJobWizard businesses={businesses} categories={categories ?? []} priceLine={priceLine} />
+        <PostJobWizard businesses={businesses} categories={categories ?? []} priceLine={priceLine} canceled={canceled} />
       </div>
     </main>
   )

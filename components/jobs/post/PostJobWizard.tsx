@@ -11,6 +11,7 @@ interface Props {
   businesses: HiringBusiness[]
   categories: CategoryOption[]
   priceLine: JobPriceLine
+  canceled?: boolean
 }
 
 const noopSubscribe = () => () => {}

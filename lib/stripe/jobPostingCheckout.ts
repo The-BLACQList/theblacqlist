@@ -53,8 +53,8 @@ export async function createJobPostingCheckoutSession(params: {
       // dynamically, matching the subscription route.
       line_items: [{ price: priceId, quantity: 1 }],
       ...(params.userEmail ? { customer_email: params.userEmail } : {}),
-      success_url: `${baseUrl}/dashboard/pages/${params.listingId}?posted=1`,
-      cancel_url: `${baseUrl}/dashboard/pages/${params.listingId}?canceled=1`,
+      success_url: `${baseUrl}/dashboard/pages/${params.listingId}/posted?paid=1`,
+      cancel_url: `${baseUrl}/add-job?canceled=1`,
       metadata,
       payment_intent_data: { metadata },
     })
