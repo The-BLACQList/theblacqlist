@@ -7,6 +7,8 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import { receiptBusinessName } from '@/lib/spend/receipt-emails'
 import { countedScreen, isReceiptId, joinedMap } from '@/lib/spend/counted-receipt'
+import { getAppUrl } from '@/lib/env'
+import { CountedShare } from '@/components/spend/CountedShare'
 
 export const metadata: Metadata = { title: 'Your spend is counted' }
 
@@ -172,6 +174,19 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
           </div>
 
           <p className="font-body text-xs text-charcoal-soft mt-4">Nobody’s name is shown.</p>
+
+          {/* Share only what's true: a receipt off the map isn't in The Collective.
+              No business has a way to opt in to being named yet, so the text
+              names none and links to /flow-map. Wire the opt-in here when it lands. */}
+          {onMap && (
+            <CountedShare
+              origin={getAppUrl()}
+              businessName={businessName}
+              businessPath={null}
+              businessNameOptIn={false}
+              amountCents={receipt.amount_cents}
+            />
+          )}
         </section>
       </div>
     </main>
