@@ -65,7 +65,7 @@ export function ImpactBand({
             Join The Collective.
           </h2>
           <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
-            Track a receipt and your spend joins everyone else&apos;s on one live map. Together it
+            Add a receipt and your spend joins everyone else&apos;s on one live map. Together it
             shows where our money goes.
           </p>
           <div className="flex gap-3 flex-wrap mt-6">
@@ -73,7 +73,7 @@ export function ImpactBand({
               href="/account/receipts/new"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Track a receipt
+              Add a receipt
             </Link>
             <Link
               href="/flow-map"
@@ -112,7 +112,7 @@ export function ImpactBand({
                 The Collective is waiting on its first dollar.
               </dd>
               <dt className="font-subhead text-xs text-off-white/70 mt-1">
-                Track a receipt and be the first in.
+                Add a receipt and be the first in.
               </dt>
             </div>
           )}

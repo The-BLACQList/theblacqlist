@@ -328,7 +328,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
               href="/account/receipts/new"
               className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Submit a receipt
+              Add a receipt
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
             <Link
@@ -368,7 +368,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           <div className="rounded-xl bg-brand-black text-white p-8 text-center">
             <p className="font-headline text-2xl">Be the first to contribute</p>
             <p className="font-body text-sm text-white/50 mt-2 max-w-sm mx-auto">
-              Submit your first receipt to start building the community dollar-flow map.
+              Add your first receipt to start building the community dollar-flow map.
             </p>
           </div>
         )}
@@ -488,13 +488,13 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
             <div className="bg-white px-5 py-8 text-center">
               <p className="font-subhead text-sm font-semibold text-brand-black">No receipts yet</p>
               <p className="font-body text-xs text-charcoal-soft mt-1 mb-4">
-                Submit a receipt to start tracking your personal impact.
+                Add a receipt to start tracking your personal impact.
               </p>
               <Link
                 href="/account/receipts/new"
                 className="inline-flex items-center gap-2 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
               >
-                Submit a receipt
+                Add a receipt
               </Link>
             </div>
           ) : personalImpact ? (
@@ -639,7 +639,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
             never included in public views. A named business or city only appears here once{' '}
             {AGGREGATE_MIN_TRANSACTIONS} or more distinct transactions are behind its total. The
             community-wide figures at the top of this page are a single sum across everything
-            reported, so they identify no one. When you submit a receipt you can choose to keep it
+            reported, so they identify no one. When you add a receipt you can choose to keep it
             out of community figures.
           </p>
           <Link

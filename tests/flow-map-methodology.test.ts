@@ -120,7 +120,7 @@ describe('the false opt-out claim is gone from the flow map', () => {
   })
 
   it('describes the choice that does exist, at the moment it exists', () => {
-    expect(read(FLOW_MAP)).toContain('When you submit a receipt you can choose to keep it')
+    expect(read(FLOW_MAP)).toContain('When you add a receipt you can choose to keep it')
   })
 
   // Still deliberately NOT asserted here: that app/(public)/privacy/page.tsx

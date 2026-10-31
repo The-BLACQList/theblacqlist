@@ -207,7 +207,7 @@ export default async function CommunitySpendPage() {
               </p>
               <p className="font-headline text-3xl mt-2">Be the first to contribute</p>
               <p className="font-body text-sm text-white/50 mt-2">
-                Submit a receipt from a business on the list to start building The Collective.
+                Add a receipt from a business on the list to start building The Collective.
               </p>
             </>
           )}
@@ -216,7 +216,7 @@ export default async function CommunitySpendPage() {
               href="/account/receipts/new"
               className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Submit a receipt
+              Add a receipt
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
           </div>

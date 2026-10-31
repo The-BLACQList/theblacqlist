@@ -60,7 +60,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
         <div className="px-5 py-16 text-center">
           <p className="font-subhead text-sm font-semibold text-brand-black">No flow data yet</p>
           <p className="font-body text-xs text-charcoal-soft mt-1">
-            As community members submit receipts, businesses will appear here as nodes.
+            As community members add receipts, businesses will appear here as nodes.
           </p>
         </div>
       ) : (
