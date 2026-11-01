@@ -47,14 +47,14 @@ describe('withJobsCount', () => {
 describe('home tile', () => {
   it('shows five avenues and no Jobs link with the flag off', () => {
     const html = renderToStaticMarkup(createElement(TheAvenues, { counts: BASE }))
-    expect(html).toContain('One index, five avenues')
+    expect(html).toContain('One list, five avenues')
     expect(html).not.toContain('href="/jobs"')
   })
   it('shows six avenues and a Jobs link with the count when on', () => {
     const html = renderToStaticMarkup(
       createElement(TheAvenues, { counts: withJobsCount(BASE, true, 4) })
     )
-    expect(html).toContain('One index, six avenues')
+    expect(html).toContain('One list, six avenues')
     expect(html).toContain('href="/jobs"')
     expect(html).toContain('4 open roles')
     expect(html).not.toContain('Coming soon')
@@ -68,8 +68,8 @@ describe('home tile', () => {
     expect(html).toContain('href="/jobs"')
   })
   it('names the eyebrow by tile count', () => {
-    expect(avenuesEyebrow(5)).toBe('One index, five avenues')
-    expect(avenuesEyebrow(6)).toBe('One index, six avenues')
+    expect(avenuesEyebrow(5)).toBe('One list, five avenues')
+    expect(avenuesEyebrow(6)).toBe('One list, six avenues')
   })
 })
 

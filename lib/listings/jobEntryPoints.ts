@@ -28,9 +28,9 @@ export function withJobsCount<T extends object>(
 
 const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
 
-/** "One index, five avenues" while five tiles show; "six" once Jobs joins. */
+/** "One list, five avenues" while five tiles show; "six" once Jobs joins. */
 export function avenuesEyebrow(tiles: number): string {
-  return `One index, ${NUMBER_WORDS[tiles] ?? String(tiles)} avenues`
+  return `One list, ${NUMBER_WORDS[tiles] ?? String(tiles)} avenues`
 }
 
 interface QuotaLike {
