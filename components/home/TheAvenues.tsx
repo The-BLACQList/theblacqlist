@@ -86,7 +86,7 @@ const SCRIM =
   'linear-gradient(to top, rgba(8,8,10,0.92) 0%, rgba(8,8,10,0.72) 45%, rgba(8,8,10,0.2) 100%)'
 
 /**
- * The Avenues — one index, six avenues (Living Commerce Index breadth
+ * The Avenues — one list, six avenues (Living Commerce Index breadth
  * section, named for the historic Black business districts). Sits directly
  * under the hero: every kind of Black enterprise gets a named way in.
  *

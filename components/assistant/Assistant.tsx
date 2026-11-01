@@ -388,7 +388,7 @@ function AssistantPanel({
         {status}
       </p>
 
-      <form onSubmit={onSubmit} className="flex items-center gap-2 shrink-0 px-3 pt-3 pb-1 border-t border-white/10">
+      <form onSubmit={onSubmit} className="flex items-center gap-2 shrink-0 px-3 pt-3 pb-3 border-t border-white/10">
         <label htmlFor="assistant-input" className="sr-only">
           Ask Cue
         </label>
@@ -424,11 +424,13 @@ function AssistantPanel({
           <span className="sr-only">{pending ? 'Stop Cue’s answer' : 'Send'}</span>
         </button>
       </form>
-      <p className="shrink-0 px-4 pt-0.5 pb-2 font-body text-xs leading-snug text-ink-soft">
+      {/* The link stays inline so it doesn't stretch the line; the ::after
+          overlay keeps a 44px tap target. */}
+      <p className="shrink-0 px-4 pb-3 font-body text-[11px] leading-tight text-ink-soft">
         Cue uses AI to answer from our listings and can get things wrong.{' '}
         <Link
           href="/privacy#cue"
-          className="inline-flex items-center min-h-11 underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm"
+          className="relative underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
         >
           Privacy
         </Link>

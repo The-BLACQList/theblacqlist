@@ -65,7 +65,7 @@ test.describe('Opening-soon covers', () => {
     test.skip(!(await pageCovered(request, '/jobs')), 'Jobs is open on this server')
 
     await page.goto('/')
-    await expect(page.getByText('One index, five avenues')).toBeVisible()
+    await expect(page.getByText('One list, five avenues')).toBeVisible()
     await expect(page.locator('a[href="/jobs"]')).toHaveCount(0)
   })
 

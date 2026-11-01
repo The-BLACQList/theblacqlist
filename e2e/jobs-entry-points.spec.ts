@@ -10,7 +10,7 @@ test.describe('Jobs entry points', () => {
     const tile = page.locator('section[aria-labelledby="avenues-heading"] a[href="/jobs"]')
     test.skip((await tile.count()) === 0, 'Jobs is covered on this server')
 
-    await expect(page.getByText('One index, six avenues')).toBeVisible()
+    await expect(page.getByText('One list, six avenues')).toBeVisible()
     await expect(tile).toContainText(/open roles?|No open roles yet|Find your next role/)
     await tile.click()
     await expect(page).toHaveURL(/\/jobs$/)

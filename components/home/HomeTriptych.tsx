@@ -30,7 +30,7 @@ const PANELS: readonly Panel[] = [
   {
     index: '01',
     title: 'Browse the list',
-    body: 'Every Black-owned business, one index.',
+    body: 'Every Black-owned business, one list.',
     href: '/discover',
     photo: '/images/editorial/asha-osei-photography.webp',
   },
