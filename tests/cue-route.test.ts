@@ -140,7 +140,7 @@ describe('POST /api/cue', () => {
     expect(done.text).toBe('Here are 2 places that match.')
 
     expect(h.inserts).toHaveLength(1)
-    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@1', status: 'pending' })
+    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@2', status: 'pending' })
     expect(h.updates).toEqual([{ status: 'completed', error_message: null, request_tokens: 0, response_tokens: 0 }])
   })
 

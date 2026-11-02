@@ -15,7 +15,7 @@ import {
   namesUnreturned,
   redactReply,
   SWAP_NO_CARDS,
-  SWAP_SAME_TERMS,
+  SWAP_LABEL,
   SWAP_WITH_CARDS,
   TextGuard,
 } from '@/lib/ai/cue/guard'
@@ -133,14 +133,14 @@ describe('checkReply', () => {
     expect(checkReply({ ...base, text: 'These Black-owned spots are great.', hasCards: true }).swapped).toBe(true)
   })
 
-  it('swaps an ownership label with no cards for the fixed same-terms line', () => {
+  it('swaps an ownership label with no cards for a fixed line that says nothing about owners', () => {
     const text = "I don't sort by owner. Every business is listed on the same terms, not as Black-owned or ally."
-    expect(checkReply({ ...base, text, hasCards: false })).toEqual({ text: SWAP_SAME_TERMS, swapped: true })
-    expect(hasIdentityLabel(SWAP_SAME_TERMS)).toBe(false)
+    expect(checkReply({ ...base, text, hasCards: false })).toEqual({ text: SWAP_LABEL, swapped: true })
+    expect(hasIdentityLabel(SWAP_LABEL)).toBe(false)
   })
 
-  it('lets Cue explain the same-terms rule in its own words when it names no label', () => {
-    const text = "I don't sort by owner. Every business here is listed on the same terms."
+  it('leaves a reply alone when it names no label', () => {
+    const text = 'Here are two produce sellers in Chicago.'
     expect(checkReply({ ...base, text, hasCards: false })).toEqual({ text, swapped: false })
   })
 

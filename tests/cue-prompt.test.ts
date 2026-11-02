@@ -40,6 +40,12 @@ describe('cueSystem', () => {
     expect(rules).not.toContain('ownership_label')
     expect(rules).not.toMatch(/—/)
   })
+
+  it('drops an ownership word from a question without remarking on it', () => {
+    const rules = cueSystem(CATEGORIES, CITIES)[0]!.text
+    expect(rules).toContain('leave that word out and search for what they need')
+    expect(rules).not.toContain('same terms')
+  })
 })
 
 describe('normalizeHistory', () => {
