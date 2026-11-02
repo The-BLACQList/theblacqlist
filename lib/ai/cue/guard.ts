@@ -26,8 +26,8 @@ export interface CueName {
 export const SWAP_WITH_CARDS = "Here's what I found."
 /** The line a swapped reply becomes when there are none. */
 export const SWAP_NO_CARDS = "Sorry, I couldn't answer that one. Try a search for it instead."
-/** The line an ownership label becomes when there are no cards (founder, 2026-10-31). */
-export const SWAP_SAME_TERMS = "Every business here is listed on the same terms. Tell me what you need and I'll help you find it."
+/** The line an ownership label becomes when there are no cards. It says nothing about owners (founder, 2026-11-02). */
+export const SWAP_LABEL = "Tell me what you need and where, and I'll help you find it."
 
 /** A finished reply is cut to about this many characters. */
 export const CUE_REPLY_MAX_CHARS = 1200
@@ -174,7 +174,7 @@ export function hasIdentityLabel(text: string): boolean {
 /**
  * The final check. Returns the text to keep and whether it was swapped.
  * An ownership label swaps every reply, with or without cards. With no cards
- * it becomes the fixed same-terms line, so Cue never says a label itself.
+ * it becomes a fixed line that says nothing about owners, so Cue never says a label itself.
  */
 export function checkReply(args: {
   text: string
@@ -186,7 +186,7 @@ export function checkReply(args: {
   const swapLine = args.hasCards ? SWAP_WITH_CARDS : SWAP_NO_CARDS
   if (namesUnreturned(args)) return { text: swapLine, swapped: true }
   if (hasIdentityLabel(args.text)) {
-    return { text: args.hasCards ? SWAP_WITH_CARDS : SWAP_SAME_TERMS, swapped: true }
+    return { text: args.hasCards ? SWAP_WITH_CARDS : SWAP_LABEL, swapped: true }
   }
   return { text: args.text, swapped: false }
 }
