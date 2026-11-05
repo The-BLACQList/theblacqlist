@@ -27,6 +27,7 @@ import {
   gapsPerFloor,
   siloGaps,
   pickLabels,
+  wedgePoint,
   placeBusinesses,
   pulseProgress,
   pulseSchedule,
@@ -37,8 +38,15 @@ import {
   CLUSTER_MAX_R,
   crowdAnchor,
   linkControlPoints,
+  ORBIT,
+  busiestFamily,
+  focusFrame,
+  headingTo,
+  orbitForScroll,
+  orbitPose,
   scrollForFloor,
-  viewForScroll,
+  smoothDamp,
+  wrapAngle,
   type BusinessListingMeta,
   type BusinessNodeRow,
 } from '@/lib/spend/silo-layout'
@@ -286,8 +294,87 @@ describe('placement', () => {
       const t = scrollForFloor(k)
       expect(t).toBeGreaterThanOrEqual(0)
       expect(t).toBeLessThanOrEqual(1)
-      const { pos } = viewForScroll(t)
+      const { pos } = orbitPose(orbitForScroll(t, 0, ORBIT.el))
       expect(pos.y).toBeGreaterThan(SILO.y[k]!)
+    }
+  })
+})
+
+describe('camera', () => {
+  it('holds the same default view as before the orbit', () => {
+    for (const t of [0, 0.3, 1]) {
+      const { pos, look } = orbitPose(orbitForScroll(t, 0, ORBIT.el))
+      expect(pos.x).toBeCloseTo(0)
+      expect(pos.y).toBeCloseTo(46 - t * 82)
+      expect(pos.z).toBeCloseTo(6)
+      expect(look.y).toBeCloseTo(33 - t * 82)
+      expect(look.z).toBeCloseTo(0)
+    }
+  })
+
+  it('wraps a turn the short way round', () => {
+    expect(wrapAngle(0.2)).toBeCloseTo(0.2)
+    expect(wrapAngle(Math.PI * 2 - 0.2)).toBeCloseTo(-0.2)
+    expect(wrapAngle(-Math.PI * 2 + 0.2)).toBeCloseTo(0.2)
+    expect(wrapAngle(Math.PI * 7 + 0.1)).toBeCloseTo(-Math.PI + 0.1)
+  })
+
+  it('settles on the goal without overshooting, at any frame rate', () => {
+    for (const dt of [1 / 120, 1 / 60, 1 / 20]) {
+      let value = 0
+      let velocity = 0
+      let last = 0
+      for (let i = 0; i < 5 / dt; i++) {
+        ;[value, velocity] = smoothDamp(value, 10, velocity, ORBIT.easeS, dt)
+        expect(value).toBeGreaterThanOrEqual(last)
+        expect(value).toBeLessThanOrEqual(10)
+        last = value
+      }
+      expect(value).toBeCloseTo(10, 3)
+    }
+  })
+
+  it('keeps its speed when the goal moves mid-way', () => {
+    const [, speed] = smoothDamp(0, 10, 0, ORBIT.easeS, 1 / 60)
+    const [value] = smoothDamp(1, 0, speed, ORBIT.easeS, 1 / 60)
+    expect(value).toBeGreaterThan(1)
+  })
+
+  it('frames a point from the middle of the silo, looking out', () => {
+    const p = wedgePoint(2, 3)
+    for (const kind of ['business', 'gap', 'floor'] as const) {
+      const { pos, look } = orbitPose(focusFrame(p, kind))
+      expect(look).toEqual({ x: p.x, y: p.y, z: p.z })
+      expect(Math.hypot(pos.x, pos.z)).toBeLessThan(Math.hypot(p.x, p.z))
+      expect(pos.y).toBeGreaterThan(p.y)
+    }
+  })
+
+  it('finds the busiest family on a floor', () => {
+    const list = [
+      { familyIndex: 1, floorIndex: 4 },
+      { familyIndex: 2, floorIndex: 4 },
+      { familyIndex: 2, floorIndex: 4 },
+      { familyIndex: 3, floorIndex: 1 },
+      { familyIndex: 3, floorIndex: 1 },
+      { familyIndex: 3, floorIndex: 1 },
+    ]
+    expect(busiestFamily(list, 4)).toBe(2)
+    expect(busiestFamily(list, 0)).toBeNull()
+    expect(busiestFamily(list.slice(0, 2), 4)).toBe(1)
+  })
+
+  it('faces a floor wedge with its dots inside the frame', () => {
+    const fov = 62
+    for (let floor = 1; floor < SILO.y.length; floor++) {
+      const p = wedgePoint(0, floor)
+      const az = headingTo(p)
+      const { pos, look } = orbitPose(orbitForScroll(scrollForFloor(floor), az, ORBIT.floorEl))
+      const toLook = [look.x - pos.x, look.y - pos.y, look.z - pos.z]
+      const toDot = [p.x - pos.x, p.y - pos.y, p.z - pos.z]
+      const dot = toLook.reduce((sum, v, i) => sum + v * toDot[i]!, 0)
+      const off = Math.acos(dot / (Math.hypot(...toLook) * Math.hypot(...toDot)))
+      expect((off * 180) / Math.PI).toBeLessThan(fov / 2)
     }
   })
 })

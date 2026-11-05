@@ -680,16 +680,103 @@ export function linkControlPoints(a: Point3, b: Point3): [Point3, Point3, Point3
   return [a, at(1 / 3), at(2 / 3), b]
 }
 
-/** Camera height along the silo for a 0 (top) to 1 (bottom) scroll position. */
-export function viewForScroll(t: number): { pos: Point3; look: Point3 } {
-  const y = 46 - t * 82
-  return { pos: { x: 0, y, z: 6 }, look: { x: 0, y: y - 26, z: -6 } }
-}
-
 /** The scroll position that frames a floor. */
 export function scrollForFloor(floorIndex: number): number {
   const y = SILO.y[floorIndex] ?? 0
   return Math.min(1, Math.max(0, (33 - y) / 82))
+}
+
+// ─── Camera ──────────────────────────────────────────────────────────────────
+
+/** The camera circles a point: heading `az`, tilt `el`, distance `R`. */
+export interface Orbit extends Point3 {
+  az: number
+  el: number
+  R: number
+}
+
+export const ORBIT_KEYS = ['x', 'y', 'z', 'az', 'el', 'R'] as const
+
+const degrees = (d: number) => (d * Math.PI) / 180
+
+export const ORBIT = {
+  /** The default view: 13 above the floor and 6 back. */
+  el: Math.atan2(13, 6),
+  R: Math.hypot(13, 6),
+  /** Lower than the default, so dots on the wall sit inside the frame. */
+  floorEl: degrees(38),
+  minEl: degrees(5),
+  maxEl: degrees(78),
+  /** Seconds to settle after a scroll or a drag. */
+  easeS: 0.28,
+  /** Seconds to settle after a jump to a floor or a dot. */
+  jumpS: 0.55,
+} as const
+
+/** The same angle between -pi and pi, so a turn always goes the short way. */
+export function wrapAngle(a: number): number {
+  const turn = Math.PI * 2
+  const w = (((a + Math.PI) % turn) + turn) % turn
+  return w - Math.PI
+}
+
+/** One critically damped step: keeps its speed between calls, never overshoots. */
+export function smoothDamp(
+  current: number,
+  goal: number,
+  velocity: number,
+  smoothS: number,
+  dt: number,
+): [value: number, velocity: number] {
+  const omega = 2 / smoothS
+  const x = omega * dt
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x)
+  const change = current - goal
+  const temp = (velocity + omega * change) * dt
+  const value = goal + (change + temp) * decay
+  if (goal - current > 0 === value > goal) return [goal, 0]
+  return [value, (velocity - omega * temp) * decay]
+}
+
+export function orbitPose(o: Orbit): { pos: Point3; look: Point3 } {
+  const flat = o.R * Math.cos(o.el)
+  return {
+    pos: { x: o.x + flat * Math.sin(o.az), y: o.y + o.R * Math.sin(o.el), z: o.z + flat * Math.cos(o.az) },
+    look: { x: o.x, y: o.y, z: o.z },
+  }
+}
+
+/** The view at a scroll position, circling the silo's center line. */
+export function orbitForScroll(t: number, az: number, el: number): Orbit {
+  return { x: 0, y: 33 - t * 82, z: 0, az, el, R: ORBIT.R }
+}
+
+/** The heading that stands at the center of the silo and faces a point. */
+export function headingTo(p: Point3): number {
+  return Math.atan2(-p.x, -p.z)
+}
+
+const FOCUS_R = { business: 8, gap: 11.5, floor: 13 } as const
+
+/** Up close on a dot, a gap or a ring, looking out from the middle of the silo. */
+export function focusFrame(p: Point3, kind: keyof typeof FOCUS_R): Orbit {
+  return { x: p.x, y: p.y, z: p.z, az: headingTo(p), el: degrees(30), R: FOCUS_R[kind] }
+}
+
+/** The family with the most businesses on a floor, or null on an empty floor. */
+export function busiestFamily(
+  businesses: readonly Pick<SiloBusiness, 'familyIndex' | 'floorIndex'>[],
+  floorIndex: number,
+): number | null {
+  const counts = new Map<number, number>()
+  for (const b of businesses) {
+    if (b.floorIndex === floorIndex) counts.set(b.familyIndex, (counts.get(b.familyIndex) ?? 0) + 1)
+  }
+  let best: number | null = null
+  for (const [family, n] of counts) {
+    if (best === null || n > (counts.get(best) ?? 0) || (n === counts.get(best) && family < best)) best = family
+  }
+  return best
 }
 
 // ─── Name labels ─────────────────────────────────────────────────────────────

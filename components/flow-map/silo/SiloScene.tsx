@@ -27,24 +27,33 @@ import {
   LABEL_KEEP,
   LEVEL_COLORS,
   SILO,
+  ORBIT,
+  ORBIT_KEYS,
   SILO_FLOORS,
   businessDisplayName,
+  busiestFamily,
   clusterRadius,
   colorForBusiness,
   crowdAnchor,
+  focusFrame,
+  headingTo,
   linkControlPoints,
+  orbitForScroll,
+  orbitPose,
   overlaps,
   pickLabels,
   pulseProgress,
   pulseSchedule,
   scrollForFloor,
+  smoothDamp,
   snapLabelPos,
-  viewForScroll,
   wedgeAngle,
   wedgePoint,
+  wrapAngle,
   type ColorBy,
   type LabelBox,
   type LabelCandidate,
+  type Orbit,
   type PlacedBusiness,
   type Point3,
   type SiloBusiness,
@@ -393,32 +402,52 @@ function crowdColor(fi: number, colorBy: ColorBy): string {
 
 interface Focus {
   kind: 'business' | 'floor' | 'gap'
-  pos: THREE.Vector3
-  look: THREE.Vector3
-  yaw0: number
-  pitch0: number
+  orbit: Orbit
 }
 
-const UP = new THREE.Vector3(0, 1, 0)
-const rightTmp = new THREE.Vector3()
+interface Rig {
+  /** Where along the silo the view is, 0 (top) to 1 (bottom). */
+  t: number
+  az: number
+  el: number
+  focus: Focus | null
+  /** Heading speed a drag leaves behind, in radians a second. */
+  spin: number
+  dragging: boolean
+  /** Seconds to settle, from the last thing that moved the view. */
+  ease: number
+  /** Where the camera is now, on its way to the goal. */
+  cur: Orbit
+  vel: Orbit
+}
 
-/** Turns a view direction by yaw and pitch, never quite straight up or down. */
-function rotateDir(d: THREE.Vector3, yaw: number, pitch: number): THREE.Vector3 {
-  d.applyAxisAngle(UP, yaw)
-  if (pitch) {
-    const right = rightTmp.copy(d).cross(UP).normalize()
-    if (right.lengthSq() > 0.0001) d.applyAxisAngle(right, pitch)
-  }
-  const len = d.length()
-  d.normalize()
-  if (Math.abs(d.y) > 0.97) {
-    d.y = Math.sign(d.y) * 0.97
-    const hz = Math.sqrt(1 - 0.97 * 0.97)
-    const hl = Math.hypot(d.x, d.z) || 1
-    d.x = (d.x / hl) * hz
-    d.z = (d.z / hl) * hz
-  }
-  return d.multiplyScalar(len)
+const DRAG_TURN = 0.006
+const DRAG_TILT = 0.0032
+/** A drag that paused this long before release leaves no spin. */
+const SPIN_STALE_MS = 80
+/** Radians a second. Even a hard flick coasts under a quarter turn. */
+const SPIN_MAX = 3
+
+/** Turns whichever view is live, so a close-up circles what it's looking at. */
+function turn(r: Rig, dAz: number, dEl: number) {
+  const o = r.focus?.orbit ?? r
+  o.az += dAz
+  o.el = THREE.MathUtils.clamp(o.el + dEl, ORBIT.minEl, ORBIT.maxEl)
+}
+
+function focusOn(r: Rig, kind: Focus['kind'], p: Point3, floor: number | undefined) {
+  if (floor !== undefined) r.t = scrollForFloor(floor)
+  r.focus = { kind, orbit: focusFrame(p, kind) }
+  r.spin = 0
+  r.ease = ORBIT.jumpS
+}
+
+/** Back to the floor view, keeping the heading so nothing swings round. */
+function clearFocus(r: Rig) {
+  if (!r.focus) return
+  r.az = r.focus.orbit.az
+  r.focus = null
+  r.ease = ORBIT.jumpS
 }
 
 const v3 = (p: Point3) => new THREE.Vector3(p.x, p.y, p.z)
@@ -433,12 +462,16 @@ type Pick =
 
 function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo[] }) {
   const { camera, gl, invalidate } = useThree()
-  const rig = useRef({
+  const rig = useRef<Rig>({
     t: 0,
-    yaw: 0,
-    pitch: 0,
-    focus: null as Focus | null,
-    look: v3(viewForScroll(0).look),
+    az: 0,
+    el: ORBIT.el,
+    focus: null,
+    spin: 0,
+    dragging: false,
+    ease: ORBIT.easeS,
+    cur: orbitForScroll(0, 0, ORBIT.el),
+    vel: { x: 0, y: 0, z: 0, az: 0, el: 0, R: 0 },
   })
   const pendingFloor = useRef<number | null>(null)
   const live = useRef(props)
@@ -448,23 +481,31 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
 
   // First frame: start at the top of the silo, looking down.
   useEffect(() => {
-    const v = viewForScroll(0)
-    camera.position.set(v.pos.x, v.pos.y, v.pos.z)
-    camera.lookAt(rig.current.look)
+    const { pos, look } = orbitPose(rig.current.cur)
+    camera.position.set(pos.x, pos.y, pos.z)
+    camera.lookAt(look.x, look.y, look.z)
   }, [camera])
 
-  // A floor from the gauge: frame it level, no turn.
+  // A floor from the gauge: turn to its busiest wedge, so its dots are in frame.
   const { focusFloor, selectedId, placed } = props
   useEffect(() => {
-    if (focusFloor === null) return
+    const r = rig.current
+    if (focusFloor === null) {
+      if (r.focus?.kind === 'floor') clearFocus(r)
+      invalidate()
+      return
+    }
     const fromRing = pendingFloor.current === focusFloor
     pendingFloor.current = null
     if (fromRing) return
-    const r = rig.current
+    const on = live.current.shown.filter((s) => s.on).map((s) => s.b)
+    const family = busiestFamily(on, focusFloor)
+    clearFocus(r)
     r.t = scrollForFloor(focusFloor)
-    r.yaw = 0
-    r.pitch = 0
-    r.focus = null
+    r.el = family === null ? ORBIT.el : ORBIT.floorEl
+    if (family !== null) r.az = headingTo(wedgePoint(family, focusFloor))
+    r.spin = 0
+    r.ease = ORBIT.jumpS
     invalidate()
   }, [focusFloor, invalidate])
 
@@ -473,19 +514,11 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     const r = rig.current
     const p = selectedId ? placed.get(selectedId) : undefined
     if (!p) {
-      if (r.focus?.kind === 'business') r.focus = null
+      if (r.focus?.kind === 'business') clearFocus(r)
       invalidate()
       return
     }
-    const floor = live.current.businesses.find((b) => b.id === selectedId)?.floorIndex
-    if (floor !== undefined) r.t = scrollForFloor(floor)
-    r.focus = {
-      kind: 'business',
-      pos: new THREE.Vector3(p.x * 0.55, p.y + 4, p.z * 0.55),
-      look: v3(p),
-      yaw0: r.yaw,
-      pitch0: r.pitch,
-    }
+    focusOn(r, 'business', p, live.current.businesses.find((b) => b.id === selectedId)?.floorIndex)
     invalidate()
   }, [selectedId, placed, invalidate])
 
@@ -494,19 +527,11 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
   useEffect(() => {
     const r = rig.current
     if (!selectedGap) {
-      if (r.focus?.kind === 'gap') r.focus = null
+      if (r.focus?.kind === 'gap') clearFocus(r)
       invalidate()
       return
     }
-    const c = wedgePoint(selectedGap.familyIndex, selectedGap.floorIndex)
-    r.t = scrollForFloor(selectedGap.floorIndex)
-    r.focus = {
-      kind: 'gap',
-      pos: new THREE.Vector3(c.x * 0.35, c.y + 6, c.z * 0.35),
-      look: v3(c),
-      yaw0: r.yaw,
-      pitch0: r.pitch,
-    }
+    focusOn(r, 'gap', wedgePoint(selectedGap.familyIndex, selectedGap.floorIndex), selectedGap.floorIndex)
     invalidate()
   }, [selectedGap, invalidate])
 
@@ -519,6 +544,8 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       y: number
       lastX: number
       lastY: number
+      /** When the last move landed, for the speed a drag leaves behind. */
+      at: number
       mouse: boolean
       drag: boolean
       /** Touch only: the stage was docked, so a vertical swipe travels. */
@@ -573,16 +600,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     }
 
     function focusRing(h: Halo) {
-      const r = rig.current
-      const c = h.center
-      r.t = scrollForFloor(h.floor)
-      r.focus = {
-        kind: 'floor',
-        pos: new THREE.Vector3(c.x * 0.25, c.y + 6, c.z * 0.25),
-        look: v3(c),
-        yaw0: r.yaw,
-        pitch0: r.pitch,
-      }
+      focusOn(rig.current, 'floor', h.center, h.floor)
       const l = live.current
       if (l.selectedId) l.onSelect(null)
       if (l.focusFloor !== h.floor && l.onPickFloor) {
@@ -606,11 +624,13 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         y: e.clientY,
         lastX: e.clientX,
         lastY: e.clientY,
+        at: e.timeStamp,
         mouse: e.pointerType !== 'touch',
         drag: false,
         travel: e.pointerType === 'touch' && el.style.touchAction === 'none',
         axis: null,
       }
+      rig.current.spin = 0
       el.setPointerCapture?.(e.pointerId)
     }
 
@@ -624,15 +644,19 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
           const r = rig.current
           const dx = e.clientX - down.lastX
           const dy = e.clientY - down.lastY
-          if (down.mouse) {
-            r.yaw -= dx * 0.0042
-            r.pitch = THREE.MathUtils.clamp(r.pitch - dy * 0.0032, -1.1, 1.1)
-          } else {
-            // A swipe keeps one direction: sideways turns, up and down travels.
+          // A swipe keeps one direction: sideways turns, up and down travels.
+          if (!down.mouse) {
             down.axis ??= Math.abs(e.clientX - down.x) >= Math.abs(e.clientY - down.y) ? 'x' : 'y'
-            if (down.axis === 'x') r.yaw -= dx * 0.0042
-            else if (down.travel) travel(-dy * 0.0022, -dy)
           }
+          if (down.mouse || down.axis === 'x') {
+            const dAz = -dx * DRAG_TURN
+            turn(r, dAz, down.mouse ? dy * DRAG_TILT : 0)
+            r.dragging = true
+            r.ease = ORBIT.easeS
+            const speed = dAz / Math.max((e.timeStamp - down.at) / 1000, 0.001)
+            r.spin = THREE.MathUtils.clamp(r.spin * 0.6 + speed * 0.4, -SPIN_MAX, SPIN_MAX)
+          } else if (down.travel) travel(-dy * 0.0022, -dy)
+          down.at = e.timeStamp
           invalidate()
         }
         down.lastX = e.clientX
@@ -648,13 +672,22 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     const onUp = (e: PointerEvent) => {
       if (!down || e.pointerId !== down.id) return
       const wasDrag = down.drag
+      const r = rig.current
+      const l = live.current
+      if (l.reducedMotion || e.timeStamp - down.at > SPIN_STALE_MS) r.spin = 0
+      r.dragging = false
       down = null
       el.releasePointerCapture?.(e.pointerId)
       el.style.cursor = ''
+      invalidate()
       if (wasDrag) return
       const hit = pickAt(e.clientX, e.clientY)
-      const l = live.current
-      if (hit?.kind === 'business') l.onSelect(hit.id)
+      if (hit?.kind === 'business') {
+        // The same dot again: a scroll may have left it, so frame it once more.
+        const p = hit.id === l.selectedId ? l.placed.get(hit.id) : undefined
+        if (p) focusOn(r, 'business', p, l.businesses.find((b) => b.id === hit.id)?.floorIndex)
+        l.onSelect(hit.id)
+      }
       else if (hit?.kind === 'gap') l.onSelectGap?.(hit.gap)
       else if (hit?.kind === 'halo') focusRing(hit.halo)
       else {
@@ -665,6 +698,8 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
 
     const onCancel = () => {
       down = null
+      rig.current.dragging = false
+      rig.current.spin = 0
       el.style.cursor = ''
     }
 
@@ -682,7 +717,8 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         if (pagePx) window.scrollBy(0, pagePx)
         return
       }
-      r.focus = null
+      r.ease = ORBIT.easeS
+      clearFocus(r)
       r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
       invalidate()
     }
@@ -784,38 +820,39 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     }
   }, [gl, camera, invalidate])
 
-  const goalPos = useMemo(() => new THREE.Vector3(), [])
-  const goalLook = useMemo(() => new THREE.Vector3(), [])
-  const dir = useMemo(() => new THREE.Vector3(), [])
-
   useFrame((_, delta) => {
     const l = live.current
     if (!l.active) return
     const r = rig.current
-    if (r.focus) {
-      goalPos.copy(r.focus.pos)
-      dir.copy(r.focus.look).sub(r.focus.pos)
-      rotateDir(dir, r.yaw - r.focus.yaw0, r.pitch - r.focus.pitch0)
-    } else {
-      const v = viewForScroll(r.t)
-      goalPos.set(v.pos.x, v.pos.y, v.pos.z)
-      dir.set(v.look.x - v.pos.x, v.look.y - v.pos.y, v.look.z - v.pos.z)
-      rotateDir(dir, r.yaw, r.pitch)
-    }
-    goalLook.copy(goalPos).add(dir)
+    const dt = Math.min(delta, 0.05)
 
-    if (l.reducedMotion) {
-      camera.position.copy(goalPos)
-      r.look.copy(goalLook)
-    } else {
-      const dt = Math.min(delta, 0.05)
-      camera.position.lerp(goalPos, 1 - Math.exp(-dt * 2.6))
-      r.look.lerp(goalLook, 1 - Math.exp(-dt * 4))
+    // A released drag carries on and fades out.
+    if (r.spin && !r.dragging) {
+      turn(r, r.spin * dt, 0)
+      r.spin *= Math.exp(-4 * dt)
+      if (Math.abs(r.spin) < 0.01) r.spin = 0
     }
-    camera.lookAt(r.look)
+
+    const goal = r.focus?.orbit ?? orbitForScroll(r.t, r.az, r.el)
+    let settled = !r.spin
+    for (const k of ORBIT_KEYS) {
+      const gap = k === 'az' ? wrapAngle(goal.az - r.cur.az) : goal[k] - r.cur[k]
+      if (l.reducedMotion || (Math.abs(gap) < 0.001 && Math.abs(r.vel[k]) < 0.001)) {
+        r.cur[k] = goal[k]
+        r.vel[k] = 0
+        continue
+      }
+      const [value, velocity] = smoothDamp(r.cur[k], r.cur[k] + gap, r.vel[k], r.ease, dt)
+      r.cur[k] = value
+      r.vel[k] = velocity
+      settled = false
+    }
+
+    const { pos, look } = orbitPose(r.cur)
+    camera.position.set(pos.x, pos.y, pos.z)
+    camera.lookAt(look.x, look.y, look.z)
 
     // With the loop on demand, keep drawing until the move settles.
-    const settled = camera.position.distanceTo(goalPos) < 0.01 && r.look.distanceTo(goalLook) < 0.01
     if (!settled && !l.motion) invalidate()
   })
 
