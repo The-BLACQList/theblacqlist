@@ -692,6 +692,107 @@ export function scrollForFloor(floorIndex: number): number {
   return Math.min(1, Math.max(0, (33 - y) / 82))
 }
 
+// ─── Name labels ─────────────────────────────────────────────────────────────
+
+/** A label on screen stays until its dot is smaller than this share of the floor. */
+export const LABEL_KEEP = 0.8
+/** A new label must be this much bigger than the one it would replace. */
+export const LABEL_SWAP_SIZE = 1.25
+/** And it must win for this long first. */
+export const LABEL_SWAP_MS = 300
+
+export interface LabelBox {
+  l: number
+  t: number
+  r: number
+  b: number
+}
+
+export const overlaps = (a: LabelBox, b: LabelBox) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
+
+export interface LabelCandidate {
+  id: string
+  /** Center of the dot, in stage pixels. */
+  x: number
+  /** Top edge of the label. */
+  top: number
+  /** The dot's size on screen. */
+  size: number
+  w: number
+  h: number
+}
+
+export interface LabelPick {
+  /** Every dot on screen at or above the keep size, not just the winners. */
+  candidates: readonly LabelCandidate[]
+  /** Who is on screen now. */
+  held: readonly string[]
+  /** When each waiting label started winning, from the last pick. */
+  since: ReadonlyMap<string, number>
+  /** HUD panels, in stage pixels. */
+  blocked: readonly LabelBox[]
+  now: number
+  max: number
+  minPx: number
+  stageW: number
+  stageH: number
+}
+
+/** Moves one edge onto a whole pixel inside the stage, and leaves it alone under 1px. */
+export function snapLabelPos(start: number, length: number, stage: number, prev: number): number {
+  const raw = Math.min(Math.max(start, 0), Math.max(stage - length, 0))
+  return Math.abs(raw - prev) < 1 ? prev : Math.round(raw)
+}
+
+function labelBox(c: LabelCandidate, stageW: number, stageH: number): LabelBox {
+  const l = Math.min(Math.max(c.x - c.w / 2, 0), Math.max(stageW - c.w, 0))
+  const t = Math.min(Math.max(c.top, 0), Math.max(stageH - c.h, 0))
+  return { l, t, r: l + c.w, b: t + c.h }
+}
+
+/**
+ * Who carries a name next. Labels on screen go first and keep their place, so a
+ * still camera always gets the same answer. Biggest first, ties by id.
+ */
+export function pickLabels(input: LabelPick): { ids: string[]; boxes: LabelBox[]; since: Map<string, number> } {
+  const { candidates, held, blocked, now, max, minPx, stageW, stageH } = input
+  const bigFirst = (a: LabelCandidate, b: LabelCandidate) => b.size - a.size || (a.id < b.id ? -1 : 1)
+  const heldIds = new Set(held)
+  const hitsHud = (box: LabelBox) => blocked.some((p) => overlaps(p, box))
+
+  let kept: { c: LabelCandidate; box: LabelBox }[] = []
+  for (const c of candidates.filter((x) => heldIds.has(x.id)).sort(bigFirst)) {
+    if (kept.length >= max) break
+    const box = labelBox(c, stageW, stageH)
+    if (hitsHud(box) || kept.some((k) => overlaps(k.box, box))) continue
+    kept.push({ c, box })
+  }
+
+  const since = new Map<string, number>()
+  const onScreen = new Set(kept.map((k) => k.c.id))
+  for (const c of candidates.filter((x) => !onScreen.has(x.id) && x.size >= minPx).sort(bigFirst)) {
+    const box = labelBox(c, stageW, stageH)
+    if (hitsHud(box)) continue
+    const hits = kept.filter((k) => overlaps(k.box, box))
+    if (hits.length === 0 && kept.length < max) {
+      kept.push({ c, box })
+      continue
+    }
+    // No room: it has to beat whatever it lands on, or the smallest label held.
+    const out = hits.length > 0 ? hits : kept.slice().sort((a, b) => bigFirst(b.c, a.c)).slice(0, 1)
+    if (out.length === 0 || out.some((k) => c.size < k.c.size * LABEL_SWAP_SIZE)) continue
+    const first = input.since.get(c.id) ?? now
+    if (now - first < LABEL_SWAP_MS) {
+      since.set(c.id, first)
+      continue
+    }
+    kept = kept.filter((k) => !out.includes(k))
+    kept.push({ c, box })
+  }
+
+  return { ids: kept.map((k) => k.c.id), boxes: kept.map((k) => k.box), since }
+}
+
 // ─── Pulses ──────────────────────────────────────────────────────────────────
 
 export const PULSE_MIN_MS = 60_000
