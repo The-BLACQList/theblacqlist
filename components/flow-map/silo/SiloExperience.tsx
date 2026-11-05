@@ -44,7 +44,7 @@ import {
   type SiloGap,
 } from '@/lib/spend/silo-layout'
 import { FloorIcon } from './floor-icons'
-import type { SiloSceneProps } from './SiloScene'
+import type { SiloNav, SiloSceneProps } from './SiloScene'
 import { SceneBoundary, SiloList, type SiloCityRow } from './SiloList'
 import { SiloMore } from './SiloMore'
 import {
@@ -69,6 +69,11 @@ type Scene = ComponentType<SiloSceneProps>
 
 /** Name labels the scene can place at once (round 17 shows about ten). */
 const LABEL_POOL = 12
+
+/** How far one press of an arrow key moves, as a share of the silo. */
+const KEY_TRAVEL = 0.05
+/** How far one press of a left or right arrow turns the map, in radians. */
+const KEY_TURN = 0.26
 
 interface Props {
   totalSpentCents: number
@@ -105,6 +110,8 @@ export function SiloExperience({
   const [selectedGap, setSelectedGap] = useState<SiloGap | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [focusFloor, setFocusFloor] = useState<number | null>(null)
+  // Where the camera is heading, from the scene. Picks and scrolls both land here.
+  const [liveFloor, setLiveFloor] = useState(0)
   const [paused, setPaused] = useState(false)
   const [inView, setInView] = useState(true)
   const [moreOpen, setMoreOpen] = useState(false)
@@ -115,6 +122,7 @@ export function SiloExperience({
   const [status, setStatus] = useState('')
 
   const sectionRef = useRef<HTMLElement>(null)
+  const navRef = useRef<SiloNav>(null)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
   const keysBtnRef = useRef<HTMLButtonElement>(null)
   const hoverTagRef = useRef<HTMLDivElement>(null)
@@ -226,6 +234,11 @@ export function SiloExperience({
     )
   }
 
+  function leaveFloor() {
+    setFocusFloor(null)
+    setStatus('Showing every floor.')
+  }
+
   function togglePause() {
     if (reducedMotion) {
       setStatus('Motion stays off because your device asks for less motion.')
@@ -286,10 +299,36 @@ export function SiloExperience({
     keysBtnRef.current?.focus()
   }
 
+  /** Up, down and floor keys. False leaves the key to the browser. */
+  function moveKey(key: string): boolean {
+    const nav = navRef.current
+    if (!nav) return false
+    const last = SILO_FLOORS.length - 1
+    const goTo = (floor: number) => {
+      if (floor < 0 || floor > last) return false
+      if (floor !== focusFloor) pickFloor(floor)
+      return true
+    }
+    if (key === 'ArrowUp') return nav.travel(-KEY_TRAVEL)
+    if (key === 'ArrowDown') return nav.travel(KEY_TRAVEL)
+    if (key === 'ArrowLeft') nav.turn(-KEY_TURN)
+    else if (key === 'ArrowRight') nav.turn(KEY_TURN)
+    else if (key === 'PageUp') return goTo(liveFloor - 1)
+    else if (key === 'PageDown') return goTo(liveFloor + 1)
+    else if (key === 'Home') return goTo(0)
+    else if (key === 'End') return goTo(last)
+    else return false
+    return true
+  }
+
   function onKeyDown(e: KeyboardEvent<HTMLElement>) {
     if (moreOpen || e.metaKey || e.ctrlKey || e.altKey) return
     const t = e.target as HTMLElement
     if (t.closest('input, textarea, select, [contenteditable="true"]')) return
+    if (!t.closest('.ctx') && moveKey(e.key)) {
+      e.preventDefault()
+      return
+    }
     if (e.key === 'Escape') {
       if (keysOpen) closeKeys()
       else if (selectedId) selectBusiness(null)
@@ -339,10 +378,16 @@ export function SiloExperience({
   }
   const showList = !showScene && support !== 'pending' && !(wantMap && !Scene)
 
-  const currentFloor = focusFloor ?? selected?.floorIndex ?? null
+  const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
 
   return (
-    <section ref={sectionRef} className="silo" aria-labelledby="silo-title" onKeyDown={onKeyDown}>
+    <section
+      ref={sectionRef}
+      className={`silo${moreOpen ? ' more-open' : ''}`}
+      aria-labelledby="silo-title"
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+    >
       {showList ? (
         <SiloList businesses={businesses} cities={cities} note={listNote} action={listAction} />
       ) : (
@@ -365,6 +410,9 @@ export function SiloExperience({
                 onSelect={(id) => selectBusiness(businesses.find((b) => b.id === id) ?? null)}
                 onSelectGap={selectGap}
                 onPickFloor={pickFloor}
+                onFloorChange={setLiveFloor}
+                onLeaveFloor={leaveFloor}
+                navRef={navRef}
                 onHover={setHoveredId}
                 onContextLost={() => setContextLost(true)}
                 hoverTagRef={hoverTagRef}

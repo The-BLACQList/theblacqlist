@@ -45,6 +45,7 @@ import {
   pulseProgress,
   pulseSchedule,
   scrollForFloor,
+  floorForHeight,
   smoothDamp,
   snapLabelPos,
   wedgeAngle,
@@ -72,6 +73,14 @@ const GAP_HEX = '#ff8ccf'
 /** A gap square's size in scene units. */
 const GAP_SIZE = 2.6
 
+/** What the keys can do to the camera. */
+export interface SiloNav {
+  /** Moves down (+) or up (-) the silo. False at either end. */
+  travel: (dt: number) => boolean
+  /** Turns the map, in radians. */
+  turn: (dAz: number) => void
+}
+
 export interface SiloSceneProps {
   businesses: readonly SiloBusiness[]
   placed: ReadonlyMap<string, PlacedBusiness>
@@ -91,6 +100,11 @@ export interface SiloSceneProps {
   onSelect: (id: string | null) => void
   /** The reader clicked a floor's ring. */
   onPickFloor?: (floor: number) => void
+  /** The floor the camera is heading for, each time that changes. */
+  onFloorChange?: (floor: number) => void
+  /** The reader moved off the floor they picked. */
+  onLeaveFloor?: () => void
+  navRef?: RefObject<SiloNav | null>
   onHover: (id: string | null) => void
   onContextLost: () => void
   hoverTagRef: RefObject<HTMLDivElement | null>
@@ -474,6 +488,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     vel: { x: 0, y: 0, z: 0, az: 0, el: 0, R: 0 },
   })
   const pendingFloor = useRef<number | null>(null)
+  const floorNow = useRef<number | null>(null)
   const live = useRef(props)
   useEffect(() => {
     live.current = props
@@ -711,16 +726,34 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     }
 
     /** Moves down (+) or up (-) the silo. Past either end, the page scrolls. */
-    function travel(dt: number, pagePx = 0) {
+    function travel(dt: number, pagePx = 0): boolean {
       const r = rig.current
       if (!r.focus && ((r.t <= 0 && dt < 0) || (r.t >= 1 && dt > 0))) {
         if (pagePx) window.scrollBy(0, pagePx)
-        return
+        return false
       }
       r.ease = ORBIT.easeS
       clearFocus(r)
       r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
+      const l = live.current
+      const floor = floorForHeight(orbitForScroll(r.t, r.az, r.el).y)
+      if (l.focusFloor !== null && l.focusFloor !== floor) l.onLeaveFloor?.()
       invalidate()
+      return true
+    }
+
+    const nav = live.current.navRef
+    if (nav) {
+      nav.current = {
+        travel: (dt) => travel(dt),
+        turn: (dAz) => {
+          const r = rig.current
+          r.ease = ORBIT.easeS
+          r.spin = 0
+          turn(r, dAz, 0)
+          invalidate()
+        },
+      }
     }
 
     // ── Page scroll versus silo travel ──
@@ -809,6 +842,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     window.addEventListener('scroll', updateTouchMode, { passive: true })
     window.addEventListener('resize', updateTouchMode)
     return () => {
+      if (nav) nav.current = null
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)
@@ -834,6 +868,11 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     }
 
     const goal = r.focus?.orbit ?? orbitForScroll(r.t, r.az, r.el)
+    const floor = floorForHeight(goal.y)
+    if (floor !== floorNow.current) {
+      floorNow.current = floor
+      l.onFloorChange?.(floor)
+    }
     let settled = !r.spin
     for (const k of ORBIT_KEYS) {
       const gap = k === 'az' ? wrapAngle(goal.az - r.cur.az) : goal[k] - r.cur[k]
