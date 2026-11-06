@@ -85,9 +85,9 @@ import sharp from 'sharp'
 import { PHOTO_PLATE_TINT } from '../lib/design/surfaces'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000'
-const ROUTES = ['/', '/cities']
+const ROUTES = ['/']
 
-/** 640 is where `CityChapters` used to break to three columns and 1024 is where
+/** 640 is where the old city tiles used to break to three columns and 1024 is where
  *  the photographic grids break now; both are worst-case widths that the
  *  original 375/768/1280 triple stepped straight over. */
 const WIDTHS = [375, 640, 768, 1024, 1280]
@@ -179,7 +179,7 @@ const COLLECT = `(function () {
   // The Next.js dev-tools badge lives in a shadow root on a nextjs-portal element
   // and is pinned to the bottom-left of the viewport. A full-page screenshot
   // flattens fixed chrome into the bitmap at whatever y the viewport was sitting
-  // on, so the badge lands mid-page — over the /cities chicago caption at 640,
+  // on, so the badge lands mid-page — over a photo caption at 640,
   // where its white glyph read as a 1.00:1 failure that no veil could ever
   // produce. Dev-server furniture, not page content; remove it before any read.
   var portals = document.querySelectorAll('nextjs-portal')
@@ -196,7 +196,7 @@ const COLLECT = `(function () {
       var el = leaves[j]
 
       // Own text, not leaf-ness. The previous test skipped any span containing a
-      // span, which silently dropped the /cities count line — it wraps an
+      // span, which silently dropped the city count line — it wraps an
       // aria-hidden separator, so only the bare '·' glyph was ever measured and
       // the brightest ground on the site went unsampled. Direct text nodes are
       // what this element actually paints; the element's own rect is a

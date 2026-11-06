@@ -223,8 +223,8 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             aria-label="Breadcrumb"
             className="flex items-center gap-1.5 font-subhead text-xs text-charcoal-soft mb-2"
           >
-            <Link href="/cities" className="hover:text-charcoal transition-colors">
-              Cities
+            <Link href="/discover" className="hover:text-charcoal transition-colors">
+              Discover
             </Link>
             <ChevronRight className="size-3" aria-hidden="true" />
             <span className="text-brand-black font-semibold">{locationLabel}</span>
