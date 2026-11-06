@@ -9,7 +9,8 @@
 // two never overlap on any viewport, and an enrolled tester sees both without
 // either covering the other. On a phone-width listing page both pills lift
 // above the quick-action bar while it shows (`.lift-over-quick-bar` in
-// app/globals.css), so neither covers its Save button. Hidden on the same
+// app/globals.css), so neither covers its Save button. On The Collective the
+// pill rides above the phone card sheet the same way. Hidden on the same
 // routes the rail hides on
 // (lib/tour/routes.ts): a report button floating over the admin console or the
 // sign-in form is noise, not help.
@@ -33,6 +34,7 @@ import {
 } from '@/lib/actions/feedback/submitProblemReport'
 import { PROBLEM_REPORT_MAX, PROBLEM_REPORT_MIN } from '@/lib/feedback/problem-report'
 import { isHiddenPath } from '@/lib/tour/routes'
+import { cn } from '@/lib/utils'
 
 function SendButton() {
   const { pending } = useFormStatus()
@@ -123,7 +125,13 @@ export function ReportProblemButton() {
   if (isHiddenPath(pathname)) return null
 
   return (
-    <div className="lift-over-quick-bar fixed bottom-4 left-4 z-40">
+    <div
+      className={cn(
+        'lift-over-quick-bar fixed bottom-4 left-4 z-40',
+        // The Collective's card sheet fills a phone's bottom edge (globals.css).
+        pathname === '/flow-map' && 'lift-over-map-sheet'
+      )}
+    >
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <button

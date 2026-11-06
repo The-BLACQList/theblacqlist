@@ -67,6 +67,13 @@ import './silo.css'
 
 type Scene = ComponentType<SiloSceneProps>
 
+/** The phone stage, where the card is a bottom sheet. Matches silo.css. */
+const PHONE_STAGE = '(max-width: 759px) and (min-height: 501px)'
+
+/** The sheet still counts as on the bottom edge this far above it, because a
+    collapsed iOS toolbar opens a gap under the stage. */
+const SHEET_EDGE_PX = 120
+
 /** Name labels the scene can place at once (round 17 shows about ten). */
 const LABEL_POOL = 12
 
@@ -74,6 +81,21 @@ const LABEL_POOL = 12
 const KEY_TRAVEL = 0.05
 /** How far one press of a left or right arrow turns the map, in radians. */
 const KEY_TURN = 0.26
+
+/**
+ * Lifts the site's pills over the sheet with the same hooks /map uses
+ * (globals.css), and gives the hint the sheet's height. 0 lets them drop back.
+ */
+function writeSheetLift(section: HTMLElement, sheetPx: number, liftPx: number) {
+  section.style.setProperty('--silo-sheet-h', `${sheetPx}px`)
+  if (liftPx > 0) {
+    document.documentElement.style.setProperty('--map-sheet-h', `${liftPx}px`)
+    section.setAttribute('data-map-sheet', '')
+  } else {
+    document.documentElement.style.removeProperty('--map-sheet-h')
+    section.removeAttribute('data-map-sheet')
+  }
+}
 
 interface Props {
   totalSpentCents: number
@@ -392,6 +414,35 @@ export function SiloExperience({
     }
   }, [showList])
 
+  useEffect(() => {
+    const section = sectionRef.current
+    const sheet = section?.querySelector<HTMLElement>('.ctx')
+    if (!section || !sheet || showList) return
+    const phone = window.matchMedia(PHONE_STAGE)
+    let last = ''
+    const update = () => {
+      const edge = window.innerHeight
+      const top = sheet.getBoundingClientRect().top
+      const onEdge = top < edge && section.getBoundingClientRect().bottom > edge - SHEET_EDGE_PX
+      const lift = phone.matches && onEdge ? Math.round(edge - top) : 0
+      const key = `${sheet.offsetHeight}:${lift}`
+      if (key === last) return
+      last = key
+      writeSheetLift(section, sheet.offsetHeight, lift)
+    }
+    update()
+    const resize = new ResizeObserver(update)
+    resize.observe(sheet)
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      resize.disconnect()
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+      writeSheetLift(section, 0, 0)
+    }
+  }, [showList])
+
   const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
   const showHint =
     showScene &&
@@ -560,6 +611,16 @@ export function SiloExperience({
             you={you}
             totalSpentCents={totalSpentCents}
             onClear={clearCard}
+            legend={
+              <SiloLegend
+                className="legend-in-card"
+                colorBy={colorBy}
+                active={filter}
+                onToggle={toggleFilter}
+                onColorBy={toggleColor}
+                hasGaps={gaps.length > 0}
+              />
+            }
           />
 
           <div className="dock" role="toolbar" aria-label="Map controls">

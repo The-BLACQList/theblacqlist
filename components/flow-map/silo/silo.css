@@ -128,9 +128,8 @@
 
 .silo-stage canvas {
   display: block;
-  /* Sideways drags turn the map; up and down scroll the page. Once the stage
-     is fully on screen, the scene sets touch-action: none so up and down
-     travel the silo instead (SiloScene, Controls). */
+  /* Sideways drags turn the map. Up and down belong to the browser, so a swipe
+     is always page scroll and the page scroll is the silo's position. */
   touch-action: pan-y;
 }
 
@@ -1173,7 +1172,8 @@
   text-underline-offset: 3px;
 }
 
-.more .legend-in-more {
+.more .legend-in-more,
+.legend-in-card {
   display: none;
 }
 
@@ -1445,9 +1445,221 @@
   }
 }
 
+/* ── Phone map: the stage fills the screen, the panels sit on top ─────────── */
+
+@media (max-width: 759px) and (min-height: 501px) {
+  /* A collapsed iOS toolbar shows what's under the svh stage: keep it dark. */
+  .silo-track[data-mode='map'] {
+    background: #0a0907;
+  }
+
+  .silo-track[data-mode='map'] .silo {
+    display: block;
+    height: calc(100svh - var(--hdr));
+    padding: 0;
+  }
+
+  /* Taller than the band and hung over the top, so the map centers in the
+     window between the strip and the sheet. */
+  .silo-track[data-mode='map'] .silo-stage {
+    position: absolute;
+    inset: -148px 0 0;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .silo-track[data-mode='map'] .hud-bg {
+    display: none;
+  }
+
+  /* Top strip: title, numbers, latest receipt. */
+  .silo-track[data-mode='map'] .hud {
+    display: grid;
+    inset: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 4px;
+    padding: 4px var(--er) 14px var(--el);
+    background: linear-gradient(180deg, rgba(12, 11, 9, 0.94) 78%, rgba(12, 11, 9, 0));
+  }
+
+  .silo-track[data-mode='map'] .brand h2 {
+    min-height: 44px;
+    gap: 8px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+  }
+  .silo-track[data-mode='map'] .brand .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+  .silo-track[data-mode='map'] .brand p {
+    display: none;
+  }
+
+  .silo-track[data-mode='map'] .kpis {
+    gap: 16px;
+  }
+  .silo-track[data-mode='map'] .kpi {
+    flex: none;
+    flex-direction: row-reverse;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .silo-track[data-mode='map'] .kpi + .kpi {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .silo-track[data-mode='map'] .kpi dd {
+    font-size: 16px;
+  }
+
+  .silo-track[data-mode='map'] .ticker {
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .silo-track[data-mode='map'] .ticker ul {
+    flex: 1;
+    min-width: 0;
+  }
+  .silo-track[data-mode='map'] .ticker li:first-child {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .silo-track[data-mode='map'] .ticker li::before {
+    display: none;
+  }
+
+  /* More and Find me share the title row, so a card can't cover them. */
+  .silo-track[data-mode='map'] .dock {
+    position: absolute;
+    inset: 4px var(--er) auto auto;
+    display: flex;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+  }
+  .silo-track[data-mode='map'] .dock button {
+    padding: 0 14px;
+    border-color: var(--line-2);
+  }
+
+  /* Floors down the right edge, just under the strip. */
+  .silo-track[data-mode='map'] .gauge {
+    position: absolute;
+    top: 100%;
+    right: max(4px, env(safe-area-inset-right));
+  }
+  .silo-track[data-mode='map'] .gauge ol {
+    display: grid;
+    gap: 0;
+  }
+  .silo-track[data-mode='map'] .gauge ol::before {
+    left: 50%;
+    right: auto;
+    top: 14px;
+    bottom: 14px;
+    width: 1px;
+    height: auto;
+  }
+  .silo-track[data-mode='map'] .fl {
+    position: relative;
+    border: 0;
+    background: none;
+  }
+  .silo-track[data-mode='map'] .fl .ic {
+    width: 32px;
+    height: 32px;
+  }
+  .silo-track[data-mode='map'] .fl .gp {
+    left: 20px;
+    top: -4px;
+  }
+  .silo-track[data-mode='map'] .fl[aria-current='location'] .nm {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: calc(100% - 2px);
+    transform: translateY(-50%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--panel-solid);
+    white-space: nowrap;
+  }
+  .silo-track[data-mode='map'] .fl .val {
+    display: none;
+  }
+
+  /* The card rises from the bottom edge. */
+  .silo-track[data-mode='map'] .ctx {
+    position: absolute;
+    inset: auto 0 0;
+    max-height: 42%;
+    padding: 16px var(--er) var(--eb) var(--el);
+    border-width: 1px 0 0;
+    border-radius: 16px 16px 0 0;
+    background: var(--panel-solid);
+    backdrop-filter: none;
+  }
+  .silo-track[data-mode='map'] .ctx::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: calc(50% - 17px);
+    width: 34px;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--line-2);
+  }
+
+  /* The key: one line of chips that scrolls sideways. */
+  .silo-track[data-mode='map'] .legend-in-card {
+    display: block;
+    margin-top: 10px;
+  }
+  .silo-track[data-mode='map'] .legend-in-card .legend-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--el) * -1) calc(var(--er) * -1);
+    padding-inline: var(--el) var(--er);
+  }
+  .silo-track[data-mode='map'] .legend-in-card .legend-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .legend-in-card .spot {
+    flex: none;
+  }
+  .silo-track[data-mode='map'] .more .legend-in-more {
+    display: none;
+  }
+
+  /* Above the sheet and the pills that ride on it. */
+  .silo-track[data-mode='map'] .silo-hint {
+    left: var(--el);
+    bottom: calc(var(--silo-sheet-h, 180px) + 68px);
+    transform: none;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 359px) and (min-height: 501px) {
+  .silo-track[data-mode='map'] .brand .brand-mark {
+    display: none;
+  }
+}
+
 /* ── The track: the map pins and page scroll travels the floors ──────────── */
 
-@media (min-width: 760px) and (min-height: 501px) and (prefers-reduced-motion: no-preference) {
+@media (min-height: 501px) and (prefers-reduced-motion: no-preference) {
   .silo-track:not([data-mode='list']) {
     height: calc(300svh - var(--hdr));
   }

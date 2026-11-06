@@ -65,6 +65,7 @@ export function Assistant() {
 
   if (hidden) return null
   const onMap = pathname === '/map' || pathname.startsWith('/map/')
+  const onCollective = pathname === '/flow-map'
 
   return (
     <>
@@ -79,7 +80,8 @@ export function Assistant() {
             'lift-over-quick-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible',
             // The map's zoom and locate buttons sit bottom-right on a computer;
             // on a phone the button rides above the card sheet (globals.css).
-            onMap && 'lift-over-map-sheet md:bottom-48',
+            (onMap || onCollective) && 'lift-over-map-sheet',
+            onMap && 'md:bottom-48',
             // The home bar is its own Ask Cue; one in view is enough.
             barInView && !open && 'invisible'
           )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef } from 'react'
+import { forwardRef, type ReactNode } from 'react'
 
 import {
   CATEGORY_FAMILIES,
@@ -273,6 +273,8 @@ interface CardProps {
   you: SiloBusiness | null
   totalSpentCents: number
   onClear: () => void
+  /** The color key, for the resting card on a phone. */
+  legend: ReactNode
 }
 
 /**
@@ -287,6 +289,7 @@ export function SiloCard({
   you,
   totalSpentCents,
   onClear,
+  legend,
 }: CardProps) {
   const close = (
     <button
@@ -405,6 +408,7 @@ export function SiloCard({
         <p className="ctx-eyebrow">You</p>
         <h3 id="silo-ctx-title">Your receipts are in here</h3>
         <p>Find me shows the businesses where you have a counted receipt.</p>
+        {legend}
       </aside>
     )
   }
@@ -414,6 +418,7 @@ export function SiloCard({
       <p className="ctx-eyebrow">The Collective</p>
       <h3 id="silo-ctx-title">Where the money goes first</h3>
       <p>Pick a floor or a dot to look closer. Pink squares are gaps to fill.</p>
+      {legend}
     </aside>
   )
 }
