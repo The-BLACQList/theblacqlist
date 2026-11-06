@@ -1,6 +1,6 @@
 # 180: Remove the Cities page and the home page Cities section
 
-**Status:** Draft PR, waiting for the founder's merge word
+**Status:** Merged on the founder's word. Just Added moved to `bg-off-white` so the white map band and showcase keep a break between them.
 **Follows:** nothing, this stands alone
 **Area:** `/cities`, the home page, the site header
 
