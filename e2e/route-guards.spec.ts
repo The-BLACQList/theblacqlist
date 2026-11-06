@@ -41,11 +41,16 @@ test.describe('Middleware guards on protected routes (anonymous)', () => {
 test.describe('Public routes stay public', () => {
   // The mirror assertion. A guard applied too broadly is as much a regression
   // as one applied too narrowly, and it fails silently for signed-in testers.
-  for (const path of ['/', '/discover', '/cities', '/collections']) {
+  for (const path of ['/', '/discover', '/collections']) {
     test(`${path} renders for an anonymous visitor`, async ({ page }) => {
       const response = await page.goto(path)
       expect(response?.status(), `${path} status`).toBeLessThan(400)
       await expect(page).not.toHaveURL(/\/sign-in/)
     })
   }
+
+  test('/cities redirects to /discover', async ({ page }) => {
+    await page.goto('/cities')
+    await expect(page).toHaveURL(/\/discover$/)
+  })
 })

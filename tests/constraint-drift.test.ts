@@ -226,6 +226,6 @@ describe('Products & Services is binned by location_type', () => {
     const home = source('app/page.tsx')
     expect(home).toContain('PRODUCTS_SERVICES_LOCATION_TYPES')
     // The facet scan must actually select the column it now counts.
-    expect(home).toMatch(/\.select\('category_id, city_id, entity_type, location_type'\)/)
+    expect(home).toMatch(/\.select\('category_id, entity_type, location_type'\)/)
   })
 })

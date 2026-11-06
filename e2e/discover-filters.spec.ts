@@ -109,12 +109,7 @@ function skipIfUnavailable(answer: GridAnswer, where: string): asserts answer is
   )
 }
 
-async function firstCitySlug(page: Page): Promise<string> {
-  await page.goto('/cities')
-  const href = await page.locator('a[href^="/discover/"]').first().getAttribute('href')
-  expect(href, '/cities must link at least one city').toBeTruthy()
-  return href!.replace('/discover/', '')
-}
+const CITY_SLUG = 'atlanta-ga' // a seeded city (supabase/seed.sql)
 
 test.describe('Discover filters — every facet reaches the query', () => {
   test('a facet that matches nothing empties /discover', async ({ page }) => {
@@ -128,11 +123,13 @@ test.describe('Discover filters — every facet reaches the query', () => {
   })
 
   test('a facet that matches nothing empties the city page', async ({ page }) => {
-    const slug = await firstCitySlug(page)
-    const all = requireNumber(await totalAt(page, `/discover/${slug}`), `/discover/${slug}`)
+    const all = requireNumber(
+      await totalAt(page, `/discover/${CITY_SLUG}`),
+      `/discover/${CITY_SLUG}`
+    )
     test.skip(all === 0, 'this city has no published listings to filter')
 
-    const filtered = await totalAt(page, `/discover/${slug}?attrs=${NO_SUCH_ATTR}`)
+    const filtered = await totalAt(page, `/discover/${CITY_SLUG}?attrs=${NO_SUCH_ATTR}`)
     expect(filtered, 'the city page dropped the attribute filter').toBe(0)
   })
 
@@ -166,8 +163,7 @@ test.describe('Discover filters — every facet reaches the query', () => {
 
   for (const { key, value } of KEYS) {
     test(`${key} narrows the result set on all three pages`, async ({ page }) => {
-      const slug = await firstCitySlug(page)
-      const bases = ['/discover', `/discover/${slug}`]
+      const bases = ['/discover', `/discover/${CITY_SLUG}`]
 
       for (const base of bases) {
         const all = requireNumber(await totalAt(page, base), base)

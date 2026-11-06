@@ -7,7 +7,6 @@ export interface NavLink {
 export const MAIN_NAV_LINKS: NavLink[] = [
   { label: 'Discover', href: '/discover' },
   { label: 'Map', href: '/map' },
-  { label: 'Cities', href: '/cities' },
   { label: 'The Collective', href: '/flow-map' },
   { label: 'For Business', href: '/for-business' },
 ]

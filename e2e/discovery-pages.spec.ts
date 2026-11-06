@@ -9,18 +9,12 @@ import { FIXTURE_OWNED_SLUG, FIXTURE_OWNED_NAME, fixtureListingUrl } from './hel
  * needs two segments, and the city landing page lives at
  * `/discover/[citySlug]`. Corrected here; see the 2d doc corrections.
  *
- * The city slug is discovered from /cities rather than hard-coded, so this
- * suite keeps working against any seeded database instead of pinning one row.
+ * The city is pinned to Atlanta, a seeded city, as e2e/launch-gates.spec.ts
+ * does. It used to be read from /cities, which is gone.
  */
 
 const CATEGORY_SLUG = 'food-dining' // a seeded top-level category (supabase/seed.sql)
-
-async function firstCitySlug(page: import('@playwright/test').Page): Promise<string> {
-  await page.goto('/cities')
-  const href = await page.locator('a[href^="/discover/"]').first().getAttribute('href')
-  expect(href, '/cities must link at least one city').toBeTruthy()
-  return href!.replace('/discover/', '')
-}
+const CITY_SLUG = 'atlanta-ga' // a seeded city (supabase/seed.sql)
 
 test.describe('TA-06 — Business page', () => {
   test('step 3 — Save while signed out sends the visitor to sign-in and remembers the listing', async ({
@@ -67,8 +61,7 @@ test.describe('TA-07 — Search and discovery', () => {
 
 test.describe('TA-08 — City and category landing pages', () => {
   test('step 1 — the city landing page renders at /discover/[citySlug]', async ({ page }) => {
-    const slug = await firstCitySlug(page)
-    await page.goto(`/discover/${slug}`)
+    await page.goto(`/discover/${CITY_SLUG}`)
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Black-Owned Businesses in')
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toBeVisible()
@@ -78,10 +71,9 @@ test.describe('TA-08 — City and category landing pages', () => {
   test('step 2 — the city + category page renders at /[citySlug]/[categorySlug]', async ({
     page,
   }) => {
-    const slug = await firstCitySlug(page)
-    const response = await page.goto(`/${slug}/${CATEGORY_SLUG}`)
+    const response = await page.goto(`/${CITY_SLUG}/${CATEGORY_SLUG}`)
 
-    expect(response?.status(), `/${slug}/${CATEGORY_SLUG}`).toBe(200)
+    expect(response?.status(), `/${CITY_SLUG}/${CATEGORY_SLUG}`).toBe(200)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   })
 
@@ -93,16 +85,14 @@ test.describe('TA-08 — City and category landing pages', () => {
   test('step 3b — an unknown category under a real city 404s rather than 500s', async ({
     page,
   }) => {
-    const slug = await firstCitySlug(page)
-    const response = await page.goto(`/${slug}/no-such-category-zzzz`)
+    const response = await page.goto(`/${CITY_SLUG}/no-such-category-zzzz`)
     expect(response?.status()).toBe(404)
   })
 
   test('step 4 — the city landing page declares a canonical URL', async ({ page }) => {
-    const slug = await firstCitySlug(page)
-    await page.goto(`/discover/${slug}`)
+    await page.goto(`/discover/${CITY_SLUG}`)
 
     const canonical = page.locator('link[rel="canonical"]')
-    await expect(canonical).toHaveAttribute('href', new RegExp(`/discover/${slug}$`))
+    await expect(canonical).toHaveAttribute('href', new RegExp(`/discover/${CITY_SLUG}$`))
   })
 })

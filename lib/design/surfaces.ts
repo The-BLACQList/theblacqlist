@@ -2,7 +2,7 @@
  * Shared dark-surface treatments.
  *
  * The ember wash is the gold radial that sits on every `bg-deep-bg` tile in the
- * Living Commerce Index direction — city chapters, category bento, the Avenues.
+ * Living Commerce Index direction — category bento, the Avenues.
  * It lives here so the three call sites can never drift apart.
  */
 export const EMBER_WASH =
@@ -310,32 +310,6 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // The chicken stack runs ~5-70%, waffle below.
   '/images/editorial/chicken-and-waffles.webp': 'object-[50%_30%]',
 
-  // Skylines. Each value is set from the highest structure in the frame. They
-  // were tuned against the pre-plate city tile (~2.53:1, a ~41% cut, centered
-  // landing at [20.5%, 79.5%] and shearing the tower tops); the photo region is
-  // now 16/9, so the same values run at a ~16% cut with more headroom, not less.
-  // Bank of America Plaza's spire sits at ~11%.
-  '/images/cities/atlanta.webp': 'object-[50%_25%]',
-  // Antenna at ~11%, the bronze-glass tower that carries the frame at ~14%.
-  '/images/cities/houston.webp': 'object-[50%_25%]',
-  // Aerial: the Hancock antenna tips at ~7% and the beach anchors the bottom.
-  // At a ~41% cut, 15% puts the band top at 6.1% — inside the antenna. 22% read
-  // plausible against an eyeballed ~9% and clipped it.
-  '/images/cities/chicago.webp': 'object-[50%_15%]',
-  // The three below are not the same problem as the three above, and copying
-  // 25% into them would have been the `chicago` mistake made a second time.
-  // None is a tower-topped skyline: DC is a low horizontal city under a very
-  // tall sunset sky, so a top-weighted crop returns mostly cloud and loses the
-  // dome; New Orleans puts its skyline band at ~34% with the river below it,
-  // so biasing up crops the water that says "New Orleans" and still doesn't
-  // gain a subject. Both sit slightly below centre on purpose.
-  '/images/cities/dc.webp': 'object-[50%_45%]',
-  '/images/cities/new-orleans.webp': 'object-[50%_45%]',
-  // Los Angeles is the only one of the three that behaves like the set above —
-  // the US Bank Tower crown is the highest structure at ~17%, well clear of
-  // Atlanta's ~11% spire, so it needs a gentler bias than 25%.
-  '/images/cities/los-angeles.webp': 'object-[50%_30%]',
-
   // Discover banners. Different geometry from everything above: the frame is a
   // wide letterbox (~1440×480 at desktop) rather than a portrait-ish panel, so
   // `object-cover` crops *vertically* and hard, and the type sits over the
@@ -357,38 +331,6 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // under the headline. Below `md` it shows the whole 3:2 frame (`fullWidth`),
   // so the value only matters from `md` up.
   '/images/editorial/farmer-and-cattle.webp': 'object-[50%_34%]',
-}
-
-/**
- * City slug → skyline photograph. Same contract as `CATEGORY_PHOTOS`:
- * deliberately partial, and an unmapped city renders the ember wash as a
- * first-class outcome rather than a missing image.
- *
- * Keyed on the full slug (`atlanta-ga`), not the bare city name, because that is
- * what `cities.slug` holds (`supabase/seed.sql:87`) and what both consumers
- * already have in hand.
- *
- * The mapped set is exactly the cities we have licensed skyline photography for
- * — nothing more. It used to coincide with the `is_active = true` set, but that
- * was a coincidence and never a rule: activating a city does not give it a
- * photograph. Washington DC, Los Angeles and New Orleans spent months on the
- * wash for exactly that reason and joined the map on 2026-09-03, when the
- * founder confirmed their photographs carry the same license as the original
- * three `[Decision — founder, 2026-09-03]`. That is still the only way in: a
- * city gets a frame when its photo is licensed and art-directed into
- * `PHOTO_FOCAL`, and until then the wash is the finished look, not a gap.
- * Do not stretch one of these six across a seventh city.
- *
- * Unlike the editorial frames these are informative, so consumers pass a real
- * `alt` — see `PhotoPanelGround`.
- */
-export const CITY_PHOTOS: Readonly<Record<string, string>> = {
-  'atlanta-ga': '/images/cities/atlanta.webp',
-  'houston-tx': '/images/cities/houston.webp',
-  'chicago-il': '/images/cities/chicago.webp',
-  'washington-dc': '/images/cities/dc.webp',
-  'los-angeles-ca': '/images/cities/los-angeles.webp',
-  'new-orleans-la': '/images/cities/new-orleans.webp',
 }
 
 /**

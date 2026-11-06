@@ -10,8 +10,7 @@ interface BannerContent {
   tone: string
   /**
    * The commissioned frame for this avenue. Absent means the `tone` gradient is
-   * the finished ground — same contract as `CITY_PHOTOS`, where an unmapped
-   * city renders the wash as a first-class outcome rather than a hole.
+   * the finished ground, a first-class outcome rather than a hole.
    */
   photo?: string
   /**

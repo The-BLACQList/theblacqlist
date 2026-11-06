@@ -14,7 +14,6 @@ import { HomeMapBand } from '@/components/home/HomeMapBand'
 import { TheAvenues, type AvenueCounts } from '@/components/home/TheAvenues'
 import { HomeCategories, type CategoryTile } from '@/components/home/HomeCategories'
 import { FreshFinds } from '@/components/home/FreshFinds'
-import { CityChapters, type CityChapter } from '@/components/home/CityChapters'
 import { MicrositeShowcase } from '@/components/home/MicrositeShowcase'
 import type { ShowcaseItem } from '@/components/home/ShowcaseCarousel'
 import { ImpactBand } from '@/components/home/ImpactBand'
@@ -54,7 +53,6 @@ export default async function HomePage() {
   const [
     categoriesRes,
     listingFacetRes,
-    citiesRes,
     freshRes,
     showcaseRes,
     spendRes,
@@ -70,13 +68,9 @@ export default async function HomePage() {
       .order('display_order'),
     supabase
       .from('listings')
-      .select('category_id, city_id, entity_type, location_type')
+      .select('category_id, entity_type, location_type')
       .eq('status', 'published')
       .is('deleted_at', null),
-    supabase
-      .from('cities')
-      .select('id, name, slug, is_active, states!cities_state_id_fkey(code)')
-      .order('name'),
     // Fresh Finds: newest first, no tier or is_featured gating. `published_at`
     // is nullable, so `created_at` (NOT NULL DEFAULT now()) is the tiebreak
     // floor — same definition of "newest" the search RPC already uses.
@@ -123,9 +117,8 @@ export default async function HomePage() {
     supabase.from('guide_sections').select('guide_id'),
   ])
 
-  // Live counts per category and city from one published-listings scan
+  // Live counts per category from one published-listings scan
   const categoryCounts = new Map<string, number>()
-  const cityCounts = new Map<string, number>()
   const typeCounts = new Map<string, number>()
   // Counted separately from typeCounts because this avenue is binned by
   // location_type, not entity_type — see PRODUCTS_SERVICES_LOCATION_TYPES.
@@ -134,7 +127,6 @@ export default async function HomePage() {
   for (const row of listingFacetRes.data ?? []) {
     if (row.category_id)
       categoryCounts.set(row.category_id, (categoryCounts.get(row.category_id) ?? 0) + 1)
-    if (row.city_id) cityCounts.set(row.city_id, (cityCounts.get(row.city_id) ?? 0) + 1)
     typeCounts.set(row.entity_type, (typeCounts.get(row.entity_type) ?? 0) + 1)
     if (row.location_type && productsServices.has(row.location_type)) productsServicesCount += 1
   }
@@ -180,14 +172,6 @@ export default async function HomePage() {
     }))
     .filter((c) => c.count > 0)
     .sort((a, b) => b.count - a.count)
-
-  const cities: CityChapter[] = (citiesRes.data ?? []).map((c) => ({
-    name: c.name,
-    slug: c.slug,
-    stateCode: (c.states as unknown as { code: string } | null)?.code ?? '',
-    count: cityCounts.get(c.id) ?? 0,
-    isActive: c.is_active,
-  }))
 
   const freshFinds = ((freshRes.data ?? []) as unknown as RawRow[]).map(mapRow)
   await attachLevels(supabase, freshFinds)
@@ -284,9 +268,6 @@ export default async function HomePage() {
       </Reveal>
       <Reveal>
         <FreshFinds entities={freshFinds} />
-      </Reveal>
-      <Reveal>
-        <CityChapters cities={cities} />
       </Reveal>
       <Reveal>
         <MicrositeShowcase items={showcaseItems} />

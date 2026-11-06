@@ -26,10 +26,7 @@ import { chromium } from '@playwright/test'
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 const WIDTHS = [375, 768, 1280]
-const PAGES = [
-  { path: '/', label: 'home' },
-  { path: '/cities', label: 'cities' },
-]
+const PAGES = [{ path: '/', label: 'home' }]
 
 function srgbToLinear(c: number) {
   const s = c / 255

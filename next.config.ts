@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: [...SECURITY_HEADERS] }]
   },
+  // /cities is gone. Old links and search results land on Discover, not the 404
+  // page. `[Decision — founder, 2026-11-06]`
+  async redirects() {
+    return [{ source: '/cities', destination: '/discover', permanent: true }]
+  },
   images: {
     remotePatterns: [
       {
