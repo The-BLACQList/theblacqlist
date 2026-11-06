@@ -112,6 +112,7 @@ export function SiloExperience({
   const [focusFloor, setFocusFloor] = useState<number | null>(null)
   // Where the camera is heading, from the scene. Picks and scrolls both land here.
   const [liveFloor, setLiveFloor] = useState(0)
+  const [hintGone, setHintGone] = useState(false)
   const [paused, setPaused] = useState(false)
   const [inView, setInView] = useState(true)
   const [moreOpen, setMoreOpen] = useState(false)
@@ -232,6 +233,11 @@ export function SiloExperience({
     setStatus(
       next === null ? 'Showing every floor.' : `Showing the ${SILO_FLOORS[i]!.short} floor.`
     )
+  }
+
+  function changeLiveFloor(floor: number) {
+    setLiveFloor(floor)
+    if (floor > 0) setHintGone(true)
   }
 
   function leaveFloor() {
@@ -378,246 +384,278 @@ export function SiloExperience({
   }
   const showList = !showScene && support !== 'pending' && !(wantMap && !Scene)
 
+  // The list collapses the track, which can leave the reader below the section.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (showList && section && section.getBoundingClientRect().top < 0) {
+      section.scrollIntoView({ block: 'start', behavior: 'instant' })
+    }
+  }, [showList])
+
   const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
+  const showHint =
+    showScene &&
+    !hintGone &&
+    !selected &&
+    !selectedGap &&
+    focusFloor === null &&
+    !keysOpen &&
+    !moreOpen
 
   return (
-    <section
-      ref={sectionRef}
-      className={`silo${moreOpen ? ' more-open' : ''}`}
-      aria-labelledby="silo-title"
-      tabIndex={-1}
-      onKeyDown={onKeyDown}
-    >
-      {showList ? (
-        <SiloList businesses={businesses} cities={cities} note={listNote} action={listAction} />
-      ) : (
-        <div className="silo-stage">
-          {showScene && Scene && (
-            <SceneBoundary key={canvasKey} onError={() => setChunkFailed(true)}>
-              <Scene
-                businesses={businesses}
-                placed={placed}
-                colorBy={colorBy}
-                visible={visible}
-                selectedId={selectedId}
-                hoveredId={hoveredId}
-                focusFloor={focusFloor}
-                motion={motion}
-                reducedMotion={reducedMotion}
-                active={active}
-                gaps={gaps}
-                selectedGap={selectedGap}
-                onSelect={(id) => selectBusiness(businesses.find((b) => b.id === id) ?? null)}
-                onSelectGap={selectGap}
-                onPickFloor={pickFloor}
-                onFloorChange={setLiveFloor}
-                onLeaveFloor={leaveFloor}
-                navRef={navRef}
-                onHover={setHoveredId}
-                onContextLost={() => setContextLost(true)}
-                hoverTagRef={hoverTagRef}
-                youTagRef={youTagRef}
-                signsRef={signsRef}
-                labelsRef={labelsRef}
-                gapLabelsRef={gapLabelsRef}
-              />
-            </SceneBoundary>
-          )}
-          {showScene && (
-            <div ref={signsRef} className="silo-signs" aria-hidden="true">
-              {SILO_FLOORS.map((f, i) => (
-                <div key={f.key} className="silo-sign" hidden>
-                  <span className="ic">
-                    <FloorIcon floor={i} />
-                  </span>
-                  <b>{f.short}</b>
-                </div>
-              ))}
-            </div>
-          )}
-          {showScene && (
-            <div className="silo-labels" aria-hidden="true">
-              <div ref={labelsRef}>
-                {Array.from({ length: LABEL_POOL }, (_, i) => (
-                  <div key={i} className="silo-lbl">
-                    <span className="dot" />
-                    <span>
-                      <b />
-                      <small />
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div ref={gapLabelsRef}>
-                {gaps.map((g) => (
-                  <div key={`${g.familyIndex}:${g.floorIndex}`} className="silo-lbl gap">
-                    <span className="ic">
-                      <FloorIcon floor={g.floorIndex} />
-                    </span>
-                    <span>
-                      <b>No {SILO_FLOORS[g.floorIndex]!.short.toLowerCase()} yet</b>
-                      <small>{CATEGORY_FAMILIES[g.familyIndex]?.name}</small>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div ref={hoverTagRef} className="silo-tag" hidden aria-hidden="true">
-            {hovered ? businessDisplayName(hovered) : ''}
-          </div>
-          <div ref={youTagRef} className="silo-tag is-you" hidden aria-hidden="true">
-            You
-          </div>
-        </div>
-      )}
-
-      <div className="hud-bg" aria-hidden="true" />
-
-      <div className="hud">
-        <div className="brand">
-          <h2 id="silo-title">
-            <GoldBrandMark className="brand-mark" />
-            The Collective
-          </h2>
-          <p>
-            Every business on the list, floor by floor. Lines show money spent once enough receipts
-            are counted.
-          </p>
-        </div>
-
-        <dl className="kpis">
-          <div className="kpi">
-            <dt>Spent</dt>
-            <dd>{formatDollars(totalSpentCents)}</dd>
-          </div>
-          <div className="kpi">
-            <dt>Receipts</dt>
-            <dd>{receiptCount.toLocaleString('en-US')}</dd>
-          </div>
-          <div className="kpi">
-            <dt>Links</dt>
-            <dd>{linkedCount.toLocaleString('en-US')}</dd>
-          </div>
-        </dl>
-
-        <SiloGauge
-          floors={floors}
-          counts={counts}
-          gaps={gapCounts}
-          currentFloor={currentFloor}
-          youFloors={youFloors}
-          onPick={pickFloor}
-        />
-
-        <SiloLegend
-          colorBy={colorBy}
-          active={filter}
-          onToggle={toggleFilter}
-          onColorBy={toggleColor}
-          hasGaps={gaps.length > 0}
-        />
-
-        <SiloTicker items={ticker} />
-      </div>
-
-      <SiloCard
-        selected={selected}
-        selectedGap={selectedGap}
-        focusFloor={focusFloor === null ? null : (floors[focusFloor] ?? null)}
-        floorCount={focusFloor === null ? 0 : (counts[focusFloor] ?? 0)}
-        you={you}
-        totalSpentCents={totalSpentCents}
-        onClear={clearCard}
-      />
-
-      <div className="dock" role="toolbar" aria-label="Map controls">
-        {you && (
-          <button type="button" className="find" onClick={findMe}>
-            Find me
-          </button>
+    <>
+      <div className="silo-track" data-mode={showList ? 'list' : 'map'}>
+        {!showList && (
+          <a className="silo-skip" href="#silo-after">
+            Skip past the map
+          </a>
         )}
-        <button
-          ref={moreBtnRef}
-          type="button"
-          aria-haspopup="dialog"
-          aria-expanded={moreOpen}
-          onClick={() => setMoreOpen(true)}
+        <section
+          ref={sectionRef}
+          className={`silo${moreOpen ? ' more-open' : ''}`}
+          aria-labelledby="silo-title"
+          tabIndex={-1}
+          onKeyDown={onKeyDown}
         >
-          More
-        </button>
-        <button
-          ref={keysBtnRef}
-          type="button"
-          className="keys"
-          aria-expanded={keysOpen}
-          aria-controls="silo-keymap"
-          aria-label="Keyboard keys"
-          onClick={() => setKeysOpen((v) => !v)}
-        >
-          ?
-        </button>
-      </div>
+          {showList ? (
+            <SiloList businesses={businesses} cities={cities} note={listNote} action={listAction} />
+          ) : (
+            <div className="silo-stage">
+              {showScene && Scene && (
+                <SceneBoundary key={canvasKey} onError={() => setChunkFailed(true)}>
+                  <Scene
+                    businesses={businesses}
+                    placed={placed}
+                    colorBy={colorBy}
+                    visible={visible}
+                    selectedId={selectedId}
+                    hoveredId={hoveredId}
+                    focusFloor={focusFloor}
+                    motion={motion}
+                    reducedMotion={reducedMotion}
+                    active={active}
+                    gaps={gaps}
+                    selectedGap={selectedGap}
+                    onSelect={(id) => selectBusiness(businesses.find((b) => b.id === id) ?? null)}
+                    onSelectGap={selectGap}
+                    onPickFloor={pickFloor}
+                    onFloorChange={changeLiveFloor}
+                    onLeaveFloor={leaveFloor}
+                    navRef={navRef}
+                    onHover={setHoveredId}
+                    onContextLost={() => setContextLost(true)}
+                    hoverTagRef={hoverTagRef}
+                    youTagRef={youTagRef}
+                    signsRef={signsRef}
+                    labelsRef={labelsRef}
+                    gapLabelsRef={gapLabelsRef}
+                  />
+                </SceneBoundary>
+              )}
+              {showScene && (
+                <div ref={signsRef} className="silo-signs" aria-hidden="true">
+                  {SILO_FLOORS.map((f, i) => (
+                    <div key={f.key} className="silo-sign" hidden>
+                      <span className="ic">
+                        <FloorIcon floor={i} />
+                      </span>
+                      <b>{f.short}</b>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showScene && (
+                <div className="silo-labels" aria-hidden="true">
+                  <div ref={labelsRef}>
+                    {Array.from({ length: LABEL_POOL }, (_, i) => (
+                      <div key={i} className="silo-lbl">
+                        <span className="dot" />
+                        <span>
+                          <b />
+                          <small />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div ref={gapLabelsRef}>
+                    {gaps.map((g) => (
+                      <div key={`${g.familyIndex}:${g.floorIndex}`} className="silo-lbl gap">
+                        <span className="ic">
+                          <FloorIcon floor={g.floorIndex} />
+                        </span>
+                        <span>
+                          <b>No {SILO_FLOORS[g.floorIndex]!.short.toLowerCase()} yet</b>
+                          <small>{CATEGORY_FAMILIES[g.familyIndex]?.name}</small>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div ref={hoverTagRef} className="silo-tag" hidden aria-hidden="true">
+                {hovered ? businessDisplayName(hovered) : ''}
+              </div>
+              <div ref={youTagRef} className="silo-tag is-you" hidden aria-hidden="true">
+                You
+              </div>
+            </div>
+          )}
 
-      {keysOpen && (
-        <SiloKeyMap shortcutsOn={shortcutsOn} onShortcutsChange={changeShortcuts} hasYou={!!you} />
-      )}
+          {showHint && <p className="silo-hint">Keep scrolling to see every floor</p>}
 
-      <SiloMore open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusRef={moreBtnRef}>
-        <SiloLegend
-          className="legend-in-more"
-          colorBy={colorBy}
-          active={filter}
-          onToggle={toggleFilter}
-          onColorBy={toggleColor}
-          hasGaps={gaps.length > 0}
-        />
-        <div className="more-group">
-          <h4>Motion</h4>
-          <div className="more-row">
+          <div className="hud-bg" aria-hidden="true" />
+
+          <div className="hud">
+            <div className="brand">
+              <h2 id="silo-title">
+                <GoldBrandMark className="brand-mark" />
+                The Collective
+              </h2>
+              <p>
+                Every business on the list, floor by floor. Lines show money spent once enough
+                receipts are counted.
+              </p>
+            </div>
+
+            <dl className="kpis">
+              <div className="kpi">
+                <dt>Spent</dt>
+                <dd>{formatDollars(totalSpentCents)}</dd>
+              </div>
+              <div className="kpi">
+                <dt>Receipts</dt>
+                <dd>{receiptCount.toLocaleString('en-US')}</dd>
+              </div>
+              <div className="kpi">
+                <dt>Links</dt>
+                <dd>{linkedCount.toLocaleString('en-US')}</dd>
+              </div>
+            </dl>
+
+            <SiloGauge
+              floors={floors}
+              counts={counts}
+              gaps={gapCounts}
+              currentFloor={currentFloor}
+              youFloors={youFloors}
+              onPick={pickFloor}
+            />
+
+            <SiloLegend
+              colorBy={colorBy}
+              active={filter}
+              onToggle={toggleFilter}
+              onColorBy={toggleColor}
+              hasGaps={gaps.length > 0}
+            />
+
+            <SiloTicker items={ticker} />
+          </div>
+
+          <SiloCard
+            selected={selected}
+            selectedGap={selectedGap}
+            focusFloor={focusFloor === null ? null : (floors[focusFloor] ?? null)}
+            floorCount={focusFloor === null ? 0 : (counts[focusFloor] ?? 0)}
+            you={you}
+            totalSpentCents={totalSpentCents}
+            onClear={clearCard}
+          />
+
+          <div className="dock" role="toolbar" aria-label="Map controls">
+            {you && (
+              <button type="button" className="find" onClick={findMe}>
+                Find me
+              </button>
+            )}
             <button
+              ref={moreBtnRef}
               type="button"
-              className="more-option"
-              aria-pressed={reducedMotion || paused}
-              onClick={togglePause}
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen(true)}
             >
-              {reducedMotion ? 'Motion is off' : paused ? 'Resume motion' : 'Pause motion'}
+              More
+            </button>
+            <button
+              ref={keysBtnRef}
+              type="button"
+              className="keys"
+              aria-expanded={keysOpen}
+              aria-controls="silo-keymap"
+              aria-label="Keyboard keys"
+              onClick={() => setKeysOpen((v) => !v)}
+            >
+              ?
             </button>
           </div>
-        </div>
-        <div className="more-group">
-          <h4>View</h4>
-          <div className="more-row">
-            <button
-              type="button"
-              className="more-option"
-              aria-pressed={showList}
-              onClick={toggleList}
-            >
-              Explore as a list
-            </button>
-          </div>
-        </div>
-        <div className="more-group">
-          <h4>Keys</h4>
-          <ShortcutsToggle on={shortcutsOn} onChange={changeShortcuts} />
-        </div>
-        <div className="more-group">
-          <h4>How we count</h4>
-          <p>
-            Every published business is on the map. A line appears once a business has at least{' '}
-            {AGGREGATE_MIN_TRANSACTIONS} counted receipts, so no total can point back at one shopper. We only count the
-            first stop: a shopper&apos;s receipt at a business on the list. The floors below say
-            &quot;Not tracked yet&quot; until we can count them honestly.{' '}
-            <Link href="/flow-map/methodology">Read the method</Link>
+
+          {keysOpen && (
+            <SiloKeyMap
+              shortcutsOn={shortcutsOn}
+              onShortcutsChange={changeShortcuts}
+              hasYou={!!you}
+            />
+          )}
+
+          <SiloMore open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusRef={moreBtnRef}>
+            <SiloLegend
+              className="legend-in-more"
+              colorBy={colorBy}
+              active={filter}
+              onToggle={toggleFilter}
+              onColorBy={toggleColor}
+              hasGaps={gaps.length > 0}
+            />
+            <div className="more-group">
+              <h4>Motion</h4>
+              <div className="more-row">
+                <button
+                  type="button"
+                  className="more-option"
+                  aria-pressed={reducedMotion || paused}
+                  onClick={togglePause}
+                >
+                  {reducedMotion ? 'Motion is off' : paused ? 'Resume motion' : 'Pause motion'}
+                </button>
+              </div>
+            </div>
+            <div className="more-group">
+              <h4>View</h4>
+              <div className="more-row">
+                <button
+                  type="button"
+                  className="more-option"
+                  aria-pressed={showList}
+                  onClick={toggleList}
+                >
+                  Explore as a list
+                </button>
+              </div>
+            </div>
+            <div className="more-group">
+              <h4>Keys</h4>
+              <ShortcutsToggle on={shortcutsOn} onChange={changeShortcuts} />
+            </div>
+            <div className="more-group">
+              <h4>How we count</h4>
+              <p>
+                Every published business is on the map. A line appears once a business has at least{' '}
+                {AGGREGATE_MIN_TRANSACTIONS} counted receipts, so no total can point back at one
+                shopper. We only count the first stop: a shopper&apos;s receipt at a business on the
+                list. The floors below say &quot;Not tracked yet&quot; until we can count them
+                honestly. <Link href="/flow-map/methodology">Read the method</Link>
+              </p>
+            </div>
+          </SiloMore>
+
+          <p className="sr-only" role="status" aria-live="polite">
+            {status}
           </p>
-        </div>
-      </SiloMore>
-
-      <p className="sr-only" role="status" aria-live="polite">
-        {status}
-      </p>
-    </section>
+        </section>
+      </div>
+      <span id="silo-after" className="silo-after" tabIndex={-1} />
+    </>
   )
 }
 

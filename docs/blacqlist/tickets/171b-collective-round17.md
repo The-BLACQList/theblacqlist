@@ -40,7 +40,7 @@ After #294 the founder said (2026-10-31):
 
 **Denser categories spread out.** Placement in `lib/spend/silo-layout.ts` spreads a cluster out to a radius of 7.5, so busy families don't stack.
 
-**Page scroll and silo travel hand off cleanly.**
+**Page scroll and silo travel hand off cleanly.** (The wheel part is replaced by ticket 177: the map stays put and page scroll travels the floors.)
 - *Desktop wheel:*
   - The first wheel gesture toward the stage snaps it to the dock (just under the header).
   - Once docked, the wheel travels the silo.

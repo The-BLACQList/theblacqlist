@@ -695,6 +695,20 @@ export function floorForHeight(y: number): number {
   return nearest
 }
 
+/**
+ * How far a pinned stage has ridden down its track, 0 to 1. Null when the
+ * track has no room, so scroll means nothing. Reads the stage's offset inside
+ * the track, not the window, so a moving phone toolbar can't shift it.
+ */
+export function trackProgress(
+  track: { top: number; height: number },
+  stage: { top: number; height: number }
+): number | null {
+  const room = track.height - stage.height
+  if (room < 1) return null
+  return Math.min(1, Math.max(0, (stage.top - track.top) / room))
+}
+
 // ─── Camera ──────────────────────────────────────────────────────────────────
 
 /** The camera circles a point: heading `az`, tilt `el`, distance `R`. */
@@ -735,7 +749,7 @@ export function smoothDamp(
   goal: number,
   velocity: number,
   smoothS: number,
-  dt: number,
+  dt: number
 ): [value: number, velocity: number] {
   const omega = 2 / smoothS
   const x = omega * dt
@@ -750,7 +764,11 @@ export function smoothDamp(
 export function orbitPose(o: Orbit): { pos: Point3; look: Point3 } {
   const flat = o.R * Math.cos(o.el)
   return {
-    pos: { x: o.x + flat * Math.sin(o.az), y: o.y + o.R * Math.sin(o.el), z: o.z + flat * Math.cos(o.az) },
+    pos: {
+      x: o.x + flat * Math.sin(o.az),
+      y: o.y + o.R * Math.sin(o.el),
+      z: o.z + flat * Math.cos(o.az),
+    },
     look: { x: o.x, y: o.y, z: o.z },
   }
 }
@@ -775,7 +793,7 @@ export function focusFrame(p: Point3, kind: keyof typeof FOCUS_R): Orbit {
 /** The family with the most businesses on a floor, or null on an empty floor. */
 export function busiestFamily(
   businesses: readonly Pick<SiloBusiness, 'familyIndex' | 'floorIndex'>[],
-  floorIndex: number,
+  floorIndex: number
 ): number | null {
   const counts = new Map<number, number>()
   for (const b of businesses) {
@@ -783,7 +801,8 @@ export function busiestFamily(
   }
   let best: number | null = null
   for (const [family, n] of counts) {
-    if (best === null || n > (counts.get(best) ?? 0) || (n === counts.get(best) && family < best)) best = family
+    if (best === null || n > (counts.get(best) ?? 0) || (n === counts.get(best) && family < best))
+      best = family
   }
   return best
 }
@@ -804,7 +823,8 @@ export interface LabelBox {
   b: number
 }
 
-export const overlaps = (a: LabelBox, b: LabelBox) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
+export const overlaps = (a: LabelBox, b: LabelBox) =>
+  a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
 
 export interface LabelCandidate {
   id: string
@@ -850,9 +870,14 @@ function labelBox(c: LabelCandidate, stageW: number, stageH: number): LabelBox {
  * Who carries a name next. Labels on screen go first and keep their place, so a
  * still camera always gets the same answer. Biggest first, ties by id.
  */
-export function pickLabels(input: LabelPick): { ids: string[]; boxes: LabelBox[]; since: Map<string, number> } {
+export function pickLabels(input: LabelPick): {
+  ids: string[]
+  boxes: LabelBox[]
+  since: Map<string, number>
+} {
   const { candidates, held, blocked, now, max, minPx, stageW, stageH } = input
-  const bigFirst = (a: LabelCandidate, b: LabelCandidate) => b.size - a.size || (a.id < b.id ? -1 : 1)
+  const bigFirst = (a: LabelCandidate, b: LabelCandidate) =>
+    b.size - a.size || (a.id < b.id ? -1 : 1)
   const heldIds = new Set(held)
   const hitsHud = (box: LabelBox) => blocked.some((p) => overlaps(p, box))
 
@@ -875,7 +900,13 @@ export function pickLabels(input: LabelPick): { ids: string[]; boxes: LabelBox[]
       continue
     }
     // No room: it has to beat whatever it lands on, or the smallest label held.
-    const out = hits.length > 0 ? hits : kept.slice().sort((a, b) => bigFirst(b.c, a.c)).slice(0, 1)
+    const out =
+      hits.length > 0
+        ? hits
+        : kept
+            .slice()
+            .sort((a, b) => bigFirst(b.c, a.c))
+            .slice(0, 1)
     if (out.length === 0 || out.some((k) => c.size < k.c.size * LABEL_SWAP_SIZE)) continue
     const first = input.since.get(c.id) ?? now
     if (now - first < LABEL_SWAP_MS) {
