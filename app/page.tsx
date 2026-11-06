@@ -270,15 +270,15 @@ export default async function HomePage() {
         <FreshFinds entities={freshFinds} />
       </Reveal>
       <Reveal>
-        <MicrositeShowcase items={showcaseItems} />
-      </Reveal>
-      <Reveal>
         <ImpactBand
           totalAmountCents={totalAmountCents}
           totalTransactions={spendRows.length}
           uniqueBusinesses={uniqueBusinesses}
           covered={collectiveSoon}
         />
+      </Reveal>
+      <Reveal>
+        <MicrositeShowcase items={showcaseItems} />
       </Reveal>
       <Reveal>
         <BlacqlightFeature article={article} />
