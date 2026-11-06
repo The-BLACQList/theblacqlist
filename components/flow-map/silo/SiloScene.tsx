@@ -167,6 +167,14 @@ function isPhone(): boolean {
 export default function SiloScene(props: SiloSceneProps) {
   const { motion, active, onContextLost } = props
   const phone = useMemo(() => isPhone(), [])
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
   return (
     <Canvas
       aria-hidden="true"
@@ -180,7 +188,8 @@ export default function SiloScene(props: SiloSceneProps) {
         gl.setClearColor(BG, 1)
         gl.domElement.addEventListener('webglcontextlost', (e) => {
           e.preventDefault()
-          onContextLost()
+          // The renderer drops its own context after unmount, which isn't a failure.
+          if (mounted.current) onContextLost()
         })
       }}
     >
@@ -1656,9 +1665,13 @@ function Tags({
             })
             .filter((b) => b.r > b.l && b.b > b.t)
         : []
-      // The phone stage hangs over the band's top edge, where nothing shows.
-      const hung = root ? root.getBoundingClientRect().top - c.top : 0
+      // The phone stage hangs over the band's top edge and the sideways stage
+      // under its bottom edge, where nothing shows.
+      const band = root?.getBoundingClientRect()
+      const hung = band ? band.top - c.top : 0
       if (hung > 0) boxes.push({ l: 0, t: 0, r: c.width, b: hung })
+      const under = band ? c.bottom - band.bottom : 0
+      if (under > 0) boxes.push({ l: 0, t: c.height - under, r: c.width, b: c.height })
       if (!sameBoxes(boxes, st.boxes)) {
         st.boxes = boxes
         st.stale = true

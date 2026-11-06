@@ -70,6 +70,9 @@ type Scene = ComponentType<SiloSceneProps>
 /** The phone stage, where the card is a bottom sheet. Matches silo.css. */
 const PHONE_STAGE = '(max-width: 759px) and (min-height: 501px)'
 
+/** A sideways phone, where the card is a right panel. Matches silo.css. */
+const SIDEWAYS_STAGE = '(max-height: 500px)'
+
 /** The sheet still counts as on the bottom edge this far above it, because a
     collapsed iOS toolbar opens a gap under the stage. */
 const SHEET_EDGE_PX = 120
@@ -85,8 +88,10 @@ const KEY_TURN = 0.26
 /**
  * Lifts the site's pills over the sheet with the same hooks /map uses
  * (globals.css), and gives the hint the sheet's height. 0 lets them drop back.
+ * On a sideways phone sidePx is the card's width, and the pills move off the
+ * floors and the card instead.
  */
-function writeSheetLift(section: HTMLElement, sheetPx: number, liftPx: number) {
+function writeSheetLift(section: HTMLElement, sheetPx: number, liftPx: number, sidePx = 0) {
   section.style.setProperty('--silo-sheet-h', `${sheetPx}px`)
   if (liftPx > 0) {
     document.documentElement.style.setProperty('--map-sheet-h', `${liftPx}px`)
@@ -94,6 +99,13 @@ function writeSheetLift(section: HTMLElement, sheetPx: number, liftPx: number) {
   } else {
     document.documentElement.style.removeProperty('--map-sheet-h')
     section.removeAttribute('data-map-sheet')
+  }
+  if (sidePx > 0) {
+    document.documentElement.style.setProperty('--map-card-w', `${sidePx}px`)
+    section.setAttribute('data-map-side', '')
+  } else {
+    document.documentElement.style.removeProperty('--map-card-w')
+    section.removeAttribute('data-map-side')
   }
 }
 
@@ -419,16 +431,18 @@ export function SiloExperience({
     const sheet = section?.querySelector<HTMLElement>('.ctx')
     if (!section || !sheet || showList) return
     const phone = window.matchMedia(PHONE_STAGE)
+    const sideways = window.matchMedia(SIDEWAYS_STAGE)
     let last = ''
     const update = () => {
       const edge = window.innerHeight
       const top = sheet.getBoundingClientRect().top
       const onEdge = top < edge && section.getBoundingClientRect().bottom > edge - SHEET_EDGE_PX
       const lift = phone.matches && onEdge ? Math.round(edge - top) : 0
-      const key = `${sheet.offsetHeight}:${lift}`
+      const side = sideways.matches && onEdge ? sheet.offsetWidth : 0
+      const key = `${sheet.offsetHeight}:${lift}:${side}`
       if (key === last) return
       last = key
-      writeSheetLift(section, sheet.offsetHeight, lift)
+      writeSheetLift(section, sheet.offsetHeight, lift, side)
     }
     update()
     const resize = new ResizeObserver(update)

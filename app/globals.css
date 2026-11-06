@@ -665,6 +665,16 @@ body:has([data-assistant='on']) .stack-over-assistant {
     bottom: calc(var(--map-sheet-h, 16rem) + 4.5rem);
   }
 }
+/* On The Collective, a sideways phone has floors down the left edge and the card
+   down the right, so the pills sit on the map between them. The page writes the
+   card's width to --map-card-w while the map fills the window. */
+body:has([data-map-side]) .lift-over-map-sheet:not([data-assistant]) {
+  left: 4.5rem;
+}
+body:has([data-map-side]) [data-assistant='on'].lift-over-map-sheet,
+body:has([data-map-side]) .stack-over-assistant {
+  right: calc(var(--map-card-w, 18rem) + 0.75rem);
+}
 @media (prefers-reduced-motion: reduce) {
   .lift-over-map-sheet {
     transition: none;
