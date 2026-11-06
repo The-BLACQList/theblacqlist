@@ -45,6 +45,7 @@ import {
   pulseProgress,
   pulseSchedule,
   scrollForFloor,
+  trackProgress,
   floorForHeight,
   smoothDamp,
   snapLabelPos,
@@ -174,6 +175,7 @@ export default function SiloScene(props: SiloSceneProps) {
     <Canvas
       aria-hidden="true"
       flat
+      resize={{ scroll: false }}
       frameloop={motion && active ? 'always' : 'demand'}
       dpr={[1, phone ? 1.5 : 2]}
       camera={{ position: [0, 46, 6], fov: phone ? 72 : 62, near: 0.1, far: 900 }}
@@ -262,11 +264,22 @@ function SceneContents(props: Inner) {
       <Cage />
       <Sky phone={phone} dot={textures.dot} />
       <Hub glow={textures.glow} motion={motion} />
-      <Halos halos={halos} colorBy={props.colorBy} focusFloor={props.focusFloor} textures={textures} />
+      <Halos
+        halos={halos}
+        colorBy={props.colorBy}
+        focusFloor={props.focusFloor}
+        textures={textures}
+      />
       <Links shown={shown} colorBy={props.colorBy} selectedId={props.selectedId} />
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} />
-      <Gaps gaps={props.gaps} selected={props.selectedGap} tex={textures.gap} ring={textures.ring} phone={phone} />
+      <Gaps
+        gaps={props.gaps}
+        selected={props.selectedGap}
+        tex={textures.gap}
+        ring={textures.ring}
+        phone={phone}
+      />
       <Marks shown={shown} selectedId={props.selectedId} ring={textures.ring} />
       <Tags {...props} shown={shown} />
     </>
@@ -441,6 +454,8 @@ const DRAG_TILT = 0.0032
 const SPIN_STALE_MS = 80
 /** Radians a second. Even a hard flick coasts under a quarter turn. */
 const SPIN_MAX = 3
+/** How far off a pick the track can go before scrolling lets go of it. */
+const PICK_HOLD = 0.03
 
 /** Turns whichever view is live, so a close-up circles what it's looking at. */
 function turn(r: Rig, dAz: number, dEl: number) {
@@ -449,8 +464,42 @@ function turn(r: Rig, dAz: number, dEl: number) {
   o.el = THREE.MathUtils.clamp(o.el + dEl, ORBIT.minEl, ORBIT.maxEl)
 }
 
-function focusOn(r: Rig, kind: Focus['kind'], p: Point3, floor: number | undefined) {
-  if (floor !== undefined) r.t = scrollForFloor(floor)
+/** The pinned stage and the track it rides in, for a canvas inside them. */
+function trackParts(el: HTMLElement) {
+  const stage = el.closest<HTMLElement>('.silo')
+  const track = stage?.parentElement
+  return stage && track ? { stage, track } : null
+}
+
+/** Where the page has the stage on its track. Null when the track is off. */
+function trackT(el: HTMLElement): number | null {
+  const parts = trackParts(el)
+  if (!parts) return null
+  return trackProgress(parts.track.getBoundingClientRect(), parts.stage.getBoundingClientRect())
+}
+
+/** Moves the page to `t` on the track. Instant, so it can't read as a user scroll. */
+function seatTrack(el: HTMLElement, t: number) {
+  const parts = trackParts(el)
+  if (!parts) return
+  const track = parts.track.getBoundingClientRect()
+  const room = track.height - parts.stage.getBoundingClientRect().height
+  if (room < 1) return
+  const stuck = parseFloat(getComputedStyle(parts.stage).top) || 0
+  window.scrollTo({ top: window.scrollY + track.top - stuck + t * room, behavior: 'instant' })
+}
+
+function focusOn(
+  r: Rig,
+  el: HTMLElement,
+  kind: Focus['kind'],
+  p: Point3,
+  floor: number | undefined
+) {
+  if (floor !== undefined) {
+    r.t = scrollForFloor(floor)
+    seatTrack(el, r.t)
+  }
   r.focus = { kind, orbit: focusFrame(p, kind) }
   r.spin = 0
   r.ease = ORBIT.jumpS
@@ -517,12 +566,13 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     const family = busiestFamily(on, focusFloor)
     clearFocus(r)
     r.t = scrollForFloor(focusFloor)
+    seatTrack(gl.domElement, r.t)
     r.el = family === null ? ORBIT.el : ORBIT.floorEl
     if (family !== null) r.az = headingTo(wedgePoint(family, focusFloor))
     r.spin = 0
     r.ease = ORBIT.jumpS
     invalidate()
-  }, [focusFloor, invalidate])
+  }, [focusFloor, gl, invalidate])
 
   // A business: move in close and look at it.
   useEffect(() => {
@@ -533,9 +583,15 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       invalidate()
       return
     }
-    focusOn(r, 'business', p, live.current.businesses.find((b) => b.id === selectedId)?.floorIndex)
+    focusOn(
+      r,
+      gl.domElement,
+      'business',
+      p,
+      live.current.businesses.find((b) => b.id === selectedId)?.floorIndex
+    )
     invalidate()
-  }, [selectedId, placed, invalidate])
+  }, [selectedId, placed, gl, invalidate])
 
   // A gap: frame its square from above, like a floor ring.
   const { selectedGap } = props
@@ -546,13 +602,18 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       invalidate()
       return
     }
-    focusOn(r, 'gap', wedgePoint(selectedGap.familyIndex, selectedGap.floorIndex), selectedGap.floorIndex)
+    focusOn(
+      r,
+      gl.domElement,
+      'gap',
+      wedgePoint(selectedGap.familyIndex, selectedGap.floorIndex),
+      selectedGap.floorIndex
+    )
     invalidate()
-  }, [selectedGap, invalidate])
+  }, [selectedGap, gl, invalidate])
 
   useEffect(() => {
     const el = gl.domElement
-    const section = el.closest<HTMLElement>('.silo')
     let down: {
       id: number
       x: number
@@ -581,7 +642,10 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         if (projected.z > 1 || projected.z < -1) return null
         const dist = Math.max(cam.position.distanceTo(worldTmp.set(p.x, p.y, p.z)), 0.1)
         return {
-          d: Math.hypot(((projected.x + 1) / 2) * rect.width - x, ((1 - projected.y) / 2) * rect.height - y),
+          d: Math.hypot(
+            ((projected.x + 1) / 2) * rect.width - x,
+            ((1 - projected.y) / 2) * rect.height - y
+          ),
           r: (worldR * kpx) / dist,
         }
       }
@@ -615,7 +679,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     }
 
     function focusRing(h: Halo) {
-      focusOn(rig.current, 'floor', h.center, h.floor)
+      focusOn(rig.current, el, 'floor', h.center, h.floor)
       const l = live.current
       if (l.selectedId) l.onSelect(null)
       if (l.focusFloor !== h.floor && l.onPickFloor) {
@@ -698,12 +762,11 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       if (wasDrag) return
       const hit = pickAt(e.clientX, e.clientY)
       if (hit?.kind === 'business') {
-        // The same dot again: a scroll may have left it, so frame it once more.
+        // The same dot again: frame it once more.
         const p = hit.id === l.selectedId ? l.placed.get(hit.id) : undefined
-        if (p) focusOn(r, 'business', p, l.businesses.find((b) => b.id === hit.id)?.floorIndex)
+        if (p) focusOn(r, el, 'business', p, l.businesses.find((b) => b.id === hit.id)?.floorIndex)
         l.onSelect(hit.id)
-      }
-      else if (hit?.kind === 'gap') l.onSelectGap?.(hit.gap)
+      } else if (hit?.kind === 'gap') l.onSelectGap?.(hit.gap)
       else if (hit?.kind === 'halo') focusRing(hit.halo)
       else {
         l.onSelect(null)
@@ -725,6 +788,20 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       }
     }
 
+    function hasPick(): boolean {
+      const l = live.current
+      return !!rig.current.focus || !!l.selectedId || !!l.selectedGap || l.focusFloor !== null
+    }
+
+    /** Closes whatever is picked, for a move that takes the reader off it. */
+    function letGo() {
+      const l = live.current
+      clearFocus(rig.current)
+      if (l.selectedId) l.onSelect(null)
+      if (l.selectedGap) l.onSelectGap?.(null)
+      if (l.focusFloor !== null) l.onLeaveFloor?.()
+    }
+
     /** Moves down (+) or up (-) the silo. Past either end, the page scrolls. */
     function travel(dt: number, pagePx = 0): boolean {
       const r = rig.current
@@ -733,11 +810,9 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         return false
       }
       r.ease = ORBIT.easeS
-      clearFocus(r)
+      letGo()
       r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
-      const l = live.current
-      const floor = floorForHeight(orbitForScroll(r.t, r.az, r.el).y)
-      if (l.focusFloor !== null && l.focusFloor !== floor) l.onLeaveFloor?.()
+      seatTrack(el, r.t)
       invalidate()
       return true
     }
@@ -756,66 +831,29 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       }
     }
 
-    // ── Page scroll versus silo travel ──
-    //
-    // The section is "docked" when it fills the window below the site header.
-    // Until then the wheel scrolls the page, and a wheel toward the dock
-    // snaps it into place. Once docked the wheel travels the silo, and only a
-    // fresh wheel past either end goes back to the page. One gesture never
-    // does both, so the page doesn't jump mid-scroll.
-
-    const PANELS = '.ctx, .more-panel, .silo-stage-list-inner, .keymap'
-    const GESTURE_GAP_MS = 220
-
-    function dockOffset(rect: DOMRect): number {
-      return Math.max(0, window.innerHeight - rect.height)
-    }
-
-    function isDocked(rect: DOMRect): boolean {
-      const target = dockOffset(rect)
-      return (
-        Math.abs(rect.top - target) <= 12 ||
-        (rect.top <= target && rect.bottom >= window.innerHeight - 1)
-      )
-    }
-
-    function panelCanScroll(target: EventTarget | null, dy: number): boolean {
-      const box = target instanceof Element ? target.closest<HTMLElement>(PANELS) : null
-      if (!box) return false
-      return dy < 0 ? box.scrollTop > 0 : box.scrollTop + box.clientHeight < box.scrollHeight - 1
-    }
-
-    let gesture: { mode: 'snap' | 'scene' | 'page'; last: number } | null = null
-
-    function decide(dy: number): 'snap' | 'scene' | 'page' {
-      if (!section) return 'scene'
-      const rect = section.getBoundingClientRect()
-      if (!isDocked(rect)) {
-        const target = dockOffset(rect)
-        const toward = (dy > 0 && rect.top > target) || (dy < 0 && rect.top < target)
-        if (!toward) return 'page'
-        window.scrollTo({
-          top: window.scrollY + rect.top - target,
-          behavior: live.current.reducedMotion ? 'auto' : 'smooth',
-        })
-        return 'snap'
-      }
+    // The page scroll is the silo's position. A pick has already written its
+    // own spot on the track, so only a real move away from it lets go.
+    const onScroll = () => {
+      const t = trackT(el)
+      if (t === null) return
       const r = rig.current
-      if (!r.focus && ((r.t <= 0 && dy < 0) || (r.t >= 1 && dy > 0))) return 'page'
-      return 'scene'
+      if (hasPick()) {
+        if (Math.abs(t - r.t) <= PICK_HOLD) return
+        letGo()
+      }
+      if (t === r.t) return
+      r.t = t
+      r.ease = ORBIT.easeS
+      invalidate()
     }
 
-    const onWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) return
-      const dy =
-        e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY
-      if (Math.abs(dy) <= Math.abs(e.deltaX) || panelCanScroll(e.target, dy)) return
-      const now = performance.now()
-      if (!gesture || now - gesture.last > GESTURE_GAP_MS) gesture = { mode: decide(dy), last: now }
-      gesture.last = now
-      if (gesture.mode === 'page') return
-      e.preventDefault()
-      if (gesture.mode === 'scene') travel(dy * 0.0007)
+    // A reload partway down opens where the page is, with no glide.
+    const start = trackT(el)
+    if (start !== null && !hasPick()) {
+      const r = rig.current
+      r.t = start
+      r.cur = orbitForScroll(start, r.az, r.el)
+      invalidate()
     }
 
     // On touch, a vertical swipe on the canvas scrolls the page until the
@@ -837,8 +875,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     el.addEventListener('pointerup', onUp)
     el.addEventListener('pointercancel', onCancel)
     el.addEventListener('pointerleave', onLeave)
-    const wheelTarget = section ?? el
-    wheelTarget.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('scroll', updateTouchMode, { passive: true })
     window.addEventListener('resize', updateTouchMode)
     return () => {
@@ -848,7 +885,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       el.removeEventListener('pointerup', onUp)
       el.removeEventListener('pointercancel', onCancel)
       el.removeEventListener('pointerleave', onLeave)
-      wheelTarget.removeEventListener('wheel', onWheel)
+      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('scroll', updateTouchMode)
       window.removeEventListener('resize', updateTouchMode)
     }
@@ -928,7 +965,14 @@ function Cage() {
     for (let y = 48; y >= -48; y -= 3.4) circle(faint, SILO.R, y, 72)
     for (let i = 0; i < 24; i++) {
       const a = (i / 24) * Math.PI * 2
-      faint.push(Math.cos(a) * SILO.R, 48, Math.sin(a) * SILO.R, Math.cos(a) * SILO.R, -48, Math.sin(a) * SILO.R)
+      faint.push(
+        Math.cos(a) * SILO.R,
+        48,
+        Math.sin(a) * SILO.R,
+        Math.cos(a) * SILO.R,
+        -48,
+        Math.sin(a) * SILO.R
+      )
     }
     const floors: number[] = [0, 48, 0, 0, -44, 0]
     for (const y of SILO.y) circle(floors, SILO.R, y)
@@ -1074,7 +1118,10 @@ function Halos({
         const color = haloColor(h, colorBy)
         const lit = focusFloor === h.floor
         return (
-          <group key={`${h.familyIndex}:${h.floor}`} position={[h.center.x, h.center.y, h.center.z]}>
+          <group
+            key={`${h.familyIndex}:${h.floor}`}
+            position={[h.center.x, h.center.y, h.center.z]}
+          >
             <sprite scale={(h.radius + 0.8) * 2.2} renderOrder={1}>
               <spriteMaterial
                 map={textures.ring}
@@ -1396,13 +1443,34 @@ function Marks({
   return (
     <>
       {you.map((s) => (
-        <sprite key={s.b.id} position={[s.p.x, s.p.y, s.p.z]} scale={Math.max(s.size, 0.4) * 3.2} renderOrder={3}>
-          <spriteMaterial map={ring} color={GOLD_BRIGHT} transparent depthTest={false} depthWrite={false} />
+        <sprite
+          key={s.b.id}
+          position={[s.p.x, s.p.y, s.p.z]}
+          scale={Math.max(s.size, 0.4) * 3.2}
+          renderOrder={3}
+        >
+          <spriteMaterial
+            map={ring}
+            color={GOLD_BRIGHT}
+            transparent
+            depthTest={false}
+            depthWrite={false}
+          />
         </sprite>
       ))}
       {sel && (
-        <sprite position={[sel.p.x, sel.p.y, sel.p.z]} scale={Math.max(sel.size, 0.4) * 4} renderOrder={3}>
-          <spriteMaterial map={ring} color="#fcfaf4" transparent depthTest={false} depthWrite={false} />
+        <sprite
+          position={[sel.p.x, sel.p.y, sel.p.z]}
+          scale={Math.max(sel.size, 0.4) * 4}
+          renderOrder={3}
+        >
+          <spriteMaterial
+            map={ring}
+            color="#fcfaf4"
+            transparent
+            depthTest={false}
+            depthWrite={false}
+          />
         </sprite>
       )}
     </>
@@ -1454,7 +1522,13 @@ function Gaps({
           scale={base * 2}
           renderOrder={3}
         >
-          <spriteMaterial map={ring} color="#fcfaf4" transparent depthTest={false} depthWrite={false} />
+          <spriteMaterial
+            map={ring}
+            color="#fcfaf4"
+            transparent
+            depthTest={false}
+            depthWrite={false}
+          />
         </sprite>
       )}
     </>
@@ -1519,7 +1593,8 @@ type LabelState = ReturnType<typeof newLabelState>
 /** True when the camera has moved enough to show. Small drift adds up and still counts. */
 function cameraMoved(camera: THREE.Camera, st: LabelState): boolean {
   const same =
-    camera.position.distanceToSquared(st.pos) < 1e-6 && 1 - Math.abs(camera.quaternion.dot(st.quat)) < 1e-9
+    camera.position.distanceToSquared(st.pos) < 1e-6 &&
+    1 - Math.abs(camera.quaternion.dot(st.quat)) < 1e-9
   if (same) return false
   st.pos.copy(camera.position)
   st.quat.copy(camera.quaternion)
@@ -1530,7 +1605,12 @@ const sameBoxes = (a: readonly LabelBox[], b: readonly LabelBox[]) =>
   a.length === b.length &&
   a.every((x, i) => {
     const y = b[i]!
-    return Math.abs(x.l - y.l) < 1 && Math.abs(x.t - y.t) < 1 && Math.abs(x.r - y.r) < 1 && Math.abs(x.b - y.b) < 1
+    return (
+      Math.abs(x.l - y.l) < 1 &&
+      Math.abs(x.t - y.t) < 1 &&
+      Math.abs(x.r - y.r) < 1 &&
+      Math.abs(x.b - y.b) < 1
+    )
   })
 
 function Tags({
@@ -1565,7 +1645,10 @@ function Tags({
     }
     const moved = cameraMoved(camera, st) || resized
     const changed =
-      st.shown !== shown || st.hovered !== hoveredId || st.selected !== selectedId || st.gap !== selectedGap
+      st.shown !== shown ||
+      st.hovered !== hoveredId ||
+      st.selected !== selectedId ||
+      st.gap !== selectedGap
     if (changed) {
       st.shown = shown
       st.hovered = hoveredId
@@ -1584,7 +1667,12 @@ function Tags({
             .filter((el) => !el.hidden && el.offsetParent !== null)
             .map((el) => {
               const r = el.getBoundingClientRect()
-              return { l: r.left - c.left, t: r.top - c.top, r: r.right - c.left, b: r.bottom - c.top }
+              return {
+                l: r.left - c.left,
+                t: r.top - c.top,
+                r: r.right - c.left,
+                b: r.bottom - c.top,
+              }
             })
             .filter((b) => b.r > b.l && b.b > b.t)
         : []
@@ -1664,7 +1752,8 @@ function Tags({
           const s = byId.get(id)
           const free = st.slots.filter((slot) => !slot.id)
           const slot =
-            free.find((x) => x.filled === id) ?? free.reduce<LabelSlot | null>((a, x) => (!a || x.offAt < a.offAt ? x : a), null)
+            free.find((x) => x.filled === id) ??
+            free.reduce<LabelSlot | null>((a, x) => (!a || x.offAt < a.offAt ? x : a), null)
           const el = slot ? pool[st.slots.indexOf(slot)] : null
           if (!s || !slot || !(el instanceof HTMLElement)) continue
           slot.id = id
@@ -1674,7 +1763,7 @@ function Tags({
               el,
               businessDisplayName(s.b),
               CATEGORY_FAMILIES[s.b.familyIndex]?.name ?? '',
-              familyColor(s.b.familyIndex),
+              familyColor(s.b.familyIndex)
             )
           }
           // A real width only ever arrives once, so one more pick settles it.
@@ -1696,7 +1785,9 @@ function Tags({
           worldTmp.set(c.x, c.y, c.z)
           const near = camera.position.distanceTo(worldTmp) < GAP_LABEL_DIST * (slot.on ? 1.1 : 1)
           const picked =
-            !!selectedGap && selectedGap.familyIndex === g.familyIndex && selectedGap.floorIndex === g.floorIndex
+            !!selectedGap &&
+            selectedGap.familyIndex === g.familyIndex &&
+            selectedGap.floorIndex === g.floorIndex
           const at = near || picked ? toScreen(c) : null
           if (!at || !inView(at.x, at.y)) {
             toggleLabel(el, slot, false)
@@ -1736,7 +1827,7 @@ function Tags({
           el,
           slot,
           snapLabelPos(at.x - w / 2, w, size.width, slot.l),
-          snapLabelPos(at.top, st.height, size.height, slot.t),
+          snapLabelPos(at.top, st.height, size.height, slot.t)
         )
         toggleLabel(el, slot, true)
       })
@@ -1751,12 +1842,17 @@ function Tags({
           el,
           slot,
           snapLabelPos(at.x - w / 2, w, size.width, slot.l),
-          snapLabelPos(at.y + 16, st.height, size.height, slot.t),
+          snapLabelPos(at.y + 16, st.height, size.height, slot.t)
         )
       })
     }
 
-    const place = (el: Element | null | undefined, p: Point3 | undefined, lift: number, anchor: string) => {
+    const place = (
+      el: Element | null | undefined,
+      p: Point3 | undefined,
+      lift: number,
+      anchor: string
+    ) => {
       if (!(el instanceof HTMLElement)) return
       if (!p) {
         el.hidden = true
@@ -1773,7 +1869,12 @@ function Tags({
       el.style.transform = `${anchor} translate(${x.toFixed(1)}px, ${(y - lift).toFixed(1)}px)`
     }
     if (moved || changed) {
-      place(hoverTagRef.current, hover && !hover.b.isYou ? hover.p : undefined, 18, 'translate(-50%, -100%)')
+      place(
+        hoverTagRef.current,
+        hover && !hover.b.isYou ? hover.p : undefined,
+        18,
+        'translate(-50%, -100%)'
+      )
       place(youTagRef.current, you?.p, 22, 'translate(-50%, -100%)')
       const signs = signsRef?.current?.children
       if (signs) SIGN_AT.forEach((p, k) => place(signs[k], p, 0, 'translate(-50%, -50%)'))

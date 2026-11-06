@@ -27,6 +27,7 @@ import {
   gapsPerFloor,
   siloGaps,
   pickLabels,
+  trackProgress,
   wedgePoint,
   placeBusinesses,
   pulseProgress,
@@ -488,11 +489,19 @@ describe('pickLabels', () => {
   })
 
   it('holds its picks under small size and position noise', () => {
-    let held = pickLabels({ ...base, candidates: [dot('a', 100), dot('b', 300), dot('c', 500)], max: 2 }).ids
+    let held = pickLabels({
+      ...base,
+      candidates: [dot('a', 100), dot('b', 300), dot('c', 500)],
+      max: 2,
+    }).ids
     const start = [...held]
     for (let i = 0; i < 200; i++) {
       const n = i % 2 ? 0.4 : -0.4
-      const candidates = [dot('a', 100 + n, 20 + n), dot('b', 300 - n, 20 - n), dot('c', 500 + n, 20 + n)]
+      const candidates = [
+        dot('a', 100 + n, 20 + n),
+        dot('b', 300 - n, 20 - n),
+        dot('c', 500 + n, 20 + n),
+      ]
       held = pickLabels({ ...base, candidates, held, max: 2, now: i * 100 }).ids
     }
     expect(held).toEqual(start)
@@ -508,13 +517,17 @@ describe('pickLabels', () => {
 
   it('keeps a shrinking label down to the keep size, and no further', () => {
     const size = (s: number) => [dot('a', 100, s)]
-    expect(pickLabels({ ...base, candidates: size(9 * LABEL_KEEP), held: ['a'] }).ids).toEqual(['a'])
+    expect(pickLabels({ ...base, candidates: size(9 * LABEL_KEEP), held: ['a'] }).ids).toEqual([
+      'a',
+    ])
     expect(pickLabels({ ...base, candidates: size(9 * LABEL_KEEP) }).ids).toEqual([])
   })
 
   it('drops a label under a HUD panel', () => {
     const blocked = [{ l: 0, t: 0, r: 200, b: 200 }]
-    expect(pickLabels({ ...base, candidates: [dot('a', 100)], held: ['a'], blocked }).ids).toEqual([])
+    expect(pickLabels({ ...base, candidates: [dot('a', 100)], held: ['a'], blocked }).ids).toEqual(
+      []
+    )
   })
 
   it('makes a bigger dot wait before it replaces a label', () => {
@@ -522,9 +535,21 @@ describe('pickLabels', () => {
     const first = pickLabels({ ...base, candidates, held: ['a'] })
     expect(first.ids).toEqual(['a'])
     expect(first.since.get('b')).toBe(0)
-    const early = pickLabels({ ...base, candidates, held: ['a'], since: first.since, now: LABEL_SWAP_MS - 1 })
+    const early = pickLabels({
+      ...base,
+      candidates,
+      held: ['a'],
+      since: first.since,
+      now: LABEL_SWAP_MS - 1,
+    })
     expect(early.ids).toEqual(['a'])
-    const late = pickLabels({ ...base, candidates, held: ['a'], since: early.since, now: LABEL_SWAP_MS })
+    const late = pickLabels({
+      ...base,
+      candidates,
+      held: ['a'],
+      since: early.since,
+      now: LABEL_SWAP_MS,
+    })
     expect(late.ids).toEqual(['b'])
     expect(late.since.size).toBe(0)
   })
@@ -585,5 +610,29 @@ describe('floorForHeight', () => {
     SILO.y.forEach((_, i) => {
       expect(floorForHeight(orbitForScroll(scrollForFloor(i), 0, 0).y)).toBe(i)
     })
+  })
+})
+
+describe('trackProgress', () => {
+  it('is null when the track has no room', () => {
+    expect(trackProgress({ top: 0, height: 700 }, { top: 0, height: 700 })).toBeNull()
+    expect(trackProgress({ top: 0, height: 700.5 }, { top: 0, height: 700 })).toBeNull()
+  })
+
+  it('reads the stage offset inside the track', () => {
+    expect(trackProgress({ top: 200, height: 2100 }, { top: 200, height: 700 })).toBe(0)
+    expect(trackProgress({ top: -636, height: 2100 }, { top: 64, height: 700 })).toBe(0.5)
+    expect(trackProgress({ top: -1336, height: 2100 }, { top: 64, height: 700 })).toBe(1)
+  })
+
+  it('ignores where the track sits in the window', () => {
+    const near = trackProgress({ top: -100, height: 2100 }, { top: 250, height: 700 })
+    const far = trackProgress({ top: -5000, height: 2100 }, { top: -4650, height: 700 })
+    expect(near).toBe(far)
+  })
+
+  it('stays between 0 and 1', () => {
+    expect(trackProgress({ top: 0, height: 2100 }, { top: -5, height: 700 })).toBe(0)
+    expect(trackProgress({ top: 0, height: 2100 }, { top: 1405, height: 700 })).toBe(1)
   })
 })
