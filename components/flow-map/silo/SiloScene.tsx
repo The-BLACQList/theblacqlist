@@ -136,11 +136,7 @@ function setUniform(u: { value: number }, value: number) {
   u.value = value
 }
 
-/** DOM writes for the canvas and the HUD labels, kept out of hook bodies. */
-function setTouchAction(el: HTMLElement, value: string) {
-  el.style.touchAction = value
-}
-
+/** DOM writes for the HUD labels, kept out of hook bodies. */
 function moveLabel(el: HTMLElement, slot: LabelSlot, l: number, t: number) {
   if (l === slot.l && t === slot.t) return
   slot.l = l
@@ -483,10 +479,17 @@ function seatTrack(el: HTMLElement, t: number) {
   const parts = trackParts(el)
   if (!parts) return
   const track = parts.track.getBoundingClientRect()
-  const room = track.height - parts.stage.getBoundingClientRect().height
-  if (room < 1) return
-  const stuck = parseFloat(getComputedStyle(parts.stage).top) || 0
-  window.scrollTo({ top: window.scrollY + track.top - stuck + t * room, behavior: 'instant' })
+  const stage = parts.stage.getBoundingClientRect()
+  const room = track.height - stage.height
+  const hdr = parseFloat(getComputedStyle(parts.stage).getPropertyValue('--hdr')) || 0
+  if (room < 1) {
+    // No track, as with reduced motion: bring the stage on screen so its card shows.
+    if (stage.top < hdr || stage.bottom > window.innerHeight) {
+      window.scrollTo({ top: window.scrollY + stage.top - hdr, behavior: 'instant' })
+    }
+    return
+  }
+  window.scrollTo({ top: window.scrollY + track.top - hdr + t * room, behavior: 'instant' })
 }
 
 function focusOn(
@@ -624,8 +627,6 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       at: number
       mouse: boolean
       drag: boolean
-      /** Touch only: the stage was docked, so a vertical swipe travels. */
-      travel: boolean
       axis: 'x' | 'y' | null
     } | null = null
     let hovered: string | null = null
@@ -706,7 +707,6 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
         at: e.timeStamp,
         mouse: e.pointerType !== 'touch',
         drag: false,
-        travel: e.pointerType === 'touch' && el.style.touchAction === 'none',
         axis: null,
       }
       rig.current.spin = 0
@@ -723,7 +723,8 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
           const r = rig.current
           const dx = e.clientX - down.lastX
           const dy = e.clientY - down.lastY
-          // A swipe keeps one direction: sideways turns, up and down travels.
+          // A swipe keeps one direction: sideways turns, up and down is the
+          // browser's own page scroll.
           if (!down.mouse) {
             down.axis ??= Math.abs(e.clientX - down.x) >= Math.abs(e.clientY - down.y) ? 'x' : 'y'
           }
@@ -734,7 +735,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
             r.ease = ORBIT.easeS
             const speed = dAz / Math.max((e.timeStamp - down.at) / 1000, 0.001)
             r.spin = THREE.MathUtils.clamp(r.spin * 0.6 + speed * 0.4, -SPIN_MAX, SPIN_MAX)
-          } else if (down.travel) travel(-dy * 0.0022, -dy)
+          }
           down.at = e.timeStamp
           invalidate()
         }
@@ -802,13 +803,10 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       if (l.focusFloor !== null) l.onLeaveFloor?.()
     }
 
-    /** Moves down (+) or up (-) the silo. Past either end, the page scrolls. */
-    function travel(dt: number, pagePx = 0): boolean {
+    /** Moves down (+) or up (-) the silo. False past either end. */
+    function travel(dt: number): boolean {
       const r = rig.current
-      if (!r.focus && ((r.t <= 0 && dt < 0) || (r.t >= 1 && dt > 0))) {
-        if (pagePx) window.scrollBy(0, pagePx)
-        return false
-      }
+      if (!r.focus && ((r.t <= 0 && dt < 0) || (r.t >= 1 && dt > 0))) return false
       r.ease = ORBIT.easeS
       letGo()
       r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
@@ -820,7 +818,7 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
     const nav = live.current.navRef
     if (nav) {
       nav.current = {
-        travel: (dt) => travel(dt),
+        travel,
         turn: (dAz) => {
           const r = rig.current
           r.ease = ORBIT.easeS
@@ -856,28 +854,12 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       invalidate()
     }
 
-    // On touch, a vertical swipe on the canvas scrolls the page until the
-    // stage is fully on screen, then travels the silo.
-    const coarse = window.matchMedia('(pointer: coarse)')
-    function updateTouchMode() {
-      if (!coarse.matches) {
-        setTouchAction(el, '')
-        return
-      }
-      const rect = el.getBoundingClientRect()
-      const docked = rect.top >= 0 && rect.bottom <= window.innerHeight + 8 && rect.height > 0
-      setTouchAction(el, docked ? 'none' : 'pan-y')
-    }
-    updateTouchMode()
-
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointermove', onMove)
     el.addEventListener('pointerup', onUp)
     el.addEventListener('pointercancel', onCancel)
     el.addEventListener('pointerleave', onLeave)
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('scroll', updateTouchMode, { passive: true })
-    window.addEventListener('resize', updateTouchMode)
     return () => {
       if (nav) nav.current = null
       el.removeEventListener('pointerdown', onDown)
@@ -886,8 +868,6 @@ function Controls(props: Inner & { shown: readonly Shown[]; halos: readonly Halo
       el.removeEventListener('pointercancel', onCancel)
       el.removeEventListener('pointerleave', onLeave)
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('scroll', updateTouchMode)
-      window.removeEventListener('resize', updateTouchMode)
     }
   }, [gl, camera, invalidate])
 
@@ -1539,12 +1519,12 @@ function Gaps({
 
 const SIGN_AT: readonly Point3[] = SILO.y.map((y) => ({ x: 0, y: y + 2.6, z: -9 }))
 
-const LABEL_MAX = { desk: 10, phone: 5 }
+const LABEL_MAX = { desk: 10, phone: 7 }
 /** A dot this many pixels across or bigger can carry its name. */
-const LABEL_MIN_PX = { desk: 9, phone: 12 }
+const LABEL_MIN_PX = { desk: 9, phone: 8 }
 /** Gap labels show once the camera is this close to the square. */
 const GAP_LABEL_DIST = 70
-const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag'
+const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag, .silo-hint'
 
 /** How often the names are chosen while the camera moves. */
 const LABEL_PICK_MS = 100
@@ -1676,6 +1656,9 @@ function Tags({
             })
             .filter((b) => b.r > b.l && b.b > b.t)
         : []
+      // The phone stage hangs over the band's top edge, where nothing shows.
+      const hung = root ? root.getBoundingClientRect().top - c.top : 0
+      if (hung > 0) boxes.push({ l: 0, t: 0, r: c.width, b: hung })
       if (!sameBoxes(boxes, st.boxes)) {
         st.boxes = boxes
         st.stale = true
