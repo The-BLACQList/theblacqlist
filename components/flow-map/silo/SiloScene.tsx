@@ -48,6 +48,7 @@ import {
   trackProgress,
   floorForHeight,
   smoothDamp,
+  clampLabelPos,
   snapLabelPos,
   wedgeAngle,
   wedgePoint,
@@ -1796,8 +1797,8 @@ function Tags({
           }
           const w = st.widths.get(key) ?? 0
           // The same clamps the label lands on, or the box and the label disagree.
-          const l = Math.min(Math.max(at.x - w / 2, 0), Math.max(size.width - w, 0))
-          const top = Math.min(Math.max(at.y + 16, 0), Math.max(size.height - st.height, 0))
+          const l = clampLabelPos(at.x - w / 2, w, size.width)
+          const top = clampLabelPos(at.y + 16, st.height, size.height)
           const box = { l, t: top, r: l + w, b: top + st.height }
           if (!picked && taken.some((t) => overlaps(t, box))) {
             toggleLabel(el, slot, false)

@@ -76,8 +76,10 @@
   color: #1a1405;
   font-weight: 700;
   font-size: 14px;
+  border: 0;
   opacity: 0;
   pointer-events: none;
+  scroll-margin-top: calc(var(--hdr) + 8px);
 }
 
 .silo-skip:focus {
@@ -86,7 +88,8 @@
 }
 
 /* Takes focus on click so the keys work, but isn't a Tab stop. */
-.silo:focus {
+.silo:focus,
+.silo-stage-list:focus {
   outline: none;
 }
 
@@ -776,6 +779,9 @@
   backdrop-filter: blur(10px);
 }
 
+.ctx-floor {
+  display: none;
+}
 .ctx-eyebrow {
   margin: 0;
   font-weight: 700;
@@ -847,6 +853,22 @@
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Fingers get 44px. A mouse keeps the tighter panel. */
+@media (pointer: coarse) {
+  .seg button,
+  .spot {
+    min-height: 44px;
+  }
+  .cbseg button.cb {
+    width: 44px;
+  }
+  .ctx a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 
 .sel-head {
@@ -1266,6 +1288,14 @@
   }
 }
 
+/* The sheet is capped at 42%, so on the shortest phones the color key would
+   run past its edge. The key stays and the help line goes. */
+@media (max-width: 640px) and (min-height: 501px) and (max-height: 649px) {
+  .silo-track[data-mode='map'] .ctx-tip {
+    display: none;
+  }
+}
+
 /* ── Phone: numbers, then the scene, then the panels ─────────────────────── */
 
 @media (max-width: 759px), (max-height: 500px) {
@@ -1610,16 +1640,6 @@
     background: var(--panel-solid);
     backdrop-filter: none;
   }
-  .silo-track[data-mode='map'] .ctx::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: calc(50% - 17px);
-    width: 34px;
-    height: 4px;
-    border-radius: 4px;
-    background: var(--line-2);
-  }
 
   /* The key: one line of chips that scrolls sideways. */
   .silo-track[data-mode='map'] .legend-in-card {
@@ -1719,10 +1739,14 @@
   .silo-track[data-mode='map'] .fl .bars {
     display: none;
   }
-  .silo-track[data-mode='map'] .fl[aria-current='location'] .nm {
-    display: block;
-    right: auto;
-    left: calc(100% - 2px);
+
+  /* The rail has no room for names and the strip already says The Collective,
+     so the resting card names the floor. Signs can sit off a screen this short. */
+  .silo-track[data-mode='map'] .ctx-name {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .ctx-floor {
+    display: inline;
   }
 
   /* The card fills the right edge under the strip. */
@@ -1733,9 +1757,6 @@
     padding: 14px var(--er) var(--eb) 16px;
     border-width: 1px 0 0 1px;
     border-radius: 16px 0 0;
-  }
-  .silo-track[data-mode='map'] .ctx::before {
-    display: none;
   }
   .silo-track[data-mode='map'] .legend-in-card .legend-chips {
     margin-inline: -16px calc(var(--er) * -1);

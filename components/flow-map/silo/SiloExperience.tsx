@@ -33,6 +33,7 @@ import {
   SILO_FLOORS,
   buildFloors,
   businessDisplayName,
+  businessFiguresText,
   businessesPerFloor,
   formatDollars,
   gapLabel,
@@ -154,12 +155,18 @@ export function SiloExperience({
   // Read once on the client. The toggle isn't in the first paint (the key map
   // and More start closed), so the server's `true` never shows.
   const [shortcutsOn, setShortcutsOn] = useState(readShortcutsOn)
-  const [status, setStatus] = useState('')
+  const [status, setStatusText] = useState('')
+  // The same words twice in a row are silent, so the repeat gets an invisible change.
+  const setStatus = useCallback((text: string) => {
+    setStatusText((prev) => (prev === text ? `${text}\u200b` : text))
+  }, [])
 
   const sectionRef = useRef<HTMLElement>(null)
   const navRef = useRef<SiloNav>(null)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
   const keysBtnRef = useRef<HTMLButtonElement>(null)
+  const focusAfterSwap = useRef(false)
+  const saidFloor = useRef(0)
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
   const signsRef = useRef<HTMLDivElement>(null)
@@ -226,9 +233,11 @@ export function SiloExperience({
     if (b) {
       setFocusFloor(null)
       setSelectedGap(null)
-      setStatus(`Showing ${businessDisplayName(b)}${b.isYou ? ', you shopped here' : ''}.`)
+      setStatus(
+        `Showing ${businessDisplayName(b)}${b.isYou ? ', you shopped here' : ''}. ${businessFiguresText(b)}`
+      )
     }
-  }, [])
+  }, [setStatus])
 
   const findMe = useCallback(() => {
     if (youList.length === 0) return
@@ -250,7 +259,7 @@ export function SiloExperience({
       setFocusFloor(null)
       setStatus(`${gapLabel(g)}.`)
     }
-  }, [])
+  }, [setStatus])
 
   function clearCard() {
     setSelectedId(null)
@@ -317,6 +326,8 @@ export function SiloExperience({
   }
 
   function toggleList() {
+    focusAfterSwap.current = true
+    setMoreOpen(false)
     setListChosen((v) => !v)
     setStatus(listChosen ? 'Showing the map.' : 'Showing the list.')
   }
@@ -426,6 +437,28 @@ export function SiloExperience({
     }
   }, [showList])
 
+  // The button that made the swap is gone by now. Runs after More hands focus back.
+  useEffect(() => {
+    if (!focusAfterSwap.current) return
+    focusAfterSwap.current = false
+    const to = showList ? document.getElementById('silo-list') : sectionRef.current
+    to?.focus({ preventScroll: true })
+  }, [showList])
+
+  // Scrolling is silent otherwise. Waits for the reader to stop on a floor.
+  useEffect(() => {
+    if (saidFloor.current === liveFloor) return
+    if (focusFloor !== null || selectedId !== null || selectedGap !== null) {
+      saidFloor.current = liveFloor
+      return
+    }
+    const t = window.setTimeout(() => {
+      saidFloor.current = liveFloor
+      setStatus(`Floor ${liveFloor + 1} of ${SILO_FLOORS.length}, ${SILO_FLOORS[liveFloor]!.short}.`)
+    }, 400)
+    return () => window.clearTimeout(t)
+  }, [liveFloor, focusFloor, selectedId, selectedGap, setStatus])
+
   useEffect(() => {
     const section = sectionRef.current
     const sheet = section?.querySelector<HTMLElement>('.ctx')
@@ -474,6 +507,11 @@ export function SiloExperience({
           <a className="silo-skip" href="#silo-after">
             Skip past the map
           </a>
+        )}
+        {!showList && (
+          <button type="button" className="silo-skip" onClick={toggleList}>
+            Explore as a list
+          </button>
         )}
         <section
           ref={sectionRef}
@@ -570,6 +608,42 @@ export function SiloExperience({
 
           <div className="hud-bg" aria-hidden="true" />
 
+          <div className="dock" role="toolbar" aria-label="Map controls">
+            {you && (
+              <button type="button" className="find" onClick={findMe}>
+                Find me
+              </button>
+            )}
+            <button
+              ref={moreBtnRef}
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen(true)}
+            >
+              More
+            </button>
+            <button
+              ref={keysBtnRef}
+              type="button"
+              className="keys"
+              aria-expanded={keysOpen}
+              aria-controls="silo-keymap"
+              aria-label="Keyboard keys"
+              onClick={() => setKeysOpen((v) => !v)}
+            >
+              ?
+            </button>
+          </div>
+
+          {keysOpen && (
+            <SiloKeyMap
+              shortcutsOn={shortcutsOn}
+              onShortcutsChange={changeShortcuts}
+              hasYou={!!you}
+            />
+          )}
+
           <div className="hud">
             <div className="brand">
               <h2 id="silo-title">
@@ -621,6 +695,7 @@ export function SiloExperience({
             selected={selected}
             selectedGap={selectedGap}
             focusFloor={focusFloor === null ? null : (floors[focusFloor] ?? null)}
+            liveFloor={liveFloor}
             floorCount={focusFloor === null ? 0 : (counts[focusFloor] ?? 0)}
             you={you}
             totalSpentCents={totalSpentCents}
@@ -636,42 +711,6 @@ export function SiloExperience({
               />
             }
           />
-
-          <div className="dock" role="toolbar" aria-label="Map controls">
-            {you && (
-              <button type="button" className="find" onClick={findMe}>
-                Find me
-              </button>
-            )}
-            <button
-              ref={moreBtnRef}
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={moreOpen}
-              onClick={() => setMoreOpen(true)}
-            >
-              More
-            </button>
-            <button
-              ref={keysBtnRef}
-              type="button"
-              className="keys"
-              aria-expanded={keysOpen}
-              aria-controls="silo-keymap"
-              aria-label="Keyboard keys"
-              onClick={() => setKeysOpen((v) => !v)}
-            >
-              ?
-            </button>
-          </div>
-
-          {keysOpen && (
-            <SiloKeyMap
-              shortcutsOn={shortcutsOn}
-              onShortcutsChange={changeShortcuts}
-              hasYou={!!you}
-            />
-          )}
 
           <SiloMore open={moreOpen} onClose={() => setMoreOpen(false)} returnFocusRef={moreBtnRef}>
             <SiloLegend
@@ -691,7 +730,7 @@ export function SiloExperience({
                   aria-pressed={reducedMotion || paused}
                   onClick={togglePause}
                 >
-                  {reducedMotion ? 'Motion is off' : paused ? 'Resume motion' : 'Pause motion'}
+                  {reducedMotion ? 'Motion is off' : 'Pause motion'}
                 </button>
               </div>
             </div>

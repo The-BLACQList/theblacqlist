@@ -146,6 +146,67 @@ for (const size of SIZES) {
   })
 }
 
+test.describe('Collective on a sideways phone', () => {
+  test.use({ viewport: { width: 844, height: 390 } })
+
+  test('the resting card names the floor while the page scrolls', async ({ page }) => {
+    await openMap(page)
+    const name = page.locator('.ctx-floor')
+    await expect(name).toBeVisible()
+    await page.evaluate(() => {
+      const track = document.querySelector('.silo-track') as HTMLElement
+      const stage = document.querySelector('.silo') as HTMLElement
+      const start = track.getBoundingClientRect().top + window.scrollY - stage.offsetTop
+      const travel = track.offsetHeight - stage.offsetHeight
+      window.scrollTo({ top: start + travel * 0.41, behavior: 'instant' })
+    })
+    await expect(name).toHaveText('Floor 3 of 5: Suppliers')
+  })
+})
+
+test.describe('Collective from the keyboard', () => {
+  test.use({ viewport: { width: 1280, height: 800 } })
+
+  /** Tabs from the top of the page until the named skip control has focus. */
+  async function tabTo(page: Page, name: string) {
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press('Tab')
+      const at = await page.evaluate(() => document.activeElement?.textContent?.trim())
+      if (at === name) return
+    }
+    throw new Error(`${name} never took focus`)
+  }
+
+  test('the skip link shows clear of the header and lands past the map', async ({ page }) => {
+    await openMap(page)
+    await tabTo(page, 'Skip past the map')
+    const skip = page.getByRole('link', { name: 'Skip past the map' })
+    await expect(skip).toHaveCSS('opacity', '1')
+    const box = await skip.boundingBox()
+    expect(box?.y ?? 0).toBeGreaterThanOrEqual(64)
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#silo-after')).toBeFocused()
+  })
+
+  test('the list is one Tab past the skip link, and the way back keeps focus', async ({ page }) => {
+    await openMap(page)
+    await tabTo(page, 'Explore as a list')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#silo-list')).toBeFocused()
+    await page.getByRole('button', { name: 'Back to the map' }).click()
+    await page.locator('.silo-stage canvas').waitFor({ timeout: 60_000 })
+    await expect(page.locator('.silo')).toBeFocused()
+  })
+
+  test('choosing the list from More closes More', async ({ page }) => {
+    await openMap(page)
+    await page.getByRole('button', { name: 'More', exact: true }).first().click()
+    await page.locator('.more-option', { hasText: 'Explore as a list' }).click()
+    await expect(page.locator('.more-panel')).toHaveCount(0)
+    await expect(page.locator('#silo-list')).toBeFocused()
+  })
+})
+
 test.describe('Collective with reduced motion', () => {
   test.use({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true })
 

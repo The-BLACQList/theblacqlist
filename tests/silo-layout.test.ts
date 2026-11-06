@@ -16,6 +16,7 @@ import {
   buildFloors,
   buildSiloBusinesses,
   businessDisplayName,
+  businessFiguresText,
   colorForBusiness,
   familyIndexForCategorySlug,
   floorIndexForLevel,
@@ -51,6 +52,7 @@ import {
   wrapAngle,
   type BusinessListingMeta,
   type BusinessNodeRow,
+  type SiloBusiness,
 } from '@/lib/spend/silo-layout'
 
 const MIN = AGGREGATE_MIN_TRANSACTIONS
@@ -569,15 +571,29 @@ describe('pickLabels', () => {
 
   it('checks the clamped box, not the raw one', () => {
     const r = pickLabels({ ...base, candidates: [dot('a', 5)] })
-    expect(r.boxes[0]).toMatchObject({ l: 0, r: 100 })
+    expect(r.boxes[0]).toMatchObject({ l: 8, r: 108 })
+  })
+})
+
+describe('businessFiguresText', () => {
+  const b = { linked: true, amountCents: 12500, transactionCount: 6 } as SiloBusiness
+
+  it('says the total and the receipts once linked', () => {
+    expect(businessFiguresText(b)).toBe('$125 spent here, from 6 receipts.')
+  })
+
+  it('never names a total for a business under the receipt gate', () => {
+    const text = businessFiguresText({ ...b, linked: false })
+    expect(text).toBe('Not enough receipts counted here yet to show a total.')
+    expect(text).not.toMatch(/\$|\d/)
   })
 })
 
 describe('snapLabelPos', () => {
   it('lands on whole pixels inside the stage', () => {
     expect(snapLabelPos(10.4, 100, 500, NaN)).toBe(10)
-    expect(snapLabelPos(-30, 100, 500, NaN)).toBe(0)
-    expect(snapLabelPos(450, 100, 500, NaN)).toBe(400)
+    expect(snapLabelPos(-30, 100, 500, NaN)).toBe(8)
+    expect(snapLabelPos(450, 100, 500, NaN)).toBe(392)
   })
 
   it('ignores anything under a pixel, even across a rounding edge', () => {

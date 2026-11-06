@@ -40,7 +40,13 @@ export function SiloList({ businesses, cities, note, action }: Props) {
   }))
 
   return (
-    <div className="silo-stage-list" id="silo-list">
+    <div
+      className="silo-stage-list"
+      id="silo-list"
+      role="region"
+      aria-label="The Collective as a list"
+      tabIndex={-1}
+    >
       <div className="silo-stage-list-inner">
         {(note || action) && (
           <div>

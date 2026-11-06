@@ -11,6 +11,7 @@ import {
   NOT_TRACKED_TEXT,
   SILO_FLOORS,
   businessDisplayName,
+  businessFiguresText,
   floorSpokenLabel,
   floorValueText,
   gapKinds,
@@ -269,6 +270,8 @@ interface CardProps {
   selectedGap: SiloGap | null
   focusFloor: SiloFloor | null
   floorCount: number
+  /** The floor the view is on, named on the resting card on a sideways phone. */
+  liveFloor: number
   /** The reader's own business, for the resting card. */
   you: SiloBusiness | null
   totalSpentCents: number
@@ -286,6 +289,7 @@ export function SiloCard({
   selectedGap,
   focusFloor,
   floorCount,
+  liveFloor,
   you,
   totalSpentCents,
   onClear,
@@ -324,11 +328,7 @@ export function SiloCard({
           {close}
         </div>
         <p>
-          {selected.linked
-            ? `${formatDollars(selected.amountCents)} spent here, from ${selected.transactionCount} ${
-                selected.transactionCount === 1 ? 'receipt' : 'receipts'
-              }.`
-            : 'Not enough receipts counted here yet to show a total.'}
+          {businessFiguresText(selected)}
           {selected.isYou && ' You have a counted receipt here.'}
         </p>
         {selected.href && (
@@ -415,9 +415,16 @@ export function SiloCard({
 
   return (
     <aside className="ctx" aria-labelledby="silo-ctx-title">
-      <p className="ctx-eyebrow">The Collective</p>
+      <p className="ctx-eyebrow">
+        <span className="ctx-name">The Collective</span>
+        <span className="ctx-floor">
+          Floor {liveFloor + 1} of {SILO_FLOORS.length}: {SILO_FLOORS[liveFloor]?.short}
+        </span>
+      </p>
       <h3 id="silo-ctx-title">Where the money goes first</h3>
-      <p>Pick a floor or a dot to look closer. Pink squares are gaps to fill.</p>
+      <p className="ctx-tip">
+        Pick a floor or a dot to look closer. Pink squares are gaps to fill.
+      </p>
       {legend}
     </aside>
   )
