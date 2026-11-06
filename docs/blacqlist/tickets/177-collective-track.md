@@ -58,7 +58,7 @@ Founder picks from the 2026-11-05 scroll workshop: the map stays put, the track 
 - [ ] Scrolling away from a pick closes the card
 - [ ] Reload halfway down opens at that floor with no glide
 - [ ] The hint shows, then leaves at the second floor, and stays gone
-- [ ] The skip link lands below the map
+- [x] The skip link lands below the map
 - [ ] Reduced motion: no track, every floor reachable from the gauge
 - [ ] List view: no track
 - [ ] 1280x720 and 1280x600: nothing overlaps in the HUD

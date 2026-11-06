@@ -76,8 +76,10 @@
   color: #1a1405;
   font-weight: 700;
   font-size: 14px;
+  border: 0;
   opacity: 0;
   pointer-events: none;
+  scroll-margin-top: calc(var(--hdr) + 8px);
 }
 
 .silo-skip:focus {
@@ -86,7 +88,8 @@
 }
 
 /* Takes focus on click so the keys work, but isn't a Tab stop. */
-.silo:focus {
+.silo:focus,
+.silo-stage-list:focus {
   outline: none;
 }
 
@@ -776,6 +779,9 @@
   backdrop-filter: blur(10px);
 }
 
+.ctx-floor {
+  display: none;
+}
 .ctx-eyebrow {
   margin: 0;
   font-weight: 700;
@@ -847,6 +853,22 @@
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Fingers get 44px. A mouse keeps the tighter panel. */
+@media (pointer: coarse) {
+  .seg button,
+  .spot {
+    min-height: 44px;
+  }
+  .cbseg button.cb {
+    width: 44px;
+  }
+  .ctx a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 
 .sel-head {
@@ -1266,9 +1288,17 @@
   }
 }
 
+/* The sheet is capped at 42%, so on the shortest phones the color key would
+   run past its edge. The key stays and the help line goes. */
+@media (max-width: 640px) and (min-height: 501px) and (max-height: 649px) {
+  .silo-track[data-mode='map'] .ctx-tip {
+    display: none;
+  }
+}
+
 /* ── Phone: numbers, then the scene, then the panels ─────────────────────── */
 
-@media (max-width: 759px) {
+@media (max-width: 759px), (max-height: 500px) {
   .silo {
     height: auto;
     display: flex;
@@ -1447,7 +1477,8 @@
 
 /* ── Phone map: the stage fills the screen, the panels sit on top ─────────── */
 
-@media (max-width: 759px) and (min-height: 501px) {
+/* The second half is a sideways phone, which the block after this one rearranges. */
+@media (max-width: 759px) and (min-height: 501px), (max-height: 500px) {
   /* A collapsed iOS toolbar shows what's under the svh stage: keep it dark. */
   .silo-track[data-mode='map'] {
     background: #0a0907;
@@ -1609,16 +1640,6 @@
     background: var(--panel-solid);
     backdrop-filter: none;
   }
-  .silo-track[data-mode='map'] .ctx::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: calc(50% - 17px);
-    width: 34px;
-    height: 4px;
-    border-radius: 4px;
-    background: var(--line-2);
-  }
 
   /* The key: one line of chips that scrolls sideways. */
   .silo-track[data-mode='map'] .legend-in-card {
@@ -1657,9 +1678,142 @@
   }
 }
 
+/* ── Sideways phone: floors left, card right, one strip across the top ────── */
+
+@media (max-height: 500px) {
+  .silo-track[data-mode='map'] .silo {
+    --strip-h: 52px;
+    --card-w: calc(min(284px, 38vw) + var(--er));
+  }
+
+  /* Ends under the card and hangs below the band, so the map centers in the
+     window between the floors, the strip and the card. */
+  .silo-track[data-mode='map'] .silo-stage {
+    inset: 0 calc(var(--card-w) - 60px) calc(var(--strip-h) * -1) 0;
+  }
+
+  .silo-track[data-mode='map'] .hud {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: var(--strip-h);
+    padding: 0 var(--er) 0 var(--el);
+    background: rgba(12, 11, 9, 0.94);
+  }
+  .silo-track[data-mode='map'] .brand {
+    flex: none;
+  }
+
+  .silo-track[data-mode='map'] .kpis {
+    flex-direction: row;
+  }
+  .silo-track[data-mode='map'] .kpi + .kpi {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .silo-track[data-mode='map'] .ticker,
+  .silo-track[data-mode='map'] .hud .legend,
+  .silo-track[data-mode='map'] .dock .keys,
+  .silo-track[data-mode='map'] .keymap {
+    display: none;
+  }
+
+  .silo-track[data-mode='map'] .dock {
+    transform: none;
+  }
+
+  /* Floors down the left edge. 220px fits under the strip with Safari's bar up. */
+  .silo-track[data-mode='map'] .gauge {
+    right: auto;
+    left: max(4px, env(safe-area-inset-left));
+  }
+  .silo-track[data-mode='map'] .fl {
+    width: 44px;
+    height: 44px;
+    min-height: 0;
+    padding: 0;
+    justify-content: center;
+  }
+  .silo-track[data-mode='map'] .fl .nm,
+  .silo-track[data-mode='map'] .fl .bars {
+    display: none;
+  }
+
+  /* The rail has no room for names and the strip already says The Collective,
+     so the resting card names the floor. Signs can sit off a screen this short. */
+  .silo-track[data-mode='map'] .ctx-name {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .ctx-floor {
+    display: inline;
+  }
+
+  /* The card fills the right edge under the strip. */
+  .silo-track[data-mode='map'] .ctx {
+    inset: var(--strip-h) 0 0 auto;
+    width: var(--card-w);
+    max-height: none;
+    padding: 14px var(--er) var(--eb) 16px;
+    border-width: 1px 0 0 1px;
+    border-radius: 16px 0 0;
+  }
+  .silo-track[data-mode='map'] .legend-in-card .legend-chips {
+    margin-inline: -16px calc(var(--er) * -1);
+    padding-inline: 16px var(--er);
+  }
+
+  /* Over the map, above the pills. */
+  .silo-track[data-mode='map'] .silo-hint {
+    left: 64px;
+    bottom: calc(var(--eb) + 54px);
+  }
+
+  .silo-track[data-mode='map'] .silo-sign b {
+    font-size: 13px;
+  }
+  .silo-track[data-mode='map'] .silo-sign .ic {
+    width: 28px;
+    height: 28px;
+  }
+  .silo-track[data-mode='map'] .silo-sign .ic svg {
+    width: 15px;
+    height: 15px;
+  }
+  .silo-track[data-mode='map'] .silo-lbl {
+    max-width: 160px;
+  }
+
+  /* A side drawer over the whole window: a bottom sheet leaves no room this short. */
+  .silo-track[data-mode='map'] .more {
+    position: fixed;
+  }
+  .silo-track[data-mode='map'] .more-panel {
+    top: 0;
+    left: auto;
+    width: min(400px, 100%);
+    max-height: none;
+    border-top: 0;
+    border-left: 1px solid var(--line-2);
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 620px) and (max-height: 500px) {
+  .silo-track[data-mode='map'] .brand .brand-mark {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .hud {
+    gap: 12px;
+  }
+  .silo-track[data-mode='map'] .kpis {
+    gap: 10px;
+  }
+}
+
 /* ── The track: the map pins and page scroll travels the floors ──────────── */
 
-@media (min-height: 501px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   .silo-track:not([data-mode='list']) {
     height: calc(300svh - var(--hdr));
   }

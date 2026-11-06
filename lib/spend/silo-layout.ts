@@ -97,6 +97,13 @@ export function floorSpokenLabel(floor: SiloFloor, businessCount: number): strin
   return `${floor.short}: ${formatDollars(floor.amountCents)} spent with businesses on the list`
 }
 
+/** The card's line about the money. Totals only show past the receipt gate. */
+export function businessFiguresText(b: SiloBusiness): string {
+  if (!b.linked) return 'Not enough receipts counted here yet to show a total.'
+  const receipts = b.transactionCount === 1 ? 'receipt' : 'receipts'
+  return `${formatDollars(b.amountCents)} spent here, from ${b.transactionCount} ${receipts}.`
+}
+
 /** Floor index for a business level. Unknown levels sit with the shops. */
 export function floorIndexForLevel(level: string | null | undefined): number {
   const key: BusinessLevel = isBusinessLevel(level) ? level : 'local'
@@ -854,15 +861,23 @@ export interface LabelPick {
   stageH: number
 }
 
+/** Room a label keeps from the edge of the stage. */
+const LABEL_EDGE = 8
+
+/** Where one edge of a label sits inside the stage, before rounding. */
+export function clampLabelPos(start: number, length: number, stage: number): number {
+  return Math.min(Math.max(start, LABEL_EDGE), Math.max(stage - length - LABEL_EDGE, LABEL_EDGE))
+}
+
 /** Moves one edge onto a whole pixel inside the stage, and leaves it alone under 1px. */
 export function snapLabelPos(start: number, length: number, stage: number, prev: number): number {
-  const raw = Math.min(Math.max(start, 0), Math.max(stage - length, 0))
+  const raw = clampLabelPos(start, length, stage)
   return Math.abs(raw - prev) < 1 ? prev : Math.round(raw)
 }
 
 function labelBox(c: LabelCandidate, stageW: number, stageH: number): LabelBox {
-  const l = Math.min(Math.max(c.x - c.w / 2, 0), Math.max(stageW - c.w, 0))
-  const t = Math.min(Math.max(c.top, 0), Math.max(stageH - c.h, 0))
+  const l = clampLabelPos(c.x - c.w / 2, c.w, stageW)
+  const t = clampLabelPos(c.top, c.h, stageH)
   return { l, t, r: l + c.w, b: t + c.h }
 }
 
