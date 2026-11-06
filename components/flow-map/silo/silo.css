@@ -76,11 +76,13 @@
   color: #1a1405;
   font-weight: 700;
   font-size: 14px;
-  transform: translateY(-200%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .silo-skip:focus {
-  transform: none;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Takes focus on click so the keys work, but isn't a Tab stop. */
