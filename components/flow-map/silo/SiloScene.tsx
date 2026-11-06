@@ -24,6 +24,7 @@ import {
   FALLBACK_FAMILY_INDEX,
   GOLD,
   GOLD_BRIGHT,
+  LABEL_KEEP,
   LEVEL_COLORS,
   SILO,
   SILO_FLOORS,
@@ -32,13 +33,18 @@ import {
   colorForBusiness,
   crowdAnchor,
   linkControlPoints,
+  overlaps,
+  pickLabels,
   pulseProgress,
   pulseSchedule,
   scrollForFloor,
+  snapLabelPos,
   viewForScroll,
   wedgeAngle,
   wedgePoint,
   type ColorBy,
+  type LabelBox,
+  type LabelCandidate,
   type PlacedBusiness,
   type Point3,
   type SiloBusiness,
@@ -111,16 +117,17 @@ function setTouchAction(el: HTMLElement, value: string) {
   el.style.touchAction = value
 }
 
-function showLabel(el: HTMLElement, x: number, y: number) {
-  el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, 0)`
-  el.hidden = false
-  el.classList.add('on')
+function moveLabel(el: HTMLElement, slot: LabelSlot, l: number, t: number) {
+  if (l === slot.l && t === slot.t) return
+  slot.l = l
+  slot.t = t
+  el.style.transform = `translate3d(${l}px, ${t}px, 0)`
 }
 
-function hideLabel(el: HTMLElement) {
-  if (el.hidden) return
-  el.classList.remove('on')
-  el.hidden = true
+function toggleLabel(el: HTMLElement, slot: LabelSlot, on: boolean) {
+  if (slot.on === on) return
+  slot.on = on
+  el.classList.toggle('on', on)
 }
 
 function fillLabel(el: HTMLElement, name: string, family: string, color: string) {
@@ -1389,13 +1396,66 @@ const LABEL_MIN_PX = { desk: 9, phone: 12 }
 const GAP_LABEL_DIST = 70
 const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag'
 
-interface Box {
+/** How often the names are chosen while the camera moves. */
+const LABEL_PICK_MS = 100
+const LABEL_H = 34
+/** A label's padding, border and dot, for a name not measured yet. */
+const LABEL_CHROME_PX = 36
+const LABEL_CHAR_PX = 6.5
+
+/** One label element and what it last showed, so a still camera writes nothing. */
+interface LabelSlot {
+  id: string | null
+  filled: string | null
   l: number
   t: number
-  r: number
-  b: number
+  on: boolean
+  offAt: number
 }
-const overlaps = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b
+
+const newSlot = (): LabelSlot => ({ id: null, filled: null, l: NaN, t: NaN, on: false, offAt: 0 })
+
+function newLabelState() {
+  return {
+    slots: [] as LabelSlot[],
+    gapSlots: [] as LabelSlot[],
+    widths: new Map<string, number>(),
+    height: LABEL_H,
+    since: new Map<string, number>() as ReadonlyMap<string, number>,
+    boxes: [] as LabelBox[],
+    frame: 0,
+    pickedAt: -Infinity,
+    stale: true,
+    // The view the labels were last placed for.
+    pos: new THREE.Vector3(NaN, NaN, NaN),
+    quat: new THREE.Quaternion(),
+    w: 0,
+    h: 0,
+    shown: null as readonly Shown[] | null,
+    hovered: null as string | null,
+    selected: null as string | null,
+    gap: null as SiloGap | null,
+  }
+}
+
+type LabelState = ReturnType<typeof newLabelState>
+
+/** True when the camera has moved enough to show. Small drift adds up and still counts. */
+function cameraMoved(camera: THREE.Camera, st: LabelState): boolean {
+  const same =
+    camera.position.distanceToSquared(st.pos) < 1e-6 && 1 - Math.abs(camera.quaternion.dot(st.quat)) < 1e-9
+  if (same) return false
+  st.pos.copy(camera.position)
+  st.quat.copy(camera.quaternion)
+  return true
+}
+
+const sameBoxes = (a: readonly LabelBox[], b: readonly LabelBox[]) =>
+  a.length === b.length &&
+  a.every((x, i) => {
+    const y = b[i]!
+    return Math.abs(x.l - y.l) < 1 && Math.abs(x.t - y.t) < 1 && Math.abs(x.r - y.r) < 1 && Math.abs(x.b - y.b) < 1
+  })
 
 function Tags({
   shown,
@@ -1410,22 +1470,40 @@ function Tags({
   selectedGap,
   phone,
 }: Inner & { shown: readonly Shown[] }) {
-  const { camera, size, gl } = useThree()
+  const { camera, size, gl, invalidate } = useThree()
   const tagged = hoveredId ?? selectedId
   const hover = tagged ? shown.find((s) => s.b.id === tagged) : undefined
   const you = shown.find((s) => s.b.isYou)
 
-  // The HUD panels, in canvas pixels. Labels never sit under them.
-  const hud = useRef<{ boxes: Box[]; frame: number }>({ boxes: [], frame: 0 })
-  // What each pool label shows now, so text only changes when it has to.
-  const poolIds = useRef<(string | null)[]>([])
+  const byId = useMemo(() => new Map(shown.map((s) => [s.b.id, s])), [shown])
+  const labels = useRef(newLabelState())
 
   useFrame(() => {
-    const h = hud.current
-    if (h.frame++ % 20 === 0) {
+    const st = labels.current
+    const now = performance.now()
+    const resized = st.w !== size.width || st.h !== size.height
+    if (resized) {
+      st.w = size.width
+      st.h = size.height
+      st.widths.clear()
+    }
+    const moved = cameraMoved(camera, st) || resized
+    const changed =
+      st.shown !== shown || st.hovered !== hoveredId || st.selected !== selectedId || st.gap !== selectedGap
+    if (changed) {
+      st.shown = shown
+      st.hovered = hoveredId
+      st.selected = selectedId
+      st.gap = selectedGap
+    }
+    if (moved || changed) st.stale = true
+
+    // The HUD panels, in canvas pixels. Labels never sit under them.
+    const due = () => (st.stale || st.since.size > 0) && now - st.pickedAt >= LABEL_PICK_MS
+    if (due() || st.frame++ % 20 === 0) {
       const root = gl.domElement.closest('.silo')
       const c = gl.domElement.getBoundingClientRect()
-      h.boxes = root
+      const boxes = root
         ? Array.from(root.querySelectorAll<HTMLElement>(HUD_SELECTORS))
             .filter((el) => !el.hidden && el.offsetParent !== null)
             .map((el) => {
@@ -1434,8 +1512,12 @@ function Tags({
             })
             .filter((b) => b.r > b.l && b.b > b.t)
         : []
+      if (!sameBoxes(boxes, st.boxes)) {
+        st.boxes = boxes
+        st.stale = true
+      }
     }
-    const taken: Box[] = [...h.boxes]
+
     const fov = (camera as THREE.PerspectiveCamera).fov ?? 60
     const kpx = size.height / 2 / Math.tan(THREE.MathUtils.degToRad(fov) / 2)
     const toScreen = (p: Point3) => {
@@ -1444,78 +1526,157 @@ function Tags({
       return { x: ((projected.x + 1) / 2) * size.width, y: ((1 - projected.y) / 2) * size.height }
     }
     const inView = (x: number, y: number) => x > 0 && x < size.width && y > 0 && y < size.height
-
-    // Business names: the biggest dots on screen, never on top of each other.
+    const dotAt = (s: Shown) => {
+      const at = toScreen(s.p)
+      if (!at) return null
+      worldTmp.set(s.p.x, s.p.y, s.p.z)
+      const pr = (s.size * kpx) / Math.max(camera.position.distanceTo(worldTmp), 0.1)
+      return { ...at, pr, top: at.y + Math.max(pr, 4) + 6 }
+    }
     const pool = labelsRef?.current?.children
-    if (pool) {
-      const max = phone ? LABEL_MAX.phone : LABEL_MAX.desk
-      const minPx = phone ? LABEL_MIN_PX.phone : LABEL_MIN_PX.desk
-      const skip = new Set([hoveredId, selectedId].filter(Boolean))
-      const cands: { s: Shown; x: number; y: number; pr: number }[] = []
-      for (const s of shown) {
-        if (!s.on || s.b.isYou || skip.has(s.b.id)) continue
-        worldTmp.set(s.p.x, s.p.y, s.p.z)
-        const dist = camera.position.distanceTo(worldTmp)
-        const pr = (s.size * kpx) / Math.max(dist, 0.1)
-        if (pr < minPx) continue
-        const at = toScreen(s.p)
-        if (!at || !inView(at.x, at.y)) continue
-        cands.push({ s, ...at, pr })
-      }
-      cands.sort((a, b) => b.pr - a.pr)
-      let used = 0
-      for (const c of cands) {
-        if (used >= max || used >= pool.length) break
-        const el = pool[used]
-        if (!(el instanceof HTMLElement)) break
-        const top = c.y + Math.max(c.pr, 4) + 6
-        const w = el.offsetWidth || 120
-        const box = { l: c.x - w / 2, t: top, r: c.x + w / 2, b: top + (el.offsetHeight || 34) }
-        if (taken.some((t) => overlaps(t, box))) continue
-        taken.push(box)
-        if (poolIds.current[used] !== c.s.b.id) {
-          poolIds.current[used] = c.s.b.id
-          fillLabel(
-            el,
-            businessDisplayName(c.s.b),
-            CATEGORY_FAMILIES[c.s.b.familyIndex]?.name ?? '',
-            familyColor(c.s.b.familyIndex),
-          )
+    const gapEls = gapLabelsRef?.current?.children
+    const pick = due()
+
+    if (pick) {
+      st.stale = moved
+      st.pickedAt = now
+      const taken: LabelBox[] = [...st.boxes]
+
+      // Business names: the biggest dots on screen, never on top of each other.
+      if (pool) {
+        const maxW = phone ? 160 : 220
+        const minPx = phone ? LABEL_MIN_PX.phone : LABEL_MIN_PX.desk
+        const skip = new Set([hoveredId, selectedId].filter(Boolean))
+        const candidates: LabelCandidate[] = []
+        for (const s of shown) {
+          if (!s.on || s.b.isYou || skip.has(s.b.id)) continue
+          const at = dotAt(s)
+          if (!at || at.pr < minPx * LABEL_KEEP || !inView(at.x, at.y)) continue
+          const w =
+            st.widths.get(s.b.id) ??
+            Math.min(maxW, LABEL_CHROME_PX + LABEL_CHAR_PX * businessDisplayName(s.b).length)
+          candidates.push({ id: s.b.id, x: at.x, top: at.top, size: at.pr, w, h: st.height })
         }
-        showLabel(el, c.x, top)
-        used++
+        while (st.slots.length < pool.length) {
+          pool[st.slots.length]?.classList.remove('on')
+          st.slots.push(newSlot())
+        }
+        const next = pickLabels({
+          candidates,
+          held: st.slots.flatMap((slot) => (slot.id ? [slot.id] : [])),
+          since: st.since,
+          blocked: st.boxes,
+          now,
+          max: phone ? LABEL_MAX.phone : LABEL_MAX.desk,
+          minPx,
+          stageW: size.width,
+          stageH: size.height,
+        })
+        st.since = next.since
+        taken.push(...next.boxes)
+
+        const keep = new Set(next.ids)
+        st.slots.forEach((slot, i) => {
+          const el = pool[i]
+          if (!slot.id || keep.has(slot.id) || !(el instanceof HTMLElement)) return
+          slot.id = null
+          slot.offAt = now
+          toggleLabel(el, slot, false)
+        })
+        for (const id of next.ids) {
+          if (st.slots.some((slot) => slot.id === id)) continue
+          const s = byId.get(id)
+          const free = st.slots.filter((slot) => !slot.id)
+          const slot =
+            free.find((x) => x.filled === id) ?? free.reduce<LabelSlot | null>((a, x) => (!a || x.offAt < a.offAt ? x : a), null)
+          const el = slot ? pool[st.slots.indexOf(slot)] : null
+          if (!s || !slot || !(el instanceof HTMLElement)) continue
+          slot.id = id
+          if (slot.filled !== id) {
+            slot.filled = id
+            fillLabel(
+              el,
+              businessDisplayName(s.b),
+              CATEGORY_FAMILIES[s.b.familyIndex]?.name ?? '',
+              familyColor(s.b.familyIndex),
+            )
+          }
+          // A real width only ever arrives once, so one more pick settles it.
+          if (!st.widths.has(id)) {
+            st.widths.set(id, el.offsetWidth)
+            st.height = el.offsetHeight || LABEL_H
+            st.stale = true
+          }
+        }
       }
-      for (let i = used; i < pool.length; i++) {
-        const el = pool[i]
-        if (el instanceof HTMLElement) hideLabel(el)
+
+      // Gap labels: only up close, so the top view stays calm.
+      if (gapEls) {
+        gaps.forEach((g, i) => {
+          const el = gapEls[i]
+          if (!(el instanceof HTMLElement)) return
+          const slot = (st.gapSlots[i] ??= newSlot())
+          const c = wedgePoint(g.familyIndex, g.floorIndex)
+          worldTmp.set(c.x, c.y, c.z)
+          const near = camera.position.distanceTo(worldTmp) < GAP_LABEL_DIST * (slot.on ? 1.1 : 1)
+          const picked =
+            !!selectedGap && selectedGap.familyIndex === g.familyIndex && selectedGap.floorIndex === g.floorIndex
+          const at = near || picked ? toScreen(c) : null
+          if (!at || !inView(at.x, at.y)) {
+            toggleLabel(el, slot, false)
+            return
+          }
+          const key = `gap:${g.familyIndex}:${g.floorIndex}`
+          if (!st.widths.has(key)) {
+            st.widths.set(key, el.offsetWidth)
+            st.height = Math.max(st.height, el.offsetHeight)
+          }
+          const w = st.widths.get(key) ?? 0
+          // The same clamps the label lands on, or the box and the label disagree.
+          const l = Math.min(Math.max(at.x - w / 2, 0), Math.max(size.width - w, 0))
+          const top = Math.min(Math.max(at.y + 16, 0), Math.max(size.height - st.height, 0))
+          const box = { l, t: top, r: l + w, b: top + st.height }
+          if (!picked && taken.some((t) => overlaps(t, box))) {
+            toggleLabel(el, slot, false)
+            return
+          }
+          taken.push(box)
+          toggleLabel(el, slot, true)
+        })
       }
     }
 
-    // Gap labels: only up close, so the top view stays calm.
-    const gapEls = gapLabelsRef?.current?.children
-    if (gapEls) {
+    // Labels ride with the camera between picks. A still camera writes nothing.
+    if (moved || pick) {
+      st.slots.forEach((slot, i) => {
+        const el = pool?.[i]
+        const s = slot.id ? byId.get(slot.id) : undefined
+        if (!s || !(el instanceof HTMLElement)) return
+        const at = dotAt(s)
+        if (!at) return
+        const w = st.widths.get(s.b.id) ?? el.offsetWidth
+        st.widths.set(s.b.id, w)
+        moveLabel(
+          el,
+          slot,
+          snapLabelPos(at.x - w / 2, w, size.width, slot.l),
+          snapLabelPos(at.top, st.height, size.height, slot.t),
+        )
+        toggleLabel(el, slot, true)
+      })
       gaps.forEach((g, i) => {
-        const el = gapEls[i]
-        if (!(el instanceof HTMLElement)) return
-        const c = wedgePoint(g.familyIndex, g.floorIndex)
-        worldTmp.set(c.x, c.y, c.z)
-        const near = camera.position.distanceTo(worldTmp) < GAP_LABEL_DIST
-        const picked =
-          !!selectedGap && selectedGap.familyIndex === g.familyIndex && selectedGap.floorIndex === g.floorIndex
-        const at = near || picked ? toScreen(c) : null
-        if (!at || !inView(at.x, at.y)) {
-          hideLabel(el)
-          return
-        }
-        const top = at.y + 16
-        const w = el.offsetWidth || 150
-        const box = { l: at.x - w / 2, t: top, r: at.x + w / 2, b: top + (el.offsetHeight || 34) }
-        if (!picked && taken.some((t) => overlaps(t, box))) {
-          hideLabel(el)
-          return
-        }
-        taken.push(box)
-        showLabel(el, at.x, top)
+        const el = gapEls?.[i]
+        const slot = st.gapSlots[i]
+        if (!slot?.on || !(el instanceof HTMLElement)) return
+        const at = toScreen(wedgePoint(g.familyIndex, g.floorIndex))
+        if (!at) return
+        const w = st.widths.get(`gap:${g.familyIndex}:${g.floorIndex}`) ?? el.offsetWidth
+        moveLabel(
+          el,
+          slot,
+          snapLabelPos(at.x - w / 2, w, size.width, slot.l),
+          snapLabelPos(at.y + 16, st.height, size.height, slot.t),
+        )
       })
     }
 
@@ -1535,10 +1696,15 @@ function Tags({
       const y = ((1 - projected.y) / 2) * size.height
       el.style.transform = `${anchor} translate(${x.toFixed(1)}px, ${(y - lift).toFixed(1)}px)`
     }
-    place(hoverTagRef.current, hover && !hover.b.isYou ? hover.p : undefined, 18, 'translate(-50%, -100%)')
-    place(youTagRef.current, you?.p, 22, 'translate(-50%, -100%)')
-    const signs = signsRef?.current?.children
-    if (signs) SIGN_AT.forEach((p, k) => place(signs[k], p, 0, 'translate(-50%, -50%)'))
+    if (moved || changed) {
+      place(hoverTagRef.current, hover && !hover.b.isYou ? hover.p : undefined, 18, 'translate(-50%, -100%)')
+      place(youTagRef.current, you?.p, 22, 'translate(-50%, -100%)')
+      const signs = signsRef?.current?.children
+      if (signs) SIGN_AT.forEach((p, k) => place(signs[k], p, 0, 'translate(-50%, -50%)'))
+    }
+
+    // Without an ambient loop, nothing else asks for the frame that finishes a pick.
+    if (st.stale || st.since.size > 0) invalidate()
   })
 
   return null

@@ -3,6 +3,8 @@ import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   CATEGORY_FAMILIES,
   FALLBACK_FAMILY_INDEX,
+  LABEL_KEEP,
+  LABEL_SWAP_MS,
   GOLD,
   GOLD_BRIGHT,
   LEVEL_COLORS,
@@ -24,9 +26,11 @@ import {
   gapLabel,
   gapsPerFloor,
   siloGaps,
+  pickLabels,
   placeBusinesses,
   pulseProgress,
   pulseSchedule,
+  snapLabelPos,
   SILO,
   clusterRadius,
   clusterDepth,
@@ -351,5 +355,125 @@ describe('gaps', () => {
         for (const k of kinds) expect(k).not.toMatch(/—|black|ally|owned/i)
       }
     }
+  })
+})
+
+describe('pickLabels', () => {
+  const dot = (id: string, x: number, size = 20, w = 100) => ({ id, x, top: 100, size, w, h: 34 })
+  const base = {
+    candidates: [] as ReturnType<typeof dot>[],
+    held: [] as string[],
+    since: new Map<string, number>(),
+    blocked: [],
+    now: 0,
+    max: 10,
+    minPx: 9,
+    stageW: 1000,
+    stageH: 700,
+  }
+
+  it('gives the same answer on every pass when nothing moves', () => {
+    const candidates = [dot('a', 100, 30), dot('b', 150, 25), dot('c', 500, 20)]
+    let held: string[] = []
+    let since = new Map<string, number>()
+    const seen = new Set<string>()
+    for (let now = 0; now < 2000; now += 100) {
+      const r = pickLabels({ ...base, candidates, held, since, now })
+      held = r.ids
+      since = r.since
+      seen.add([...r.ids].sort().join())
+    }
+    expect(seen).toEqual(new Set(['a,c']))
+  })
+
+  it('stops flipping when a label measures wider than first thought', () => {
+    // On main this pair swapped every frame. The real width only ever arrives once.
+    const narrow = [dot('a', 100, 30), dot('b', 230, 28, 80)]
+    const first = pickLabels({ ...base, candidates: narrow })
+    expect(first.ids).toEqual(['a', 'b'])
+    const wide = [dot('a', 100, 30), dot('b', 230, 28, 220)]
+    let held = first.ids
+    for (let now = 100; now < 1000; now += 100) {
+      held = pickLabels({ ...base, candidates: wide, held, now }).ids
+      expect(held).toEqual(['a'])
+    }
+  })
+
+  it('holds its picks under small size and position noise', () => {
+    let held = pickLabels({ ...base, candidates: [dot('a', 100), dot('b', 300), dot('c', 500)], max: 2 }).ids
+    const start = [...held]
+    for (let i = 0; i < 200; i++) {
+      const n = i % 2 ? 0.4 : -0.4
+      const candidates = [dot('a', 100 + n, 20 + n), dot('b', 300 - n, 20 - n), dot('c', 500 + n, 20 + n)]
+      held = pickLabels({ ...base, candidates, held, max: 2, now: i * 100 }).ids
+    }
+    expect(held).toEqual(start)
+  })
+
+  it('does not disturb the others when one label leaves', () => {
+    const candidates = [dot('a', 100, 30), dot('b', 300, 25), dot('c', 500, 20)]
+    const held = pickLabels({ ...base, candidates }).ids
+    const r = pickLabels({ ...base, candidates: candidates.slice(1), held })
+    expect(r.ids).toEqual(['b', 'c'])
+    expect(r.boxes.map((b) => b.l)).toEqual([250, 450])
+  })
+
+  it('keeps a shrinking label down to the keep size, and no further', () => {
+    const size = (s: number) => [dot('a', 100, s)]
+    expect(pickLabels({ ...base, candidates: size(9 * LABEL_KEEP), held: ['a'] }).ids).toEqual(['a'])
+    expect(pickLabels({ ...base, candidates: size(9 * LABEL_KEEP) }).ids).toEqual([])
+  })
+
+  it('drops a label under a HUD panel', () => {
+    const blocked = [{ l: 0, t: 0, r: 200, b: 200 }]
+    expect(pickLabels({ ...base, candidates: [dot('a', 100)], held: ['a'], blocked }).ids).toEqual([])
+  })
+
+  it('makes a bigger dot wait before it replaces a label', () => {
+    const candidates = [dot('a', 100, 20), dot('b', 110, 30)]
+    const first = pickLabels({ ...base, candidates, held: ['a'] })
+    expect(first.ids).toEqual(['a'])
+    expect(first.since.get('b')).toBe(0)
+    const early = pickLabels({ ...base, candidates, held: ['a'], since: first.since, now: LABEL_SWAP_MS - 1 })
+    expect(early.ids).toEqual(['a'])
+    const late = pickLabels({ ...base, candidates, held: ['a'], since: early.since, now: LABEL_SWAP_MS })
+    expect(late.ids).toEqual(['b'])
+    expect(late.since.size).toBe(0)
+  })
+
+  it('never replaces a label for a dot under 1.25x its size', () => {
+    const candidates = [dot('a', 100, 20), dot('b', 110, 24)]
+    const r = pickLabels({ ...base, candidates, held: ['a'], now: 5000 })
+    expect(r.ids).toEqual(['a'])
+    expect(r.since.size).toBe(0)
+  })
+
+  it('honours the cap, biggest first', () => {
+    const candidates = Array.from({ length: 20 }, (_, i) => dot(`d${i}`, i * 120 + 60, 40 - i, 100))
+    const r = pickLabels({ ...base, candidates, max: 5, stageW: 3000 })
+    expect(r.ids).toEqual(['d0', 'd1', 'd2', 'd3', 'd4'])
+  })
+
+  it('checks the clamped box, not the raw one', () => {
+    const r = pickLabels({ ...base, candidates: [dot('a', 5)] })
+    expect(r.boxes[0]).toMatchObject({ l: 0, r: 100 })
+  })
+})
+
+describe('snapLabelPos', () => {
+  it('lands on whole pixels inside the stage', () => {
+    expect(snapLabelPos(10.4, 100, 500, NaN)).toBe(10)
+    expect(snapLabelPos(-30, 100, 500, NaN)).toBe(0)
+    expect(snapLabelPos(450, 100, 500, NaN)).toBe(400)
+  })
+
+  it('ignores anything under a pixel, even across a rounding edge', () => {
+    let at = snapLabelPos(100.5, 100, 500, NaN)
+    for (let i = 0; i < 100; i++) at = snapLabelPos(100.5 + (i % 2 ? 0.4 : -0.4), 100, 500, at)
+    expect(at).toBe(snapLabelPos(100.5, 100, 500, NaN))
+  })
+
+  it('follows a real move', () => {
+    expect(snapLabelPos(103, 100, 500, 100)).toBe(103)
   })
 })

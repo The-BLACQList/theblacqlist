@@ -139,7 +139,7 @@
 }
 
 /* Name labels: the biggest dots on screen carry their name. Placed by the
-   scene each frame, never under the HUD and never on top of each other. */
+   scene while the camera moves, never under the HUD or on top of each other. */
 .silo-labels {
   position: absolute;
   inset: 0;
@@ -159,20 +159,21 @@
   padding: 5px 9px 5px 6px;
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: rgba(10, 9, 7, 0.82);
-  backdrop-filter: blur(6px);
+  background: rgba(10, 9, 7, 0.88);
   white-space: nowrap;
+  /* Off labels keep their layout, so a width can be read without showing them. */
+  visibility: hidden;
   opacity: 0;
-  transition: opacity var(--t-mid) var(--ease);
-  will-change: transform;
+  transition:
+    opacity var(--t-mid) var(--ease),
+    visibility 0s linear var(--t-mid);
 }
 
 .silo-lbl.on {
+  visibility: visible;
   opacity: 1;
-}
-
-.silo-lbl[hidden] {
-  display: none;
+  transition-delay: 0s;
+  will-change: transform;
 }
 
 .silo-lbl > span:not(.ic) {

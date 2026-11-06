@@ -391,7 +391,7 @@ export function SiloExperience({
             <div className="silo-labels" aria-hidden="true">
               <div ref={labelsRef}>
                 {Array.from({ length: LABEL_POOL }, (_, i) => (
-                  <div key={i} className="silo-lbl" hidden>
+                  <div key={i} className="silo-lbl">
                     <span className="dot" />
                     <span>
                       <b />
@@ -402,7 +402,7 @@ export function SiloExperience({
               </div>
               <div ref={gapLabelsRef}>
                 {gaps.map((g) => (
-                  <div key={`${g.familyIndex}:${g.floorIndex}`} className="silo-lbl gap" hidden>
+                  <div key={`${g.familyIndex}:${g.floorIndex}`} className="silo-lbl gap">
                     <span className="ic">
                       <FloorIcon floor={g.floorIndex} />
                     </span>
