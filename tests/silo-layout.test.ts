@@ -45,6 +45,7 @@ import {
   orbitForScroll,
   orbitPose,
   scrollForFloor,
+  floorForHeight,
   smoothDamp,
   wrapAngle,
   type BusinessListingMeta,
@@ -562,5 +563,27 @@ describe('snapLabelPos', () => {
 
   it('follows a real move', () => {
     expect(snapLabelPos(103, 100, 500, 100)).toBe(103)
+  })
+})
+
+describe('floorForHeight', () => {
+  it('names each floor at its own height', () => {
+    SILO.y.forEach((y, i) => expect(floorForHeight(y)).toBe(i))
+  })
+
+  it('switches floors halfway between them', () => {
+    expect(floorForHeight(SILO.y[0]! - 8)).toBe(0)
+    expect(floorForHeight(SILO.y[0]! - 9)).toBe(1)
+  })
+
+  it('stays on the end floors past the top and bottom', () => {
+    expect(floorForHeight(SILO.y[0]! + 40)).toBe(0)
+    expect(floorForHeight(SILO.hub.y)).toBe(SILO.y.length - 1)
+  })
+
+  it('lands on the floor a pick travels to', () => {
+    SILO.y.forEach((_, i) => {
+      expect(floorForHeight(orbitForScroll(scrollForFloor(i), 0, 0).y)).toBe(i)
+    })
   })
 })

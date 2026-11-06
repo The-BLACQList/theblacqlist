@@ -686,6 +686,15 @@ export function scrollForFloor(floorIndex: number): number {
   return Math.min(1, Math.max(0, (33 - y) / 82))
 }
 
+/** The floor nearest a height in the silo. */
+export function floorForHeight(y: number): number {
+  let nearest = 0
+  SILO.y.forEach((floorY, i) => {
+    if (Math.abs(floorY - y) < Math.abs(SILO.y[nearest]! - y)) nearest = i
+  })
+  return nearest
+}
+
 // ─── Camera ──────────────────────────────────────────────────────────────────
 
 /** The camera circles a point: heading `az`, tilt `el`, distance `R`. */

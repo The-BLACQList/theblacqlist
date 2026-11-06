@@ -219,7 +219,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   })
 
   return (
-    <main className="min-h-screen bg-pale-lavender pt-16 pb-16">
+    <div className="min-h-screen bg-pale-lavender pb-16">
       {/* ── Hero (compact, ticket 171) ──────────────────────────────────────── */}
       <div className="px-4">
         <div className="max-w-[1100px] mx-auto pt-4 pb-5">
@@ -278,6 +278,6 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           focusYou={params.you === '1'}
         />
       )}
-    </main>
+    </div>
   )
 }

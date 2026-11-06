@@ -29,14 +29,32 @@
   --er: max(16px, env(safe-area-inset-right));
   --et: max(14px, env(safe-area-inset-top));
   --eb: max(14px, env(safe-area-inset-bottom));
+  /* The fixed site header: h-14, then h-16 from Tailwind's md. */
+  --hdr: 56px;
 
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  height: max(640px, calc(100svh - 64px));
+  height: max(640px, calc(100svh - var(--hdr)));
   background: radial-gradient(120% 80% at 62% 40%, var(--bg-2) 0%, var(--bg) 70%), var(--bg);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+@media (min-width: 768px) {
+  .silo {
+    --hdr: 64px;
+  }
+}
+
+/* Takes focus on click so the keys work, but isn't a Tab stop. */
+.silo:focus {
+  outline: none;
+}
+
+/* Above the fixed header (z-50) and the Report and Cue pills (z-40). */
+.silo.more-open {
+  z-index: 60;
 }
 
 .silo :focus-visible {
@@ -935,9 +953,9 @@
   position: absolute;
   z-index: 4;
   bottom: calc(var(--eb) + 66px);
-  left: calc(50% + 160px);
+  left: calc(50% + 140px);
   transform: translateX(-50%);
-  width: 280px;
+  width: 320px;
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid var(--line-2);
@@ -1142,7 +1160,7 @@
   }
   .dock,
   .keymap {
-    left: calc(50% + 150px);
+    left: calc(50% + 130px);
   }
   .dock button {
     padding: 0 12px;

@@ -99,7 +99,7 @@ describe('Silo loading', () => {
     expect(experience).toContain("import('./SiloScene')")
     // A static import would pull three into the page's first JS.
     expect(experience).not.toMatch(/import\s+SiloScene\s+from/)
-    expect(experience).toMatch(/import type \{ SiloSceneProps \} from '\.\/SiloScene'/)
+    expect(experience).toMatch(/import type \{ SiloNav, SiloSceneProps \} from '\.\/SiloScene'/)
   })
 
   it('falls back to the list when the chunk fails or the context is lost', () => {

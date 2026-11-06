@@ -444,6 +444,22 @@ export const SiloKeyMap = forwardRef<HTMLDivElement, KeyMapProps>(function SiloK
           <kbd>Drag</kbd>
         </dt>
         <dd>Turn the map</dd>
+        <dt>
+          <kbd>←</kbd> <kbd>→</kbd>
+        </dt>
+        <dd>Turn the map</dd>
+        <dt>
+          <kbd>↑</kbd> <kbd>↓</kbd>
+        </dt>
+        <dd>Move up and down</dd>
+        <dt>
+          <kbd>Page Up</kbd> <kbd>Page Down</kbd>
+        </dt>
+        <dd>Next floor</dd>
+        <dt>
+          <kbd>Home</kbd> <kbd>End</kbd>
+        </dt>
+        <dd>Top or bottom floor</dd>
         {hasYou && (
           <>
             <dt>
