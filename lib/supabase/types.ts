@@ -872,6 +872,95 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_awards: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: string
+          listing_id: string
+          score: number
+          week_start: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          score: number
+          week_start: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          score?: number
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_awards_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_runs: {
+        Row: {
+          ran_at: string
+          week_start: string
+          winners: number
+        }
+        Insert: {
+          ran_at?: string
+          week_start: string
+          winners: number
+        }
+        Update: {
+          ran_at?: string
+          week_start?: string
+          winners?: number
+        }
+        Relationships: []
+      }
+      featured_weights: {
+        Row: {
+          anon_event_points_cap: number
+          good_review_min_rating: number
+          id: number
+          min_winning_score: number
+          points_contact_tap: number
+          points_good_review: number
+          points_save: number
+          points_share: number
+          updated_at: string
+        }
+        Insert: {
+          anon_event_points_cap?: number
+          good_review_min_rating?: number
+          id?: number
+          min_winning_score?: number
+          points_contact_tap?: number
+          points_good_review?: number
+          points_save?: number
+          points_share?: number
+          updated_at?: string
+        }
+        Update: {
+          anon_event_points_cap?: number
+          good_review_min_rating?: number
+          id?: number
+          min_winning_score?: number
+          points_contact_tap?: number
+          points_good_review?: number
+          points_save?: number
+          points_share?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flow_edges: {
         Row: {
           id: string
@@ -1617,6 +1706,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          activity_score: number
           admin_notes: string | null
           auto_archive_at: string | null
           auto_expire_at: string | null
@@ -1647,6 +1737,7 @@ export type Database = {
           name: string
           noindex: boolean
           og_image_path: string | null
+          open_to_partnerships: boolean
           owner_user_id: string | null
           ownership_attested: boolean
           ownership_attested_at: string | null
@@ -1681,6 +1772,7 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          activity_score?: number
           admin_notes?: string | null
           auto_archive_at?: string | null
           auto_expire_at?: string | null
@@ -1711,12 +1803,13 @@ export type Database = {
           name: string
           noindex?: boolean
           og_image_path?: string | null
+          open_to_partnerships?: boolean
           owner_user_id?: string | null
           ownership_attested?: boolean
           ownership_attested_at?: string | null
           ownership_label?: string
           peak_tier?: string | null
-          primary_level?: string
+          primary_level: string
           published_at?: string | null
           review_count?: number
           save_count?: number
@@ -1745,6 +1838,7 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          activity_score?: number
           admin_notes?: string | null
           auto_archive_at?: string | null
           auto_expire_at?: string | null
@@ -1775,6 +1869,7 @@ export type Database = {
           name?: string
           noindex?: boolean
           og_image_path?: string | null
+          open_to_partnerships?: boolean
           owner_user_id?: string | null
           ownership_attested?: boolean
           ownership_attested_at?: string | null
@@ -2218,6 +2313,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ranking_weights: {
+        Row: {
+          bonus_edit_30d: number
+          bonus_edit_90d: number
+          bonus_tier_certified: number
+          bonus_tier_claimed: number
+          bonus_tier_verified: number
+          good_rating_floor: number
+          good_review_multiplier: number
+          id: number
+          poor_review_multiplier: number
+          updated_at: string
+          view_daily_cap: number
+          weight_owner_reply: number
+          weight_review: number
+          weight_save: number
+          weight_view: number
+          window_days: number
+        }
+        Insert: {
+          bonus_edit_30d?: number
+          bonus_edit_90d?: number
+          bonus_tier_certified?: number
+          bonus_tier_claimed?: number
+          bonus_tier_verified?: number
+          good_rating_floor?: number
+          good_review_multiplier?: number
+          id?: number
+          poor_review_multiplier?: number
+          updated_at?: string
+          view_daily_cap?: number
+          weight_owner_reply?: number
+          weight_review?: number
+          weight_save?: number
+          weight_view?: number
+          window_days?: number
+        }
+        Update: {
+          bonus_edit_30d?: number
+          bonus_edit_90d?: number
+          bonus_tier_certified?: number
+          bonus_tier_claimed?: number
+          bonus_tier_verified?: number
+          good_rating_floor?: number
+          good_review_multiplier?: number
+          id?: number
+          poor_review_multiplier?: number
+          updated_at?: string
+          view_daily_cap?: number
+          weight_owner_reply?: number
+          weight_review?: number
+          weight_save?: number
+          weight_view?: number
+          window_days?: number
+        }
+        Relationships: []
       }
       rate_limit_counters: {
         Row: {
@@ -3034,7 +3186,7 @@ export type Database = {
           started_at?: string
           stripe_checkout_session_id?: string | null
           stripe_subscription_schedule_id?: string | null
-          tester_number?: number
+          tester_number: number
           tester_user_id: string
           trial_granted_at?: string | null
           updated_at?: string
@@ -3151,11 +3303,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activity_decay: {
+        Args: { p_at: string; p_window_days: number }
+        Returns: number
+      }
       aggregate_entity_analytics: {
         Args: { target_date?: string }
         Returns: Json
       }
       auto_grant_certified: { Args: never; Returns: Json }
+      award_weekly_featured: {
+        Args: {
+          p_buckets: Json
+          p_excluded_types?: string[]
+          p_week_start: string
+        }
+        Returns: {
+          bucket: string
+          featured: boolean
+          listing_id: string
+          score: number
+        }[]
+      }
       check_rate_limit: {
         Args: {
           p_bucket: string
@@ -3177,10 +3346,13 @@ export type Database = {
           p_location_type?: string
           p_location_types?: string[]
           p_open_now?: boolean
+          p_open_to_partnerships?: boolean
           p_price_ranges?: string[]
           p_q?: string
           p_radius_miles?: number
           p_trust_tier?: string
+          p_type_category_ids?: string[]
+          p_type_location_types?: string[]
         }
         Returns: {
           facet_count: number
@@ -3188,10 +3360,7 @@ export type Database = {
           facet_kind: string
         }[]
       }
-      find_auth_user_id_by_email: {
-        Args: { p_email: string }
-        Returns: string
-      }
+      find_auth_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_top_listings_by_views: {
         Args: { days_back?: number; limit_n?: number }
         Returns: {
@@ -3217,21 +3386,31 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_open_now: { Args: { p_listing_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      listing_place_text: {
+        Args: { p_city_id: string; p_listing_id: string }
+        Returns: string
+      }
+      owned_listing_video_count: {
+        Args: { p_listing_id: string }
+        Returns: number
+      }
       owns_entity: { Args: { p_entity_id: string }; Returns: boolean }
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }
       prune_launch_subscribe_attempts: { Args: never; Returns: undefined }
       prune_rate_limit_counters: { Args: never; Returns: undefined }
+      purge_search_events: { Args: never; Returns: number }
       redeem_tester_invite: {
         Args: { p_token_hash: string }
         Returns: {
-          created_by: string | null
-          email: string | null
+          created_by: string
+          email: string
           id: string
           kind: string
-          listing_id: string | null
-          tester_user_id: string | null
+          listing_id: string
+          tester_user_id: string
         }[]
       }
+      refresh_activity_scores: { Args: never; Returns: number }
       search_listings_faceted: {
         Args: {
           p_attribute_values?: string[]
@@ -3246,17 +3425,24 @@ export type Database = {
           p_location_types?: string[]
           p_offset?: number
           p_open_now?: boolean
+          p_open_to_partnerships?: boolean
           p_ownership_label?: string
           p_price_ranges?: string[]
           p_q?: string
           p_radius_miles?: number
           p_sort?: string
           p_trust_tier?: string
+          p_type_category_ids?: string[]
+          p_type_location_types?: string[]
         }
         Returns: {
           id: string
           total_count: number
         }[]
+      }
+      search_prefix_tsquery: {
+        Args: { p_q: string; p_weights: string }
+        Returns: unknown
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }

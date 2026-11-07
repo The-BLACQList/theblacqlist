@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/supabase/database'
 import { generateTesterToken, hashTesterToken } from '@/lib/tester/links'
 import {
   REDEEM_BAD_EMAIL,

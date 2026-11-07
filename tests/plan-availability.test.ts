@@ -15,7 +15,7 @@
 import { describe, it, expect } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/supabase/database'
 import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 
 type PlanRow = {
