@@ -123,6 +123,7 @@ test.describe('M. MVP Launch Gates (repo-checkable)', () => {
             if (/\?\?\s*['"`]/.test(line)) return // `?? 'http://localhost:3000'`
             if (/127\.0\.0\.1:54321/.test(line)) return // local Supabase (next.config images)
             if (/^\s*(\/\/|\*)/.test(line)) return // comment
+            if (/===\s*['"]localhost['"]|\/\^\(localhost\|/.test(line)) return // is-this-host-local check, not a target
             offenders.push(`${full.replace(root + '/', '')}:${i + 1}  ${line.trim()}`)
           })
         }

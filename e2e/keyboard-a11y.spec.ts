@@ -75,9 +75,10 @@ test.describe('J. Accessibility — keyboard & focus', () => {
       `search for "${queryWord}" should return at least one result`
     ).toBeVisible()
 
-    // Tab to the first result link and activate it with Enter. Must be a link
-    // inside a result card — the disclosure link sits in the same section and
-    // goes to /how-ranking-works, which would never match the listing URL below.
+    // Tab to the first result's name link and activate it with Enter. Must be
+    // the card heading link: the disclosure link sits in the same section and
+    // goes to /how-ranking-works, and each card's category chip comes before
+    // the name and goes to /discover?category=, so neither matches the URL below.
     const reachedResult = await tabUntil(page, () => {
       const el = document.activeElement
       const section = document.querySelector('section[aria-label="Discovery results"]')
@@ -86,7 +87,7 @@ test.describe('J. Accessibility — keyboard & focus', () => {
         !!section &&
         section.contains(el) &&
         el.tagName.toLowerCase() === 'a' &&
-        !!el.closest('article')
+        !!el.closest('article h3')
       )
     })
     expect(reachedResult, 'first result link should be keyboard-reachable').toBe(true)
