@@ -37,7 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    // award_weekly_featured is not in the generated types yet.
+    // awardWeeklyFeatured takes an untyped client (lib/featured/award.ts).
     const supabase = createServiceClient() as unknown as SupabaseClient
     const summary = await awardWeeklyFeatured(supabase, now)
     revalidatePath('/')

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/supabase/database'
 import type { BillingCycle, PlanSlug } from './plans'
 
 // Which tiers can actually be bought, right now, per billing cycle.

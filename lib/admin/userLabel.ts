@@ -18,7 +18,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/supabase/database'
 
 /** Rendered when a user ID resolves to no name, no email, and no caller fallback. */
 export const UNKNOWN_USER_LABEL = 'Unknown user'
