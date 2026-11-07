@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { CollectiveCloseUp } from '@/components/home/CollectiveCloseUp'
 import { LaunchWaitlist } from '@/components/marketing/LaunchWaitlist'
 import { SOON_FEATURES } from '@/lib/features/opening-soon'
 
@@ -24,8 +25,9 @@ function formatDollars(cents: number): string {
 
 /**
  * The Collective band, wired to the LIVE flow-map data. It leads with
- * tracking a receipt (joining) and links out to The Collective map. With no
- * tracked spend yet, it invites the first receipt instead of showing zeros.
+ * tracking a receipt (joining) and links out to The Collective map, beside a
+ * close-up of the Silo that lights up as receipts come in. With no tracked
+ * spend yet, it invites the first receipt instead of showing zeros.
  */
 export function ImpactBand({
   totalAmountCents,
@@ -40,33 +42,23 @@ export function ImpactBand({
   return (
     <section
       aria-labelledby="impact-heading"
-      className="relative bg-deep-bg py-14 md:py-16 overflow-hidden"
+      className="relative bg-deep-bg overflow-hidden lg:flex lg:items-center lg:min-h-[520px]"
     >
-      <span
-        className="absolute inset-0 opacity-[0.18]"
-        aria-hidden="true"
-        style={{
-          backgroundImage: [
-            'radial-gradient(circle at 14% 32%, var(--color-gold) 1.6px, transparent 2.6px)',
-            'radial-gradient(circle at 68% 58%, var(--color-gold) 1.6px, transparent 2.6px)',
-            'radial-gradient(circle at 42% 84%, var(--color-gold) 1.6px, transparent 2.6px)',
-            'radial-gradient(circle at 88% 20%, var(--color-gold) 1.6px, transparent 2.6px)',
-          ].join(', '),
-          backgroundSize: '320px 320px',
-        }}
-      />
+      <CollectiveCloseUp purchases={totalTransactions} businesses={uniqueBusinesses} />
 
-      <div className="relative max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        <div>
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pb-10 md:pb-14 lg:py-14">
+        <div className="lg:max-w-[440px]">
           <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-gold mb-1.5">
             The Collective
           </p>
-          <h2 id="impact-heading" className="font-headline text-[26px] md:text-[32px] text-white max-w-[20ch] text-balance">
+          <h2
+            id="impact-heading"
+            className="font-headline text-[28px] lg:text-[36px] text-white max-w-[20ch] text-balance"
+          >
             Join The Collective.
           </h2>
-          <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[52ch]">
-            Add a receipt and your spend joins everyone else&apos;s on one live map. Together it
-            shows where our money goes.
+          <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[44ch]">
+            Every receipt puts another dollar on the map. Together we can see where our money goes.
           </p>
           <div className="flex gap-3 flex-wrap mt-6">
             <Link
@@ -82,43 +74,39 @@ export function ImpactBand({
               See The Collective
             </Link>
           </div>
-        </div>
 
-        <dl className="grid grid-cols-3 gap-4 m-0">
           {hasData ? (
-            <>
-              <div className="border-t-2 border-gold pt-3">
-                <dd className="font-headline text-[28px] md:text-[34px] text-white m-0">
-                  {formatDollars(totalAmountCents)}
-                </dd>
-                <dt className="font-subhead text-xs text-off-white/70">spent</dt>
-              </div>
-              <div className="border-t-2 border-gold pt-3">
-                <dd className="font-headline text-[28px] md:text-[34px] text-white m-0">
-                  {totalTransactions.toLocaleString()}
-                </dd>
-                <dt className="font-subhead text-xs text-off-white/70">tracked purchases</dt>
-              </div>
-              <div className="border-t-2 border-gold pt-3">
-                <dd className="font-headline text-[28px] md:text-[34px] text-white m-0">
-                  {uniqueBusinesses.toLocaleString()}
-                </dd>
-                <dt className="font-subhead text-xs text-off-white/70">businesses supported</dt>
-              </div>
-            </>
+            <dl className="flex flex-wrap gap-x-7 gap-y-4 mt-7">
+              <Stat label="spent" value={formatDollars(totalAmountCents)} />
+              <Stat
+                label={totalTransactions === 1 ? 'purchase' : 'purchases'}
+                value={totalTransactions.toLocaleString()}
+              />
+              <Stat
+                label={uniqueBusinesses === 1 ? 'business' : 'businesses'}
+                value={uniqueBusinesses.toLocaleString()}
+              />
+            </dl>
           ) : (
-            <div className="col-span-3 border-t-2 border-gold pt-3">
-              <dd className="font-headline text-[20px] text-white m-0">
-                The Collective is waiting on its first dollar.
-              </dd>
-              <dt className="font-subhead text-xs text-off-white/70 mt-1">
+            <div className="mt-7">
+              <p className="font-headline text-[20px] text-white">Waiting on its first dollar.</p>
+              <p className="font-subhead text-xs text-off-white/70 mt-0.5">
                 Add a receipt and be the first in.
-              </dt>
+              </p>
             </div>
           )}
-        </dl>
+        </div>
       </div>
     </section>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col-reverse">
+      <dt className="font-subhead text-xs text-off-white/70">{label}</dt>
+      <dd className="font-headline text-[22px] lg:text-[26px] text-white m-0">{value}</dd>
+    </div>
   )
 }
 
