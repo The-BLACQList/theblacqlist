@@ -140,6 +140,69 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # ONE-OFF, never merged (branch ci/launch-specs-once). Runs the four launch
+  # specs CI normally skips, and the ticket 170 suggest sheet, against STAGING
+  # once before Go/No-Go Mon 9 Nov. Close the PR after reading the results.
+  launch-specs-once:
+    name: launch-specs-once
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: >-
+          pnpm exec playwright test
+          e2e/launch-gates.spec.ts
+          e2e/contrast.spec.ts
+          e2e/a11y.spec.ts
+          e2e/keyboard-a11y.spec.ts
+          --reporter=list
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          COMING_SOON_MODE: 'false'
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: launch-specs-report
+          path: playwright-report/
+          retention-days: 7
+
+  suggest-170-once:
+    name: suggest-170-once
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.0.8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npx -y tsx scripts/ops/ci-suggest-once.ts out
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: subcategory-suggest
+          path: out/
+          retention-days: 7
+
   build:
     name: build
     runs-on: ubuntu-latest
