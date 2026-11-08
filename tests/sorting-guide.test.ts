@@ -133,6 +133,15 @@ describe('searchGuide', () => {
     ['financial advisor', 'financial-planning-wealth'],
     ['loan officer', 'mortgage-lending'],
     ['family farm', 'farms-farm-stands'],
+    ['ice cream', 'ice-cream-desserts'],
+    ['creamery', 'ice-cream-desserts'],
+    ['beauty supply', 'beauty-supply'],
+    ['hotel', 'hotels-stays'],
+    ['bed and breakfast', 'hotels-stays'],
+    ['car dealer', 'car-dealers'],
+    ['bike shop', 'bike-shops'],
+    ['cooking class', 'cooking-classes'],
+    ['pharmacy', 'pharmacies'],
   ])('"%s" finds %s first', (query, slug) => {
     expect(searchGuide(query, CATS)[0]?.slug).toBe(slug)
   })

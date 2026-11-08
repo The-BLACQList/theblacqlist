@@ -213,7 +213,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0001-0000-0000-000000000006', 'Meal Prep & Delivery',     'meal-prep-delivery',         'c0000001-0000-0000-0000-000000000001', 6, true),
   ('c0000002-0001-0000-0000-000000000007', 'Food Trucks',              'food-trucks',                'c0000001-0000-0000-0000-000000000001', 7, true),
   ('c0000002-0001-0000-0000-000000000008', 'Juice Bars & Smoothies',   'juice-bars-smoothies',       'c0000001-0000-0000-0000-000000000001', 8, true),
-  ('c0000002-0001-0000-0000-000000000009', 'Grocery & Markets',        'grocery-markets',            'c0000001-0000-0000-0000-000000000001', 9, true)
+  ('c0000002-0001-0000-0000-000000000009', 'Grocery & Markets',        'grocery-markets',            'c0000001-0000-0000-0000-000000000001', 9, true),
+  ('c0000002-0001-0000-0000-000000000010', 'Ice Cream & Desserts',     'ice-cream-desserts',         'c0000001-0000-0000-0000-000000000001', 10, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -228,7 +229,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0002-0000-0000-000000000005', 'Braiding & Extensions',     'braiding-extensions',      'c0000001-0000-0000-0000-000000000002', 5, true),
   ('c0000002-0002-0000-0000-000000000006', 'Estheticians & Skincare',   'estheticians-skincare',    'c0000001-0000-0000-0000-000000000002', 6, true),
   ('c0000002-0002-0000-0000-000000000007', 'Makeup Artists',            'makeup-artists',           'c0000001-0000-0000-0000-000000000002', 7, true),
-  ('c0000002-0002-0000-0000-000000000008', 'Men''s Grooming',           'mens-grooming',            'c0000001-0000-0000-0000-000000000002', 8, true)
+  ('c0000002-0002-0000-0000-000000000008', 'Men''s Grooming',           'mens-grooming',            'c0000001-0000-0000-0000-000000000002', 8, true),
+  ('c0000002-0002-0000-0000-000000000009', 'Beauty Supply',             'beauty-supply',            'c0000001-0000-0000-0000-000000000002', 9, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -333,7 +335,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0009-0000-0000-000000000005', 'College Prep & Counseling',    'college-prep-counseling',    'c0000001-0000-0000-0000-000000000009', 5, true),
   ('c0000002-0009-0000-0000-000000000006', 'Music Lessons',                'music-lessons',              'c0000001-0000-0000-0000-000000000009', 6, true),
   ('c0000002-0009-0000-0000-000000000007', 'Art Classes',                  'art-classes',                'c0000001-0000-0000-0000-000000000009', 7, true),
-  ('c0000002-0009-0000-0000-000000000008', 'STEM & Technology Education',  'stem-technology-education',  'c0000001-0000-0000-0000-000000000009', 8, true)
+  ('c0000002-0009-0000-0000-000000000008', 'STEM & Technology Education',  'stem-technology-education',  'c0000001-0000-0000-0000-000000000009', 8, true),
+  ('c0000002-0009-0000-0000-000000000009', 'Cooking Classes',              'cooking-classes',            'c0000001-0000-0000-0000-000000000009', 9, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -347,7 +350,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0010-0000-0000-000000000004', 'Car Rental',              'car-rental',               'c0000001-0000-0000-0000-000000000010', 4, true),
   ('c0000002-0010-0000-0000-000000000005', 'Tire & Wheel Services',   'tire-wheel-services',      'c0000001-0000-0000-0000-000000000010', 5, true),
   ('c0000002-0010-0000-0000-000000000006', 'Auto Body & Paint',       'auto-body-paint',          'c0000001-0000-0000-0000-000000000010', 6, true),
-  ('c0000002-0010-0000-0000-000000000007', 'Mobile Mechanic',         'mobile-mechanic',          'c0000001-0000-0000-0000-000000000010', 7, true)
+  ('c0000002-0010-0000-0000-000000000007', 'Mobile Mechanic',         'mobile-mechanic',          'c0000001-0000-0000-0000-000000000010', 7, true),
+  ('c0000002-0010-0000-0000-000000000008', 'Car Dealers',             'car-dealers',              'c0000001-0000-0000-0000-000000000010', 8, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -402,7 +406,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0014-0000-0000-000000000004', 'Urgent Care',                'urgent-care',                'c0000001-0000-0000-0000-000000000014', 4, true),
   ('c0000002-0014-0000-0000-000000000005', 'Mental & Behavioral Health', 'mental-behavioral-health',   'c0000001-0000-0000-0000-000000000014', 5, true),
   ('c0000002-0014-0000-0000-000000000006', 'Specialty Medicine',         'specialty-medicine',         'c0000001-0000-0000-0000-000000000014', 6, true),
-  ('c0000002-0014-0000-0000-000000000007', 'Telehealth Services',        'telehealth-services',        'c0000001-0000-0000-0000-000000000014', 7, true)
+  ('c0000002-0014-0000-0000-000000000007', 'Telehealth Services',        'telehealth-services',        'c0000001-0000-0000-0000-000000000014', 7, true),
+  ('c0000002-0014-0000-0000-000000000008', 'Pharmacies',                 'pharmacies',                 'c0000001-0000-0000-0000-000000000014', 8, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -414,7 +419,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0015-0000-0000-000000000002', 'Car Services & Black Cars',    'car-services-black-cars',      'c0000001-0000-0000-0000-000000000015', 2, true),
   ('c0000002-0015-0000-0000-000000000003', 'Shuttle & Airport Transport',  'shuttle-airport-transport',    'c0000001-0000-0000-0000-000000000015', 3, true),
   ('c0000002-0015-0000-0000-000000000004', 'Delivery Services',            'delivery-services',            'c0000001-0000-0000-0000-000000000015', 4, true),
-  ('c0000002-0015-0000-0000-000000000005', 'Freight & Logistics',          'freight-logistics',            'c0000001-0000-0000-0000-000000000015', 5, true)
+  ('c0000002-0015-0000-0000-000000000005', 'Freight & Logistics',          'freight-logistics',            'c0000001-0000-0000-0000-000000000015', 5, true),
+  ('c0000002-0015-0000-0000-000000000006', 'Hotels & Stays',               'hotels-stays',                 'c0000001-0000-0000-0000-000000000015', 6, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -503,7 +509,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0022-0000-0000-000000000003', 'Handmade & Artisan Goods',    'handmade-artisan-goods',     'c0000001-0000-0000-0000-000000000022', 3, true),
   ('c0000002-0022-0000-0000-000000000004', 'Cultural & Heritage Products','cultural-heritage-products', 'c0000001-0000-0000-0000-000000000022', 4, true),
   ('c0000002-0022-0000-0000-000000000005', 'Books & Media',               'books-media-retail',         'c0000001-0000-0000-0000-000000000022', 5, true),
-  ('c0000002-0022-0000-0000-000000000006', 'Health & Wellness Products',  'health-wellness-products',   'c0000001-0000-0000-0000-000000000022', 6, true)
+  ('c0000002-0022-0000-0000-000000000006', 'Health & Wellness Products',  'health-wellness-products',   'c0000001-0000-0000-0000-000000000022', 6, true),
+  ('c0000002-0022-0000-0000-000000000007', 'Bike Shops',                  'bike-shops',                 'c0000001-0000-0000-0000-000000000022', 7, true)
 ON CONFLICT (slug) DO NOTHING;
 
 
