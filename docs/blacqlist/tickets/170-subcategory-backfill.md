@@ -1,6 +1,6 @@
 # Ticket 170: Suggest and fill missing subcategories
 
-**Phase:** V1.5 · **Priority:** P1 · **Status:** Run on staging 2026-11-08 (648 listings moved to a subcategory, rollback tested). Seven new subcategories and 38 hand moves in review. Prod suggest, dry run and apply next, at GATE-DATA (given 2026-11-08).
+**Phase:** V1.5 · **Priority:** P1 · **Status:** Done 2026-11-11. Staging and prod both run. Prod: 584 listings given a subcategory or moved, 36 left on their group on purpose.
 **Depends on:** none (169 is better with it, and works without it)
 **Gates:** GATE-DATA for any prod write. Reading prod listings also needs the founder's word first. Plan approval doesn't count.
 **Decision record (founder, 2026-10-31):** the backfill is its own ticket, apart from the Cue chat (169).
@@ -92,4 +92,12 @@ Run order:
 2. Staging: dry run and apply of the 38-row moves sheet (`subcategory-moves-staging-2026-11-08.csv`, gitignored). Check the counts.
 3. Prod: the same sheet is rebuilt from the prod suggest, matched by `listing_id` and checked by name, then dry run and apply.
 4. Merge after both migrations are in.
+
+## Prod run (2026-11-11)
+
+- Staging: the 38 hand moves applied (28 MOVE, 10 APPLY). Listings still on a group with children went from 96 to 58.
+- Prod suggest (read-only): 620 published listings sat on a group with children.
+- Prod listing ids are not the same as staging's, so the staging decisions were matched by name and current group instead of by `listing_id`. 609 of 620 matched. The other 11 were picked by hand: two chains with two locations each, one name with two staging rows, and six listings that exist only on prod.
+- Prod dry run: 561 APPLY, 23 MOVE, 36 skipped, no problems. Apply at GATE-DATA: 584 written, rollback file written first. Listings still on a group with children went from 620 to 36.
+- Rollback files (gitignored): `subcategory-rollback-2026-11-11T171116Z.csv` (staging) and `subcategory-rollback-2026-11-11T171747Z.csv` (prod), in `docs/blacqlist/ops/data/`.
 
