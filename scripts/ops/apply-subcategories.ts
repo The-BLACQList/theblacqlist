@@ -2,17 +2,24 @@
  * Subcategory backfill (ticket 170). Applies the decided suggestion CSV.
  *
  * Reads the sheet scripts/ops/suggest-subcategories.ts produced, after the
- * founder has filled in the DECISION column. Only rows marked `APPLY` are
- * touched. Everything else is counted and skipped.
+ * founder has filled in the DECISION column. Only rows marked `APPLY` or
+ * `MOVE` are touched. Everything else is counted and skipped.
+ *
+ *   APPLY  to a child of the listing's current group (the normal backfill).
+ *   MOVE   to a child of another group, for a listing filed in the wrong group.
+ *
+ * The rules live in lib/listings/subcategoryApplyPlan.ts.
  *
  * What stands between this script and a bad write:
  *
  *   1. The default is a dry run. `--apply` alone is refused; it needs `--yes`.
  *   2. Every APPLY row must move a listing from a group to one of that group's
- *      own children, checked against the categories table on the target. A
- *      blank or foreign suggested_category_id stops the run before any write.
+ *      own children, and every MOVE row to a child of any group, checked
+ *      against the categories table on the target. A blank, unknown or
+ *      top-level suggested_category_id stops the run before any write.
  *   3. The rollback CSV is written to disk before the first UPDATE, so a run
- *      that dies halfway is still covered.
+ *      that dies halfway is still covered. Its name carries the time, so a
+ *      second run on the same day never overwrites the first run's rollback.
  *   4. Every UPDATE is guarded against drift. A listing whose category_id moved
  *      since the sheet was made is left alone and reported.
  *
@@ -35,6 +42,7 @@ import { dirname, isAbsolute, join } from 'path'
 import { fileURLToPath } from 'url'
 import { Client } from 'pg'
 import { describeConnectionTarget } from '../../lib/listings/locationTypeAudit'
+import { planSubcategoryRows, type PlanCategory } from '../../lib/listings/subcategoryApplyPlan'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const dataDir = join(__dirname, '..', '..', 'docs', 'blacqlist', 'ops', 'data')
@@ -153,77 +161,8 @@ function assertTargetConfirmed(url: string, live: boolean): void {
   process.exit(1)
 }
 
-interface Planned {
-  id: string
-  name: string
-  from: string
-  to: string
-  toName: string
-}
-
-interface CategoryRow {
-  id: string
-  name: string
-  parent_id: string | null
-}
-
-function plan(
-  csvPath: string,
-  categories: ReadonlyMap<string, CategoryRow>
-): { planned: Planned[]; skipped: number; problems: string[] } {
-  const rows = parseCsv(readFileSync(csvPath, 'utf8'))
-  const planned: Planned[] = []
-  const problems: string[] = []
-  const seen = new Set<string>()
-  let skipped = 0
-
-  rows.forEach((row, i) => {
-    const line = i + 2 // header is line 1
-    const decision = (row.DECISION ?? '').toUpperCase()
-    if (decision !== 'APPLY') {
-      skipped += 1
-      if (decision !== '' && decision !== 'SKIP') {
-        problems.push(`line ${line}: DECISION "${row.DECISION}" is neither APPLY nor SKIP`)
-      }
-      return
-    }
-
-    const id = row.listing_id ?? ''
-    const from = row.current_category_id ?? ''
-    const to = row.suggested_category_id ?? ''
-
-    if (!id) {
-      problems.push(`line ${line}: marked APPLY but has no listing_id`)
-      return
-    }
-    if (seen.has(id)) {
-      problems.push(`line ${line} (${id}): listing appears twice in the sheet`)
-      return
-    }
-    seen.add(id)
-    if (!to) {
-      problems.push(`line ${line} (${id}): marked APPLY but suggested_category_id is blank, fill in a child category id`)
-      return
-    }
-    const child = categories.get(to)
-    if (!child) {
-      problems.push(`line ${line} (${id}): suggested_category_id "${to}" is not a category on this project`)
-      return
-    }
-    if (child.parent_id !== from) {
-      problems.push(
-        `line ${line} (${id}): "${child.name}" is not a subcategory of the listing's current group, nothing was planned for it`
-      )
-      return
-    }
-    planned.push({ id, name: row.name ?? '', from, to, toName: child.name })
-  })
-
-  return { planned, skipped, problems }
-}
-
-async function loadCategories(db: Client): Promise<Map<string, CategoryRow>> {
-  const { rows } = await db.query<CategoryRow>(`SELECT id, name, parent_id FROM categories`)
+async function loadCategories(db: Client): Promise<Map<string, PlanCategory>> {
+  const { rows } = await db.query<PlanCategory>(`SELECT id, name, parent_id FROM categories`)
   return new Map(rows.map((r) => [r.id, r]))
 }
 
@@ -297,10 +236,12 @@ async function main() {
   await db.connect()
   try {
     const categories = await loadCategories(db)
-    const { planned, skipped, problems } = plan(csvPath, categories)
+    const { planned, skipped, problems } = planSubcategoryRows(parseCsv(readFileSync(csvPath, 'utf8')), categories)
+    const moves = planned.filter((p) => p.decision === 'MOVE').length
 
     console.log(`Decision sheet: ${csvPath}`)
-    console.log(`Rows marked APPLY: ${planned.length}`)
+    console.log(`Rows marked APPLY: ${planned.length - moves}`)
+    console.log(`Rows marked MOVE:  ${moves}`)
     console.log(`Rows skipped:      ${skipped}`)
 
     if (problems.length > 0) {
@@ -317,7 +258,9 @@ async function main() {
     }
 
     console.log('')
-    planned.slice(0, 20).forEach((p) => console.log(`  ${p.id}  → ${p.toName}  ${p.name}`))
+    planned
+      .slice(0, 20)
+      .forEach((p) => console.log(`  ${p.id}  ${p.decision === 'MOVE' ? 'MOVE ' : ''}→ ${p.toName}  ${p.name}`))
     if (planned.length > 20) console.log(`  … and ${planned.length - 20} more`)
 
     if (!APPLY) {
@@ -328,8 +271,9 @@ async function main() {
     // Rollback file first, before a single UPDATE runs. It records the group
     // each listing was in at plan time, which is also what the drift guard
     // below matches on, and the child it moved to, which the rollback guards on.
-    const date = new Date().toISOString().slice(0, 10)
-    const rollbackFile = join(dataDir, `subcategory-rollback-${date}.csv`)
+    // 2026-11-08T21:04:05.123Z → 2026-11-08T210405Z
+    const stamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z').replace(/:/g, '')
+    const rollbackFile = join(dataDir, `subcategory-rollback-${stamp}.csv`)
     mkdirSync(dataDir, { recursive: true })
     writeFileSync(
       rollbackFile,
@@ -337,7 +281,7 @@ async function main() {
         'listing_id,previous_category_id,applied_category_id',
         ...planned.map((p) => `${csvCell(p.id)},${csvCell(p.from)},${csvCell(p.to)}`),
       ].join('\n') + '\n',
-      'utf8'
+      { encoding: 'utf8', flag: 'wx' }
     )
     console.log(`\nRollback written first: ${rollbackFile}`)
 

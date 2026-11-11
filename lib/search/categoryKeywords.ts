@@ -26,6 +26,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'shuttle-airport-transport': ['airport', 'shuttle', 'ride to the airport'],
   'delivery-services': ['courier', 'deliver', 'errand'],
   'freight-logistics': ['trucking', 'shipping', 'logistic', 'freight'],
+  'hotels-stays': ['hotel', 'bed and breakfast', 'inn', 'lodging', 'motel', 'boutique hotel', 'place to stay'],
 
   // Food & Dining
   restaurants: [
@@ -38,6 +39,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'bars-lounges': ['drinks', 'cocktail', 'wine', 'beer', 'hookah', 'nightlife', 'lounge'],
   'food-trucks': ['truck'],
   'grocery-markets': ['grocery', 'groceries', 'produce', 'market', 'supermarket'],
+  'ice-cream-desserts': ['ice cream', 'creamery', 'gelato', 'frozen custard', 'sorbet', 'sundae', 'frozen yogurt'],
   'juice-bars-smoothies': ['juice', 'smoothie', 'acai'],
   'meal-prep-delivery': ['meal prep', 'meals', 'personal chef', 'chef'],
   'catering-events-food': ['catering', 'caterer'],
@@ -51,6 +53,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'makeup-artists': ['makeup', 'mua', 'glam'],
   'nail-salons-spas': ['nails', 'manicure', 'pedicure', 'acrylics', 'gel'],
   'mens-grooming': ['grooming', 'shave'],
+  'beauty-supply': ['beauty supply', 'hair care products', 'hair products', 'cosmetics store'],
 
   // Healthcare and wellness
   dentists: ['dentist', 'teeth', 'tooth', 'dental', 'orthodontist', 'braces', 'cleaning teeth'],
@@ -60,6 +63,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'urgent-care': ['urgent', 'walk in clinic'],
   'vision-optometry': ['eye', 'eyes', 'glasses', 'contacts', 'optometrist', 'eye doctor'],
   'telehealth-services': ['virtual doctor', 'online doctor', 'telemedicine'],
+  pharmacies: ['pharmacy', 'pharmacist', 'prescription', 'drugstore', 'rx'],
   'specialty-medicine': ['dermatologist', 'obgyn', 'gynecologist', 'cardiologist', 'specialist', 'midwife', 'doula'],
   'pediatric-healthcare': ['pediatrician', 'kids doctor'],
   'fitness-studios': ['gym', 'workout', 'fitness', 'boxing', 'dance class', 'spin'],
@@ -105,6 +109,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'test-preparation': ['sat', 'act', 'gre', 'gmat', 'lsat', 'test prep'],
   'college-prep-counseling': ['college', 'admissions', 'scholarship', 'fafsa'],
   'stem-technology-education': ['coding', 'robotics', 'stem', 'code camp'],
+  'cooking-classes': ['cooking class', 'cooking school', 'culinary class', 'learn to cook'],
   'music-lessons': ['piano', 'guitar', 'drums', 'voice lessons', 'singing'],
   'after-school-programs': ['after school', 'summer camp', 'camp'],
   'childcare-centers': ['daycare', 'day care', 'preschool', 'child care', 'babysitter'],
@@ -113,6 +118,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
 
   // Shopping and gifts
   'gift-shops': ['gift', 'present', 'birthday', "mother's day", "father's day", 'anniversary', 'christmas', 'holiday'],
+  'bike-shops': ['bike', 'bicycle', 'cycling', 'bike repair', 'ebike'],
   'candles-home-fragrance': ['candle', 'incense', 'fragrance'],
   'handmade-artisan-goods': ['handmade', 'crafts', 'artisan'],
   'cultural-heritage-products': ['kente', 'african print', 'ankara', 'heritage', 'juneteenth'],
@@ -162,6 +168,7 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'car-detailing': ['detail', 'car wash', 'detailer'],
   'towing-roadside': ['tow', 'tow truck', 'roadside'],
   'tire-wheel-services': ['tires', 'rims', 'flat tire'],
+  'car-dealers': ['dealership', 'car dealer', 'new cars', 'used cars', 'buy a car'],
 
   // Community
   'churches-places-of-worship': ['church', 'worship', 'mosque', 'ministry', 'faith'],
