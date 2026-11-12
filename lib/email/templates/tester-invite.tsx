@@ -1,19 +1,17 @@
+import { Button, Hr, Text } from '@react-email/components'
+
 import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Hr,
-  Html,
-  Preview,
-  Section,
-  Text,
-} from '@react-email/components'
+  CollectiveFirstLook,
+  DEFAULT_SITE_URL,
+  ReportProblemCallout,
+  TesterEmailShell,
+  styles,
+} from '@/lib/email/templates/tester-email-parts'
 
 /**
  * Who the invite is for. One template, two bodies: a separate supporter file
- * would duplicate the styling and, worse, slip past the source checks in
- * tests/tester-invite-email.test.ts that keep a real token out of this repo.
+ * would slip past the source checks in tests/tester-invite-email.test.ts that
+ * keep a real token out of this repo.
  *
  * Required with no default so a caller has to say which one they mean.
  */
@@ -22,317 +20,153 @@ export type TesterInviteVariant = 'owner' | 'supporter'
 interface TesterInviteEmailProps {
   variant: TesterInviteVariant
   /**
-   * The full preview URL, including the `?preview=` query.
+   * The one-tap tester link, `https://…/t#<token>`, minted on /admin/testers.
    *
    * Required, and deliberately without a default. Two reasons:
-   *  1. Forgetting it is a compile error, not an email that silently sends a
-   *     door-less link to a gated site.
-   *  2. A default would mean a token value living in this file. The token
-   *     never appears in the repo — it is typed into /admin/email-preview at
-   *     send time and passed in from there.
+   *  1. Forgetting it is a compile error, not an email with a dead button.
+   *  2. A default would mean a token living in this file. The token never
+   *     appears in the repo. It is pasted into /admin/email-preview at send
+   *     time and passed in from there. It rides in the URL fragment, so it
+   *     never reaches a server log when the tester taps it (lib/tester/links.ts).
    */
-  previewLink: string
+  testerLink: string
   /** Optional: the greeting degrades to "You're in early." with no dangling comma. */
   firstName?: string | null
   siteUrl?: string
 }
 
+/**
+ * The first email a new tester gets. It matches the one-tap flow on prod:
+ * tap the link, tap Start on /t, signed in with no password, and a short guide
+ * (the Tester Tour rail) walks them through the site.
+ *
+ * The step lines below mirror TOUR_STEP_COPY in lib/tour/verify.ts. If the
+ * rail's steps change, change these with them.
+ */
 export function TesterInviteEmail({
   variant,
-  previewLink,
+  testerLink,
   firstName = null,
-  siteUrl = 'https://theblacqlist.com',
+  siteUrl = DEFAULT_SITE_URL,
 }: TesterInviteEmailProps) {
   const isOwner = variant === 'owner'
 
   return (
-    <Html lang="en">
-      <Head />
-      <Preview>
-        {isOwner
-          ? 'You’re invited to add your business to The BLACQList before we open to the public.'
-          : 'You’re invited to explore The BLACQList before we open to the public.'}
-      </Preview>
-      <Body style={body}>
-        <Container style={container}>
-          {/* Header */}
-          <Section style={header}>
-            <Text style={logoText}>THE BLACQLIST</Text>
-          </Section>
+    <TesterEmailShell
+      siteUrl={siteUrl}
+      preview={
+        isOwner
+          ? 'One tap and you’re in. Add your business to The BLACQList before we open to the public.'
+          : 'One tap and you’re in. Explore The BLACQList before we open to the public.'
+      }
+    >
+      <Text style={styles.eyebrow}>Private Preview</Text>
+      <Text style={styles.heading}>
+        {firstName ? `You're in early, ${firstName}.` : "You're in early."}
+      </Text>
 
-          {/* Content */}
-          <Section style={content}>
-            <Text style={eyebrow}>Private Preview</Text>
-            <Text style={heading}>
-              {firstName ? `You're in early, ${firstName}.` : "You're in early."}
-            </Text>
+      {isOwner ? (
+        <Text style={styles.paragraph}>
+          The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small group of
+          business owners in first to put their business on the list, tell us what&rsquo;s
+          confusing, and help us fix it before everyone else arrives.
+        </Text>
+      ) : (
+        <Text style={styles.paragraph}>
+          The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small group of
+          people in first to find Black-owned businesses, save the ones they love, tell us
+          what&rsquo;s confusing, and help us fix it before everyone else arrives.
+        </Text>
+      )}
 
-            {isOwner ? (
-              <Text style={paragraph}>
-                The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small
-                group of business owners in first to add their business, tell us what&rsquo;s
-                confusing, and help us fix it before everyone else arrives.
-              </Text>
-            ) : (
-              <Text style={paragraph}>
-                The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small
-                group of people in first to find businesses, save the ones they like, tell us
-                what&rsquo;s confusing, and help us fix it before everyone else arrives.
-              </Text>
-            )}
+      <Text style={styles.paragraph}>
+        <strong>One tap and you&rsquo;re in.</strong> Tap the button, then tap{' '}
+        <strong>Start</strong>. We sign you in. No password, nothing to confirm.
+      </Text>
 
-            <Text style={paragraph}>
-              <strong>Start with this link.</strong> It&rsquo;s your door in. It remembers you for 30
-              days on whichever browser you open it in.
-            </Text>
+      <Button href={testerLink} style={styles.button}>
+        Start here
+      </Button>
 
-            <Button href={previewLink} style={button}>
-              Start here
-            </Button>
+      <Text style={styles.note}>
+        This link is yours for 14 days. Open it again any time and you pick up where you left off.
+      </Text>
 
-            <Text style={note}>
-              If you ever land on a &ldquo;coming soon&rdquo; page, open this link again. It
-              always puts you back in.
-            </Text>
+      <Hr style={styles.divider} />
 
-            <Hr style={divider} />
+      <Text style={styles.subheading}>What it takes: about 15 minutes</Text>
 
-            <Text style={subheading}>What it takes: about ten minutes</Text>
+      <Text style={styles.paragraph}>
+        A short guide down the side of the site walks you through it, one step at a time.
+      </Text>
 
-            {isOwner ? (
-              <>
-                <Text style={step}>
-                  <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings
-                  you here, pick <strong>&ldquo;I have a business.&rdquo;</strong>
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click
-                  it.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>3.</strong> Answer two quick questions.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>4.</strong> Fill in your business: the name, what you
-                  do, where you are, and a photo or two.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>5.</strong> We review it and email you when it&rsquo;s
-                  live.
-                </Text>
-                {/* Owner compensation [Decision — founder, 2026-09-19, made
-                    conditional 2026-10-10]: one free month on any tier, used now
-                    or held until the tier they want opens. It unlocks when the
-                    owner finishes the short walk on the site, so the email says
-                    so rather than promising it on sign-up. The words "trial" and
-                    "tour" are deliberately absent; the test guards both. */}
-                <Text style={paragraph}>
-                  Once your business is live, we&rsquo;ll walk you through a few short steps on the
-                  site. Finish them and you get one month of The BLACQList free on any tier. Use it
-                  right away, or save it until the plan you want opens.
-                </Text>
-              </>
-            ) : (
-              <>
-                {/* Supporter copy promises only what the product does this week.
-                    No personalising (the categories picked at onboarding are not
-                    saved), no following (does not exist), no tour or trial (both
-                    need a published listing a supporter will never have). */}
-                <Text style={step}>
-                  <strong style={stepNumber}>1.</strong> Create an account. When we ask what brings
-                  you here, pick <strong>&ldquo;I&rsquo;m here to discover.&rdquo;</strong>{' '}
-                  It&rsquo;s the first card, already selected.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>2.</strong> Confirm your email. We send a link. Click
-                  it.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>3.</strong> Answer two quick questions.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>4.</strong> Search for something near you. Save a few
-                  businesses. Sort them into a list.
-                </Text>
-                <Text style={step}>
-                  <strong style={stepNumber}>5.</strong> Leave a review on one you know.
-                </Text>
-              </>
-            )}
+      {isOwner ? (
+        <>
+          {/* The owner hint matches the role card on /t (StartTourButton). */}
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>1.</strong> If we ask, pick{' '}
+            <strong>&ldquo;I own a business.&rdquo;</strong>
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>2.</strong> Claim your page, or make one: the name,
+            what you do, where you are, and a photo or two. We review it and email you when
+            it&rsquo;s live.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>3.</strong> Walk the site the way a shopper would:
+            search, save a place you&rsquo;d actually go, find businesses on the map, and leave a
+            review.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>4.</strong> Tell us what worked and what didn&rsquo;t.
+          </Text>
+          {/* Owner compensation [Decision — founder, 2026-09-19, made
+              conditional 2026-10-10]: one free month on any tier, used now or
+              held until the tier they want opens. It unlocks when the owner
+              finishes the guide (lib/tour/freeMonth.ts), so the email ties it
+              to finishing rather than promising it on sign-up. The word
+              "trial" stays out; the test guards it. */}
+          <Text style={styles.paragraph}>
+            Finish the guide and you get one month of The BLACQList free on any tier. Use it right
+            away, or save it until the plan you want opens.
+          </Text>
+        </>
+      ) : (
+        <>
+          {/* Supporter copy promises only what the product does this week. No
+              personalising (onboarding categories are not saved), no following
+              (does not exist). */}
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>1.</strong> Search for something you&rsquo;d really
+            look for: a city, a category, a name.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>2.</strong> Open a few places. Save one you&rsquo;d
+            actually go to.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>3.</strong> Find businesses on the map, and browse a
+            collection.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>4.</strong> Leave a review on a place you know, or
+            flag a listing that looks out of date.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>5.</strong> Tell us what worked and what didn&rsquo;t.
+          </Text>
+        </>
+      )}
 
-            {/* The one callout that earns its place. This is the most common
-                way the invite path breaks, and the fix is behavioral, not code. */}
-            <Section style={callout}>
-              <Text style={calloutTitle}>Open the confirmation email in the same browser.</Text>
-              <Text style={calloutBody}>
-                If you sign up on your laptop and then open our confirmation email on your phone,
-                the link won&rsquo;t work. Same browser, same device. That&rsquo;s the one thing
-                that trips people up.
-              </Text>
-            </Section>
+      <Text style={styles.paragraph}>
+        A few steps ask for a sentence or two. Those notes are the part we read.
+      </Text>
 
-            <Hr style={divider} />
+      <ReportProblemCallout />
 
-            <Text style={paragraph}>
-              Anything that looks wrong, reads wrong, or just doesn&rsquo;t work? Reply to this
-              email and tell us. Blunt is more useful to us than kind.
-            </Text>
+      <CollectiveFirstLook siteUrl={siteUrl} />
 
-            <Text style={paragraph}>Thank you for being one of the first through the door.</Text>
-          </Section>
-
-          {/* Footer */}
-          <Section style={footer}>
-            <Text style={footerText}>
-              © {new Date().getFullYear()} The BLACQList. All rights reserved.
-            </Text>
-            <Text style={footerText}>
-              <a href={siteUrl} style={footerLink}>
-                theblacqlist.com
-              </a>
-            </Text>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
+      <Text style={styles.paragraph}>Thank you for being one of the first through the door.</Text>
+    </TesterEmailShell>
   )
-}
-
-const body: React.CSSProperties = {
-  backgroundColor: '#F5F5F0',
-  fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-  margin: 0,
-  padding: '24px 0',
-}
-
-const container: React.CSSProperties = {
-  backgroundColor: '#FFFFFF',
-  borderRadius: '8px',
-  maxWidth: '560px',
-  margin: '0 auto',
-  overflow: 'hidden',
-}
-
-const header: React.CSSProperties = {
-  backgroundColor: '#08080A',
-  padding: '24px 32px',
-}
-
-const logoText: React.CSSProperties = {
-  color: '#C4A065',
-  fontSize: '18px',
-  fontWeight: '700',
-  letterSpacing: '0.12em',
-  margin: 0,
-}
-
-const content: React.CSSProperties = {
-  padding: '32px 32px 24px',
-}
-
-const eyebrow: React.CSSProperties = {
-  color: '#8F6600',
-  fontSize: '11px',
-  fontWeight: '700',
-  letterSpacing: '0.12em',
-  margin: '0 0 8px',
-  textTransform: 'uppercase',
-}
-
-const heading: React.CSSProperties = {
-  color: '#000000',
-  fontSize: '22px',
-  fontWeight: '700',
-  lineHeight: '1.25',
-  margin: '0 0 16px',
-}
-
-const subheading: React.CSSProperties = {
-  color: '#000000',
-  fontSize: '16px',
-  fontWeight: '700',
-  lineHeight: '1.4',
-  margin: '0 0 12px',
-}
-
-const paragraph: React.CSSProperties = {
-  color: '#595758',
-  fontSize: '15px',
-  lineHeight: '1.6',
-  margin: '0 0 16px',
-}
-
-const note: React.CSSProperties = {
-  color: '#9B9B9B',
-  fontSize: '13px',
-  lineHeight: '1.6',
-  margin: '0 0 24px',
-}
-
-const step: React.CSSProperties = {
-  color: '#595758',
-  fontSize: '15px',
-  lineHeight: '1.6',
-  margin: '0 0 10px',
-}
-
-const stepNumber: React.CSSProperties = {
-  color: '#08080A',
-}
-
-const button: React.CSSProperties = {
-  backgroundColor: '#8F6600',
-  borderRadius: '100px',
-  color: '#FFFFFF',
-  display: 'inline-block',
-  fontSize: '14px',
-  fontWeight: '700',
-  margin: '8px 0 12px',
-  padding: '12px 28px',
-  textDecoration: 'none',
-}
-
-const callout: React.CSSProperties = {
-  backgroundColor: '#FAF6EC',
-  borderLeft: '3px solid #C4A065',
-  borderRadius: '4px',
-  margin: '20px 0 8px',
-  padding: '16px 18px',
-}
-
-const calloutTitle: React.CSSProperties = {
-  color: '#08080A',
-  fontSize: '14px',
-  fontWeight: '700',
-  lineHeight: '1.4',
-  margin: '0 0 6px',
-}
-
-const calloutBody: React.CSSProperties = {
-  color: '#595758',
-  fontSize: '14px',
-  lineHeight: '1.6',
-  margin: 0,
-}
-
-const divider: React.CSSProperties = {
-  borderColor: '#ECEAE6',
-  margin: '0 0 24px',
-}
-
-const footer: React.CSSProperties = {
-  backgroundColor: '#F5F5F0',
-  padding: '20px 32px',
-  textAlign: 'center',
-}
-
-const footerText: React.CSSProperties = {
-  color: '#9B9B9B',
-  fontSize: '12px',
-  margin: '0 0 4px',
-}
-
-const footerLink: React.CSSProperties = {
-  color: '#9B9B9B',
-  textDecoration: 'underline',
 }
