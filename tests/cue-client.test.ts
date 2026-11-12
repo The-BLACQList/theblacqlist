@@ -130,6 +130,23 @@ describe('streamCue', () => {
     expect(body).toEqual({ message: 'lawyer in atlanta', history: [], cards: [], page: '/', near: null })
   })
 
+  it('never asks the browser for a position when locate is false', async () => {
+    const getCurrentPosition = vi.fn()
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } })
+    fetchMock.mockResolvedValue(streamed([lines([{ type: 'done', text: 'ok' }])]))
+    await streamCue('plumber near me', { turns: [], locate: false })
+    expect(getCurrentPosition).not.toHaveBeenCalled()
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as Record<string, unknown>
+    expect(body.near).toBeNull()
+  })
+
+  it('still sends a position it was given when locate is false', async () => {
+    fetchMock.mockResolvedValue(streamed([lines([{ type: 'done', text: 'ok' }])]))
+    await streamCue('plumber near me', { turns: [], locate: false, near: { lat: 33.75, lng: -84.39 } })
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as Record<string, unknown>
+    expect(body.near).toEqual({ lat: 33.75, lng: -84.39 })
+  })
+
   it('passes a server fallback through', async () => {
     fetchMock.mockResolvedValue(
       streamed([lines([{ type: 'fallback', href: '/search?q=lawyer', reason: 'limited' }])])

@@ -25,6 +25,7 @@ import {
   normalizeQuery,
   shouldAssist,
   stem,
+  wantsCue,
   type AssistCategory,
   type AssistCity,
 } from '@/lib/search/assist'
@@ -139,6 +140,31 @@ describe('shouldAssist', () => {
   it('never talks over a filter that could not run', () => {
     expect(shouldAssist({ ...base, radiusUnavailable: true })).toBe(false)
     expect(shouldAssist({ ...base, filtersUnavailable: true })).toBe(false)
+  })
+})
+
+describe('wantsCue', () => {
+  const base = { q: 'bakery', total: 12, page: 1 }
+  it('leaves plain keywords and names to the grid', () => {
+    expect(wantsCue(base)).toBe(false)
+    expect(wantsCue({ ...base, q: 'Sunday Table' })).toBe(false)
+    expect(wantsCue({ ...base, q: 'hair salon atlanta' })).toBe(false)
+  })
+  it('asks Cue when the exact search came back thin', () => {
+    expect(wantsCue({ ...base, total: 0 })).toBe(true)
+    expect(wantsCue({ ...base, total: ASSIST_BELOW - 1 })).toBe(true)
+  })
+  it('asks Cue for questions and sentences', () => {
+    expect(wantsCue({ ...base, q: 'brunch spot for a big group' })).toBe(true)
+    expect(wantsCue({ ...base, q: 'where can I get braids' })).toBe(true)
+    expect(wantsCue({ ...base, q: 'vegan catering?' })).toBe(true)
+    expect(wantsCue({ ...base, q: 'best tacos houston' })).toBe(true)
+  })
+  it('never asks past page one or for an empty search', () => {
+    expect(wantsCue({ ...base, q: 'brunch spot for a big group', page: 2 })).toBe(false)
+    expect(wantsCue({ ...base, total: 0, page: 2 })).toBe(false)
+    expect(wantsCue({ ...base, q: '   ', total: 0 })).toBe(false)
+    expect(wantsCue({ ...base, q: undefined, total: 0 })).toBe(false)
   })
 })
 

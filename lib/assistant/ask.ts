@@ -31,6 +31,13 @@ interface StreamCueOptions {
   turns?: readonly AssistantTurn[]
   /** A position the caller already has, such as the Near me chip. */
   near?: NearPoint | null
+  /**
+   * False: never ask the browser for a position; send `near` or nothing.
+   * For asks the visitor did not start by hand, such as the answer the
+   * search page fetches on load, where a location prompt would come from
+   * nowhere. Defaults to true.
+   */
+  locate?: boolean
   /** Stop: ends the request and keeps what Cue had written so far. */
   signal?: AbortSignal
   /** Called with the status line and the reply so far, as they change. */
@@ -52,7 +59,9 @@ const actionsSchema = z.array(actionSchema)
  */
 export async function streamCue(words: string, options: StreamCueOptions = {}): Promise<CueReply | null> {
   const turns = options.turns ?? getAssistantState().turns
-  const near = options.near ?? (wantsNearMe(words) || lastWasNear(turns) ? await getNearPoint() : null)
+  const near =
+    options.near ??
+    (options.locate !== false && (wantsNearMe(words) || lastWasNear(turns)) ? await getNearPoint() : null)
   const failed: CueReply = { kind: 'fallback', href: fallbackHref(words), reason: 'error' }
 
   const got: {

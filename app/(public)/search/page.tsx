@@ -16,7 +16,9 @@ import {
 } from '@/lib/listings/discover-params'
 import { TourWitness } from '@/components/tour/TourWitness'
 import { SearchAssist } from '@/components/discovery/SearchAssist'
-import { shouldAssist } from '@/lib/search/assist'
+import { CueSearchAnswer } from '@/components/discovery/CueSearchAnswer'
+import { isFeatureEnabled } from '@/lib/env'
+import { shouldAssist, wantsCue } from '@/lib/search/assist'
 import { logZeroResultSearch } from '@/lib/search/zeroResultLog'
 
 export const metadata: Metadata = {
@@ -99,11 +101,24 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
     />
   ) : undefined
 
+  // Cue's answer above the grid, for searches that read like a question or
+  // came back thin (wantsCue). Keyword searches stay free and instant. Keyed
+  // on the words and place so a new search starts a fresh answer.
+  const cue =
+    isFeatureEnabled('aiAssistant') && wantsCue({ q: query, total: result.total, page }) ? (
+      <CueSearchAnswer
+        key={`${query}|${location?.lat ?? ''},${location?.lng ?? ''}`}
+        query={query}
+        near={location ? { lat: location.lat, lng: location.lng } : null}
+      />
+    ) : null
+
   return (
     <>
       {/* Tour evidence: a real search ran in this render. Sits after the
           empty-query early return — visiting /search is not searching. */}
       <TourWitness step="search_ran" />
+      {cue}
       <DiscoveryGrid
         entities={result.entities}
         total={result.total}
