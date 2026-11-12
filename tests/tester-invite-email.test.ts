@@ -31,9 +31,9 @@ const PARTS_SOURCE = readFileSync(
   'utf8'
 )
 
-// Everything the two variants share. Each block below runs once per variant so
-// a supporter-only regression cannot hide behind a green owner run.
-const VARIANTS = ['owner', 'supporter'] as const
+// Everything the three audiences share. Each block below runs once per
+// audience so a regression in one cannot hide behind a green run of another.
+const VARIANTS = ['owner', 'supporter', 'shared'] as const
 
 describe.each(VARIANTS)('the %s tester invite email', (variant) => {
   it('fake token is the shape the admin form accepts', () => {
@@ -58,11 +58,10 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
     expect(html).not.toContain('?preview=')
   })
 
-  it('says the link lasts 14 days and resumes where they left off', async () => {
-    // lib/tester/links.ts: TESTER_LINK_TTL_DAYS = 14.
+  it('says the link lasts 14 days', async () => {
+    // lib/tester/links.ts: TESTER_LINK_TTL_DAYS = 14, for every kind of link.
     const html = await renderInvite({ variant, testerLink: LINK })
     expect(html).toContain('14 days')
-    expect(html).toContain('pick up where you left off')
   })
 
   it('greets by name when one is given', async () => {
@@ -76,10 +75,9 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
     expect(html).not.toMatch(/in early, ?(undefined|null|,)/)
   })
 
-  it('points at both feedback channels: Report a problem and a reply', async () => {
+  it('points at Report a problem', async () => {
     const html = await renderInvite({ variant, testerLink: LINK })
     expect(html).toContain('Report a problem')
-    expect(html).toContain('reply to this email')
   })
 
   it('invites them to explore The Collective, framed as a first look', async () => {
@@ -113,6 +111,73 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
   it('renders no broken hrefs', async () => {
     const html = await renderInvite({ variant, testerLink: LINK })
     expect(html).not.toMatch(/href="[^"]*(undefined|null)/)
+  })
+})
+
+describe.each(['owner', 'supporter'] as const)('the one-person %s invite', (variant) => {
+  it('also takes feedback by reply', async () => {
+    const html = await renderInvite({ variant, testerLink: LINK })
+    expect(html).toContain('reply to this email')
+  })
+
+  it('says the link is theirs and resumes where they left off', async () => {
+    const html = await renderInvite({ variant, testerLink: LINK })
+    expect(html).toMatch(/This link is yours/)
+    expect(html).toContain('pick up where you left off')
+    expect(html).not.toMatch(/forward/i)
+  })
+})
+
+describe('the shared invite', () => {
+  it('does not ask for a reply: a forwarded reply goes to the forwarder', async () => {
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).not.toMatch(/reply/i)
+  })
+
+  it('is written to be forwarded, until the spots are filled', async () => {
+    // A shared link lets anyone in until the 15 spots are taken
+    // (tester_invites.kind = 'shared', SHARED_LINK_MAX_USES = TESTER_CAP).
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).toContain('Forward this email')
+    expect(html).toContain('until every tester spot is taken')
+    expect(html).not.toMatch(/This link is yours/)
+  })
+
+  it('names no number of spots left, since that changes after sending', async () => {
+    // Plain text, so CSS sizes like 15px don't count; the time estimate is the
+    // one 15 that belongs.
+    const text = await render(TesterInviteEmail({ variant: 'shared', testerLink: LINK }), {
+      plainText: true,
+    })
+    expect(text.replace(/about 15 minutes/i, '')).not.toMatch(/\b15\b|fifteen/i)
+  })
+
+  it('says what happens once the test is full: the waitlist on /t', async () => {
+    // app/t/StartTourButton.tsx: mode 'full' shows "This test is full" and a
+    // "Join the waitlist" link.
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).toContain('the test is full')
+    expect(html).toContain('join the waitlist there')
+  })
+
+  it('describes what /t asks on a shared link: owner or not, then an email', async () => {
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).toContain('tell us whether you own a business')
+    expect(html).toContain('type your email')
+  })
+
+  it('covers both paths, since the reader picks on /t', async () => {
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).toContain('If you own a business:')
+    expect(html).toMatch(/If you(&#x27;|&apos;|’|&rsquo;)re here to support:/)
+    expect(html).toContain('on the map')
+  })
+
+  it('offers the free month to business owners only, tied to finishing', async () => {
+    const html = await renderInvite({ variant: 'shared', testerLink: LINK })
+    expect(html).toMatch(/Business owners who finish the guide get one month/)
+    expect(html).toMatch(/free on any tier/)
+    expect(html).toMatch(/save it until the plan you want opens/)
   })
 })
 
@@ -192,7 +257,7 @@ describe('the template source', () => {
   it('leaves variant required, with no default', () => {
     // Defaulting to owner would quietly send the add-your-business copy to a
     // supporter. A caller has to say which audience they mean.
-    expect(TEMPLATE_SOURCE).toMatch(/^\s+variant: TesterInviteVariant$/m)
+    expect(TEMPLATE_SOURCE).toMatch(/^\s+variant: TesterInviteAudience$/m)
     expect(TEMPLATE_SOURCE).not.toMatch(/variant\?:/)
     expect(TEMPLATE_SOURCE).not.toMatch(/variant\s*=\s*'/)
   })

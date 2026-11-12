@@ -86,15 +86,28 @@ export function CollectiveFirstLook({ siteUrl }: { siteUrl: string }) {
   )
 }
 
-/** The "something broken?" callout both emails close on. */
-export function ReportProblemCallout() {
+/**
+ * The "something broken?" callout both emails close on.
+ *
+ * `forwarded`: the email may reach people second-hand (the shared invite). A
+ * reply to a forwarded email goes to whoever forwarded it, not to us, so that
+ * version points at Report a problem only.
+ */
+export function ReportProblemCallout({ forwarded = false }: { forwarded?: boolean } = {}) {
   return (
     <Section style={styles.callout}>
       <Text style={styles.calloutTitle}>Something broken or confusing?</Text>
-      <Text style={styles.calloutBody}>
-        Tap <strong>Report a problem</strong> on any page, or reply to this email and tell us. Blunt
-        is more useful to us than kind.
-      </Text>
+      {forwarded ? (
+        <Text style={styles.calloutBody}>
+          Tap <strong>Report a problem</strong> on any page and tell us. Blunt is more useful to us
+          than kind.
+        </Text>
+      ) : (
+        <Text style={styles.calloutBody}>
+          Tap <strong>Report a problem</strong> on any page, or reply to this email and tell us.
+          Blunt is more useful to us than kind.
+        </Text>
+      )}
     </Section>
   )
 }

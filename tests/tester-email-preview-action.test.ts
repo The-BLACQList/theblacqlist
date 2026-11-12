@@ -53,6 +53,27 @@ describe('renderTesterInviteAction', () => {
     expect(result.text).toContain('Explore The Collective')
   })
 
+  it('renders the shared invite, marked as forwardable', async () => {
+    const result = await run({ ...base, audience: 'shared' })
+    expect(result).toMatchObject({
+      subject: "You're in early. Try The BLACQList before anyone else",
+      shareable: true,
+    })
+  })
+
+  it('marks one-person emails as not forwardable', async () => {
+    expect(await run(base)).toMatchObject({ shareable: false })
+    expect(await run({ ...base, email_kind: 'update', audience: 'supporter' })).toMatchObject({
+      shareable: false,
+    })
+  })
+
+  it('refuses a shared tester update: the update goes to one tester', async () => {
+    expect(await run({ ...base, email_kind: 'update', audience: 'shared' })).toEqual({
+      error: 'The tester update goes to one tester. Pick business owner or supporter.',
+    })
+  })
+
   it('renders the supporter invite subject', async () => {
     expect(await run({ ...base, audience: 'supporter' })).toMatchObject({
       subject: "You're in early. Explore The BLACQList before anyone else",
