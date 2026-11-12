@@ -35,7 +35,7 @@ test.describe('claim workflow', () => {
     await expect(page.getByRole('heading', { name: 'Claim a listing', level: 1 })).toBeVisible()
 
     await page.getByLabel('Search for a business to claim').fill(FIXTURE_NAME_QUERY)
-    await page.getByRole('button', { name: 'Search' }).click()
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page.waitForURL(/\/claim\?q=/)
     await expect(page.getByText(FIXTURE_CLAIMABLE_NAME).first()).toBeVisible()
 

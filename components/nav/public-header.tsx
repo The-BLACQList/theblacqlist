@@ -1,7 +1,9 @@
 import Link from 'next/link'
-import { Bookmark, Search, ShieldCheck } from 'lucide-react'
+import { Bookmark, ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
+import { HeaderSearch } from '@/components/nav/HeaderSearch'
+import { isFeatureEnabled } from '@/lib/env'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
@@ -22,6 +24,9 @@ export async function PublicHeader() {
   // rendering-strategy change. Admins had no way into /admin except typing it.
   const isAdmin = user ? (await getAdminRole(user.id)) !== null : false
   const collectiveSoon = isCovered('collective')
+  // The search icon opens Search or ask Cue when the assistant is on; a plain
+  // link to /search otherwise.
+  const cue = isFeatureEnabled('aiAssistant')
   // Signed-in visitors carry Saved, My Account and Sign Out (and Admin), which
   // overflowed the row below 1100px, so their full nav starts at xl. Literal
   // classes so Tailwind keeps them.
@@ -65,13 +70,7 @@ export async function PublicHeader() {
 
           {/* Desktop right zone */}
           <div className={`${showFull} items-center gap-3`}>
-            <Link
-              href="/search"
-              aria-label="Search"
-              className="flex h-10 w-10 items-center justify-center rounded-md text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
-            >
-              <Search className="h-5 w-5" aria-hidden="true" />
-            </Link>
+            <HeaderSearch cue={cue} size="desktop" />
 
             {isSignedIn ? (
               <>
@@ -126,13 +125,7 @@ export async function PublicHeader() {
 
           {/* Mobile right zone */}
           <div className={`${showCompact} items-center gap-1`}>
-            <Link
-              href="/search"
-              aria-label="Search"
-              className="flex h-11 w-11 items-center justify-center rounded-md text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
-            >
-              <Search className="h-5 w-5" aria-hidden="true" />
-            </Link>
+            <HeaderSearch cue={cue} size="mobile" />
             <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} collectiveSoon={collectiveSoon} />
           </div>
         </nav>
