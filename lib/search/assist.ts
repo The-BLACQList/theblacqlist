@@ -108,6 +108,30 @@ export function shouldAssist(args: {
   return !!args.q?.trim() && args.page === 1 && args.total < ASSIST_BELOW
 }
 
+// Words that open a question rather than name a thing.
+const QUESTION_STARTS: ReadonlySet<string> = new Set([
+  'how', 'what', 'where', 'who', 'which', 'can', 'is', 'are', 'any', 'whats', 'wheres',
+])
+
+/**
+ * True when a /search query should also get Cue's answer above the grid.
+ * Cue costs a model call and spends the visitor's shared daily Cue allowance,
+ * so a plain keyword ("bakery", a business name) never asks. Cue does ask
+ * when the exact search came back thin, or when the words read like a
+ * question or a sentence: "brunch spot for a big group", "where can I get
+ * braids?". First page only, so paging through results never asks again.
+ */
+export function wantsCue(args: { q: string | undefined; total: number; page: number }): boolean {
+  const raw = args.q?.trim() ?? ''
+  if (!raw || args.page !== 1) return false
+  if (args.total < ASSIST_BELOW) return true
+  if (raw.endsWith('?')) return true
+  const words = tokens(raw)
+  if (words.length === 0) return false
+  if (QUESTION_STARTS.has(words[0]!)) return true
+  return words.length >= 3 && words.some((w) => FILLER_WORDS.has(w))
+}
+
 // ─── Places ───────────────────────────────────────────────────────────────────
 
 export interface AssistCity {
