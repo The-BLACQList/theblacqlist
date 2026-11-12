@@ -38,7 +38,9 @@ describe.each(VARIANTS)('the %s tester update email', (variant) => {
     const html = await renderUpdate({ variant, testerLink: LINK })
     expect(html).toContain('Explore The Collective')
     expect(html).toContain('href="https://theblacqlist.com/flow-map"')
-    expect(html).toMatch(/isn(&#x27;|&apos;|’|&rsquo;)t open yet/)
+    expect(html).toContain('before the public does')
+    expect(html).not.toMatch(/open yet/)
+    expect(html).not.toMatch(/join the list/i)
   })
 
   it('uses the opening date when given', async () => {
