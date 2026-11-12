@@ -23,10 +23,10 @@ export default function AdminEmailPreviewPage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Email preview</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Pick the invite or the tester update, paste the tester&rsquo;s one-tap link from the
-          Testers page, and say whether they own a business or are here to discover. See the email
-          rendered, then copy it into a Gmail compose window. One person per email. Nothing is sent
-          from this page.
+          Pick the invite or the tester update, paste a one-tap link from the Testers page, and say
+          who it is for. See the email rendered, then copy it into a Gmail compose window. An invite
+          made with a Shared link can be forwarded until the tester spots are filled; every other
+          email goes to one person. Nothing is sent from this page.
         </p>
       </div>
 

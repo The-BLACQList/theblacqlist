@@ -6,7 +6,7 @@ import {
   renderTesterInviteAction,
   type TesterEmailKind,
 } from '@/lib/actions/admin/renderTesterInvite'
-import type { TesterInviteVariant } from '@/lib/email/templates/tester-invite'
+import type { TesterInviteAudience } from '@/lib/email/templates/tester-invite'
 import { cn } from '@/lib/utils'
 
 type CopyState = 'idle' | 'copied' | 'failed'
@@ -30,7 +30,7 @@ const EMAIL_OPTIONS: RadioOption<TesterEmailKind>[] = [
   },
 ]
 
-const AUDIENCE_OPTIONS: RadioOption<TesterInviteVariant>[] = [
+const AUDIENCE_OPTIONS: RadioOption<TesterInviteAudience>[] = [
   {
     value: 'owner',
     label: 'Business owner',
@@ -41,7 +41,15 @@ const AUDIENCE_OPTIONS: RadioOption<TesterInviteVariant>[] = [
     label: 'Supporter',
     description: 'Search, save, map, and review',
   },
+  {
+    value: 'shared',
+    label: 'Anyone (shared link)',
+    description: 'Can be forwarded. Each person picks owner or supporter.',
+  },
 ]
+
+/** The tester update thanks one person, so it has no shared option. */
+const UPDATE_AUDIENCE_OPTIONS = AUDIENCE_OPTIONS.filter((option) => option.value !== 'shared')
 
 const INPUT_CLASS =
   'mt-1.5 w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:border-amber-gold focus:outline-none focus:ring-2 focus:ring-amber-gold/40'
@@ -70,7 +78,12 @@ function RadioCards<T extends string>({
     <fieldset>
       <legend className="font-subhead text-sm font-semibold text-brand-black">{legend}</legend>
       <p className="font-body text-xs text-charcoal-soft mt-0.5">{hint}</p>
-      <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-2 max-w-lg">
+      <div
+        className={cn(
+          'mt-1.5 grid grid-cols-1 gap-2',
+          options.length > 2 ? 'sm:grid-cols-3 max-w-2xl' : 'sm:grid-cols-2 max-w-lg'
+        )}
+      >
         {options.map((option) => {
           const isSelected = value === option.value
           return (
@@ -116,7 +129,7 @@ export function EmailPreviewForm() {
   // just pasted. tests/form-input-preservation.test.ts guards this.
   const [emailKind, setEmailKind] = useState<TesterEmailKind>('invite')
   const [testerLink, setTesterLink] = useState('')
-  const [audience, setAudience] = useState<TesterInviteVariant>('owner')
+  const [audience, setAudience] = useState<TesterInviteAudience>('owner')
   const [firstName, setFirstName] = useState('')
   const [openingDate, setOpeningDate] = useState('')
 
@@ -163,7 +176,12 @@ export function EmailPreviewForm() {
           hint="The invite opens the test. The update goes to people already in it."
           options={EMAIL_OPTIONS}
           value={emailKind}
-          onChange={setEmailKind}
+          onChange={(kind) => {
+            setEmailKind(kind)
+            // The update has no shared option. Fall back rather than post a
+            // value the form no longer shows.
+            if (kind === 'update' && audience === 'shared') setAudience('owner')
+          }}
         />
 
         <div>
@@ -174,9 +192,10 @@ export function EmailPreviewForm() {
             Tester link
           </label>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
-            The one-tap link that ends in <code>/t#…</code>. Make one on the Testers page. A fresh
-            link also works for someone already testing: it picks up where they left off. This form
-            posts, so the link never lands in a URL or a server log.
+            The one-tap link that ends in <code>/t#…</code>. Make one on the Testers page: a Shared
+            link for an invite people can forward, or a one-person link. A fresh link also works for
+            someone already testing: it picks up where they left off. This form posts, so the link
+            never lands in a URL or a server log.
           </p>
           <input
             id="tester-link"
@@ -195,8 +214,12 @@ export function EmailPreviewForm() {
         <RadioCards
           name="audience"
           legend="Who is this email for?"
-          hint="The body changes with this. Owners also hear about the free month."
-          options={AUDIENCE_OPTIONS}
+          hint={
+            emailKind === 'invite'
+              ? 'The body changes with this. Pick Anyone when you pasted a Shared link: that email can be forwarded until the tester spots are filled.'
+              : 'The body changes with this. Owners also hear about the free month.'
+          }
+          options={emailKind === 'invite' ? AUDIENCE_OPTIONS : UPDATE_AUDIENCE_OPTIONS}
           value={audience}
           onChange={setAudience}
         />
@@ -286,7 +309,9 @@ export function EmailPreviewForm() {
               </button>
               <span role="status" className="font-body text-sm text-charcoal-soft">
                 {copied === 'copied' &&
-                  'Copied. Paste into a Gmail compose window. The styling comes with it. One person per email.'}
+                  (rendered.shareable
+                    ? 'Copied. Paste into a Gmail compose window. The styling comes with it. This one can be forwarded: anyone can join until the spots are filled.'
+                    : 'Copied. Paste into a Gmail compose window. The styling comes with it. One person per email.')}
                 {copied === 'failed' &&
                   'Your browser blocked the copy. Select the preview below and copy it by hand.'}
               </span>

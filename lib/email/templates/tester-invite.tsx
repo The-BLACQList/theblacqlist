@@ -9,7 +9,7 @@ import {
 } from '@/lib/email/templates/tester-email-parts'
 
 /**
- * Who the invite is for. One template, two bodies: a separate supporter file
+ * A one-person tester. One template, one body per audience: a separate supporter file
  * would slip past the source checks in tests/tester-invite-email.test.ts that
  * keep a real token out of this repo.
  *
@@ -17,8 +17,20 @@ import {
  */
 export type TesterInviteVariant = 'owner' | 'supporter'
 
+/**
+ * Who the invite goes to. 'owner' and 'supporter' are for a one-person link.
+ * 'shared' is for a shared link (tester_invites.kind = 'shared', founder,
+ * 2026-10-13): anyone who taps it picks owner or supporter on /t, so the email
+ * covers both and is written to be forwarded. The link lets new people in
+ * until the 15 tester spots are filled or it runs out, whichever comes first;
+ * after that /t says "This test is full" and offers the waitlist.
+ *
+ * The tester update stays one-person only, so it keeps TesterInviteVariant.
+ */
+export type TesterInviteAudience = TesterInviteVariant | 'shared'
+
 interface TesterInviteEmailProps {
-  variant: TesterInviteVariant
+  variant: TesterInviteAudience
   /**
    * The one-tap tester link, `https://…/t#<token>`, minted on /admin/testers.
    *
@@ -50,14 +62,17 @@ export function TesterInviteEmail({
   siteUrl = DEFAULT_SITE_URL,
 }: TesterInviteEmailProps) {
   const isOwner = variant === 'owner'
+  const isShared = variant === 'shared'
 
   return (
     <TesterEmailShell
       siteUrl={siteUrl}
       preview={
-        isOwner
-          ? 'One tap and you’re in. Add your business to The BLACQList before we open to the public.'
-          : 'One tap and you’re in. Explore The BLACQList before we open to the public.'
+        isShared
+          ? 'One tap and you’re in. Try The BLACQList before we open to the public, and pass it on.'
+          : isOwner
+            ? 'One tap and you’re in. Add your business to The BLACQList before we open to the public.'
+            : 'One tap and you’re in. Explore The BLACQList before we open to the public.'
       }
     >
       <Text style={styles.eyebrow}>Private Preview</Text>
@@ -65,7 +80,14 @@ export function TesterInviteEmail({
         {firstName ? `You're in early, ${firstName}.` : "You're in early."}
       </Text>
 
-      {isOwner ? (
+      {isShared ? (
+        <Text style={styles.paragraph}>
+          The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small group in
+          first: business owners, and people who go out of their way to support Black-owned
+          businesses. Find your way around, tell us what&rsquo;s confusing, and help us fix it
+          before everyone else arrives.
+        </Text>
+      ) : isOwner ? (
         <Text style={styles.paragraph}>
           The BLACQList isn&rsquo;t open to the public yet. We&rsquo;re bringing a small group of
           business owners in first to put their business on the list, tell us what&rsquo;s
@@ -79,18 +101,38 @@ export function TesterInviteEmail({
         </Text>
       )}
 
-      <Text style={styles.paragraph}>
-        <strong>One tap and you&rsquo;re in.</strong> Tap the button, then tap{' '}
-        <strong>Start</strong>. We sign you in. No password, nothing to confirm.
-      </Text>
+      {isShared ? (
+        // What /t asks on a shared link: the role cards, then the email box
+        // ("We'll make your account with it. No password needed.").
+        <Text style={styles.paragraph}>
+          <strong>One tap and you&rsquo;re in.</strong> Tap the button, tell us whether you own a
+          business, type your email, and tap <strong>Start</strong>. No password, nothing to
+          confirm.
+        </Text>
+      ) : (
+        <Text style={styles.paragraph}>
+          <strong>One tap and you&rsquo;re in.</strong> Tap the button, then tap{' '}
+          <strong>Start</strong>. We sign you in. No password, nothing to confirm.
+        </Text>
+      )}
 
       <Button href={testerLink} style={styles.button}>
         Start here
       </Button>
 
-      <Text style={styles.note}>
-        This link is yours for 14 days. Open it again any time and you pick up where you left off.
-      </Text>
+      {isShared ? (
+        // No number of spots: the 15 is shared across every link, so how many
+        // are left changes between sending and tapping.
+        <Text style={styles.note}>
+          Know someone who&rsquo;d be good at this? Forward this email. The link works for anyone
+          for up to 14 days, until every tester spot is taken. If the page says the test is full,
+          you can join the waitlist there.
+        </Text>
+      ) : (
+        <Text style={styles.note}>
+          This link is yours for 14 days. Open it again any time and you pick up where you left off.
+        </Text>
+      )}
 
       <Hr style={styles.divider} />
 
@@ -100,7 +142,29 @@ export function TesterInviteEmail({
         A short guide down the side of the site walks you through it, one step at a time.
       </Text>
 
-      {isOwner ? (
+      {isShared ? (
+        <>
+          {/* Both paths, because the reader picks on /t. Each line is the
+              short form of the matching one-person list below. */}
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>If you own a business:</strong> claim your page or
+            make one, then walk the site the way a shopper would.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>If you&rsquo;re here to support:</strong> search, save
+            a place you&rsquo;d actually go, find businesses on the map, and leave a review.
+          </Text>
+          <Text style={styles.step}>
+            <strong style={styles.stepNumber}>Either way:</strong> tell us what worked and what
+            didn&rsquo;t.
+          </Text>
+          {/* Same founder decision as the owner copy, addressed to owners only. */}
+          <Text style={styles.paragraph}>
+            Business owners who finish the guide get one month of The BLACQList free on any tier.
+            Use it right away, or save it until the plan you want opens.
+          </Text>
+        </>
+      ) : isOwner ? (
         <>
           {/* The owner hint matches the role card on /t (StartTourButton). */}
           <Text style={styles.step}>
@@ -162,7 +226,7 @@ export function TesterInviteEmail({
         A few steps ask for a sentence or two. Those notes are the part we read.
       </Text>
 
-      <ReportProblemCallout />
+      <ReportProblemCallout forwarded={isShared} />
 
       <CollectiveFirstLook siteUrl={siteUrl} />
 
