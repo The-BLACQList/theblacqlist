@@ -33,7 +33,7 @@ const SURFACES = [
     file: 'components/entity-page/ReviewForm.tsx',
   },
   {
-    label: 'email preview (a pasted preview link must survive a rejected audience)',
+    label: 'email preview (a pasted tester link must survive a rejected audience)',
     file: 'components/admin/EmailPreviewForm.tsx',
   },
 ] as const
