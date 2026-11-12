@@ -78,7 +78,7 @@ test.describe('L. Cross-browser critical paths', () => {
     await page.locator('main').first().waitFor()
 
     await page.getByLabel('Search for a business to claim').fill(FIXTURE_NAME_QUERY)
-    await page.getByRole('button', { name: 'Search' }).click()
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page.waitForURL(/\/claim\?q=/)
 
     // Reach the claim form through the results list, the way an owner does —
