@@ -34,7 +34,8 @@ type Answer = { ask: string; reply: CueReply }
 
 /**
  * The header's search icon (desktop and phone). With Cue on, it opens a
- * drop-down under the header: one box to search or ask Cue. Enter asks Cue
+ * drop-down under the header with the hero bar's one call to action, "Tell
+ * us what you're looking for". The box does both jobs: Enter asks Cue
  * and streams the answer and its picks here; "See all results" is the plain
  * /search page for the same words; "Keep chatting with Cue" copies the answer
  * into the corner panel's chat and opens it.
@@ -129,7 +130,7 @@ function SearchCueDropdown({ box }: { box: string }) {
       return
     }
     if (!words) {
-      setStatus("Type a business name or what you're looking for, then press Ask.")
+      setStatus("Type a business name or what you're looking for, then press Ask Cue.")
       inputRef.current?.focus()
       return
     }
@@ -155,7 +156,7 @@ function SearchCueDropdown({ box }: { box: string }) {
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Trigger
         ref={triggerRef}
-        aria-label="Search or ask Cue"
+        aria-label="Tell us what you’re looking for"
         className={cn(TRIGGER, box)}
       >
         <Search className="h-5 w-5" aria-hidden="true" />
@@ -189,10 +190,11 @@ function SearchCueDropdown({ box }: { box: string }) {
             <div className="flex items-center gap-2 mb-3">
               <GoldBrandMark className="size-5" />
               <DialogPrimitive.Title className="font-subhead text-sm font-semibold text-off-white">
-                Search or ask Cue
+                Tell us what you&rsquo;re looking for
               </DialogPrimitive.Title>
               <DialogPrimitive.Description id="header-search-description" className="sr-only">
-                Cue answers with AI from our listings. See all results opens the plain search page.
+                A business name or what you need. Cue answers with AI from our listings; See all
+                results opens the search page.
               </DialogPrimitive.Description>
               <DialogPrimitive.Close className="ml-auto grid place-items-center size-11 -mr-2 rounded-md text-off-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">
                 <X className="size-5" aria-hidden="true" />
@@ -203,7 +205,7 @@ function SearchCueDropdown({ box }: { box: string }) {
             <form
               onSubmit={onSubmit}
               role="search"
-              aria-label="Search or ask Cue"
+              aria-label="Tell us what you’re looking for"
               className="flex items-center gap-2"
             >
               <label htmlFor="header-search-input" className="sr-only">

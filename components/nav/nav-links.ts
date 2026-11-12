@@ -5,6 +5,8 @@ export interface NavLink {
 
 /** The header and mobile menu links, in order. */
 export const MAIN_NAV_LINKS: NavLink[] = [
+  // [Decision — founder, 2026-11-12: Home first in the menu bar.]
+  { label: 'Home', href: '/' },
   { label: 'Discover', href: '/discover' },
   { label: 'Map', href: '/map' },
   { label: 'The Collective', href: '/flow-map' },

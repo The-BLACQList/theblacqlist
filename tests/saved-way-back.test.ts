@@ -9,6 +9,10 @@ describe('nav links', () => {
     expect(MAIN_NAV_LINKS.some((l) => l.href === SAVED_LINK.href)).toBe(false)
   })
 
+  it('puts Home first in the main links', () => {
+    expect(MAIN_NAV_LINKS[0]).toEqual({ label: 'Home', href: '/' })
+  })
+
   it('points Saved at the saved places page', () => {
     expect(SAVED_LINK).toEqual({ label: 'Saved', href: '/account/saved' })
   })
