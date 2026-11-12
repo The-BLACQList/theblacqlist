@@ -83,12 +83,15 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
   })
 
   it('invites them to explore The Collective, framed as a first look', async () => {
-    // [Decision — founder, 2026-11-12]: /flow-map is still behind
-    // FEATURE_COLLECTIVE_OPEN, so the copy must read true on the cover page.
+    // [Decision — founder, 2026-11-12]. /flow-map sits behind
+    // FEATURE_COLLECTIVE_OPEN, which can be on (live map) or off (cover), so
+    // the copy must read true in both: no "isn't open yet", no waitlist.
     const html = await renderInvite({ variant, testerLink: LINK })
     expect(html).toContain('Explore The Collective')
     expect(html).toContain('href="https://theblacqlist.com/flow-map"')
-    expect(html).toMatch(/isn(&#x27;|&apos;|’|&rsquo;)t open yet/)
+    expect(html).toContain('before the public does')
+    expect(html).not.toMatch(/open yet/)
+    expect(html).not.toMatch(/join the list/i)
   })
 
   it('follows the site URL it is given for The Collective link', async () => {

@@ -54,12 +54,13 @@ export function TesterEmailShell({
 /**
  * The prompt to explore The Collective (/flow-map).
  *
- * Framed as a first look on purpose [Decision — founder, 2026-11-12]: the page
- * is behind FEATURE_COLLECTIVE_OPEN, which is off in prod, so today a tester
- * who follows this lands on the /soon/collective cover and can join its
- * waitlist. Once the flag is on, the same link opens the live map. The copy
- * reads true either way, which is why it says "isn't open yet" rather than
- * asking them to add a receipt.
+ * Framed as a first look [Decision — founder, 2026-11-12]: testers see it
+ * before the public does. The page is gated by FEATURE_COLLECTIVE_OPEN. It is
+ * on in prod (since 2026-10-31), so a signed-in tester gets the live map, but
+ * it has been switched off before (2026-10-30), and then the same link shows
+ * the /soon/collective cover. The copy has to read true in both states, so it
+ * says neither "it's open" nor "it isn't open yet", and makes no promise of a
+ * waitlist or a receipt form.
  *
  * Wording follows lib/features/opening-soon.ts and the home ImpactBand.
  */
@@ -74,8 +75,7 @@ export function CollectiveFirstLook({ siteUrl }: { siteUrl: string }) {
         Shop at a business on the list, add a receipt, and your spend joins the map.
       </Text>
       <Text style={styles.collectiveBody}>
-        It isn&rsquo;t open yet. Take a look at what&rsquo;s coming and join the list to get in
-        first.
+        You&rsquo;re seeing it before the public does. Take a look.
       </Text>
       <Text style={styles.collectiveLinkLine}>
         <Link href={href} style={styles.collectiveLink}>
