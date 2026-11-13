@@ -1,12 +1,13 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { Info, Radio } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
+import { ArrowRight, Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import { socialLinksAllowed, upgradeTarget, type UpgradeTarget } from '@/lib/stripe/planChecks'
-import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit } from '@/lib/stripe/features'
+import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit, photoLimit } from '@/lib/stripe/features'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
 import { extraButtonLabel, shownExtraButtons } from '@/lib/listings/pageButtons'
@@ -39,6 +40,21 @@ import { CaptionHelp, WritingHelpProvider, WritingHelpStrip } from './finish/Wri
 import { CLOSING_NOTE, type InitialSuggestions, type WritingAllowance } from '@/lib/ai/writingHelp'
 import type { TextField } from '@/lib/ai/onboardingCards'
 import { OnboardingDrafts } from './finish/OnboardingDrafts'
+import { EditTabs, panelId, tabId } from './finish/EditTabs'
+import { MoreBelow } from './finish/MoreBelow'
+import { SiteImport, type ImportSaved } from './finish/SiteImport'
+import { photoRoom, previewContact, type ImportCard, type PageNow } from '@/lib/import/ownerImport'
+import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
+import type { WeeklyHours } from '@/types'
+import {
+  DEFAULT_TAB,
+  EDIT_TABS,
+  nextTab,
+  SCROLL_ORDER,
+  TAB_SECTIONS,
+  tabForAnchor,
+  type EditTabId,
+} from '@/lib/listings/editTabs'
 
 // The side-by-side finish view: every section of a business page on the left,
 // the page itself on the right. One component for both mounts (tickets 126 and
@@ -61,6 +77,8 @@ interface Props {
   premiumOpen?: boolean
   /** The page's inbox switch, shown with the main button. Edit mode with messaging on only. */
   inbox?: { open: boolean }
+  /** The tab to open first on the edit page, from `?tab=`. A `#card` in the address wins. */
+  initialTab?: EditTabId
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -96,10 +114,18 @@ const LAYOUT = {
   },
 } as const
 
+type Mounts = { basics: number; about: number; google: number; contact: number; hours: number; social: number }
+
+function bumpCards(m: Mounts, cards: readonly ImportCard[]): Mounts {
+  const next = { ...m }
+  for (const c of cards) next[c] += 1
+  return next
+}
+
 function Anchor({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     // tabIndex -1 lets the strength bars move focus here (see goToSection).
-    <div id={id} tabIndex={-1} className="scroll-mt-24 rounded-xl outline-none transition-shadow">
+    <div id={id} tabIndex={-1} className="scroll-mt-32 md:scroll-mt-36 rounded-xl outline-none transition-shadow">
       {children}
     </div>
   )
@@ -115,6 +141,7 @@ export function PageFinishView({
   growthOpen = false,
   premiumOpen = false,
   inbox,
+  initialTab = DEFAULT_TAB,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -131,7 +158,7 @@ export function PageFinishView({
   >({})
   // The sections read their props once, so a saved draft card remounts the
   // section that shows it.
-  const [mounts, setMounts] = useState({ basics: 0, about: 0, google: 0 })
+  const [mounts, setMounts] = useState<Mounts>({ basics: 0, about: 0, google: 0, contact: 0, hours: 0, social: 0 })
   const saved = { ...fromProps }
   for (const key of Object.keys(applied) as (keyof Draft)[]) {
     const a = applied[key]
@@ -157,6 +184,37 @@ export function PageFinishView({
       for (const k of sectionKeys[section]) next[k] = nextSaved[k]
       return next
     })
+  }
+
+  // "Import from my website" (part C). The cards read their props once, so
+  // the ones an import saved to remount when the refreshed page arrives with
+  // what was saved. Until then the preview shows the new name and About, the
+  // same bridge a draft card uses.
+  const [importWaiting, setImportWaiting] = useState<ImportCard[]>([])
+  const [seenData, setSeenData] = useState(data)
+  if (seenData !== data) {
+    setSeenData(data)
+    if (importWaiting.length > 0) {
+      setMounts((m) => bumpCards(m, importWaiting))
+      // The remounted Basics card starts from what is saved, tagline included.
+      if (importWaiting.includes('basics')) setDraft((cur) => ({ ...cur, tagline: saved.tagline }))
+      setImportWaiting([])
+    }
+  }
+
+  function onImported({ cards, name, description }: ImportSaved) {
+    const values: Partial<Draft> = {}
+    if (name !== undefined) values.name = name
+    if (description !== undefined) values.description = description
+    setApplied((cur) => {
+      const next = { ...cur }
+      for (const [k, v] of Object.entries(values) as [keyof Draft, string][]) {
+        next[k] = { value: v, before: fromProps[k] }
+      }
+      return next
+    })
+    setDraft((cur) => ({ ...cur, ...values }))
+    setImportWaiting((cur) => [...new Set([...cur, ...cards])])
   }
 
   const rootRef = useRef<HTMLDivElement>(null)
@@ -220,12 +278,304 @@ export function PageFinishView({
   const layout = LAYOUT[mode]
   const asideLabel = mode === 'new' ? 'Your page so far' : 'Your page'
 
+  const importNow: PageNow = {
+    name: data.name,
+    description: d?.description ?? null,
+    phone: d?.phone ?? null,
+    email: d?.email ?? null,
+    websiteUrl: d?.website_url ?? null,
+    addressLine1: d?.address_line_1 ?? null,
+    state: d?.state ?? null,
+    zip: d?.zip ?? null,
+    hours: (d?.hours as WeeklyHours | null | undefined) ?? null,
+    socials: {
+      instagram: d?.social_instagram ?? null,
+      facebook: d?.social_facebook ?? null,
+      twitter: d?.social_twitter ?? null,
+      tiktok: d?.social_tiktok ?? null,
+      linkedin: d?.social_linkedin ?? null,
+      youtube: d?.social_youtube ?? null,
+    },
+    locationLabel: data.locationLabel,
+  }
+
+  // What the edit page's preview adds below About (part C feedback): the
+  // photos the page shows and its contact details, so an import is visible
+  // here as soon as it saves. Rebuilt from `data` on each refresh.
+  const previewExtras =
+    mode === 'edit'
+      ? {
+          photoUrls: data.media
+            .filter((m) => m.is_approved === true && !hidden.hiddenIds.has(m.id))
+            .slice(0, 4)
+            .map((m) => `${storageUrl}/listing-media/${m.file_path}`),
+          contact: previewContact(importNow, data.entityType !== 'creator'),
+        }
+      : {}
+
   const helpReady = writingHelp?.allowance.state === 'ready'
   const initial = writingHelp?.initial ?? {}
 
+  // Edit page tabs (part C).
+  const [tab, setTab] = useState<EditTabId>(initialTab)
+  const tabsTopRef = useRef<HTMLDivElement>(null)
+  function selectTab(next: EditTabId) {
+    setTab(next)
+    // Keep the open tab in the address, so a reload or a shared link comes back to it.
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', next)
+    url.hash = ''
+    window.history.replaceState(window.history.state, '', url)
+    // From deep in a long tab, start the next one at its top.
+    const top = tabsTopRef.current
+    if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: 'start' })
+  }
+  // Opens the tab a card is in, before the strength meter or a failed save
+  // moves focus there. flushSync, so the card is visible by the next line.
+  const showSection = useCallback((anchorId: string) => {
+    const next = tabForAnchor(anchorId)
+    if (next) flushSync(() => setTab(next))
+  }, [])
+  // A link to a card (`/edit#hours`) opens its tab. The server can't see the
+  // hash, so this runs once the page is up, and again if the hash changes.
+  useEffect(() => {
+    if (mode !== 'edit') return
+    function openFromHash() {
+      const id = window.location.hash.slice(1)
+      const next = tabForAnchor(id)
+      if (!next) return
+      setTab(next)
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }))
+      )
+    }
+    openFromHash()
+    window.addEventListener('hashchange', openFromHash)
+    return () => window.removeEventListener('hashchange', openFromHash)
+  }, [mode])
+  const reveal = mode === 'edit' ? showSection : undefined
+
+  // Every card, by anchor id. A new page shows them in one scroll; the edit
+  // page groups them into tabs (part C). Cards a page doesn't have are left out.
+  const sections: Partial<Record<string, ReactNode>> = {
+    basics: (
+      <BasicInfoSection
+        key={`basics-${mounts.basics}`}
+        listingId={data.id}
+        name={data.name}
+        tagline={saved.tagline || null}
+        onDraftChange={patchDraft}
+      />
+    ),
+    about: (
+      <AboutSection
+        key={`about-${mounts.about}`}
+        listingId={data.id}
+        description={saved.description || null}
+        charLimit={descriptionCharLimit(tier)}
+        upgradeTo={starterOffer}
+        onDraftChange={patchDraft}
+        initialSuggestion={initial.listing_description}
+      />
+    ),
+    contact: (
+      <ContactSection
+        key={`contact-${mounts.contact}`}
+        listingId={data.id}
+        phone={d?.phone ?? null}
+        email={d?.email ?? null}
+        websiteUrl={d?.website_url ?? null}
+        addressLine1={d?.address_line_1 ?? null}
+        addressLine2={d?.address_line_2 ?? null}
+        state={d?.state ?? null}
+        zip={d?.zip ?? null}
+      />
+    ),
+    hours:
+      data.entityType !== 'creator' ? (
+        <HoursSection key={`hours-${mounts.hours}`} listingId={data.id} hours={d?.hours ?? null} />
+      ) : null,
+    photos: (
+      <MediaGrid
+        media={data.media}
+        supabaseStorageUrl={storageUrl}
+        listingId={data.id}
+        coverImagePath={data.coverImagePath}
+        hiddenIds={hidden.hiddenIds}
+      />
+    ),
+    'main-button': (
+      <CtaSection
+        listingId={data.id}
+        ctaType={d?.cta_type ?? null}
+        ctaUrl={d?.cta_url ?? null}
+        ctaLabelOverride={d?.cta_label_override ?? null}
+        inbox={inbox}
+        extras={{
+          initial: data.buttons,
+          tier,
+          upgradeTo: buttonsOffer,
+          hasPhone: !!d?.phone,
+          onChange: setButtons,
+        }}
+      />
+    ),
+    services: (
+      <div className="flex flex-col gap-4">
+        <div className="rounded-xl border border-charcoal/10 bg-white">
+          <div className="border-b border-charcoal/8 px-5 py-4">
+            <h2 className="font-headline text-base text-brand-black">Services and offerings</h2>
+            <p className="mt-0.5 font-body text-xs text-charcoal-soft">
+              What you offer: services, products, or classes.
+            </p>
+          </div>
+          <div className="px-5 py-4">
+            <OfferingsList services={data.services} />
+          </div>
+        </div>
+        <AddOfferingForm listingId={data.id} />
+      </div>
+    ),
+    role:
+      data.levels && data.levels.allowed.length > 1 ? (
+        <LevelSection
+          listingId={data.id}
+          primary={data.levels.primary}
+          extras={data.levels.extras}
+          allowed={data.levels.allowed}
+        />
+      ) : null,
+    details: (
+      <AttributesSection
+        listingId={data.id}
+        groups={data.attributeGroups}
+        selectedValueIds={data.selectedValueIds}
+        limit={attributeLimit(tier)}
+        upgradeTo={moreOffer}
+        entityType={data.entityType}
+      />
+    ),
+    partnerships: (
+      <PartnershipSection
+        listingId={data.id}
+        entityType={data.entityType}
+        openToPartnerships={data.openToPartnerships}
+      />
+    ),
+    'collective-name':
+      data.entityType !== 'job' ? (
+        <CollectiveNameSection listingId={data.id} optedIn={data.collectiveNameOptIn} />
+      ) : null,
+    social: (
+      <SocialSection
+        key={`social-${mounts.social}`}
+        listingId={data.id}
+        socialInstagram={d?.social_instagram ?? null}
+        socialFacebook={d?.social_facebook ?? null}
+        socialLinkedin={d?.social_linkedin ?? null}
+        socialTiktok={d?.social_tiktok ?? null}
+        socialYoutube={d?.social_youtube ?? null}
+        socialTwitter={d?.social_twitter ?? null}
+        locked={!socialLinksAllowed(tier, data.entityType)}
+        hiddenOnPage={!data.socialsShowOnPage}
+        upgradeTo={starterOffer}
+        caption={helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined}
+      />
+    ),
+    video: (
+      <VideoSection
+        listingId={data.id}
+        videos={data.videos}
+        tier={tier}
+        hiddenIds={hidden.hiddenIds}
+        storageUrl={storageUrl}
+        upgradeTo={moreOffer}
+      />
+    ),
+    links: <LinksSection listingId={data.id} links={data.links} />,
+    faq: (
+      <FaqSection
+        listingId={data.id}
+        faqs={data.faqs}
+        limit={faqLimit(tier)}
+        upgradeTo={moreOffer}
+        hiddenIds={hidden.hiddenIds}
+      />
+    ),
+    google: (
+      <GoogleCard
+        key={`google-${mounts.google}`}
+        listingId={data.id}
+        publicUrl={data.publicUrl}
+        seoFields={{
+          name: preview.name,
+          tagline: preview.tagline || null,
+          description: preview.description || null,
+          categoryName: data.categoryName,
+          locationLabel: data.locationLabel,
+        }}
+        metaTitle={saved.meta_title || null}
+        metaDescription={saved.meta_description || null}
+        onDraftChange={patchDraft}
+        initial={initial}
+      />
+    ),
+  }
+  const cards = (ids: readonly string[]) =>
+    ids.map((id) =>
+      sections[id] ? (
+        <Anchor key={id} id={id}>
+          {sections[id]}
+        </Anchor>
+      ) : null
+    )
+
+  const body =
+    mode === 'edit' ? (
+      <div ref={tabsTopRef} className="flex scroll-mt-16 flex-col gap-6 md:scroll-mt-20">
+        <EditTabs active={tab} onSelect={selectTab} />
+        {EDIT_TABS.map((t) => (
+          // Every panel stays mounted, so edits in a closed tab are kept and
+          // "Save all" still finds them.
+          <div
+            key={t.id}
+            role="tabpanel"
+            id={panelId(t.id)}
+            aria-labelledby={tabId(t.id)}
+            hidden={t.id !== tab}
+            className="flex flex-col gap-6"
+          >
+            {cards(TAB_SECTIONS[t.id])}
+            {nextTab(t.id) && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = nextTab(t.id)
+                    if (next) selectTab(next.id)
+                  }}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black hover:bg-charcoal/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
+                >
+                  Next: {nextTab(t.id)?.label}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+        <MoreBelow watch={tab} />
+      </div>
+    ) : (
+      <>
+        {cards(SCROLL_ORDER)}
+        <MoreBelow />
+      </>
+    )
+
+
   const view = (
     <SaveLabelProvider live={isLive}>
-      <ProfileSaveProvider live={isLive} rootRef={rootRef}>
+      <ProfileSaveProvider live={isLive} rootRef={rootRef} reveal={reveal}>
         <div ref={rootRef} className={layout.grid}>
           <div className="flex min-w-0 flex-col gap-6">
             {isLive && (
@@ -261,7 +611,7 @@ export function PageFinishView({
               <LivePagePreview {...preview} compact />
             </div>
 
-            <StrengthMeter checklist={checklist} />
+            <StrengthMeter checklist={checklist} showSection={reveal} />
 
             {onboardingDrafts && (
               <OnboardingDrafts
@@ -275,186 +625,28 @@ export function PageFinishView({
 
             {writingHelp && <WritingHelpStrip />}
 
-            <Anchor id="basics">
-              <BasicInfoSection
-                key={`basics-${mounts.basics}`}
+            {mode === 'edit' && (
+              <SiteImport
                 listingId={data.id}
-                name={data.name}
-                tagline={saved.tagline || null}
-                onDraftChange={patchDraft}
-              />
-            </Anchor>
-
-            <Anchor id="about">
-              <AboutSection
-                key={`about-${mounts.about}`}
-                listingId={data.id}
-                description={saved.description || null}
-                charLimit={descriptionCharLimit(tier)}
-                upgradeTo={starterOffer}
-                onDraftChange={patchDraft}
-                initialSuggestion={initial.listing_description}
-              />
-            </Anchor>
-
-            <Anchor id="contact">
-              <ContactSection
-                listingId={data.id}
-                phone={d?.phone ?? null}
-                email={d?.email ?? null}
-                websiteUrl={d?.website_url ?? null}
-                addressLine1={d?.address_line_1 ?? null}
-                addressLine2={d?.address_line_2 ?? null}
-                state={d?.state ?? null}
-                zip={d?.zip ?? null}
-              />
-            </Anchor>
-
-            {data.entityType !== 'creator' && (
-              <Anchor id="hours">
-                <HoursSection listingId={data.id} hours={d?.hours ?? null} />
-              </Anchor>
-            )}
-
-            <Anchor id="photos">
-              <MediaGrid
-                media={data.media}
-                supabaseStorageUrl={storageUrl}
-                listingId={data.id}
-                coverImagePath={data.coverImagePath}
-                hiddenIds={hidden.hiddenIds}
-              />
-            </Anchor>
-
-            <Anchor id="main-button">
-              <CtaSection
-                listingId={data.id}
-                ctaType={d?.cta_type ?? null}
-                ctaUrl={d?.cta_url ?? null}
-                ctaLabelOverride={d?.cta_label_override ?? null}
-                inbox={inbox}
-                extras={{
-                  initial: data.buttons,
-                  tier,
-                  upgradeTo: buttonsOffer,
-                  hasPhone: !!d?.phone,
-                  onChange: setButtons,
+                now={importNow}
+                options={{
+                  aboutLimit: descriptionCharLimit(tier),
+                  socialsAllowed: socialLinksAllowed(tier, data.entityType),
+                  hasHours: data.entityType !== 'creator',
                 }}
-              />
-            </Anchor>
-
-            <Anchor id="services">
-              <div className="flex flex-col gap-4">
-                <div className="rounded-xl border border-charcoal/10 bg-white">
-                  <div className="border-b border-charcoal/8 px-5 py-4">
-                    <h2 className="font-headline text-base text-brand-black">
-                      Services and offerings
-                    </h2>
-                    <p className="mt-0.5 font-body text-xs text-charcoal-soft">
-                      What you offer: services, products, or classes.
-                    </p>
-                  </div>
-                  <div className="px-5 py-4">
-                    <OfferingsList services={data.services} />
-                  </div>
-                </div>
-                <AddOfferingForm listingId={data.id} />
-              </div>
-            </Anchor>
-
-            {data.levels && data.levels.allowed.length > 1 && (
-              <Anchor id="role">
-                <LevelSection
-                  listingId={data.id}
-                  primary={data.levels.primary}
-                  extras={data.levels.extras}
-                  allowed={data.levels.allowed}
-                />
-              </Anchor>
-            )}
-
-            <Anchor id="details">
-              <AttributesSection
-                listingId={data.id}
-                groups={data.attributeGroups}
-                selectedValueIds={data.selectedValueIds}
-                limit={attributeLimit(tier)}
-                upgradeTo={moreOffer}
-                entityType={data.entityType}
-              />
-            </Anchor>
-
-            <Anchor id="partnerships">
-              <PartnershipSection
-                listingId={data.id}
-                entityType={data.entityType}
-                openToPartnerships={data.openToPartnerships}
-              />
-            </Anchor>
-
-            {data.entityType !== 'job' && (
-              <Anchor id="collective-name">
-                <CollectiveNameSection listingId={data.id} optedIn={data.collectiveNameOptIn} />
-              </Anchor>
-            )}
-
-            <Anchor id="social">
-              <SocialSection
-                listingId={data.id}
-                socialInstagram={d?.social_instagram ?? null}
-                socialFacebook={d?.social_facebook ?? null}
-                socialLinkedin={d?.social_linkedin ?? null}
-                socialTiktok={d?.social_tiktok ?? null}
-                socialYoutube={d?.social_youtube ?? null}
-                socialTwitter={d?.social_twitter ?? null}
-                locked={!socialLinksAllowed(tier, data.entityType)}
-                hiddenOnPage={!data.socialsShowOnPage}
-                upgradeTo={starterOffer}
-                caption={
-                  helpReady ? <CaptionHelp initial={initial.social_caption_instagram} /> : undefined
-                }
-              />
-            </Anchor>
-
-            <Anchor id="video">
-              <VideoSection
-                listingId={data.id}
-                videos={data.videos}
-                tier={tier}
-                hiddenIds={hidden.hiddenIds}
-                storageUrl={storageUrl}
-                upgradeTo={moreOffer}
-              />
-            </Anchor>
-
-            <LinksSection listingId={data.id} links={data.links} />
-
-            <FaqSection
-              listingId={data.id}
-              faqs={data.faqs}
-              limit={faqLimit(tier)}
-              upgradeTo={moreOffer}
-              hiddenIds={hidden.hiddenIds}
-            />
-
-            <Anchor id="google">
-              <GoogleCard
-                key={`google-${mounts.google}`}
-                listingId={data.id}
-                publicUrl={data.publicUrl}
-                seoFields={{
-                  name: preview.name,
-                  tagline: preview.tagline || null,
-                  description: preview.description || null,
-                  categoryName: data.categoryName,
-                  locationLabel: data.locationLabel,
+                hasCover={data.coverImagePath !== null}
+                photoRoom={photoRoom(photoLimit(tier), data.media.length, MAX_PHOTO_CANDIDATES)}
+                photoPlan={{
+                  limit: photoLimit(tier),
+                  upgradeTo: moreOffer,
+                  nextLimit: moreOffer ? photoLimit(moreOffer.toLowerCase()) : null,
                 }}
-                metaTitle={saved.meta_title || null}
-                metaDescription={saved.meta_description || null}
-                onDraftChange={patchDraft}
-                initial={initial}
+                aboutLocked={writingHelp?.allowance.state === 'locked'}
+                onSaved={onImported}
               />
-            </Anchor>
+            )}
+
+            {body}
 
             <SaveBar />
 
@@ -479,7 +671,7 @@ export function PageFinishView({
               <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft">
                 {asideLabel}
               </p>
-              <LivePagePreview {...preview} />
+              <LivePagePreview {...preview} {...previewExtras} />
             </div>
           </aside>
         </div>

@@ -44,7 +44,8 @@ type RequestResult =
 interface WritingHelpValue {
   listingId: string
   allowance: WritingAllowance
-  request: (agent: HelpAgent) => Promise<RequestResult>
+  /** `extra` adds form fields, e.g. `site_text` from the website import. */
+  request: (agent: HelpAgent, extra?: Readonly<Record<string, string>>) => Promise<RequestResult>
 }
 
 const WritingHelpContext = createContext<WritingHelpValue | null>(null)
@@ -61,10 +62,11 @@ export function WritingHelpProvider({
   const [allowance, setAllowance] = useState(initialAllowance)
 
   const request = useCallback(
-    async (agent: HelpAgent): Promise<RequestResult> => {
+    async (agent: HelpAgent, extra?: Readonly<Record<string, string>>): Promise<RequestResult> => {
       const form = new FormData()
       form.set('listing_id', listingId)
       form.set('agent_type', agent)
+      for (const [k, v] of Object.entries(extra ?? {})) form.set(k, v)
       try {
         const result = await generateSuggestionAction(null, form)
         if (result && 'success' in result) {

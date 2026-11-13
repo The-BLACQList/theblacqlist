@@ -30,9 +30,11 @@ export function itemLabel(id: string, fallback: string): string {
 const HIGHLIGHT = ['ring-2', 'ring-amber-gold', 'ring-offset-4']
 
 // Scrolls to an item's section, moves focus there so the next Tab lands on
-// its first field, and rings it for a moment so the eye can find it.
-function goToSection(id: string): void {
+// its first field, and rings it for a moment so the eye can find it. On the
+// edit page the section may sit in a closed tab, so `show` opens it first.
+function goToSection(id: string, show?: (anchorId: string) => void): void {
   const anchor = FINISH_ITEMS[id]?.anchor ?? '#basics'
+  show?.(anchor.slice(1))
   const el = document.querySelector<HTMLElement>(anchor)
   if (!el) return
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -45,9 +47,11 @@ function goToSection(id: string): void {
 
 interface Props {
   checklist: ChecklistResult
+  /** Makes a section visible before the meter scrolls to it (opens its tab). Runs synchronously. */
+  showSection?: (anchorId: string) => void
 }
 
-export function StrengthMeter({ checklist }: Props) {
+export function StrengthMeter({ checklist, showSection }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const done = checklist.items.filter((i) => i.passed).length
   const missing = checklist.items.filter((i) => !i.passed)
@@ -76,7 +80,7 @@ export function StrengthMeter({ checklist }: Props) {
               aria-label={`${itemLabel(item.id, item.label)}: ${item.passed ? 'done' : 'not yet'}. Go to this part of your page.`}
               onClick={() => {
                 setActiveId(item.id)
-                goToSection(item.id)
+                goToSection(item.id, showSection)
               }}
               onMouseEnter={() => setActiveId(item.id)}
               onFocus={() => setActiveId(item.id)}
@@ -120,7 +124,7 @@ export function StrengthMeter({ checklist }: Props) {
                   href={FINISH_ITEMS[item.id]?.anchor ?? '#basics'}
                   onClick={(e) => {
                     e.preventDefault()
-                    goToSection(item.id)
+                    goToSection(item.id, showSection)
                   }}
                   className="inline-flex min-h-9 items-center rounded-full border border-charcoal/15 px-3 font-subhead text-xs text-brand-black hover:border-amber-gold hover:bg-amber-gold/10"
                 >

@@ -82,7 +82,8 @@ export async function updateListingContentAction(
 
   // ── Collect listing_details_business fields ────────────────────────────────
   const detailsUpdate: Record<string, unknown> = {}
-  const description = formData.get('description')?.toString().trim()
+  // Textareas send "\r\n"; stored as "\n" so paragraph breaks read the same everywhere.
+  const description = formData.get('description')?.toString().replace(/\r\n?/g, '\n').trim()
   const phone = formData.get('phone')?.toString().trim()
   const email = formData.get('email')?.toString().trim()
   const websiteUrl = formData.get('website_url')?.toString().trim()

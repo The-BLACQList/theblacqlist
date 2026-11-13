@@ -78,6 +78,11 @@ import { MAX_PROMPT_CHARS, monthlyCeilingUsd, withinMonthlyCeiling } from './spe
 /** Requests per listing per rolling 24 hours. */
 export const RATE_LIMIT_PER_LISTING_24H = 10
 
+/** Most services or attributes named in one prompt. */
+export const MAX_PROMPT_LIST_ITEMS = 15
+/** Longest website text that may enter a prompt. The import sends more; this is what fits. */
+export const MAX_SITE_TEXT_PROMPT_CHARS = 1100
+
 /** /add-business drafts per page, ever (ticket 128). */
 export const ONBOARDING_DRAFTS_PER_PAGE = 5
 /** /add-business drafts per owner per rolling 24 hours, across all their pages. */
@@ -100,6 +105,18 @@ export interface GenerateContext {
   tagline: string | null
   /** Raw owner-typed description. Sanitized and truncated before use. */
   description: string | null
+  /** The parent of `categoryName` ("Food & Dining" for "Bakery"), or null. */
+  parentCategoryName: string | null
+  /** Names of the services and products on the page, as the owner typed them. Sanitized. */
+  serviceNames: readonly string[]
+  /** The page's chosen attribute labels ("Wheelchair accessible"). Platform text, not owner text. */
+  attributeLabels: readonly string[]
+  /**
+   * Visible text from the owner's own website, only when the owner asked for an
+   * About drafted from it (the edit page's import). Sanitized like the
+   * description: no emails, phones, street addresses or the owner's name.
+   */
+  siteText?: string | null
   /** Aggregate counts only. Never individual analytics_events rows. */
   pageViews30d: number
   ctaClicks30d: number
@@ -181,12 +198,20 @@ export function buildPromptVars(
   ctx: GenerateContext,
   redaction: PromptRedaction = NO_NAME_REDACTION
 ): Record<string, string> {
+  const parent = sanitizeForPrompt(ctx.parentCategoryName, 100)
+  const services = sanitizeForPrompt(ctx.serviceNames.slice(0, MAX_PROMPT_LIST_ITEMS).join(', '), 300, redaction)
+  const attributes = sanitizeForPrompt(ctx.attributeLabels.slice(0, MAX_PROMPT_LIST_ITEMS).join(', '), 200)
+  const siteText = sanitizeForPrompt(ctx.siteText, MAX_SITE_TEXT_PROMPT_CHARS, redaction)
   return {
     listing_name: sanitizeForPrompt(ctx.listingName, 200),
     category_name: sanitizeForPrompt(ctx.categoryName, 100),
+    parent_category: parent ? ` (${parent})` : '',
     city_name: sanitizeForPrompt(ctx.cityName, 100),
     tagline: sanitizeForPrompt(ctx.tagline, 200, redaction),
     description_excerpt: sanitizeForPrompt(ctx.description, MAX_DESCRIPTION_CHARS, redaction),
+    services_block: services ? `Services and products: ${services}\n` : '',
+    attributes_block: attributes ? `Features: ${attributes}\n` : '',
+    site_text_block: siteText ? `Text from the owner's website:\n"""\n${siteText}\n"""\n` : '',
     page_views_30d: String(ctx.pageViews30d),
     cta_clicks_30d: String(ctx.ctaClicks30d),
     saves_30d: String(ctx.saves30d),

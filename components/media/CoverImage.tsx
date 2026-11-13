@@ -15,6 +15,8 @@ interface Props {
   /** Adaptive text scrim for content overlaid on the photo */
   scrim?: 'bottom' | 'none'
   fallbackSize?: 'hero' | 'card'
+  /** next/image quality; must be listed in next.config images.qualities. */
+  quality?: 75 | 90
   className?: string
 }
 
@@ -34,6 +36,7 @@ export function CoverImage({
   sizes = '100vw',
   scrim = 'none',
   fallbackSize = 'hero',
+  quality,
   className,
 }: Props) {
   return (
@@ -45,6 +48,7 @@ export function CoverImage({
           fill
           priority={priority}
           sizes={sizes}
+          quality={quality}
           className={cn('object-cover', className)}
         />
       ) : (

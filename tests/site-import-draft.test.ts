@@ -24,6 +24,7 @@ function findings(over: Partial<SiteFindings> = {}): SiteFindings {
     sourceHost: 'glowsalon.com',
     isLinkInBio: false,
     name: 'Glow Salon',
+    nameOptions: [],
     about: 'A family salon on the South Side since 2009.',
     phones: ['(312) 555-0100'],
     emails: ['hello@glowsalon.com'],
@@ -34,6 +35,7 @@ function findings(over: Partial<SiteFindings> = {}): SiteFindings {
     photos: [],
     suggestedLogo: null,
     suggestedCover: null,
+    siteText: null,
     ...over,
   }
 }

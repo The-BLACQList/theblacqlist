@@ -86,23 +86,33 @@ interface Api {
 
 interface Status {
   dirtyCount: number
+  /** Ids of the changed cards, in page order. */
+  dirtyIds: string[]
   saving: boolean
   result: Result
 }
 
 const ApiContext = createContext<Api | null>(null)
-const StatusContext = createContext<Status>({ dirtyCount: 0, saving: false, result: null })
+const StatusContext = createContext<Status>({ dirtyCount: 0, dirtyIds: [], saving: false, result: null })
 
 /** The page-wide save, or null outside a business profile editor. */
 export function useProfileSave(): Api | null {
   return useContext(ApiContext)
 }
 
+/** The cards with unsaved changes, by anchor id. Empty outside the provider. */
+export function useChangedCards(): string[] {
+  return useContext(StatusContext).dirtyIds
+}
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
-function goToFailure(f: Failure) {
+function goToFailure(f: Failure, reveal?: (anchorId: string) => void) {
+  // A card in a closed tab (edit page, part C) is shown first, so the browser
+  // can point at its field and the scroll lands on something visible.
+  reveal?.(f.anchorId)
   if (f.invalidForm) {
     // Focuses the first field that needs fixing and says why.
     f.invalidForm.reportValidity()
@@ -117,11 +127,17 @@ function goToFailure(f: Failure) {
 interface ProviderProps {
   live: boolean
   rootRef: RefObject<HTMLElement | null>
+  /** Shows a card before focus moves to it, e.g. by opening its tab. Runs synchronously. */
+  reveal?: (anchorId: string) => void
   children: ReactNode
 }
 
-export function ProfileSaveProvider({ live, rootRef, children }: ProviderProps) {
+export function ProfileSaveProvider({ live, rootRef, reveal, children }: ProviderProps) {
   const router = useRouter()
+  const revealRef = useRef(reveal)
+  useEffect(() => {
+    revealRef.current = reveal
+  })
   const entries = useRef(new Map<string, Entry>())
   const barRef = useRef<HTMLDivElement>(null)
   const setBar = useCallback((el: HTMLDivElement | null) => {
@@ -197,7 +213,7 @@ export function ProfileSaveProvider({ live, rootRef, children }: ProviderProps) 
           if (form && !form.checkValidity()) {
             failure.current = { anchorId: entry.anchorId, invalidForm: form }
             setResult({ kind: 'error', text: `Check ${entry.label} first.` })
-            if (focus) goToFailure(failure.current)
+            if (focus) goToFailure(failure.current, revealRef.current)
             return false
           }
         }
@@ -227,7 +243,7 @@ export function ProfileSaveProvider({ live, rootRef, children }: ProviderProps) 
             text: `Couldn't save ${joinLabels(failed.map((f) => f.label))}. See the ${many ? 'notes on those cards' : 'note on that card'}.`,
           })
           failure.current = { anchorId: firstFailed.anchorId }
-          if (focus) goToFailure(failure.current)
+          if (focus) goToFailure(failure.current, revealRef.current)
           return false
         }
         setResult({
@@ -301,8 +317,8 @@ export function ProfileSaveProvider({ live, rootRef, children }: ProviderProps) 
     [live, register, refresh, saveAll, hasChanges, setBar]
   )
   const status = useMemo<Status>(
-    () => ({ dirtyCount: dirtyIds.length, saving, result }),
-    [dirtyIds.length, saving, result]
+    () => ({ dirtyCount: dirtyIds.length, dirtyIds, saving, result }),
+    [dirtyIds, saving, result]
   )
   const saveWord = live ? 'Publish changes' : 'Save changes'
 
@@ -324,7 +340,7 @@ export function ProfileSaveProvider({ live, rootRef, children }: ProviderProps) 
               if (!f) return
               e.preventDefault()
               failure.current = null
-              goToFailure(f)
+              goToFailure(f, revealRef.current)
             }}
           >
             <DialogHeader>

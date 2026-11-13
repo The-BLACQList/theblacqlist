@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
     return [{ source: '/cities', destination: '/discover', permanent: true }]
   },
   images: {
+    // 90 is for banners (TemplateHero), where a full-width photo shows every
+    // compression artefact; everything else keeps the default 75.
+    qualities: [75, 90],
     remotePatterns: [
       {
         // Supabase Storage CDN — covers all hosted Supabase projects.

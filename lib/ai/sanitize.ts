@@ -181,7 +181,8 @@ export function validateOutput(raw: string, maxChars: number): OutputValidation 
   const ceiling = Math.min(maxChars, MAX_OUTPUT_CHARS)
   if (text.length > ceiling) return { ok: false, reason: 'too_long' }
 
-  const opening = text.toLowerCase()
+  // Models write curly apostrophes as often as straight ones.
+  const opening = text.toLowerCase().replace(/[\u2018\u2019]/g, "'")
   if (REFUSAL_PREFIXES.some((p) => opening.startsWith(p))) {
     return { ok: false, reason: 'refusal' }
   }
@@ -214,7 +215,7 @@ export function rejectionCode(reason: OutputRejection): string {
  */
 export function ownerRejectionMessage(reason: OutputRejection): string {
   if (reason === 'refusal') {
-    return "There isn't enough on your page yet to write this. Add a few lines about your business, then try again."
+    return "There isn't enough on your page yet for us to write from. Add a few services or a line about what you do, then try again."
   }
   return "That suggestion didn't pass our checks. Try requesting it again."
 }

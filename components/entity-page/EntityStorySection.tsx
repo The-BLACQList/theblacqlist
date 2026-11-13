@@ -7,18 +7,29 @@ interface Props {
   entity: EntityPageData
 }
 
+/** Splits an About into paragraphs at blank lines. */
+export function storyParagraphs(text: string): string[] {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+}
+
 export function EntityStorySection({ entity }: Props) {
   const [expanded, setExpanded] = useState(false)
   const { description } = entity.details
 
   if (!description?.trim()) return null
 
-  const paragraphs = description.split('\n\n').filter(Boolean)
+  // A blank line starts a paragraph, however the text was typed ("\r\n", spaces).
+  const paragraphs = storyParagraphs(description)
   const isLong = description.length > 400
 
-  // Split: first paragraph always visible; rest behind "Read more"
-  const visibleParagraphs = expanded ? paragraphs : paragraphs.slice(0, 1)
+  // Long stories show the first paragraph, the rest behind "Read more". A short
+  // one shows every paragraph: hiding them with no button would lose them.
   const hasMore = isLong && paragraphs.length > 1
+  const visibleParagraphs = expanded || !hasMore ? paragraphs : paragraphs.slice(0, 1)
 
   return (
     <section aria-labelledby="story-heading" className="bg-cream py-12 md:py-16">

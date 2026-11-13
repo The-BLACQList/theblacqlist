@@ -119,7 +119,7 @@ describe('rejectionCode', () => {
 
 describe('ownerRejectionMessage', () => {
   it('tells the owner what to add when the model declines', () => {
-    expect(ownerRejectionMessage('refusal')).toMatch(/Add a few lines about your business/)
+    expect(ownerRejectionMessage('refusal')).toMatch(/Add a few services or a line about what you do/)
   })
 
   it('never names the reason for a contact-detail rejection', () => {

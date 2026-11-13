@@ -121,7 +121,7 @@ export function computePageChecklist(
     {
       id: 'cover',
       label: 'Cover image uploaded',
-      hint: 'Add a cover photo, 1200×800px or larger. Without one your page shows a brand tile instead of your business in search results and collections.',
+      hint: 'Add a banner photo: a wide photo at least 1920 × 960px. Without one your page shows a brand tile instead of your business in search results and collections.',
       category: 'recommended',
       weight: 8,
       passed: !!listing.cover_image_path?.trim(),

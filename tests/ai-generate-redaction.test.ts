@@ -78,6 +78,9 @@ const CONTEXT: GenerateContext = {
   saves30d: 1,
   shares30d: 0,
   pageViews7d: 3,
+  parentCategoryName: null,
+  serviceNames: [],
+  attributeLabels: [],
 }
 
 describe('generate() — what reaches the provider', () => {

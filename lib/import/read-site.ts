@@ -1,6 +1,8 @@
 import { parse, type HTMLElement } from 'node-html-parser'
 import { WEEK_DAYS, type WeekDay } from '@/lib/listings/hours'
+import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { DayHours, SocialLinks, WeeklyHours } from '@/types'
+import { pickBannerPhoto } from '@/lib/media/banner'
 
 // =============================================================================
 // Reading an owner's public page into draft fields (ticket 127)
@@ -13,10 +15,17 @@ import type { DayHours, SocialLinks, WeeklyHours } from '@/types'
 //      address, hours, logo, images, sameAs)
 //   2. Open Graph and meta tags
 //   3. Page links: tel:, mailto:, and known social hosts
-//   4. <img> tags at least 400px wide (attributes, srcset or data dimensions),
-//      24 candidates at most
-//   5. Link-in-bio pages (Linktree and similar): outbound links become the
+//   4. <img> tags at least 400px wide (attributes, srcset, data dimensions or
+//      a width in the image host's URL), 24 candidates at most
+//   5. Images that are not <img>: lazy-load data-src attributes and CSS
+//      background images, which website builders use for gallery photos
+//   6. Website builder data (the `window._site` object of Web.com, FatCow and
+//      similar): name, address and opening hours when nothing better said
+//   7. Link-in-bio pages (Linktree and similar): outbound links become the
 //      website and socials
+//
+// It also keeps the page's visible text (`siteText`), which the writing help
+// may use to draft an About from the owner's own words.
 //
 // Nothing here is saved. The owner confirms or edits every field, and only the
 // photos they pick are ever downloaded.
@@ -44,6 +53,12 @@ export interface SiteFindings {
   sourceHost: string
   isLinkInBio: boolean
   name: string | null
+  /**
+   * Every plausible name on the page, best guess first: the parts of the
+   * title, the site name, the logo text, the main heading. Sites write their
+   * titles every which way, so the owner picks. Empty when none was found.
+   */
+  nameOptions: string[]
   about: string | null
   /** Every distinct phone found, most trusted first. Two or more means "Which is right?". */
   phones: string[]
@@ -55,10 +70,16 @@ export interface SiteFindings {
   photos: PhotoCandidate[]
   suggestedLogo: string | null
   suggestedCover: string | null
+  /**
+   * The page's visible headings, paragraphs and list items, deduped, without
+   * menus, headers, footers or forms. For drafting an About; never saved as is.
+   */
+  siteText: string | null
 }
 
-export const MAX_PHOTO_CANDIDATES = 24
+export { MAX_PHOTO_CANDIDATES }
 export const MIN_PHOTO_WIDTH = 400
+export const MAX_SITE_TEXT = 4000
 
 // ── Hosts ───────────────────────────────────────────────────────────────────
 
@@ -131,9 +152,70 @@ function cleanText(value: unknown, max = 2000): string | null {
   return text.length > max ? text.slice(0, max).trimEnd() : text
 }
 
-/** "Glow Salon | Atlanta Hair" becomes "Glow Salon". Hyphenated names survive. */
-function firstTitleSegment(title: string): string {
-  return title.split(/\s+[|–—·•:]\s+|\s+-\s+/)[0]!.trim()
+/** Title segments that name the page, not the business. */
+const GENERIC_SEGMENT = /^(home|home ?page|welcome|index|main|official (web)?site|official page)$/i
+
+/**
+ * Where a title splits into parts: " | ", " - ", " – ", " » ", " / ", " ~ ",
+ * " : ", " :: ", and a bare "|". A hyphen inside a word ("Jean-Paul") doesn't.
+ */
+const TITLE_SEPARATOR = /\s+(?:[|–—·•:»›~\/]|::)\s+|\s+-\s+|\s*\|\s*/
+
+/** The parts of a title, trimmed, in order. */
+export function titleParts(title: string): string[] {
+  return title
+    .split(TITLE_SEPARATOR)
+    .map((p) => p.trim())
+    .filter(Boolean)
+}
+
+const squash = (v: string): string => v.toLowerCase().replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
+
+/**
+ * The business name in a page title. "Glow Salon | Atlanta Hair" becomes
+ * "Glow Salon", and "Home - Cakes & Treats" becomes "Cakes & Treats": words
+ * like "Home" name the page, not the business. A segment that matches one of
+ * `hints` (the site name, a logo title, a heading) wins. Hyphenated names
+ * survive, and so does a name that only starts with a generic word.
+ */
+export function titleName(title: string, hints: readonly (string | null | undefined)[] = []): string {
+  const segments = titleParts(title)
+  const real = segments.filter((p) => !GENERIC_SEGMENT.test(p))
+  const wanted = new Set(hints.filter((h): h is string => Boolean(h && h.trim())).map(squash))
+  return real.find((p) => wanted.has(squash(p))) ?? real[0] ?? segments[0] ?? title.trim()
+}
+
+const MAX_NAME_OPTIONS = 6
+/** Longer than this is a sentence or a tagline, not a name. */
+const MAX_NAME_OPTION = 80
+
+/**
+ * The names to offer, `best` first: every part of every source, without
+ * page words ("Home"), repeats, or anything sentence-long.
+ */
+export function nameChoices(
+  best: string | null,
+  sources: readonly (string | null | undefined)[],
+  isLinkInBio = false
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const add = (raw: string | null | undefined) => {
+    let text = cleanText(raw, 200)
+    if (!text) return
+    if (isLinkInBio) text = text.replace(/^@/, '')
+    if (text.length < 2 || text.length > MAX_NAME_OPTION || GENERIC_SEGMENT.test(text)) return
+    const key = squash(text)
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(text)
+  }
+  add(best)
+  for (const source of sources) {
+    if (!source) continue
+    for (const part of titleParts(source)) add(part)
+  }
+  return out.slice(0, MAX_NAME_OPTIONS)
 }
 
 const JUNK_ABOUT = /\blinktree\b|make your link do more|link in bio|\bbeacons\b/i
@@ -401,7 +483,11 @@ function readHours(node: Json | null): WeeklyHours | null {
     }
   }
 
-  if (Object.keys(spans).length === 0) return null
+  return weekFromSpans(spans)
+}
+
+function weekFromSpans(spans: DaySpans): WeeklyHours | null {
+  if (!Object.values(spans).some((list) => list && list.length > 0)) return null
   const week = {} as WeeklyHours
   for (const day of WEEK_DAYS) {
     const list = spans[day] ?? []
@@ -434,6 +520,172 @@ function isRasterCandidate(url: URL): boolean {
   return !/\.(svg|gif|ico)(\?|$)/i.test(url.pathname)
 }
 
+/**
+ * The pixel width an image host was asked for, read from the URL, or null.
+ * Website builders often say nothing else about an image's size.
+ */
+export function widthFromUrl(raw: string): number | null {
+  let url: URL
+  try {
+    url = new URL(raw)
+  } catch {
+    return null
+  }
+  const full = decodeURIComponent(url.href)
+  const n = (v: string | undefined): number | null => {
+    const w = Number(v)
+    return Number.isFinite(w) && w > 0 && w < 20000 ? w : null
+  }
+  // Web.com / FatCow / builderservices: methods=crop,…|resize,900,5000
+  const methods = url.searchParams.get('methods')
+  if (methods) {
+    const all = [...methods.matchAll(/resize,(\d+)/g)]
+    const last = all.at(-1)?.[1]
+    if (last) return n(last)
+  }
+  // Wix: /v1/fill/w_980,h_600,…
+  const wix = /\/(?:fill|fit|crop)\/w_(\d+),/.exec(full)
+  if (wix) return n(wix[1])
+  // GoDaddy: /:/rs=w:1200,h:600
+  const godaddy = /\/rs=w:(\d+)/.exec(full)
+  if (godaddy) return n(godaddy[1])
+  // Squarespace: ?format=1500w
+  const format = /^(\d+)w$/.exec(url.searchParams.get('format') ?? '')
+  if (format) return n(format[1])
+  // Shopify: name_800x.jpg or name_800x600.jpg
+  const shopify = /_(\d+)x\d*\.(?:jpe?g|png|webp)$/i.exec(url.pathname)
+  if (shopify) return n(shopify[1])
+  return n(url.searchParams.get('w') ?? url.searchParams.get('width') ?? undefined)
+}
+
+/** Photos on a CDN wrap the real file in `url=`; the same file in two sizes is one photo. */
+function photoKey(href: string): string {
+  try {
+    const inner = new URL(href).searchParams.get('url')
+    return inner ?? href
+  } catch {
+    return href
+  }
+}
+
+const NOT_A_PHOTO = /icon|avatar|sprite|placeholder|spinner|loading|badge|emoji|flag/i
+
+// ── Website builder data ────────────────────────────────────────────────────
+
+interface BuilderData {
+  name: string | null
+  address: FoundAddress | null
+  hours: WeeklyHours | null
+  phone: string | null
+  email: string | null
+}
+
+const BUILDER_DAYS: Record<string, WeekDay> = {
+  mon: 'monday',
+  tue: 'tuesday',
+  wed: 'wednesday',
+  thu: 'thursday',
+  fri: 'friday',
+  sat: 'saturday',
+  sun: 'sunday',
+}
+
+/** The largest `window._site` we will parse. Real ones are about 20 KB. */
+const MAX_BUILDER_JSON = 500_000
+
+/**
+ * Web.com, FatCow and other builders on the same platform put the site's
+ * settings in `window._site = {…}`: company name, address and opening hours.
+ */
+function readBuilderData(root: HTMLElement): BuilderData | null {
+  for (const script of root.querySelectorAll('script')) {
+    const text = script.rawText
+    const at = text.indexOf('window._site')
+    if (at === -1) continue
+    const start = text.indexOf('{', at)
+    if (start === -1 || text.length - start > MAX_BUILDER_JSON) continue
+    const end = text.lastIndexOf('}')
+    let data: Json
+    try {
+      data = JSON.parse(text.slice(start, end + 1)) as Json
+    } catch {
+      continue
+    }
+    const obj = (v: unknown): Json => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Json) : {})
+    const metadata = obj(data.metadata)
+    const binding = obj(data.globalBinding)
+    const name = cleanText(metadata.siteName ?? metadata.companyName ?? binding.companyName, 120)
+
+    const a = obj(binding.address)
+    const address: FoundAddress = {
+      street: cleanText(a.street, 200),
+      city: cleanText(a.city, 120),
+      state: cleanText(a.state, 60),
+      zip: cleanText(typeof a.zip === 'number' ? String(a.zip) : a.zip, 20),
+    }
+
+    const spans: DaySpans = {}
+    for (const [key, list] of Object.entries(obj(binding.openingHours))) {
+      const day = BUILDER_DAYS[key.toLowerCase()]
+      if (!day || !Array.isArray(list)) continue
+      spans[day] ??= []
+      for (const item of list) {
+        const span = obj(item)
+        const opens = normalizeTime(span.opening)
+        const closes = normalizeTime(span.closing)
+        if (opens && closes) addSpan(spans, day, opens, closes)
+      }
+    }
+
+    const phone = typeof binding.phone === 'string' ? binding.phone.replace(/[\u200e\u200f\u202a-\u202e]/g, '') : null
+    return {
+      name,
+      address: address.street || address.city || address.state || address.zip ? address : null,
+      hours: weekFromSpans(spans),
+      phone,
+      email: typeof binding.email === 'string' ? binding.email : null,
+    }
+  }
+  return null
+}
+
+// ── Visible text ────────────────────────────────────────────────────────────
+
+const HIDDEN_TEXT = new Set(['nav', 'header', 'footer', 'script', 'style', 'form', 'noscript', 'template', 'svg', 'button'])
+
+function isHiddenText(el: HTMLElement): boolean {
+  for (let node: HTMLElement | null = el; node; node = node.parentNode as HTMLElement | null) {
+    const tag = node.rawTagName?.toLowerCase()
+    if (tag && HIDDEN_TEXT.has(tag)) return true
+    if (node.getAttribute?.('aria-hidden') === 'true') return true
+    const role = node.getAttribute?.('role')
+    if (role === 'navigation' || role === 'banner' || role === 'contentinfo') return true
+  }
+  return false
+}
+
+/** Headings, paragraphs and list items a visitor reads, once each, at most MAX_SITE_TEXT characters. */
+function readSiteText(root: HTMLElement): string | null {
+  const seen = new Set<string>()
+  const lines: string[] = []
+  let size = 0
+  for (const el of root.querySelectorAll('h1, h2, h3, p, li')) {
+    if (isHiddenText(el)) continue
+    // A list item that wraps paragraphs is read through them.
+    if (el.rawTagName.toLowerCase() === 'li' && el.querySelector('p, h1, h2, h3')) continue
+    const line = el.text.replace(/\s+/g, ' ').trim()
+    if (line.length < 3 || !/[a-z]/i.test(line)) continue
+    const key = line.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    if (size + line.length + 1 > MAX_SITE_TEXT) break
+    lines.push(line)
+    size += line.length + 1
+  }
+  const text = lines.join('\n').trim()
+  return text.length >= 40 ? text : null
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 /**
@@ -450,15 +702,27 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
   const meta = (selector: string): string | null =>
     root.querySelector(selector)?.getAttribute('content')?.trim() || null
 
+  const builder = readBuilderData(root)
+
   // Name
   const titleText = root.querySelector('title')?.text ?? ''
-  const rawName =
-    (typeof ld?.name === 'string' ? ld.name : null) ??
-    meta('meta[property="og:site_name"]') ??
-    meta('meta[property="og:title"]') ??
-    (titleText ? titleText : null)
-  let name = rawName ? cleanText(firstTitleSegment(rawName), 120) : null
+  const siteName = meta('meta[property="og:site_name"]')
+  const logoTitle = root
+    .querySelector('[class*="logo-title"], [class*="site-title"], [class*="site-name"]')
+    ?.text.trim()
+  const heading = root.querySelector('h1')?.text.trim()
+  // Only names the site gives itself break a tie between title parts. The main
+  // heading is often a tagline that is also in the title, so it never does.
+  const hints = [siteName, builder?.name, logoTitle]
+  const ldName = typeof ld?.name === 'string' ? ld.name : null
+  const ogTitle = meta('meta[property="og:title"]')
+  const rawName = ldName ?? siteName ?? ogTitle ?? (titleText ? titleText : null)
+  let name = rawName ? cleanText(titleName(rawName, hints), 120) : null
+  // A title that only names the page ("Home") is no name at all.
+  if ((!name || GENERIC_SEGMENT.test(name)) && builder?.name) name = cleanText(titleName(builder.name, hints), 120)
+  if (name && GENERIC_SEGMENT.test(name)) name = null
   if (name && isLinkInBio) name = name.replace(/^@/, '')
+  const nameOptions = nameChoices(name, [ldName, siteName, builder?.name, logoTitle, ogTitle, titleText, heading], isLinkInBio)
 
   // About
   const aboutCandidates = [
@@ -475,11 +739,20 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
     }
   }
 
+  // No description in the page's tags: the first real paragraph a visitor reads.
+  const siteText = isLinkInBio ? null : readSiteText(root)
+  if (!about && siteText) {
+    const lead = siteText.split('\n').find((line) => line.length >= 60 && /[.!?]$/.test(line) && !JUNK_ABOUT.test(line))
+    if (lead) about = lead
+  }
+
   // Phones and emails
   const phones: string[] = []
   const emails: string[] = []
   for (const tel of strings(ld?.telephone).flatMap(splitPhones)) pushUnique(phones, formatPhone(tel), (p) => phoneKey(p)!)
   for (const mail of strings(ld?.email)) pushUnique(emails, cleanEmail(mail), (e) => e)
+  if (builder?.phone) pushUnique(phones, formatPhone(builder.phone), (p) => phoneKey(p)!)
+  if (builder?.email) pushUnique(emails, cleanEmail(builder.email), (e) => e)
 
   // Links: tel, mailto, socials, and (on link-in-bio pages) the website
   const socials: Partial<SocialLinks> = {}
@@ -532,12 +805,13 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
     // An http image on an https page is blocked in the browser. Most hosts serve both.
     if (url.protocol === 'http:' && page.protocol === 'https:') url.protocol = 'https:'
     const href = url.toString()
-    const existing = photos.find((p) => p.url === href)
+    const key = photoKey(href)
+    const existing = photos.find((p) => photoKey(p.url) === key)
     if (existing) {
       if (kind === 'logo') existing.kind = 'logo'
       return
     }
-    photos.push({ url: href, kind, width, alt })
+    photos.push({ url: href, kind, width: width ?? widthFromUrl(href), alt })
   }
 
   for (const logo of strings(ld?.logo)) addPhoto(logo, 'logo', null, null)
@@ -558,34 +832,68 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
     const src = img.getAttribute('src') ?? img.getAttribute('data-src') ?? null
     const attrWidth = Number(img.getAttribute('width') ?? NaN)
     const dims = /^(\d+)x(\d+)$/.exec(img.getAttribute('data-image-dimensions') ?? '')
-    const width = Math.max(
+    const fromAttrs = Math.max(
       fromSrcset?.width ?? 0,
       Number.isFinite(attrWidth) ? attrWidth : 0,
       dims ? Number(dims[1]) : 0,
     )
-    const url = fromSrcset && fromSrcset.width >= width ? fromSrcset.url : src
+    const url = fromSrcset && fromSrcset.width >= fromAttrs ? fromSrcset.url : src
     if (!url || url.startsWith('data:')) continue
+    const width = fromAttrs || (toUrl(url, pageUrl) ? widthFromUrl(toUrl(url, pageUrl)!.href) ?? 0 : 0)
     if (looksLikeLogo) addPhoto(url, 'logo', width || null, alt)
     else if (width >= MIN_PHOTO_WIDTH) addPhoto(url, 'photo', width, alt)
   }
 
+  // Images that are not <img>: website builders lazy-load gallery photos into
+  // divs (data-src, with larger copies in data-src-normal and -retina) or
+  // paint them as CSS backgrounds.
+  const lazy = root.querySelectorAll(
+    '[data-src-retina], [data-src-normal], [data-src], [data-bg], [data-background-image], [style*="background-image"]',
+  )
+  for (const el of lazy) {
+    if (photos.length >= MAX_PHOTO_CANDIDATES) break
+    if (el.rawTagName.toLowerCase() === 'img') continue
+    const marks = `${el.getAttribute('class') ?? ''} ${el.getAttribute('id') ?? ''}`
+    if (NOT_A_PHOTO.test(marks)) continue
+    const styleUrl = /background-image\s*:\s*url\(\s*['"]?([^'")]+)['"]?\s*\)/i.exec(el.getAttribute('style') ?? '')?.[1]
+    const options = [
+      el.getAttribute('data-src-retina'),
+      el.getAttribute('data-src-normal'),
+      el.getAttribute('data-src'),
+      el.getAttribute('data-bg'),
+      el.getAttribute('data-background-image'),
+      styleUrl,
+    ]
+      .map((raw) => (raw && !raw.startsWith('data:') ? toUrl(raw, pageUrl) : null))
+      .filter((u): u is URL => u !== null)
+      .map((u) => ({ href: u.href, width: widthFromUrl(u.href) }))
+    if (options.length === 0) continue
+    const best = options.reduce((a, b) => ((b.width ?? 0) > (a.width ?? 0) ? b : a))
+    const alt = el.getAttribute('aria-label')?.trim() || el.getAttribute('title')?.trim() || null
+    if (/logo/i.test(`${marks} ${alt ?? ''}`)) addPhoto(best.href, 'logo', best.width, alt)
+    else if ((best.width ?? 0) >= MIN_PHOTO_WIDTH) addPhoto(best.href, 'photo', best.width, alt)
+  }
+
   const suggestedLogo = photos.find((p) => p.kind === 'logo')?.url ?? null
-  const suggestedCover = photos.find((p) => p.kind === 'photo')?.url ?? null
+  // The first photo wide enough to stay sharp across the top of the page.
+  const suggestedCover = pickBannerPhoto(photos)?.url ?? null
 
   return {
     sourceHost,
     isLinkInBio,
     name,
+    nameOptions,
     about,
     phones,
     emails,
-    address: readAddress(ld?.address),
-    hours: readHours(ld),
+    address: readAddress(ld?.address) ?? builder?.address ?? null,
+    hours: readHours(ld) ?? builder?.hours ?? null,
     socials,
     website,
     photos,
     suggestedLogo,
     suggestedCover,
+    siteText,
   }
 }
 

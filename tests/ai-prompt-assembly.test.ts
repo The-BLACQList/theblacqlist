@@ -27,6 +27,9 @@ const CTX: GenerateContext = {
   saves30d: 12,
   shares30d: 4,
   pageViews7d: 96,
+  parentCategoryName: null,
+  serviceNames: [],
+  attributeLabels: [],
 }
 
 describe('fillTemplate', () => {
