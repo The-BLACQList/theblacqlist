@@ -3,6 +3,8 @@
 // whole message on the scripted model. The route's guards are read as text.
 
 import { readFileSync } from 'node:fs'
+
+import { isOwnerCueHiddenPath, ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import { join } from 'node:path'
 
 import { describe, expect, it, vi } from 'vitest'
@@ -443,19 +445,49 @@ describe('the route (read as text)', () => {
   })
 })
 
-describe('the panel', () => {
-  const sidebar = readFileSync(
-    join(process.cwd(), 'components/dashboard/DashboardSidebar.tsx'),
-    'utf8'
-  )
-  const layout = readFileSync(join(process.cwd(), 'app/dashboard/layout.tsx'), 'utf8')
+describe('the corner button', () => {
+  const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+  const sidebar = read('components/dashboard/DashboardSidebar.tsx')
+  const layout = read('app/dashboard/layout.tsx')
+  const cue = read('components/dashboard/OwnerCue.tsx')
+  const css = read('app/globals.css')
+  const save = read('components/listings/finish/ProfileSave.tsx')
 
-  it('is behind the flag and hidden on Upgrade', async () => {
-    expect(layout).toMatch(/showOwnerCue=\{isFeatureEnabled\('ownerCue'\)\}/)
-    expect(sidebar).toMatch(/showOwnerCue && hasListings && !isOwnerCueHiddenPath\(pathname\)/)
-    const { isOwnerCueHiddenPath } = await import('@/components/dashboard/DashboardSidebar')
+  it('is mounted by the dashboard layout behind the flag, not in the sidebar', () => {
+    expect(layout).toMatch(/isFeatureEnabled\('ownerCue'\) && hasListings && <OwnerCue \/>/)
+    expect(sidebar).not.toMatch(/OwnerCue/)
+  })
+
+  it('hides on Upgrade and checkout', () => {
     expect(isOwnerCueHiddenPath('/dashboard/upgrade')).toBe(true)
     expect(isOwnerCueHiddenPath('/dashboard/upgrade/success')).toBe(true)
+    expect(isOwnerCueHiddenPath('/dashboard/upgraded')).toBe(false)
     expect(isOwnerCueHiddenPath('/dashboard/pages')).toBe(false)
+    expect(cue).toMatch(/if \(isOwnerCueHiddenPath\(pathname\)\) return null/)
+  })
+
+  it('reads the open page from the address', () => {
+    const id = '11111111-2222-4333-8444-555555555555'
+    expect(ownerCuePageId(`/dashboard/pages/${id}/edit`)).toBe(id)
+    expect(ownerCuePageId(`/dashboard/pages/${id}`)).toBe(id)
+    expect(ownerCuePageId('/dashboard/pages/new')).toBeNull()
+    expect(ownerCuePageId('/dashboard/messages')).toBeNull()
+  })
+
+  it('works like the visitor Cue: corner pill, side panel on a computer, sheet on a phone', () => {
+    expect(cue).toMatch(/fixed bottom-4 right-4 z-40/)
+    expect(cue).toMatch(/modal=\{!isDesktop\}/)
+    expect(cue).toMatch(/md:bottom-4 md:right-4 md:w-96/)
+    expect(cue).toMatch(/onInteractOutside/)
+    expect(cue).not.toMatch(/DialogPrimitive\.Overlay/)
+    expect(cue).toMatch(/aria-label="Ask Cue"/)
+  })
+
+  it('rides above the edit page Save bar', () => {
+    expect(save).toMatch(/data-save-bar=""/)
+    expect(cue).toMatch(/lift-over-save-bar/)
+    expect(css).toMatch(/body:has\(\[data-save-bar\]\) \.lift-over-save-bar \{\s*bottom: 6\.5rem/)
+    expect(css).toMatch(/body:has\(\[data-save-bar\]\) \.owner-cue-panel/)
+    expect(css).toMatch(/body:has\(\[data-owner-cue='on'\]\) \.stack-over-assistant/)
   })
 })

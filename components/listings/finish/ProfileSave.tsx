@@ -425,7 +425,7 @@ export function SaveBar() {
   }
 
   return (
-    <div ref={setBar} className="sticky bottom-3 z-20">
+    <div ref={setBar} data-save-bar="" className="sticky bottom-3 z-20">
       <div className="flex items-center gap-3 rounded-xl border border-charcoal/15 bg-white px-4 py-3 shadow-[0_6px_24px_rgba(0,0,0,0.12)]">
         <p role="status" className="min-w-0 flex-1 font-body text-sm text-charcoal">
           {message}

@@ -1,8 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type MouseEvent,
+} from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { ArrowUp, Square, X } from 'lucide-react'
 
@@ -15,20 +22,41 @@ import { CUE_HISTORY_TURNS, CUE_TURN_MAX_CHARS } from '@/lib/ai/cue/ask'
 import { OWNER_CUE_MESSAGE_MAX } from '@/lib/ai/cue/owner/ask'
 import { streamOwnerCue, type OwnerCueReply } from '@/lib/ai/cue/owner/client'
 import { OWNER_DRAFT_KINDS, OWNER_FALLBACK_TEXT, type OwnerDraft } from '@/lib/ai/cue/owner/events'
+import { isOwnerCueHiddenPath, ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import { cn } from '@/lib/utils'
 
 /**
- * The owner Cue (ticket 203): "✦ Ask Cue" in the dashboard sidebar opens this
- * panel on the right. It answers how-to questions, reads the owner's own page
- * and drafts text. A draft is a pending suggestion; it reaches the page only
- * when the owner chooses "Use this" and confirms. The chat lives in this tab
- * (sessionStorage) and clears when the tab closes.
+ * The owner Cue (ticket 203): the same gold Ask Cue button in the bottom-right
+ * corner that visitors get, on every dashboard page but Upgrade. On a computer
+ * it opens a panel that stays open while the owner works on the page; on a
+ * phone, a full-screen sheet that closes when they follow a link. It answers
+ * how-to questions, reads the owner's own pages and drafts text. A draft is a
+ * pending suggestion; it reaches the page only when the owner chooses "Use
+ * this" and confirms. The chat lives in this tab (sessionStorage).
+ *
+ * On the edit page the button and panel sit above the Save bar
+ * (.lift-over-save-bar in globals.css), so Save is never covered.
  */
 
 const STORAGE_KEY = 'blacq-owner-cue-v1'
 const MAX_KEPT_TURNS = 20
 const LOOKING = 'Cue is looking…'
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const DESKTOP = '(min-width: 48rem)'
+
+function subscribeDesktop(onChange: () => void): () => void {
+  const mq = window.matchMedia(DESKTOP)
+  mq.addEventListener('change', onChange)
+  return () => mq.removeEventListener('change', onChange)
+}
+
+/** md and up: a panel beside the page. Below: a full-screen sheet. */
+function useIsDesktop(): boolean {
+  return useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(DESKTOP).matches,
+    () => false
+  )
+}
 
 export const OWNER_CUE_EXAMPLES = [
   'How do I get more views?',
@@ -99,7 +127,9 @@ function replyLine(reply: OwnerCueReply): string {
   return reply.drafts.length > 0 ? 'Cue answered, with a draft below.' : 'Cue answered.'
 }
 
-export function OwnerCue({ listingId }: { listingId?: string | null }) {
+export function OwnerCue() {
+  const pathname = usePathname()
+  const isDesktop = useIsDesktop()
   const [open, setOpen] = useState(false)
   const [turns, setTurns] = useState<OwnerTurn[]>([])
   const loaded = useRef(false)
@@ -122,23 +152,27 @@ export function OwnerCue({ listingId }: { listingId?: string | null }) {
     })
   }
 
-  const pageId = listingId && UUID.test(listingId) ? listingId : null
+  // Upgrade and checkout are for deciding what to pay; Cue stays out of them.
+  if (isOwnerCueHiddenPath(pathname)) return null
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} modal={!isDesktop}>
       <DialogPrimitive.Trigger
         data-owner-cue="on"
-        className="flex shrink-0 md:w-full items-center gap-2.5 whitespace-nowrap px-3 py-2 rounded-lg font-subhead text-sm text-gold hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+        aria-label="Ask Cue"
+        className="lift-over-save-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible"
       >
-        <span aria-hidden="true">✦</span>
-        Ask Cue
+        <span className="grid place-items-center size-9 rounded-full bg-brand-black">
+          <GoldBrandMark className="size-5" />
+        </span>
+        <span className="owner-cue-label">Ask Cue</span>
       </DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-brand-black/40" />
         <OwnerCuePanel
           turns={turns}
           setTurns={updateTurns}
-          pageId={pageId}
+          pageId={ownerCuePageId(pathname)}
+          isDesktop={isDesktop}
           close={() => setOpen(false)}
         />
       </DialogPrimitive.Portal>
@@ -150,11 +184,13 @@ function OwnerCuePanel({
   turns,
   setTurns,
   pageId,
+  isDesktop,
   close,
 }: {
   turns: OwnerTurn[]
   setTurns: (update: (now: OwnerTurn[]) => OwnerTurn[]) => void
   pageId: string | null
+  isDesktop: boolean
   close: () => void
 }) {
   const [text, setText] = useState('')
@@ -166,6 +202,7 @@ function OwnerCuePanel({
   } | null>(null)
   const [status, setStatus] = useState('')
   const stopRef = useRef<AbortController | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const lastRef = useRef<HTMLLIElement>(null)
@@ -264,28 +301,43 @@ function OwnerCuePanel({
     inputRef.current?.focus()
   }
 
-  // Following a link to the dashboard closes the panel so the owner sees it.
+  // The phone sheet covers the page, so following a link closes it. The
+  // computer panel stays open beside the page, except on the way to Upgrade,
+  // where Cue doesn't show.
   function onClickCapture(event: MouseEvent<HTMLDivElement>) {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return
-    if ((event.target as Element).closest('a[href^="/dashboard"]')) close()
+    const link = (event.target as Element).closest('a[href]')
+    if (!link) return
+    if (!isDesktop || isOwnerCueHiddenPath(link.getAttribute('href') ?? '')) close()
   }
 
   return (
     <DialogPrimitive.Content
+      ref={contentRef}
       aria-describedby="owner-cue-description"
       onOpenAutoFocus={(event) => {
         event.preventDefault()
-        inputRef.current?.focus()
+        // On a phone the keyboard would cover the examples, so focus the sheet.
+        if (isDesktop) inputRef.current?.focus()
+        else contentRef.current?.focus()
       }}
+      // The computer panel stays open while the owner uses the page.
+      onInteractOutside={(event) => {
+        if (isDesktop) event.preventDefault()
+      }}
+      // The computer panel is not modal: Esc on the page belongs to the page.
+      // While Cue writes, Esc in the panel stops it rather than closing.
       onEscapeKeyDown={(event) => {
-        if (pending) {
+        if (isDesktop && !contentRef.current?.contains(document.activeElement)) {
+          event.preventDefault()
+        } else if (pending) {
           event.preventDefault()
           onStop()
         }
       }}
       onClickCapture={onClickCapture}
-      className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-brand-black text-off-white shadow-2xl shadow-brand-black/50 sm:w-[26rem] sm:border-l sm:border-gold/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] focus:outline-none"
+      className="owner-cue-panel fixed inset-0 z-50 flex flex-col bg-brand-black text-off-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] h-dvh md:inset-auto md:bottom-4 md:right-4 md:w-96 md:h-[min(70dvh,40rem)] md:p-0 md:rounded-2xl md:border md:border-gold/30 md:shadow-2xl md:shadow-brand-black/50 focus:outline-none"
     >
       <header className="flex items-center gap-2 h-14 shrink-0 pl-4 pr-1 border-b border-white/10">
         <GoldBrandMark className="size-6" />
