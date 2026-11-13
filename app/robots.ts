@@ -19,6 +19,8 @@ export default function robots(): MetadataRoute.Robots {
           '/sign-up/',
           '/verify-email/',
           '/claim/',
+          // Sample pages (ticket 184). 404 on production; noindex on Preview.
+          '/example/',
         ],
       },
     ],

@@ -1,5 +1,6 @@
 import type { EntityPageData } from '@/types'
 import { TemplateSectionHeading } from '@/components/entity-page/templates/TemplateSectionHeading'
+import { documentsActions } from '@/components/entity-page/EntityDocumentsRow'
 
 interface Props {
   entity: EntityPageData
@@ -19,6 +20,7 @@ export function TemplateCapabilities({ entity }: Props) {
         kicker="What we do"
         heading="Capabilities"
         headingId="capabilities-heading"
+        actions={documentsActions(entity.documents)}
       />
 
       <ul className="columns-1 sm:columns-2 gap-12 max-w-xl list-none p-0 m-0">
@@ -27,7 +29,10 @@ export function TemplateCapabilities({ entity }: Props) {
             key={service.id}
             className="flex items-baseline gap-3 py-2.5 border-b border-charcoal/10 break-inside-avoid"
           >
-            <span className="size-[7px] rounded-full bg-amber shrink-0 translate-y-[-1px]" aria-hidden="true" />
+            <span
+              className="size-[7px] rounded-full bg-amber shrink-0 translate-y-[-1px]"
+              aria-hidden="true"
+            />
             <div>
               <span className="font-headline text-[17px] md:text-[19px] text-brand-black">
                 {service.name}

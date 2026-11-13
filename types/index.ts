@@ -208,6 +208,9 @@ export interface EntityVideo {
   file_url: string | null
 }
 
+/** Price band shown on the facts line; the DB column takes the same four values. */
+export type PriceRange = '$' | '$$' | '$$$' | '$$$$'
+
 export interface BusinessDetails {
   description: string
   hours: WeeklyHours | null
@@ -225,6 +228,14 @@ export interface BusinessDetails {
   cta_label_override: string | null
   ships_nationwide: boolean
   /**
+   * The facts line (ticket 189): year founded, price band, reservations. The
+   * columns exist on listing_details_business; the live loader does not read
+   * them yet, so undefined means "not loaded" and null "left blank".
+   */
+  founded_year?: number | null
+  price_range?: PriceRange | null
+  accepts_reservations?: boolean | null
+  /**
    * The page's videos in the owner's order (ticket 105): a YouTube/Vimeo link
    * or the public URL of an uploaded file (ticket 130). After a downgrade only
    * the ones the plan shows are here.
@@ -240,6 +251,8 @@ export interface GalleryImage {
   id: string
   src: string
   alt: string
+  /** Album chip in the gallery (ticket 193). Undefined or null → unfiled. */
+  album?: string | null
 }
 
 export interface ReviewCriterionScore {
@@ -342,6 +355,117 @@ export interface JobDetails {
   hiring: JobHiring | null
 }
 
+// ─── Page sections that a loader may or may not provide (ticket 184) ────────────
+//
+// Every field below is optional on EntityPageData. `undefined` means "this loader
+// does not provide it yet", and the section stays hidden — so adding a type here
+// changes nothing on a live page until its loader fills it. The example pages
+// (lib/example/fixtures) fill all of them; the live loader gains them one ticket
+// at a time (185 logo, 186 shop, 107 team, 109 booking, 110 locations).
+// Deals (ticket 108) are main's `deals` above (part G, #328); 184 dropped its
+// own coupons type.
+
+/** An image whose `src` is already a renderable URL — storage, remote or a repo asset. */
+export interface ResolvedImage {
+  src: string
+  alt: string
+  /** Set when next/image must not optimize it (a host outside remotePatterns). */
+  unoptimized?: boolean
+}
+
+/** One person on the Team section (ticket 107). `photo` null → initials avatar. */
+export interface TeamMember {
+  id: string
+  name: string
+  role: string | null
+  bio: string | null
+  photo: ResolvedImage | null
+  /** The owner's card: first, larger, labelled "Owner" (ticket 107 `is_founder`). */
+  isFounder?: boolean
+}
+
+/** Owner settings for the booking-request form (ticket 109). */
+export interface BookingConfig {
+  prompt: string | null
+  askDate: boolean
+  askPartySize: boolean
+}
+
+/** Another location of the same business (ticket 110). `href` is its page. */
+export interface LocationLink {
+  id: string
+  label: string
+  cityName: string
+  addressLine: string | null
+  href: string
+  /** Its pin on the Visit map (ticket 190); absent or null when it has no address. */
+  lat?: number | null
+  lng?: number | null
+}
+
+/** One marketplace item shown on the profile Shop section (ticket 186). */
+export interface EntityShopItem {
+  id: string
+  kind: 'product' | 'service'
+  name: string
+  priceLabel: string | null
+  image: ResolvedImage | null
+  href: string
+}
+
+export interface EntityShop {
+  items: EntityShopItem[]
+  /** Total active items, so "Shop all (14)" can exceed what is shown. */
+  total: number
+  shopAllHref: string
+}
+
+/** Open roles for the Now-hiring block. Shape matches NowHiringView's props. */
+export interface EntityHiring {
+  roles: DiscoveryEntity[]
+  total: number
+}
+
+/** A licence, certification, award or press mention the business brings with it (ticket 192). */
+export interface CredentialItem {
+  id: string
+  kind: 'license' | 'certification' | 'award' | 'press'
+  title: string
+  issuer: string | null
+  year: number | null
+  href: string | null
+}
+
+/** A downloadable PDF — menu, rate card, commission guide (ticket 194). */
+export interface DocumentItem {
+  id: string
+  label: string
+  href: string
+  /** "2.1 MB"; null when unknown. */
+  sizeLabel: string | null
+}
+
+/** "Why choose us" bullets or "How it works" steps (ticket 195). */
+export interface HighlightItem {
+  id: string
+  kind: 'highlight' | 'step'
+  /** A name from the icon allow-list in EntityHighlightsSection; null → numbered. */
+  icon: string | null
+  title: string
+  text: string | null
+}
+
+/** One day's special hours (ticket 196). Open and close are "HH:MM"; null when closed. */
+export interface HoursOverride {
+  /** YYYY-MM-DD in the listing's local calendar. */
+  date: string
+  closed: boolean
+  open: string | null
+  close: string | null
+  /** "Thanksgiving", "Open late for the market"; null → no reason given. */
+  label: string | null
+}
+
 export interface EntityPageData {
   id: string
   entity_type: EntityType
@@ -413,4 +537,19 @@ export interface EntityPageData {
   reviews: ReviewItem[]
   reviewCriteria: ReviewCriterion[]
   reviewCriteriaAverages: ReviewCriterionAverage[]
+  // ── Optional sections (ticket 184). See the block above EntityPageData. ──
+  /** Logo beside the name in the hero. Only claimed listings get one (ticket 185). */
+  logo?: ResolvedImage | null
+  team?: TeamMember[]
+  booking?: BookingConfig | null
+  /** OTHER locations of this business, not the page itself. */
+  locations?: LocationLink[]
+  shop?: EntityShop | null
+  hiring?: EntityHiring | null
+  // ── Optional sections, PR 1B (ticket 184). Loaders fill them in tickets 192–196.
+  //    Posts are `happeningNow` above (main, part F); 1B dropped its own updates feed. ──
+  credentials?: CredentialItem[]
+  documents?: DocumentItem[]
+  highlights?: HighlightItem[]
+  hoursOverrides?: HoursOverride[]
 }

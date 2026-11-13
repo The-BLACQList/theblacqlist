@@ -1,0 +1,362 @@
+// =============================================================================
+// Ticket 184 — the page section registry
+// =============================================================================
+// lib/entity-page/sections.ts is the one list of what a listing page can show:
+// the three templates render in its order, the example pages prove every
+// section is filled against it, and the click-to-fill editor (ticket 188)
+// will read its gates and editor links. Three things can drift and only a
+// test would notice:
+//
+//   1. A template file reorders or drops a SectionMark without the registry
+//      following (or the reverse). The order arrays below are pinned to the
+//      SectionMark ids in each template's source, in order.
+//   2. A gate names a plan feature or an editor anchor that does not exist.
+//      Features are checked against FEATURE_MIN_TIER; edit anchors against the
+//      cards lib/listings/editTabs.ts lists, which is how main's tabbed edit
+//      page (#324) finds the tab a `/edit#card` link opens.
+//   3. applyTierGates stops hiding what a lower plan did not buy. Pinned per
+//      plan on the storefront fixture, which fills everything.
+//
+// vitest here is `env: node` with no jsdom, so the .tsx templates are read as
+// source text (the instrument tests/entity-cta.test.ts uses on the same files).
+// =============================================================================
+
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+
+import { describe, expect, it } from 'vitest'
+
+import {
+  ENTITY_SECTIONS,
+  TEMPLATE_SECTION_ORDER,
+  applyTierGates,
+  minTierFor,
+  sectionAllowed,
+  sectionDef,
+  templateKeyFor,
+  visibleSections,
+  type SectionId,
+  type TemplateKey,
+} from '@/lib/entity-page/sections'
+import { buildExampleEntity } from '@/lib/example/fixtures'
+import { DEALS_ON_MAX } from '@/lib/listings/deals'
+import { SCROLL_ORDER, tabForAnchor } from '@/lib/listings/editTabs'
+import { FEATURE_MIN_TIER, TIER_LIMITS, canAccess } from '@/lib/stripe/features'
+import type { PlanSlug } from '@/lib/stripe/plans'
+import type { EntityPageData } from '@/types'
+
+const NOW = new Date('2026-11-13T12:00:00Z')
+const PLANS: readonly PlanSlug[] = ['free', 'starter', 'growth', 'premium']
+const TEMPLATES: readonly TemplateKey[] = ['storefront', 'professional', 'creative']
+
+const TEMPLATE_FILES: Record<TemplateKey, string> = {
+  storefront: 'components/entity-page/templates/StorefrontTemplate.tsx',
+  professional: 'components/entity-page/templates/ProfessionalTemplate.tsx',
+  creative: 'components/entity-page/templates/CreativeTemplate.tsx',
+}
+
+/** The sections ticket 184 added; a page the live loader built never fills them. */
+const NEW_SECTIONS: readonly SectionId[] = [
+  'logo',
+  'locations',
+  'team',
+  'shop',
+  'booking',
+  'hiring',
+  // PR 1B
+  'highlights',
+  'credentials',
+]
+
+/**
+ * Marks rendered inside another section's component rather than by the
+ * template: the logo and facts line in TemplateHero, the map and special
+ * hours in EntityAtAGlance, the downloads row in every offerings heading,
+ * the album chips over the gallery grid. They are registered but never
+ * listed in TEMPLATE_SECTION_ORDER.
+ */
+const NESTED_MARKS: readonly SectionId[] = [
+  'logo',
+  'facts',
+  'map',
+  'hours-overrides',
+  'documents',
+  'albums',
+]
+
+/**
+ * Marks the route renders above the template, as the live listing route does
+ * with main's Happening now band (#326). Registered, never ordered, and never
+ * in a template file.
+ */
+const ROUTE_MARKS: readonly SectionId[] = ['happening-now']
+
+const UNORDERED_MARKS: readonly SectionId[] = [...NESTED_MARKS, ...ROUTE_MARKS]
+
+function source(relPath: string): string {
+  return readFileSync(path.resolve(process.cwd(), relPath), 'utf8')
+}
+
+function sectionMarkIds(relPath: string): string[] {
+  return [...source(relPath).matchAll(/<SectionMark id="([a-z-]+)"/g)].map((m) => m[1] ?? '')
+}
+
+/**
+ * A page shaped the way lib/listings/entityPage.ts builds it today: none of the
+ * optional fields ticket 184 added. `happeningNow` stays — main's loader fills it.
+ */
+function legacyShaped(entity: EntityPageData): EntityPageData {
+  const {
+    logo: _logo,
+    team: _team,
+    booking: _booking,
+    locations: _locations,
+    shop: _shop,
+    hiring: _hiring,
+    hoursOverrides: _hoursOverrides,
+    highlights: _highlights,
+    documents: _documents,
+    credentials: _credentials,
+    details,
+    ...rest
+  } = entity
+  const {
+    founded_year: _founded,
+    price_range: _price,
+    accepts_reservations: _reservations,
+    ...legacyDetails
+  } = details
+  return { ...rest, details: legacyDetails }
+}
+
+describe('registry shape', () => {
+  it('every section id is registered once', () => {
+    const ids = ENTITY_SECTIONS.map((s) => s.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const id of ids) expect(sectionDef(id).id).toBe(id)
+  })
+
+  it('every plan gate names a feature FEATURE_MIN_TIER knows', () => {
+    for (const def of ENTITY_SECTIONS) {
+      if (def.gate.feature) expect(FEATURE_MIN_TIER).toHaveProperty(def.gate.feature)
+      if (def.gate.limit) expect(TIER_LIMITS.premium).toHaveProperty(def.gate.limit)
+    }
+  })
+
+  it('minTierFor is the lowest plan canAccess admits, never a restated number', () => {
+    for (const def of ENTITY_SECTIONS) {
+      const feature = def.gate.feature
+      const expected = feature ? PLANS.find((plan) => canAccess(plan, feature)) : 'free'
+      expect(minTierFor(def.id), def.id).toBe(expected)
+    }
+  })
+
+  it('every edit anchor is a card the owner edit page has, so the link opens its tab', () => {
+    for (const def of ENTITY_SECTIONS) {
+      const href = def.editor.href('listing-1')
+      const anchor = href?.match(/\/edit#([a-z-]+)$/)?.[1]
+      if (anchor) {
+        expect(SCROLL_ORDER, `${def.id} → ${href}`).toContain(anchor)
+        expect(tabForAnchor(anchor), `${def.id} → ${href}`).not.toBeNull()
+      }
+      if (href) expect(href.startsWith('/dashboard/'), `${def.id} → ${href}`).toBe(true)
+    }
+  })
+})
+
+describe('template order', () => {
+  for (const template of TEMPLATES) {
+    it(`${template}: the registry order is the SectionMark order in ${TEMPLATE_FILES[template]}`, () => {
+      expect(sectionMarkIds(TEMPLATE_FILES[template])).toEqual([
+        ...TEMPLATE_SECTION_ORDER[template],
+      ])
+    })
+
+    it(`${template}: every ordered section is registered for this template, and vice versa`, () => {
+      const order = TEMPLATE_SECTION_ORDER[template]
+      expect(new Set(order).size).toBe(order.length)
+      for (const id of order) expect(sectionDef(id).templates, id).toContain(template)
+      // The nested marks render inside another section, the route marks above
+      // the template; neither is a top-level section.
+      const registered = ENTITY_SECTIONS.filter(
+        (s) => s.templates.includes(template) && !UNORDERED_MARKS.includes(s.id)
+      ).map((s) => s.id)
+      expect([...order].sort()).toEqual(registered.sort())
+    })
+  }
+
+  it('the logo and facts marks live in the hero', () => {
+    expect(sectionMarkIds('components/entity-page/templates/TemplateHero.tsx')).toEqual([
+      'logo',
+      'facts',
+    ])
+  })
+
+  it('the map and special-hours marks live in At a Glance', () => {
+    expect(sectionMarkIds('components/entity-page/EntityAtAGlance.tsx')).toEqual([
+      'map',
+      'hours-overrides',
+    ])
+  })
+
+  it('the albums mark is the chip row inside the gallery', () => {
+    expect(sectionMarkIds('components/entity-page/EntityMediaGallery.tsx')).toEqual(['albums'])
+  })
+
+  it('the documents mark is the row every offerings heading renders', () => {
+    expect(sectionMarkIds('components/entity-page/EntityDocumentsRow.tsx')).toEqual(['documents'])
+    for (const rel of [
+      'components/entity-page/EntityOfferingsSection.tsx',
+      'components/entity-page/templates/TemplateServices.tsx',
+      'components/entity-page/templates/TemplateCapabilities.tsx',
+    ]) {
+      expect(source(rel), rel).toContain('documentsActions(entity.documents')
+      expect(sectionMarkIds(rel), rel).toEqual([])
+    }
+  })
+
+  it('the happening-now mark is the band the example route renders above the template', () => {
+    expect(sectionMarkIds('app/example/[variant]/page.tsx')).toEqual(['happening-now'])
+    expect(source('app/example/[variant]/page.tsx')).toContain('<HappeningNowBanner')
+    for (const template of TEMPLATES) {
+      expect(source(TEMPLATE_FILES[template]), template).not.toContain('happening-now')
+    }
+  })
+
+  it('every nested and route mark is registered for every template and never ordered', () => {
+    for (const id of UNORDERED_MARKS) {
+      expect(sectionDef(id).templates).toEqual(['storefront', 'professional', 'creative'])
+      for (const template of TEMPLATES) expect(TEMPLATE_SECTION_ORDER[template]).not.toContain(id)
+    }
+  })
+
+  it('templateKeyFor maps every storefront, professional and creative type; events and jobs get none', () => {
+    expect(templateKeyFor('business')).toBe('storefront')
+    expect(templateKeyFor('restaurant')).toBe('storefront')
+    expect(templateKeyFor('vendor')).toBe('storefront')
+    expect(templateKeyFor('professional')).toBe('professional')
+    expect(templateKeyFor('service_provider')).toBe('professional')
+    expect(templateKeyFor('creative')).toBe('creative')
+    expect(templateKeyFor('creator')).toBe('creative')
+    expect(templateKeyFor('event')).toBeNull()
+    expect(templateKeyFor('job')).toBeNull()
+  })
+})
+
+describe('applyTierGates on a page that fills everything', () => {
+  const full = buildExampleEntity('storefront', NOW)
+
+  it('premium keeps the whole page', () => {
+    expect(visibleSections(applyTierGates(full, 'premium'), 'storefront')).toEqual([
+      ...TEMPLATE_SECTION_ORDER.storefront,
+    ])
+  })
+
+  it('growth keeps team and shop, drops deals, booking and other locations', () => {
+    const shown = visibleSections(applyTierGates(full, 'growth'), 'storefront')
+    expect(shown).toContain('team')
+    expect(shown).toContain('shop')
+    expect(shown).not.toContain('deals')
+    expect(shown).not.toContain('booking')
+    expect(shown).not.toContain('locations')
+  })
+
+  it('starter also drops team and shop, keeps faq and video', () => {
+    const shown = visibleSections(applyTierGates(full, 'starter'), 'storefront')
+    expect(shown).not.toContain('team')
+    expect(shown).not.toContain('shop')
+    expect(shown).toContain('faq')
+    expect(shown).toContain('video')
+  })
+
+  it('free drops faq, video and events and caps the gallery at one photo', () => {
+    const gated = applyTierGates(full, 'free')
+    const shown = visibleSections(gated, 'storefront')
+    expect(shown).not.toContain('faq')
+    expect(shown).not.toContain('video')
+    expect(shown).not.toContain('events')
+    expect(gated.images).toHaveLength(TIER_LIMITS.free.photos ?? 0)
+    expect(gated.faqs).toEqual([])
+    expect(gated.details.videos).toEqual([])
+  })
+
+  it('an unknown or lapsed tier fails closed to free', () => {
+    expect(visibleSections(applyTierGates(full, null), 'storefront')).toEqual(
+      visibleSections(applyTierGates(full, 'free'), 'storefront')
+    )
+    expect(visibleSections(applyTierGates(full, 'gold'), 'storefront')).toEqual(
+      visibleSections(applyTierGates(full, 'free'), 'storefront')
+    )
+  })
+
+  it('caps rows to the plan limit instead of hiding the section', () => {
+    const many = {
+      ...full,
+      team: Array.from({ length: 8 }, (_, i) => ({
+        id: `t${i}`,
+        name: `Person ${i}`,
+        role: null,
+        bio: null,
+        photo: null,
+      })),
+    }
+    expect(applyTierGates(many, 'growth').team).toHaveLength(TIER_LIMITS.growth.teamMembers ?? 0)
+    expect(applyTierGates(many, 'premium').team).toHaveLength(8)
+  })
+
+  it('never mutates its input', () => {
+    const before = JSON.stringify(full)
+    applyTierGates(full, 'free')
+    expect(JSON.stringify(full)).toBe(before)
+  })
+
+  it('the logo needs a claimed listing whatever the plan', () => {
+    expect(sectionAllowed('logo', 'premium', undefined, { claimed: false })).toBe(false)
+    expect(sectionAllowed('logo', 'free', undefined, { claimed: true })).toBe(true)
+    const unclaimed = applyTierGates({ ...full, trust_tier: 'unclaimed' }, 'premium')
+    expect(unclaimed.logo).toBeUndefined()
+  })
+
+  it('flags hide what the site has not opened, whatever the plan', () => {
+    const flagsOff = () => false
+    expect(sectionAllowed('shop', 'premium', flagsOff)).toBe(false)
+    expect(sectionAllowed('hiring', 'premium', flagsOff)).toBe(false)
+    // Main's deals are behind the coupons flag (part G), like its loader.
+    expect(sectionAllowed('deals', 'premium', flagsOff)).toBe(false)
+    expect(sectionAllowed('happening-now', 'premium', flagsOff)).toBe(false)
+  })
+
+  it('deals follow main: Premium only, at most DEALS_ON_MAX, gone with the flag off', () => {
+    const one = full.deals?.[0]
+    expect(one).toBeDefined()
+    if (!one) return
+    const many = Array.from({ length: DEALS_ON_MAX + 2 }, (_, i) => ({ ...one, id: `deal-${i}` }))
+    const page = { ...full, deals: many }
+    expect(applyTierGates(page, 'premium').deals).toHaveLength(DEALS_ON_MAX)
+    expect(applyTierGates(page, 'growth').deals).toBeUndefined()
+    expect(applyTierGates(page, 'premium', () => false).deals).toBeUndefined()
+  })
+
+  it('happening-now follows main’s active-post cap: none on free, cut to the plan above', () => {
+    expect(full.happeningNow?.length).toBeGreaterThan(TIER_LIMITS.starter.activePosts ?? 0)
+    expect(applyTierGates(full, 'free').happeningNow).toEqual([])
+    expect(applyTierGates(full, 'starter').happeningNow).toHaveLength(
+      TIER_LIMITS.starter.activePosts ?? 0
+    )
+    expect(applyTierGates(full, 'premium').happeningNow).toEqual(full.happeningNow)
+    expect(applyTierGates(full, 'premium', () => false).happeningNow).toBeUndefined()
+  })
+})
+
+describe('a page the live loader built today', () => {
+  for (const template of TEMPLATES) {
+    it(`${template}: shows none of the new sections, so live output is unchanged`, () => {
+      const legacy = legacyShaped(buildExampleEntity(template, NOW))
+      const shown = visibleSections(legacy, template)
+      for (const id of NEW_SECTIONS) expect(shown, id).not.toContain(id)
+      // …and still shows everything it showed before ticket 184.
+      const expected = TEMPLATE_SECTION_ORDER[template].filter((id) => !NEW_SECTIONS.includes(id))
+      expect(shown).toEqual(expected)
+    })
+  }
+})

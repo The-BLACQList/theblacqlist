@@ -31,6 +31,8 @@ const PUBLIC_SCREENS: { label: string; path: string }[] = [
   { label: 'Terms (/terms)', path: '/terms' },
   { label: 'Cookies (/cookies)', path: '/cookies' },
   { label: 'How ranking works (/how-ranking-works)', path: '/how-ranking-works' },
+  // Ticket 184: the sample page is the one listing page that needs no seeded data.
+  { label: 'Example page (/example/storefront)', path: '/example/storefront' },
 ]
 
 test.describe('J. Accessibility — axe scans (no-login screens)', () => {

@@ -9,7 +9,12 @@ import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import type { EntityPageData } from '@/types'
-import { resolveCoverImage } from '@/lib/listings/coverImage'
+import { resolveEntityCover } from '@/lib/listings/exampleAssets'
+import type { EntityRenderMode } from '@/lib/entity-page/template'
+import { EntityLogo } from '@/components/entity-page/EntityLogo'
+import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EntityFactsLine } from '@/components/entity-page/EntityFactsLine'
+import { factsFor } from '@/lib/listings/facts'
 import { categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
 import { levelPill, extraLevelLabels } from '@/lib/listings/levels'
 import {
@@ -37,6 +42,11 @@ interface Props {
   initialSaved?: boolean
   /** professional = P-A Immersive Microsite; creative = C-B Cover Story */
   variant: TemplateHeroVariant
+  /**
+   * 'example' (ticket 184) resolves repo assets as covers and makes Save and
+   * Share inert — they look the same and call nothing. Defaults to 'live'.
+   */
+  mode?: EntityRenderMode
 }
 
 // Only events and jobs keep a type pill; every other type is covered by the
@@ -70,12 +80,15 @@ const HEADING_SIZES: Record<TemplateHeroVariant, string> = {
  * and the business-defined CTA inside the hero. The CTA keeps id="hero-cta"
  * so EntityQuickActionBar's IntersectionObserver continues to work.
  */
-export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
+export function TemplateHero({ entity, initialSaved = false, variant, mode = 'live' }: Props) {
   const isCreative = variant === 'creative'
+  const inert = mode === 'example'
   // Events and jobs have no opening hours and no "is it open right now?"
   // question to answer — OpenStatus would render an empty promise there.
   const showOpenStatus = variant !== 'event' && variant !== 'job'
-  const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
+  // Facts line (ticket 189): only business templates have a founding year or price band.
+  const facts = showOpenStatus ? factsFor(entity.details) : []
+  const cover = resolveEntityCover(entity.cover_image_path, entity.entity_type, entity.id, mode)
   const ctaLabel = getEntityCtaLabel(entity)
   // A job past its closing date offers no apply button; the page says so instead.
   const jobClosed = entity.entity_type === 'job' && isRoleClosed(entity.job?.closes_at)
@@ -85,7 +98,8 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   // something else gets a secondary "Message" button.
   const messagingClosed = !jobClosed && isMessagingUnavailable(entity)
   // A closed role still links an existing thread ("View messages"), never a new one.
-  const messageHref = jobClosed && entity.messaging?.mode !== 'thread' ? null : getSecondaryMessageHref(entity)
+  const messageHref =
+    jobClosed && entity.messaging?.mode !== 'thread' ? null : getSecondaryMessageHref(entity)
   const messageLabel = messageButtonLabel(entity.messaging?.mode, postingKind(entity.entity_type))
   // Extra buttons by plan (part B), already capped and resolved by the page read.
   const extraButtons = entity.buttons ?? []
@@ -99,7 +113,10 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
     ? []
     : extraLevelLabels(entity.extra_levels).filter((l) => l !== 'Local business')
   // When the chip shows the category, the line under the name keeps the city only.
-  const locationLine = [categoryHref ? null : entity.category?.name, entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null]
+  const locationLine = [
+    categoryHref ? null : entity.category?.name,
+    entity.city ? `${entity.city.name}, ${entity.city.state_abbr}` : null,
+  ]
     .filter(Boolean)
     .join(' · ')
 
@@ -168,7 +185,11 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
               Also: {alsoLevels.join(', ')}
             </span>
           )}
-          <OwnershipBadge label={entity.ownership_label} entityType={entity.entity_type} size="small" />
+          <OwnershipBadge
+            label={entity.ownership_label}
+            entityType={entity.entity_type}
+            size="small"
+          />
           {/* Unclaimed stays in the trust panel, next to "Claim this listing". */}
           {entity.trust_tier !== 'unclaimed' && (
             <StatusBadge tier={entity.trust_tier} size="small" explain />
@@ -207,9 +228,23 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           </p>
         )}
 
-        <h1 className={cn('font-headline text-white leading-tight text-balance', HEADING_SIZES[variant])}>
-          {entity.name}
-        </h1>
+        {/* Logo beside the name (ticket 184; the live loader sets `logo` in 185).
+            Stacked on phones, a row from md up. */}
+        <div className="flex flex-col items-start gap-3 md:flex-row md:items-center md:gap-5">
+          {entity.logo && (
+            <SectionMark id="logo">
+              <EntityLogo logo={entity.logo} name={entity.name} />
+            </SectionMark>
+          )}
+          <h1
+            className={cn(
+              'font-headline text-white leading-tight text-balance',
+              HEADING_SIZES[variant]
+            )}
+          >
+            {entity.name}
+          </h1>
+        </div>
 
         {entity.job?.hiring && (
           <p className="font-body text-base md:text-lg text-off-white/90 mt-2">
@@ -226,14 +261,30 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
         {!isCreative && locationLine && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">
             {locationLine}
-            {showOpenStatus && <OpenStatus hours={entity.details.hours} surface="dark" />}
+            {showOpenStatus && (
+              <OpenStatus
+                hours={entity.details.hours}
+                overrides={entity.hoursOverrides}
+                surface="dark"
+              />
+            )}
           </p>
         )}
         {isCreative && entity.city && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">
             {entity.city.name}, {entity.city.state_abbr}
-            <OpenStatus hours={entity.details.hours} surface="dark" />
+            <OpenStatus
+              hours={entity.details.hours}
+              overrides={entity.hoursOverrides}
+              surface="dark"
+            />
           </p>
+        )}
+
+        {facts.length > 0 && (
+          <SectionMark id="facts">
+            <EntityFactsLine facts={facts} className="mt-2" />
+          </SectionMark>
         )}
 
         <span className="blacq-hero-rule mt-3" aria-hidden="true" />
@@ -327,25 +378,30 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           {/* Labelled variant + `surface`. `className` is sizing only here — a
               `bg-` class would override the saved state, which is exactly the
               bug this replaced. */}
-          <SaveButton
-            listingId={entity.id}
-            initialSaved={initialSaved}
-            variant="pill"
-            surface="hero"
-            className="h-12 px-6"
-          />
+          {/* `inert` (example mode) keeps both buttons visible and untouchable:
+              nothing here may reach /api/saves or the analytics endpoint from a
+              sample page. React 19 renders the attribute as a boolean. */}
+          <span inert={inert || undefined} className="contents">
+            <SaveButton
+              listingId={entity.id}
+              initialSaved={initialSaved}
+              variant="pill"
+              surface="hero"
+              className="h-12 px-6"
+            />
 
-          {/* Also ported from EntityPageHero. Share was reachable from every
+            {/* Also ported from EntityPageHero. Share was reachable from every
               storefront listing and from nowhere else once that hero went. */}
-          <ShareButton
-            listingName={entity.name}
-            listingId={entity.id}
-            listingSlug={entity.slug}
-            cityName={entity.city?.name}
-            categoryName={entity.category.name}
-            className="size-12 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
-            iconClassName="size-5"
-          />
+            <ShareButton
+              listingName={entity.name}
+              listingId={entity.id}
+              listingSlug={entity.slug}
+              cityName={entity.city?.name}
+              categoryName={entity.category.name}
+              className="size-12 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
+              iconClassName="size-5"
+            />
+          </span>
         </div>
       </div>
     </div>

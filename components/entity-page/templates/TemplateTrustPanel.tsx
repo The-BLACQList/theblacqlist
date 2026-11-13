@@ -26,10 +26,8 @@ export function TemplateTrustPanel({ entity }: Props) {
   const isCreator = entity.entity_type === 'creator'
 
   return (
-    <div className="lg:sticky lg:top-32 bg-pale-lavender border-t-[3px] border-gold rounded-b-xl p-5 md:p-6">
-      <h2 className="font-headline text-[19px] text-brand-black mb-3.5">
-        Trust on The BLACQList
-      </h2>
+    <div className="bg-pale-lavender border-t-[3px] border-gold rounded-b-xl p-5 md:p-6">
+      <h2 className="font-headline text-[19px] text-brand-black mb-3.5">Trust on The BLACQList</h2>
 
       <div className="mb-4">
         <StatusBadge tier={entity.trust_tier} size="standard" />

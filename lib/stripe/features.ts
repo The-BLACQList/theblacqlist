@@ -71,7 +71,10 @@ export const TIER_RANK: Record<string, number> = {
   premium: 3,
 }
 
-const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
+// Exported (ticket 184) so the page section registry (lib/entity-page/sections.ts)
+// derives each section's minimum tier from here rather than keeping a second
+// copy that could drift. Still read through `canAccess` everywhere else.
+export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   // Starter+ (1)
   analytics: 1,
   ai_suggestions: 1,
