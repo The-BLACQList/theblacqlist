@@ -8,6 +8,8 @@ import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { MESSAGING_UNAVAILABLE_ERROR, START_RATE_LIMIT } from '@/lib/messaging/constants'
 import { isUuid, normalizeMessageBody } from '@/lib/messaging/rules'
+import { postingKind } from '@/lib/messaging/postings'
+import { readPostingInbox } from '@/lib/messaging/postingInbox'
 import { appendMessage, isBlocked, isMessagingSuspended, revalidateConversation } from '@/lib/messaging/write'
 
 export type StartConversationState = { success: true; conversationId: string } | { error: string } | null
@@ -29,6 +31,10 @@ export type StartConversationState = { success: true; conversationId: string } |
  *     of the sender's own published pages. It is stored on a NEW thread only
  *     (customer_listing_id); an existing thread keeps the identity it started
  *     with. Blocks and suspensions stay per person, whatever page they use.
+ *   - Job and event postings (part H): a new thread needs the posting's
+ *     effective inbox (readPostingInbox: the linked page's switch, else the
+ *     posting's own) and a role that has not closed / an event that is not
+ *     over. "Send as" is ignored on jobs: people apply, not pages.
  */
 export async function startConversationAction(
   _prev: StartConversationState,
@@ -55,8 +61,8 @@ export async function startConversationAction(
   if (!isUuid(listingId)) return { error: 'Missing listing.' }
   const parsed = normalizeMessageBody(formData.get('body'))
   if (!parsed.ok) return { error: parsed.error }
-  const asListingId = formData.get('as_listing_id')?.toString().trim() || null
-  if (asListingId && (!isUuid(asListingId) || asListingId === listingId)) {
+  const requestedAsListingId = formData.get('as_listing_id')?.toString().trim() || null
+  if (requestedAsListingId && (!isUuid(requestedAsListingId) || requestedAsListingId === listingId)) {
     return { error: 'Pick one of your pages to send as.' }
   }
 
@@ -72,6 +78,8 @@ export async function startConversationAction(
     return { error: MESSAGING_UNAVAILABLE_ERROR }
   }
   if (listing.owner_user_id === user.id) return { error: "You can't message your own business." }
+  const kind = postingKind(listing.entity_type)
+  const asListingId = kind === 'job' ? null : requestedAsListingId
 
   try {
     if (
@@ -95,7 +103,21 @@ export async function startConversationAction(
   let created = false
 
   if (!conversationId) {
-    if (!listing.messaging_enabled) return { error: MESSAGING_UNAVAILABLE_ERROR }
+    let inboxOpen = listing.messaging_enabled === true
+    if (kind) {
+      try {
+        const posting = await readPostingInbox(service, {
+          id: listing.id,
+          kind,
+          ownerUserId: listing.owner_user_id,
+          messagingEnabled: inboxOpen,
+        })
+        inboxOpen = posting.open
+      } catch {
+        return { error: 'Something went wrong. Please try again.' }
+      }
+    }
+    if (!inboxOpen) return { error: MESSAGING_UNAVAILABLE_ERROR }
 
     if (asListingId) {
       // Only the sender's own live page: the receiver sees its name and logo.
@@ -145,7 +167,12 @@ export async function startConversationAction(
     entity_id: listingId,
     entity_type: 'listing',
     user_id: user.id,
-    properties: { sender_role: 'customer', source: 'listing_composer', as_page: created && !!asListingId },
+    properties: {
+      sender_role: 'customer',
+      source: 'listing_composer',
+      as_page: created && !!asListingId,
+      posting: kind ?? 'none',
+    },
   })
 
   revalidateConversation(conversationId)

@@ -236,3 +236,78 @@ describe('message composer on the listing page', () => {
     expect(composer).toContain('Message sent to {businessName}')
   })
 })
+
+// ── Part H: messages about job and event postings ───────────────────────────
+
+const SAVED = source('supabase/migrations/20261114000000_message_saved_replies.sql').replace(/--.*$/gm, '')
+
+describe('migration 20261114000000_message_saved_replies.sql', () => {
+  it('enables RLS with one owner-only SELECT policy', () => {
+    expect(SAVED).toMatch(/ALTER TABLE\s+public\.message_saved_replies\s+ENABLE ROW LEVEL SECURITY/i)
+    const policies = SAVED.match(/CREATE POLICY[\s\S]*?;/gi) ?? []
+    expect(policies).toHaveLength(1)
+    expect(policies[0]).toMatch(/FOR SELECT/i)
+    expect(policies[0]).toMatch(/USING\s*\(\s*owner_user_id\s*=\s*auth\.uid\(\)\s*\)/i)
+  })
+
+  it('never grants writes to anon or authenticated', () => {
+    expect(SAVED).toMatch(/REVOKE ALL ON public\.message_saved_replies FROM anon, authenticated/i)
+    expect(SAVED).not.toMatch(/GRANT[^;]*(INSERT|UPDATE|DELETE|ALL)[^;]*TO[^;]*\b(anon|authenticated)\b/i)
+  })
+
+  it('bounds the kind, name and body in the database too', () => {
+    expect(SAVED).toMatch(/CHECK \(kind IN \('any','customer','job','event'\)\)/)
+    expect(SAVED).toMatch(/char_length\(btrim\(title\)\)\s+BETWEEN\s+1\s+AND\s+60/i)
+    expect(SAVED).toMatch(/char_length\(body\)\s+BETWEEN\s+1\s+AND\s+2000/i)
+    expect(SAVED).toMatch(/REFERENCES auth\.users\(id\) ON DELETE CASCADE/i)
+  })
+})
+
+describe('saved reply actions', () => {
+  const actions = source('lib/actions/messaging/savedReplies.ts')
+  const create = actions.slice(actions.indexOf('export async function createSavedReplyAction'), actions.indexOf('export async function deleteSavedReplyAction'))
+  const remove = actions.slice(actions.indexOf('export async function deleteSavedReplyAction'))
+
+  it('checks the flag and the signed-in user before writing', () => {
+    for (const fn of [create, remove]) {
+      expect(fn).toContain("isFeatureEnabled('messaging')")
+      expect(fn.indexOf('auth.getUser()')).toBeLessThan(fn.indexOf('createServiceClient()'))
+    }
+  })
+
+  it('enforces the cap before inserting, always as the caller', () => {
+    expect(create.indexOf('SAVED_REPLY_LIMIT')).toBeLessThan(create.indexOf('.insert('))
+    expect(create).toContain('.insert({ owner_user_id: user.id, ...parsed.value })')
+  })
+
+  it('only deletes the caller\'s own rows', () => {
+    expect(remove).toContain(".eq('owner_user_id', user.id)")
+  })
+})
+
+describe('messages about postings', () => {
+  it('lets jobs and events show the composer (no posting skip on the listing page)', () => {
+    const page = source('app/[citySlug]/[entityType]/[listingSlug]/page.tsx')
+    expect(page).not.toMatch(/isEvent\s*\|\|\s*isJob/)
+    expect(page).toContain('entityType: entity.entity_type')
+  })
+
+  it('decides whether a posting takes messages in one place, for the page and the action', () => {
+    const start = source('lib/actions/messaging/startConversation.ts')
+    const loaders = source('lib/messaging/loaders.ts')
+    expect(start).toContain('readPostingInbox(')
+    expect(loaders).toContain('readPostingInbox(')
+  })
+
+  it('never offers "send as" on a job', () => {
+    const start = source('lib/actions/messaging/startConversation.ts')
+    expect(start).toContain("kind === 'job' ? null : requestedAsListingId")
+  })
+
+  it('quick replies only fill the box', () => {
+    const box = source('components/messaging/ReplyBox.tsx')
+    const pick = box.slice(box.indexOf('function pickReply'), box.indexOf('const chips'))
+    expect(pick).toContain('setBody(')
+    expect(pick).not.toMatch(/requestSubmit|formAction|sendMessageAction/)
+  })
+})

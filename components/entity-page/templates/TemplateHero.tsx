@@ -21,6 +21,7 @@ import {
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 import { ContactLink } from '@/components/entity-page/ContactLink'
 import { isRoleClosed } from '@/lib/listings/jobPosting'
+import { messageButtonLabel, postingKind } from '@/lib/messaging/postings'
 import { bucketLabel } from '@/lib/featured/buckets'
 
 /**
@@ -83,7 +84,9 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   // messages" in place of the button, and a claimed listing whose main CTA is
   // something else gets a secondary "Message" button.
   const messagingClosed = !jobClosed && isMessagingUnavailable(entity)
-  const messageHref = jobClosed ? null : getSecondaryMessageHref(entity)
+  // A closed role still links an existing thread ("View messages"), never a new one.
+  const messageHref = jobClosed && entity.messaging?.mode !== 'thread' ? null : getSecondaryMessageHref(entity)
+  const messageLabel = messageButtonLabel(entity.messaging?.mode, postingKind(entity.entity_type))
   const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
   // Creatives already carry the category as the gold eyebrow, so they get no chip.
   const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
@@ -293,7 +296,7 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
               className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-off-white/40 bg-off-white/10 hover:bg-off-white/20 text-white font-subhead font-bold text-sm backdrop-blur-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
-              {entity.messaging?.mode === 'thread' ? 'View messages' : 'Message'}
+              {messageLabel}
             </a>
           )}
 

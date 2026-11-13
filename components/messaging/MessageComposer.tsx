@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import type { PostingKind } from '@/lib/messaging/postings'
 
 interface SendAsPage {
   id: string
@@ -24,8 +25,15 @@ interface SendAsPage {
 interface Props {
   listingId: string
   businessName: string
-  /** The sender's own published pages. Non-empty shows "Send as" (default: me). */
+  /** The sender's own published pages. Non-empty shows "Send as" (default: me), except on jobs. */
   sendAsPages?: SendAsPage[]
+  /** A job or event posting (part H): its own heading, and no "Send as" on jobs. */
+  postingKind?: PostingKind | null
+}
+
+const HEADINGS: Record<PostingKind, { title: string; placeholder: string }> = {
+  job: { title: 'Ask about this role', placeholder: "Hi! I'm interested in this role and wanted to ask…" },
+  event: { title: 'Ask about this event', placeholder: "Hi! I'm planning to come and wanted to ask…" },
 }
 
 /**
@@ -35,7 +43,8 @@ interface Props {
  * clicks on those links rather than each template rendering its own dialog.
  * It also opens when the page loads with #send-message in the URL.
  */
-export function MessageComposer({ listingId, businessName, sendAsPages = [] }: Props) {
+export function MessageComposer({ listingId, businessName, sendAsPages = [], postingKind = null }: Props) {
+  const heading = postingKind ? HEADINGS[postingKind] : null
   const [open, setOpen] = useState(false)
   // A new form (and a fresh action state) every time the dialog opens after a send.
   const [round, setRound] = useState(0)
@@ -72,9 +81,11 @@ export function MessageComposer({ listingId, businessName, sendAsPages = [] }: P
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader className="px-5 py-4 pr-12 border-b border-charcoal/10">
-          <DialogTitle>Message {businessName}</DialogTitle>
+          <DialogTitle>{heading ? heading.title : `Message ${businessName}`}</DialogTitle>
           <DialogDescription className="font-body text-sm text-charcoal-soft">
-            The business will see your message and your display name, and reply here on The BLACQList.
+            {heading
+              ? `About ${businessName}. Whoever posted it will see your message and your display name, and reply here on The BLACQList.`
+              : 'The business will see your message and your display name, and reply here on The BLACQList.'}
           </DialogDescription>
         </DialogHeader>
         <ComposerForm
@@ -82,6 +93,8 @@ export function MessageComposer({ listingId, businessName, sendAsPages = [] }: P
           listingId={listingId}
           businessName={businessName}
           sendAsPages={sendAsPages}
+          allowSendAs={postingKind !== 'job'}
+          placeholder={heading?.placeholder}
           onSent={() => setRound((r) => r + 1)}
         />
       </DialogContent>
@@ -93,11 +106,15 @@ function ComposerForm({
   listingId,
   businessName,
   sendAsPages,
+  allowSendAs,
+  placeholder = "Hi! I'd like to ask about…",
   onSent,
 }: {
   listingId: string
   businessName: string
   sendAsPages: SendAsPage[]
+  allowSendAs: boolean
+  placeholder?: string
   onSent: () => void
 }) {
   const [state, formAction, isPending] = useActionState(startConversationAction, null)
@@ -151,7 +168,7 @@ function ComposerForm({
   return (
     <form action={formAction} className="px-5 py-4 space-y-3">
       <input type="hidden" name="listing_id" value={listingId} />
-      {sendAsPages.length > 0 && (
+      {allowSendAs && sendAsPages.length > 0 && (
         <fieldset className="space-y-1.5">
           <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-1">Send as</legend>
           <div className="flex flex-wrap gap-2">
@@ -190,7 +207,7 @@ function ComposerForm({
         maxLength={MESSAGE_MAX_LENGTH}
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder="Hi! I'd like to ask about…"
+        placeholder={placeholder}
         className="w-full rounded-lg border border-charcoal/15 bg-white px-3 py-2.5 font-body text-sm text-brand-black placeholder:text-charcoal-soft/70 focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-y"
       />
       <div className="flex items-center justify-between gap-3">

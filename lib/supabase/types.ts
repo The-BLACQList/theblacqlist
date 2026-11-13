@@ -2216,6 +2216,33 @@ export type Database = {
         }
         Relationships: []
       }
+      message_saved_replies: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          owner_user_id: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_user_id: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_user_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string

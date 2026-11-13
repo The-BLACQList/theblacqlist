@@ -9,9 +9,14 @@ interface Props {
   initialOpen: boolean
   /** The switch's label. */
   label?: string
+  /** The line under the label. Defaults to the business-page wording. */
+  hint?: string
   /** Called after a save succeeds, so a parent can react (the button warning). */
   onSaved?: (open: boolean) => void
 }
+
+const DEFAULT_HINT =
+  'When on, customers can message you from your page. Turning it off stops new conversations; you can still reply to existing ones.'
 
 /**
  * The inbox open/closed switch for one page. Saves as soon as it is flipped and
@@ -19,7 +24,7 @@ interface Props {
  * Used in Messages → Inbox settings (one per page) and in the edit page's
  * main-button section.
  */
-export function InboxSwitch({ listingId, initialOpen, label = 'Let customers message me', onSaved }: Props) {
+export function InboxSwitch({ listingId, initialOpen, label = 'Let customers message me', hint = DEFAULT_HINT, onSaved }: Props) {
   const [open, setOpen] = useState(initialOpen)
   const [message, setMessage] = useState<{ kind: 'saved' | 'error'; text: string } | null>(null)
   const [pending, startTransition] = useTransition()
@@ -58,8 +63,7 @@ export function InboxSwitch({ listingId, initialOpen, label = 'Let customers mes
             {label}
           </label>
           <p id={`${id}-hint`} className="mt-0.5 font-body text-xs text-charcoal-soft">
-            When on, customers can message you from your page. Turning it off stops new conversations; you can still
-            reply to existing ones.
+            {hint}
           </p>
         </div>
       </div>
