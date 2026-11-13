@@ -9,6 +9,8 @@ import { updateCtaAction } from '@/lib/actions/dashboard/updateCta'
 import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
 import { InboxSwitch } from './InboxSwitch'
 import { OWNER_INBOX_PATH } from '@/lib/messaging/constants'
+import { CTA_OPTIONS } from '@/lib/listings/pageButtons'
+import { ExtraButtonsEditor } from './ExtraButtonsEditor'
 
 interface Props {
   listingId: string
@@ -20,32 +22,13 @@ interface Props {
    * failed): the section then hides the inbox and the "Message us" type.
    */
   inbox?: { open: boolean }
+  /** Extra buttons by plan (part B). Left out where a page keeps one button. */
+  extras?: Omit<React.ComponentProps<typeof ExtraButtonsEditor>, 'listingId'>
 }
-
-const CTA_OPTIONS: { value: string; label: string; requiresUrl: boolean }[] = [
-  { value: 'book', label: 'Book an appointment', requiresUrl: true },
-  { value: 'order', label: 'Order now', requiresUrl: true },
-  { value: 'call', label: 'Call us', requiresUrl: false },
-  { value: 'message', label: 'Message us (your inbox)', requiresUrl: false },
-  { value: 'email', label: 'Email us', requiresUrl: true },
-  { value: 'visit', label: 'Visit us', requiresUrl: true },
-  { value: 'get-quote', label: 'Get a quote', requiresUrl: true },
-  { value: 'shop', label: 'Shop now', requiresUrl: true },
-  { value: 'subscribe', label: 'Subscribe', requiresUrl: true },
-  { value: 'contact', label: 'Contact us', requiresUrl: true },
-  { value: 'commission', label: 'Commission work', requiresUrl: true },
-  { value: 'inquire', label: 'Inquire', requiresUrl: true },
-  { value: 'get-tickets', label: 'Get tickets', requiresUrl: true },
-  { value: 'rsvp', label: 'RSVP', requiresUrl: true },
-  { value: 'register', label: 'Register', requiresUrl: true },
-  { value: 'learn-more', label: 'Learn more', requiresUrl: true },
-  { value: 'apply', label: 'Apply now', requiresUrl: true },
-  { value: 'buy-now', label: 'Buy now', requiresUrl: true },
-]
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox }: Props) {
+export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox, extras }: Props) {
   const {
     state,
     pending: isPending,
@@ -73,13 +56,16 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Main button</h2>
+        <h2 className="font-headline text-base text-brand-black">
+          {extras ? 'Buttons on your page' : 'Main button'}
+        </h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
-          The main button shown on your public page. Choose the action that best fits your business.
+          The buttons at the top of your public page. Choose the actions that best fit your business.
         </p>
       </div>
       <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
+        {extras && <h3 className="font-subhead text-sm font-bold text-brand-black">Main button</h3>}
 
         <div>
           <label
@@ -191,6 +177,12 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
           </div>
         )}
       </form>
+
+      {extras && (
+        <div className="px-5 py-4 border-t border-charcoal/8">
+          <ExtraButtonsEditor listingId={listingId} {...extras} />
+        </div>
+      )}
 
       {inbox && (
         <div className="px-5 py-4 border-t border-charcoal/8">

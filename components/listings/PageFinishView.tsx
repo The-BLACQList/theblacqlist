@@ -174,6 +174,7 @@ export function PageFinishView({
     faqs: data.faqs,
     attributeGroups: data.attributeGroups,
     selectedValueIds: data.selectedValueIds,
+    buttons: data.buttons,
   })
 
   const checklist = computePageChecklist(
@@ -323,6 +324,12 @@ export function PageFinishView({
                 ctaUrl={d?.cta_url ?? null}
                 ctaLabelOverride={d?.cta_label_override ?? null}
                 inbox={inbox}
+                extras={{
+                  initial: data.buttons,
+                  tier,
+                  upgradeTo: moreOffer,
+                  hasPhone: !!d?.phone,
+                }}
               />
             </Anchor>
 

@@ -87,6 +87,8 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   // A closed role still links an existing thread ("View messages"), never a new one.
   const messageHref = jobClosed && entity.messaging?.mode !== 'thread' ? null : getSecondaryMessageHref(entity)
   const messageLabel = messageButtonLabel(entity.messaging?.mode, postingKind(entity.entity_type))
+  // Extra buttons by plan (part B), already capped and resolved by the page read.
+  const extraButtons = entity.buttons ?? []
   const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
   // Creatives already carry the category as the gold eyebrow, so they get no chip.
   const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
@@ -279,6 +281,18 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
               {ctaLabel}
             </ContactLink>
           )}
+
+          {extraButtons.map((b) => (
+            <ContactLink
+              key={b.id}
+              href={b.href}
+              listingId={entity.id}
+              source="hero"
+              className="inline-flex items-center justify-center h-12 px-6 rounded-full border border-off-white/40 bg-off-white/10 hover:bg-off-white/20 text-white font-subhead font-bold text-sm backdrop-blur-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            >
+              {b.label}
+            </ContactLink>
+          ))}
 
           {messagingClosed && (
             <span

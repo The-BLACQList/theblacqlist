@@ -8,6 +8,7 @@ import { capDescription, capList, shownLimits } from '@/lib/stripe/downgrade'
 import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
 import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
+import { resolvePageButtons, toExtraButtons } from '@/lib/listings/pageButtons'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -207,6 +208,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: serviceGroupData },
     { data: linksData },
     { data: faqData },
+    { data: buttonData },
     { data: criteriaData },
   ] = await Promise.all([
     supabase
@@ -272,6 +274,13 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       .eq('listing_id', raw.id)
       .eq('is_visible', true)
       .order('display_order', { ascending: true }),
+    // Extra buttons (part B). Fail-soft: listing_buttons may not be migrated yet.
+    sb
+      .from('listing_buttons')
+      .select('id, type, value, label_override, position')
+      .eq('listing_id', raw.id)
+      .order('position', { ascending: true })
+      .order('created_at', { ascending: true }),
     // Fail-soft: review_criteria may not be migrated yet — drives the optional
     // per-criterion rows in the review form and the category-average summary.
     sb
@@ -783,6 +792,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     attributes,
     links,
     faqs,
+    // Capped to the plan the page has now, never only after a downgrade
+    // (lib/listings/pageButtons.ts). Jobs and events keep one button.
+    buttons:
+      raw.entity_type === 'job' || raw.entity_type === 'event'
+        ? []
+        : resolvePageButtons(toExtraButtons(buttonData), raw.tier, det?.phone ?? null),
     related,
     images,
     reviews,

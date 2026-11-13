@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Phone, MapPin } from 'lucide-react'
+import { Phone, MapPin, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
@@ -32,6 +32,10 @@ export function EntityQuickActionBar({
   // Same resolution the hero uses, so the bar's button and the hero's button
   // always agree. null = no reachable destination → render no button.
   const ctaHref = getCtaHref(entity)
+  // Extra buttons by plan (part B). Desktop shows the first one beside the main
+  // button and the rest under "More"; the narrow mobile bar puts them all there.
+  const extras = entity.buttons ?? []
+  const [firstExtra, ...moreExtras] = extras
 
   const shortName = entity.name.length > 18 ? entity.name.slice(0, 17) + '…' : entity.name
 
@@ -93,6 +97,15 @@ export function EntityQuickActionBar({
             >
               {ctaLabel}
             </a>
+          )}
+          {extras.length > 0 && (
+            <MoreButtons
+              buttons={extras}
+              listingId={entity.id}
+              visible={visible}
+              placement="up"
+              className="flex-shrink-0 size-11"
+            />
           )}
           {showShoppedHere && (
             <Link
@@ -188,6 +201,27 @@ export function EntityQuickActionBar({
             </a>
           )}
 
+          {firstExtra && (
+            <a
+              href={firstExtra.href}
+              onClick={tap(firstExtra.href)}
+              tabIndex={visible ? 0 : -1}
+              className="inline-flex items-center justify-center h-9 px-4 rounded-full border border-white/30 hover:bg-white/10 text-white font-subhead font-semibold text-sm whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
+            >
+              {firstExtra.label}
+            </a>
+          )}
+
+          {moreExtras.length > 0 && (
+            <MoreButtons
+              buttons={moreExtras}
+              listingId={entity.id}
+              visible={visible}
+              placement="down"
+              className="size-9"
+            />
+          )}
+
           <SaveButton
             listingId={entity.id}
             initialSaved={initialSaved}
@@ -208,5 +242,85 @@ export function EntityQuickActionBar({
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * "More" in the quick-action bar: the page's other buttons in a small menu.
+ * Opens up from the mobile bar (it sits at the bottom) and down from the
+ * desktop bar. Escape or a click outside closes it.
+ */
+function MoreButtons({
+  buttons,
+  listingId,
+  visible,
+  placement,
+  className,
+}: {
+  buttons: { id: string; href: string; label: string }[]
+  listingId: string
+  visible: boolean
+  placement: 'up' | 'down'
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const isOpen = open && visible
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onPointer = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [isOpen])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-label="More buttons"
+        tabIndex={visible ? 0 : -1}
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          'inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold',
+          className
+        )}
+      >
+        <MoreHorizontal className="size-5" aria-hidden="true" />
+      </button>
+      {isOpen && (
+        <ul
+          className={cn(
+            'absolute right-0 z-50 min-w-[12rem] rounded-xl border border-white/10 bg-brand-black py-1.5 shadow-lg',
+            placement === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+          )}
+        >
+          {buttons.map((b) => (
+            <li key={b.id}>
+              <a
+                href={b.href}
+                onClick={() => {
+                  trackContactTap(listingId, b.href, 'action_bar')
+                  setOpen(false)
+                }}
+                className="block px-4 py-2.5 font-subhead text-sm font-semibold text-white hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
+              >
+                {b.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }

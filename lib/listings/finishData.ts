@@ -7,6 +7,7 @@ import { loadAttributeGroups, type FacetGroupData } from '@/lib/listings/facets'
 import { levelsForCategory, isBusinessLevel, type BusinessLevel } from '@/lib/listings/levels'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
+import { toExtraButtons, type ExtraButton } from '@/lib/listings/pageButtons'
 
 // Everything the finish view needs for one business page (tickets 126 and 129).
 // Both mounts call this: /add-business/finish/[listingId] (new mode) and the
@@ -96,6 +97,8 @@ export interface FinishData {
   peakTier: string | null
   links: { id: string; link_type: string; url: string; label: string | null }[]
   faqs: { id: string; question: string; answer: string }[]
+  /** Extra buttons beyond the main one (part B), in position order. Empty when the table isn't there yet. */
+  buttons: ExtraButton[]
   /**
    * Main level, extras and what the category allows (business levels).
    * Null when the columns aren't there yet (a database before the migration).
@@ -157,6 +160,7 @@ export async function loadFinishData(
     { data: videoRows },
     { data: linkRows },
     { data: faqRows },
+    { data: buttonRows },
     { data: mediaRows },
     { data: serviceRows },
     { data: groupRows },
@@ -181,6 +185,12 @@ export async function loadFinishData(
       .select('id, question, answer')
       .eq('listing_id', row.id)
       .order('display_order', { ascending: true }),
+    supabase
+      .from('listing_buttons')
+      .select('id, type, value, label_override, position')
+      .eq('listing_id', row.id)
+      .order('position', { ascending: true })
+      .order('created_at', { ascending: true }),
     supabase
       .from('media_attachments')
       .select('id, file_path, file_type, alt_text, display_order, is_approved')
@@ -281,6 +291,7 @@ export async function loadFinishData(
       (linkRows as { id: string; link_type: string; url: string; label: string | null }[] | null) ??
       [],
     faqs: (faqRows as { id: string; question: string; answer: string }[] | null) ?? [],
+    buttons: toExtraButtons(buttonRows),
     levels,
     openToPartnerships:
       (partnerRow as { open_to_partnerships?: boolean } | null)?.open_to_partnerships === true,

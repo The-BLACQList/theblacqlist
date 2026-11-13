@@ -94,6 +94,7 @@ export interface HiddenCount {
     | 'events'
     | 'products'
     | 'services'
+    | 'buttons'
     | 'description'
   hidden: number
   limit: number
@@ -107,6 +108,7 @@ const NOUNS: Record<Exclude<HiddenCount['kind'], 'description'>, [string, string
   events: ['upcoming event', 'upcoming events'],
   products: ['product', 'products'],
   services: ['service', 'services'],
+  buttons: ['extra button', 'extra buttons'],
 }
 
 /**

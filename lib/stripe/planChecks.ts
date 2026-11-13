@@ -2,6 +2,7 @@ import {
   attributeLimit,
   canAccess,
   descriptionCharLimit,
+  extraButtonLimit,
   faqLimit,
   photoLimit,
   TIER_RANK,
@@ -182,6 +183,22 @@ export function checkPhotoAdd(
   const limit = photoLimit(tier)
   if (limit === null || existingCount < limit) return null
   return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen)}`
+}
+
+/**
+ * Adding one extra button (part B). `existingCount` is how many extra buttons
+ * the page has now; the main button and the automatic "Message" button don't count.
+ */
+export function checkButtonAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false
+): string | null {
+  const limit = extraButtonLimit(tier)
+  if (existingCount < limit) return null
+  if (limit === 0) return 'Extra buttons are part of Starter. Upgrade to add one to your page.'
+  const what = limit === 1 ? '1 extra button' : `up to ${limit} extra buttons`
+  return `Your plan includes ${what}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen)}`
 }
 
 /**
