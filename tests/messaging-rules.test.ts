@@ -10,8 +10,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  inboxPlacement,
   isConversationUnread,
   isUuid,
+  matchesPageFilter,
+  parseInboxTab,
   messagePreview,
   messagingCtaLabel,
   normalizeMessageBody,
@@ -112,15 +115,82 @@ describe('messagingCtaLabel', () => {
   })
 })
 
+// ── One inbox, two tabs ─────────────────────────────────────────────────────
+
+describe('inboxPlacement', () => {
+  const MINE = new Set([LISTING])
+  const OTHER = '55555555-5555-4555-8555-555555555555'
+  const MY_OTHER_PAGE = '66666666-6666-4666-8666-666666666666'
+
+  it('puts a person writing to my page under Customers, as the owner', () => {
+    expect(
+      inboxPlacement({ listing_id: LISTING, customer_user_id: CUSTOMER, customer_listing_id: null }, OWNER, MINE)
+    ).toEqual({ tab: 'customers', role: 'owner' })
+  })
+
+  it('puts a business writing to my page under Businesses, as the owner', () => {
+    expect(
+      inboxPlacement({ listing_id: LISTING, customer_user_id: CUSTOMER, customer_listing_id: OTHER }, OWNER, MINE)
+    ).toEqual({ tab: 'businesses', role: 'owner' })
+  })
+
+  it('puts a thread I started with another business under Businesses, as me or as my page', () => {
+    for (const customer_listing_id of [null, MY_OTHER_PAGE]) {
+      expect(
+        inboxPlacement({ listing_id: OTHER, customer_user_id: OWNER, customer_listing_id }, OWNER, MINE)
+      ).toEqual({ tab: 'businesses', role: 'customer' })
+    }
+  })
+
+  it('places nothing that is not mine', () => {
+    expect(
+      inboxPlacement({ listing_id: OTHER, customer_user_id: CUSTOMER, customer_listing_id: null }, OWNER, MINE)
+    ).toBeNull()
+  })
+})
+
+describe('matchesPageFilter', () => {
+  const OTHER = '55555555-5555-4555-8555-555555555555'
+  const sentFromMine = { listing_id: OTHER, customer_user_id: OWNER, customer_listing_id: LISTING }
+  const toMine = { listing_id: LISTING, customer_user_id: CUSTOMER, customer_listing_id: null }
+
+  it('matches everything with no page chosen', () => {
+    expect(matchesPageFilter(sentFromMine, 'businesses', null)).toBe(true)
+  })
+
+  it('matches threads sent to the page on both tabs', () => {
+    expect(matchesPageFilter(toMine, 'customers', LISTING)).toBe(true)
+    expect(matchesPageFilter(toMine, 'businesses', LISTING)).toBe(true)
+  })
+
+  it('matches threads sent from the page on Businesses only', () => {
+    expect(matchesPageFilter(sentFromMine, 'businesses', LISTING)).toBe(true)
+    expect(matchesPageFilter(sentFromMine, 'customers', LISTING)).toBe(false)
+  })
+})
+
+describe('parseInboxTab', () => {
+  it('defaults anything unknown to Customers', () => {
+    expect(parseInboxTab('businesses')).toBe('businesses')
+    expect(parseInboxTab('customers')).toBe('customers')
+    expect(parseInboxTab(undefined)).toBe('customers')
+    expect(parseInboxTab('admin')).toBe('customers')
+  })
+})
+
 // ── Listing CTA wiring ──────────────────────────────────────────────────────
 
-function entity(cta_type: CTAType, messaging?: EntityPageData['messaging']): EntityPageData {
+function entity(
+  cta_type: CTAType,
+  messaging?: EntityPageData['messaging'],
+  cta_url: string | null = null
+): EntityPageData {
   return {
     entity_type: 'business',
     messaging,
     details: {
       cta_type,
-      cta_url: 'hello@biz.com',
+      cta_url,
       cta_label_override: null,
       phone: null,
       email: null,
@@ -140,7 +210,36 @@ describe('getCtaHref — message CTA', () => {
   })
 
   it('keeps the mailto: fallback for unclaimed listings (messaging undefined)', () => {
-    expect(getCtaHref(entity('message'))).toBe('mailto:hello@biz.com')
+    expect(getCtaHref(entity('message', undefined, 'hello@biz.com'))).toBe('mailto:hello@biz.com')
+  })
+
+  it('keeps an old "Send a message" email as Email us while the inbox is closed', () => {
+    const closed = entity('message', { mode: 'unavailable', href: null }, 'hello@biz.com')
+    expect(getCtaHref(closed)).toBe('mailto:hello@biz.com')
+    expect(getEntityCtaLabel(closed)).toBe('Email Us')
+    expect(isMessagingUnavailable(closed)).toBe(false)
+  })
+
+  it('uses the inbox once the owner opens it, even with an old email saved', () => {
+    expect(getCtaHref(entity('message', { mode: 'compose', href: '#send-message' }, 'hello@biz.com'))).toBe(
+      '#send-message'
+    )
+  })
+})
+
+describe('getCtaHref — email CTA', () => {
+  it('turns the saved address into a mailto: link', () => {
+    expect(getCtaHref(entity('email', undefined, 'hello@biz.com'))).toBe('mailto:hello@biz.com')
+    expect(getEntityCtaLabel(entity('email', undefined, 'hello@biz.com'))).toBe('Email Us')
+  })
+
+  it('is never the in-app inbox, even when messaging is open', () => {
+    expect(getCtaHref(entity('email', { mode: 'compose', href: '#send-message' }, 'hello@biz.com'))).toBe(
+      'mailto:hello@biz.com'
+    )
+    expect(getSecondaryMessageHref(entity('email', { mode: 'compose', href: '#send-message' }, 'a@b.co'))).toBe(
+      '#send-message'
+    )
   })
 })
 

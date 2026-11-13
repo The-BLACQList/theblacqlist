@@ -14,7 +14,7 @@ import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickAction
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { recordTourWitness } from '@/lib/tour/witness'
 import { showShoppedHere } from '@/lib/spend/receipt-prefill'
-import { loadListingMessaging } from '@/lib/messaging/loaders'
+import { listSendAsPages, loadListingMessaging } from '@/lib/messaging/loaders'
 import { MessageComposer } from '@/components/messaging/MessageComposer'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
@@ -232,6 +232,9 @@ export default async function EntityPage({ params }: PageProps) {
           listingPath: buildEntityUrl(entityType, citySlug, listingSlug),
         })
   const pageEntity = messaging ? { ...entity, messaging } : entity
+  // "Send as": a page owner can write as one of their own live pages.
+  const sendAsPages =
+    messaging?.mode === 'compose' && user ? await listSendAsPages(supabase, user.id, entity.id) : []
 
   return (
     // `data-tour-listing` lets the Tester Tour remember this page so a step row
@@ -285,7 +288,7 @@ export default async function EntityPage({ params }: PageProps) {
       {/* One composer per page. It opens for every link to #send-message (the
           hero, the quick bar, the inquiry band, the services links). */}
       {messaging?.mode === 'compose' && (
-        <MessageComposer listingId={entity.id} businessName={entity.name} />
+        <MessageComposer listingId={entity.id} businessName={entity.name} sendAsPages={sendAsPages} />
       )}
     </div>
   )

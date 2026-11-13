@@ -1,23 +1,33 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { useSaveLabel } from './SaveLabel'
-import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Loader2, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react'
 import { updateCtaAction } from '@/lib/actions/dashboard/updateCta'
 import { CollectiveSubmit, useSectionSave } from '@/components/listings/finish/ProfileSave'
+import { InboxSwitch } from './InboxSwitch'
+import { OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 
 interface Props {
   listingId: string
   ctaType: string | null
   ctaUrl: string | null
   ctaLabelOverride: string | null
+  /**
+   * This page's inbox switch. undefined while messaging is off (or the read
+   * failed): the section then hides the inbox and the "Message us" type.
+   */
+  inbox?: { open: boolean }
 }
 
 const CTA_OPTIONS: { value: string; label: string; requiresUrl: boolean }[] = [
   { value: 'book', label: 'Book an appointment', requiresUrl: true },
   { value: 'order', label: 'Order now', requiresUrl: true },
   { value: 'call', label: 'Call us', requiresUrl: false },
-  { value: 'message', label: 'Send a message', requiresUrl: true },
+  { value: 'message', label: 'Message us (your inbox)', requiresUrl: false },
+  { value: 'email', label: 'Email us', requiresUrl: true },
   { value: 'visit', label: 'Visit us', requiresUrl: true },
   { value: 'get-quote', label: 'Get a quote', requiresUrl: true },
   { value: 'shop', label: 'Shop now', requiresUrl: true },
@@ -33,7 +43,9 @@ const CTA_OPTIONS: { value: string; label: string; requiresUrl: boolean }[] = [
   { value: 'buy-now', label: 'Buy now', requiresUrl: true },
 ]
 
-export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Props) {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox }: Props) {
   const {
     state,
     pending: isPending,
@@ -45,17 +57,23 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
     action: updateCtaAction,
   })
   const saveLabel = useSaveLabel()
-  const [selectedType, setSelectedType] = useState(ctaType ?? '')
+  // Before "Email us" existed, "Send a message" held an email address. Such a
+  // button still works as an email button, so it opens as one here.
+  const legacyEmail = ctaType === 'message' && !!ctaUrl && EMAIL_RE.test(ctaUrl)
+  const [selectedType, setSelectedType] = useState(legacyEmail ? 'email' : (ctaType ?? ''))
+  const [inboxOpen, setInboxOpen] = useState(inbox?.open ?? false)
 
+  // "Message us" needs the inbox, so it is offered only while messaging is on
+  // (and kept for a page that already has it).
+  const options = CTA_OPTIONS.filter((o) => o.value !== 'message' || inbox || ctaType === 'message')
   const selectedOption = CTA_OPTIONS.find((o) => o.value === selectedType)
   const requiresUrl = selectedOption?.requiresUrl ?? true
-  // "Send a message" takes an email address, the same as the quick start.
-  const isMessage = selectedType === 'message'
+  const isEmail = selectedType === 'email'
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Primary call to action</h2>
+        <h2 className="font-headline text-base text-brand-black">Main button</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           The main button shown on your public page. Choose the action that best fits your business.
         </p>
@@ -81,7 +99,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
             <option value="" disabled>
               Select an action…
             </option>
-            {CTA_OPTIONS.map((opt) => (
+            {options.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -95,17 +113,17 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
               htmlFor="cta-url"
               className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
             >
-              {isMessage ? 'Email for messages' : 'Destination URL'}{' '}
+              {isEmail ? 'Email address' : 'Destination URL'}{' '}
               <span aria-hidden="true">*</span>
             </label>
             <input
-              key={isMessage ? 'email' : 'url'}
+              key={isEmail ? 'email' : 'url'}
               id="cta-url"
               name="cta_url"
-              type={isMessage ? 'email' : 'url'}
-              autoComplete={isMessage ? 'email' : 'url'}
-              defaultValue={ctaUrl ?? ''}
-              placeholder={isMessage ? 'you@yourbusiness.com' : 'https://example.com/book'}
+              type={isEmail ? 'email' : 'url'}
+              autoComplete={isEmail ? 'email' : 'url'}
+              defaultValue={isEmail === EMAIL_RE.test(ctaUrl ?? '') ? (ctaUrl ?? '') : ''}
+              placeholder={isEmail ? 'you@yourbusiness.com' : 'https://example.com/book'}
               required={requiresUrl}
               className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
             />
@@ -130,6 +148,17 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
         </div>
+
+        {selectedType === 'message' && inbox && !inboxOpen && (
+          <p
+            role="status"
+            className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 font-body text-sm text-amber-900"
+          >
+            <AlertCircle className="size-4 mt-0.5 shrink-0" aria-hidden="true" />
+            Your inbox is off, so this button shows &ldquo;Not accepting messages&rdquo;. Turn the inbox on below, or
+            pick Email us.
+          </p>
+        )}
 
         {state && 'error' in state && (
           <div
@@ -162,6 +191,37 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride }: Pro
           </div>
         )}
       </form>
+
+      {inbox && (
+        <div className="px-5 py-4 border-t border-charcoal/8">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h3 className="flex items-center gap-2 font-subhead text-sm font-bold text-brand-black">
+              <MessageCircle className="size-4 text-amber-700" aria-hidden="true" />
+              Inbox
+            </h3>
+            <span className="flex items-center gap-3">
+              <Link
+                href={`${OWNER_INBOX_PATH}?listing=${listingId}` as Route}
+                className="font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
+              >
+                Go to inbox
+              </Link>
+              <Link
+                href={`${OWNER_INBOX_PATH}/settings` as Route}
+                className="font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
+              >
+                Inbox settings
+              </Link>
+            </span>
+          </div>
+          <InboxSwitch
+            listingId={listingId}
+            initialOpen={inbox.open}
+            label="Let customers message this page"
+            onSaved={setInboxOpen}
+          />
+        </div>
+      )}
     </div>
   )
 }

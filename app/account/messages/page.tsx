@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
-import { listCustomerConversations } from '@/lib/messaging/loaders'
-import Link from 'next/link'
+import { listInbox, ownsAnyPage } from '@/lib/messaging/loaders'
 import { CUSTOMER_INBOX_PATH, OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 import { ConversationList } from '@/components/messaging/ConversationList'
 
@@ -18,30 +17,17 @@ export default async function CustomerMessagesPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/sign-in?next=${encodeURIComponent(CUSTOMER_INBOX_PATH)}`)
 
-  const [{ items, error }, owned] = await Promise.all([
-    listCustomerConversations(supabase, user.id),
-    supabase
-      .from('listings')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_user_id', user.id)
-      .is('deleted_at', null),
-  ])
-  const isOwner = (owned.count ?? 0) > 0
+  // One inbox: a page owner's conversations with businesses are in the
+  // dashboard inbox's Businesses tab, next to their customers.
+  if (await ownsAnyPage(supabase, user.id)) redirect(`${OWNER_INBOX_PATH}?tab=businesses`)
+
+  const { items, error } = await listInbox(supabase, user.id, 'businesses', null)
 
   return (
     <main>
       <div className="max-w-[960px] mx-auto">
         <h1 className="font-headline text-3xl text-brand-black mb-2">Messages</h1>
         <p className="font-body text-sm text-charcoal-soft mb-6">Your conversations with businesses.</p>
-        {isOwner && (
-          <p className="mb-4 rounded-xl bg-white border border-charcoal/10 px-4 py-3 font-body text-sm text-charcoal">
-            Messages from customers to your business are in your{' '}
-            <Link href={OWNER_INBOX_PATH} className="font-semibold text-brand-black underline underline-offset-2">
-              business inbox
-            </Link>
-            .
-          </p>
-        )}
         {error ? (
           <p role="alert" className="rounded-xl bg-white border border-charcoal/10 px-4 py-3 font-body text-sm text-charcoal">
             We couldn&apos;t load your messages. Refresh to try again.

@@ -1,17 +1,17 @@
 import Link from 'next/link'
 import { MessageCircle } from 'lucide-react'
-import { CUSTOMER_INBOX_PATH } from '@/lib/messaging/constants'
+import { CUSTOMER_INBOX_PATH, OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 
 /**
  * Header envelope with the unread count. Customers and owners share one count
- * (unread_message_count covers both sides); it opens the customer inbox, which
- * points owners to their dashboard inbox.
+ * (unread_message_count covers both sides). A page owner's whole inbox, both
+ * sides, is the dashboard one; everyone else's is /account/messages.
  */
-export function MessagesNavLink({ unread }: { unread: number }) {
+export function MessagesNavLink({ unread, owner = false }: { unread: number; owner?: boolean }) {
   const label = unread > 0 ? `Messages, ${unread} unread` : 'Messages'
   return (
     <Link
-      href={CUSTOMER_INBOX_PATH}
+      href={owner ? OWNER_INBOX_PATH : CUSTOMER_INBOX_PATH}
       aria-label={label}
       title="Messages"
       className="relative inline-flex items-center justify-center size-9 rounded-md text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"

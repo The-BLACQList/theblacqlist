@@ -25,6 +25,10 @@ export type StartConversationState = { success: true; conversationId: string } |
  *   - not blocked by the owner, not suspended. Both answer with the same
  *     neutral error as a closed inbox, so a block is never revealed.
  *   - Turnstile, and 5 per hour per account.
+ *   - "Send as" (owner-experience round 2): an optional as_listing_id names one
+ *     of the sender's own published pages. It is stored on a NEW thread only
+ *     (customer_listing_id); an existing thread keeps the identity it started
+ *     with. Blocks and suspensions stay per person, whatever page they use.
  */
 export async function startConversationAction(
   _prev: StartConversationState,
@@ -51,6 +55,10 @@ export async function startConversationAction(
   if (!isUuid(listingId)) return { error: 'Missing listing.' }
   const parsed = normalizeMessageBody(formData.get('body'))
   if (!parsed.ok) return { error: parsed.error }
+  const asListingId = formData.get('as_listing_id')?.toString().trim() || null
+  if (asListingId && (!isUuid(asListingId) || asListingId === listingId)) {
+    return { error: 'Pick one of your pages to send as.' }
+  }
 
   const service = createServiceClient()
 
@@ -89,9 +97,22 @@ export async function startConversationAction(
   if (!conversationId) {
     if (!listing.messaging_enabled) return { error: MESSAGING_UNAVAILABLE_ERROR }
 
+    if (asListingId) {
+      // Only the sender's own live page: the receiver sees its name and logo.
+      const { data: asPage } = await service
+        .from('listings')
+        .select('id')
+        .eq('id', asListingId)
+        .eq('owner_user_id', user.id)
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .maybeSingle()
+      if (!asPage) return { error: 'Pick one of your pages to send as.' }
+    }
+
     const { data: inserted, error } = await service
       .from('conversations')
-      .insert({ listing_id: listingId, customer_user_id: user.id })
+      .insert({ listing_id: listingId, customer_user_id: user.id, customer_listing_id: asListingId })
       .select('id')
       .single()
 
@@ -124,7 +145,7 @@ export async function startConversationAction(
     entity_id: listingId,
     entity_type: 'listing',
     user_id: user.id,
-    properties: { sender_role: 'customer', source: 'listing_composer' },
+    properties: { sender_role: 'customer', source: 'listing_composer', as_page: created && !!asListingId },
   })
 
   revalidateConversation(conversationId)

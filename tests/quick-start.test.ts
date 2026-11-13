@@ -164,8 +164,8 @@ describe('Save my draft', () => {
 
 describe('the main button value', () => {
   it('follows the same rules as the server', () => {
-    expect(ctaValueProblem('message', 'owner@example.com')).toBeNull()
-    expect(ctaValueProblem('message', 'nope')).not.toBeNull()
+    expect(ctaValueProblem('email', 'owner@example.com')).toBeNull()
+    expect(ctaValueProblem('email', 'nope')).not.toBeNull()
     expect(ctaValueProblem('call', '(404) 555-0100')).toBeNull()
     expect(ctaValueProblem('book', 'cal.com/x')).not.toBeNull()
     expect(ctaValueProblem('book', 'https://cal.com/x')).toBeNull()
@@ -225,8 +225,8 @@ describe('creator mode', () => {
     expect(quickStartMode(['creator'])).toBe('business')
   })
 
-  it('offers Message, Follow and Work with me', () => {
-    expect(ctasFor('creator').map((c) => c.label)).toEqual(['Message', 'Follow', 'Work with me'])
+  it('offers Email, Follow and Work with me', () => {
+    expect(ctasFor('creator').map((c) => c.label)).toEqual(['Email', 'Follow', 'Work with me'])
     expect(ctasFor('business').map((c) => c.value)).not.toContain('inquire')
   })
 
@@ -266,8 +266,8 @@ describe('creator mode', () => {
   })
 
   it('checks the creator button value', () => {
-    expect(ctaValueProblem('message', 'not-an-email', 'creator')).toBe('Enter a valid email address.')
-    expect(ctaValueProblem('message', 'hi@jane.com', 'creator')).toBeNull()
+    expect(ctaValueProblem('email', 'not-an-email', 'creator')).toBe('Enter a valid email address.')
+    expect(ctaValueProblem('email', 'hi@jane.com', 'creator')).toBeNull()
   })
 
   it('maps the age error to the last step', () => {

@@ -42,7 +42,7 @@ export async function setInboxOpenAction(listingId: unknown, open: unknown): Pro
     if (citySlug && listing.slug) revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
   }
   revalidateOwnerEditors(listingId)
-  revalidatePath('/dashboard/messages')
+  revalidatePath('/dashboard/messages', 'layout')
 
   return { success: true, open }
 }

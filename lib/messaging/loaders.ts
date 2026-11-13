@@ -8,9 +8,12 @@ import type { Database } from '@/lib/supabase/types'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import {
+  inboxPlacement,
   isConversationUnread,
+  matchesPageFilter,
   participantRole,
   resolveListingMessaging,
+  type InboxTab,
   type ListingMessaging,
   type ParticipantRole,
 } from './rules'
@@ -146,86 +149,187 @@ async function readCustomerProfiles(ids: string[]): Promise<Map<string, Customer
   }
 }
 
-export async function listCustomerConversations(
-  supabase: Client,
-  userId: string
-): Promise<{ items: ConversationListItem[]; error: boolean }> {
-  const { data, error } = await supabase
-    .from('conversations')
-    .select('id, listing_id, last_message_at, last_message_preview, customer_last_read_at, owner_last_read_at')
-    .eq('customer_user_id', userId)
-    .order('last_message_at', { ascending: false })
-    .limit(LIST_LIMIT)
-  if (error) return { items: [], error: true }
+export interface OwnerListingOption {
+  id: string
+  name: string
+  messagingEnabled: boolean
+  published: boolean
+}
 
-  const listings = await readListings(supabase, [...new Set((data ?? []).map((c) => c.listing_id))])
+export interface Inbox {
+  items: ConversationListItem[]
+  /** The viewer's own pages (for the chips and the inbox summary). Empty for a customer. */
+  pages: OwnerListingOption[]
+  /** Unread threads per tab, across all pages (from the rows loaded). */
+  unread: Record<InboxTab, number>
+  error: boolean
+}
+
+const CONVERSATION_COLUMNS =
+  'id, listing_id, customer_user_id, customer_listing_id, last_message_at, last_message_preview, customer_last_read_at, owner_last_read_at'
+
+/**
+ * The one inbox (owner-experience round 2). Conversations on the viewer's own
+ * pages plus conversations the viewer started, split into two tabs by
+ * inboxPlacement(). A customer with no pages gets everything under
+ * 'businesses', which /account/messages shows without tabs.
+ *
+ * Names and logos of OTHER pages (a page writing to me, a page I wrote to) are
+ * read with the service client, and only for ids taken from conversations RLS
+ * has already returned, like readCustomerProfiles.
+ */
+export async function listInbox(
+  supabase: Client,
+  userId: string,
+  tab: InboxTab,
+  listingFilter: string | null
+): Promise<Inbox> {
+  const empty = { items: [], pages: [], unread: { customers: 0, businesses: 0 } }
+  const { data: owned, error: ownedError } = await supabase
+    .from('listings')
+    .select('id, name, status, messaging_enabled')
+    .eq('owner_user_id', userId)
+    .is('deleted_at', null)
+    .order('name')
+  if (ownedError) return { ...empty, error: true }
+
+  const pages: OwnerListingOption[] = (owned ?? []).map((l) => ({
+    id: l.id,
+    name: l.name,
+    messagingEnabled: l.messaging_enabled,
+    published: l.status === 'published',
+  }))
+  const ownedIds = new Set(pages.map((p) => p.id))
+  const pageNames = new Map(pages.map((p) => [p.id, p.name]))
+
+  const [incoming, outgoing] = await Promise.all([
+    ownedIds.size === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .from('conversations')
+          .select(CONVERSATION_COLUMNS)
+          .in('listing_id', [...ownedIds])
+          .order('last_message_at', { ascending: false })
+          .limit(LIST_LIMIT),
+    supabase
+      .from('conversations')
+      .select(CONVERSATION_COLUMNS)
+      .eq('customer_user_id', userId)
+      .order('last_message_at', { ascending: false })
+      .limit(LIST_LIMIT),
+  ])
+  if (incoming.error || outgoing.error) return { ...empty, pages, error: true }
+
+  const byId = new Map([...(outgoing.data ?? []), ...(incoming.data ?? [])].map((c) => [c.id, c]))
+  const placed = [...byId.values()]
+    .map((c) => ({ c, place: inboxPlacement(c, userId, ownedIds) }))
+    .filter((r): r is { c: (typeof r)['c']; place: NonNullable<(typeof r)['place']> } => r.place !== null)
+    .sort((a, b) => b.c.last_message_at.localeCompare(a.c.last_message_at))
+
+  const unread = { customers: 0, businesses: 0 }
+  for (const { c, place } of placed) if (isConversationUnread(place.role, c)) unread[place.tab] += 1
+
+  const shown = placed.filter(
+    ({ c, place }) => place.tab === tab && matchesPageFilter(c, tab, listingFilter && ownedIds.has(listingFilter) ? listingFilter : null)
+  )
+
+  // Other pages' names: the business a page of mine wrote to, or the page that wrote to mine.
+  const otherPageIds = new Set<string>()
+  const customerIds: string[] = []
+  for (const { c, place } of shown) {
+    if (place.role === 'customer') otherPageIds.add(c.listing_id)
+    else if (c.customer_listing_id) otherPageIds.add(c.customer_listing_id)
+    else customerIds.push(c.customer_user_id)
+  }
+  const [otherPages, profiles] = await Promise.all([
+    readListingsAsService([...otherPageIds]),
+    readCustomerProfiles(customerIds),
+  ])
+  const many = pages.length > 1
+
   return {
+    pages,
+    unread,
     error: false,
-    items: (data ?? []).map((c) => {
-      const listing = listings.get(c.listing_id)
-      return {
+    items: shown.map(({ c, place }) => {
+      const base = {
         id: c.id,
-        title: listing?.name ?? 'A business',
-        subtitle: null,
-        imageUrl: resolveMediaPath(listing?.logo_path),
         preview: c.last_message_preview,
         lastMessageAt: c.last_message_at,
-        unread: isConversationUnread('customer', c),
+        unread: isConversationUnread(place.role, c),
+      }
+      if (place.role === 'customer') {
+        const to = otherPages.get(c.listing_id)
+        const asPage = c.customer_listing_id ? pageNames.get(c.customer_listing_id) : null
+        return {
+          ...base,
+          title: to?.name ?? 'A business',
+          subtitle: asPage ? `You wrote as ${asPage}` : null,
+          imageUrl: resolveMediaPath(to?.logo_path),
+        }
+      }
+      const toMine = many ? (pageNames.get(c.listing_id) ?? null) : null
+      if (c.customer_listing_id) {
+        const from = otherPages.get(c.customer_listing_id)
+        return {
+          ...base,
+          title: from?.name ?? 'A business',
+          subtitle: toMine ? `To ${toMine}` : null,
+          imageUrl: resolveMediaPath(from?.logo_path),
+        }
+      }
+      const profile = profiles.get(c.customer_user_id)
+      return {
+        ...base,
+        title: profile?.displayName ?? 'Customer',
+        subtitle: toMine,
+        imageUrl: profile?.avatarUrl ?? null,
       }
     }),
   }
 }
 
-export interface OwnerListingOption {
-  id: string
-  name: string
-  messagingEnabled: boolean
+/** See listInbox: only call with listing ids from conversations RLS has already returned. */
+async function readListingsAsService(ids: string[]): Promise<Map<string, ListingLite>> {
+  try {
+    // Same Database type; the two client factories only differ in options.
+    return await readListings(createServiceClient() as unknown as Client, ids)
+  } catch {
+    return new Map()
+  }
 }
 
-export async function listOwnerConversations(
-  supabase: Client,
-  ownerId: string,
-  listingFilter: string | null
-): Promise<{ items: ConversationListItem[]; listings: OwnerListingOption[]; error: boolean }> {
-  const { data: owned, error: ownedError } = await supabase
+/** Has at least one page (any status). Page owners use the dashboard inbox. */
+export async function ownsAnyPage(supabase: Client, userId: string): Promise<boolean> {
+  const { count } = await supabase
     .from('listings')
-    .select('id, name, messaging_enabled')
-    .eq('owner_user_id', ownerId)
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_user_id', userId)
     .is('deleted_at', null)
-    .order('name')
-  if (ownedError) return { items: [], listings: [], error: true }
+  return (count ?? 0) > 0
+}
 
-  const listings = (owned ?? []).map((l) => ({ id: l.id, name: l.name, messagingEnabled: l.messaging_enabled }))
-  const names = new Map(listings.map((l) => [l.id, l.name]))
-  const ids = listingFilter && names.has(listingFilter) ? [listingFilter] : listings.map((l) => l.id)
-  if (ids.length === 0) return { items: [], listings, error: false }
-
-  const { data, error } = await supabase
-    .from('conversations')
-    .select(
-      'id, listing_id, customer_user_id, last_message_at, last_message_preview, customer_last_read_at, owner_last_read_at'
-    )
-    .in('listing_id', ids)
-    .order('last_message_at', { ascending: false })
-    .limit(LIST_LIMIT)
-  if (error) return { items: [], listings, error: true }
-
-  const profiles = await readCustomerProfiles((data ?? []).map((c) => c.customer_user_id))
-  return {
-    listings,
-    error: false,
-    items: (data ?? []).map((c) => {
-      const profile = profiles.get(c.customer_user_id)
-      return {
-        id: c.id,
-        title: profile?.displayName ?? 'Customer',
-        subtitle: listings.length > 1 ? (names.get(c.listing_id) ?? null) : null,
-        imageUrl: profile?.avatarUrl ?? null,
-        preview: c.last_message_preview,
-        lastMessageAt: c.last_message_at,
-        unread: isConversationUnread('owner', c),
-      }
-    }),
+/** The viewer's published pages, for "Send as" in the composer. */
+export async function listSendAsPages(
+  supabase: Client,
+  userId: string,
+  excludeListingId: string
+): Promise<{ id: string; name: string }[]> {
+  if (!isFeatureEnabled('messaging')) return []
+  try {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('id, name')
+      .eq('owner_user_id', userId)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .neq('id', excludeListingId)
+      .order('name')
+      .limit(20)
+    if (error) return []
+    return data ?? []
+  } catch {
+    return []
   }
 }
 
@@ -257,6 +361,12 @@ export interface Thread {
   /** Shown above the reply box when canReply is false. */
   replyNotice: string | null
   customerUserId: string
+  /**
+   * The customer side wrote as one of their pages. For the owner it is who
+   * wrote in (counterpartName is that page); for the customer it is the page
+   * they are writing as.
+   */
+  sentAsPageName: string | null
 }
 
 export async function loadThread(
@@ -267,14 +377,14 @@ export async function loadThread(
   const { data: conversation } = await supabase
     .from('conversations')
     .select(
-      'id, listing_id, customer_user_id, last_message_at, customer_last_read_at, owner_last_read_at, last_message_preview'
+      'id, listing_id, customer_user_id, customer_listing_id, last_message_at, customer_last_read_at, owner_last_read_at, last_message_preview'
     )
     .eq('id', conversationId)
     .maybeSingle()
   // RLS returned nothing: not a participant, or no such thread.
   if (!conversation) return null
 
-  const [{ data: listingRow }, { data: messages }, restriction] = await Promise.all([
+  const [{ data: listingRow }, { data: messages }, restriction, sentAs] = await Promise.all([
     supabase
       .from('listings')
       .select('id, name, slug, status, entity_type, logo_path, owner_user_id, cities(slug)')
@@ -287,6 +397,10 @@ export async function loadThread(
       .order('created_at', { ascending: false })
       .limit(THREAD_MESSAGE_LIMIT),
     supabase.rpc('messaging_restricted', { p_listing_id: conversation.listing_id }),
+    // RLS returned this conversation, so its sending page may be named.
+    conversation.customer_listing_id
+      ? readListingsAsService([conversation.customer_listing_id]).then((m) => m.get(conversation.customer_listing_id!) ?? null)
+      : Promise.resolve(null),
   ])
 
   const listing = listingRow as unknown as
@@ -310,15 +424,15 @@ export async function loadThread(
     ])
     blockedByMe = !!block
     const profile = profiles.get(conversation.customer_user_id)
-    counterpartName = profile?.displayName ?? 'Customer'
-    counterpartImageUrl = profile?.avatarUrl ?? null
+    counterpartName = sentAs?.name ?? profile?.displayName ?? 'Customer'
+    counterpartImageUrl = sentAs ? resolveMediaPath(sentAs.logo_path) : (profile?.avatarUrl ?? null)
   }
 
   // For a customer, messaging_restricted() is true when blocked or suspended.
   // For an owner it can only mean suspended (an owner never blocks themselves).
   const restricted = restriction.data === true
   let replyNotice: string | null = null
-  if (role === 'owner' && blockedByMe) replyNotice = 'You blocked this customer. Unblock them to reply.'
+  if (role === 'owner' && blockedByMe) replyNotice = 'You blocked this sender. Unblock them to reply.'
   else if (restricted) replyNotice = "You can't message this business."
   if (role === 'owner' && restricted && !blockedByMe) replyNotice = 'Your messaging is turned off.'
 
@@ -344,6 +458,7 @@ export async function loadThread(
     canReply: replyNotice === null,
     replyNotice,
     customerUserId: conversation.customer_user_id,
+    sentAsPageName: sentAs?.name ?? null,
   }
 }
 

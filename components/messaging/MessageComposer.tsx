@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { startConversationAction } from '@/lib/actions/messaging/startConversation'
-import { COMPOSE_HASH, CUSTOMER_INBOX_PATH, MESSAGE_MAX_LENGTH } from '@/lib/messaging/constants'
+import { COMPOSE_HASH, CUSTOMER_INBOX_PATH, MESSAGE_MAX_LENGTH, OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 import { TurnstileWidget } from '@/components/security/TurnstileWidget'
 import {
   Dialog,
@@ -16,9 +16,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+interface SendAsPage {
+  id: string
+  name: string
+}
+
 interface Props {
   listingId: string
   businessName: string
+  /** The sender's own published pages. Non-empty shows "Send as" (default: me). */
+  sendAsPages?: SendAsPage[]
 }
 
 /**
@@ -28,7 +35,7 @@ interface Props {
  * clicks on those links rather than each template rendering its own dialog.
  * It also opens when the page loads with #send-message in the URL.
  */
-export function MessageComposer({ listingId, businessName }: Props) {
+export function MessageComposer({ listingId, businessName, sendAsPages = [] }: Props) {
   const [open, setOpen] = useState(false)
   // A new form (and a fresh action state) every time the dialog opens after a send.
   const [round, setRound] = useState(0)
@@ -70,15 +77,31 @@ export function MessageComposer({ listingId, businessName }: Props) {
             The business will see your message and your display name, and reply here on The BLACQList.
           </DialogDescription>
         </DialogHeader>
-        <ComposerForm key={round} listingId={listingId} onSent={() => setRound((r) => r + 1)} />
+        <ComposerForm
+          key={round}
+          listingId={listingId}
+          sendAsPages={sendAsPages}
+          onSent={() => setRound((r) => r + 1)}
+        />
       </DialogContent>
     </Dialog>
   )
 }
 
-function ComposerForm({ listingId, onSent }: { listingId: string; onSent: () => void }) {
+function ComposerForm({
+  listingId,
+  sendAsPages,
+  onSent,
+}: {
+  listingId: string
+  sendAsPages: SendAsPage[]
+  onSent: () => void
+}) {
   const [state, formAction, isPending] = useActionState(startConversationAction, null)
   const [body, setBody] = useState('')
+  const [asListingId, setAsListingId] = useState('')
+  // Page owners read every thread in the dashboard inbox (Businesses tab).
+  const inboxPath = sendAsPages.length > 0 ? OWNER_INBOX_PATH : CUSTOMER_INBOX_PATH
 
   if (state && 'success' in state) {
     return (
@@ -90,7 +113,7 @@ function ComposerForm({ listingId, onSent }: { listingId: string; onSent: () => 
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link
-            href={`${CUSTOMER_INBOX_PATH}/${state.conversationId}` as Route}
+            href={`${inboxPath}/${state.conversationId}` as Route}
             className="inline-flex items-center h-11 px-5 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
           >
             View conversation
@@ -111,6 +134,34 @@ function ComposerForm({ listingId, onSent }: { listingId: string; onSent: () => 
   return (
     <form action={formAction} className="px-5 py-4 space-y-3">
       <input type="hidden" name="listing_id" value={listingId} />
+      {sendAsPages.length > 0 && (
+        <fieldset className="space-y-1.5">
+          <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-1">Send as</legend>
+          <div className="flex flex-wrap gap-2">
+            {[{ id: '', name: 'Me' }, ...sendAsPages].map((p) => (
+              <label
+                key={p.id || 'me'}
+                className="inline-flex items-center gap-2 h-9 px-3 rounded-full border border-charcoal/15 bg-white font-subhead text-xs font-semibold text-brand-black cursor-pointer has-[:checked]:bg-brand-black has-[:checked]:text-white has-[:checked]:border-brand-black has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-amber-gold"
+              >
+                <input
+                  type="radio"
+                  name="as_listing_id"
+                  value={p.id}
+                  checked={asListingId === p.id}
+                  onChange={() => setAsListingId(p.id)}
+                  className="sr-only"
+                />
+                {p.name}
+              </label>
+            ))}
+          </div>
+          <p className="font-body text-xs text-charcoal-soft">
+            {asListingId
+              ? 'The business sees your page’s name and logo.'
+              : 'The business sees your display name.'}
+          </p>
+        </fieldset>
+      )}
       <label htmlFor="message-body" className="sr-only">
         Your message
       </label>

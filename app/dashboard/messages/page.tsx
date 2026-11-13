@@ -2,83 +2,123 @@ import type { Metadata } from 'next'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Check, Settings, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
-import { listBlockedCustomers, listOwnerConversations } from '@/lib/messaging/loaders'
-import { isUuid } from '@/lib/messaging/rules'
+import { listInbox } from '@/lib/messaging/loaders'
+import { isUuid, parseInboxTab, type InboxTab } from '@/lib/messaging/rules'
 import { OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 import { ConversationList } from '@/components/messaging/ConversationList'
-import { BlockButton } from '@/components/messaging/BlockButton'
 import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Messages | Dashboard' }
 
 interface Props {
-  searchParams: Promise<{ listing?: string }>
+  searchParams: Promise<{ listing?: string; tab?: string }>
 }
 
+const TABS: { tab: InboxTab; label: string }[] = [
+  { tab: 'customers', label: 'Customers' },
+  { tab: 'businesses', label: 'Businesses' },
+]
+
+function inboxHref(tab: InboxTab, listing: string | null): string {
+  const params = new URLSearchParams()
+  if (tab !== 'customers') params.set('tab', tab)
+  if (listing) params.set('listing', listing)
+  const query = params.toString()
+  return query ? `${OWNER_INBOX_PATH}?${query}` : OWNER_INBOX_PATH
+}
+
+/**
+ * The one inbox (owner-experience round 2, 2026-11-13). Customers: people
+ * writing to my pages. Businesses: pages writing to mine, and every thread I
+ * started with another business, as me or as one of my pages.
+ */
 export default async function OwnerMessagesPage({ searchParams }: Props) {
   if (!isFeatureEnabled('messaging')) notFound()
   const owner = await requireOwner()
-  const { listing } = await searchParams
+  const { listing, tab: rawTab } = await searchParams
+  const tab = parseInboxTab(rawTab)
   const listingFilter = listing && isUuid(listing) ? listing : null
 
   const supabase = await createClient()
-  const [{ items, listings, error }, blocked] = await Promise.all([
-    listOwnerConversations(supabase, owner.user.id, listingFilter),
-    listBlockedCustomers(supabase, owner.user.id),
-  ])
+  const { items, pages, unread, error } = await listInbox(supabase, owner.user.id, tab, listingFilter)
 
-  const activeFilter = listingFilter && listings.some((l) => l.id === listingFilter) ? listingFilter : null
-  const shown = activeFilter ? listings.filter((l) => l.id === activeFilter) : listings
-  const anyOpen = listings.some((l) => l.messagingEnabled)
+  const activeFilter = listingFilter && pages.some((p) => p.id === listingFilter) ? listingFilter : null
+  const anyOpen = pages.some((p) => p.messagingEnabled)
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl text-brand-black mb-1">Messages</h1>
-        <p className="font-body text-sm text-charcoal-soft">Conversations customers started from your pages.</p>
+    <div className="max-w-3xl space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-headline text-2xl text-brand-black mb-1">Messages</h1>
+          <p className="font-body text-sm text-charcoal-soft">
+            Everything people and businesses send your pages, and the businesses you write to.
+          </p>
+        </div>
+        <Link
+          href={`${OWNER_INBOX_PATH}/settings` as Route}
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-charcoal/15 bg-white font-subhead text-xs font-semibold text-brand-black hover:bg-pale-lavender transition-colors"
+        >
+          <Settings className="size-3.5" aria-hidden="true" />
+          Inbox settings
+        </Link>
       </div>
 
-      {listings.length > 1 && (
-        <nav aria-label="Filter by page" className="flex flex-wrap gap-2">
-          <FilterChip href={OWNER_INBOX_PATH} active={!activeFilter} label="All pages" />
-          {listings.map((l) => (
-            <FilterChip
-              key={l.id}
-              href={`${OWNER_INBOX_PATH}?listing=${l.id}`}
-              active={activeFilter === l.id}
-              label={l.name}
-            />
+      {pages.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-body text-xs text-charcoal-soft">
+          <span className="font-subhead font-semibold text-charcoal">Accepting new messages:</span>
+          {pages.map((p) => (
+            <span key={p.id} className="inline-flex items-center gap-1">
+              {p.messagingEnabled ? (
+                <Check className="size-3.5 text-green-700" aria-hidden="true" />
+              ) : (
+                <X className="size-3.5 text-charcoal-soft" aria-hidden="true" />
+              )}
+              {p.name}
+              <span className="sr-only">{p.messagingEnabled ? ' (on)' : ' (off)'}</span>
+            </span>
           ))}
-        </nav>
+        </p>
       )}
 
-      {listings.length > 0 && (
-        <ul className="rounded-2xl bg-white border border-charcoal/10 divide-y divide-charcoal/8">
-          {shown.map((l) => (
-            <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-              <span className="font-subhead text-sm font-semibold text-brand-black">{l.name}</span>
-              <span className="flex items-center gap-3">
-                <span
-                  className={cn(
-                    'inline-flex items-center rounded-full px-2.5 py-0.5 font-subhead text-xs font-semibold',
-                    l.messagingEnabled ? 'bg-green-100 text-green-800' : 'bg-charcoal/8 text-charcoal-soft'
-                  )}
-                >
-                  {l.messagingEnabled ? 'Inbox open' : 'Inbox closed'}
+      <nav aria-label="Inbox" className="flex gap-1 border-b border-charcoal/10">
+        {TABS.map((t) => {
+          const active = t.tab === tab
+          const count = unread[t.tab]
+          return (
+            <Link
+              key={t.tab}
+              href={inboxHref(t.tab, activeFilter) as Route}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                '-mb-px inline-flex items-center gap-2 px-3 py-2 border-b-2 font-subhead text-sm font-semibold transition-colors',
+                active
+                  ? 'border-brand-black text-brand-black'
+                  : 'border-transparent text-charcoal-soft hover:text-brand-black'
+              )}
+            >
+              {t.label}
+              {count > 0 && (
+                <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-amber-gold px-1.5 font-subhead text-[11px] font-bold text-brand-black">
+                  {count > 99 ? '99+' : count}
+                  <span className="sr-only"> unread</span>
                 </span>
-                <Link
-                  href={`/dashboard/pages/${l.id}/edit` as Route}
-                  className="font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
-                >
-                  {l.messagingEnabled ? 'Change' : 'Open inbox'}
-                </Link>
-              </span>
-            </li>
+              )}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {pages.length > 1 && (
+        <nav aria-label="Filter by page" className="flex flex-wrap gap-2">
+          <FilterChip href={inboxHref(tab, null)} active={!activeFilter} label="All pages" />
+          {pages.map((p) => (
+            <FilterChip key={p.id} href={inboxHref(tab, p.id)} active={activeFilter === p.id} label={p.name} />
           ))}
-        </ul>
+        </nav>
       )}
 
       {error ? (
@@ -89,35 +129,16 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
         <ConversationList
           items={items}
           basePath={OWNER_INBOX_PATH}
-          emptyHeading="No messages yet"
+          emptyHeading={tab === 'customers' ? 'No messages from customers yet' : 'No business messages yet'}
           emptyBody={
-            anyOpen
-              ? 'When a customer messages you from your page, the conversation shows up here.'
-              : 'Your inbox is closed. Open it from Edit page so customers can message you.'
+            tab === 'businesses'
+              ? 'When you message a business from its page, or a business messages yours, the conversation shows up here.'
+              : anyOpen
+                ? 'When a customer messages you from your page, the conversation shows up here.'
+                : 'Your inbox is off. Turn it on in Inbox settings so customers can message you.'
           }
         />
       )}
-
-      <section aria-labelledby="blocked-heading" className="rounded-2xl bg-white border border-charcoal/10 px-4 py-4">
-        <h2 id="blocked-heading" className="font-subhead text-sm font-bold text-brand-black">
-          Blocked customers
-        </h2>
-        <p className="font-body text-xs text-charcoal-soft mt-0.5 mb-3">
-          Blocked customers can&apos;t message any of your pages. They aren&apos;t told.
-        </p>
-        {blocked.length === 0 ? (
-          <p className="font-body text-sm text-charcoal-soft">You haven&apos;t blocked anyone.</p>
-        ) : (
-          <ul className="divide-y divide-charcoal/8">
-            {blocked.map((b) => (
-              <li key={b.userId} className="flex items-center justify-between gap-3 py-2.5">
-                <span className="font-body text-sm text-brand-black truncate">{b.displayName}</span>
-                <BlockButton customerUserId={b.userId} blocked variant="link" />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   )
 }

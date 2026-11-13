@@ -19,7 +19,6 @@ import { SeoSection } from '@/components/dashboard/SeoSection'
 import { PublishSection } from '@/components/dashboard/PublishSection'
 import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
-import { InboxSection } from '@/components/dashboard/InboxSection'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
 import { growthIsOpen } from '@/lib/marketplace/entitlements'
@@ -351,14 +350,13 @@ export default async function EditPage({ params }: Props) {
         )}
       </div>
 
-      {inboxOpen !== null && <InboxSection listingId={listing.id} initialOpen={inboxOpen} />}
-
       <PageFinishView
         data={data}
         mode="edit"
         storageUrl={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public`}
         writingHelp={writingHelp}
         growthOpen={growthOpen}
+        inbox={inboxOpen === null ? undefined : { open: inboxOpen }}
       />
     </div>
   )

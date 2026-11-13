@@ -12,6 +12,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import { VALID_CTA_TYPES } from '@/lib/constants/listing'
+
 function source(relPath: string): string {
   return readFileSync(path.resolve(process.cwd(), relPath), 'utf8')
 }
@@ -145,11 +147,78 @@ describe('inbox pages', () => {
     'app/account/messages/[conversationId]/page.tsx',
     'app/dashboard/messages/page.tsx',
     'app/dashboard/messages/[conversationId]/page.tsx',
+    'app/dashboard/messages/settings/page.tsx',
   ])('%s 404s while the flag is off', (file) => {
     expect(source(file)).toMatch(/if \(!isFeatureEnabled\('messaging'\)\) notFound\(\)/)
   })
 
   it('guards the admin report page', () => {
     expect(source('app/admin/reports/messages/page.tsx')).toContain('await requireAdmin()')
+  })
+})
+
+// ── Owner-experience round 2, part A ────────────────────────────────────────
+
+const SEND_AS = source('supabase/migrations/20261113000003_messaging_send_as.sql').replace(/--.*$/gm, '')
+const MESSAGE_TO_EMAIL = source('supabase/migrations/20261113000004_cta_message_to_email.sql').replace(/--.*$/gm, '')
+
+describe('migration 20261113000003_messaging_send_as.sql', () => {
+  it('adds the sending page as a nullable column that survives the page being deleted', () => {
+    expect(SEND_AS).toMatch(
+      /ADD COLUMN IF NOT EXISTS customer_listing_id uuid NULL\s+REFERENCES public\.listings\(id\) ON DELETE SET NULL/i
+    )
+  })
+
+  it('keeps one thread per person per business', () => {
+    expect(SEND_AS).not.toMatch(/DROP CONSTRAINT[^;]*conversations_listing_customer_key/i)
+  })
+
+  it('allows the email button type and keeps every earlier type', () => {
+    const check = SEND_AS.match(/CHECK \(cta_type IN \(([^)]*)\)\)/i)?.[1] ?? ''
+    for (const t of VALID_CTA_TYPES) expect(check).toContain(`'${t}'`)
+  })
+
+  it('changes no data (the backfill is its own migration, applied after the deploy)', () => {
+    expect(SEND_AS).not.toMatch(/\bUPDATE\b/i)
+    expect(SEND_AS).not.toMatch(/\bDELETE\s+FROM\b/i)
+  })
+
+  it('touches no RLS policy or grant', () => {
+    expect(SEND_AS).not.toMatch(/POLICY|GRANT/i)
+  })
+})
+
+describe('migration 20261113000004_cta_message_to_email.sql', () => {
+  it('only rewrites message buttons that hold an email address or an https link', () => {
+    const updates = MESSAGE_TO_EMAIL.match(/UPDATE[\s\S]*?;/gi) ?? []
+    expect(updates).toHaveLength(2)
+    for (const u of updates) expect(u).toMatch(/WHERE cta_type = 'message'\s+AND cta_url ~/i)
+    expect(updates[0]).toMatch(/SET cta_type = 'email'/)
+    expect(updates[1]).toMatch(/SET cta_type = 'contact'/)
+  })
+})
+
+describe('send as a page', () => {
+  const start = source('lib/actions/messaging/startConversation.ts')
+
+  it('only lets the sender use their own live page', () => {
+    const check = start.slice(start.indexOf('if (asListingId) {'), start.indexOf(".insert({"))
+    expect(check).toContain(".eq('owner_user_id', user.id)")
+    expect(check).toContain(".eq('status', 'published')")
+    expect(check).toContain(".is('deleted_at', null)")
+  })
+
+  it('stores the page only when a new thread is created', () => {
+    expect(start).toMatch(/insert\(\{ listing_id: listingId, customer_user_id: user\.id, customer_listing_id: asListingId \}\)/)
+    const code = start.replace(/^\s*(\/\/|\*|\/\*\*).*$/gm, '')
+    expect(code.match(/customer_listing_id/g)).toHaveLength(1)
+  })
+
+  it('names other pages only for conversations RLS already returned', () => {
+    const loaders = source('lib/messaging/loaders.ts')
+    const inbox = loaders.slice(loaders.indexOf('export async function listInbox'), loaders.indexOf('async function readListingsAsService'))
+    // Conversations come from the request client; only then are names read.
+    expect(inbox).toContain("supabase\n          .from('conversations')")
+    expect(inbox.indexOf('readListingsAsService(')).toBeGreaterThan(inbox.indexOf("from('conversations')"))
   })
 })

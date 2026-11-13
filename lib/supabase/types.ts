@@ -748,6 +748,7 @@ export type Database = {
         Row: {
           created_at: string
           customer_last_read_at: string | null
+          customer_listing_id: string | null
           customer_user_id: string
           id: string
           last_message_at: string
@@ -758,6 +759,7 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_last_read_at?: string | null
+          customer_listing_id?: string | null
           customer_user_id: string
           id?: string
           last_message_at?: string
@@ -768,6 +770,7 @@ export type Database = {
         Update: {
           created_at?: string
           customer_last_read_at?: string | null
+          customer_listing_id?: string | null
           customer_user_id?: string
           id?: string
           last_message_at?: string
@@ -776,6 +779,13 @@ export type Database = {
           owner_last_read_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_customer_listing_id_fkey"
+            columns: ["customer_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_listing_id_fkey"
             columns: ["listing_id"]

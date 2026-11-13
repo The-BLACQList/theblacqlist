@@ -123,6 +123,7 @@ export type CTAType =
   | 'order'
   | 'call'
   | 'message'
+  | 'email'
   | 'visit'
   | 'get-quote'
   | 'shop'
@@ -141,7 +142,8 @@ export const CTA_LABELS: Record<CTAType, string> = {
   book: 'Book Now',
   order: 'Order Now',
   call: 'Call Now',
-  message: 'Send Message',
+  message: 'Message Us',
+  email: 'Email Us',
   visit: 'Visit Us',
   'get-quote': 'Get a Quote',
   shop: 'Shop Now',

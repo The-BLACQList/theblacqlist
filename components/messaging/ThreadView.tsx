@@ -16,7 +16,7 @@ interface Props {
   backLabel: string
 }
 
-/** Shared by the customer (/account/messages) and owner (/dashboard/messages) threads. */
+/** Shared by /account/messages (customers) and /dashboard/messages (anyone with a page, either side). */
 export function ThreadView({ thread, backHref, backLabel }: Props) {
   const isOwner = thread.role === 'owner'
 
@@ -36,17 +36,23 @@ export function ThreadView({ thread, backHref, backLabel }: Props) {
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-subhead text-base font-bold text-brand-black">{thread.counterpartName}</h1>
             {isOwner ? (
-              <p className="truncate font-body text-xs text-charcoal-soft">About {thread.listingName}</p>
+              <p className="truncate font-body text-xs text-charcoal-soft">
+                {thread.sentAsPageName ? 'A business, writing to ' : 'About '}
+                {thread.listingName}
+              </p>
             ) : (
-              thread.listingUrl && (
-                <a
-                  href={thread.listingUrl}
-                  className="inline-flex items-center gap-1 font-body text-xs text-charcoal-soft hover:text-brand-black underline underline-offset-2"
-                >
-                  View business page
-                  <ExternalLink className="size-3" aria-hidden="true" />
-                </a>
-              )
+              <p className="flex flex-wrap items-center gap-x-3 font-body text-xs text-charcoal-soft">
+                {thread.sentAsPageName && <span>You&apos;re writing as {thread.sentAsPageName}</span>}
+                {thread.listingUrl && (
+                  <a
+                    href={thread.listingUrl}
+                    className="inline-flex items-center gap-1 hover:text-brand-black underline underline-offset-2"
+                  >
+                    View business page
+                    <ExternalLink className="size-3" aria-hidden="true" />
+                  </a>
+                )}
+              </p>
             )}
           </div>
           <div className="flex items-center gap-2">

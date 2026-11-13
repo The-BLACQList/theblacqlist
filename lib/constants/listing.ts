@@ -138,6 +138,7 @@ export const VALID_CTA_TYPES = [
   'order',
   'call',
   'message',
+  'email',
   'visit',
   'get-quote',
   'shop',

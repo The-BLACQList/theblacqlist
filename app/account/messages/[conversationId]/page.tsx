@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
-import { loadThread } from '@/lib/messaging/loaders'
+import { loadThread, ownsAnyPage } from '@/lib/messaging/loaders'
 import { isUuid } from '@/lib/messaging/rules'
 import { CUSTOMER_INBOX_PATH, OWNER_INBOX_PATH } from '@/lib/messaging/constants'
 import { ThreadView } from '@/components/messaging/ThreadView'
@@ -24,10 +24,13 @@ export default async function CustomerThreadPage({ params }: Props) {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/sign-in?next=${encodeURIComponent(`${CUSTOMER_INBOX_PATH}/${conversationId}`)}`)
 
-  const thread = await loadThread(supabase, conversationId, user.id)
+  const [thread, ownsPages] = await Promise.all([
+    loadThread(supabase, conversationId, user.id),
+    ownsAnyPage(supabase, user.id),
+  ])
   if (!thread) notFound()
-  // An owner who follows a customer-side link lands in their own inbox.
-  if (thread.role === 'owner') redirect(`${OWNER_INBOX_PATH}/${conversationId}`)
+  // A page owner reads every thread, both sides, in the dashboard inbox.
+  if (ownsPages) redirect(`${OWNER_INBOX_PATH}/${conversationId}`)
 
   return (
     <main>

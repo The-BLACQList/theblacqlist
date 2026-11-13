@@ -105,6 +105,46 @@ export function participantRole(
   return null
 }
 
+// ── One inbox, two tabs (owner-experience round 2, 2026-11-13) ─────────────
+
+export type InboxTab = 'customers' | 'businesses'
+
+/** ?tab= on /dashboard/messages. Anything unknown is the Customers tab. */
+export function parseInboxTab(raw: unknown): InboxTab {
+  return raw === 'businesses' ? 'businesses' : 'customers'
+}
+
+type InboxRow = { listing_id: string; customer_user_id: string; customer_listing_id: string | null }
+
+/**
+ * Where a conversation sits in this viewer's inbox, and which side they are on.
+ *   - On one of my pages, from a person          → Customers (I am the owner)
+ *   - On one of my pages, from another business  → Businesses (I am the owner)
+ *   - I wrote to someone else's page (as me or as one of my pages) → Businesses
+ * null: not mine (RLS should never return it).
+ */
+export function inboxPlacement(
+  conversation: InboxRow,
+  viewerId: string,
+  ownedListingIds: ReadonlySet<string>
+): { tab: InboxTab; role: ParticipantRole } | null {
+  if (ownedListingIds.has(conversation.listing_id)) {
+    return { role: 'owner', tab: conversation.customer_listing_id ? 'businesses' : 'customers' }
+  }
+  if (conversation.customer_user_id === viewerId) return { role: 'customer', tab: 'businesses' }
+  return null
+}
+
+/**
+ * The page chips. On Customers a chip means "sent to this page". On Businesses
+ * it also means "sent from this page", so a page's outgoing threads are there.
+ */
+export function matchesPageFilter(conversation: InboxRow, tab: InboxTab, listingFilter: string | null): boolean {
+  if (!listingFilter) return true
+  if (conversation.listing_id === listingFilter) return true
+  return tab === 'businesses' && conversation.customer_listing_id === listingFilter
+}
+
 /**
  * Unread for this side: the thread moved after this side last read it. A send
  * stamps the sender's own read marker with the same instant as

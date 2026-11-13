@@ -131,7 +131,7 @@ export function aboutMax(): number {
 export type QuickCtaInput = 'url' | 'tel' | 'email'
 
 export interface QuickCta {
-  value: 'book' | 'order' | 'call' | 'visit' | 'message' | 'subscribe' | 'inquire'
+  value: 'book' | 'order' | 'call' | 'visit' | 'email' | 'subscribe' | 'inquire'
   label: string
   /** What the button says on the live page. */
   buttonLabel: string
@@ -176,11 +176,13 @@ export const QUICK_CTAS: readonly QuickCta[] = [
     placeholder: 'https://maps.google.com/?q=...',
   },
   {
-    value: 'message',
-    label: 'Send a message',
-    buttonLabel: 'Send a message',
+    // A new page's inbox starts closed, so the quick start offers email; the
+    // owner can switch to "Message us" once they open the inbox.
+    value: 'email',
+    label: 'Email',
+    buttonLabel: 'Email us',
     input: 'email',
-    inputLabel: 'Email for messages',
+    inputLabel: 'Email address',
     placeholder: 'hello@yourbusiness.com',
   },
 ]
@@ -189,11 +191,12 @@ export const QUICK_CTAS: readonly QuickCta[] = [
 // live page, the finish view and the CTA editor all read them without changes.
 export const CREATOR_CTAS: readonly QuickCta[] = [
   {
-    value: 'message',
-    label: 'Message',
-    buttonLabel: 'Send a message',
+    value: 'email',
+    label: 'Email',
+    buttonLabel: 'Email me',
+    labelOverride: 'Email me',
     input: 'email',
-    inputLabel: 'Email for messages',
+    inputLabel: 'Email address',
     placeholder: 'hello@yourname.com',
   },
   {

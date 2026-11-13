@@ -12,7 +12,7 @@ import { isCovered } from '@/lib/features/covered'
 import { SoonPill } from '@/components/ui/soon-pill'
 import { MAIN_NAV_LINKS, SAVED_LINK } from '@/components/nav/nav-links'
 import { MessagesNavLink } from '@/components/nav/MessagesNavLink'
-import { getUnreadMessageCount } from '@/lib/messaging/loaders'
+import { getUnreadMessageCount, ownsAnyPage } from '@/lib/messaging/loaders'
 
 export async function PublicHeader() {
   const supabase = await createClient()
@@ -26,12 +26,15 @@ export async function PublicHeader() {
   // rendering-strategy change. Admins had no way into /admin except typing it.
   // The unread count rides the same round-trip; undefined hides the link
   // (signed out, or messaging off).
-  const [adminRole, messagesUnread] = user
+  // Page owners read everything in the dashboard inbox (one inbox).
+  const messagingOn = isFeatureEnabled('messaging')
+  const [adminRole, messagesUnread, ownsPages] = user
     ? await Promise.all([
         getAdminRole(user.id),
-        isFeatureEnabled('messaging') ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
+        messagingOn ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
+        messagingOn ? ownsAnyPage(supabase, user.id) : Promise.resolve(false),
       ])
-    : [null, undefined]
+    : [null, undefined, false]
   const isAdmin = adminRole !== null
   const collectiveSoon = isCovered('collective')
   // The search icon opens Search or ask Cue when the assistant is on; a plain
@@ -93,7 +96,7 @@ export async function PublicHeader() {
                     Admin
                   </Link>
                 )}
-                {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} />}
+                {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
                 <Link
                   href={SAVED_LINK.href}
                   className="inline-flex items-center gap-1.5 font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
@@ -137,7 +140,7 @@ export async function PublicHeader() {
           {/* Mobile right zone */}
           <div className={`${showCompact} items-center gap-1`}>
             <HeaderSearch cue={cue} size="mobile" />
-            {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} />}
+            {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
             <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} collectiveSoon={collectiveSoon} />
           </div>
         </nav>
