@@ -1,6 +1,6 @@
 # Community Spend: Data Sourcing & Methodology
 
-**Status:** current as of 2026-08-17 (§5.2 corrected; see the warning there)
+**Status:** current as of 2026-11-13 (only listed businesses count, Stages 2–4; §5.2 corrected 2026-08-17, see the warning there)
 **Audience:** anyone who publishes, cites, or defends a BLACQList community-spend figure
 **Companions:**
 - [`flow-map-mvp-spec.md`](flow-map-mvp-spec.md) — what the feature is. This file is where the numbers come from and what they mean.
@@ -17,7 +17,7 @@ Every dollar figure the product publishes about community spend traces back thro
 Five stages. There is no batch job, no cron, and no materialized view anywhere in this path.
 
 ```
-user submits receipt   →   admin approves   →   spend_event   →   flow_nodes / flow_edges   →   published figures
+user submits receipt   →   owner/admin approves   →   spend_event   →   flow_nodes / flow_edges   →   published figures
 (receipt_uploads)          (server action)      (one row)         (running totals)              (4 surfaces)
 ```
 
@@ -29,21 +29,30 @@ user submits receipt   →   admin approves   →   spend_event   →   flow_nod
 |---|---|---|
 | `amount_cents` | user-entered dollars | `Math.round(dollars * 100)`. Must be > 0. |
 | `purchase_date` | user-entered | The date on the receipt, **not** the submission date. |
-| `listing_id` | directory selection | Optional. Null when the user typed a business name we do not have. |
+| `listing_id` | directory selection | Optional. Null when the user typed a business name we do not have. Such a receipt is kept but **cannot be counted** until it is linked to a listed business (Stage 2). |
 | `aggregate_opt_out` | checkbox | Set once at submission. See §5. |
 | `status` | fixed | `'pending_review'`. |
 | `client_idempotency_key` | client | `UNIQUE` — a duplicate submission returns "already submitted" rather than a second row. |
 
 Nothing at this stage reaches any public figure.
 
-### Stage 2 — Admin review
+### Stage 2 — Review (the business, or an admin)
 
-Two terminal outcomes, both audit-logged:
+`[Decision — founder, 2026-11-13]` (ticket 183): the business a receipt names verifies it from `/dashboard/receipts` (`lib/actions/owner/verifyReceipt.ts`, `lib/actions/owner/rejectReceipt.ts`). Admins review receipts for unclaimed businesses and anything a business hasn't reviewed in 7 days (`lib/actions/spend/approveReceipt.ts`, `lib/actions/spend/rejectReceipt.ts`). An owner can never verify their own receipt. Both paths write through `lib/spend/applyReceiptReview.ts`, which only changes a receipt that is still `'pending_review'`, so a receipt is counted once even if both press at the same moment. `receipt_uploads.verified_by_role` records which one did.
 
-- **Reject** (`lib/actions/spend/rejectReceipt.ts`) — status becomes `'rejected'`. **No aggregate row is ever written.** A rejected receipt contributes nothing, permanently.
-- **Approve** (`lib/actions/spend/approveReceipt.ts`) — status becomes `'approved'` and the aggregate write happens synchronously, in the same request.
+Two terminal outcomes:
 
-A receipt sitting at `'pending_review'` contributes nothing either. **Every published community figure is a figure about admin-approved receipts only.**
+- **Reject** — status becomes `'rejected'`. **No aggregate row is ever written.** A rejected receipt contributes nothing, permanently.
+- **Approve** — status becomes `'approved'` and the aggregate write happens synchronously, in the same request.
+
+A receipt sitting at `'pending_review'` contributes nothing either. **Every published community figure is a figure about approved receipts only.**
+
+**Only businesses on The BLACQList count.** `[Decision — founder, 2026-11-13]` (ticket 183): *"We can't allow any and every business receipt to be posted on the collective."* A receipt with no `listing_id` (the shopper typed a business we don't list) is never approved:
+
+- `applyReceiptReview.ts` refuses it (`reason: 'unlisted'`, nothing written), so neither an admin nor an owner can approve it. It is excluded from the admin queue's default view and shown under "Waiting for the business".
+- It stays `'pending_review'` for up to `UNLISTED_WAIT_DAYS` (90) days from upload (`lib/spend/unlisted.ts`). If the business joins in that window, the shopper edits the receipt, picks the listing, and the owner is emailed to verify it like any other.
+- After 90 days it stops waiting and can no longer be edited. There is no cron: "stopped" is computed from `created_at` when the receipt is read, and the row keeps `status = 'pending_review'`, so it still counts toward nothing.
+- No support post is offered for it; the shopper sees the invite-the-business prompt instead.
 
 ### Stage 3 — The spend event
 
@@ -51,7 +60,7 @@ One approved receipt produces exactly one `spend_events` row.
 
 `spend_events` **has no `user_id` column, by design.** The link back to a person exists only as `receipt_upload_id`, and that link is severed on account deletion (§6). This is the table every community-wide total is summed from.
 
-`city_id` is resolved at approval time from the linked listing's `city_id`. A receipt with no `listing_id` gets `city_id = null`.
+`city_id` is resolved at approval time from the linked listing's `city_id`. Before 2026-11-13 a receipt with no `listing_id` could be approved and got `city_id = null`; those rows are still in the table (see Stage 4). No new ones can be written.
 
 ### Stage 4 — The flow graph
 
@@ -63,7 +72,9 @@ One approved receipt produces exactly one `spend_events` row.
 
 `business → city` is the **only** edge the schema can express: `flow_nodes.node_type` has a `CHECK` permitting `'business' | 'city'` and nothing else. Any diagram implying business-to-business or city-to-city flow is drawing something the data does not contain.
 
-**A receipt with no `listing_id` produces a spend event but no node and no edge.** It counts toward community-wide totals and toward nothing else. This is why the totals and the named tables can legitimately disagree.
+**Historical spend events with no `listing_id` are excluded from every published figure.** Before 2026-11-13 an approved receipt with no `listing_id` produced a spend event but no node and no edge, and it counted toward the community-wide totals. `[Decision — founder, 2026-11-13]`: past unmatched spend is removed from the totals. The rows are not deleted; every public reader of `spend_events` now filters `.not('listing_id', 'is', null)` alongside `.eq('aggregate_opt_out', false)` (pinned by `tests/unlisted-wait.test.ts`). **Published totals dropped when this shipped, by an amount that has not been measured** `[Unknown]` — measure it read-only before citing a before/after.
+
+The shopper's own total on `/account/receipts` still includes their past approved unmatched receipts; it is private and was never a community figure.
 
 ### Stage 5 — Publication
 
@@ -118,9 +129,9 @@ It must never appear beside one of our figures in a way that implies we measured
 
 | Figure | Computed as | Excludes |
 |---|---|---|
-| Total dollars spent with Black-owned businesses | `SUM(amount_cents)` over **all** `spend_events` where `aggregate_opt_out = false` | Pending, rejected, opted-out |
+| Total dollars spent with Black-owned businesses | `SUM(amount_cents)` over `spend_events` where `aggregate_opt_out = false` and `listing_id IS NOT NULL` | Pending, rejected, opted-out, businesses not on The BLACQList |
 | Tracked purchases | `COUNT(*)` of the same rows | Same |
-| Unique businesses | `COUNT(DISTINCT listing_id)` of the same rows, nulls dropped | Receipts with no directory listing |
+| Unique businesses | `COUNT(DISTINCT listing_id)` of the same rows | Same (no row has a null `listing_id`) |
 | Top businesses / cities | `flow_nodes` rows with `transaction_count >= 5`, ordered by `total_amount_cents`, limit 10 (8 on the account page) | Anything under the threshold — **but not opted-out spend, see §5** |
 | Edges | `flow_edges` rows with `transaction_count >= 5`, limit 50 | Same |
 
@@ -177,7 +188,7 @@ So an opted-out receipt was excluded from the anonymous headline sums and **incl
 
 The threshold still applied, so no single opted-out receipt was individually exposed. The gap was that opted-out spend was silently counted in a figure the user was told it would be withheld from.
 
-**Half of this is now fixed.** Because `flow_nodes` has no opt-out column, the exclusion can only happen at write time, and `approveReceipt.ts` is the only writer `[Measured — repo grep of flow_nodes/flow_edges writers, 2026-08-16]`. Its step-4 guard now reads `if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out)`, so **no new opted-out spend enters the graph**.
+**Half of this is now fixed.** Because `flow_nodes` has no opt-out column, the exclusion can only happen at write time, and `approveReceipt.ts` was the only writer `[Measured — repo grep of flow_nodes/flow_edges writers, 2026-08-16]` (since ticket 183 the single writer is `lib/spend/applyReceiptReview.ts`, which both the admin and owner actions call). Its step-4 guard now reads `if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out)`, so **no new opted-out spend enters the graph**.
 
 **The other half is still open and is a GATE-DATA decision.** Node and edge totals accumulated before that guard landed still contain opted-out spend, and no code change corrects a stored sum. Until a recompute is approved and run, the named per-business and per-city figures on `/flow-map`, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend` include historical opted-out spend. **Do not cite the opt-out as fully implemented on the strength of the code fix alone.**
 
@@ -232,7 +243,7 @@ This is the behavior the Privacy Policy §7 states — contributed aggregates ar
 
 | Claim | Source of truth |
 |---|---|
-| Only write path into the aggregate graph | `lib/actions/spend/approveReceipt.ts` |
+| Only write path into the aggregate graph | `lib/spend/applyReceiptReview.ts` (called by `lib/actions/spend/approveReceipt.ts` and the owner's verify action) |
 | Submission validation and limits | `lib/actions/spend/createReceiptSubmission.ts` |
 | Schema, indexes, RLS | `supabase/migrations/20260511000001_receipt_community_spend.sql` |
 | Current RLS posture | `supabase/migrations/20260815010000_spend_aggregate_rls_close_anon_read.sql` |

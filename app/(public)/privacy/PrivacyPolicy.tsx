@@ -329,11 +329,35 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               <li>Generate anonymized, aggregated community spend totals (e.g., &ldquo;$X tracked through the community this month&rdquo;)</li>
               <li>Display personal spend summaries to you in your account</li>
             </ul>
-            <p>
-              Individual receipt data (amounts, dates, specific businesses visited) is visible only to you.
-              Aggregated data shown publicly contains no personally identifiable information and cannot be
-              traced back to any individual.
-            </p>
+            {/* [Needs professional review] Ticket 183: the business a receipt is
+                for verifies it. The upcoming wording below must be live before
+                FEATURE_OWNER_RECEIPT_REVIEW opens (GATE-PUBLISH); until then the
+                live sentence stays true because admins review every receipt. */}
+            {isNext ? (
+              <>
+                <p>
+                  Individual receipt data (amounts, dates, specific businesses visited) is not shown
+                  publicly. It is visible to you, to BLACQList admins, and, for the purpose of verifying
+                  your purchase, to the business you bought from. That business sees your receipt photo,
+                  the amount, the date and your first name and last initial, only while the receipt is
+                  waiting to be verified. It never sees your email address or your other receipts.
+                  Aggregated data shown publicly contains no personally identifiable information and
+                  cannot be traced back to any individual.
+                </p>
+                <p>
+                  After you upload a receipt you may choose to make a support post to share on social
+                  media. The post never includes your receipt or the amount. If you add a photo, it is
+                  combined into the post on your own device and is not uploaded to or stored by us. What
+                  you post, and where, is your choice.
+                </p>
+              </>
+            ) : (
+              <p>
+                Individual receipt data (amounts, dates, specific businesses visited) is visible only to you.
+                Aggregated data shown publicly contains no personally identifiable information and cannot be
+                traced back to any individual.
+              </p>
+            )}
             <p>
               The choice about community aggregation belongs to each receipt individually. You make it
               when you submit the receipt, and you may change it from Account &rarr; Receipts for as long

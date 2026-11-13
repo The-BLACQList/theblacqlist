@@ -270,8 +270,10 @@ describe('the review actions send after the status update', () => {
   const read = (p: string) => readFileSync(path.resolve(process.cwd(), p), 'utf8')
 
   it.each([
-    ['lib/actions/spend/approveReceipt.ts', 'sendReceiptCountedEmail(', "status: 'approved'"],
-    ['lib/actions/spend/rejectReceipt.ts', 'sendReceiptNeedsFixEmail(', "status: 'rejected'"],
+    ['lib/actions/spend/approveReceipt.ts', 'sendReceiptCountedEmail(', 'approvePendingReceipt('],
+    ['lib/actions/spend/rejectReceipt.ts', 'sendReceiptNeedsFixEmail(', 'rejectPendingReceipt('],
+    ['lib/actions/owner/verifyReceipt.ts', 'sendReceiptCountedEmail(', 'approvePendingReceipt('],
+    ['lib/actions/owner/rejectReceipt.ts', 'sendReceiptNeedsFixEmail(', 'rejectPendingReceipt('],
   ])('%s fires and forgets', (file, call, statusWrite) => {
     const src = read(file)
     expect(src).toContain('void (async () => {')

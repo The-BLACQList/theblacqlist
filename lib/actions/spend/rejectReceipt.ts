@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendReceiptNeedsFixEmail } from '@/lib/email/receiptNotices'
 import { pickRejectionReason, receiptBusinessName } from '@/lib/spend/receipt-emails'
+import { rejectPendingReceipt } from '@/lib/spend/applyReceiptReview'
 
 export type RejectReceiptState = { success: true } | { error: string } | null
 
@@ -36,17 +37,20 @@ export async function rejectReceiptAction(
   if (receipt.status !== 'pending_review')
     return { error: 'Only pending receipts can be rejected.' }
 
-  const { error: updateError } = await serviceClient
-    .from('receipt_uploads')
-    .update({
-      status: 'rejected',
-      rejection_reason: rejectionReason,
-      reviewed_by: session.user.id,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq('id', receiptId)
-
-  if (updateError) return { error: 'Failed to reject receipt. Please try again.' }
+  const result = await rejectPendingReceipt(
+    serviceClient,
+    receiptId,
+    { userId: session.user.id, role: 'admin' },
+    rejectionReason
+  )
+  if (!result.ok) {
+    return {
+      error:
+        result.reason === 'already_reviewed'
+          ? 'This receipt was already reviewed.'
+          : 'Failed to reject receipt. Please try again.',
+    }
+  }
 
   await writeAuditLog({
     adminUserId: session.user.id,

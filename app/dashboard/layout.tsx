@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
+import { isFeatureEnabled } from '@/lib/env'
+import { countReceiptsToVerify, ownedListingIds } from '@/lib/dashboard/receiptsToVerify'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Auth-only gate — a signed-in user with zero listings reaches the dashboard and
@@ -20,9 +22,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .is('deleted_at', null)
   const hasListings = Boolean(error) || (count ?? 0) > 0
 
+  // Receipts waiting for this owner to verify (ticket 183), for the nav badge.
+  // Off, the nav item is hidden (ownerReceiptReview, closed by default).
+  const ownerReview = isFeatureEnabled('ownerReceiptReview')
+  const listingIds = ownerReview && hasListings ? await ownedListingIds(owner.user.id) : []
+  const receiptsToVerify = listingIds
+    ? await countReceiptsToVerify(owner.user.id, listingIds)
+    : 0
+
   return (
     <div className="flex min-h-screen flex-col bg-pale-lavender md:flex-row">
-      <DashboardSidebar ownerEmail={owner.user.email} hasListings={hasListings} />
+      <DashboardSidebar
+        ownerEmail={owner.user.email}
+        hasListings={hasListings}
+        receiptsToVerify={receiptsToVerify}
+        showReceipts={ownerReview}
+      />
       <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8">{children}</main>
     </div>
   )

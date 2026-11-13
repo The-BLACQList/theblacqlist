@@ -89,6 +89,15 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: h.createServiceClient,
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+// Ticket 183: the owner's to-verify email runs after the response.
+const owner = vi.hoisted(() => ({
+  after: vi.fn(),
+  sendReceiptToVerifyEmail: vi.fn(async () => {}),
+}))
+vi.mock('next/server', () => ({ after: owner.after }))
+vi.mock('@/lib/email/receiptNotices', () => ({
+  sendReceiptToVerifyEmail: owner.sendReceiptToVerifyEmail,
+}))
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import {
@@ -415,5 +424,38 @@ describe('while The Collective is covered', () => {
     const res = await createReceiptSubmissionAction(null, form())
     expect(res).toMatchObject({ error: "The Collective isn't open yet." })
     expect(h.calls.uploadPath).toBeNull()
+  })
+})
+
+describe('the business is told a receipt waits for them (ticket 183)', () => {
+  it('schedules the to-verify email for a matched business, after the response', async () => {
+    vi.stubEnv('FEATURE_OWNER_RECEIPT_REVIEW', 'true')
+    const res = await createReceiptSubmissionAction(null, form({ listing_id: LISTING_ID }))
+    expect(res).toMatchObject({ success: true })
+    expect(owner.after).toHaveBeenCalledTimes(1)
+    expect(owner.sendReceiptToVerifyEmail).not.toHaveBeenCalled()
+    await (owner.after.mock.calls[0] as unknown as [() => Promise<void>])[0]()
+    expect(owner.sendReceiptToVerifyEmail).toHaveBeenCalledWith(expect.anything(), {
+      receiptId: 'receipt-1',
+      listingId: LISTING_ID,
+      uploaderId: USER_ID,
+    })
+  })
+
+  it('sends nothing for a receipt with no matched business', async () => {
+    await createReceiptSubmissionAction(null, form())
+    expect(owner.after).not.toHaveBeenCalled()
+  })
+
+  it('sends nothing while owner review is closed', async () => {
+    await createReceiptSubmissionAction(null, form({ listing_id: LISTING_ID }))
+    expect(owner.after).not.toHaveBeenCalled()
+  })
+
+  it('sends nothing when the insert fails', async () => {
+    vi.stubEnv('FEATURE_OWNER_RECEIPT_REVIEW', 'true')
+    h.state.insertError = { code: '23505', message: 'dup' }
+    await createReceiptSubmissionAction(null, form({ listing_id: LISTING_ID }))
+    expect(owner.after).not.toHaveBeenCalled()
   })
 })

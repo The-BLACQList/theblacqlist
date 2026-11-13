@@ -20,6 +20,8 @@ export async function GET() {
     .from('spend_events')
     .select('amount_cents, listing_id')
     .eq('aggregate_opt_out', false)
+    // Only businesses on The BLACQList count (ticket 183).
+    .not('listing_id', 'is', null)
 
   if (spendError) {
     return NextResponse.json(

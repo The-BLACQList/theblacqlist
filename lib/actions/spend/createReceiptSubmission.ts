@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
+import { sendReceiptToVerifyEmail } from '@/lib/email/receiptNotices'
 import { isFeatureEnabled } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
@@ -12,7 +14,8 @@ import {
 } from '@/lib/spend/receipt-input'
 
 export type ReceiptSubmissionState =
-  | { success: true; id: string }
+  /** `matched`: the receipt is for a listed business, so it has a support post. */
+  | { success: true; id: string; matched?: boolean }
   | { error: string; fieldErrors?: Record<string, string> }
   | null
 
@@ -107,6 +110,20 @@ export async function createReceiptSubmissionAction(
     return { error: "We couldn't add your receipt. Please try again." }
   }
 
+  // Tell the business a receipt waits for them (ticket 183). After the
+  // response, so the shopper never waits on email; sendReceiptToVerifyEmail
+  // never throws and skips unclaimed listings and owners' own receipts.
+  const listingId = fields.listingId
+  if (listingId && isFeatureEnabled('ownerReceiptReview')) {
+    after(() =>
+      sendReceiptToVerifyEmail(serviceClient, {
+        receiptId: data.id,
+        listingId,
+        uploaderId: user.id,
+      })
+    )
+  }
+
   revalidatePath('/account/receipts')
-  return { success: true, id: data.id }
+  return { success: true, id: data.id, matched: listingId !== null }
 }

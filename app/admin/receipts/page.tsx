@@ -12,10 +12,19 @@ import {
   OTHER_FIX_REASON,
   RECEIPT_FIX_REASONS,
 } from '@/lib/spend/receipt-emails'
+import { ADMIN_FALLBACK_DAYS, needsAdminReview } from '@/lib/spend/owner-receipts'
+import { UNLISTED_WAIT_DAYS, addListingHref, unlistedWait } from '@/lib/spend/unlisted'
+import { isFeatureEnabled } from '@/lib/env'
 
 export const metadata: Metadata = { title: 'Receipts — Admin' }
 
-type StatusFilter = 'pending_review' | 'approved' | 'rejected' | 'all'
+// Ticket 183: businesses verify their own receipts. The default tab is what
+// still needs an admin: an unclaimed business, or one the owner hasn't checked
+// in ADMIN_FALLBACK_DAYS. Admins can still act on any pending receipt from
+// "All pending". A receipt for a business that isn't on The BLACQList can't be
+// approved by anyone; it sits in "Waiting for the business" until the shopper
+// links it to a listing (lib/spend/unlisted.ts).
+type StatusFilter = 'needs_admin' | 'waiting' | 'pending_review' | 'approved' | 'rejected' | 'all'
 
 interface Props {
   searchParams: Promise<{ status?: string }>
@@ -37,13 +46,17 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
   await requireAdmin()
   const { status: statusParam } = await searchParams
   const activeFilter: StatusFilter =
-    statusParam === 'approved'
-      ? 'approved'
-      : statusParam === 'rejected'
-        ? 'rejected'
-        : statusParam === 'all'
-          ? 'all'
-          : 'pending_review'
+    statusParam === 'waiting'
+      ? 'waiting'
+      : statusParam === 'pending_review'
+        ? 'pending_review'
+        : statusParam === 'approved'
+          ? 'approved'
+          : statusParam === 'rejected'
+            ? 'rejected'
+            : statusParam === 'all'
+              ? 'all'
+              : 'needs_admin'
 
   const serviceClient = createServiceClient()
 
@@ -62,22 +75,42 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
       created_at,
       rejection_reason,
       listing_id,
-      listings(name, slug)
+      verified_by_role,
+      listings(name, slug, owner_user_id)
     `
     )
     .order('created_at', { ascending: false })
-    .limit(100)
+    // The admin tab filters after the read, so it reads further back.
+    .limit(activeFilter === 'needs_admin' ? 500 : 100)
 
-  if (activeFilter !== 'all') {
+  if (activeFilter === 'needs_admin') {
+    query = query.eq('status', 'pending_review').not('listing_id', 'is', null)
+  } else if (activeFilter === 'waiting') {
+    query = query.eq('status', 'pending_review').is('listing_id', null)
+  } else if (activeFilter !== 'all') {
     query = query.eq('status', activeFilter)
   }
 
   const { data: receipts } = await query
 
-  const receiptList = receipts ?? []
+  // With owner review off, every matched pending receipt needs an admin.
+  const ownerReview = isFeatureEnabled('ownerReceiptReview')
+  const now = new Date()
+  const receiptList = (receipts ?? []).filter(
+    (r) =>
+      activeFilter !== 'needs_admin' ||
+      !ownerReview ||
+      needsAdminReview(
+        r,
+        (r.listings as { owner_user_id: string | null } | null)?.owner_user_id ?? null,
+        now
+      )
+  )
 
   const tabs: { label: string; value: StatusFilter }[] = [
-    { label: 'Pending review', value: 'pending_review' },
+    { label: 'Needs an admin', value: 'needs_admin' },
+    { label: 'Waiting for the business', value: 'waiting' },
+    { label: 'All pending', value: 'pending_review' },
     { label: 'Approved', value: 'approved' },
     { label: 'Rejected', value: 'rejected' },
     { label: 'All', value: 'all' },
@@ -94,7 +127,11 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
         <div>
           <h1 className="font-headline text-2xl text-brand-black">Receipts</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-            Review community receipt submissions
+            {activeFilter === 'waiting'
+              ? `These businesses aren't on The BLACQList, so the receipts can't be counted. Each waits up to ${UNLISTED_WAIT_DAYS} days for the shopper to link it to a listed business.`
+              : ownerReview
+                ? `Businesses verify their own receipts. This tab shows the ones that need you: an unclaimed business, or waiting more than ${ADMIN_FALLBACK_DAYS} days.`
+                : 'Review community receipt submissions'}
           </p>
         </div>
         {/* Ticket 168: businesses on receipts that aren't listings yet. */}
@@ -111,7 +148,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
         {tabs.map((tab) => (
           <Link
             key={tab.value}
-            href={`/admin/receipts${tab.value === 'pending_review' ? '' : `?status=${tab.value}`}`}
+            href={`/admin/receipts${tab.value === 'needs_admin' ? '' : `?status=${tab.value}`}`}
             className={tabCls(tab.value)}
           >
             {tab.label}
@@ -123,15 +160,24 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm font-semibold text-brand-black">No receipts</p>
           <p className="font-body text-xs text-charcoal-soft mt-1">
-            No {activeFilter === 'all' ? '' : activeFilter.replace('_', ' ')} receipts found.
+            {activeFilter === 'needs_admin'
+              ? 'Nothing needs an admin right now.'
+              : activeFilter === 'waiting'
+                ? 'No receipts are waiting for a business to join.'
+                : `No ${activeFilter === 'all' ? '' : activeFilter.replace('_', ' ')} receipts found.`}
           </p>
         </div>
       ) : (
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           <div className="divide-y divide-charcoal/5">
             {receiptList.map((receipt) => {
-              const listing = receipt.listings as { name: string; slug: string } | null
+              const listing = receipt.listings as {
+                name: string
+                slug: string
+                owner_user_id: string | null
+              } | null
               const businessLabel = listing?.name ?? receipt.raw_business_name ?? 'Unknown business'
+              const wait = unlistedWait(receipt, now)
 
               return (
                 <div key={receipt.id} className="p-5 space-y-3">
@@ -148,7 +194,19 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                             after. */}
                         {!listing && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-charcoal/5 text-charcoal-soft shrink-0">
-                            Not matched to a listing
+                            {wait === 'stopped'
+                              ? `Stopped waiting after ${UNLISTED_WAIT_DAYS} days`
+                              : 'Not on The BLACQList'}
+                          </span>
+                        )}
+                        {listing && !listing.owner_user_id && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-charcoal/5 text-charcoal-soft shrink-0">
+                            Unclaimed business
+                          </span>
+                        )}
+                        {receipt.verified_by_role === 'owner' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full font-subhead text-xs font-semibold bg-amber-gold/15 text-amber-700 shrink-0">
+                            Reviewed by the business
                           </span>
                         )}
                       </div>
@@ -194,21 +252,37 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
 
                   {receipt.status === 'pending_review' && (
                     <div className="flex flex-wrap items-center gap-3 pt-1">
-                      <form
-                        action={
-                          approveReceiptAction.bind(null, null) as unknown as (
-                            formData: FormData
-                          ) => Promise<void>
-                        }
-                      >
-                        <input type="hidden" name="receipt_id" value={receipt.id} />
-                        <button
-                          type="submit"
-                          className="h-8 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-xs transition-colors"
+                      {/* Only listed businesses count: no Approve without a listing. */}
+                      {!listing ? (
+                        <p className="font-body text-xs text-charcoal-soft basis-full">
+                          Can&apos;t be counted until it&apos;s linked to a business on The
+                          BLACQList.{' '}
+                          {receipt.raw_business_name && (
+                            <Link
+                              href={addListingHref(receipt.raw_business_name)}
+                              className="font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
+                            >
+                              Add {receipt.raw_business_name} as a listing
+                            </Link>
+                          )}
+                        </p>
+                      ) : (
+                        <form
+                          action={
+                            approveReceiptAction.bind(null, null) as unknown as (
+                              formData: FormData
+                            ) => Promise<void>
+                          }
                         >
-                          Approve
-                        </button>
-                      </form>
+                          <input type="hidden" name="receipt_id" value={receipt.id} />
+                          <button
+                            type="submit"
+                            className="h-8 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-xs transition-colors"
+                          >
+                            Approve
+                          </button>
+                        </form>
+                      )}
                       <form
                         action={
                           rejectReceiptAction.bind(null, null) as unknown as (

@@ -1,6 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
+import { sendReceiptToVerifyEmail } from '@/lib/email/receiptNotices'
+import { UNLISTED_STOPPED_EDIT, unlistedWait } from '@/lib/spend/unlisted'
 import { isFeatureEnabled } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
@@ -65,7 +68,7 @@ export async function updateReceiptSubmissionAction(
   // rather than reported as forbidden — which would confirm it exists.
   const { data: existing } = await serviceClient
     .from('receipt_uploads')
-    .select('id, status, file_path')
+    .select('id, status, file_path, listing_id, created_at')
     .eq('id', receiptId)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -75,6 +78,11 @@ export async function updateReceiptSubmissionAction(
     return { error: 'This receipt has been approved and can no longer be edited.' }
   }
   const isResend = existing.status === 'rejected'
+  // A receipt for a business that isn't listed waits UNLISTED_WAIT_DAYS for it
+  // to join (ticket 183). After that it can't be linked and counted.
+  if (unlistedWait(existing, new Date()) === 'stopped') {
+    return { error: UNLISTED_STOPPED_EDIT }
+  }
 
   // Every receipt needs a photo (ticket 162). A receipt saved before that rule
   // may have none; its correction is where the photo gets added.
@@ -128,6 +136,7 @@ export async function updateReceiptSubmissionAction(
             rejection_reason: null,
             reviewed_by: null,
             reviewed_at: null,
+            verified_by_role: null,
           }
         : {}),
     })
@@ -180,6 +189,17 @@ export async function updateReceiptSubmissionAction(
   // another receipt's image.
   if (uploadedPath !== null && existing.file_path !== null) {
     await removeReceiptFile(serviceClient.storage, existing.file_path)
+  }
+
+  // Tell the business a receipt waits for them (ticket 183): a fixed receipt
+  // goes back to them, and a receipt newly linked to them (its business just
+  // joined, or the shopper picked a different one) is new to them.
+  const listingId = fields.listingId
+  const newToBusiness = isResend || existing.listing_id !== listingId
+  if (listingId && newToBusiness && isFeatureEnabled('ownerReceiptReview')) {
+    after(() =>
+      sendReceiptToVerifyEmail(serviceClient, { receiptId, listingId, uploaderId: user.id })
+    )
   }
 
   revalidatePath('/account/receipts')

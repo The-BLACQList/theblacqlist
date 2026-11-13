@@ -3,8 +3,12 @@ import Link from 'next/link'
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import { RECEIPT_STATUS_LABEL, type ReceiptStatus } from '@/lib/spend/my-receipts'
 import { countedReceiptHref } from '@/lib/spend/counted-receipt'
+import { supportShareHref } from '@/lib/share/supportCard'
 import { ReceiptImageButton } from './ReceiptImageButton'
 import { UnlistedInvite } from './UnlistedInvite'
+import { isFeatureEnabled } from '@/lib/env'
+import { pendingReviewLine } from '@/lib/spend/owner-receipts'
+import { unlistedWait, unlistedWaitLine } from '@/lib/spend/unlisted'
 
 interface Props {
   id: string
@@ -26,6 +30,8 @@ interface Props {
   rejectionReason: string | null
   /** Site origin for the invite link on an unmatched receipt (ticket 168). */
   origin?: string
+  /** When it was uploaded: an unmatched receipt waits 90 days from here. */
+  createdAt: string
 }
 
 const PILL_CLS: Record<ReceiptStatus, string> = {
@@ -61,10 +67,17 @@ export function ReceiptListRow({
   filePath,
   rejectionReason,
   origin,
+  createdAt,
 }: Props) {
   const known = status in RECEIPT_STATUS_LABEL ? (status as ReceiptStatus) : null
   const needsFix = status === 'rejected'
   const counted = status === 'approved'
+  // Ticket 183: only listed businesses count. An unmatched receipt waits for
+  // the business to join and has no support post until it's linked.
+  const wait = isMatched
+    ? null
+    : unlistedWait({ listing_id: null, status, created_at: createdAt }, new Date())
+  const canEdit = status === 'pending_review' && wait !== 'stopped'
 
   return (
     <li className="py-4 space-y-2">
@@ -95,12 +108,20 @@ export function ReceiptListRow({
         </span>
       </div>
 
-      {!isMatched && <UnlistedInvite origin={origin} businessName={businessName} />}
+      {!isMatched && wait !== 'stopped' && (
+        <UnlistedInvite origin={origin} businessName={businessName} />
+      )}
 
-      {status === 'pending_review' && (
+      {wait ? (
         <p className="font-body text-xs text-charcoal-soft">
-          We&apos;ll check it within 3 business days.
+          {unlistedWaitLine(wait, businessName)}
         </p>
+      ) : (
+        status === 'pending_review' && (
+          <p className="font-body text-xs text-charcoal-soft">
+            {pendingReviewLine(isFeatureEnabled('ownerReceiptReview'))}
+          </p>
+        )
       )}
 
       {needsFix && (
@@ -135,7 +156,18 @@ export function ReceiptListRow({
               <span className="sr-only"> for your {businessName} receipt</span>
             </Link>
           )}
-          {status === 'pending_review' && (
+          {/* The support post (ticket 183): "Supported" while waiting,
+              "Verified" once approved. Never shows the receipt or amount. */}
+          {isMatched && (counted || status === 'pending_review') && (
+            <Link
+              href={supportShareHref(id)}
+              className="inline-flex items-center min-h-11 px-2 font-subhead text-xs font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
+            >
+              {counted ? 'Share verified post' : 'Share'}
+              <span className="sr-only"> that you supported {businessName}</span>
+            </Link>
+          )}
+          {canEdit && (
             <Link
               href={`/account/receipts/${id}/edit`}
               className="inline-flex items-center min-h-11 px-2 font-subhead text-xs font-semibold text-charcoal-soft underline underline-offset-2 hover:text-brand-black"

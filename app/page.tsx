@@ -92,7 +92,12 @@ export default async function HomePage() {
       .order('is_featured', { ascending: false })
       .order('save_count', { ascending: false })
       .limit(12),
-    service.from('spend_events').select('amount_cents, listing_id').eq('aggregate_opt_out', false),
+    service
+      .from('spend_events')
+      .select('amount_cents, listing_id')
+      .eq('aggregate_opt_out', false)
+      // Only businesses on The BLACQList count (ticket 183).
+      .not('listing_id', 'is', null),
     // Editorial: the newest article anchors the `BlacqlightFeature` hero and
     // the rest fall into the rail beneath it, so this needs the hero's one
     // row plus a rail's worth. Both editorial tables carry a

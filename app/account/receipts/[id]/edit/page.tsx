@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
+import { isFeatureEnabled } from '@/lib/env'
+import { pendingReviewLine } from '@/lib/spend/owner-receipts'
 
 export const metadata: Metadata = { title: 'Edit your receipt' }
 
@@ -59,6 +61,7 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
     redirect('/account/receipts')
   }
   const needsFix = receipt.status === 'rejected'
+  const ownerReview = isFeatureEnabled('ownerReceiptReview')
 
   const listing = receipt.listings as unknown as ListingJoin | null
 
@@ -78,7 +81,7 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
           </h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             {needsFix
-              ? "Fix what's below and send it back. We'll check it within 3 business days."
+              ? `Fix what's below and send it back. ${pendingReviewLine(ownerReview)}`
               : 'Fix anything you entered wrong. You can edit while it is still waiting.'}
           </p>
         </div>
@@ -107,6 +110,7 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
               hasFile: receipt.file_path !== null,
               needsFix,
             }}
+            ownerReview={ownerReview}
           />
         </div>
       </div>

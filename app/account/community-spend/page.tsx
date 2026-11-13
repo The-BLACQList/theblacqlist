@@ -54,6 +54,8 @@ export default async function CommunitySpendPage() {
     .from('spend_events')
     .select('amount_cents, listing_id')
     .eq('aggregate_opt_out', false)
+    // Only businesses on The BLACQList count (ticket 183).
+    .not('listing_id', 'is', null)
 
   const totalAmountCents = (spendRows ?? []).reduce((sum, r) => sum + r.amount_cents, 0)
   const totalTransactions = spendRows?.length ?? 0

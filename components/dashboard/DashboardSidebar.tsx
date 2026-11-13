@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, Package, Briefcase, Sparkles, ChevronRight } from 'lucide-react'
+import {
+  LayoutDashboard,
+  FileText,
+  Package,
+  Briefcase,
+  Sparkles,
+  ChevronRight,
+  ReceiptText,
+} from 'lucide-react'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 
@@ -12,19 +20,39 @@ interface Props {
    *  each need a listing (requireOwner sends them to /account), so they stay
    *  hidden until there is one. */
   hasListings?: boolean
+  /** Receipts waiting for this owner to verify (ticket 183). Shown as a badge. */
+  receiptsToVerify?: number
+  /** ownerReceiptReview is on. Off, "Receipts to verify" is hidden. */
+  showReceipts?: boolean
 }
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/pages', label: 'My Pages', icon: FileText, exact: false },
+  {
+    href: '/dashboard/receipts',
+    label: 'Receipts to verify',
+    icon: ReceiptText,
+    exact: false,
+    needsListing: true,
+  },
   { href: '/dashboard/products', label: 'Products', icon: Package, exact: false, needsListing: true },
   { href: '/dashboard/services', label: 'Services', icon: Briefcase, exact: false, needsListing: true },
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false, needsListing: true },
 ]
 
-export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
+export function DashboardSidebar({
+  ownerEmail,
+  hasListings = true,
+  receiptsToVerify = 0,
+  showReceipts = false,
+}: Props) {
   const pathname = usePathname()
-  const navItems = NAV_ITEMS.filter((item) => hasListings || !('needsListing' in item))
+  const navItems = NAV_ITEMS.filter(
+    (item) =>
+      (hasListings || !('needsListing' in item)) &&
+      (showReceipts || item.href !== '/dashboard/receipts')
+  )
 
   // Extract entityId from /dashboard/pages/[entityId]/...
   const entityMatch = pathname.match(/^\/dashboard\/pages\/([^/]+)/)
@@ -71,6 +99,12 @@ export function DashboardSidebar({ ownerEmail, hasListings = true }: Props) {
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />
                 {label}
+                {href === '/dashboard/receipts' && receiptsToVerify > 0 && (
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-amber-gold px-1.5 font-subhead text-[11px] font-bold leading-5 text-brand-black">
+                    {receiptsToVerify > 99 ? '99+' : receiptsToVerify}
+                    <span className="sr-only"> waiting</span>
+                  </span>
+                )}
               </Link>
             )
           })}
