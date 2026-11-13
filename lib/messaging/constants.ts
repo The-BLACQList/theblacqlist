@@ -38,3 +38,15 @@ export const COMPOSE_HASH = '#send-message'
 
 export const CUSTOMER_INBOX_PATH = '/account/messages'
 export const OWNER_INBOX_PATH = '/dashboard/messages'
+
+// Saved replies (messages about postings, 2026-11-13). The table CHECKs match.
+export const SAVED_REPLY_LIMIT = 30
+export const SAVED_REPLY_TITLE_MAX = 60
+export const SAVED_REPLY_KINDS = ['any', 'customer', 'job', 'event'] as const
+export type SavedReplyKind = (typeof SAVED_REPLY_KINDS)[number]
+export const SAVED_REPLY_KIND_LABELS: Record<SavedReplyKind, string> = {
+  any: 'Any conversation',
+  customer: 'Customers',
+  job: 'Job applicants',
+  event: 'Event guests',
+}

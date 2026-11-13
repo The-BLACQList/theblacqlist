@@ -17,6 +17,7 @@ import { showShoppedHere } from '@/lib/spend/receipt-prefill'
 import { listSendAsPages, loadListingMessaging } from '@/lib/messaging/loaders'
 import { MessageComposer } from '@/components/messaging/MessageComposer'
 import { composerMounted } from '@/lib/messaging/rules'
+import { postingKind } from '@/lib/messaging/postings'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
 // layout, so every route is already dynamic and a revalidate here is dead —
@@ -222,22 +223,24 @@ export default async function EntityPage({ params }: PageProps) {
   // customer with a thread already, a blocked customer), so it is resolved
   // here and not in the shared loader. Fail-soft: undefined keeps the old
   // mailto: CTA. A new object, so a cached loader result is never mutated.
-  // Events and jobs have no inbox switch, so they never get in-app messaging.
-  const messaging =
-    isEvent || isJob
-      ? undefined
-      : await loadListingMessaging(supabase, {
-          listingId: entity.id,
-          ownerUserId: entity.owner_user_id,
-          viewerId: user?.id ?? null,
-          listingPath: buildEntityUrl(entityType, citySlug, listingSlug),
-        })
+  // Jobs and events (part H) follow their linked page's inbox switch, or their
+  // own when unlinked, and stop taking new messages once closed or over.
+  const messaging = await loadListingMessaging(supabase, {
+    listingId: entity.id,
+    ownerUserId: entity.owner_user_id,
+    viewerId: user?.id ?? null,
+    listingPath: buildEntityUrl(entityType, citySlug, listingSlug),
+    entityType: entity.entity_type,
+  })
   const pageEntity = messaging ? { ...entity, messaging } : entity
   // Mounted in thread mode too, so "Message sent" survives the refresh that
   // follows the first send (composerMounted).
   const showComposer = composerMounted(messaging?.mode)
-  // "Send as": a page owner can write as one of their own live pages.
+  // "Send as": a page owner can write as one of their own live pages. Not on
+  // jobs (people apply, not pages); the list still tells the composer which
+  // inbox the sender reads.
   const sendAsPages = showComposer && user ? await listSendAsPages(supabase, user.id, entity.id) : []
+  const posting = postingKind(entity.entity_type)
 
   return (
     // `data-tour-listing` lets the Tester Tour remember this page so a step row
@@ -291,7 +294,12 @@ export default async function EntityPage({ params }: PageProps) {
       {/* One composer per page. It opens for every link to #send-message (the
           hero, the quick bar, the inquiry band, the services links). */}
       {showComposer && (
-        <MessageComposer listingId={entity.id} businessName={entity.name} sendAsPages={sendAsPages} />
+        <MessageComposer
+          listingId={entity.id}
+          businessName={entity.name}
+          sendAsPages={sendAsPages}
+          postingKind={posting}
+        />
       )}
     </div>
   )

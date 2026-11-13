@@ -4,9 +4,12 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatMessageTime } from '@/lib/messaging/format'
 import type { Thread } from '@/lib/messaging/loaders'
+import { postingTag } from '@/lib/messaging/postings'
+import type { ReplyOptions } from '@/lib/messaging/quickReplies'
 import { Avatar } from './ConversationList'
 import { BlockButton } from './BlockButton'
 import { MarkConversationRead } from './MarkConversationRead'
+import { PostingCard } from './PostingCard'
 import { ReplyBox } from './ReplyBox'
 import { ReportDialog } from './ReportDialog'
 
@@ -14,11 +17,14 @@ interface Props {
   thread: Thread
   backHref: string
   backLabel: string
+  /** Owner side: quick and saved replies offered above the reply box. */
+  replies?: ReplyOptions
 }
 
 /** Shared by /account/messages (customers) and /dashboard/messages (anyone with a page, either side). */
-export function ThreadView({ thread, backHref, backLabel }: Props) {
+export function ThreadView({ thread, backHref, backLabel, replies }: Props) {
   const isOwner = thread.role === 'owner'
+  const about = thread.posting ? postingTag(thread.posting.kind, thread.posting.title) : thread.listingName
 
   return (
     <div className="space-y-4">
@@ -37,8 +43,8 @@ export function ThreadView({ thread, backHref, backLabel }: Props) {
             <h1 className="truncate font-subhead text-base font-bold text-brand-black">{thread.counterpartName}</h1>
             {isOwner ? (
               <p className="truncate font-body text-xs text-charcoal-soft">
-                {thread.sentAsPageName ? 'A business, writing to ' : 'About '}
-                {thread.listingName}
+                {thread.sentAsPageName ? (thread.posting ? 'A business, asking about ' : 'A business, writing to ') : 'About '}
+                {about}
               </p>
             ) : (
               <p className="flex flex-wrap items-center gap-x-3 font-body text-xs text-charcoal-soft">
@@ -48,7 +54,7 @@ export function ThreadView({ thread, backHref, backLabel }: Props) {
                     href={thread.listingUrl}
                     className="inline-flex items-center gap-1 hover:text-brand-black underline underline-offset-2"
                   >
-                    View business page
+                    {thread.posting ? (thread.posting.kind === 'job' ? 'View job' : 'View event') : 'View business page'}
                     <ExternalLink className="size-3" aria-hidden="true" />
                   </a>
                 )}
@@ -71,6 +77,8 @@ export function ThreadView({ thread, backHref, backLabel }: Props) {
             />
           </div>
         </header>
+
+        {thread.posting && <PostingCard posting={thread.posting} />}
 
         <ol className="px-4 py-5 space-y-4 bg-pale-lavender/40" aria-label="Messages">
           {thread.messages.length === 0 && (
@@ -110,7 +118,7 @@ export function ThreadView({ thread, backHref, backLabel }: Props) {
 
         <div className="px-4 py-4 border-t border-charcoal/10">
           {thread.canReply ? (
-            <ReplyBox conversationId={thread.id} />
+            <ReplyBox conversationId={thread.id} replies={replies} />
           ) : (
             <p role="status" className="rounded-xl bg-charcoal/5 px-4 py-3 font-body text-sm text-charcoal">
               {thread.replyNotice ?? "You can't reply to this conversation."}

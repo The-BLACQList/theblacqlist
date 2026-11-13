@@ -9,8 +9,12 @@ import {
   OWNER_INBOX_PATH,
   REPORT_NOTE_MAX_LENGTH,
   REPORT_REASONS,
+  SAVED_REPLY_KINDS,
+  SAVED_REPLY_TITLE_MAX,
   type ReportReason,
+  type SavedReplyKind,
 } from './constants'
+import { postingKind, type PostingKind } from './postings'
 
 // ── Listing page ────────────────────────────────────────────────────────────
 
@@ -41,6 +45,8 @@ export interface ResolveListingMessagingInput {
   /** messaging_restricted(): the viewer is blocked by this owner or suspended. */
   restricted: boolean
   existingConversationId: string | null
+  /** A job or event posting: the owner's link opens that tab of the inbox. */
+  postingKind?: PostingKind | null
 }
 
 export function resolveListingMessaging(input: ResolveListingMessagingInput): ListingMessaging | undefined {
@@ -49,7 +55,8 @@ export function resolveListingMessaging(input: ResolveListingMessagingInput): Li
   if (!ownerUserId) return undefined
 
   if (viewerId && viewerId === ownerUserId) {
-    return { mode: 'owner', href: `${OWNER_INBOX_PATH}?listing=${encodeURIComponent(input.listingId)}` }
+    const tab = input.postingKind === 'job' ? 'tab=jobs&' : input.postingKind === 'event' ? 'tab=events&' : ''
+    return { mode: 'owner', href: `${OWNER_INBOX_PATH}?${tab}listing=${encodeURIComponent(input.listingId)}` }
   }
   if (!viewerId) {
     return input.messagingEnabled
@@ -116,31 +123,51 @@ export function participantRole(
   return null
 }
 
-// ── One inbox, two tabs (owner-experience round 2, 2026-11-13) ─────────────
+// ── One inbox, four tabs (owner-experience round 2, 2026-11-13) ────────────
 
-export type InboxTab = 'customers' | 'businesses'
+/**
+ * Customers: people writing to my pages. Job applicants / Event guests:
+ * anyone writing about one of my postings (part H). Businesses: pages writing
+ * to mine, and every thread I started.
+ */
+export type InboxTab = 'customers' | 'jobs' | 'events' | 'businesses'
+export const INBOX_TABS: readonly InboxTab[] = ['customers', 'jobs', 'events', 'businesses']
 
 /** ?tab= on /dashboard/messages. Anything unknown is the Customers tab. */
 export function parseInboxTab(raw: unknown): InboxTab {
-  return raw === 'businesses' ? 'businesses' : 'customers'
+  return (INBOX_TABS as readonly unknown[]).includes(raw) ? (raw as InboxTab) : 'customers'
+}
+
+/**
+ * The owner's tab for a thread on one of their listings. A posting's threads
+ * all sit under its tab, whoever wrote in (a person, or a vendor writing as
+ * their page about an event): the owner answers them about that posting.
+ */
+export function ownerInboxTab(entityType: string | null | undefined, customerListingId: string | null): InboxTab {
+  const kind = postingKind(entityType)
+  if (kind === 'job') return 'jobs'
+  if (kind === 'event') return 'events'
+  return customerListingId ? 'businesses' : 'customers'
 }
 
 type InboxRow = { listing_id: string; customer_user_id: string; customer_listing_id: string | null }
 
 /**
  * Where a conversation sits in this viewer's inbox, and which side they are on.
+ *   - On one of my postings                     → Job applicants / Event guests
  *   - On one of my pages, from a person          → Customers (I am the owner)
  *   - On one of my pages, from another business  → Businesses (I am the owner)
- *   - I wrote to someone else's page (as me or as one of my pages) → Businesses
+ *   - I wrote to someone else's page or posting (as me or as my page) → Businesses
+ * ownedListings maps each of my listing ids to its entity_type.
  * null: not mine (RLS should never return it).
  */
 export function inboxPlacement(
   conversation: InboxRow,
   viewerId: string,
-  ownedListingIds: ReadonlySet<string>
+  ownedListings: ReadonlyMap<string, string>
 ): { tab: InboxTab; role: ParticipantRole } | null {
-  if (ownedListingIds.has(conversation.listing_id)) {
-    return { role: 'owner', tab: conversation.customer_listing_id ? 'businesses' : 'customers' }
+  if (ownedListings.has(conversation.listing_id)) {
+    return { role: 'owner', tab: ownerInboxTab(ownedListings.get(conversation.listing_id), conversation.customer_listing_id) }
   }
   if (conversation.customer_user_id === viewerId) return { role: 'customer', tab: 'businesses' }
   return null
@@ -149,10 +176,18 @@ export function inboxPlacement(
 /**
  * The page chips. On Customers a chip means "sent to this page". On Businesses
  * it also means "sent from this page", so a page's outgoing threads are there.
+ * On Job applicants / Event guests it also means "about a posting linked to
+ * this page" (postingPages: posting id → the page it is linked to).
  */
-export function matchesPageFilter(conversation: InboxRow, tab: InboxTab, listingFilter: string | null): boolean {
+export function matchesPageFilter(
+  conversation: InboxRow,
+  tab: InboxTab,
+  listingFilter: string | null,
+  postingPages: ReadonlyMap<string, string | null> = new Map()
+): boolean {
   if (!listingFilter) return true
   if (conversation.listing_id === listingFilter) return true
+  if (tab === 'jobs' || tab === 'events') return postingPages.get(conversation.listing_id) === listingFilter
   return tab === 'businesses' && conversation.customer_listing_id === listingFilter
 }
 
@@ -168,6 +203,26 @@ export function isConversationUnread(
   const readAt = role === 'customer' ? conversation.customer_last_read_at : conversation.owner_last_read_at
   if (!readAt) return true
   return new Date(conversation.last_message_at).getTime() > new Date(readAt).getTime()
+}
+
+// ── Saved replies ───────────────────────────────────────────────────────────
+
+export type SavedReplyInput = { title: string; body: string; kind: SavedReplyKind }
+
+export function parseSavedReplyInput(
+  rawTitle: unknown,
+  rawBody: unknown,
+  rawKind: unknown
+): { ok: true; value: SavedReplyInput } | { ok: false; error: string } {
+  const title = typeof rawTitle === 'string' ? rawTitle.replace(/\s+/g, ' ').trim() : ''
+  if (!title) return { ok: false, error: 'Give the reply a short name.' }
+  if (title.length > SAVED_REPLY_TITLE_MAX) {
+    return { ok: false, error: `Names can be up to ${SAVED_REPLY_TITLE_MAX} characters.` }
+  }
+  const body = normalizeMessageBody(rawBody)
+  if (!body.ok) return { ok: false, error: body.error === 'Write a message first.' ? 'Write the reply first.' : body.error }
+  const kind = (SAVED_REPLY_KINDS as readonly unknown[]).includes(rawKind) ? (rawKind as SavedReplyKind) : 'any'
+  return { ok: true, value: { title, body: body.body, kind } }
 }
 
 // ── Reports ─────────────────────────────────────────────────────────────────

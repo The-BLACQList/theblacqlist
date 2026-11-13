@@ -15,7 +15,9 @@ import {
   composerMounted,
   isUuid,
   matchesPageFilter,
+  ownerInboxTab,
   parseInboxTab,
+  parseSavedReplyInput,
   messagePreview,
   messagingCtaLabel,
   normalizeMessageBody,
@@ -66,6 +68,15 @@ describe('resolveListingMessaging', () => {
         href: `/dashboard/messages?listing=${LISTING}`,
       })
     }
+  })
+
+  it('sends a posting owner to the posting\'s tab', () => {
+    expect(resolveListingMessaging(input({ viewerId: OWNER, postingKind: 'job' }))?.href).toBe(
+      `/dashboard/messages?tab=jobs&listing=${LISTING}`
+    )
+    expect(resolveListingMessaging(input({ viewerId: OWNER, postingKind: 'event' }))?.href).toBe(
+      `/dashboard/messages?tab=events&listing=${LISTING}`
+    )
   })
 
   it('sends a signed-out visitor to sign in and back when the inbox is open', () => {
@@ -119,9 +130,15 @@ describe('messagingCtaLabel', () => {
 // ── One inbox, two tabs ─────────────────────────────────────────────────────
 
 describe('inboxPlacement', () => {
-  const MINE = new Set([LISTING])
   const OTHER = '55555555-5555-4555-8555-555555555555'
   const MY_OTHER_PAGE = '66666666-6666-4666-8666-666666666666'
+  const MY_JOB = '77777777-7777-4777-8777-777777777777'
+  const MY_EVENT = '88888888-8888-4888-8888-888888888888'
+  const MINE = new Map([
+    [LISTING, 'business'],
+    [MY_JOB, 'job'],
+    [MY_EVENT, 'event'],
+  ])
 
   it('puts a person writing to my page under Customers, as the owner', () => {
     expect(
@@ -141,6 +158,23 @@ describe('inboxPlacement', () => {
         inboxPlacement({ listing_id: OTHER, customer_user_id: OWNER, customer_listing_id }, OWNER, MINE)
       ).toEqual({ tab: 'businesses', role: 'customer' })
     }
+  })
+
+  it('puts every thread on my postings under its own tab, whoever wrote in', () => {
+    for (const customer_listing_id of [null, OTHER]) {
+      expect(
+        inboxPlacement({ listing_id: MY_JOB, customer_user_id: CUSTOMER, customer_listing_id }, OWNER, MINE)
+      ).toEqual({ tab: 'jobs', role: 'owner' })
+      expect(
+        inboxPlacement({ listing_id: MY_EVENT, customer_user_id: CUSTOMER, customer_listing_id }, OWNER, MINE)
+      ).toEqual({ tab: 'events', role: 'owner' })
+    }
+  })
+
+  it('puts my own questions about someone else\'s posting under Businesses', () => {
+    expect(
+      inboxPlacement({ listing_id: OTHER, customer_user_id: OWNER, customer_listing_id: null }, OWNER, new Map())
+    ).toEqual({ tab: 'businesses', role: 'customer' })
   })
 
   it('places nothing that is not mine', () => {
@@ -164,6 +198,21 @@ describe('matchesPageFilter', () => {
     expect(matchesPageFilter(toMine, 'businesses', LISTING)).toBe(true)
   })
 
+  it('matches threads about a posting linked to the page on Job applicants and Event guests', () => {
+    const JOB = '77777777-7777-4777-8777-777777777777'
+    const UNLINKED = '99999999-9999-4999-8999-999999999999'
+    const postingPages = new Map<string, string | null>([
+      [JOB, LISTING],
+      [UNLINKED, null],
+    ])
+    const aboutJob = { listing_id: JOB, customer_user_id: CUSTOMER, customer_listing_id: null }
+    const aboutUnlinked = { listing_id: UNLINKED, customer_user_id: CUSTOMER, customer_listing_id: null }
+    expect(matchesPageFilter(aboutJob, 'jobs', LISTING, postingPages)).toBe(true)
+    expect(matchesPageFilter(aboutJob, 'events', LISTING, postingPages)).toBe(true)
+    expect(matchesPageFilter(aboutJob, 'customers', LISTING, postingPages)).toBe(false)
+    expect(matchesPageFilter(aboutUnlinked, 'jobs', LISTING, postingPages)).toBe(false)
+  })
+
   it('matches threads sent from the page on Businesses only', () => {
     expect(matchesPageFilter(sentFromMine, 'businesses', LISTING)).toBe(true)
     expect(matchesPageFilter(sentFromMine, 'customers', LISTING)).toBe(false)
@@ -176,6 +225,46 @@ describe('parseInboxTab', () => {
     expect(parseInboxTab('customers')).toBe('customers')
     expect(parseInboxTab(undefined)).toBe('customers')
     expect(parseInboxTab('admin')).toBe('customers')
+  })
+
+  it('accepts the posting tabs', () => {
+    expect(parseInboxTab('jobs')).toBe('jobs')
+    expect(parseInboxTab('events')).toBe('events')
+  })
+})
+
+describe('ownerInboxTab', () => {
+  it('files postings by kind, and pages by who wrote in', () => {
+    expect(ownerInboxTab('job', null)).toBe('jobs')
+    expect(ownerInboxTab('job', LISTING)).toBe('jobs')
+    expect(ownerInboxTab('event', LISTING)).toBe('events')
+    expect(ownerInboxTab('business', null)).toBe('customers')
+    expect(ownerInboxTab('business', LISTING)).toBe('businesses')
+    expect(ownerInboxTab(undefined, null)).toBe('customers')
+  })
+})
+
+describe('parseSavedReplyInput', () => {
+  it('tidies the name and keeps a known kind', () => {
+    expect(parseSavedReplyInput('  Interview \n times ', 'Come in Tuesday.', 'job')).toEqual({
+      ok: true,
+      value: { title: 'Interview times', body: 'Come in Tuesday.', kind: 'job' },
+    })
+  })
+
+  it('falls back to any for an unknown kind', () => {
+    const r = parseSavedReplyInput('Hi', 'Hello', 'admin')
+    expect(r.ok && r.value.kind).toBe('any')
+  })
+
+  it('rejects a missing name, a long name, and an empty reply', () => {
+    expect(parseSavedReplyInput('   ', 'x', 'any')).toEqual({ ok: false, error: 'Give the reply a short name.' })
+    expect(parseSavedReplyInput('x'.repeat(61), 'x', 'any')).toEqual({
+      ok: false,
+      error: 'Names can be up to 60 characters.',
+    })
+    expect(parseSavedReplyInput('Hi', '   ', 'any')).toEqual({ ok: false, error: 'Write the reply first.' })
+    expect(parseSavedReplyInput('Hi', 'x'.repeat(MESSAGE_MAX_LENGTH + 1), 'any').ok).toBe(false)
   })
 })
 

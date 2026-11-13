@@ -18,10 +18,31 @@ interface Props {
   searchParams: Promise<{ listing?: string; tab?: string }>
 }
 
-const TABS: { tab: InboxTab; label: string }[] = [
-  { tab: 'customers', label: 'Customers' },
-  { tab: 'businesses', label: 'Businesses' },
-]
+const TAB_LABELS: Record<InboxTab, string> = {
+  customers: 'Customers',
+  jobs: 'Job applicants',
+  events: 'Event guests',
+  businesses: 'Businesses',
+}
+
+const EMPTY: Record<InboxTab, { heading: string; body: string }> = {
+  customers: {
+    heading: 'No messages from customers yet',
+    body: 'When a customer messages you from your page, the conversation shows up here.',
+  },
+  jobs: {
+    heading: 'No questions about your jobs yet',
+    body: 'When someone asks about one of your job postings, the conversation shows up here.',
+  },
+  events: {
+    heading: 'No questions about your events yet',
+    body: 'When someone asks about one of your events, the conversation shows up here.',
+  },
+  businesses: {
+    heading: 'No business messages yet',
+    body: 'When you message a business from its page, or a business messages yours, the conversation shows up here.',
+  },
+}
 
 function inboxHref(tab: InboxTab, listing: string | null): string {
   const params = new URLSearchParams()
@@ -33,8 +54,10 @@ function inboxHref(tab: InboxTab, listing: string | null): string {
 
 /**
  * The one inbox (owner-experience round 2, 2026-11-13). Customers: people
- * writing to my pages. Businesses: pages writing to mine, and every thread I
- * started with another business, as me or as one of my pages.
+ * writing to my pages. Job applicants / Event guests: anyone asking about one
+ * of my postings (part H; shown only with postings or threads there).
+ * Businesses: pages writing to mine, and every thread I started with another
+ * business, as me or as one of my pages.
  */
 export default async function OwnerMessagesPage({ searchParams }: Props) {
   if (!isFeatureEnabled('messaging')) notFound()
@@ -44,10 +67,13 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
   const listingFilter = listing && isUuid(listing) ? listing : null
 
   const supabase = await createClient()
-  const { items, pages, unread, error } = await listInbox(supabase, owner.user.id, tab, listingFilter)
+  const { items, pages, postings, tabs, unread, error } = await listInbox(supabase, owner.user.id, tab, listingFilter)
 
   const activeFilter = listingFilter && pages.some((p) => p.id === listingFilter) ? listingFilter : null
   const anyOpen = pages.some((p) => p.messagingEnabled)
+  // A posting's own id (from its page's "View inbox") filters too; it has no chip.
+  const postingFilter = listingFilter ? (postings.find((p) => p.id === listingFilter) ?? null) : null
+  const empty = EMPTY[tab]
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -55,7 +81,7 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
         <div>
           <h1 className="font-headline text-2xl text-brand-black mb-1">Messages</h1>
           <p className="font-body text-sm text-charcoal-soft">
-            Everything people and businesses send your pages, and the businesses you write to.
+            Everything people and businesses send your pages and postings, and the businesses you write to.
           </p>
         </div>
         <Link
@@ -85,13 +111,13 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
       )}
 
       <nav aria-label="Inbox" className="flex gap-1 border-b border-charcoal/10">
-        {TABS.map((t) => {
-          const active = t.tab === tab
-          const count = unread[t.tab]
+        {tabs.map((t) => {
+          const active = t === tab
+          const count = unread[t]
           return (
             <Link
-              key={t.tab}
-              href={inboxHref(t.tab, activeFilter) as Route}
+              key={t}
+              href={inboxHref(t, activeFilter) as Route}
               aria-current={active ? 'page' : undefined}
               className={cn(
                 '-mb-px inline-flex items-center gap-2 px-3 py-2 border-b-2 font-subhead text-sm font-semibold transition-colors',
@@ -100,7 +126,7 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
                   : 'border-transparent text-charcoal-soft hover:text-brand-black'
               )}
             >
-              {t.label}
+              {TAB_LABELS[t]}
               {count > 0 && (
                 <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-amber-gold px-1.5 font-subhead text-[11px] font-bold text-brand-black">
                   {count > 99 ? '99+' : count}
@@ -111,6 +137,15 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
           )
         })}
       </nav>
+
+      {postingFilter && (
+        <p className="flex flex-wrap items-center gap-2 font-body text-sm text-charcoal-soft">
+          Showing messages about <span className="font-semibold text-brand-black">{postingFilter.name}</span>
+          <Link href={inboxHref(tab, null) as Route} className="underline underline-offset-2 hover:text-brand-black">
+            Show all
+          </Link>
+        </p>
+      )}
 
       {pages.length > 1 && (
         <nav aria-label="Filter by page" className="flex flex-wrap gap-2">
@@ -129,13 +164,11 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
         <ConversationList
           items={items}
           basePath={OWNER_INBOX_PATH}
-          emptyHeading={tab === 'customers' ? 'No messages from customers yet' : 'No business messages yet'}
+          emptyHeading={empty.heading}
           emptyBody={
-            tab === 'businesses'
-              ? 'When you message a business from its page, or a business messages yours, the conversation shows up here.'
-              : anyOpen
-                ? 'When a customer messages you from your page, the conversation shows up here.'
-                : 'Your inbox is off. Turn it on in Inbox settings so customers can message you.'
+            tab === 'customers' && !anyOpen
+              ? 'Your inbox is off. Turn it on in Inbox settings so customers can message you.'
+              : empty.body
           }
         />
       )}
