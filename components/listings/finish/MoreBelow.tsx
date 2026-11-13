@@ -35,15 +35,15 @@ export function MoreBelow({ watch }: { watch?: unknown }) {
   return (
     <>
       {/* No height of its own, and -mt-6 cancels the column's gap, so neither div moves the cards. */}
-      <div className="pointer-events-none sticky bottom-20 z-10 -mt-6 flex h-0 justify-center">
+      <div className="pointer-events-none sticky bottom-24 z-10 -mt-6 flex h-0 justify-center">
         {below && (
           <button
             type="button"
             onClick={scrollOn}
-            className="pointer-events-auto inline-flex -translate-y-full items-center gap-1.5 rounded-full border border-charcoal/15 bg-white/95 px-4 py-2 font-subhead text-xs font-semibold text-brand-black shadow-md backdrop-blur hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
+            className="pointer-events-auto inline-flex -translate-y-full items-center gap-2 rounded-full bg-amber-gold px-6 py-3 font-subhead text-sm font-bold text-brand-black shadow-lg ring-4 ring-white transition-colors hover:bg-[#b08d55] focus-visible:outline-none focus-visible:ring-brand-black"
           >
             More below
-            <ArrowDown className="size-3.5" aria-hidden="true" />
+            <ArrowDown className="size-4 motion-safe:animate-bounce" aria-hidden="true" />
           </button>
         )}
       </div>
