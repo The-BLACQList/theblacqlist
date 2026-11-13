@@ -91,10 +91,6 @@ export function StorefrontTemplate({
         </div>
       </SectionMark>
 
-      <SectionMark id="coupons">
-        <EntityCouponsSection coupons={entity.coupons} />
-      </SectionMark>
-
       {/* The id lives on the call site, never inside EntityAtAGlance — every
           template wraps it, so an id in the component would be duplicated.
           Unconditional on every template because EntityAtAGlance also carries
@@ -104,6 +100,10 @@ export function StorefrontTemplate({
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} />
         </div>
+      </SectionMark>
+
+      <SectionMark id="coupons">
+        <EntityCouponsSection coupons={entity.coupons} />
       </SectionMark>
 
       <SectionMark id="locations">

@@ -82,10 +82,6 @@ export function ProfessionalTemplate({
         </div>
       </SectionMark>
 
-      <SectionMark id="coupons">
-        <EntityCouponsSection coupons={entity.coupons} />
-      </SectionMark>
-
       {/* At a Glance sits right under the quick facts on every template
           (ticket 140). Unconditional, as on Storefront, because it also
           carries the social row, which a page can have with no address,
@@ -94,6 +90,10 @@ export function ProfessionalTemplate({
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} />
         </div>
+      </SectionMark>
+
+      <SectionMark id="coupons">
+        <EntityCouponsSection coupons={entity.coupons} />
       </SectionMark>
 
       <SectionMark id="locations">

@@ -331,8 +331,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
   storefront: [
     'hero',
     'info-rail',
-    'coupons',
     'at-a-glance',
+    'coupons',
     'locations',
     'links',
     'story',
@@ -356,8 +356,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
   professional: [
     'hero',
     'info-rail',
-    'coupons',
     'at-a-glance',
+    'coupons',
     'locations',
     'services',
     'booking',
@@ -380,8 +380,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
   creative: [
     'hero',
     'info-rail',
-    'coupons',
     'at-a-glance',
+    'coupons',
     'locations',
     'portfolio',
     'capabilities',
